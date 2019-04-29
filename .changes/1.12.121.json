@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``iotanalytics``", 
+    "description": "Update iotanalytics client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``robomaker``", 
+    "description": "Update robomaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fms``", 
+    "description": "Update fms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot1click-devices``", 
+    "description": "Update iot1click-devices client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -18,7 +18,8 @@
       "name":"AbortMultipartUpload",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}/{Key+}"
+        "requestUri":"/{Bucket}/{Key+}",
+        "responseCode":204
       },
       "input":{"shape":"AbortMultipartUploadRequest"},
       "output":{"shape":"AbortMultipartUploadOutput"},
@@ -86,7 +87,8 @@
       "name":"DeleteBucket",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}"
+        "requestUri":"/{Bucket}",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETE.html",
@@ -96,7 +98,8 @@
       "name":"DeleteBucketAnalyticsConfiguration",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?analytics"
+        "requestUri":"/{Bucket}?analytics",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketAnalyticsConfigurationRequest"},
       "documentation":"<p>Deletes an analytics configuration for the bucket (specified by the analytics configuration ID).</p>"
@@ -105,7 +108,8 @@
       "name":"DeleteBucketCors",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?cors"
+        "requestUri":"/{Bucket}?cors",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketCorsRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETEcors.html",
@@ -115,7 +119,8 @@
       "name":"DeleteBucketEncryption",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?encryption"
+        "requestUri":"/{Bucket}?encryption",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketEncryptionRequest"},
       "documentation":"<p>Deletes the server-side encryption configuration from the bucket.</p>"
@@ -124,7 +129,8 @@
       "name":"DeleteBucketInventoryConfiguration",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?inventory"
+        "requestUri":"/{Bucket}?inventory",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketInventoryConfigurationRequest"},
       "documentation":"<p>Deletes an inventory configuration (identified by the inventory ID) from the bucket.</p>"
@@ -133,7 +139,8 @@
       "name":"DeleteBucketLifecycle",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?lifecycle"
+        "requestUri":"/{Bucket}?lifecycle",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketLifecycleRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETElifecycle.html",
@@ -143,7 +150,8 @@
       "name":"DeleteBucketMetricsConfiguration",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?metrics"
+        "requestUri":"/{Bucket}?metrics",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketMetricsConfigurationRequest"},
       "documentation":"<p>Deletes a metrics configuration (specified by the metrics configuration ID) from the bucket.</p>"
@@ -152,7 +160,8 @@
       "name":"DeleteBucketPolicy",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?policy"
+        "requestUri":"/{Bucket}?policy",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketPolicyRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETEpolicy.html",
@@ -162,7 +171,8 @@
       "name":"DeleteBucketReplication",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?replication"
+        "requestUri":"/{Bucket}?replication",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketReplicationRequest"},
       "documentation":"<p> Deletes the replication configuration from the bucket. For information about replication configuration, see <a href=\" https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html\">Cross-Region Replication (CRR)</a> in the <i>Amazon S3 Developer Guide</i>. </p>"
@@ -171,7 +181,8 @@
       "name":"DeleteBucketTagging",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?tagging"
+        "requestUri":"/{Bucket}?tagging",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketTaggingRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETEtagging.html",
@@ -181,7 +192,8 @@
       "name":"DeleteBucketWebsite",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?website"
+        "requestUri":"/{Bucket}?website",
+        "responseCode":204
       },
       "input":{"shape":"DeleteBucketWebsiteRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketDELETEwebsite.html",
@@ -191,7 +203,8 @@
       "name":"DeleteObject",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}/{Key+}"
+        "requestUri":"/{Bucket}/{Key+}",
+        "responseCode":204
       },
       "input":{"shape":"DeleteObjectRequest"},
       "output":{"shape":"DeleteObjectOutput"},
@@ -202,7 +215,8 @@
       "name":"DeleteObjectTagging",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}/{Key+}?tagging"
+        "requestUri":"/{Bucket}/{Key+}?tagging",
+        "responseCode":204
       },
       "input":{"shape":"DeleteObjectTaggingRequest"},
       "output":{"shape":"DeleteObjectTaggingOutput"},
@@ -224,7 +238,8 @@
       "name":"DeletePublicAccessBlock",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}?publicAccessBlock"
+        "requestUri":"/{Bucket}?publicAccessBlock",
+        "responseCode":204
       },
       "input":{"shape":"DeletePublicAccessBlockRequest"},
       "documentation":"<p>Removes the <code>PublicAccessBlock</code> configuration from an Amazon S3 bucket.</p>"
@@ -300,7 +315,7 @@
       "input":{"shape":"GetBucketLifecycleRequest"},
       "output":{"shape":"GetBucketLifecycleOutput"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketGETlifecycle.html",
-      "documentation":"<p>Deprecated, see the GetBucketLifecycleConfiguration operation.</p>",
+      "documentation":"<p> No longer used, see the GetBucketLifecycleConfiguration operation.</p>",
       "deprecated":true
     },
     "GetBucketLifecycleConfiguration":{
@@ -354,7 +369,7 @@
       "input":{"shape":"GetBucketNotificationConfigurationRequest"},
       "output":{"shape":"NotificationConfigurationDeprecated"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketGETnotification.html",
-      "documentation":"<p>Deprecated, see the GetBucketNotificationConfiguration operation.</p>",
+      "documentation":"<p> No longer used, see the GetBucketNotificationConfiguration operation.</p>",
       "deprecated":true
     },
     "GetBucketNotificationConfiguration":{
@@ -725,7 +740,7 @@
       },
       "input":{"shape":"PutBucketLifecycleRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketPUTlifecycle.html",
-      "documentation":"<p>Deprecated, see the PutBucketLifecycleConfiguration operation.</p>",
+      "documentation":"<p> No longer used, see the PutBucketLifecycleConfiguration operation.</p>",
       "deprecated":true
     },
     "PutBucketLifecycleConfiguration":{
@@ -764,7 +779,7 @@
       },
       "input":{"shape":"PutBucketNotificationRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketPUTnotification.html",
-      "documentation":"<p>Deprecated, see the PutBucketNotificationConfiguraiton operation.</p>",
+      "documentation":"<p> No longer used, see the PutBucketNotificationConfiguration operation.</p>",
       "deprecated":true
     },
     "PutBucketNotificationConfiguration":{
@@ -993,16 +1008,19 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
         "UploadId":{
           "shape":"MultipartUploadId",
+          "documentation":"<p/>",
           "location":"querystring",
           "locationName":"uploadId"
         },
@@ -1021,7 +1039,8 @@
           "shape":"BucketAccelerateStatus",
           "documentation":"<p>The accelerate configuration of the bucket.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AcceptRanges":{"type":"string"},
     "AccessControlPolicy":{
@@ -1032,8 +1051,12 @@
           "documentation":"<p>A list of grants.</p>",
           "locationName":"AccessControlList"
         },
-        "Owner":{"shape":"Owner"}
-      }
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "AccessControlTranslation":{
       "type":"structure",
@@ -1079,7 +1102,8 @@
           "flattened":true,
           "locationName":"Tag"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AnalyticsConfiguration":{
       "type":"structure",
@@ -1100,7 +1124,8 @@
           "shape":"StorageClassAnalysis",
           "documentation":"<p>If present, it indicates that data related to access patterns will be collected and made available to analyze the tradeoffs between different storage classes.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AnalyticsConfigurationList":{
       "type":"list",
@@ -1115,7 +1140,8 @@
           "shape":"AnalyticsS3BucketDestination",
           "documentation":"<p>A destination signifying output to an S3 bucket.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AnalyticsFilter":{
       "type":"structure",
@@ -1132,7 +1158,8 @@
           "shape":"AnalyticsAndOperator",
           "documentation":"<p>A conjunction (logical AND) of predicates, which is used in evaluating an analytics filter. The operator must have at least two predicates.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AnalyticsId":{"type":"string"},
     "AnalyticsS3BucketDestination":{
@@ -1158,7 +1185,8 @@
           "shape":"Prefix",
           "documentation":"<p>The prefix to use when exporting data. The exported data begins with this prefix.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "AnalyticsS3ExportFileFormat":{
       "type":"string",
@@ -1176,7 +1204,8 @@
           "shape":"CreationDate",
           "documentation":"<p>Date the bucket was created.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "BucketAccelerateStatus":{
       "type":"string",
@@ -1196,6 +1225,7 @@
       "type":"structure",
       "members":{
       },
+      "documentation":"<p/>",
       "exception":true
     },
     "BucketCannedACL":{
@@ -1213,9 +1243,11 @@
       "members":{
         "Rules":{
           "shape":"LifecycleRules",
+          "documentation":"<p/>",
           "locationName":"Rule"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "BucketLocationConstraint":{
       "type":"string",
@@ -1237,7 +1269,8 @@
       "type":"structure",
       "members":{
         "LoggingEnabled":{"shape":"LoggingEnabled"}
-      }
+      },
+      "documentation":"<p/>"
     },
     "BucketLogsPermission":{
       "type":"string",
@@ -1272,9 +1305,11 @@
       "members":{
         "CORSRules":{
           "shape":"CORSRules",
+          "documentation":"<p/>",
           "locationName":"CORSRule"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CORSRule":{
       "type":"structure",
@@ -1307,7 +1342,8 @@
           "shape":"MaxAgeSeconds",
           "documentation":"<p>The time in seconds that your browser is to cache the preflight response for the specified resource.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CORSRules":{
       "type":"list",
@@ -1386,11 +1422,19 @@
         },
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
-        "CloudFunction":{"shape":"CloudFunction"},
-        "InvocationRole":{"shape":"CloudFunctionInvocationRole"}
-      }
+        "CloudFunction":{
+          "shape":"CloudFunction",
+          "documentation":"<p/>"
+        },
+        "InvocationRole":{
+          "shape":"CloudFunctionInvocationRole",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "CloudFunctionInvocationRole":{"type":"string"},
     "Code":{"type":"string"},
@@ -1398,8 +1442,12 @@
     "CommonPrefix":{
       "type":"structure",
       "members":{
-        "Prefix":{"shape":"Prefix"}
-      }
+        "Prefix":{
+          "shape":"Prefix",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "CommonPrefixList":{
       "type":"list",
@@ -1409,9 +1457,18 @@
     "CompleteMultipartUploadOutput":{
       "type":"structure",
       "members":{
-        "Location":{"shape":"Location"},
-        "Bucket":{"shape":"BucketName"},
-        "Key":{"shape":"ObjectKey"},
+        "Location":{
+          "shape":"Location",
+          "documentation":"<p/>"
+        },
+        "Bucket":{
+          "shape":"BucketName",
+          "documentation":"<p/>"
+        },
+        "Key":{
+          "shape":"ObjectKey",
+          "documentation":"<p/>"
+        },
         "Expiration":{
           "shape":"Expiration",
           "documentation":"<p>If the object expiration is configured, this will contain the expiration date (expiry-date) and rule ID (rule-id). The value of rule-id is URL encoded.</p>",
@@ -1457,21 +1514,25 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
         "MultipartUpload":{
           "shape":"CompletedMultipartUpload",
+          "documentation":"<p/>",
           "locationName":"CompleteMultipartUpload",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
         "UploadId":{
           "shape":"MultipartUploadId",
+          "documentation":"<p/>",
           "location":"querystring",
           "locationName":"uploadId"
         },
@@ -1488,9 +1549,11 @@
       "members":{
         "Parts":{
           "shape":"CompletedPartList",
+          "documentation":"<p/>",
           "locationName":"Part"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CompletedPart":{
       "type":"structure",
@@ -1503,7 +1566,8 @@
           "shape":"PartNumber",
           "documentation":"<p>Part number that identifies the part. This is a positive integer between 1 and 10,000.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CompletedPartList":{
       "type":"list",
@@ -1529,7 +1593,8 @@
           "shape":"KeyPrefixEquals",
           "documentation":"<p>The object key name prefix when the redirect is applied. For example, to redirect requests for ExamplePage.html, the key prefix will be ExamplePage.html. To redirect request for all pages with the prefix docs/, the key prefix will be /docs, which identifies all objects in the docs/ folder. Required when the parent element Condition is specified and sibling HttpErrorCodeReturnedEquals is not specified. If both conditions are specified, both must be true for the redirect to be applied.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ConfirmRemoveSelfBucketAccess":{"type":"boolean"},
     "ContentDisposition":{"type":"string"},
@@ -1543,12 +1608,16 @@
       "type":"structure",
       "members":{
       },
+      "documentation":"<p/>",
       "event":true
     },
     "CopyObjectOutput":{
       "type":"structure",
       "members":{
-        "CopyObjectResult":{"shape":"CopyObjectResult"},
+        "CopyObjectResult":{
+          "shape":"CopyObjectResult",
+          "documentation":"<p/>"
+        },
         "Expiration":{
           "shape":"Expiration",
           "documentation":"<p>If the object expiration is configured, the response includes this header.</p>",
@@ -1557,6 +1626,7 @@
         },
         "CopySourceVersionId":{
           "shape":"CopySourceVersionId",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-copy-source-version-id"
         },
@@ -1614,6 +1684,7 @@
         },
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -1709,6 +1780,7 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -1824,9 +1896,16 @@
     "CopyObjectResult":{
       "type":"structure",
       "members":{
-        "ETag":{"shape":"ETag"},
-        "LastModified":{"shape":"LastModified"}
-      }
+        "ETag":{
+          "shape":"ETag",
+          "documentation":"<p/>"
+        },
+        "LastModified":{
+          "shape":"LastModified",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "CopyPartResult":{
       "type":"structure",
@@ -1839,7 +1918,8 @@
           "shape":"LastModified",
           "documentation":"<p>Date and time at which the object was uploaded.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CopySource":{
       "type":"string",
@@ -1862,15 +1942,17 @@
       "members":{
         "LocationConstraint":{
           "shape":"BucketLocationConstraint",
-          "documentation":"<p>Specifies the region where the bucket will be created. If you don't specify a region, the bucket will be created in US Standard.</p>"
+          "documentation":"<p>Specifies the region where the bucket will be created. If you don't specify a region, the bucket is created in US East (N. Virginia) Region (us-east-1).</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "CreateBucketOutput":{
       "type":"structure",
       "members":{
         "Location":{
           "shape":"Location",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Location"
         }
@@ -1888,6 +1970,7 @@
         },
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -1899,6 +1982,7 @@
         },
         "CreateBucketConfiguration":{
           "shape":"CreateBucketConfiguration",
+          "documentation":"<p/>",
           "locationName":"CreateBucketConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
@@ -2015,6 +2099,7 @@
         },
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -2080,6 +2165,7 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -2193,13 +2279,15 @@
       "members":{
         "Objects":{
           "shape":"ObjectIdentifierList",
+          "documentation":"<p/>",
           "locationName":"Object"
         },
         "Quiet":{
           "shape":"Quiet",
           "documentation":"<p>Element to enable quiet mode for the request. When you add this element, you must set its value to true.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "DeleteBucketAnalyticsConfigurationRequest":{
       "type":"structure",
@@ -2228,6 +2316,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2272,6 +2361,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2304,6 +2394,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2327,6 +2418,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2338,6 +2430,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2349,6 +2442,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2358,7 +2452,10 @@
     "DeleteMarkerEntry":{
       "type":"structure",
       "members":{
-        "Owner":{"shape":"Owner"},
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        },
         "Key":{
           "shape":"ObjectKey",
           "documentation":"<p>The object key.</p>"
@@ -2375,7 +2472,8 @@
           "shape":"LastModified",
           "documentation":"<p>Date and time the object was last modified.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "DeleteMarkerReplication":{
       "type":"structure",
@@ -2431,11 +2529,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -2484,11 +2584,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -2503,7 +2605,10 @@
     "DeleteObjectsOutput":{
       "type":"structure",
       "members":{
-        "Deleted":{"shape":"DeletedObjects"},
+        "Deleted":{
+          "shape":"DeletedObjects",
+          "documentation":"<p/>"
+        },
         "RequestCharged":{
           "shape":"RequestCharged",
           "location":"header",
@@ -2511,6 +2616,7 @@
         },
         "Errors":{
           "shape":"Errors",
+          "documentation":"<p/>",
           "locationName":"Error"
         }
       }
@@ -2524,6 +2630,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -2540,6 +2647,7 @@
         },
         "Delete":{
           "shape":"Delete",
+          "documentation":"<p/>",
           "locationName":"Delete",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
@@ -2578,11 +2686,24 @@
     "DeletedObject":{
       "type":"structure",
       "members":{
-        "Key":{"shape":"ObjectKey"},
-        "VersionId":{"shape":"ObjectVersionId"},
-        "DeleteMarker":{"shape":"DeleteMarker"},
-        "DeleteMarkerVersionId":{"shape":"DeleteMarkerVersionId"}
-      }
+        "Key":{
+          "shape":"ObjectKey",
+          "documentation":"<p/>"
+        },
+        "VersionId":{
+          "shape":"ObjectVersionId",
+          "documentation":"<p/>"
+        },
+        "DeleteMarker":{
+          "shape":"DeleteMarker",
+          "documentation":"<p/>"
+        },
+        "DeleteMarkerVersionId":{
+          "shape":"DeleteMarkerVersionId",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "DeletedObjects":{
       "type":"list",
@@ -2660,16 +2781,30 @@
       "type":"structure",
       "members":{
       },
+      "documentation":"<p/>",
       "event":true
     },
     "Error":{
       "type":"structure",
       "members":{
-        "Key":{"shape":"ObjectKey"},
-        "VersionId":{"shape":"ObjectVersionId"},
-        "Code":{"shape":"Code"},
-        "Message":{"shape":"Message"}
-      }
+        "Key":{
+          "shape":"ObjectKey",
+          "documentation":"<p/>"
+        },
+        "VersionId":{
+          "shape":"ObjectVersionId",
+          "documentation":"<p/>"
+        },
+        "Code":{
+          "shape":"Code",
+          "documentation":"<p/>"
+        },
+        "Message":{
+          "shape":"Message",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "ErrorDocument":{
       "type":"structure",
@@ -2679,7 +2814,8 @@
           "shape":"ObjectKey",
           "documentation":"<p>The object key name to use when a 4XX class error occurs.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "Errors":{
       "type":"list",
@@ -2744,9 +2880,12 @@
       "members":{
         "Name":{
           "shape":"FilterRuleName",
-          "documentation":"<p>The object key name prefix or suffix identifying one or more objects to which the filtering rule applies. The maximum prefix length is 1,024 characters. Overlapping prefixes and suffixes are not supported. For more information, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html\">Configuring Event Notifications</a> in the <i>Amazon Simple Storage Service Developer Guide</i>.</p>"
+          "documentation":"<p>The object key name prefix or suffix identifying one or more objects to which the filtering rule applies. The maximum prefix length is 1,024 characters. Overlapping prefixes and suffixes are not supported. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html\">Configuring Event Notifications</a> in the <i>Amazon Simple Storage Service Developer Guide</i>.</p>"
         },
-        "Value":{"shape":"FilterRuleValue"}
+        "Value":{
+          "shape":"FilterRuleValue",
+          "documentation":"<p/>"
+        }
       },
       "documentation":"<p>A container for a key value pair that defines the criteria for the filter rule.</p>"
     },
@@ -2788,7 +2927,10 @@
     "GetBucketAclOutput":{
       "type":"structure",
       "members":{
-        "Owner":{"shape":"Owner"},
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        },
         "Grants":{
           "shape":"Grants",
           "documentation":"<p>A list of grants.</p>",
@@ -2802,6 +2944,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2843,6 +2986,7 @@
       "members":{
         "CORSRules":{
           "shape":"CORSRules",
+          "documentation":"<p/>",
           "locationName":"CORSRule"
         }
       }
@@ -2853,6 +2997,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2913,6 +3058,7 @@
       "members":{
         "Rules":{
           "shape":"LifecycleRules",
+          "documentation":"<p/>",
           "locationName":"Rule"
         }
       }
@@ -2923,6 +3069,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2933,6 +3080,7 @@
       "members":{
         "Rules":{
           "shape":"Rules",
+          "documentation":"<p/>",
           "locationName":"Rule"
         }
       }
@@ -2943,6 +3091,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2951,7 +3100,10 @@
     "GetBucketLocationOutput":{
       "type":"structure",
       "members":{
-        "LocationConstraint":{"shape":"BucketLocationConstraint"}
+        "LocationConstraint":{
+          "shape":"BucketLocationConstraint",
+          "documentation":"<p/>"
+        }
       }
     },
     "GetBucketLocationRequest":{
@@ -2960,6 +3112,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -2977,6 +3130,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3041,6 +3195,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3081,6 +3236,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3101,6 +3257,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3110,7 +3267,10 @@
       "type":"structure",
       "required":["TagSet"],
       "members":{
-        "TagSet":{"shape":"TagSet"}
+        "TagSet":{
+          "shape":"TagSet",
+          "documentation":"<p/>"
+        }
       }
     },
     "GetBucketTaggingRequest":{
@@ -3119,6 +3279,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3144,6 +3305,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3152,10 +3314,22 @@
     "GetBucketWebsiteOutput":{
       "type":"structure",
       "members":{
-        "RedirectAllRequestsTo":{"shape":"RedirectAllRequestsTo"},
-        "IndexDocument":{"shape":"IndexDocument"},
-        "ErrorDocument":{"shape":"ErrorDocument"},
-        "RoutingRules":{"shape":"RoutingRules"}
+        "RedirectAllRequestsTo":{
+          "shape":"RedirectAllRequestsTo",
+          "documentation":"<p/>"
+        },
+        "IndexDocument":{
+          "shape":"IndexDocument",
+          "documentation":"<p/>"
+        },
+        "ErrorDocument":{
+          "shape":"ErrorDocument",
+          "documentation":"<p/>"
+        },
+        "RoutingRules":{
+          "shape":"RoutingRules",
+          "documentation":"<p/>"
+        }
       }
     },
     "GetBucketWebsiteRequest":{
@@ -3164,6 +3338,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3172,7 +3347,10 @@
     "GetObjectAclOutput":{
       "type":"structure",
       "members":{
-        "Owner":{"shape":"Owner"},
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        },
         "Grants":{
           "shape":"Grants",
           "documentation":"<p>A list of grants.</p>",
@@ -3194,11 +3372,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -3295,6 +3475,7 @@
         },
         "AcceptRanges":{
           "shape":"AcceptRanges",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"accept-ranges"
         },
@@ -3420,6 +3601,7 @@
         },
         "StorageClass":{
           "shape":"StorageClass",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-storage-class"
         },
@@ -3430,6 +3612,7 @@
         },
         "ReplicationStatus":{
           "shape":"ReplicationStatus",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-replication-status"
         },
@@ -3475,6 +3658,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -3504,6 +3688,7 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -3634,10 +3819,14 @@
       "members":{
         "VersionId":{
           "shape":"ObjectVersionId",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-version-id"
         },
-        "TagSet":{"shape":"TagSet"}
+        "TagSet":{
+          "shape":"TagSet",
+          "documentation":"<p/>"
+        }
       }
     },
     "GetObjectTaggingRequest":{
@@ -3649,16 +3838,19 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
         "VersionId":{
           "shape":"ObjectVersionId",
+          "documentation":"<p/>",
           "location":"querystring",
           "locationName":"versionId"
         }
@@ -3669,6 +3861,7 @@
       "members":{
         "Body":{
           "shape":"Body",
+          "documentation":"<p/>",
           "streaming":true
         },
         "RequestCharged":{
@@ -3688,11 +3881,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -3733,17 +3928,22 @@
           "shape":"Tier",
           "documentation":"<p>Glacier retrieval tier at which the restore will be processed.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "Grant":{
       "type":"structure",
       "members":{
-        "Grantee":{"shape":"Grantee"},
+        "Grantee":{
+          "shape":"Grantee",
+          "documentation":"<p/>"
+        },
         "Permission":{
           "shape":"Permission",
           "documentation":"<p>Specifies the permission given to the grantee.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "GrantFullControl":{"type":"string"},
     "GrantRead":{"type":"string"},
@@ -3777,6 +3977,7 @@
           "documentation":"<p>URI of the grantee group.</p>"
         }
       },
+      "documentation":"<p/>",
       "xmlNamespace":{
         "prefix":"xsi",
         "uri":"http://www.w3.org/2001/XMLSchema-instance"
@@ -3795,6 +3996,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         }
@@ -3811,6 +4013,7 @@
         },
         "AcceptRanges":{
           "shape":"AcceptRanges",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"accept-ranges"
         },
@@ -3930,6 +4133,7 @@
         },
         "StorageClass":{
           "shape":"StorageClass",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-storage-class"
         },
@@ -3940,6 +4144,7 @@
         },
         "ReplicationStatus":{
           "shape":"ReplicationStatus",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-replication-status"
         },
@@ -3978,6 +4183,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -4007,6 +4213,7 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -4069,7 +4276,8 @@
           "shape":"Suffix",
           "documentation":"<p>A suffix that is appended to a request that is for a directory on the website endpoint (e.g. if the suffix is index.html and you make a request to samplebucket/images/ the data that is returned will be for the object with the key name images/index.html) The suffix must not be empty and must not include a slash character.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "Initiated":{"type":"timestamp"},
     "Initiator":{
@@ -4083,7 +4291,8 @@
           "shape":"DisplayName",
           "documentation":"<p>Name of the Principal.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "InputSerialization":{
       "type":"structure",
@@ -4145,7 +4354,8 @@
           "shape":"InventorySchedule",
           "documentation":"<p>Specifies the schedule for generating inventory results.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "InventoryConfigurationList":{
       "type":"list",
@@ -4160,7 +4370,8 @@
           "shape":"InventoryS3BucketDestination",
           "documentation":"<p>Contains the bucket name, file format, bucket owner (optional), and prefix (optional) where inventory results are published.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "InventoryEncryption":{
       "type":"structure",
@@ -4186,7 +4397,8 @@
           "shape":"Prefix",
           "documentation":"<p>The prefix that an object must have to be included in the inventory results.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "InventoryFormat":{
       "type":"string",
@@ -4260,7 +4472,8 @@
           "shape":"InventoryEncryption",
           "documentation":"<p>Contains the type of server-side encryption used to encrypt the inventory results.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "InventorySchedule":{
       "type":"structure",
@@ -4270,7 +4483,8 @@
           "shape":"InventoryFrequency",
           "documentation":"<p>Specifies how frequently inventory results are produced.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "IsEnabled":{"type":"boolean"},
     "IsLatest":{"type":"boolean"},
@@ -4283,7 +4497,8 @@
           "shape":"JSONType",
           "documentation":"<p>The type of JSON. Valid values: Document, Lines.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "JSONOutput":{
       "type":"structure",
@@ -4292,7 +4507,8 @@
           "shape":"RecordDelimiter",
           "documentation":"<p>The value used to separate individual records in the output.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "JSONType":{
       "type":"string",
@@ -4321,6 +4537,7 @@
         },
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
         "Filter":{"shape":"NotificationConfigurationFilter"}
@@ -4339,9 +4556,11 @@
       "members":{
         "Rules":{
           "shape":"Rules",
+          "documentation":"<p/>",
           "locationName":"Rule"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "LifecycleExpiration":{
       "type":"structure",
@@ -4358,20 +4577,24 @@
           "shape":"ExpiredObjectDeleteMarker",
           "documentation":"<p>Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to true, the delete marker will be expired; if set to false the policy takes no action. This cannot be specified with Days or Date in a Lifecycle Expiration Policy.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "LifecycleRule":{
       "type":"structure",
       "required":["Status"],
       "members":{
-        "Expiration":{"shape":"LifecycleExpiration"},
+        "Expiration":{
+          "shape":"LifecycleExpiration",
+          "documentation":"<p/>"
+        },
         "ID":{
           "shape":"ID",
           "documentation":"<p>Unique identifier for the rule. The value cannot be longer than 255 characters.</p>"
         },
         "Prefix":{
           "shape":"Prefix",
-          "documentation":"<p>Prefix identifying one or more objects to which the rule applies. This is deprecated; use Filter instead.</p>",
+          "documentation":"<p>Prefix identifying one or more objects to which the rule applies. This is No longer used; use Filter instead.</p>",
           "deprecated":true
         },
         "Filter":{"shape":"LifecycleRuleFilter"},
@@ -4381,20 +4604,26 @@
         },
         "Transitions":{
           "shape":"TransitionList",
+          "documentation":"<p/>",
           "locationName":"Transition"
         },
         "NoncurrentVersionTransitions":{
           "shape":"NoncurrentVersionTransitionList",
+          "documentation":"<p/>",
           "locationName":"NoncurrentVersionTransition"
         },
         "NoncurrentVersionExpiration":{"shape":"NoncurrentVersionExpiration"},
         "AbortIncompleteMultipartUpload":{"shape":"AbortIncompleteMultipartUpload"}
-      }
+      },
+      "documentation":"<p/>"
     },
     "LifecycleRuleAndOperator":{
       "type":"structure",
       "members":{
-        "Prefix":{"shape":"Prefix"},
+        "Prefix":{
+          "shape":"Prefix",
+          "documentation":"<p/>"
+        },
         "Tags":{
           "shape":"TagSet",
           "documentation":"<p>All of these tags must exist in the object's tag set in order for the rule to apply.</p>",
@@ -4547,8 +4776,14 @@
     "ListBucketsOutput":{
       "type":"structure",
       "members":{
-        "Buckets":{"shape":"Buckets"},
-        "Owner":{"shape":"Owner"}
+        "Buckets":{
+          "shape":"Buckets",
+          "documentation":"<p/>"
+        },
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        }
       }
     },
     "ListMultipartUploadsOutput":{
@@ -4574,7 +4809,10 @@
           "shape":"Prefix",
           "documentation":"<p>When a prefix is provided in the request, this field contains the specified prefix. The result contains only keys starting with the specified prefix.</p>"
         },
-        "Delimiter":{"shape":"Delimiter"},
+        "Delimiter":{
+          "shape":"Delimiter",
+          "documentation":"<p/>"
+        },
         "NextUploadIdMarker":{
           "shape":"NextUploadIdMarker",
           "documentation":"<p>When a list is truncated, this element specifies the value that should be used for the upload-id-marker request parameter in a subsequent request.</p>"
@@ -4589,9 +4827,13 @@
         },
         "Uploads":{
           "shape":"MultipartUploadList",
+          "documentation":"<p/>",
           "locationName":"Upload"
         },
-        "CommonPrefixes":{"shape":"CommonPrefixList"},
+        "CommonPrefixes":{
+          "shape":"CommonPrefixList",
+          "documentation":"<p/>"
+        },
         "EncodingType":{
           "shape":"EncodingType",
           "documentation":"<p>Encoding type used by Amazon S3 to encode object keys in the response.</p>"
@@ -4604,6 +4846,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -4655,7 +4898,10 @@
           "shape":"KeyMarker",
           "documentation":"<p>Marks the last Key returned in a truncated response.</p>"
         },
-        "VersionIdMarker":{"shape":"VersionIdMarker"},
+        "VersionIdMarker":{
+          "shape":"VersionIdMarker",
+          "documentation":"<p/>"
+        },
         "NextKeyMarker":{
           "shape":"NextKeyMarker",
           "documentation":"<p>Use this value for the key marker request parameter in a subsequent request.</p>"
@@ -4666,17 +4912,34 @@
         },
         "Versions":{
           "shape":"ObjectVersionList",
+          "documentation":"<p/>",
           "locationName":"Version"
         },
         "DeleteMarkers":{
           "shape":"DeleteMarkers",
+          "documentation":"<p/>",
           "locationName":"DeleteMarker"
         },
-        "Name":{"shape":"BucketName"},
-        "Prefix":{"shape":"Prefix"},
-        "Delimiter":{"shape":"Delimiter"},
-        "MaxKeys":{"shape":"MaxKeys"},
-        "CommonPrefixes":{"shape":"CommonPrefixList"},
+        "Name":{
+          "shape":"BucketName",
+          "documentation":"<p/>"
+        },
+        "Prefix":{
+          "shape":"Prefix",
+          "documentation":"<p/>"
+        },
+        "Delimiter":{
+          "shape":"Delimiter",
+          "documentation":"<p/>"
+        },
+        "MaxKeys":{
+          "shape":"MaxKeys",
+          "documentation":"<p/>"
+        },
+        "CommonPrefixes":{
+          "shape":"CommonPrefixList",
+          "documentation":"<p/>"
+        },
         "EncodingType":{
           "shape":"EncodingType",
           "documentation":"<p>Encoding type used by Amazon S3 to encode object keys in the response.</p>"
@@ -4689,6 +4952,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -4736,17 +5000,38 @@
           "shape":"IsTruncated",
           "documentation":"<p>A flag that indicates whether or not Amazon S3 returned all of the results that satisfied the search criteria.</p>"
         },
-        "Marker":{"shape":"Marker"},
+        "Marker":{
+          "shape":"Marker",
+          "documentation":"<p/>"
+        },
         "NextMarker":{
           "shape":"NextMarker",
           "documentation":"<p>When response is truncated (the IsTruncated element value in the response is true), you can use the key name in this field as marker in the subsequent request to get next set of objects. Amazon S3 lists objects in alphabetical order Note: This element is returned only if you have delimiter request parameter specified. If response does not include the NextMaker and it is truncated, you can use the value of the last Key in the response as the marker in the subsequent request to get the next set of object keys.</p>"
         },
-        "Contents":{"shape":"ObjectList"},
-        "Name":{"shape":"BucketName"},
-        "Prefix":{"shape":"Prefix"},
-        "Delimiter":{"shape":"Delimiter"},
-        "MaxKeys":{"shape":"MaxKeys"},
-        "CommonPrefixes":{"shape":"CommonPrefixList"},
+        "Contents":{
+          "shape":"ObjectList",
+          "documentation":"<p/>"
+        },
+        "Name":{
+          "shape":"BucketName",
+          "documentation":"<p/>"
+        },
+        "Prefix":{
+          "shape":"Prefix",
+          "documentation":"<p/>"
+        },
+        "Delimiter":{
+          "shape":"Delimiter",
+          "documentation":"<p/>"
+        },
+        "MaxKeys":{
+          "shape":"MaxKeys",
+          "documentation":"<p/>"
+        },
+        "CommonPrefixes":{
+          "shape":"CommonPrefixList",
+          "documentation":"<p/>"
+        },
         "EncodingType":{
           "shape":"EncodingType",
           "documentation":"<p>Encoding type used by Amazon S3 to encode object keys in the response.</p>"
@@ -4759,6 +5044,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -4957,13 +5243,17 @@
         },
         "Parts":{
           "shape":"Parts",
+          "documentation":"<p/>",
           "locationName":"Part"
         },
         "Initiator":{
           "shape":"Initiator",
           "documentation":"<p>Identifies who initiated the multipart upload.</p>"
         },
-        "Owner":{"shape":"Owner"},
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        },
         "StorageClass":{
           "shape":"StorageClass",
           "documentation":"<p>The class of storage used to store the object.</p>"
@@ -4985,11 +5275,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -5031,7 +5323,10 @@
           "shape":"TargetBucket",
           "documentation":"<p>Specifies the bucket where you want Amazon S3 to store server access logs. You can have your logs delivered to any bucket that you own, including the same bucket that is being logged. You can also configure multiple buckets to deliver their logs to the same target bucket. In this case you should choose a different TargetPrefix for each source bucket so that the delivered log files can be distinguished by key.</p>"
         },
-        "TargetGrants":{"shape":"TargetGrants"},
+        "TargetGrants":{
+          "shape":"TargetGrants",
+          "documentation":"<p/>"
+        },
         "TargetPrefix":{
           "shape":"TargetPrefix",
           "documentation":"<p>This element lets you specify a prefix for the keys that the log files will be stored under.</p>"
@@ -5075,8 +5370,14 @@
     "MetadataEntry":{
       "type":"structure",
       "members":{
-        "Name":{"shape":"MetadataKey"},
-        "Value":{"shape":"MetadataValue"}
+        "Name":{
+          "shape":"MetadataKey",
+          "documentation":"<p/>"
+        },
+        "Value":{
+          "shape":"MetadataValue",
+          "documentation":"<p/>"
+        }
       },
       "documentation":"<p>A metadata key-value pair to store with an object.</p>"
     },
@@ -5095,7 +5396,8 @@
           "flattened":true,
           "locationName":"Tag"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "MetricsConfiguration":{
       "type":"structure",
@@ -5109,7 +5411,8 @@
           "shape":"MetricsFilter",
           "documentation":"<p>Specifies a metrics configuration filter. The metrics configuration will only include objects that meet the filter's criteria. A filter must be a prefix, a tag, or a conjunction (MetricsAndOperator).</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "MetricsConfigurationList":{
       "type":"list",
@@ -5131,7 +5434,8 @@
           "shape":"MetricsAndOperator",
           "documentation":"<p>A conjunction (logical AND) of predicates, which is used in evaluating a metrics filter. The operator must have at least two predicates, and an object must match all of the predicates in order for the filter to apply.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "MetricsId":{"type":"string"},
     "MissingMeta":{"type":"integer"},
@@ -5154,12 +5458,16 @@
           "shape":"StorageClass",
           "documentation":"<p>The class of storage used to store the object.</p>"
         },
-        "Owner":{"shape":"Owner"},
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        },
         "Initiator":{
           "shape":"Initiator",
           "documentation":"<p>Identifies who initiated the multipart upload.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "MultipartUploadId":{"type":"string"},
     "MultipartUploadList":{
@@ -5199,7 +5507,7 @@
       "members":{
         "NoncurrentDays":{
           "shape":"Days",
-          "documentation":"<p>Specifies the number of days an object is noncurrent before Amazon S3 can perform the associated action. For information about the noncurrent days calculations, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html\">How Amazon S3 Calculates When an Object Became Noncurrent</a> in the Amazon Simple Storage Service Developer Guide.</p>"
+          "documentation":"<p>Specifies the number of days an object is noncurrent before Amazon S3 can perform the associated action. For information about the noncurrent days calculations, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html\">How Amazon S3 Calculates When an Object Became Noncurrent</a> in the Amazon Simple Storage Service Developer Guide.</p>"
         }
       },
       "documentation":"<p>Specifies when noncurrent object versions expire. Upon expiration, Amazon S3 permanently deletes the noncurrent object versions. You set this lifecycle configuration action on a bucket that has versioning enabled (or suspended) to request that Amazon S3 delete noncurrent object versions at a specific period in the object's lifetime.</p>"
@@ -5209,14 +5517,14 @@
       "members":{
         "NoncurrentDays":{
           "shape":"Days",
-          "documentation":"<p>Specifies the number of days an object is noncurrent before Amazon S3 can perform the associated action. For information about the noncurrent days calculations, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html\">How Amazon S3 Calculates When an Object Became Noncurrent</a> in the Amazon Simple Storage Service Developer Guide.</p>"
+          "documentation":"<p>Specifies the number of days an object is noncurrent before Amazon S3 can perform the associated action. For information about the noncurrent days calculations, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html\">How Amazon S3 Calculates When an Object Became Noncurrent</a> in the Amazon Simple Storage Service Developer Guide.</p>"
         },
         "StorageClass":{
           "shape":"TransitionStorageClass",
           "documentation":"<p>The class of storage used to store the object.</p>"
         }
       },
-      "documentation":"<p>Container for the transition rule that describes when noncurrent objects transition to the STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING or GLACIER storage class. If your bucket is versioning-enabled (or versioning is suspended), you can set this action to request that Amazon S3 transition noncurrent object versions to the STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING or GLACIER storage class at a specific period in the object's lifetime.</p>"
+      "documentation":"<p>Container for the transition rule that describes when noncurrent objects transition to the STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER or DEEP_ARCHIVE storage class. If your bucket is versioning-enabled (or versioning is suspended), you can set this action to request that Amazon S3 transition noncurrent object versions to the STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER or DEEP_ARCHIVE storage class at a specific period in the object's lifetime.</p>"
     },
     "NoncurrentVersionTransitionList":{
       "type":"list",
@@ -5228,14 +5536,17 @@
       "members":{
         "TopicConfigurations":{
           "shape":"TopicConfigurationList",
+          "documentation":"<p/>",
           "locationName":"TopicConfiguration"
         },
         "QueueConfigurations":{
           "shape":"QueueConfigurationList",
+          "documentation":"<p/>",
           "locationName":"QueueConfiguration"
         },
         "LambdaFunctionConfigurations":{
           "shape":"LambdaFunctionConfigurationList",
+          "documentation":"<p/>",
           "locationName":"CloudFunctionConfiguration"
         }
       },
@@ -5244,9 +5555,18 @@
     "NotificationConfigurationDeprecated":{
       "type":"structure",
       "members":{
-        "TopicConfiguration":{"shape":"TopicConfigurationDeprecated"},
-        "QueueConfiguration":{"shape":"QueueConfigurationDeprecated"},
-        "CloudFunctionConfiguration":{"shape":"CloudFunctionConfiguration"}
+        "TopicConfiguration":{
+          "shape":"TopicConfigurationDeprecated",
+          "documentation":"<p/>"
+        },
+        "QueueConfiguration":{
+          "shape":"QueueConfigurationDeprecated",
+          "documentation":"<p/>"
+        },
+        "CloudFunctionConfiguration":{
+          "shape":"CloudFunctionConfiguration",
+          "documentation":"<p/>"
+        }
       }
     },
     "NotificationConfigurationFilter":{
@@ -5257,7 +5577,7 @@
           "locationName":"S3Key"
         }
       },
-      "documentation":"<p>A container for object key name filtering rules. For information about key name filtering, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html\">Configuring Event Notifications</a> in the <i>Amazon Simple Storage Service Developer Guide</i>.</p>"
+      "documentation":"<p>A container for object key name filtering rules. For information about key name filtering, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html\">Configuring Event Notifications</a> in the <i>Amazon Simple Storage Service Developer Guide</i>.</p>"
     },
     "NotificationId":{
       "type":"string",
@@ -5266,16 +5586,32 @@
     "Object":{
       "type":"structure",
       "members":{
-        "Key":{"shape":"ObjectKey"},
-        "LastModified":{"shape":"LastModified"},
-        "ETag":{"shape":"ETag"},
-        "Size":{"shape":"Size"},
+        "Key":{
+          "shape":"ObjectKey",
+          "documentation":"<p/>"
+        },
+        "LastModified":{
+          "shape":"LastModified",
+          "documentation":"<p/>"
+        },
+        "ETag":{
+          "shape":"ETag",
+          "documentation":"<p/>"
+        },
+        "Size":{
+          "shape":"Size",
+          "documentation":"<p/>"
+        },
         "StorageClass":{
           "shape":"ObjectStorageClass",
           "documentation":"<p>The class of storage used to store the object.</p>"
         },
-        "Owner":{"shape":"Owner"}
-      }
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "ObjectAlreadyInActiveTierError":{
       "type":"structure",
@@ -5308,7 +5644,8 @@
           "shape":"ObjectVersionId",
           "documentation":"<p>VersionId for the specific version of the object to delete.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ObjectIdentifierList":{
       "type":"list",
@@ -5418,13 +5755,17 @@
         "GLACIER",
         "STANDARD_IA",
         "ONEZONE_IA",
-        "INTELLIGENT_TIERING"
+        "INTELLIGENT_TIERING",
+        "DEEP_ARCHIVE"
       ]
     },
     "ObjectVersion":{
       "type":"structure",
       "members":{
-        "ETag":{"shape":"ETag"},
+        "ETag":{
+          "shape":"ETag",
+          "documentation":"<p/>"
+        },
         "Size":{
           "shape":"Size",
           "documentation":"<p>Size in bytes of the object.</p>"
@@ -5449,8 +5790,12 @@
           "shape":"LastModified",
           "documentation":"<p>Date and time the object was last modified.</p>"
         },
-        "Owner":{"shape":"Owner"}
-      }
+        "Owner":{
+          "shape":"Owner",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "ObjectVersionId":{"type":"string"},
     "ObjectVersionList":{
@@ -5489,9 +5834,16 @@
     "Owner":{
       "type":"structure",
       "members":{
-        "DisplayName":{"shape":"DisplayName"},
-        "ID":{"shape":"ID"}
-      }
+        "DisplayName":{
+          "shape":"DisplayName",
+          "documentation":"<p/>"
+        },
+        "ID":{
+          "shape":"ID",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "OwnerOverride":{
       "type":"string",
@@ -5500,7 +5852,8 @@
     "ParquetInput":{
       "type":"structure",
       "members":{
-      }
+      },
+      "documentation":"<p/>"
     },
     "Part":{
       "type":"structure",
@@ -5521,7 +5874,8 @@
           "shape":"Size",
           "documentation":"<p>Size in bytes of the uploaded part data.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "PartNumber":{"type":"integer"},
     "PartNumberMarker":{"type":"integer"},
@@ -5577,7 +5931,8 @@
           "shape":"BytesReturned",
           "documentation":"<p>The current number of bytes of records payload data returned.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ProgressEvent":{
       "type":"structure",
@@ -5588,6 +5943,7 @@
           "eventpayload":true
         }
       },
+      "documentation":"<p/>",
       "event":true
     },
     "Protocol":{
@@ -5620,7 +5976,8 @@
           "documentation":"<p>Specifies whether Amazon S3 should restrict public bucket policies for this bucket. Setting this element to <code>TRUE</code> restricts access to this bucket to only AWS services and authorized users within this account if the bucket has a public policy.</p> <p>Enabling this setting doesn't affect previously stored bucket policies, except that public and cross-account access within any public bucket policy, including non-public delegation to specific accounts, is blocked.</p>",
           "locationName":"RestrictPublicBuckets"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "PutBucketAccelerateConfigurationRequest":{
       "type":"structure",
@@ -5662,16 +6019,19 @@
         },
         "AccessControlPolicy":{
           "shape":"AccessControlPolicy",
+          "documentation":"<p/>",
           "locationName":"AccessControlPolicy",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -5758,6 +6118,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -5769,11 +6130,13 @@
         },
         "CORSConfiguration":{
           "shape":"CORSConfiguration",
+          "documentation":"<p/>",
           "locationName":"CORSConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         }
@@ -5795,7 +6158,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
-          "documentation":"<p>The base64-encoded 128-bit MD5 digest of the server-side encryption configuration.</p>",
+          "documentation":"<p>The base64-encoded 128-bit MD5 digest of the server-side encryption configuration. This parameter is auto-populated when using the command from the CLI</p>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -5854,11 +6217,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "LifecycleConfiguration":{
           "shape":"BucketLifecycleConfiguration",
+          "documentation":"<p/>",
           "locationName":"LifecycleConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -5871,11 +6236,13 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -5887,6 +6254,7 @@
         },
         "LifecycleConfiguration":{
           "shape":"LifecycleConfiguration",
+          "documentation":"<p/>",
           "locationName":"LifecycleConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -5902,6 +6270,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -5913,11 +6282,13 @@
         },
         "BucketLoggingStatus":{
           "shape":"BucketLoggingStatus",
+          "documentation":"<p/>",
           "locationName":"BucketLoggingStatus",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         }
@@ -5968,6 +6339,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -5988,6 +6360,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -5999,11 +6372,13 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
         "NotificationConfiguration":{
           "shape":"NotificationConfigurationDeprecated",
+          "documentation":"<p/>",
           "locationName":"NotificationConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6019,6 +6394,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6030,6 +6406,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -6055,6 +6432,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6066,6 +6444,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -6086,6 +6465,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6097,11 +6477,13 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
         "RequestPaymentConfiguration":{
           "shape":"RequestPaymentConfiguration",
+          "documentation":"<p/>",
           "locationName":"RequestPaymentConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6117,6 +6499,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6128,11 +6511,13 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
         "Tagging":{
           "shape":"Tagging",
+          "documentation":"<p/>",
           "locationName":"Tagging",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6148,6 +6533,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6159,6 +6545,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -6170,6 +6557,7 @@
         },
         "VersioningConfiguration":{
           "shape":"VersioningConfiguration",
+          "documentation":"<p/>",
           "locationName":"VersioningConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6185,6 +6573,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6196,11 +6585,13 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
         "WebsiteConfiguration":{
           "shape":"WebsiteConfiguration",
+          "documentation":"<p/>",
           "locationName":"WebsiteConfiguration",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6232,11 +6623,13 @@
         },
         "AccessControlPolicy":{
           "shape":"AccessControlPolicy",
+          "documentation":"<p/>",
           "locationName":"AccessControlPolicy",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         },
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -6248,6 +6641,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -6283,6 +6677,7 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -6388,6 +6783,7 @@
         },
         "Token":{
           "shape":"ObjectLockToken",
+          "documentation":"<p>A token to allow Object Lock to be enabled for an existing bucket.</p>",
           "location":"header",
           "locationName":"x-amz-bucket-object-lock-token"
         },
@@ -6508,7 +6904,7 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
-          "documentation":"<p>The base64-encoded 128-bit MD5 digest of the part data.</p>",
+          "documentation":"<p>The base64-encoded 128-bit MD5 digest of the part data. This parameter is auto-populated when using the command from the CLI</p>",
           "location":"header",
           "locationName":"Content-MD5"
         },
@@ -6700,6 +7096,7 @@
       "members":{
         "VersionId":{
           "shape":"ObjectVersionId",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"x-amz-version-id"
         }
@@ -6715,16 +7112,19 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
         "VersionId":{
           "shape":"ObjectVersionId",
+          "documentation":"<p/>",
           "location":"querystring",
           "locationName":"versionId"
         },
@@ -6736,11 +7136,13 @@
         },
         "ContentMD5":{
           "shape":"ContentMD5",
+          "documentation":"<p/>",
           "location":"header",
           "locationName":"Content-MD5"
         },
         "Tagging":{
           "shape":"Tagging",
+          "documentation":"<p/>",
           "locationName":"Tagging",
           "xmlNamespace":{"uri":"http://s3.amazonaws.com/doc/2006-03-01/"}
         }
@@ -6791,6 +7193,7 @@
         },
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
         "Filter":{"shape":"NotificationConfigurationFilter"}
@@ -6807,10 +7210,15 @@
         },
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
-        "Queue":{"shape":"QueueArn"}
-      }
+        "Queue":{
+          "shape":"QueueArn",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "QueueConfigurationList":{
       "type":"list",
@@ -6838,6 +7246,7 @@
           "eventpayload":true
         }
       },
+      "documentation":"<p/>",
       "event":true
     },
     "Redirect":{
@@ -6863,7 +7272,8 @@
           "shape":"ReplaceKeyWith",
           "documentation":"<p>The specific object key to use in the redirect request. For example, redirect request to error.html. Not required if one of the sibling is present. Can be present only if ReplaceKeyPrefixWith is not provided.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "RedirectAllRequestsTo":{
       "type":"structure",
@@ -6877,7 +7287,8 @@
           "shape":"Protocol",
           "documentation":"<p>Protocol to use (http, https) when redirecting requests. The default is the protocol that is used in the original request.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ReplaceKeyPrefixWith":{"type":"string"},
     "ReplaceKeyWith":{"type":"string"},
@@ -6941,13 +7352,18 @@
     "ReplicationRuleAndOperator":{
       "type":"structure",
       "members":{
-        "Prefix":{"shape":"Prefix"},
+        "Prefix":{
+          "shape":"Prefix",
+          "documentation":"<p/>"
+        },
         "Tags":{
           "shape":"TagSet",
+          "documentation":"<p/>",
           "flattened":true,
           "locationName":"Tag"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ReplicationRuleFilter":{
       "type":"structure",
@@ -7006,7 +7422,8 @@
           "shape":"Payer",
           "documentation":"<p>Specifies who pays for the download and request fees.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "RequestProgress":{
       "type":"structure",
@@ -7015,7 +7432,8 @@
           "shape":"EnableRequestProgress",
           "documentation":"<p>Specifies whether periodic QueryProgress frames should be sent. Valid values: TRUE, FALSE. Default value: FALSE.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "ResponseCacheControl":{"type":"string"},
     "ResponseContentDisposition":{"type":"string"},
@@ -7049,6 +7467,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -7059,11 +7478,13 @@
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
         "VersionId":{
           "shape":"ObjectVersionId",
+          "documentation":"<p/>",
           "location":"querystring",
           "locationName":"versionId"
         },
@@ -7132,7 +7553,8 @@
           "shape":"Redirect",
           "documentation":"<p>Container for redirect information. You can redirect requests to another host, to another page, or with another protocol. In the event of an error, you can specify a different error code to return.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "RoutingRules":{
       "type":"list",
@@ -7148,7 +7570,10 @@
         "Status"
       ],
       "members":{
-        "Expiration":{"shape":"LifecycleExpiration"},
+        "Expiration":{
+          "shape":"LifecycleExpiration",
+          "documentation":"<p/>"
+        },
         "ID":{
           "shape":"ID",
           "documentation":"<p>Unique identifier for the rule. The value cannot be longer than 255 characters.</p>"
@@ -7161,11 +7586,15 @@
           "shape":"ExpirationStatus",
           "documentation":"<p>If 'Enabled', the rule is currently being applied. If 'Disabled', the rule is not currently being applied.</p>"
         },
-        "Transition":{"shape":"Transition"},
+        "Transition":{
+          "shape":"Transition",
+          "documentation":"<p/>"
+        },
         "NoncurrentVersionTransition":{"shape":"NoncurrentVersionTransition"},
         "NoncurrentVersionExpiration":{"shape":"NoncurrentVersionExpiration"},
         "AbortIncompleteMultipartUpload":{"shape":"AbortIncompleteMultipartUpload"}
-      }
+      },
+      "documentation":"<p/>"
     },
     "Rules":{
       "type":"list",
@@ -7302,12 +7731,16 @@
           "documentation":"<p>The End Event.</p>"
         }
       },
+      "documentation":"<p/>",
       "eventstream":true
     },
     "SelectObjectContentOutput":{
       "type":"structure",
       "members":{
-        "Payload":{"shape":"SelectObjectContentEventStream"}
+        "Payload":{
+          "shape":"SelectObjectContentEventStream",
+          "documentation":"<p/>"
+        }
       },
       "payload":"Payload"
     },
@@ -7336,19 +7769,19 @@
         },
         "SSECustomerAlgorithm":{
           "shape":"SSECustomerAlgorithm",
-          "documentation":"<p>The SSE Algorithm used to encrypt the object. For more information, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
+          "documentation":"<p>The SSE Algorithm used to encrypt the object. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm"
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
-          "documentation":"<p>The SSE Customer Key. For more information, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
+          "documentation":"<p>The SSE Customer Key. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-key"
         },
         "SSECustomerKeyMD5":{
           "shape":"SSECustomerKeyMD5",
-          "documentation":"<p>The SSE Customer Key MD5. For more information, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
+          "documentation":"<p>The SSE Customer Key MD5. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html\"> Server-Side Encryption (Using Customer-Provided Encryption Keys</a>. </p>",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-key-MD5"
         },
@@ -7373,7 +7806,7 @@
           "documentation":"<p>Describes the format of the data that you want Amazon S3 to return in response.</p>"
         }
       },
-      "documentation":"<p>Request to filter the contents of an Amazon S3 object based on a simple Structured Query Language (SQL) statement. In the request, along with the SQL expression, you must specify a data serialization format (JSON or CSV) of the object. Amazon S3 uses this to parse object data into records. It returns only records that match the specified SQL expression. You must also specify the data serialization format for the response. For more information, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectSELECTContent.html\">S3Select API Documentation</a>.</p>"
+      "documentation":"<p>Request to filter the contents of an Amazon S3 object based on a simple Structured Query Language (SQL) statement. In the request, along with the SQL expression, you must specify a data serialization format (JSON or CSV) of the object. Amazon S3 uses this to parse object data into records. It returns only records that match the specified SQL expression. You must also specify the data serialization format for the response. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectSELECTContent.html\">S3Select API Documentation</a>.</p>"
     },
     "SelectParameters":{
       "type":"structure",
@@ -7498,7 +7931,8 @@
           "shape":"BytesReturned",
           "documentation":"<p>The total number of bytes of records payload data returned.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "StatsEvent":{
       "type":"structure",
@@ -7509,6 +7943,7 @@
           "eventpayload":true
         }
       },
+      "documentation":"<p/>",
       "event":true
     },
     "StorageClass":{
@@ -7519,7 +7954,8 @@
         "STANDARD_IA",
         "ONEZONE_IA",
         "INTELLIGENT_TIERING",
-        "GLACIER"
+        "GLACIER",
+        "DEEP_ARCHIVE"
       ]
     },
     "StorageClassAnalysis":{
@@ -7529,7 +7965,8 @@
           "shape":"StorageClassAnalysisDataExport",
           "documentation":"<p>A container used to describe how data related to the storage class analysis should be exported.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "StorageClassAnalysisDataExport":{
       "type":"structure",
@@ -7546,7 +7983,8 @@
           "shape":"AnalyticsExportDestination",
           "documentation":"<p>The place to store the data for an analysis.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "StorageClassAnalysisSchemaVersion":{
       "type":"string",
@@ -7568,7 +8006,8 @@
           "shape":"Value",
           "documentation":"<p>Value of the tag.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "TagCount":{"type":"integer"},
     "TagSet":{
@@ -7582,8 +8021,12 @@
       "type":"structure",
       "required":["TagSet"],
       "members":{
-        "TagSet":{"shape":"TagSet"}
-      }
+        "TagSet":{
+          "shape":"TagSet",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "TaggingDirective":{
       "type":"string",
@@ -7597,12 +8040,16 @@
     "TargetGrant":{
       "type":"structure",
       "members":{
-        "Grantee":{"shape":"Grantee"},
+        "Grantee":{
+          "shape":"Grantee",
+          "documentation":"<p/>"
+        },
         "Permission":{
           "shape":"BucketLogsPermission",
           "documentation":"<p>Logging permissions assigned to the Grantee for the bucket.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "TargetGrants":{
       "type":"list",
@@ -7637,6 +8084,7 @@
         },
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
         "Filter":{"shape":"NotificationConfigurationFilter"}
@@ -7649,6 +8097,7 @@
         "Id":{"shape":"NotificationId"},
         "Events":{
           "shape":"EventList",
+          "documentation":"<p/>",
           "locationName":"Event"
         },
         "Event":{
@@ -7660,7 +8109,8 @@
           "shape":"TopicArn",
           "documentation":"<p>Amazon SNS topic to which Amazon S3 will publish a message to report the specified events for the bucket.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "TopicConfigurationList":{
       "type":"list",
@@ -7682,7 +8132,8 @@
           "shape":"TransitionStorageClass",
           "documentation":"<p>The class of storage used to store the object.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "TransitionList":{
       "type":"list",
@@ -7695,7 +8146,8 @@
         "GLACIER",
         "STANDARD_IA",
         "ONEZONE_IA",
-        "INTELLIGENT_TIERING"
+        "INTELLIGENT_TIERING",
+        "DEEP_ARCHIVE"
       ]
     },
     "Type":{
@@ -7717,7 +8169,10 @@
           "location":"header",
           "locationName":"x-amz-copy-source-version-id"
         },
-        "CopyPartResult":{"shape":"CopyPartResult"},
+        "CopyPartResult":{
+          "shape":"CopyPartResult",
+          "documentation":"<p/>"
+        },
         "ServerSideEncryption":{
           "shape":"ServerSideEncryption",
           "documentation":"<p>The Server-side encryption algorithm used when storing this object in S3 (e.g., AES256, aws:kms).</p>",
@@ -7762,6 +8217,7 @@
       "members":{
         "Bucket":{
           "shape":"BucketName",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Bucket"
         },
@@ -7797,12 +8253,13 @@
         },
         "CopySourceRange":{
           "shape":"CopySourceRange",
-          "documentation":"<p>The range of bytes to copy from the source object. The range value must use the form bytes=first-last, where the first and last are the zero-based byte offsets to copy. For example, bytes=0-9 indicates that you want to copy the first ten bytes of the source. You can copy a range only if the source object is greater than 5 GB.</p>",
+          "documentation":"<p>The range of bytes to copy from the source object. The range value must use the form bytes=first-last, where the first and last are the zero-based byte offsets to copy. For example, bytes=0-9 indicates that you want to copy the first ten bytes of the source. You can copy a range only if the source object is greater than 5 MB.</p>",
           "location":"header",
           "locationName":"x-amz-copy-source-range"
         },
         "Key":{
           "shape":"ObjectKey",
+          "documentation":"<p/>",
           "location":"uri",
           "locationName":"Key"
         },
@@ -7998,18 +8455,33 @@
           "shape":"BucketVersioningStatus",
           "documentation":"<p>The versioning state of the bucket.</p>"
         }
-      }
+      },
+      "documentation":"<p/>"
     },
     "WebsiteConfiguration":{
       "type":"structure",
       "members":{
-        "ErrorDocument":{"shape":"ErrorDocument"},
-        "IndexDocument":{"shape":"IndexDocument"},
-        "RedirectAllRequestsTo":{"shape":"RedirectAllRequestsTo"},
-        "RoutingRules":{"shape":"RoutingRules"}
-      }
+        "ErrorDocument":{
+          "shape":"ErrorDocument",
+          "documentation":"<p/>"
+        },
+        "IndexDocument":{
+          "shape":"IndexDocument",
+          "documentation":"<p/>"
+        },
+        "RedirectAllRequestsTo":{
+          "shape":"RedirectAllRequestsTo",
+          "documentation":"<p/>"
+        },
+        "RoutingRules":{
+          "shape":"RoutingRules",
+          "documentation":"<p/>"
+        }
+      },
+      "documentation":"<p/>"
     },
     "WebsiteRedirectLocation":{"type":"string"},
     "Years":{"type":"integer"}
-  }
+  },
+  "documentation":"<p/>"
 }

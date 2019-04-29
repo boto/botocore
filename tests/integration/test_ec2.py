@@ -30,7 +30,8 @@ class TestEC2(unittest.TestCase):
         result = self.client.describe_availability_zones()
         zones = list(
             sorted(a['ZoneName'] for a in result['AvailabilityZones']))
-        self.assertEqual(zones, ['us-west-2a', 'us-west-2b', 'us-west-2c'])
+        self.assertTrue(
+            set(['us-west-2a', 'us-west-2b', 'us-west-2c']).issubset(zones))
 
     def test_get_console_output_handles_error(self):
         # Want to ensure the underlying ClientError is propogated

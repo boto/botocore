@@ -870,6 +870,20 @@ class TestBuilders(unittest.TestCase):
         self.assertEqual(shape.members['A'].documentation,
                          'MyDocs')
 
+    def test_min_max_used_in_metadata(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'string',
+                'documentation': 'MyDocs',
+                'min': 2,
+                'max': 3,
+            },
+        }).build_model()
+        metadata = shape.members['A'].metadata
+        self.assertEqual(metadata.get('min'), 2)
+        self.assertEqual(metadata.get('max'), 3)
+
     def test_use_shape_name_when_provided(self):
         b = model.DenormalizedStructureBuilder()
         shape = b.with_members({

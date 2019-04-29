@@ -92,7 +92,8 @@
       "input":{"shape":"AssociateSkillWithUsersRequest"},
       "output":{"shape":"AssociateSkillWithUsersResponse"},
       "errors":[
-        {"shape":"ConcurrentModificationException"}
+        {"shape":"ConcurrentModificationException"},
+        {"shape":"NotFoundException"}
       ],
       "documentation":"<p>Makes a private skill available for enrolled users to enable on their devices.</p>"
     },
@@ -149,6 +150,20 @@
         {"shape":"LimitExceededException"}
       ],
       "documentation":"<p>Creates a contact with the specified details.</p>"
+    },
+    "CreateGatewayGroup":{
+      "name":"CreateGatewayGroup",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"CreateGatewayGroupRequest"},
+      "output":{"shape":"CreateGatewayGroupResponse"},
+      "errors":[
+        {"shape":"AlreadyExistsException"},
+        {"shape":"LimitExceededException"}
+      ],
+      "documentation":"<p>Creates a gateway group with the specified details.</p>"
     },
     "CreateProfile":{
       "name":"CreateProfile",
@@ -278,6 +293,19 @@
         {"shape":"InvalidCertificateAuthorityException"}
       ],
       "documentation":"<p>Removes a device from Alexa For Business.</p>"
+    },
+    "DeleteGatewayGroup":{
+      "name":"DeleteGatewayGroup",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DeleteGatewayGroupRequest"},
+      "output":{"shape":"DeleteGatewayGroupResponse"},
+      "errors":[
+        {"shape":"ResourceAssociatedException"}
+      ],
+      "documentation":"<p>Deletes a gateway group.</p>"
     },
     "DeleteProfile":{
       "name":"DeleteProfile",
@@ -409,7 +437,8 @@
       "input":{"shape":"DisassociateSkillFromUsersRequest"},
       "output":{"shape":"DisassociateSkillFromUsersResponse"},
       "errors":[
-        {"shape":"ConcurrentModificationException"}
+        {"shape":"ConcurrentModificationException"},
+        {"shape":"NotFoundException"}
       ],
       "documentation":"<p>Makes a private skill unavailable for enrolled users and prevents them from enabling it on their devices.</p>"
     },
@@ -504,6 +533,45 @@
       ],
       "documentation":"<p>Gets the details of a device by device ARN.</p>"
     },
+    "GetGateway":{
+      "name":"GetGateway",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetGatewayRequest"},
+      "output":{"shape":"GetGatewayResponse"},
+      "errors":[
+        {"shape":"NotFoundException"}
+      ],
+      "documentation":"<p>Retrieves the details of a gateway.</p>"
+    },
+    "GetGatewayGroup":{
+      "name":"GetGatewayGroup",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetGatewayGroupRequest"},
+      "output":{"shape":"GetGatewayGroupResponse"},
+      "errors":[
+        {"shape":"NotFoundException"}
+      ],
+      "documentation":"<p>Retrieves the details of a gateway group.</p>"
+    },
+    "GetInvitationConfiguration":{
+      "name":"GetInvitationConfiguration",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetInvitationConfigurationRequest"},
+      "output":{"shape":"GetInvitationConfigurationResponse"},
+      "errors":[
+        {"shape":"NotFoundException"}
+      ],
+      "documentation":"<p>Retrieves the configured values for the user enrollment invitation email template.</p>"
+    },
     "GetProfile":{
       "name":"GetProfile",
       "http":{
@@ -589,6 +657,26 @@
       ],
       "documentation":"<p>Lists the device event history, including device connection status, for up to 30 days.</p>"
     },
+    "ListGatewayGroups":{
+      "name":"ListGatewayGroups",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ListGatewayGroupsRequest"},
+      "output":{"shape":"ListGatewayGroupsResponse"},
+      "documentation":"<p>Retrieves a list of gateway group summaries. Use GetGatewayGroup to retrieve details of a specific gateway group.</p>"
+    },
+    "ListGateways":{
+      "name":"ListGateways",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ListGatewaysRequest"},
+      "output":{"shape":"ListGatewaysResponse"},
+      "documentation":"<p>Retrieves a list of gateway summaries. Use GetGateway to retrieve details of a specific gateway. An optional gateway group ARN can be provided to only retrieve gateway summaries of gateways that are associated with that gateway group ARN.</p>"
+    },
     "ListSkills":{
       "name":"ListSkills",
       "http":{
@@ -657,6 +745,20 @@
         {"shape":"NotFoundException"}
       ],
       "documentation":"<p>Sets the conference preferences on a specific conference provider at the account level.</p>"
+    },
+    "PutInvitationConfiguration":{
+      "name":"PutInvitationConfiguration",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"PutInvitationConfigurationRequest"},
+      "output":{"shape":"PutInvitationConfigurationResponse"},
+      "errors":[
+        {"shape":"NotFoundException"},
+        {"shape":"ConcurrentModificationException"}
+      ],
+      "documentation":"<p>Configures the email template for the user enrollment invitation with the specified attributes.</p>"
     },
     "PutRoomSkillParameter":{
       "name":"PutRoomSkillParameter",
@@ -949,6 +1051,34 @@
       ],
       "documentation":"<p>Updates the device name by device ARN.</p>"
     },
+    "UpdateGateway":{
+      "name":"UpdateGateway",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"UpdateGatewayRequest"},
+      "output":{"shape":"UpdateGatewayResponse"},
+      "errors":[
+        {"shape":"NotFoundException"},
+        {"shape":"NameInUseException"}
+      ],
+      "documentation":"<p>Updates the details of a gateway. If any optional field is not provided, the existing corresponding value is left unmodified.</p>"
+    },
+    "UpdateGatewayGroup":{
+      "name":"UpdateGatewayGroup",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"UpdateGatewayGroupRequest"},
+      "output":{"shape":"UpdateGatewayGroupResponse"},
+      "errors":[
+        {"shape":"NotFoundException"},
+        {"shape":"NameInUseException"}
+      ],
+      "documentation":"<p>Updates the details of a gateway group. If any optional field is not provided, the existing corresponding value is left unmodified.</p>"
+    },
     "UpdateProfile":{
       "name":"UpdateProfile",
       "http":{
@@ -1167,13 +1297,9 @@
       "type":"structure",
       "required":["SkillId"],
       "members":{
-        "OrganizationArn":{
-          "shape":"Arn",
-          "documentation":"<p>The ARN of the organization.</p>"
-        },
         "SkillId":{
           "shape":"SkillId",
-          "documentation":"<p>The private skill ID you want to make available to enrolled users.&gt;</p>"
+          "documentation":"<p>The private skill ID you want to make available to enrolled users.</p>"
         }
       }
     },
@@ -1363,7 +1489,7 @@
     },
     "ClientRequestToken":{
       "type":"string",
-      "documentation":"User specified token that is used to support idempotency during Create Resource",
+      "documentation":"<p>A unique, user-specified identifier for the request that ensures idempotency.</p>",
       "max":150,
       "min":10,
       "pattern":"[a-zA-Z0-9][a-zA-Z0-9_-]*"
@@ -1381,7 +1507,7 @@
       "members":{
         "Message":{"shape":"ErrorMessage"}
       },
-      "documentation":"Concurrent modification of resources. HTTP Status Code: 400.",
+      "documentation":"<p>There is a concurrent modification of resources.</p>",
       "exception":true
     },
     "ConferencePreference":{
@@ -1563,7 +1689,7 @@
         },
         "S3BucketName":{
           "shape":"CustomerS3BucketName",
-          "documentation":"<p>The S3 bucket name of the output reports.</p>"
+          "documentation":"<p>The S3 bucket name of the output reports. If this isn't specified, the report can be retrieved from a download link by calling ListBusinessReportSchedule. </p>"
         },
         "S3KeyPrefix":{
           "shape":"S3KeyPrefix",
@@ -1579,7 +1705,7 @@
         },
         "Recurrence":{
           "shape":"BusinessReportRecurrence",
-          "documentation":"<p>The recurrence of the reports.</p>"
+          "documentation":"<p>The recurrence of the reports. If this isn't specified, the report will only be delivered one time when the API is called. </p>"
         },
         "ClientRequestToken":{
           "shape":"ClientRequestToken",
@@ -1674,6 +1800,37 @@
         "ContactArn":{
           "shape":"Arn",
           "documentation":"<p>The ARN of the newly created address book.</p>"
+        }
+      }
+    },
+    "CreateGatewayGroupRequest":{
+      "type":"structure",
+      "required":[
+        "Name",
+        "ClientRequestToken"
+      ],
+      "members":{
+        "Name":{
+          "shape":"GatewayGroupName",
+          "documentation":"<p>The name of the gateway group.</p>"
+        },
+        "Description":{
+          "shape":"GatewayGroupDescription",
+          "documentation":"<p>The description of the gateway group.</p>"
+        },
+        "ClientRequestToken":{
+          "shape":"ClientRequestToken",
+          "documentation":"<p> A unique, user-specified identifier for the request that ensures idempotency.</p>",
+          "idempotencyToken":true
+        }
+      }
+    },
+    "CreateGatewayGroupResponse":{
+      "type":"structure",
+      "members":{
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the created gateway group.</p>"
         }
       }
     },
@@ -1927,6 +2084,21 @@
       }
     },
     "DeleteDeviceResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "DeleteGatewayGroupRequest":{
+      "type":"structure",
+      "required":["GatewayGroupArn"],
+      "members":{
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group to delete.</p>"
+        }
+      }
+    },
+    "DeleteGatewayGroupResponse":{
       "type":"structure",
       "members":{
       }
@@ -2311,10 +2483,6 @@
       "type":"structure",
       "required":["SkillId"],
       "members":{
-        "OrganizationArn":{
-          "shape":"Arn",
-          "documentation":"<p>The ARN of the organization.</p>"
-        },
         "SkillId":{
           "shape":"SkillId",
           "documentation":"<p> The private skill ID you want to make unavailable for enrolled users.</p>"
@@ -2449,7 +2617,7 @@
     "FilterValueList":{
       "type":"list",
       "member":{"shape":"FilterValue"},
-      "max":5
+      "max":50
     },
     "ForgetSmartHomeAppliancesRequest":{
       "type":"structure",
@@ -2465,6 +2633,130 @@
       "type":"structure",
       "members":{
       }
+    },
+    "Gateway":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway.</p>"
+        },
+        "Name":{
+          "shape":"GatewayName",
+          "documentation":"<p>The name of the gateway.</p>"
+        },
+        "Description":{
+          "shape":"GatewayDescription",
+          "documentation":"<p>The description of the gateway.</p>"
+        },
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group that the gateway is associated to.</p>"
+        },
+        "SoftwareVersion":{
+          "shape":"GatewayVersion",
+          "documentation":"<p>The software version of the gateway. The gateway automatically updates its software version during normal operation.</p>"
+        }
+      },
+      "documentation":"<p>The details of the gateway. </p>"
+    },
+    "GatewayDescription":{
+      "type":"string",
+      "max":200,
+      "min":0,
+      "pattern":"[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]*"
+    },
+    "GatewayGroup":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group.</p>"
+        },
+        "Name":{
+          "shape":"GatewayGroupName",
+          "documentation":"<p>The name of the gateway group.</p>"
+        },
+        "Description":{
+          "shape":"GatewayGroupDescription",
+          "documentation":"<p>The description of the gateway group.</p>"
+        }
+      },
+      "documentation":"<p>The details of the gateway group.</p>"
+    },
+    "GatewayGroupDescription":{
+      "type":"string",
+      "max":200,
+      "min":0
+    },
+    "GatewayGroupName":{
+      "type":"string",
+      "max":100,
+      "min":1,
+      "pattern":"[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]*"
+    },
+    "GatewayGroupSummaries":{
+      "type":"list",
+      "member":{"shape":"GatewayGroupSummary"}
+    },
+    "GatewayGroupSummary":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group.</p>"
+        },
+        "Name":{
+          "shape":"GatewayGroupName",
+          "documentation":"<p>The name of the gateway group.</p>"
+        },
+        "Description":{
+          "shape":"GatewayGroupDescription",
+          "documentation":"<p>The description of the gateway group.</p>"
+        }
+      },
+      "documentation":"<p>The summary of a gateway group.</p>"
+    },
+    "GatewayName":{
+      "type":"string",
+      "max":253,
+      "min":1,
+      "pattern":"[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]*"
+    },
+    "GatewaySummaries":{
+      "type":"list",
+      "member":{"shape":"GatewaySummary"}
+    },
+    "GatewaySummary":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway.</p>"
+        },
+        "Name":{
+          "shape":"GatewayName",
+          "documentation":"<p>The name of the gateway.</p>"
+        },
+        "Description":{
+          "shape":"GatewayDescription",
+          "documentation":"<p>The description of the gateway.</p>"
+        },
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group that the gateway is associated to.</p>"
+        },
+        "SoftwareVersion":{
+          "shape":"GatewayVersion",
+          "documentation":"<p>The software version of the gateway. The gateway automatically updates its software version during normal operation.</p>"
+        }
+      },
+      "documentation":"<p>The summary of a gateway.</p>"
+    },
+    "GatewayVersion":{
+      "type":"string",
+      "max":50,
+      "min":1
     },
     "GenericKeyword":{"type":"string"},
     "GenericKeywords":{
@@ -2557,6 +2849,63 @@
         "Device":{
           "shape":"Device",
           "documentation":"<p>The details of the device requested. Required.</p>"
+        }
+      }
+    },
+    "GetGatewayGroupRequest":{
+      "type":"structure",
+      "required":["GatewayGroupArn"],
+      "members":{
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group to get.</p>"
+        }
+      }
+    },
+    "GetGatewayGroupResponse":{
+      "type":"structure",
+      "members":{
+        "GatewayGroup":{"shape":"GatewayGroup"}
+      }
+    },
+    "GetGatewayRequest":{
+      "type":"structure",
+      "required":["GatewayArn"],
+      "members":{
+        "GatewayArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway to get.</p>"
+        }
+      }
+    },
+    "GetGatewayResponse":{
+      "type":"structure",
+      "members":{
+        "Gateway":{
+          "shape":"Gateway",
+          "documentation":"<p>The details of the gateway.</p>"
+        }
+      }
+    },
+    "GetInvitationConfigurationRequest":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "GetInvitationConfigurationResponse":{
+      "type":"structure",
+      "members":{
+        "OrganizationName":{
+          "shape":"OrganizationName",
+          "documentation":"<p>The name of the organization sending the enrollment invite to a user.</p>"
+        },
+        "ContactEmail":{
+          "shape":"Email",
+          "documentation":"<p>The email ID of the organization or individual contact that the enrolled user can use. </p>"
+        },
+        "PrivateSkillIds":{
+          "shape":"ShortSkillIdList",
+          "documentation":"<p>The list of private skill IDs that you want to recommend to the user to enable in the invitation.</p>"
         }
       }
     },
@@ -2787,12 +3136,68 @@
         }
       }
     },
+    "ListGatewayGroupsRequest":{
+      "type":"structure",
+      "members":{
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The token used to paginate though multiple pages of gateway group summaries.</p>"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of gateway group summaries to return. The default is 50.</p>"
+        }
+      }
+    },
+    "ListGatewayGroupsResponse":{
+      "type":"structure",
+      "members":{
+        "GatewayGroups":{
+          "shape":"GatewayGroupSummaries",
+          "documentation":"<p>The gateway groups in the list.</p>"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The token used to paginate though multiple pages of gateway group summaries.</p>"
+        }
+      }
+    },
+    "ListGatewaysRequest":{
+      "type":"structure",
+      "members":{
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The gateway group ARN for which to list gateways.</p>"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The token used to paginate though multiple pages of gateway summaries.</p>"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of gateway summaries to return. The default is 50.</p>"
+        }
+      }
+    },
+    "ListGatewaysResponse":{
+      "type":"structure",
+      "members":{
+        "Gateways":{
+          "shape":"GatewaySummaries",
+          "documentation":"<p>The gateways in the list.</p>"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The token used to paginate though multiple pages of gateway summaries.</p>"
+        }
+      }
+    },
     "ListSkillsRequest":{
       "type":"structure",
       "members":{
         "SkillGroupArn":{
           "shape":"Arn",
-          "documentation":"<p>The ARN of the skill group for which to list enabled skills.</p>"
+          "documentation":"<p>The ARN of the skill group for which to list enabled skills. Required.</p>"
         },
         "EnablementType":{
           "shape":"EnablementTypeFilter",
@@ -2804,11 +3209,11 @@
         },
         "NextToken":{
           "shape":"NextToken",
-          "documentation":"<p>An optional token returned from a prior request. Use this token for pagination of results from this action. If this parameter is specified, the response includes only results beyond the token, up to the value specified by <code>MaxResults</code>.</p>"
+          "documentation":"<p>An optional token returned from a prior request. Use this token for pagination of results from this action. If this parameter is specified, the response includes only results beyond the token, up to the value specified by <code>MaxResults</code>. Required.</p>"
         },
         "MaxResults":{
           "shape":"SkillListMaxResults",
-          "documentation":"<p>The maximum number of results to include in the response. If more results exist than the specified <code>MaxResults</code> value, a token is included in the response so that the remaining results can be retrieved.</p>"
+          "documentation":"<p>The maximum number of results to include in the response. If more results exist than the specified <code>MaxResults</code> value, a token is included in the response so that the remaining results can be retrieved. Required.</p>"
         }
       }
     },
@@ -2997,6 +3402,12 @@
       "max":2,
       "min":1
     },
+    "OrganizationName":{
+      "type":"string",
+      "max":100,
+      "min":1,
+      "pattern":"([A-Za-z\\-' 0-9._]|\\p{IsLetter})*"
+    },
     "OutboundPhoneNumber":{
       "type":"string",
       "pattern":"\\d{10}"
@@ -3157,6 +3568,29 @@
       "members":{
       }
     },
+    "PutInvitationConfigurationRequest":{
+      "type":"structure",
+      "required":["OrganizationName"],
+      "members":{
+        "OrganizationName":{
+          "shape":"OrganizationName",
+          "documentation":"<p>The name of the organization sending the enrollment invite to a user.</p>"
+        },
+        "ContactEmail":{
+          "shape":"Email",
+          "documentation":"<p>The email ID of the organization or individual contact that the enrolled user can use. </p>"
+        },
+        "PrivateSkillIds":{
+          "shape":"ShortSkillIdList",
+          "documentation":"<p>The list of private skill IDs that you want to recommend to the user to enable in the invitation.</p>"
+        }
+      }
+    },
+    "PutInvitationConfigurationResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
     "PutRoomSkillParameterRequest":{
       "type":"structure",
       "required":[
@@ -3307,6 +3741,14 @@
           "documentation":"<p>Response to get the room profile request. Required.</p>"
         }
       }
+    },
+    "ResourceAssociatedException":{
+      "type":"structure",
+      "members":{
+        "Message":{"shape":"ErrorMessage"}
+      },
+      "documentation":"<p>Another resource is associated with the resource in the request.</p>",
+      "exception":true
     },
     "ResourceInUseException":{
       "type":"structure",
@@ -3737,6 +4179,12 @@
       }
     },
     "ShortDescription":{"type":"string"},
+    "ShortSkillIdList":{
+      "type":"list",
+      "member":{"shape":"SkillId"},
+      "max":3,
+      "min":0
+    },
     "SkillDetails":{
       "type":"structure",
       "members":{
@@ -4287,6 +4735,56 @@
       }
     },
     "UpdateDeviceResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "UpdateGatewayGroupRequest":{
+      "type":"structure",
+      "required":["GatewayGroupArn"],
+      "members":{
+        "GatewayGroupArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway group to update.</p>"
+        },
+        "Name":{
+          "shape":"GatewayGroupName",
+          "documentation":"<p>The updated name of the gateway group.</p>"
+        },
+        "Description":{
+          "shape":"GatewayGroupDescription",
+          "documentation":"<p>The updated description of the gateway group.</p>"
+        }
+      }
+    },
+    "UpdateGatewayGroupResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "UpdateGatewayRequest":{
+      "type":"structure",
+      "required":["GatewayArn"],
+      "members":{
+        "GatewayArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the gateway to update.</p>"
+        },
+        "Name":{
+          "shape":"GatewayName",
+          "documentation":"<p>The updated name of the gateway.</p>"
+        },
+        "Description":{
+          "shape":"GatewayDescription",
+          "documentation":"<p>The updated description of the gateway.</p>"
+        },
+        "SoftwareVersion":{
+          "shape":"GatewayVersion",
+          "documentation":"<p>The updated software version of the gateway. The gateway automatically updates its software version during normal operation.</p>"
+        }
+      }
+    },
+    "UpdateGatewayResponse":{
       "type":"structure",
       "members":{
       }
