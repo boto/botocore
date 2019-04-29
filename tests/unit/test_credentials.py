@@ -701,6 +701,38 @@ class TestEnvVar(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_expiry_omitted_if_envvar_empty(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_EXPIRATION': '',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        # Because we treat empty env vars the same as not being provided,
+        # we should return static credentials and not a refreshable
+        # credential.
+        self.assertNotIsInstance(creds, credentials.RefreshableCredentials)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+    def test_error_when_expiry_required_but_empty(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+
+        del environ['AWS_CREDENTIAL_EXPIRATION']
+
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds.get_frozen_credentials()
+
     def test_can_override_env_var_mapping(self):
         # We can change the env var provider to
         # use our specified env var names.
