@@ -11,6 +11,7 @@
          "ListCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ListCertificates",
          "ListTagsForCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ListTagsForCertificate",
          "RemoveTagsFromCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/RemoveTagsFromCertificate",
+         "RenewCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/RenewCertificate",
          "RequestCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/RequestCertificate",
          "ResendValidationEmail" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ResendValidationEmail",
          "UpdateCertificateOptions" : "https://docs.aws.amazon.com/goto/WebAPI/acm/UpdateCertificateOptions"

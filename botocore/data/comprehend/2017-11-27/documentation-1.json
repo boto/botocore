@@ -31,6 +31,7 @@
          "ListEntityRecognizers" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListEntityRecognizers",
          "ListKeyPhrasesDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListKeyPhrasesDetectionJobs",
          "ListSentimentDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListSentimentDetectionJobs",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListTagsForResource",
          "ListTopicsDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListTopicsDetectionJobs",
          "StartDocumentClassificationJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartDocumentClassificationJob",
          "StartDominantLanguageDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartDominantLanguageDetectionJob",
@@ -43,7 +44,9 @@
          "StopKeyPhrasesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopKeyPhrasesDetectionJob",
          "StopSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopSentimentDetectionJob",
          "StopTrainingDocumentClassifier" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopTrainingDocumentClassifier",
-         "StopTrainingEntityRecognizer" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopTrainingEntityRecognizer"
+         "StopTrainingEntityRecognizer" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopTrainingEntityRecognizer",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/UntagResource"
       }
    }
 }

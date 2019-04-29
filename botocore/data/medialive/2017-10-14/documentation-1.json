@@ -29,7 +29,8 @@
          "StopChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/StopChannel",
          "UpdateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateChannel",
          "UpdateInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInput",
-         "UpdateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInputSecurityGroup"
+         "UpdateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInputSecurityGroup",
+         "UpdateReservation" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateReservation"
       }
    }
 }

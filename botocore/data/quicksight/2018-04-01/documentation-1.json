@@ -7,6 +7,7 @@
          "DeleteGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteGroup",
          "DeleteGroupMembership" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteGroupMembership",
          "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteUser",
+         "DeleteUserByPrincipalId" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteUserByPrincipalId",
          "DescribeGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DescribeGroup",
          "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DescribeUser",
          "GetDashboardEmbedUrl" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/GetDashboardEmbedUrl",

@@ -14,11 +14,14 @@
          "GetOpenIdTokenForDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetOpenIdTokenForDeveloperIdentity",
          "ListIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/ListIdentities",
          "ListIdentityPools" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/ListIdentityPools",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/ListTagsForResource",
          "LookupDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/LookupDeveloperIdentity",
          "MergeDeveloperIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/MergeDeveloperIdentities",
          "SetIdentityPoolRoles" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/SetIdentityPoolRoles",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/TagResource",
          "UnlinkDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UnlinkDeveloperIdentity",
          "UnlinkIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UnlinkIdentity",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UntagResource",
          "UpdateIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UpdateIdentityPool"
       }
    }

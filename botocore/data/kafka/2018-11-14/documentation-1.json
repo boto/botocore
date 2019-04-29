@@ -7,7 +7,10 @@
          "DescribeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DescribeCluster",
          "GetBootstrapBrokers" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/GetBootstrapBrokers",
          "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListClusters",
-         "ListNodes" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListNodes"
+         "ListNodes" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListNodes",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListTagsForResource",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/UntagResource"
       }
    }
 }

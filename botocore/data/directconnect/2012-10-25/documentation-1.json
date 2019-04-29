@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25",
       "methods" : {
+         "AcceptDirectConnectGatewayAssociationProposal" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/AcceptDirectConnectGatewayAssociationProposal",
          "AllocateConnectionOnInterconnect" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/AllocateConnectionOnInterconnect",
          "AllocateHostedConnection" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/AllocateHostedConnection",
          "AllocatePrivateVirtualInterface" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/AllocatePrivateVirtualInterface",
@@ -16,6 +17,7 @@
          "CreateConnection" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateConnection",
          "CreateDirectConnectGateway" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateDirectConnectGateway",
          "CreateDirectConnectGatewayAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateDirectConnectGatewayAssociation",
+         "CreateDirectConnectGatewayAssociationProposal" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateDirectConnectGatewayAssociationProposal",
          "CreateInterconnect" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateInterconnect",
          "CreateLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreateLag",
          "CreatePrivateVirtualInterface" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/CreatePrivateVirtualInterface",
@@ -24,12 +26,14 @@
          "DeleteConnection" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteConnection",
          "DeleteDirectConnectGateway" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteDirectConnectGateway",
          "DeleteDirectConnectGatewayAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteDirectConnectGatewayAssociation",
+         "DeleteDirectConnectGatewayAssociationProposal" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteDirectConnectGatewayAssociationProposal",
          "DeleteInterconnect" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteInterconnect",
          "DeleteLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteLag",
          "DeleteVirtualInterface" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DeleteVirtualInterface",
          "DescribeConnectionLoa" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeConnectionLoa",
          "DescribeConnections" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeConnections",
          "DescribeConnectionsOnInterconnect" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeConnectionsOnInterconnect",
+         "DescribeDirectConnectGatewayAssociationProposals" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeDirectConnectGatewayAssociationProposals",
          "DescribeDirectConnectGatewayAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeDirectConnectGatewayAssociations",
          "DescribeDirectConnectGatewayAttachments" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeDirectConnectGatewayAttachments",
          "DescribeDirectConnectGateways" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DescribeDirectConnectGateways",
@@ -45,6 +49,7 @@
          "DisassociateConnectionFromLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DisassociateConnectionFromLag",
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/TagResource",
          "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UntagResource",
+         "UpdateDirectConnectGatewayAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateDirectConnectGatewayAssociation",
          "UpdateLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateLag",
          "UpdateVirtualInterfaceAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateVirtualInterfaceAttributes"
       }

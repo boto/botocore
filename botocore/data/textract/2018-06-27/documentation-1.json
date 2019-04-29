@@ -1,0 +1,13 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27",
+      "methods" : {
+         "AnalyzeDocument" : "https://docs.aws.amazon.com/goto/WebAPI/textract/AnalyzeDocument",
+         "DetectDocumentText" : "https://docs.aws.amazon.com/goto/WebAPI/textract/DetectDocumentText",
+         "GetDocumentAnalysis" : "https://docs.aws.amazon.com/goto/WebAPI/textract/GetDocumentAnalysis",
+         "GetDocumentTextDetection" : "https://docs.aws.amazon.com/goto/WebAPI/textract/GetDocumentTextDetection",
+         "StartDocumentAnalysis" : "https://docs.aws.amazon.com/goto/WebAPI/textract/StartDocumentAnalysis",
+         "StartDocumentTextDetection" : "https://docs.aws.amazon.com/goto/WebAPI/textract/StartDocumentTextDetection"
+      }
+   }
+}

@@ -4,16 +4,19 @@
       "methods" : {
          "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/CreateCluster",
          "CreateService" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/CreateService",
+         "CreateTaskSet" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/CreateTaskSet",
          "DeleteAccountSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeleteAccountSetting",
          "DeleteAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeleteAttributes",
          "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeleteCluster",
          "DeleteService" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeleteService",
+         "DeleteTaskSet" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeleteTaskSet",
          "DeregisterContainerInstance" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeregisterContainerInstance",
          "DeregisterTaskDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DeregisterTaskDefinition",
          "DescribeClusters" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeClusters",
          "DescribeContainerInstances" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeContainerInstances",
          "DescribeServices" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeServices",
          "DescribeTaskDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeTaskDefinition",
+         "DescribeTaskSets" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeTaskSets",
          "DescribeTasks" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DescribeTasks",
          "DiscoverPollEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/DiscoverPollEndpoint",
          "ListAccountSettings" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/ListAccountSettings",
@@ -26,6 +29,7 @@
          "ListTaskDefinitions" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/ListTaskDefinitions",
          "ListTasks" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/ListTasks",
          "PutAccountSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAccountSetting",
+         "PutAccountSettingDefault" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAccountSettingDefault",
          "PutAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAttributes",
          "RegisterContainerInstance" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/RegisterContainerInstance",
          "RegisterTaskDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/RegisterTaskDefinition",
@@ -38,7 +42,9 @@
          "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UntagResource",
          "UpdateContainerAgent" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateContainerAgent",
          "UpdateContainerInstancesState" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateContainerInstancesState",
-         "UpdateService" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateService"
+         "UpdateService" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateService",
+         "UpdateServicePrimaryTaskSet" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateServicePrimaryTaskSet",
+         "UpdateTaskSet" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/UpdateTaskSet"
       }
    }
 }

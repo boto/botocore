@@ -8482,6 +8482,5 @@
     },
     "WebsiteRedirectLocation":{"type":"string"},
     "Years":{"type":"integer"}
-  },
-  "documentation":"<p/>"
+  }
 }

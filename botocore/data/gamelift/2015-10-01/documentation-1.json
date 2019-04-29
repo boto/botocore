@@ -12,6 +12,7 @@
          "CreateMatchmakingRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreateMatchmakingRuleSet",
          "CreatePlayerSession" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreatePlayerSession",
          "CreatePlayerSessions" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreatePlayerSessions",
+         "CreateScript" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreateScript",
          "CreateVpcPeeringAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreateVpcPeeringAuthorization",
          "CreateVpcPeeringConnection" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/CreateVpcPeeringConnection",
          "DeleteAlias" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteAlias",
@@ -21,6 +22,7 @@
          "DeleteMatchmakingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteMatchmakingConfiguration",
          "DeleteMatchmakingRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteMatchmakingRuleSet",
          "DeleteScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteScalingPolicy",
+         "DeleteScript" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteScript",
          "DeleteVpcPeeringAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteVpcPeeringAuthorization",
          "DeleteVpcPeeringConnection" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteVpcPeeringConnection",
          "DescribeAlias" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeAlias",
@@ -42,6 +44,7 @@
          "DescribePlayerSessions" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribePlayerSessions",
          "DescribeRuntimeConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeRuntimeConfiguration",
          "DescribeScalingPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeScalingPolicies",
+         "DescribeScript" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeScript",
          "DescribeVpcPeeringAuthorizations" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeVpcPeeringAuthorizations",
          "DescribeVpcPeeringConnections" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DescribeVpcPeeringConnections",
          "GetGameSessionLogUrl" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/GetGameSessionLogUrl",
@@ -49,6 +52,7 @@
          "ListAliases" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ListAliases",
          "ListBuilds" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ListBuilds",
          "ListFleets" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ListFleets",
+         "ListScripts" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ListScripts",
          "PutScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/PutScalingPolicy",
          "RequestUploadCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/RequestUploadCredentials",
          "ResolveAlias" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ResolveAlias",
@@ -69,6 +73,7 @@
          "UpdateGameSessionQueue" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/UpdateGameSessionQueue",
          "UpdateMatchmakingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/UpdateMatchmakingConfiguration",
          "UpdateRuntimeConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/UpdateRuntimeConfiguration",
+         "UpdateScript" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/UpdateScript",
          "ValidateMatchmakingRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/ValidateMatchmakingRuleSet"
       }
    }

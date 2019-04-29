@@ -88,6 +88,7 @@
          "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetPolicy",
          "GetPolicyVersion" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetPolicyVersion",
          "GetRegistrationCode" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetRegistrationCode",
+         "GetStatistics" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetStatistics",
          "GetTopicRule" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetTopicRule",
          "GetV2LoggingOptions" : "https://docs.aws.amazon.com/goto/WebAPI/iot/GetV2LoggingOptions",
          "ListActiveViolations" : "https://docs.aws.amazon.com/goto/WebAPI/iot/ListActiveViolations",

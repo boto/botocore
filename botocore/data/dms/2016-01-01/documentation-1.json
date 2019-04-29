@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01",
       "methods" : {
          "AddTagsToResource" : "https://docs.aws.amazon.com/goto/WebAPI/dms/AddTagsToResource",
+         "ApplyPendingMaintenanceAction" : "https://docs.aws.amazon.com/goto/WebAPI/dms/ApplyPendingMaintenanceAction",
          "CreateEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/dms/CreateEndpoint",
          "CreateEventSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/dms/CreateEventSubscription",
          "CreateReplicationInstance" : "https://docs.aws.amazon.com/goto/WebAPI/dms/CreateReplicationInstance",
@@ -23,6 +24,7 @@
          "DescribeEventSubscriptions" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeEventSubscriptions",
          "DescribeEvents" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeEvents",
          "DescribeOrderableReplicationInstances" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeOrderableReplicationInstances",
+         "DescribePendingMaintenanceActions" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribePendingMaintenanceActions",
          "DescribeRefreshSchemasStatus" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeRefreshSchemasStatus",
          "DescribeReplicationInstanceTaskLogs" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeReplicationInstanceTaskLogs",
          "DescribeReplicationInstances" : "https://docs.aws.amazon.com/goto/WebAPI/dms/DescribeReplicationInstances",

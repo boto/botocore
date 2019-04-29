@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25",
       "methods" : {
+         "AssociateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/AssociateDomain",
          "AssociateWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/AssociateWebsiteCertificateAuthority",
          "CreateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/CreateFleet",
          "DeleteFleet" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DeleteFleet",
@@ -9,17 +10,23 @@
          "DescribeCompanyNetworkConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeCompanyNetworkConfiguration",
          "DescribeDevice" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeDevice",
          "DescribeDevicePolicyConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeDevicePolicyConfiguration",
+         "DescribeDomain" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeDomain",
          "DescribeFleetMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeFleetMetadata",
          "DescribeIdentityProviderConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeIdentityProviderConfiguration",
          "DescribeWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeWebsiteCertificateAuthority",
+         "DisassociateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DisassociateDomain",
          "DisassociateWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DisassociateWebsiteCertificateAuthority",
          "ListDevices" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListDevices",
+         "ListDomains" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListDomains",
          "ListFleets" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListFleets",
          "ListWebsiteCertificateAuthorities" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListWebsiteCertificateAuthorities",
+         "RestoreDomainAccess" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/RestoreDomainAccess",
+         "RevokeDomainAccess" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/RevokeDomainAccess",
          "SignOutUser" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/SignOutUser",
          "UpdateAuditStreamConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateAuditStreamConfiguration",
          "UpdateCompanyNetworkConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateCompanyNetworkConfiguration",
          "UpdateDevicePolicyConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateDevicePolicyConfiguration",
+         "UpdateDomainMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateDomainMetadata",
          "UpdateFleetMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateFleetMetadata",
          "UpdateIdentityProviderConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateIdentityProviderConfiguration"
       }

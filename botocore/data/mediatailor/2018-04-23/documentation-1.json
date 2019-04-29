@@ -5,7 +5,10 @@
          "DeletePlaybackConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/DeletePlaybackConfiguration",
          "GetPlaybackConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/GetPlaybackConfiguration",
          "ListPlaybackConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/ListPlaybackConfigurations",
-         "PutPlaybackConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/PutPlaybackConfiguration"
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/ListTagsForResource",
+         "PutPlaybackConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/PutPlaybackConfiguration",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/api.mediatailor/UntagResource"
       }
    }
 }

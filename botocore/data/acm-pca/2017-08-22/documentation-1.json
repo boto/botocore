@@ -4,7 +4,9 @@
       "methods" : {
          "CreateCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/CreateCertificateAuthority",
          "CreateCertificateAuthorityAuditReport" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/CreateCertificateAuthorityAuditReport",
+         "CreatePermission" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/CreatePermission",
          "DeleteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DeleteCertificateAuthority",
+         "DeletePermission" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DeletePermission",
          "DescribeCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DescribeCertificateAuthority",
          "DescribeCertificateAuthorityAuditReport" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DescribeCertificateAuthorityAuditReport",
          "GetCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/GetCertificate",
@@ -13,6 +15,7 @@
          "ImportCertificateAuthorityCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ImportCertificateAuthorityCertificate",
          "IssueCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/IssueCertificate",
          "ListCertificateAuthorities" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListCertificateAuthorities",
+         "ListPermissions" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListPermissions",
          "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListTags",
          "RestoreCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/RestoreCertificateAuthority",
          "RevokeCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/RevokeCertificate",

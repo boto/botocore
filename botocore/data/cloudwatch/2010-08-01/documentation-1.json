@@ -15,10 +15,13 @@
          "GetMetricWidgetImage" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricWidgetImage",
          "ListDashboards" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListDashboards",
          "ListMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListMetrics",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListTagsForResource",
          "PutDashboard" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutDashboard",
          "PutMetricAlarm" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutMetricAlarm",
          "PutMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutMetricData",
-         "SetAlarmState" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/SetAlarmState"
+         "SetAlarmState" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/SetAlarmState",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/UntagResource"
       }
    }
 }

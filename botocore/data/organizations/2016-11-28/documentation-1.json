@@ -6,6 +6,7 @@
          "AttachPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/AttachPolicy",
          "CancelHandshake" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CancelHandshake",
          "CreateAccount" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CreateAccount",
+         "CreateGovCloudAccount" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CreateGovCloudAccount",
          "CreateOrganization" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CreateOrganization",
          "CreateOrganizationalUnit" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CreateOrganizationalUnit",
          "CreatePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/CreatePolicy",

@@ -31,6 +31,7 @@
          "DeleteInstance" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteInstance",
          "DeleteInstanceSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteInstanceSnapshot",
          "DeleteKeyPair" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteKeyPair",
+         "DeleteKnownHostKeys" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteKnownHostKeys",
          "DeleteLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteLoadBalancer",
          "DeleteLoadBalancerTlsCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteLoadBalancerTlsCertificate",
          "DeleteRelationalDatabase" : "https://docs.aws.amazon.com/goto/WebAPI/lightsail/DeleteRelationalDatabase",

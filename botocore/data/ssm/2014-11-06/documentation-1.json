@@ -74,6 +74,7 @@
          "GetParametersByPath" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetParametersByPath",
          "GetPatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetPatchBaseline",
          "GetPatchBaselineForPatchGroup" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetPatchBaselineForPatchGroup",
+         "GetServiceSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetServiceSetting",
          "LabelParameterVersion" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/LabelParameterVersion",
          "ListAssociationVersions" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ListAssociationVersions",
          "ListAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ListAssociations",
@@ -96,6 +97,7 @@
          "RegisterTargetWithMaintenanceWindow" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/RegisterTargetWithMaintenanceWindow",
          "RegisterTaskWithMaintenanceWindow" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/RegisterTaskWithMaintenanceWindow",
          "RemoveTagsFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/RemoveTagsFromResource",
+         "ResetServiceSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ResetServiceSetting",
          "ResumeSession" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ResumeSession",
          "SendAutomationSignal" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/SendAutomationSignal",
          "SendCommand" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/SendCommand",
@@ -112,7 +114,8 @@
          "UpdateMaintenanceWindowTarget" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateMaintenanceWindowTarget",
          "UpdateMaintenanceWindowTask" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateMaintenanceWindowTask",
          "UpdateManagedInstanceRole" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateManagedInstanceRole",
-         "UpdatePatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdatePatchBaseline"
+         "UpdatePatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdatePatchBaseline",
+         "UpdateServiceSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateServiceSetting"
       }
    }
 }

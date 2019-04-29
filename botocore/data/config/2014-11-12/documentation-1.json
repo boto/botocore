@@ -11,6 +11,7 @@
          "DeleteDeliveryChannel" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteDeliveryChannel",
          "DeleteEvaluationResults" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteEvaluationResults",
          "DeletePendingAggregationRequest" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeletePendingAggregationRequest",
+         "DeleteRemediationConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteRemediationConfiguration",
          "DeleteRetentionConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteRetentionConfiguration",
          "DeliverConfigSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeliverConfigSnapshot",
          "DescribeAggregateComplianceByConfigRules" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeAggregateComplianceByConfigRules",
@@ -26,6 +27,8 @@
          "DescribeDeliveryChannelStatus" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeDeliveryChannelStatus",
          "DescribeDeliveryChannels" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeDeliveryChannels",
          "DescribePendingAggregationRequests" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribePendingAggregationRequests",
+         "DescribeRemediationConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeRemediationConfigurations",
+         "DescribeRemediationExecutionStatus" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeRemediationExecutionStatus",
          "DescribeRetentionConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeRetentionConfigurations",
          "GetAggregateComplianceDetailsByConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateComplianceDetailsByConfigRule",
          "GetAggregateConfigRuleComplianceSummary" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateConfigRuleComplianceSummary",
@@ -39,16 +42,22 @@
          "GetResourceConfigHistory" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetResourceConfigHistory",
          "ListAggregateDiscoveredResources" : "https://docs.aws.amazon.com/goto/WebAPI/config/ListAggregateDiscoveredResources",
          "ListDiscoveredResources" : "https://docs.aws.amazon.com/goto/WebAPI/config/ListDiscoveredResources",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/config/ListTagsForResource",
          "PutAggregationAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutAggregationAuthorization",
          "PutConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutConfigRule",
          "PutConfigurationAggregator" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutConfigurationAggregator",
          "PutConfigurationRecorder" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutConfigurationRecorder",
          "PutDeliveryChannel" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutDeliveryChannel",
          "PutEvaluations" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutEvaluations",
+         "PutRemediationConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutRemediationConfigurations",
          "PutRetentionConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutRetentionConfiguration",
+         "SelectResourceConfig" : "https://docs.aws.amazon.com/goto/WebAPI/config/SelectResourceConfig",
          "StartConfigRulesEvaluation" : "https://docs.aws.amazon.com/goto/WebAPI/config/StartConfigRulesEvaluation",
          "StartConfigurationRecorder" : "https://docs.aws.amazon.com/goto/WebAPI/config/StartConfigurationRecorder",
-         "StopConfigurationRecorder" : "https://docs.aws.amazon.com/goto/WebAPI/config/StopConfigurationRecorder"
+         "StartRemediationExecution" : "https://docs.aws.amazon.com/goto/WebAPI/config/StartRemediationExecution",
+         "StopConfigurationRecorder" : "https://docs.aws.amazon.com/goto/WebAPI/config/StopConfigurationRecorder",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/config/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/config/UntagResource"
       }
    }
 }

@@ -1,0 +1,35 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25",
+      "methods" : {
+         "CreateMesh" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/CreateMesh",
+         "CreateRoute" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/CreateRoute",
+         "CreateVirtualNode" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/CreateVirtualNode",
+         "CreateVirtualRouter" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/CreateVirtualRouter",
+         "CreateVirtualService" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/CreateVirtualService",
+         "DeleteMesh" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DeleteMesh",
+         "DeleteRoute" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DeleteRoute",
+         "DeleteVirtualNode" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DeleteVirtualNode",
+         "DeleteVirtualRouter" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DeleteVirtualRouter",
+         "DeleteVirtualService" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DeleteVirtualService",
+         "DescribeMesh" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DescribeMesh",
+         "DescribeRoute" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DescribeRoute",
+         "DescribeVirtualNode" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DescribeVirtualNode",
+         "DescribeVirtualRouter" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DescribeVirtualRouter",
+         "DescribeVirtualService" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/DescribeVirtualService",
+         "ListMeshes" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListMeshes",
+         "ListRoutes" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListRoutes",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListTagsForResource",
+         "ListVirtualNodes" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListVirtualNodes",
+         "ListVirtualRouters" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListVirtualRouters",
+         "ListVirtualServices" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/ListVirtualServices",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UntagResource",
+         "UpdateMesh" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UpdateMesh",
+         "UpdateRoute" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UpdateRoute",
+         "UpdateVirtualNode" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UpdateVirtualNode",
+         "UpdateVirtualRouter" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UpdateVirtualRouter",
+         "UpdateVirtualService" : "https://docs.aws.amazon.com/goto/WebAPI/appmesh/UpdateVirtualService"
+      }
+   }
+}

@@ -18,6 +18,7 @@
          "GetFunction" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetFunction",
          "GetFunctionConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetFunctionConfiguration",
          "GetLayerVersion" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetLayerVersion",
+         "GetLayerVersionByArn" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetLayerVersionByArn",
          "GetLayerVersionPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetLayerVersionPolicy",
          "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetPolicy",
          "Invoke" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/Invoke",

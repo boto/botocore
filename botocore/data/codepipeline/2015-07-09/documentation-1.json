@@ -17,6 +17,7 @@
          "GetPipelineExecution" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetPipelineExecution",
          "GetPipelineState" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetPipelineState",
          "GetThirdPartyJobDetails" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetThirdPartyJobDetails",
+         "ListActionExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListActionExecutions",
          "ListActionTypes" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListActionTypes",
          "ListPipelineExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListPipelineExecutions",
          "ListPipelines" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListPipelines",

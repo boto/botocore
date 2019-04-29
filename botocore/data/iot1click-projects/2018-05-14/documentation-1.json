@@ -13,6 +13,9 @@
          "GetDevicesInPlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/GetDevicesInPlacement",
          "ListPlacements" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/ListPlacements",
          "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/ListProjects",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/ListTagsForResource",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/UntagResource",
          "UpdatePlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/UpdatePlacement",
          "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/UpdateProject"
       }

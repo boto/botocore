@@ -8,6 +8,7 @@
          "DescribeUpdate" : "https://docs.aws.amazon.com/goto/WebAPI/eks/DescribeUpdate",
          "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/eks/ListClusters",
          "ListUpdates" : "https://docs.aws.amazon.com/goto/WebAPI/eks/ListUpdates",
+         "UpdateClusterConfig" : "https://docs.aws.amazon.com/goto/WebAPI/eks/UpdateClusterConfig",
          "UpdateClusterVersion" : "https://docs.aws.amazon.com/goto/WebAPI/eks/UpdateClusterVersion"
       }
    }

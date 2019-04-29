@@ -10,6 +10,7 @@
          "GetComplianceDetail" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetComplianceDetail",
          "GetNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetNotificationChannel",
          "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetPolicy",
+         "GetProtectionStatus" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetProtectionStatus",
          "ListComplianceStatus" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListComplianceStatus",
          "ListMemberAccounts" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListMemberAccounts",
          "ListPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListPolicies",

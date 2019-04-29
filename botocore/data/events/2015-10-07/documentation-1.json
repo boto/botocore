@@ -9,6 +9,7 @@
          "EnableRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/EnableRule",
          "ListRuleNamesByTarget" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListRuleNamesByTarget",
          "ListRules" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListRules",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListTagsForResource",
          "ListTargetsByRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListTargetsByRule",
          "PutEvents" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutEvents",
          "PutPermission" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutPermission",
@@ -16,7 +17,9 @@
          "PutTargets" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutTargets",
          "RemovePermission" : "https://docs.aws.amazon.com/goto/WebAPI/events/RemovePermission",
          "RemoveTargets" : "https://docs.aws.amazon.com/goto/WebAPI/events/RemoveTargets",
-         "TestEventPattern" : "https://docs.aws.amazon.com/goto/WebAPI/events/TestEventPattern"
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/events/TagResource",
+         "TestEventPattern" : "https://docs.aws.amazon.com/goto/WebAPI/events/TestEventPattern",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/events/UntagResource"
       }
    }
 }

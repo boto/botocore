@@ -116,6 +116,7 @@
          "ResetServiceSpecificCredential" : "https://docs.aws.amazon.com/goto/WebAPI/iam/ResetServiceSpecificCredential",
          "ResyncMFADevice" : "https://docs.aws.amazon.com/goto/WebAPI/iam/ResyncMFADevice",
          "SetDefaultPolicyVersion" : "https://docs.aws.amazon.com/goto/WebAPI/iam/SetDefaultPolicyVersion",
+         "SetSecurityTokenServicePreferences" : "https://docs.aws.amazon.com/goto/WebAPI/iam/SetSecurityTokenServicePreferences",
          "SimulateCustomPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/iam/SimulateCustomPolicy",
          "SimulatePrincipalPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/iam/SimulatePrincipalPolicy",
          "TagRole" : "https://docs.aws.amazon.com/goto/WebAPI/iam/TagRole",

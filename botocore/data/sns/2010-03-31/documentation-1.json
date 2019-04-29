@@ -21,6 +21,7 @@
          "ListPlatformApplications" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListPlatformApplications",
          "ListSubscriptions" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListSubscriptions",
          "ListSubscriptionsByTopic" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListSubscriptionsByTopic",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListTagsForResource",
          "ListTopics" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListTopics",
          "OptInPhoneNumber" : "https://docs.aws.amazon.com/goto/WebAPI/sns/OptInPhoneNumber",
          "Publish" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Publish",
@@ -31,7 +32,9 @@
          "SetSubscriptionAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetSubscriptionAttributes",
          "SetTopicAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetTopicAttributes",
          "Subscribe" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Subscribe",
-         "Unsubscribe" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Unsubscribe"
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/sns/TagResource",
+         "Unsubscribe" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Unsubscribe",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/sns/UntagResource"
       }
    }
 }

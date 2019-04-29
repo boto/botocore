@@ -10,7 +10,10 @@
          "InvokeDeviceMethod" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/InvokeDeviceMethod",
          "ListDeviceEvents" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ListDeviceEvents",
          "ListDevices" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ListDevices",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ListTagsForResource",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/TagResource",
          "UnclaimDevice" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/UnclaimDevice",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/UntagResource",
          "UpdateDeviceState" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/UpdateDeviceState"
       }
    }

@@ -4,6 +4,7 @@
       "methods" : {
          "BatchGetRepositories" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/BatchGetRepositories",
          "CreateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreateBranch",
+         "CreateCommit" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreateCommit",
          "CreatePullRequest" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreatePullRequest",
          "CreateRepository" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreateRepository",
          "DeleteBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/DeleteBranch",

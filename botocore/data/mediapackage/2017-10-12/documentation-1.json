@@ -10,8 +10,11 @@
          "DescribeOriginEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/DescribeOriginEndpoint",
          "ListChannels" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/ListChannels",
          "ListOriginEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/ListOriginEndpoints",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/ListTagsForResource",
          "RotateChannelCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/RotateChannelCredentials",
          "RotateIngestEndpointCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/RotateIngestEndpointCredentials",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/UntagResource",
          "UpdateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/UpdateChannel",
          "UpdateOriginEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/UpdateOriginEndpoint"
       }

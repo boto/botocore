@@ -25,6 +25,7 @@
          "ListDedicatedIpPools" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListDedicatedIpPools",
          "ListDeliverabilityTestReports" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListDeliverabilityTestReports",
          "ListEmailIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListEmailIdentities",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListTagsForResource",
          "PutAccountDedicatedIpWarmupAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutAccountDedicatedIpWarmupAttributes",
          "PutAccountSendingAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutAccountSendingAttributes",
          "PutConfigurationSetDeliveryOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetDeliveryOptions",
@@ -38,6 +39,8 @@
          "PutEmailIdentityFeedbackAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutEmailIdentityFeedbackAttributes",
          "PutEmailIdentityMailFromAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutEmailIdentityMailFromAttributes",
          "SendEmail" : "https://docs.aws.amazon.com/goto/WebAPI/email/SendEmail",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/email/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/email/UntagResource",
          "UpdateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/email/UpdateConfigurationSetEventDestination"
       }
    }
