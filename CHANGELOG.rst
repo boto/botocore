@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.138
+========
+
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.137
 ========
 
