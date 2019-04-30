@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.139
+========
+
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+
+
 1.12.138
 ========
 
