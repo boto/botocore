@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.140
+========
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.139
 ========
 
