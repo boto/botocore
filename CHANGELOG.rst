@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.141
+========
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
 1.12.140
 ========
 
