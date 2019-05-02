@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``alexaforbusiness``", 
+    "description": "Update alexaforbusiness client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }
+]
