@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.142
+========
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.12.141
 ========
 
