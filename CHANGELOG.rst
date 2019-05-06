@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.143
+========
+
+* api-change:``config``: Update config client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+
+
 1.12.142
 ========
 
