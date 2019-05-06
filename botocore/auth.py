@@ -24,6 +24,8 @@ import time
 import calendar
 import json
 
+from botocore.credentials import (Credentials, SigningCredentials,
+                                  ReadOnlyCredentials)
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
 from botocore.compat import HTTPHeaders
@@ -59,6 +61,29 @@ class BaseSigner(object):
 
     def add_auth(self, request):
         raise NotImplementedError("add_auth")
+
+    def hmac_sign(self, key, msg, hex=False, version=None):
+        if isinstance(key, SigningCredentials):
+            sig = key.hmac_sign(msg=msg, hex=hex, version=version)
+        else:
+            if isinstance(key, (Credentials, ReadOnlyCredentials)):
+                if version == "HmacV1":
+                    hmac_key = key.secret_key.encode('utf-8')
+                else:
+                    hmac_key = ('AWS4' + key.secret_key).encode('utf-8')
+            else:
+                hmac_key = key
+
+            if version == "HmacV1":
+                alg = sha1
+            else:
+                alg = sha256
+
+            if hex:
+                sig = hmac.new(hmac_key, msg.encode('utf-8'), alg).hexdigest()
+            else:
+                sig = hmac.new(hmac_key, msg.encode('utf-8'), alg).digest()
+        return sig
 
 
 class SigV2Auth(BaseSigner):
@@ -344,13 +369,12 @@ class SigV4Auth(BaseSigner):
         return '\n'.join(sts)
 
     def signature(self, string_to_sign, request):
-        key = self.credentials.secret_key
-        k_date = self._sign(('AWS4' + key).encode('utf-8'),
-                            request.context['timestamp'][0:8])
-        k_region = self._sign(k_date, self._region_name)
-        k_service = self._sign(k_region, self._service_name)
-        k_signing = self._sign(k_service, 'aws4_request')
-        return self._sign(k_signing, string_to_sign, hex=True)
+        k_date = self.hmac_sign(self.credentials,
+                                request.context['timestamp'][0:8])
+        k_region = self.hmac_sign(k_date, self._region_name)
+        k_service = self.hmac_sign(k_region, self._service_name)
+        k_signing = self.hmac_sign(k_service, 'aws4_request')
+        return self.hmac_sign(k_signing, string_to_sign, hex=True)
 
     def add_auth(self, request):
         if self.credentials is None:
@@ -647,10 +671,10 @@ class HmacV1Auth(BaseSigner):
         self.credentials = credentials
 
     def sign_string(self, string_to_sign):
-        new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
-                            digestmod=sha1)
-        new_hmac.update(string_to_sign.encode('utf-8'))
-        return encodebytes(new_hmac.digest()).strip().decode('utf-8')
+        digest = self.hmac_sign(key=self.credentials,
+                                msg=string_to_sign,
+                                version="HmacV1")
+        return encodebytes(digest).strip().decode('utf-8')
 
     def canonical_standard_headers(self, headers):
         interesting_headers = ['content-md5', 'content-type', 'date']

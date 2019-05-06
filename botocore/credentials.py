@@ -543,6 +543,11 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         )
 
 
+class SigningCredentials(Credentials):
+    def hmac_sign(self, key, message, hex=False, version=None):
+        raise NotImplementedError('hmac_sign()')
+
+
 class CachedCredentialFetcher(object):
     def __init__(self, cache=None, expiry_window_seconds=60 * 15):
         if cache is None:
