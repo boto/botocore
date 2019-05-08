@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.145
+========
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+
+
 1.12.144
 ========
 
