@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sts``", 
+    "description": "Update sts client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "api-change"
+  }
+]
