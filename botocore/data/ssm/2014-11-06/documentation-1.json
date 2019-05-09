@@ -54,6 +54,7 @@
          "DescribePatchBaselines" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchBaselines",
          "DescribePatchGroupState" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchGroupState",
          "DescribePatchGroups" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchGroups",
+         "DescribePatchProperties" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchProperties",
          "DescribeSessions" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeSessions",
          "GetAutomationExecution" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetAutomationExecution",
          "GetCommandInvocation" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetCommandInvocation",

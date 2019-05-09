@@ -20,8 +20,11 @@
          "DiscoverInputSchema" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DiscoverInputSchema",
          "ListApplicationSnapshots" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/ListApplicationSnapshots",
          "ListApplications" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/ListApplications",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/ListTagsForResource",
          "StartApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/StartApplication",
          "StopApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/StopApplication",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/UntagResource",
          "UpdateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/UpdateApplication"
       }
    }

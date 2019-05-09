@@ -11,6 +11,7 @@
          "DeleteInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteInput",
          "DeleteInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteInputSecurityGroup",
          "DeleteReservation" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteReservation",
+         "DeleteSchedule" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteSchedule",
          "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteTags",
          "DescribeChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeChannel",
          "DescribeInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeInput",
@@ -28,6 +29,7 @@
          "StartChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/StartChannel",
          "StopChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/StopChannel",
          "UpdateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateChannel",
+         "UpdateChannelClass" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateChannelClass",
          "UpdateInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInput",
          "UpdateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInputSecurityGroup",
          "UpdateReservation" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateReservation"

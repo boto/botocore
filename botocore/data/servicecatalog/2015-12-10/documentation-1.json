@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10",
       "methods" : {
          "AcceptPortfolioShare" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AcceptPortfolioShare",
+         "AssociateBudgetWithResource" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AssociateBudgetWithResource",
          "AssociatePrincipalWithPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AssociatePrincipalWithPortfolio",
          "AssociateProductWithPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AssociateProductWithPortfolio",
          "AssociateServiceActionWithProvisioningArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AssociateServiceActionWithProvisioningArtifact",
@@ -41,6 +42,7 @@
          "DescribeServiceAction" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeServiceAction",
          "DescribeTagOption" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeTagOption",
          "DisableAWSOrganizationsAccess" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisableAWSOrganizationsAccess",
+         "DisassociateBudgetFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisassociateBudgetFromResource",
          "DisassociatePrincipalFromPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisassociatePrincipalFromPortfolio",
          "DisassociateProductFromPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisassociateProductFromPortfolio",
          "DisassociateServiceActionFromProvisioningArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisassociateServiceActionFromProvisioningArtifact",
@@ -50,6 +52,7 @@
          "ExecuteProvisionedProductServiceAction" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ExecuteProvisionedProductServiceAction",
          "GetAWSOrganizationsAccessStatus" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/GetAWSOrganizationsAccessStatus",
          "ListAcceptedPortfolioShares" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListAcceptedPortfolioShares",
+         "ListBudgetsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListBudgetsForResource",
          "ListConstraintsForPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListConstraintsForPortfolio",
          "ListLaunchPaths" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListLaunchPaths",
          "ListOrganizationPortfolioAccess" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListOrganizationPortfolioAccess",

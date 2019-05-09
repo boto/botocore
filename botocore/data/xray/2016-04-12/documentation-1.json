@@ -14,6 +14,7 @@
          "GetSamplingStatisticSummaries" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetSamplingStatisticSummaries",
          "GetSamplingTargets" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetSamplingTargets",
          "GetServiceGraph" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetServiceGraph",
+         "GetTimeSeriesServiceStatistics" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetTimeSeriesServiceStatistics",
          "GetTraceGraph" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetTraceGraph",
          "GetTraceSummaries" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetTraceSummaries",
          "PutEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutEncryptionConfig",

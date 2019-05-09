@@ -288,6 +288,7 @@
          "ModifyVpcEndpointServicePermissions" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/ModifyVpcEndpointServicePermissions",
          "ModifyVpcPeeringConnectionOptions" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/ModifyVpcPeeringConnectionOptions",
          "ModifyVpcTenancy" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/ModifyVpcTenancy",
+         "ModifyVpnConnection" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/ModifyVpnConnection",
          "MonitorInstances" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/MonitorInstances",
          "MoveAddressToVpc" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/MoveAddressToVpc",
          "ProvisionByoipCidr" : "https://docs.aws.amazon.com/goto/WebAPI/ec2/ProvisionByoipCidr",

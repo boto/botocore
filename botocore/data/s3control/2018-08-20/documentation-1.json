@@ -2,9 +2,14 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control-2018-08-20",
       "methods" : {
+         "CreateJob" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/CreateJob",
          "DeletePublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/DeletePublicAccessBlock",
+         "DescribeJob" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/DescribeJob",
          "GetPublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/GetPublicAccessBlock",
-         "PutPublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/PutPublicAccessBlock"
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/ListJobs",
+         "PutPublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/PutPublicAccessBlock",
+         "UpdateJobPriority" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/UpdateJobPriority",
+         "UpdateJobStatus" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/UpdateJobStatus"
       }
    }
 }

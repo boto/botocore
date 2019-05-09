@@ -23,6 +23,7 @@
          "AdminResetUserPassword" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminResetUserPassword",
          "AdminRespondToAuthChallenge" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminRespondToAuthChallenge",
          "AdminSetUserMFAPreference" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminSetUserMFAPreference",
+         "AdminSetUserPassword" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminSetUserPassword",
          "AdminSetUserSettings" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminSetUserSettings",
          "AdminUpdateAuthEventFeedback" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminUpdateAuthEventFeedback",
          "AdminUpdateDeviceStatus" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminUpdateDeviceStatus",

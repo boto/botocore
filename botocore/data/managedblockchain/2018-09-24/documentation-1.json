@@ -1,0 +1,25 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24",
+      "methods" : {
+         "CreateMember" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/CreateMember",
+         "CreateNetwork" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/CreateNetwork",
+         "CreateNode" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/CreateNode",
+         "CreateProposal" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/CreateProposal",
+         "DeleteMember" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/DeleteMember",
+         "DeleteNode" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/DeleteNode",
+         "GetMember" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/GetMember",
+         "GetNetwork" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/GetNetwork",
+         "GetNode" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/GetNode",
+         "GetProposal" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/GetProposal",
+         "ListInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListInvitations",
+         "ListMembers" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListMembers",
+         "ListNetworks" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListNetworks",
+         "ListNodes" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListNodes",
+         "ListProposalVotes" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListProposalVotes",
+         "ListProposals" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/ListProposals",
+         "RejectInvitation" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/RejectInvitation",
+         "VoteOnProposal" : "https://docs.aws.amazon.com/goto/WebAPI/managedblockchain/VoteOnProposal"
+      }
+   }
+}

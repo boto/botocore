@@ -20,6 +20,7 @@
          "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DescribeUser",
          "DisassociateDelegateFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DisassociateDelegateFromResource",
          "DisassociateMemberFromGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DisassociateMemberFromGroup",
+         "GetMailboxDetails" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/GetMailboxDetails",
          "ListAliases" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListAliases",
          "ListGroupMembers" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListGroupMembers",
          "ListGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListGroups",
@@ -31,6 +32,7 @@
          "PutMailboxPermissions" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/PutMailboxPermissions",
          "RegisterToWorkMail" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/RegisterToWorkMail",
          "ResetPassword" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ResetPassword",
+         "UpdateMailboxQuota" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/UpdateMailboxQuota",
          "UpdatePrimaryEmailAddress" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/UpdatePrimaryEmailAddress",
          "UpdateResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/UpdateResource"
       }
