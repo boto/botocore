@@ -801,7 +801,7 @@
         "shape" : "GetIntegrationRequest"
       },
       "output" : {
-        "shape" : "GetIntegrationResponse",
+        "shape" : "GetIntegrationResult",
         "documentation" : "<p>Success</p>"
       },
       "errors" : [ {
@@ -971,7 +971,7 @@
         "shape" : "GetRouteRequest"
       },
       "output" : {
-        "shape" : "GetRouteResponse",
+        "shape" : "GetRouteResult",
         "documentation" : "<p>Success</p>"
       },
       "errors" : [ {
@@ -1350,7 +1350,7 @@
         "shape" : "UpdateRouteRequest"
       },
       "output" : {
-        "shape" : "UpdateRouteResponse",
+        "shape" : "UpdateRouteResult",
         "documentation" : "<p>Success</p>"
       },
       "errors" : [ {
@@ -3850,7 +3850,7 @@
       },
       "required" : [ "ApiId", "IntegrationId" ]
     },
-    "GetIntegrationResponse" : {
+    "GetIntegrationResult" : {
       "type" : "structure",
       "members" : {
         "ConnectionId" : {
@@ -4206,7 +4206,7 @@
       },
       "required" : [ "ApiId", "RouteId" ]
     },
-    "GetRouteResponse" : {
+    "GetRouteResult" : {
       "type" : "structure",
       "members" : {
         "ApiKeyRequired" : {
@@ -6246,7 +6246,7 @@
       },
       "required" : [ "ApiId", "RouteId" ]
     },
-    "UpdateRouteResponse" : {
+    "UpdateRouteResult" : {
       "type" : "structure",
       "members" : {
         "ApiKeyRequired" : {
