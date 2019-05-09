@@ -723,8 +723,9 @@ class DenormalizedStructureBuilder(object):
         }
         if 'documentation' in model:
             shape['documentation'] = model['documentation']
-        if 'enum' in model:
-            shape['enum'] = model['enum']
+        for attr in Shape.METADATA_ATTRS:
+            if attr in model:
+                shape[attr] = model[attr]
         return shape
 
     def _build_scalar(self, model):

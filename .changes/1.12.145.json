@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisanalytics``", 
+    "description": "Update kinesisanalytics client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisanalyticsv2``", 
+    "description": "Update kinesisanalyticsv2 client to latest version", 
+    "type": "api-change"
+  }
+]
