@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.146
+========
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
 1.12.145
 ========
 
