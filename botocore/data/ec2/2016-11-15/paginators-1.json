@@ -382,6 +382,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "SpotInstanceRequests"
+    },
+    "DescribeDhcpOptions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "DhcpOptions"
+    },
+    "DescribeSubnets": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Subnets"
     }
   }
 }

@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.148
+========
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.147
 ========
 
