@@ -264,60 +264,6 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
             sse_member_prefix + 'KeyMD5' not in params)
 
 
-# NOTE: Retries get registered in two separate places in the botocore
-# code: once when creating the client and once when you load the service
-# model from the session. While at first this handler seems unneeded, it
-# would be a breaking change for the AWS CLI to have it removed. This is
-# because it relies on the service model from the session to create commands
-# and this handler respects operation granular retry logic while the client
-# one does not. If this is ever to be removed the handler, the client
-# will have to respect per-operation level retry configuration.
-def register_retries_for_service(service_data, session,
-                                 service_name, **kwargs):
-    loader = session.get_component('data_loader')
-    endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
-    if endpoint_prefix is None:
-        logger.debug("Not registering retry handlers, could not endpoint "
-                     "prefix from model for service %s", service_name)
-        return
-    service_id = service_data.get('metadata', {}).get('serviceId')
-    if service_id is None:
-        raise MissingServiceIdError(service_name=service_name)
-    service_event_name = hyphenize_service_id(service_id)
-    config = _load_retry_config(loader, endpoint_prefix)
-    if not config:
-        return
-    logger.debug("Registering retry handlers for service: %s", service_name)
-    handler = retryhandler.create_retry_handler(
-        config, endpoint_prefix)
-    unique_id = 'retry-config-%s' % service_event_name
-    session.register('needs-retry.%s' % service_event_name,
-                     handler, unique_id=unique_id)
-    _register_for_operations(config, session, service_event_name)
-
-
-def _load_retry_config(loader, endpoint_prefix):
-    original_config = loader.load_data('_retry')
-    retry_config = translate.build_retry_config(
-        endpoint_prefix, original_config['retry'],
-        original_config.get('definitions', {}))
-    return retry_config
-
-
-def _register_for_operations(config, session, service_event_name):
-    # There's certainly a tradeoff for registering the retry config
-    # for the operations when the service is created.  In practice,
-    # there aren't a whole lot of per operation retry configs so
-    # this is ok for now.
-    for key in config:
-        if key == '__default__':
-            continue
-        handler = retryhandler.create_retry_handler(config, key)
-        unique_id = 'retry-config-%s-%s' % (service_event_name, key)
-        session.register('needs-retry.%s.%s' % (service_event_name, key),
-                         handler, unique_id=unique_id)
-
-
 def disable_signing(**kwargs):
     """
     This handler disables request signing by setting the signer
@@ -998,7 +944,6 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
-    ('service-data-loaded', register_retries_for_service),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),
