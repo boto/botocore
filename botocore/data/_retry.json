@@ -180,7 +180,7 @@
       }
     },
     "kinesis": {
-      "DescribeStream": {
+      "__default__": {
         "policies": {
           "request_limit_exceeded": {
             "applies_when": {
