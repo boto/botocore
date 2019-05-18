@@ -10,5 +10,5 @@ behave==1.2.5
 jsonschema==2.5.1
 urllib3>=1.20,<1.23; python_version=="3.3"
 urllib3>=1.20,<1.24; python_version=="2.6"
-urllib3>=1.20,<1.25; python_version=="2.7"
-urllib3>=1.20,<1.25; python_version>="3.4"
+urllib3>=1.20,<1.26; python_version=="2.7"
+urllib3>=1.20,<1.26; python_version>="3.4"
