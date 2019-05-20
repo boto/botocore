@@ -1,22 +1,22 @@
 {
   "pagination": {
-    "ListClusters": {
+    "ListAssets": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "ClusterInfoList"
+      "result_key": "Assets"
     },
-    "ListNodes": {
+    "ListPackagingConfigurations": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "NodeInfoList"
+      "result_key": "PackagingConfigurations"
     },
-    "ListConfigurations": {
+    "ListPackagingGroups": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
-      "result_key": "Configurations"
+      "output_token": "NextToken",
+      "result_key": "PackagingGroups"
     }
   }
 }
