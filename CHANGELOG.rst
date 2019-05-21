@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.153
+========
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
 1.12.152
 ========
 
