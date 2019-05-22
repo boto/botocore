@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.12.154
+========
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+
+
 1.12.153
 ========
 
