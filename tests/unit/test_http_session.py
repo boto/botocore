@@ -93,7 +93,7 @@ class TestURLLib3Session(unittest.TestCase):
         self.pool_patch.stop()
         self.proxy_patch.stop()
 
-    def assert_request_sent(self, headers=None, body=None, url='/'):
+    def assert_request_sent(self, headers=None, body=None, url='/', chunked=False):
         if headers is None:
             headers = {}
 
@@ -106,6 +106,7 @@ class TestURLLib3Session(unittest.TestCase):
             assert_same_host=False,
             preload_content=False,
             decode_content=False,
+            chunked=chunked,
         )
 
     def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
@@ -266,3 +267,19 @@ class TestURLLib3Session(unittest.TestCase):
         self.assertIs(http_class, AWSHTTPConnectionPool)
         https_class = self.pool_manager.pool_classes_by_scheme.get('https')
         self.assertIs(https_class, AWSHTTPSConnectionPool)
+
+    def test_chunked_encoding_is_set_with_header(self):
+        session = URLLib3Session()
+        self.request.headers['Transfer-Encoding'] = 'chunked'
+
+        session.send(self.request.prepare())
+        self.assert_request_sent(
+            chunked=True,
+            headers={'Transfer-Encoding': 'chunked'},
+        )
+
+    def test_chunked_encoding_is_not_set_without_header(self):
+        session = URLLib3Session()
+
+        session.send(self.request.prepare())
+        self.assert_request_sent(chunked=False)

@@ -239,6 +239,9 @@ class URLLib3Session(object):
             # otherwise just set the request target to the url path
             return self._path_url(url)
 
+    def _chunked(self, headers):
+        return headers.get('Transfer-Encoding', '') == 'chunked'
+
     def send(self, request):
         try:
             proxy_url = self._proxy_config.proxy_url_for(request.url)
@@ -256,6 +259,7 @@ class URLLib3Session(object):
                 assert_same_host=False,
                 preload_content=False,
                 decode_content=False,
+                chunked=self._chunked(request.headers),
             )
 
             http_response = botocore.awsrequest.AWSResponse(
