@@ -1721,8 +1721,9 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             self.fake_response(status_code=200, body=b'Not JSON'),
         )
         fetcher = self.create_fetcher()
-        with self.assertRaises(MetadataRetrievalError):
+        with self.assertRaises(MetadataRetrievalError) as e:
             fetcher.retrieve_uri('/foo?id=1')
+        self.assertNotIn('Not JSON', str(e.exception))
         # Should have tried up to RETRY_ATTEMPTS.
         self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
