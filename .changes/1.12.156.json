@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``mediastore-data``", 
+    "description": "Update mediastore-data client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``opsworkscm``", 
+    "description": "Update opsworkscm client to latest version", 
+    "type": "api-change"
+  }
+]

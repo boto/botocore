@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.156
+========
+
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.12.155
 ========
 
