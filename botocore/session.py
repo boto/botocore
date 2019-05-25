@@ -390,6 +390,17 @@ class Session(object):
         """
         self._client_config = client_config
 
+    def set_botocore_credentials(self, credentials):
+        """
+        Manually set the botocore Credentials for this session. If you need
+        to provided a custom implementation of RefreshableCredentials you
+        can pass an instance of it here.
+
+        :type credentials: botocore.credentials.Credentials
+        :param credentials: The credential object to use for this session
+        """
+        self._credentials = credentials
+
     def set_credentials(self, access_key, secret_key, token=None):
         """
         Manually create credentials for this session.  If you would
@@ -407,9 +418,9 @@ class Session(object):
         :param token: An option session token used by STS session
             credentials.
         """
-        self._credentials = botocore.credentials.Credentials(access_key,
-                                                             secret_key,
-                                                             token)
+        self.set_botocore_credentials(botocore.credentials.Credentials(access_key,
+                                                                       secret_key,
+                                                                       token))
 
     def get_credentials(self):
         """
