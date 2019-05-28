@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.12.157
+========
+
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
 1.12.156
 ========
 
