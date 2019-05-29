@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.158
+========
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``iotthingsgraph``: Update iotthingsgraph client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.157
 ========
 
