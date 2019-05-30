@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``iotevents-data``", 
+    "description": "Update iotevents-data client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotevents``", 
+    "description": "Update iotevents client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint-email``", 
+    "description": "Update pinpoint-email client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotanalytics``", 
+    "description": "Update iotanalytics client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds-data``", 
+    "description": "Update rds-data client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }
+]

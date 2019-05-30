@@ -1,5 +1,0 @@
-{
-  "category": "``kafka``", 
-  "type": "api-change", 
-  "description": "Update kafka client to latest version"
-}
