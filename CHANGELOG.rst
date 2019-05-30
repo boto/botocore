@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.12.159
+========
+
+* api-change:``iotevents-data``: Update iotevents-data client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+
+
 1.12.158
 ========
 
