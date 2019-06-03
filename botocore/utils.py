@@ -1312,9 +1312,11 @@ class ContainerMetadataFetcher(object):
             try:
                 return json.loads(response_text)
             except ValueError:
-                raise MetadataRetrievalError(
-                    error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response_text))
+                error_msg = (
+                    "Unable to parse JSON returned from ECS metadata services"
+                )
+                logger.debug('%s:%s', error_msg, response_text)
+                raise MetadataRetrievalError(error_msg=error_msg)
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)
