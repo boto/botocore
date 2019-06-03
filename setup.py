@@ -47,7 +47,7 @@ if sys.version_info[:2] == (2, 6):
 elif sys.version_info[:2] == (3, 3):
     requires.append('urllib3>=1.20,<1.23')
 else:
-    requires.append('urllib3>=1.20,<1.25')
+    requires.append('urllib3>=1.20,<1.26')
 
 
 setup(

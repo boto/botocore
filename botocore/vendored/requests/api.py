@@ -24,6 +24,13 @@ _WARNING_MSG = (
 )
 
 
+warnings.filterwarnings(
+    action="always",
+    category=DeprecationWarning,
+    module=__name__,
+)
+
+
 def request(method, url, **kwargs):
     """Constructs and sends a :class:`Request <Request>`.
 

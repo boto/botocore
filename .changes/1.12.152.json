@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``meteringmarketplace``", 
+    "description": "Update meteringmarketplace client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediapackage-vod``", 
+    "description": "Update mediapackage-vod client to latest version", 
+    "type": "api-change"
+  }
+]

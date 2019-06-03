@@ -2,6 +2,136 @@
 CHANGELOG
 =========
 
+1.12.159
+========
+
+* api-change:``iotevents-data``: Update iotevents-data client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+
+
+1.12.158
+========
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``iotthingsgraph``: Update iotthingsgraph client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.157
+========
+
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
+1.12.156
+========
+
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
+1.12.155
+========
+
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.154
+========
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+
+
+1.12.153
+========
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
+1.12.152
+========
+
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+
+
+1.12.151
+========
+
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.12.150
+========
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
+1.12.149
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* enhancement:Environment Variables: Ignore env var credentials is values are empty (`#1680 <https://github.com/boto/botocore/issues/1680>`__)
+* api-change:``rds``: Update rds client to latest version
+
+
+1.12.148
+========
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.147
+========
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.12.146
+========
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
 1.12.145
 ========
 
