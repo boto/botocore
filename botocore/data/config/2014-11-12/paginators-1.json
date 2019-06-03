@@ -31,6 +31,15 @@
       "result_key": "configurationItems",
       "limit_key": "limit"
     },
+    "SelectResourceConfig": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Results",
+      "limit_key": "Limit",
+      "non_aggregate_keys": [
+        "QueryInfo"
+      ]
+    },
     "ListDiscoveredResources": {
       "input_token": "nextToken",
       "output_token": "nextToken",
