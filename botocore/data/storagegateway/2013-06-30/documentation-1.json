@@ -7,6 +7,7 @@
          "AddTagsToResource" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/AddTagsToResource",
          "AddUploadBuffer" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/AddUploadBuffer",
          "AddWorkingStorage" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/AddWorkingStorage",
+         "AssignTapePool" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/AssignTapePool",
          "AttachVolume" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/AttachVolume",
          "CancelArchival" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/CancelArchival",
          "CancelRetrieval" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/CancelRetrieval",

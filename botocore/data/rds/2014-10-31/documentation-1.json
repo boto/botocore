@@ -107,8 +107,10 @@
          "RestoreDBInstanceFromS3" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RestoreDBInstanceFromS3",
          "RestoreDBInstanceToPointInTime" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RestoreDBInstanceToPointInTime",
          "RevokeDBSecurityGroupIngress" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RevokeDBSecurityGroupIngress",
+         "StartActivityStream" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StartActivityStream",
          "StartDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StartDBCluster",
          "StartDBInstance" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StartDBInstance",
+         "StopActivityStream" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StopActivityStream",
          "StopDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StopDBCluster",
          "StopDBInstance" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StopDBInstance"
       }

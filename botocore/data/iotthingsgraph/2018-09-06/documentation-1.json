@@ -1,0 +1,42 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph-2018-09-06",
+      "methods" : {
+         "AssociateEntityToThing" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/AssociateEntityToThing",
+         "CreateFlowTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/CreateFlowTemplate",
+         "CreateSystemInstance" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/CreateSystemInstance",
+         "CreateSystemTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/CreateSystemTemplate",
+         "DeleteFlowTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeleteFlowTemplate",
+         "DeleteNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeleteNamespace",
+         "DeleteSystemInstance" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeleteSystemInstance",
+         "DeleteSystemTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeleteSystemTemplate",
+         "DeploySystemInstance" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeploySystemInstance",
+         "DeprecateFlowTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeprecateFlowTemplate",
+         "DeprecateSystemTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DeprecateSystemTemplate",
+         "DescribeNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DescribeNamespace",
+         "DissociateEntityFromThing" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/DissociateEntityFromThing",
+         "GetEntities" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetEntities",
+         "GetFlowTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetFlowTemplate",
+         "GetFlowTemplateRevisions" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetFlowTemplateRevisions",
+         "GetNamespaceDeletionStatus" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetNamespaceDeletionStatus",
+         "GetSystemInstance" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetSystemInstance",
+         "GetSystemTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetSystemTemplate",
+         "GetSystemTemplateRevisions" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetSystemTemplateRevisions",
+         "GetUploadStatus" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/GetUploadStatus",
+         "ListFlowExecutionMessages" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/ListFlowExecutionMessages",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/ListTagsForResource",
+         "SearchEntities" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchEntities",
+         "SearchFlowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchFlowExecutions",
+         "SearchFlowTemplates" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchFlowTemplates",
+         "SearchSystemInstances" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchSystemInstances",
+         "SearchSystemTemplates" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchSystemTemplates",
+         "SearchThings" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/SearchThings",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/TagResource",
+         "UndeploySystemInstance" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/UndeploySystemInstance",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/UntagResource",
+         "UpdateFlowTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/UpdateFlowTemplate",
+         "UpdateSystemTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/UpdateSystemTemplate",
+         "UploadEntityDefinitions" : "https://docs.aws.amazon.com/goto/WebAPI/iotthingsgraph/UploadEntityDefinitions"
+      }
+   }
+}

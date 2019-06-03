@@ -67,6 +67,7 @@
          "ListResourcesForTagOption" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListResourcesForTagOption",
          "ListServiceActions" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListServiceActions",
          "ListServiceActionsForProvisioningArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListServiceActionsForProvisioningArtifact",
+         "ListStackInstancesForProvisionedProduct" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListStackInstancesForProvisionedProduct",
          "ListTagOptions" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ListTagOptions",
          "ProvisionProduct" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/ProvisionProduct",
          "RejectPortfolioShare" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/RejectPortfolioShare",
@@ -79,6 +80,7 @@
          "UpdatePortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdatePortfolio",
          "UpdateProduct" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateProduct",
          "UpdateProvisionedProduct" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateProvisionedProduct",
+         "UpdateProvisionedProductProperties" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateProvisionedProductProperties",
          "UpdateProvisioningArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateProvisioningArtifact",
          "UpdateServiceAction" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateServiceAction",
          "UpdateTagOption" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/UpdateTagOption"

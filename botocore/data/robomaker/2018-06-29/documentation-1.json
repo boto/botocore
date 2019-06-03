@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker-2018-06-29",
       "methods" : {
          "BatchDescribeSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/BatchDescribeSimulationJob",
+         "CancelDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CancelDeploymentJob",
          "CancelSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CancelSimulationJob",
          "CreateDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateDeploymentJob",
          "CreateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateFleet",

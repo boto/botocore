@@ -3,14 +3,23 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14",
       "methods" : {
          "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/CreateCluster",
+         "CreateConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/CreateConfiguration",
          "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DeleteCluster",
          "DescribeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DescribeCluster",
+         "DescribeClusterOperation" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DescribeClusterOperation",
+         "DescribeConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DescribeConfiguration",
+         "DescribeConfigurationRevision" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/DescribeConfigurationRevision",
          "GetBootstrapBrokers" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/GetBootstrapBrokers",
+         "ListClusterOperations" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListClusterOperations",
          "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListClusters",
+         "ListConfigurationRevisions" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListConfigurationRevisions",
+         "ListConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListConfigurations",
          "ListNodes" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListNodes",
          "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/ListTagsForResource",
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/TagResource",
-         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/UntagResource"
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/UntagResource",
+         "UpdateBrokerStorage" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/UpdateBrokerStorage",
+         "UpdateClusterConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/kafka/UpdateClusterConfiguration"
       }
    }
 }

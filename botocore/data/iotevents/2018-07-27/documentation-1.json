@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27",
+      "methods" : {
+         "CreateDetectorModel" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/CreateDetectorModel",
+         "CreateInput" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/CreateInput",
+         "DeleteDetectorModel" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/DeleteDetectorModel",
+         "DeleteInput" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/DeleteInput",
+         "DescribeDetectorModel" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/DescribeDetectorModel",
+         "DescribeInput" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/DescribeInput",
+         "DescribeLoggingOptions" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/DescribeLoggingOptions",
+         "ListDetectorModelVersions" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/ListDetectorModelVersions",
+         "ListDetectorModels" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/ListDetectorModels",
+         "ListInputs" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/ListInputs",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/ListTagsForResource",
+         "PutLoggingOptions" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/PutLoggingOptions",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/UntagResource",
+         "UpdateDetectorModel" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/UpdateDetectorModel",
+         "UpdateInput" : "https://docs.aws.amazon.com/goto/WebAPI/iotevents/UpdateInput"
+      }
+   }
+}

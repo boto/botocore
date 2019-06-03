@@ -1,0 +1,32 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation-2019-05-23",
+      "methods" : {
+         "CancelContact" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/CancelContact",
+         "CreateConfig" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/CreateConfig",
+         "CreateDataflowEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/CreateDataflowEndpointGroup",
+         "CreateMissionProfile" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/CreateMissionProfile",
+         "DeleteConfig" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/DeleteConfig",
+         "DeleteDataflowEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/DeleteDataflowEndpointGroup",
+         "DeleteMissionProfile" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/DeleteMissionProfile",
+         "DescribeContact" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/DescribeContact",
+         "GetConfig" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/GetConfig",
+         "GetDataflowEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/GetDataflowEndpointGroup",
+         "GetMinuteUsage" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/GetMinuteUsage",
+         "GetMissionProfile" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/GetMissionProfile",
+         "GetSatellite" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/GetSatellite",
+         "ListConfigs" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListConfigs",
+         "ListContacts" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListContacts",
+         "ListDataflowEndpointGroups" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListDataflowEndpointGroups",
+         "ListGroundStations" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListGroundStations",
+         "ListMissionProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListMissionProfiles",
+         "ListSatellites" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListSatellites",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ListTagsForResource",
+         "ReserveContact" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/ReserveContact",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/UntagResource",
+         "UpdateConfig" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/UpdateConfig",
+         "UpdateMissionProfile" : "https://docs.aws.amazon.com/goto/WebAPI/groundstation/UpdateMissionProfile"
+      }
+   }
+}

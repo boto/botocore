@@ -1,0 +1,19 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07",
+      "methods" : {
+         "CreateAsset" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/CreateAsset",
+         "CreatePackagingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/CreatePackagingConfiguration",
+         "CreatePackagingGroup" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/CreatePackagingGroup",
+         "DeleteAsset" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DeleteAsset",
+         "DeletePackagingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DeletePackagingConfiguration",
+         "DeletePackagingGroup" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DeletePackagingGroup",
+         "DescribeAsset" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DescribeAsset",
+         "DescribePackagingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DescribePackagingConfiguration",
+         "DescribePackagingGroup" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/DescribePackagingGroup",
+         "ListAssets" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/ListAssets",
+         "ListPackagingConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/ListPackagingConfigurations",
+         "ListPackagingGroups" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod/ListPackagingGroups"
+      }
+   }
+}

@@ -1,0 +1,11 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/data.iotevents-2018-10-23",
+      "methods" : {
+         "BatchPutMessage" : "https://docs.aws.amazon.com/goto/WebAPI/data.iotevents/BatchPutMessage",
+         "BatchUpdateDetector" : "https://docs.aws.amazon.com/goto/WebAPI/data.iotevents/BatchUpdateDetector",
+         "DescribeDetector" : "https://docs.aws.amazon.com/goto/WebAPI/data.iotevents/DescribeDetector",
+         "ListDetectors" : "https://docs.aws.amazon.com/goto/WebAPI/data.iotevents/ListDetectors"
+      }
+   }
+}

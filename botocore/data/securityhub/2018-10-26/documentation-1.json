@@ -12,6 +12,7 @@
          "DeleteInsight" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteInsight",
          "DeleteInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteInvitations",
          "DeleteMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteMembers",
+         "DescribeProducts" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DescribeProducts",
          "DisableImportFindingsForProduct" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisableImportFindingsForProduct",
          "DisableSecurityHub" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisableSecurityHub",
          "DisassociateFromMasterAccount" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisassociateFromMasterAccount",
@@ -29,6 +30,7 @@
          "ListEnabledProductsForImport" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListEnabledProductsForImport",
          "ListInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListInvitations",
          "ListMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListMembers",
+         "ListProductSubscribers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListProductSubscribers",
          "UpdateFindings" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/UpdateFindings",
          "UpdateInsight" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/UpdateInsight"
       }

@@ -37,12 +37,15 @@
          "ListDeployments" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/ListDeployments",
          "ListGitHubAccountTokenNames" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/ListGitHubAccountTokenNames",
          "ListOnPremisesInstances" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/ListOnPremisesInstances",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/ListTagsForResource",
          "PutLifecycleEventHookExecutionStatus" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/PutLifecycleEventHookExecutionStatus",
          "RegisterApplicationRevision" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/RegisterApplicationRevision",
          "RegisterOnPremisesInstance" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/RegisterOnPremisesInstance",
          "RemoveTagsFromOnPremisesInstances" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/RemoveTagsFromOnPremisesInstances",
          "SkipWaitTimeForInstanceTermination" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/SkipWaitTimeForInstanceTermination",
          "StopDeployment" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/StopDeployment",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/UntagResource",
          "UpdateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/UpdateApplication",
          "UpdateDeploymentGroup" : "https://docs.aws.amazon.com/goto/WebAPI/codedeploy/UpdateDeploymentGroup"
       }
