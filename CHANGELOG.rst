@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.161
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
 1.12.160
 ========
 

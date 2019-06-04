@@ -71,6 +71,18 @@
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "Snapshots"
+    },
+    "DescribeServiceUpdates": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "ServiceUpdates"
+    },
+    "DescribeUpdateActions": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "UpdateActions"
     }
   }
 }
