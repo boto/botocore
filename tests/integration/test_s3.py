@@ -163,9 +163,8 @@ class BaseS3ClientTest(unittest.TestCase):
         return status == 'Enabled' if enabled else status != 'Enabled'
 
     def wait_until_versioning_enabled(self, bucket, min_successes=3):
-        waiter = ConsistencyWaiter()
-        for _ in range(min_successes):
-            waiter.wait(self._check_bucket_versioning, bucket)
+        waiter = ConsistencyWaiter(min_successes=min_successes)
+        waiter.wait(self._check_bucket_versioning, bucket)
 
 
 class TestS3BaseWithBucket(BaseS3ClientTest):

@@ -428,17 +428,53 @@ class ConsistencyWaiterException(Exception):
 
 
 class ConsistencyWaiter(object):
-    def __init__(self, max_attempts=20, delay=5):
+    """
+    A waiter class for some check to reach a consistent state.
+
+    :type min_successes: int
+    :param min_successes: The minimum number of successful check calls to
+    treat the check as stable. Default of 1 success.
+
+    :type max_attempts: int
+    :param min_successes: The maximum number of times to attempt calling
+    the check. Default of 20 attempts.
+
+    :type delay: int
+    :param delay: The number of seconds to delay the next API call after a
+    failed check call. Default of 5 seconds.
+    """
+    def __init__(self, min_successes=1, max_attempts=20, delay=5):
+        self.min_successes = min_successes
         self.max_attempts = max_attempts
         self.delay = delay
 
     def wait(self, check, *args, **kwargs):
+        """
+        Wait until the check succeeds the configured number of times
+
+        :type check: callable
+        :param check: A callable that returns True or False to indicate
+        if the check succeeded or failed.
+
+        :type args: list
+        :param args: Any ordered arguments to be passed to the check.
+
+        :type kwargs: dict
+        :param kwargs: Any keyword arguments to be passed to the check.
+        """
         attempts = 0
+        successes = 0
         while attempts < self.max_attempts:
             attempts += 1
             if check(*args, **kwargs):
-                return
-        raise ConsistencyWaiterException(self._fail_message(attempts))
+                successes += 1
+                if successes >= self.min_successes:
+                    return
+            else:
+                time.sleep(self.delay)
+        fail_msg = self._fail_message(attempts, successes)
+        raise ConsistencyWaiterException(fail_msg)
 
-    def _fail_message(self, attempts):
-        return 'Failed after %s attempts' % attempts
+    def _fail_message(self, attempts, successes):
+        format_args = (attempts, successes)
+        return 'Failed after %s attempts, only had %s successes' % format_args
