@@ -11,7 +11,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, temporary_file, random_chars, ClientHTTPStubber
+from tests import (
+    unittest, temporary_file, random_chars, ClientHTTPStubber,
+    ConsistencyWaiter,
+)
 import os
 import time
 from collections import defaultdict
@@ -37,7 +40,7 @@ from botocore.exceptions import ClientError
 
 
 def random_bucketname():
-    return 'botocoretest-' + random_chars(10)
+    return 'botocoretest-' + random_chars(50)
 
 
 LOG = logging.getLogger('botocore.tests.integration')
@@ -153,6 +156,16 @@ class BaseS3ClientTest(unittest.TestCase):
             params.update(extra_params)
         for _ in range(min_successes):
             waiter.wait(**params)
+
+    def _check_bucket_versioning(self, bucket, enabled=True):
+        response = self.client.get_bucket_versioning(Bucket=bucket)
+        status = response.get('Status')
+        return status == 'Enabled' if enabled else status != 'Enabled'
+
+    def wait_until_versioning_enabled(self, bucket, min_successes=3):
+        waiter = ConsistencyWaiter()
+        for _ in range(min_successes):
+            waiter.wait(self._check_bucket_versioning, bucket)
 
 
 class TestS3BaseWithBucket(BaseS3ClientTest):
@@ -1203,10 +1216,63 @@ class TestRegionRedirect(BaseS3ClientTest):
         key = 'foo'
         self.bucket_client.put_object(
             Bucket=self.bucket_name, Key=key, Body='bar')
-
+        self.wait_until_key_exists(self.bucket_name, key)
         try:
             response = self.client.head_object(
                 Bucket=self.bucket_name, Key=key)
             self.assertEqual(response.get('ContentLength'), len(key))
         except ClientError as e:
             self.fail("S3 Client failed to redirect Head Object: %s" % e)
+
+
+class TestBucketWithVersions(BaseS3ClientTest):
+    def extract_version_ids(self, versions):
+        version_ids = []
+        for marker in versions['DeleteMarkers']:
+            version_ids.append(marker['VersionId'])
+        for version in versions['Versions']:
+            version_ids.append(version['VersionId'])
+        return version_ids
+
+    def test_create_versioned_bucket(self):
+        # Verifies we can:
+        # 1. Create a bucket
+        # 2. Enable versioning
+        # 3. Put an Object
+        bucket = self.create_bucket(self.region)
+
+        self.client.put_bucket_versioning(
+            Bucket=bucket,
+            VersioningConfiguration={"Status": "Enabled"},
+        )
+        self.wait_until_versioning_enabled(bucket)
+
+        key = 'testkey'
+        body = b'bytes body'
+        response = self.client.put_object(Bucket=bucket, Key=key, Body=body)
+        self.addCleanup(
+            self.client.delete_object,
+            Bucket=bucket,
+            Key=key,
+            VersionId=response['VersionId']
+        )
+        self.wait_until_key_exists(bucket, key)
+
+        response = self.client.get_object(Bucket=bucket, Key=key)
+        self.assertEqual(response['Body'].read(), body)
+
+        response = self.client.delete_object(Bucket=bucket, Key=key)
+        # This cleanup step removes the DeleteMarker that's created
+        # from the delete_object call above.
+        self.addCleanup(
+            self.client.delete_object,
+            Bucket=bucket,
+            Key=key,
+            VersionId=response['VersionId']
+        )
+        # Object does not exist anymore.
+        with self.assertRaises(ClientError):
+            self.client.get_object(Bucket=bucket, Key=key)
+        versions = self.client.list_object_versions(Bucket=bucket)
+        version_ids = self.extract_version_ids(versions)
+        self.assertEqual(len(version_ids), 2)

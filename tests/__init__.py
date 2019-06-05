@@ -421,3 +421,24 @@ class ClientHTTPStubber(object):
             raise HTTPStubberException('Insufficient responses')
         else:
             return None
+
+
+class ConsistencyWaiterException(Exception):
+    pass
+
+
+class ConsistencyWaiter(object):
+    def __init__(self, max_attempts=20, delay=5):
+        self.max_attempts = max_attempts
+        self.delay = delay
+
+    def wait(self, check, *args, **kwargs):
+        attempts = 0
+        while attempts < self.max_attempts:
+            attempts += 1
+            if check(*args, **kwargs):
+                return
+        raise ConsistencyWaiterException(self._fail_message(attempts))
+
+    def _fail_message(self, attempts):
+        return 'Failed after %s attempts' % attempts
