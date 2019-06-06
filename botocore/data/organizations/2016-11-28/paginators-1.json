@@ -77,6 +77,11 @@
       "output_token": "NextToken",
       "input_token": "NextToken",
       "limit_key": "MaxResults"
+    },
+    "ListTagsForResource": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Tags"
     }
   }
 }
