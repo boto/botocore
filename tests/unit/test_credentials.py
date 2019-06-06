@@ -1285,8 +1285,7 @@ class CredentialResolverTest(BaseEnvVar):
         self.provider2.load.return_value = None
         resolver = credentials.CredentialResolver(providers=[self.provider1,
                                                              self.provider2])
-        creds = resolver.load_credentials()
-        self.assertIsNone(creds)
+        self.assertRaises(botocore.exceptions.NoCredentialsError, resolver.load_credentials)
 
     def test_inject_additional_providers_after_existing(self):
         self.provider1.load.return_value = None

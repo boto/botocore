@@ -31,6 +31,7 @@ import botocore.configloader
 import botocore.compat
 from botocore.compat import total_seconds
 from botocore.compat import compat_shell_split
+from botocore.exceptions import NoCredentialsError
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
@@ -1748,10 +1749,9 @@ class CredentialResolver(object):
             if creds is not None:
                 return creds
 
-        # If we got here, no credentials could be found.
-        # This feels like it should be an exception, but historically, ``None``
-        # is returned.
-        #
-        # +1
-        # -js
-        return None
+        # This is a change in behavior, but is a safety feature that will
+        # ensure that the session will get credentials. This avoids the
+        # scenario where it's possible to fail to receive credentials from
+        # the instance metadata store and then never refresh, despite that
+        # being the desired credential method.
+        raise NoCredentialsError
