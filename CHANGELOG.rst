@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.12.163
+========
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ses``: Update ses client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
 1.12.162
 ========
 
