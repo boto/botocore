@@ -165,11 +165,6 @@ ERROR_TESTS = {
     'gamelift': {'DescribeBuild': {'BuildId': 'fake-build-id'}},
     'glacier': {'ListVaults': {'accountId': 'fake'}},
     'iam': {'GetUser': {'UserName': 'fake'}},
-    'importexport': {'CreateJob': {
-        'JobType': 'Import',
-        'ValidateOnly': False,
-        'Manifest': 'fake',
-        }},
     'kinesis': {'DescribeStream': {'StreamName': 'fake'}},
     'kms': {'GetKeyPolicy': {'KeyId': 'fake', 'PolicyName': 'fake'}},
     'lambda': {'Invoke': {'FunctionName': 'fake'}},
