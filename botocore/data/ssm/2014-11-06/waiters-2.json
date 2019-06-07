@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "waiters": {
+      "CommandComplete": {
+          "operation": "GetCommandInvocation",
+          "maxAttempts": 200,
+          "delay": 5,
+          "acceptors": [
+              {
+                  "state": "retry",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Pending"
+              },
+              {
+                  "state": "retry",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "InProgress"
+              },
+              {
+                  "state": "retry",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Delayed"
+              },
+              {
+                  "state": "success",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Success"
+              },
+              {
+                  "state": "failure",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Cancelled"
+              },
+              {
+                  "state": "failure",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "TimedOut"
+              },
+              {
+                  "state": "failure",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Failed"
+              },
+              {
+                  "state": "retry",
+                  "matcher": "path",
+                  "argument": "Status",
+                  "expected": "Cancelling"
+              },
+              {
+                  "state": "retry",
+                  "matcher": "error",
+                  "expected": "InvocationDoesNotExist"
+              }
+          ]
+      }
+  }
+}
