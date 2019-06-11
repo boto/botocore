@@ -2,6 +2,58 @@
 CHANGELOG
 =========
 
+1.12.165
+========
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``personalize-events``: Update personalize-events client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
+1.12.164
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.163
+========
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ses``: Update ses client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
+1.12.162
+========
+
+* api-change:``glue``: Update glue client to latest version
+
+
+1.12.161
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
+1.12.160
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.159
 ========
 
