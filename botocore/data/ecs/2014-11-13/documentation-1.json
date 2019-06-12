@@ -36,6 +36,7 @@
          "RunTask" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/RunTask",
          "StartTask" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/StartTask",
          "StopTask" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/StopTask",
+         "SubmitAttachmentStateChanges" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/SubmitAttachmentStateChanges",
          "SubmitContainerStateChange" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/SubmitContainerStateChange",
          "SubmitTaskStateChange" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/SubmitTaskStateChange",
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/TagResource",

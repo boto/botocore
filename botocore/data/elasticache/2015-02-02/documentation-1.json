@@ -4,6 +4,8 @@
       "methods" : {
          "AddTagsToResource" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/AddTagsToResource",
          "AuthorizeCacheSecurityGroupIngress" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/AuthorizeCacheSecurityGroupIngress",
+         "BatchApplyUpdateAction" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/BatchApplyUpdateAction",
+         "BatchStopUpdateAction" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/BatchStopUpdateAction",
          "CopySnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/CopySnapshot",
          "CreateCacheCluster" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/CreateCacheCluster",
          "CreateCacheParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/CreateCacheParameterGroup",
@@ -29,7 +31,9 @@
          "DescribeReplicationGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeReplicationGroups",
          "DescribeReservedCacheNodes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeReservedCacheNodes",
          "DescribeReservedCacheNodesOfferings" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeReservedCacheNodesOfferings",
+         "DescribeServiceUpdates" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeServiceUpdates",
          "DescribeSnapshots" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeSnapshots",
+         "DescribeUpdateActions" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/DescribeUpdateActions",
          "IncreaseReplicaCount" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/IncreaseReplicaCount",
          "ListAllowedNodeTypeModifications" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/ListAllowedNodeTypeModifications",
          "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/elasticache/ListTagsForResource",

@@ -72,6 +72,7 @@
          "UpdateMaintenanceStartTime" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateMaintenanceStartTime",
          "UpdateNFSFileShare" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateNFSFileShare",
          "UpdateSMBFileShare" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateSMBFileShare",
+         "UpdateSMBSecurityStrategy" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateSMBSecurityStrategy",
          "UpdateSnapshotSchedule" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateSnapshotSchedule",
          "UpdateVTLDeviceType" : "https://docs.aws.amazon.com/goto/WebAPI/storagegateway/UpdateVTLDeviceType"
       }

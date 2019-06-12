@@ -1,0 +1,43 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22",
+      "methods" : {
+         "CreateCampaign" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateCampaign",
+         "CreateDataset" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateDataset",
+         "CreateDatasetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateDatasetGroup",
+         "CreateDatasetImportJob" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateDatasetImportJob",
+         "CreateEventTracker" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateEventTracker",
+         "CreateSchema" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateSchema",
+         "CreateSolution" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateSolution",
+         "CreateSolutionVersion" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/CreateSolutionVersion",
+         "DeleteCampaign" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteCampaign",
+         "DeleteDataset" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteDataset",
+         "DeleteDatasetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteDatasetGroup",
+         "DeleteEventTracker" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteEventTracker",
+         "DeleteSchema" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteSchema",
+         "DeleteSolution" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DeleteSolution",
+         "DescribeAlgorithm" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeAlgorithm",
+         "DescribeCampaign" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeCampaign",
+         "DescribeDataset" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeDataset",
+         "DescribeDatasetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeDatasetGroup",
+         "DescribeDatasetImportJob" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeDatasetImportJob",
+         "DescribeEventTracker" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeEventTracker",
+         "DescribeFeatureTransformation" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeFeatureTransformation",
+         "DescribeRecipe" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeRecipe",
+         "DescribeSchema" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeSchema",
+         "DescribeSolution" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeSolution",
+         "DescribeSolutionVersion" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/DescribeSolutionVersion",
+         "GetSolutionMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/GetSolutionMetrics",
+         "ListCampaigns" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListCampaigns",
+         "ListDatasetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListDatasetGroups",
+         "ListDatasetImportJobs" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListDatasetImportJobs",
+         "ListDatasets" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListDatasets",
+         "ListEventTrackers" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListEventTrackers",
+         "ListRecipes" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListRecipes",
+         "ListSchemas" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListSchemas",
+         "ListSolutionVersions" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListSolutionVersions",
+         "ListSolutions" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/ListSolutions",
+         "UpdateCampaign" : "https://docs.aws.amazon.com/goto/WebAPI/personalize/UpdateCampaign"
+      }
+   }
+}

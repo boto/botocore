@@ -40,9 +40,12 @@
          "ListPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/ListPolicies",
          "ListPoliciesForTarget" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/ListPoliciesForTarget",
          "ListRoots" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/ListRoots",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/ListTagsForResource",
          "ListTargetsForPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/ListTargetsForPolicy",
          "MoveAccount" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/MoveAccount",
          "RemoveAccountFromOrganization" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/RemoveAccountFromOrganization",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/UntagResource",
          "UpdateOrganizationalUnit" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/UpdateOrganizationalUnit",
          "UpdatePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/organizations/UpdatePolicy"
       }

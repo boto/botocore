@@ -44,6 +44,7 @@
          "ListReceiptRuleSets" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListReceiptRuleSets",
          "ListTemplates" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListTemplates",
          "ListVerifiedEmailAddresses" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListVerifiedEmailAddresses",
+         "PutConfigurationSetDeliveryOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetDeliveryOptions",
          "PutIdentityPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutIdentityPolicy",
          "ReorderReceiptRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/ReorderReceiptRuleSet",
          "SendBounce" : "https://docs.aws.amazon.com/goto/WebAPI/email/SendBounce",

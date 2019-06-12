@@ -10,6 +10,7 @@
          "CreateAssociationBatch" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreateAssociationBatch",
          "CreateDocument" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreateDocument",
          "CreateMaintenanceWindow" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreateMaintenanceWindow",
+         "CreateOpsItem" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreateOpsItem",
          "CreatePatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreatePatchBaseline",
          "CreateResourceDataSync" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/CreateResourceDataSync",
          "DeleteActivation" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DeleteActivation",
@@ -50,6 +51,7 @@
          "DescribeMaintenanceWindowTasks" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeMaintenanceWindowTasks",
          "DescribeMaintenanceWindows" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeMaintenanceWindows",
          "DescribeMaintenanceWindowsForTarget" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeMaintenanceWindowsForTarget",
+         "DescribeOpsItems" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeOpsItems",
          "DescribeParameters" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribeParameters",
          "DescribePatchBaselines" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchBaselines",
          "DescribePatchGroupState" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/DescribePatchGroupState",
@@ -69,6 +71,8 @@
          "GetMaintenanceWindowExecutionTask" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetMaintenanceWindowExecutionTask",
          "GetMaintenanceWindowExecutionTaskInvocation" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetMaintenanceWindowExecutionTaskInvocation",
          "GetMaintenanceWindowTask" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetMaintenanceWindowTask",
+         "GetOpsItem" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetOpsItem",
+         "GetOpsSummary" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetOpsSummary",
          "GetParameter" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetParameter",
          "GetParameterHistory" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetParameterHistory",
          "GetParameters" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetParameters",
@@ -115,6 +119,7 @@
          "UpdateMaintenanceWindowTarget" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateMaintenanceWindowTarget",
          "UpdateMaintenanceWindowTask" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateMaintenanceWindowTask",
          "UpdateManagedInstanceRole" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateManagedInstanceRole",
+         "UpdateOpsItem" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateOpsItem",
          "UpdatePatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdatePatchBaseline",
          "UpdateServiceSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/UpdateServiceSetting"
       }

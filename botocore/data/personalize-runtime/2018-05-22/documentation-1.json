@@ -1,0 +1,9 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-runtime-2018-05-22",
+      "methods" : {
+         "GetPersonalizedRanking" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-runtime/GetPersonalizedRanking",
+         "GetRecommendations" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-runtime/GetRecommendations"
+      }
+   }
+}

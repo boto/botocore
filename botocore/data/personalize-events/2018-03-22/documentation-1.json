@@ -1,0 +1,8 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-events-2018-03-22",
+      "methods" : {
+         "PutEvents" : "https://docs.aws.amazon.com/goto/WebAPI/personalize-events/PutEvents"
+      }
+   }
+}
