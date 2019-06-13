@@ -265,6 +265,20 @@
           }
         }
       }
+    },
+    "sts": {
+      "__default__": {
+        "policies": {
+          "idp_unreachable_error": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "IDPCommunicationError",
+                "http_status_code": 400
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
