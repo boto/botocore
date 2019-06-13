@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.168
+========
+
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.12.167
 ========
 
