@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.169
+========
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.12.168
 ========
 
