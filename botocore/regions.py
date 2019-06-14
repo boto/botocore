@@ -168,7 +168,7 @@ class EndpointResolver(BaseEndpointResolver):
         self._merge_keys(partition.get('defaults', {}), result)
         hostname = result.get('hostname', DEFAULT_URI_TEMPLATE)
         result['hostname'] = self._expand_template(
-            partition, result['hostname'], service_name, endpoint_name)
+            partition, hostname, service_name, endpoint_name)
         if 'sslCommonName' in result:
             result['sslCommonName'] = self._expand_template(
                 partition, result['sslCommonName'], service_name,
