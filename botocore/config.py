@@ -134,7 +134,7 @@ class Config(object):
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
         ('s3', None),
-        ('retries', None),
+        ('retries', dict(max_attempts=15)),
         ('client_cert', None),
         ('inject_host_prefix', True),
         ('endpoint_discovery_enabled', None),
