@@ -188,6 +188,73 @@
           "argument": "DBSnapshots[].Status"
         }
       ]
+    },
+    "DBClusterAvailable": {
+      "delay": 30,
+      "operation": "DescribeDBClusters",
+      "maxAttempts": 60,
+      "acceptors": [
+        {
+          "expected": "available",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "deleted",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "deleting",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        }
+      ]
+    },
+    "DBClusterDeleted": {
+      "delay": 30,
+      "operation": "DescribeDBClusters",
+      "maxAttempts": 60,
+      "acceptors": [
+        {
+          "expected": "deleted",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "DBClusterNotFoundFault",
+          "matcher": "error",
+          "state": "success"
+        },
+        {
+          "expected": "creating",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "modifying",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "rebooting",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        },
+        {
+          "expected": "resetting-master-credentials",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "DBClusters[].Status"
+        }
+      ]
     }
   }
 }
