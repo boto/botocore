@@ -173,6 +173,50 @@ class TestAutoscalingPagination(BaseSessionTest):
         self.assertEqual(len(all_results), total_items)
 
 
+class TestCloudwatchLogsPagination(BaseSessionTest):
+    def setUp(self):
+        super(TestCloudwatchLogsPagination, self).setUp()
+        self.region = 'us-west-2'
+        self.client = self.session.create_client(
+            'logs', self.region, aws_secret_access_key='foo',
+            aws_access_key_id='bar', aws_session_token='baz'
+        )
+        self.stubber = Stubber(self.client)
+        self.stubber.activate()
+
+    def test_token_with_triple_underscores(self):
+        response = {
+            'events': [{
+                'logStreamName': 'foobar',
+                'timestamp': 1560195817,
+                'message': 'a thing happened',
+                'ingestionTime': 1560195817,
+                'eventId': 'foo',
+            }],
+            'searchedLogStreams': [{
+                'logStreamName': 'foobar',
+                'searchedCompletely': False,
+            }],
+        }
+        group_name = 'foo'
+        token = 'foo___bar'
+        expected_args = {
+            'logGroupName': group_name,
+            'nextToken': token,
+        }
+        self.stubber.add_response('filter_log_events', response, expected_args)
+        paginator = self.client.get_paginator('filter_log_events')
+        pages = paginator.paginate(
+            PaginationConfig={
+                'MaxItems': 1,
+                'StartingToken': token,
+            },
+            logGroupName=group_name,
+        )
+        result = pages.build_full_result()
+        self.assertEqual(len(result['events']), 1)
+
+
 def test_token_encoding():
     cases = [
         {'foo': 'bar'},
