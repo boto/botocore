@@ -78,6 +78,14 @@
           "http_status_code": 509
         }
       }
+    },
+    "throughput_exceeded": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "ProvisionedThroughputExceededException",
+          "http_status_code": 400
+        }
+      }
     }
   },
   "retry": {
@@ -99,7 +107,8 @@
           "throttled_exception": {"$ref": "throttled_exception"},
           "request_throttled_exception": {"$ref": "request_throttled_exception"},
           "throttling": {"$ref": "throttling"},
-          "too_many_requests": {"$ref": "too_many_requests"}
+          "too_many_requests": {"$ref": "too_many_requests"},
+          "throughput_exceeded": {"$ref": "throughput_exceeded"}
       }
     },
     "organizations": {
@@ -133,14 +142,6 @@
 	      }
 	    }
 	  },
-          "throughput_exceeded": {
-            "applies_when": {
-              "response": {
-                "service_error_code": "ProvisionedThroughputExceededException",
-                "http_status_code": 400
-              }
-            }
-          },
           "crc32": {
             "applies_when": {
               "response": {
