@@ -105,7 +105,10 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxResults",
-      "result_key": "ServiceDetails"
+      "result_key": [
+          "ServiceDetails",
+          "ServiceNames"
+      ]
     },
     "DescribeVpcEndpointConnections": {
       "input_token": "NextToken",

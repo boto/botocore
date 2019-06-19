@@ -39,6 +39,8 @@ class TestElasticTranscoder(unittest.TestCase):
     def create_bucket(self):
         bucket_name = 'ets-bucket-1-%s' % random_chars(50)
         self.s3_client.create_bucket(Bucket=bucket_name)
+        waiter = self.s3_client.get_waiter('bucket_exists')
+        waiter.wait(Bucket=bucket_name)
         self.addCleanup(
             self.s3_client.delete_bucket, Bucket=bucket_name)
         return bucket_name
