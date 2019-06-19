@@ -2,6 +2,46 @@
 CHANGELOG
 =========
 
+1.12.172
+========
+
+* api-change:``eks``: Update eks client to latest version
+
+
+1.12.171
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
+1.12.170
+========
+
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* bugfix:Paginator: Fixes a bug where pagination tokens with three consecutive underscores would result in a parsing failure. Resolves boto/boto3`#1984 <https://github.com/boto/boto3/issues/1984>`__.
+
+
+1.12.169
+========
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.12.168
+========
+
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.12.167
 ========
 
