@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.172
+========
+
+* api-change:``eks``: Update eks client to latest version
+
+
 1.12.171
 ========
 
