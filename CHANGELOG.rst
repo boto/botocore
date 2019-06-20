@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.173
+========
+
+* api-change:``health``: Update health client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``iotevents-data``: Update iotevents-data client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
 1.12.172
 ========
 
