@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.174
+========
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+
+
 1.12.173
 ========
 
