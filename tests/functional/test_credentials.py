@@ -30,7 +30,7 @@ from tests import temporary_file
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
-from botocore.credentials import AssumeRoleProvider
+from botocore.credentials import AssumeRoleProvider, get_profile_providers
 from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
 from botocore.credentials import create_credential_resolver
@@ -157,6 +157,14 @@ class TestAssumeRole(BaseEnvVar):
         self.container_provider = self.mock_provider(ContainerProvider)
         self.actual_client_region = None
 
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        credential_process = os.path.join(
+            current_dir, 'utils', 'credentialprocess.py'
+        )
+        self.credential_process = '%s %s' % (
+            sys.executable, credential_process
+        )
+
     def mock_provider(self, provider_cls):
         mock_instance = mock.Mock(spec=provider_cls)
         mock_instance.load.return_value = None
@@ -187,7 +195,8 @@ class TestAssumeRole(BaseEnvVar):
             credential_sourcer=CanonicalNameCredentialSourcer([
                 self.env_provider, self.container_provider,
                 self.metadata_provider
-            ])
+            ]),
+            profile_providers=get_profile_providers(session),
         )
 
         component_name = 'credential_provider'
@@ -360,13 +369,13 @@ class TestAssumeRole(BaseEnvVar):
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'source_profile = B\n'
             '[profile B]\n'
-            'credential_process = command\n'
+            'region = us-west-2\n'
         )
         self.write_config(config)
 
         with self.assertRaises(InvalidConfigError):
             session, _ = self.create_session(profile='A')
-            session.get_credentials()
+            session.get_credentials().get_frozen_credentials()
 
     def test_recursive_assume_role(self):
         config = (
@@ -432,6 +441,25 @@ class TestAssumeRole(BaseEnvVar):
             session, _ = self.create_session(profile='A')
             session.get_credentials()
 
+    def test_process_source_profile(self):
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n'
+            '[profile B]\n'
+            'credential_process = %s\n' % self.credential_process
+        )
+        self.write_config(config)
+
+        expected_creds = self.create_random_credentials()
+        response = self.create_assume_role_response(expected_creds)
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
+
+        actual_creds = session.get_credentials()
+        self.assert_creds_equal(actual_creds, expected_creds)
+        stubber.assert_no_pending_responses()
+
     def test_self_referential_profile(self):
         config = (
             '[profile A]\n'
@@ -450,7 +478,6 @@ class TestAssumeRole(BaseEnvVar):
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
         stubber.assert_no_pending_responses()
-
 
     def create_stubbed_sts_client(self, session):
         expected_creds = self.create_random_credentials()

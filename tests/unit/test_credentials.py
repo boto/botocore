@@ -28,7 +28,7 @@ from botocore.compat import json
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
-from botocore.credentials import Credentials
+from botocore.credentials import Credentials, get_profile_providers
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import ConfigValueStore
@@ -2306,6 +2306,48 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                 aws_session_token=assume_responses[0].token
             ),
         ])
+
+    def test_assume_role_with_profile_provider(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={},
+            profile_name='development',
+            profile_providers=[ProfileProvider],
+        )
+
+        creds = provider.load().get_frozen_credentials()
+
+        self.assertEqual(client_creator.call_count, 1)
+        client_creator.assert_called_with(
+            'sts',
+            aws_access_key_id='fu',
+            aws_secret_access_key='bin',
+            aws_session_token='bam',
+        )
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+
+class ProfileProvider(object):
+    METHOD = 'fake'
+
+    def __init__(self, profile_name):
+        self._profile_name = profile_name
+
+    def load(self):
+        return Credentials('fu', 'bin', 'bam', self.METHOD)
 
 
 class TestJSONCache(unittest.TestCase):
