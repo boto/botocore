@@ -21,6 +21,7 @@ import json
 import subprocess
 from collections import namedtuple
 from copy import deepcopy
+from functools import partial
 from hashlib import sha1
 import json
 
@@ -79,20 +80,26 @@ def create_credential_resolver(session, cache=None):
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
-        ])
+        ]),
+        profile_providers=get_profile_providers(session),
     )
     providers = [
         env_provider,
         assume_role_provider,
         SharedCredentialProvider(
             creds_filename=credential_file,
-            profile_name=profile_name
+            profile_name=profile_name,
         ),
-        ProcessProvider(profile_name=profile_name,
-                        load_config=lambda: session.full_config),
+        ProcessProvider(
+            profile_name=profile_name,
+            load_config=lambda: session.full_config,
+        ),
         # The new config file has precedence over the legacy
         # config file.
-        ConfigProvider(config_filename=config_file, profile_name=profile_name),
+        ConfigProvider(
+            config_filename=config_file,
+            profile_name=profile_name,
+        ),
         OriginalEC2Provider(),
         BotoProvider(),
         container_provider,
@@ -120,6 +127,23 @@ def create_credential_resolver(session, cache=None):
 
     resolver = CredentialResolver(providers=providers)
     return resolver
+
+
+def get_profile_providers(session):
+    return [
+        partial(
+            SharedCredentialProvider,
+            creds_filename=session.get_config_variable('credentials_file'),
+        ),
+        partial(
+            ProcessProvider,
+            load_config=lambda: session.full_config,
+        ),
+        partial(
+            ConfigProvider,
+            config_filename=session.get_config_variable('config_file'),
+        ),
+    ]
 
 
 def get_credentials(session):
@@ -1173,7 +1197,8 @@ class AssumeRoleProvider(CredentialProvider):
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass, credential_sourcer=None):
+                 prompter=getpass.getpass, credential_sourcer=None,
+                 profile_providers=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1223,6 +1248,9 @@ class AssumeRoleProvider(CredentialProvider):
         # instantiated).
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
+        self._profile_providers = profile_providers
+        if self._profile_providers is None:
+            self._profile_providers = []
         self._visited_profiles = [self._profile_name]
 
     def load(self):
@@ -1362,16 +1390,6 @@ class AssumeRoleProvider(CredentialProvider):
 
         source_profile = profiles[source_profile_name]
 
-        # Ensure the profile has valid credential type
-        if not self._source_profile_has_credentials(source_profile):
-            raise InvalidConfigError(
-                error_msg=(
-                    'The source_profile "%s" must specify either static '
-                    'credentials or an assume role configuration' % (
-                        source_profile_name)
-                )
-            )
-
         # Make sure we aren't going into an infinite loop. If we haven't
         # visited the profile yet, we're good.
         if source_profile_name not in self._visited_profiles:
@@ -1415,8 +1433,24 @@ class AssumeRoleProvider(CredentialProvider):
         profiles = self._loaded_config.get('profiles', {})
         profile = profiles[profile_name]
 
-        if self._has_static_credentials(profile):
+        if self._has_static_credentials(profile) and \
+                not self._profile_providers:
+            # This is only here for backwards compatibility
             return self._resolve_static_credentials_from_profile(profile)
+        elif self._has_static_credentials(profile) or \
+                not self._has_assume_role_config_vars(profile):
+            profile_chain = CredentialResolver([
+                p(profile_name=profile_name) for p in self._profile_providers
+            ])
+            credentials = profile_chain.load_credentials()
+            if credentials is None:
+                error_message = (
+                    'The source profile "%s" must have credentials.'
+                )
+                raise InvalidConfigError(
+                    error_msg=error_message % profile_name,
+                )
+            return credentials
 
         return self._load_creds_via_assume_role(profile_name)
 
