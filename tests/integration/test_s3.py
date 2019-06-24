@@ -70,6 +70,9 @@ def setup_module():
 def clear_out_bucket(bucket, region, delete_bucket=False):
     s3 = botocore.session.get_session().create_client(
         's3', region_name=region)
+    # Ensure the bucket exists before attempting to wipe it out
+    exists_waiter = s3.get_waiter('bucket_exists')
+    exists_waiter.wait(Bucket=bucket)
     page = s3.get_paginator('list_objects')
     # Use pages paired with batch delete_objects().
     for page in page.paginate(Bucket=bucket):
@@ -77,17 +80,21 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
         if keys:
             s3.delete_objects(Bucket=bucket, Delete={'Objects': keys})
     if delete_bucket:
-        try:
-            s3.delete_bucket(Bucket=bucket)
-        except Exception as e:
-            # We can sometimes get exceptions when trying to
-            # delete a bucket.  We'll let the waiter make
-            # the final call as to whether the bucket was able
-            # to be deleted.
-            LOG.debug("delete_bucket() raised an exception: %s",
-                      e, exc_info=True)
-            waiter = s3.get_waiter('bucket_not_exists')
-            waiter.wait(Bucket=bucket)
+        for _ in range(5):
+            try:
+                s3.delete_bucket(Bucket=bucket)
+                break
+            except s3.exceptions.NoSuchBucket:
+                exists_waiter.wait(Bucket=bucket)
+            except Exception as e:
+                # We can sometimes get exceptions when trying to
+                # delete a bucket.  We'll let the waiter make
+                # the final call as to whether the bucket was able
+                # to be deleted.
+                LOG.debug("delete_bucket() raised an exception: %s",
+                          e, exc_info=True)
+                not_exists_waiter = s3.get_waiter('bucket_not_exists')
+                not_exists_waiter.wait(Bucket=bucket)
 
 
 def teardown_module():
