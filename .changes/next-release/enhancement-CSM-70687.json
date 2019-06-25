@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "CSM",
+  "description": "Support configuration of the host used in client side metrics via AWS_CSM_HOST"
+}

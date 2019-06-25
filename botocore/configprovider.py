@@ -72,6 +72,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     # Do not use them until publicly documented.
     'csm_enabled': (
             'csm_enabled', 'AWS_CSM_ENABLED', False, utils.ensure_boolean),
+    'csm_host': ('csm_host', 'AWS_CSM_HOST', '127.0.0.1', None),
     'csm_port': ('csm_port', 'AWS_CSM_PORT', 31000, int),
     'csm_client_id': ('csm_client_id', 'AWS_CSM_CLIENT_ID', '', None),
     # Endpoint discovery configuration
