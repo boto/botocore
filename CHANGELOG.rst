@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.176
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
 1.12.175
 ========
 
