@@ -192,12 +192,13 @@ class Session(object):
     def _create_csm_monitor(self):
         if self.get_config_variable('csm_enabled'):
             client_id = self.get_config_variable('csm_client_id')
+            host = self.get_config_variable('csm_host')
             port = self.get_config_variable('csm_port')
             handler = monitoring.Monitor(
                 adapter=monitoring.MonitorEventAdapter(),
                 publisher=monitoring.SocketPublisher(
                     socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
-                    host='127.0.0.1',
+                    host=host,
                     port=port,
                     serializer=monitoring.CSMSerializer(
                         csm_client_id=client_id)

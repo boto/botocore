@@ -728,6 +728,15 @@ class TestClientMonitoring(BaseSessionTest):
         mock_monitor.return_value.register.assert_called_with(
             client.meta.events)
 
+    def assert_monitoring_host_and_port(self, session, host, port):
+        with mock.patch('botocore.monitoring.SocketPublisher',
+                        spec=True) as mock_publisher:
+            client = session.create_client('ec2', 'us-west-2')
+        self.assertEqual(mock_publisher.call_count, 1)
+        _, args, kwargs = mock_publisher.mock_calls[0]
+        self.assertEqual(kwargs.get('host'), host)
+        self.assertEqual(kwargs.get('port'), port)
+
     def assert_created_client_is_not_monitored(self, session):
         with mock.patch('botocore.session.monitoring.Monitor',
                         spec=True) as mock_monitor:
@@ -746,6 +755,22 @@ class TestClientMonitoring(BaseSessionTest):
     def test_with_csm_enabled_from_env(self):
         self.environ['AWS_CSM_ENABLED'] = 'true'
         self.assert_created_client_is_monitored(self.session)
+
+    def test_with_csm_host(self):
+        custom_host = '10.13.37.1'
+        self.environ['AWS_CSM_ENABLED'] = 'true'
+        self.environ['AWS_CSM_HOST'] = custom_host
+        self.assert_monitoring_host_and_port(self.session, custom_host, 31000)
+
+    def test_with_csm_port(self):
+        custom_port = '1234'
+        self.environ['AWS_CSM_ENABLED'] = 'true'
+        self.environ['AWS_CSM_PORT'] = custom_port
+        self.assert_monitoring_host_and_port(
+            self.session,
+            '127.0.0.1',
+            int(custom_port),
+        )
 
     def test_with_csm_disabled_from_config(self):
         with temporary_file('w') as f:
