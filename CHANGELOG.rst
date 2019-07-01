@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.181
+========
+
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.180
 ========
 
