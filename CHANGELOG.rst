@@ -2,6 +2,78 @@
 CHANGELOG
 =========
 
+1.12.180
+========
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
+1.12.179
+========
+
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``ec2-instance-connect``: Update ec2-instance-connect client to latest version
+
+
+1.12.178
+========
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
+1.12.177
+========
+
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
+1.12.176
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
+1.12.175
+========
+
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``service-quotas``: Update service-quotas client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
+1.12.174
+========
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+
+
+1.12.173
+========
+
+* api-change:``health``: Update health client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``iotevents-data``: Update iotevents-data client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
 1.12.172
 ========
 

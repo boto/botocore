@@ -106,8 +106,8 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": [
-          "ServiceDetails",
-          "ServiceNames"
+        "ServiceDetails",
+        "ServiceNames"
       ]
     },
     "DescribeVpcEndpointConnections": {
@@ -397,6 +397,24 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Subnets"
+    },
+    "DescribeTrafficMirrorFilters": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TrafficMirrorFilters"
+    },
+    "DescribeTrafficMirrorSessions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TrafficMirrorSessions"
+    },
+    "DescribeTrafficMirrorTargets": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TrafficMirrorTargets"
     }
   }
 }
