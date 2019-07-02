@@ -23,8 +23,8 @@
         "shape" : "CreateAppRequest"
       },
       "output" : {
-        "shape" : "CreateAppResponse",
-        "documentation" : "<p>The request succeeded and the specified resource was created.</p>"
+        "shape" : "ApplicationResponse",
+        "documentation" : "201 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -58,8 +58,8 @@
         "shape" : "CreateCampaignRequest"
       },
       "output" : {
-        "shape" : "CreateCampaignResponse",
-        "documentation" : "<p>The request succeeded and the specified resource was created.</p>"
+        "shape" : "CampaignResponse",
+        "documentation" : "201 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -93,8 +93,8 @@
         "shape" : "CreateExportJobRequest"
       },
       "output" : {
-        "shape" : "CreateExportJobResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "ExportJobResponse",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -128,8 +128,8 @@
         "shape" : "CreateImportJobRequest"
       },
       "output" : {
-        "shape" : "CreateImportJobResponse",
-        "documentation" : "<p>The request succeeded and the specified resource was created.</p>"
+        "shape" : "ImportJobResponse",
+        "documentation" : "201 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -163,8 +163,8 @@
         "shape" : "CreateSegmentRequest"
       },
       "output" : {
-        "shape" : "CreateSegmentResponse",
-        "documentation" : "<p>The request succeeded and the specified resource was created.</p>"
+        "shape" : "SegmentResponse",
+        "documentation" : "201 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -198,8 +198,8 @@
         "shape" : "DeleteAdmChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteAdmChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ADMChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -233,8 +233,8 @@
         "shape" : "DeleteApnsChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteApnsChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -268,8 +268,8 @@
         "shape" : "DeleteApnsSandboxChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteApnsSandboxChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSSandboxChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -303,8 +303,8 @@
         "shape" : "DeleteApnsVoipChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteApnsVoipChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSVoipChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -338,8 +338,8 @@
         "shape" : "DeleteApnsVoipSandboxChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteApnsVoipSandboxChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSVoipSandboxChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -373,8 +373,8 @@
         "shape" : "DeleteAppRequest"
       },
       "output" : {
-        "shape" : "DeleteAppResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ApplicationResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -408,8 +408,8 @@
         "shape" : "DeleteBaiduChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteBaiduChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "BaiduChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -443,8 +443,8 @@
         "shape" : "DeleteCampaignRequest"
       },
       "output" : {
-        "shape" : "DeleteCampaignResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "CampaignResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -478,8 +478,8 @@
         "shape" : "DeleteEmailChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteEmailChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EmailChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -513,8 +513,8 @@
         "shape" : "DeleteEndpointRequest"
       },
       "output" : {
-        "shape" : "DeleteEndpointResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "EndpointResponse",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -548,8 +548,8 @@
         "shape" : "DeleteEventStreamRequest"
       },
       "output" : {
-        "shape" : "DeleteEventStreamResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EventStream",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -583,8 +583,8 @@
         "shape" : "DeleteGcmChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteGcmChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "GCMChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -618,8 +618,8 @@
         "shape" : "DeleteSegmentRequest"
       },
       "output" : {
-        "shape" : "DeleteSegmentResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -653,8 +653,8 @@
         "shape" : "DeleteSmsChannelRequest"
       },
       "output" : {
-        "shape" : "DeleteSmsChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SMSChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -688,8 +688,8 @@
         "shape" : "DeleteUserEndpointsRequest"
       },
       "output" : {
-        "shape" : "DeleteUserEndpointsResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "EndpointsResponse",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -758,8 +758,8 @@
         "shape" : "GetAdmChannelRequest"
       },
       "output" : {
-        "shape" : "GetAdmChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ADMChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -933,8 +933,8 @@
         "shape" : "GetAppRequest"
       },
       "output" : {
-        "shape" : "GetAppResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ApplicationResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -968,8 +968,8 @@
         "shape" : "GetApplicationSettingsRequest"
       },
       "output" : {
-        "shape" : "GetApplicationSettingsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ApplicationSettingsResource",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1003,8 +1003,8 @@
         "shape" : "GetAppsRequest"
       },
       "output" : {
-        "shape" : "GetAppsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ApplicationsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1108,8 +1108,8 @@
         "shape" : "GetCampaignActivitiesRequest"
       },
       "output" : {
-        "shape" : "GetCampaignActivitiesResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ActivitiesResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1143,8 +1143,8 @@
         "shape" : "GetCampaignVersionRequest"
       },
       "output" : {
-        "shape" : "GetCampaignVersionResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "CampaignResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1178,8 +1178,8 @@
         "shape" : "GetCampaignVersionsRequest"
       },
       "output" : {
-        "shape" : "GetCampaignVersionsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "CampaignsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1248,8 +1248,8 @@
         "shape" : "GetChannelsRequest"
       },
       "output" : {
-        "shape" : "GetChannelsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ChannelsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1283,8 +1283,8 @@
         "shape" : "GetEmailChannelRequest"
       },
       "output" : {
-        "shape" : "GetEmailChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EmailChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1318,8 +1318,8 @@
         "shape" : "GetEndpointRequest"
       },
       "output" : {
-        "shape" : "GetEndpointResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EndpointResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1528,8 +1528,8 @@
         "shape" : "GetImportJobsRequest"
       },
       "output" : {
-        "shape" : "GetImportJobsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ImportJobsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1563,8 +1563,8 @@
         "shape" : "GetSegmentRequest"
       },
       "output" : {
-        "shape" : "GetSegmentResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1598,8 +1598,8 @@
         "shape" : "GetSegmentExportJobsRequest"
       },
       "output" : {
-        "shape" : "GetSegmentExportJobsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ExportJobsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1633,8 +1633,8 @@
         "shape" : "GetSegmentImportJobsRequest"
       },
       "output" : {
-        "shape" : "GetSegmentImportJobsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ImportJobsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1668,8 +1668,8 @@
         "shape" : "GetSegmentVersionRequest"
       },
       "output" : {
-        "shape" : "GetSegmentVersionResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1703,8 +1703,8 @@
         "shape" : "GetSegmentVersionsRequest"
       },
       "output" : {
-        "shape" : "GetSegmentVersionsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1738,8 +1738,8 @@
         "shape" : "GetSegmentsRequest"
       },
       "output" : {
-        "shape" : "GetSegmentsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1773,8 +1773,8 @@
         "shape" : "GetSmsChannelRequest"
       },
       "output" : {
-        "shape" : "GetSmsChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SMSChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1808,8 +1808,8 @@
         "shape" : "GetUserEndpointsRequest"
       },
       "output" : {
-        "shape" : "GetUserEndpointsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EndpointsResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1895,8 +1895,8 @@
         "shape" : "PhoneNumberValidateRequest"
       },
       "output" : {
-        "shape" : "PhoneNumberValidateResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "NumberValidateResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1930,8 +1930,8 @@
         "shape" : "PutEventStreamRequest"
       },
       "output" : {
-        "shape" : "PutEventStreamResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EventStream",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -1965,8 +1965,8 @@
         "shape" : "PutEventsRequest"
       },
       "output" : {
-        "shape" : "PutEventsResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "EventsResponse",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2000,8 +2000,8 @@
         "shape" : "RemoveAttributesRequest"
       },
       "output" : {
-        "shape" : "RemoveAttributesResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "AttributesResource",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2035,8 +2035,8 @@
         "shape" : "SendMessagesRequest"
       },
       "output" : {
-        "shape" : "SendMessagesResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "MessageResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2070,8 +2070,8 @@
         "shape" : "SendUsersMessagesRequest"
       },
       "output" : {
-        "shape" : "SendUsersMessagesResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SendUsersMessageResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2131,8 +2131,8 @@
         "shape" : "UpdateAdmChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateAdmChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ADMChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2166,8 +2166,8 @@
         "shape" : "UpdateApnsChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateApnsChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2201,8 +2201,8 @@
         "shape" : "UpdateApnsSandboxChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateApnsSandboxChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSSandboxChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2236,8 +2236,8 @@
         "shape" : "UpdateApnsVoipChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateApnsVoipChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSVoipChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2271,8 +2271,8 @@
         "shape" : "UpdateApnsVoipSandboxChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateApnsVoipSandboxChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "APNSVoipSandboxChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2306,8 +2306,8 @@
         "shape" : "UpdateApplicationSettingsRequest"
       },
       "output" : {
-        "shape" : "UpdateApplicationSettingsResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "ApplicationSettingsResource",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2341,8 +2341,8 @@
         "shape" : "UpdateBaiduChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateBaiduChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "BaiduChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2376,8 +2376,8 @@
         "shape" : "UpdateCampaignRequest"
       },
       "output" : {
-        "shape" : "UpdateCampaignResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "CampaignResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2411,8 +2411,8 @@
         "shape" : "UpdateEmailChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateEmailChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "EmailChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2446,8 +2446,8 @@
         "shape" : "UpdateEndpointRequest"
       },
       "output" : {
-        "shape" : "UpdateEndpointResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "MessageBody",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2481,8 +2481,8 @@
         "shape" : "UpdateEndpointsBatchRequest"
       },
       "output" : {
-        "shape" : "UpdateEndpointsBatchResponse",
-        "documentation" : "<p>The request was accepted for processing. Processing may not be complete.</p>"
+        "shape" : "MessageBody",
+        "documentation" : "202 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2516,8 +2516,8 @@
         "shape" : "UpdateGcmChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateGcmChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "GCMChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2551,8 +2551,8 @@
         "shape" : "UpdateSegmentRequest"
       },
       "output" : {
-        "shape" : "UpdateSegmentResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SegmentResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -2586,8 +2586,8 @@
         "shape" : "UpdateSmsChannelRequest"
       },
       "output" : {
-        "shape" : "UpdateSmsChannelResponse",
-        "documentation" : "<p>The request succeeded.</p>"
+        "shape" : "SMSChannelResponse",
+        "documentation" : "200 response"
       },
       "errors" : [ {
         "shape" : "BadRequestException",
@@ -5595,21 +5595,6 @@
           "documentation" : "<p>The NextToken string that specifies which page of results to return in a paginated response.</p>"
         }
       }
-    },
-    "GetAppsResponse" : {
-      "type" : "structure",
-      "members" : {
-        "Item" : {
-          "shape" : "ListOfApplicationResponse",
-          "documentation" : "A list of applications"
-        },
-        "NextToken" : {
-          "shape" : "__string",
-          "documentation" : "The string that you use in a subsequent request to get the next page of results in a paginated response."
-        }
-      },
-      "documentation" : "Application list.",
-      "required" : [ ]
     },
     "GetBaiduChannelRequest" : {
       "type" : "structure",
