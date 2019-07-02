@@ -254,7 +254,7 @@
         "shape" : "CreateRouteRequest"
       },
       "output" : {
-        "shape" : "CreateRouteResponse",
+        "shape" : "CreateRouteResponseShape",
         "documentation" : "<p>The request has succeeded and has resulted in the creation of a resource.</p>"
       },
       "errors" : [ {
@@ -1344,7 +1344,7 @@
         "shape" : "UpdateIntegrationRequest"
       },
       "output" : {
-        "shape" : "UpdateIntegrationResponse",
+        "shape" : "UpdateIntegrationResponseShape",
         "documentation" : "<p>Success</p>"
       },
       "errors" : [ {
@@ -2855,7 +2855,7 @@
       },
       "required" : [ "ApiId", "RouteKey" ]
     },
-    "CreateRouteResponse" : {
+    "CreateRouteResponseShape" : {
       "type" : "structure",
       "members" : {
         "ApiKeyRequired" : {
@@ -6087,7 +6087,7 @@
       },
       "required" : [ "ApiId", "IntegrationId" ]
     },
-    "UpdateIntegrationResponse" : {
+    "UpdateIntegrationResponseShape" : {
       "type" : "structure",
       "members" : {
         "ConnectionId" : {
