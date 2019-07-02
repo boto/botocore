@@ -4,6 +4,7 @@
       "methods" : {
          "AssociateIpGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/AssociateIpGroups",
          "AuthorizeIpRules" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/AuthorizeIpRules",
+         "CopyWorkspaceImage" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CopyWorkspaceImage",
          "CreateIpGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateIpGroup",
          "CreateTags" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateTags",
          "CreateWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateWorkspaces",

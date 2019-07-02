@@ -1,0 +1,8 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/ec2-instance-connect-2018-04-02",
+      "methods" : {
+         "SendSSHPublicKey" : "https://docs.aws.amazon.com/goto/WebAPI/ec2-instance-connect/SendSSHPublicKey"
+      }
+   }
+}

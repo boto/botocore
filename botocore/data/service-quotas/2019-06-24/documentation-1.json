@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas-2019-06-24",
+      "methods" : {
+         "AssociateServiceQuotaTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/AssociateServiceQuotaTemplate",
+         "DeleteServiceQuotaIncreaseRequestFromTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/DeleteServiceQuotaIncreaseRequestFromTemplate",
+         "DisassociateServiceQuotaTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/DisassociateServiceQuotaTemplate",
+         "GetAWSDefaultServiceQuota" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/GetAWSDefaultServiceQuota",
+         "GetAssociationForServiceQuotaTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/GetAssociationForServiceQuotaTemplate",
+         "GetRequestedServiceQuotaChange" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/GetRequestedServiceQuotaChange",
+         "GetServiceQuota" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/GetServiceQuota",
+         "GetServiceQuotaIncreaseRequestFromTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/GetServiceQuotaIncreaseRequestFromTemplate",
+         "ListAWSDefaultServiceQuotas" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListAWSDefaultServiceQuotas",
+         "ListRequestedServiceQuotaChangeHistory" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListRequestedServiceQuotaChangeHistory",
+         "ListRequestedServiceQuotaChangeHistoryByQuota" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListRequestedServiceQuotaChangeHistoryByQuota",
+         "ListServiceQuotaIncreaseRequestsInTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListServiceQuotaIncreaseRequestsInTemplate",
+         "ListServiceQuotas" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListServiceQuotas",
+         "ListServices" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/ListServices",
+         "PutServiceQuotaIncreaseRequestIntoTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/PutServiceQuotaIncreaseRequestIntoTemplate",
+         "RequestServiceQuotaIncrease" : "https://docs.aws.amazon.com/goto/WebAPI/servicequotas/RequestServiceQuotaIncrease"
+      }
+   }
+}

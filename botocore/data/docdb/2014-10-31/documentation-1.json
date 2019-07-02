@@ -40,7 +40,9 @@
          "RemoveTagsFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveTagsFromResource",
          "ResetDBClusterParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ResetDBClusterParameterGroup",
          "RestoreDBClusterFromSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RestoreDBClusterFromSnapshot",
-         "RestoreDBClusterToPointInTime" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RestoreDBClusterToPointInTime"
+         "RestoreDBClusterToPointInTime" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RestoreDBClusterToPointInTime",
+         "StartDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StartDBCluster",
+         "StopDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/StopDBCluster"
       }
    }
 }

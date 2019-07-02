@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights-2018-11-25",
+      "methods" : {
+         "CreateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/CreateApplication",
+         "CreateComponent" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/CreateComponent",
+         "DeleteApplication" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DeleteApplication",
+         "DeleteComponent" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DeleteComponent",
+         "DescribeApplication" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeApplication",
+         "DescribeComponent" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeComponent",
+         "DescribeComponentConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeComponentConfiguration",
+         "DescribeComponentConfigurationRecommendation" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeComponentConfigurationRecommendation",
+         "DescribeObservation" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeObservation",
+         "DescribeProblem" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeProblem",
+         "DescribeProblemObservations" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/DescribeProblemObservations",
+         "ListApplications" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/ListApplications",
+         "ListComponents" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/ListComponents",
+         "ListProblems" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/ListProblems",
+         "UpdateComponent" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/UpdateComponent",
+         "UpdateComponentConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/applicationinsights/UpdateComponentConfiguration"
+      }
+   }
+}
