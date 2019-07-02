@@ -9030,25 +9030,6 @@
       },
       "documentation": "Placeholder documentation for UpdateChannel"
     },
-    "UpdateChannelClass": {
-      "type": "structure",
-      "members": {
-        "ChannelClass": {
-          "shape": "ChannelClass",
-          "locationName": "channelClass",
-          "documentation": "The channel class that you wish to update this channel to use."
-        },
-        "Destinations": {
-          "shape": "__listOfOutputDestination",
-          "locationName": "destinations",
-          "documentation": "A list of output destinations for this channel."
-        }
-      },
-      "required": [
-        "ChannelClass"
-      ],
-      "documentation": "Placeholder documentation for UpdateChannelClass"
-    },
     "UpdateChannelClassRequest": {
       "type": "structure",
       "members": {
@@ -9244,17 +9225,6 @@
         }
       },
       "documentation": "Placeholder documentation for UpdateInputSecurityGroupResultModel"
-    },
-    "UpdateReservation": {
-      "type": "structure",
-      "members": {
-        "Name": {
-          "shape": "__string",
-          "locationName": "name",
-          "documentation": "Name of the reservation"
-        }
-      },
-      "documentation": "UpdateReservation request"
     },
     "UpdateReservationRequest": {
       "type": "structure",
