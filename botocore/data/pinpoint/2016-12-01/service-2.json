@@ -8625,6 +8625,5 @@
       "type" : "timestamp",
       "timestampFormat" : "unixTimestamp"
     }
-  },
-  "documentation" : "<p>Doc Engage API - Amazon Pinpoint API</p>"
+  }
 }
