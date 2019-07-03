@@ -165,12 +165,15 @@ class BaseS3ClientTest(unittest.TestCase):
             waiter.wait(**params)
 
     def _check_bucket_versioning(self, bucket, enabled=True):
-        response = self.client.get_bucket_versioning(Bucket=bucket)
+        client = self.session.create_client('s3', region_name=self.region)
+        response = client.get_bucket_versioning(Bucket=bucket)
         status = response.get('Status')
         return status == 'Enabled' if enabled else status != 'Enabled'
 
     def wait_until_versioning_enabled(self, bucket, min_successes=3):
-        waiter = ConsistencyWaiter(min_successes=min_successes)
+        waiter = ConsistencyWaiter(
+            min_successes=min_successes,
+            delay=5, delay_initial_poll=True)
         waiter.wait(self._check_bucket_versioning, bucket)
 
 
