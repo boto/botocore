@@ -18,6 +18,7 @@
          "ListClosedWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListClosedWorkflowExecutions",
          "ListDomains" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListDomains",
          "ListOpenWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListOpenWorkflowExecutions",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListTagsForResource",
          "ListWorkflowTypes" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListWorkflowTypes",
          "PollForActivityTask" : "https://docs.aws.amazon.com/goto/WebAPI/swf/PollForActivityTask",
          "PollForDecisionTask" : "https://docs.aws.amazon.com/goto/WebAPI/swf/PollForDecisionTask",
@@ -32,7 +33,12 @@
          "RespondDecisionTaskCompleted" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RespondDecisionTaskCompleted",
          "SignalWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/SignalWorkflowExecution",
          "StartWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/StartWorkflowExecution",
-         "TerminateWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/TerminateWorkflowExecution"
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/swf/TagResource",
+         "TerminateWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/TerminateWorkflowExecution",
+         "UndeprecateActivityType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/UndeprecateActivityType",
+         "UndeprecateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/swf/UndeprecateDomain",
+         "UndeprecateWorkflowType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/UndeprecateWorkflowType",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/swf/UntagResource"
       }
    }
 }
