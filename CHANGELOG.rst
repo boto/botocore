@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.184
+========
+
+* api-change:``ce``: Update ce client to latest version
+
+
 1.12.183
 ========
 
