@@ -443,10 +443,12 @@ class ConsistencyWaiter(object):
     :param delay: The number of seconds to delay the next API call after a
     failed check call. Default of 5 seconds.
     """
-    def __init__(self, min_successes=1, max_attempts=20, delay=5):
+    def __init__(self, min_successes=1, max_attempts=20, delay=5,
+                 delay_initial_poll=False):
         self.min_successes = min_successes
         self.max_attempts = max_attempts
         self.delay = delay
+        self.delay_initial_poll = delay_initial_poll
 
     def wait(self, check, *args, **kwargs):
         """
@@ -464,6 +466,8 @@ class ConsistencyWaiter(object):
         """
         attempts = 0
         successes = 0
+        if self.delay_initial_poll:
+            time.sleep(self.delay)
         while attempts < self.max_attempts:
             attempts += 1
             if check(*args, **kwargs):

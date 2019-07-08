@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.12.183
+========
+
+* api-change:``swf``: Update swf client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.182
+========
+
+* enhancement:CSM: Support configuration of the host used in client side metrics via AWS_CSM_HOST
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+
+
 1.12.181
 ========
 
