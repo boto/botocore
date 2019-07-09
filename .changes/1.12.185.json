@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplify``", 
+    "description": "Update amplify client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesis-video-archived-media``", 
+    "description": "Update kinesis-video-archived-media client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisvideo``", 
+    "description": "Update kinesisvideo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf``", 
+    "description": "Update waf client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf-regional``", 
+    "description": "Update waf-regional client to latest version", 
+    "type": "api-change"
+  }
+]
