@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.12.185
+========
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+
+
 1.12.184
 ========
 
