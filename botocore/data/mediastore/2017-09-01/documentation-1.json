@@ -12,11 +12,14 @@
          "GetCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetCorsPolicy",
          "GetLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetLifecyclePolicy",
          "ListContainers" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/ListContainers",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/ListTagsForResource",
          "PutContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutContainerPolicy",
          "PutCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutCorsPolicy",
          "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutLifecyclePolicy",
          "StartAccessLogging" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/StartAccessLogging",
-         "StopAccessLogging" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/StopAccessLogging"
+         "StopAccessLogging" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/StopAccessLogging",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/UntagResource"
       }
    }
 }
