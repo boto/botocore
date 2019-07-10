@@ -40,6 +40,7 @@
          "DescribeProvisioningParameters" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeProvisioningParameters",
          "DescribeRecord" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeRecord",
          "DescribeServiceAction" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeServiceAction",
+         "DescribeServiceActionExecutionParameters" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeServiceActionExecutionParameters",
          "DescribeTagOption" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DescribeTagOption",
          "DisableAWSOrganizationsAccess" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisableAWSOrganizationsAccess",
          "DisassociateBudgetFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/DisassociateBudgetFromResource",

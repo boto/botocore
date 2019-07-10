@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30",
       "methods" : {
+         "GetDASHStreamingSessionURL" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/GetDASHStreamingSessionURL",
          "GetHLSStreamingSessionURL" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/GetHLSStreamingSessionURL",
          "GetMediaForFragmentList" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/GetMediaForFragmentList",
          "ListFragments" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/ListFragments"

@@ -4,24 +4,34 @@
       "methods" : {
          "CreateApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateApp",
          "CreateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateBranch",
+         "CreateDeployment" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateDeployment",
          "CreateDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateDomainAssociation",
+         "CreateWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateWebhook",
          "DeleteApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteApp",
          "DeleteBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteBranch",
          "DeleteDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteDomainAssociation",
          "DeleteJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteJob",
+         "DeleteWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteWebhook",
          "GetApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetApp",
          "GetBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetBranch",
          "GetDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetDomainAssociation",
          "GetJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetJob",
+         "GetWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetWebhook",
          "ListApps" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListApps",
          "ListBranches" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListBranches",
          "ListDomainAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListDomainAssociations",
          "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListJobs",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListTagsForResource",
+         "ListWebhooks" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListWebhooks",
+         "StartDeployment" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/StartDeployment",
          "StartJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/StartJob",
          "StopJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/StopJob",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UntagResource",
          "UpdateApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateApp",
          "UpdateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateBranch",
-         "UpdateDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateDomainAssociation"
+         "UpdateDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateDomainAssociation",
+         "UpdateWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateWebhook"
       }
    }
 }
