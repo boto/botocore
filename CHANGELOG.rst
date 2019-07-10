@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.186
+========
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``glacier``: Update glacier client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.12.185
 ========
 
