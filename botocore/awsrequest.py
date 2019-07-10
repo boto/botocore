@@ -237,9 +237,9 @@ class AWSConnection(object):
 
     def _is_100_continue_status(self, maybe_status_line):
         parts = maybe_status_line.split(None, 2)
-        # Check for HTTP/<version> 100 Continue\r\n
+        # Check for HTTP/<version> 100 *\r\n
         return (
-            len(parts) >= 3 and parts[0].startswith(b'HTTP/') and
+            len(parts) >= 2 and parts[0].startswith(b'HTTP/') and
             parts[1] == b'100')
 
 
