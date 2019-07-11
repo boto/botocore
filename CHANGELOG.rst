@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.187
+========
+
+* api-change:``events``: Update events client to latest version
+
+
 1.12.186
 ========
 
