@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.188
+========
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.12.187
 ========
 
