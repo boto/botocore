@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.189
+========
+
+* api-change:``config``: Update config client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.12.188
 ========
 
