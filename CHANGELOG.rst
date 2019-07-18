@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.190
+========
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.189
 ========
 
