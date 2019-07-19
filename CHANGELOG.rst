@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.191
+========
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+
+
 1.12.190
 ========
 
