@@ -28,7 +28,7 @@ from botocore.compat import json
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
-from botocore.credentials import Credentials, get_profile_providers
+from botocore.credentials import Credentials, ProfileProviderBuilder
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import ConfigValueStore
@@ -2317,12 +2317,14 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             },
         }
         client_creator = self.create_client_creator(with_response=response)
+        mock_builder = mock.Mock(spec=ProfileProviderBuilder)
+        mock_builder.providers.return_value = [ProfileProvider('foo-profile')]
 
         provider = credentials.AssumeRoleProvider(
             self.create_config_loader(),
             client_creator, cache={},
             profile_name='development',
-            profile_providers=[ProfileProvider],
+            profile_provider_builder=mock_builder,
         )
 
         creds = provider.load().get_frozen_credentials()

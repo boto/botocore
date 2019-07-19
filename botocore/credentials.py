@@ -21,7 +21,6 @@ import json
 import subprocess
 from collections import namedtuple
 from copy import deepcopy
-from functools import partial
 from hashlib import sha1
 import json
 
@@ -58,10 +57,10 @@ def create_credential_resolver(session, cache=None):
 
     """
     profile_name = session.get_config_variable('profile') or 'default'
-    credential_file = session.get_config_variable('credentials_file')
-    config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    disable_env_vars = session.instance_variables().get('profile') is not None
+
     if cache is None:
         cache = {}
 
@@ -73,6 +72,8 @@ def create_credential_resolver(session, cache=None):
             num_attempts=num_attempts,
             user_agent=session.user_agent())
     )
+
+    profile_provider_builder = ProfileProviderBuilder(session, cache=cache)
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
@@ -81,31 +82,25 @@ def create_credential_resolver(session, cache=None):
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
         ]),
-        profile_providers=get_profile_providers(session),
+        profile_provider_builder=profile_provider_builder,
     )
-    providers = [
+
+    pre_profile = [
         env_provider,
         assume_role_provider,
-        SharedCredentialProvider(
-            creds_filename=credential_file,
-            profile_name=profile_name,
-        ),
-        ProcessProvider(
-            profile_name=profile_name,
-            load_config=lambda: session.full_config,
-        ),
-        # The new config file has precedence over the legacy
-        # config file.
-        ConfigProvider(
-            config_filename=config_file,
-            profile_name=profile_name,
-        ),
+    ]
+    profile_providers = profile_provider_builder.providers(
+        profile_name=profile_name,
+    )
+    post_profile = [
         OriginalEC2Provider(),
         BotoProvider(),
         container_provider,
-        instance_metadata_provider
+        instance_metadata_provider,
     ]
-    if session.instance_variables().get('profile') is not None:
+    providers = pre_profile + profile_providers + post_profile
+
+    if disable_env_vars:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.
@@ -129,21 +124,44 @@ def create_credential_resolver(session, cache=None):
     return resolver
 
 
-def get_profile_providers(session):
-    return [
-        partial(
-            SharedCredentialProvider,
-            creds_filename=session.get_config_variable('credentials_file'),
-        ),
-        partial(
-            ProcessProvider,
-            load_config=lambda: session.full_config,
-        ),
-        partial(
-            ConfigProvider,
-            config_filename=session.get_config_variable('config_file'),
-        ),
-    ]
+class ProfileProviderBuilder(object):
+
+    def __init__(self, session, cache=None):
+        self._session = session
+        self._cache = cache
+        self._profile = (
+            self._session.get_config_variable('profile') or 'default'
+        )
+
+    def providers(self, profile_name=None):
+        if profile_name is None:
+            profile_name = self._profile
+
+        return [
+            self._create_shared_credential_provider(profile_name),
+            self._create_process_provider(profile_name),
+            self._create_config_provider(profile_name),
+        ]
+
+    def _create_process_provider(self, profile_name):
+        return ProcessProvider(
+            profile_name=profile_name,
+            load_config=lambda: self._session.full_config,
+        )
+
+    def _create_shared_credential_provider(self, profile_name):
+        credential_file = self._session.get_config_variable('credentials_file')
+        return SharedCredentialProvider(
+            profile_name=profile_name,
+            creds_filename=credential_file,
+        )
+
+    def _create_config_provider(self, profile_name):
+        config_file = self._session.get_config_variable('config_file')
+        return ConfigProvider(
+            profile_name=profile_name,
+            config_filename=config_file,
+        )
 
 
 def get_credentials(session):
@@ -1198,7 +1216,7 @@ class AssumeRoleProvider(CredentialProvider):
 
     def __init__(self, load_config, client_creator, cache, profile_name,
                  prompter=getpass.getpass, credential_sourcer=None,
-                 profile_providers=None):
+                 profile_provider_builder=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1248,9 +1266,7 @@ class AssumeRoleProvider(CredentialProvider):
         # instantiated).
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
-        self._profile_providers = profile_providers
-        if self._profile_providers is None:
-            self._profile_providers = []
+        self._profile_provider_builder = profile_provider_builder
         self._visited_profiles = [self._profile_name]
 
     def load(self):
@@ -1434,14 +1450,15 @@ class AssumeRoleProvider(CredentialProvider):
         profile = profiles[profile_name]
 
         if self._has_static_credentials(profile) and \
-                not self._profile_providers:
+                not self._profile_provider_builder:
             # This is only here for backwards compatibility
             return self._resolve_static_credentials_from_profile(profile)
         elif self._has_static_credentials(profile) or \
                 not self._has_assume_role_config_vars(profile):
-            profile_chain = CredentialResolver([
-                p(profile_name=profile_name) for p in self._profile_providers
-            ])
+            profile_providers = self._profile_provider_builder.providers(
+                profile_name=profile_name,
+            )
+            profile_chain = CredentialResolver(profile_providers)
             credentials = profile_chain.load_credentials()
             if credentials is None:
                 error_message = (

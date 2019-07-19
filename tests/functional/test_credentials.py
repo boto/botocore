@@ -30,7 +30,7 @@ from tests import temporary_file
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
-from botocore.credentials import AssumeRoleProvider, get_profile_providers
+from botocore.credentials import AssumeRoleProvider, ProfileProviderBuilder
 from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
 from botocore.credentials import create_credential_resolver
@@ -196,7 +196,7 @@ class TestAssumeRole(BaseEnvVar):
                 self.env_provider, self.container_provider,
                 self.metadata_provider
             ]),
-            profile_providers=get_profile_providers(session),
+            profile_provider_builder=ProfileProviderBuilder(session),
         )
 
         component_name = 'credential_provider'
