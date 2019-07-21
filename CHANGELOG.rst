@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.192
+========
+
+* bugfix:Dependency: Fixed dependency issue with broken docutils aws/aws-cli`#4332 <https://github.com/boto/botocore/issues/4332>`__
+
+
 1.12.191
 ========
 
