@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``mq``", 
+    "description": "Update mq client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``shield``", 
+    "description": "Update shield client to latest version", 
+    "type": "api-change"
+  }
+]
