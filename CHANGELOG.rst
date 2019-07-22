@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.193
+========
+
+* api-change:``mq``: Update mq client to latest version
+* api-change:``shield``: Update shield client to latest version
+
+
 1.12.192
 ========
 
