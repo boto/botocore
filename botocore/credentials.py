@@ -89,9 +89,7 @@ def create_credential_resolver(session, cache=None):
         env_provider,
         assume_role_provider,
     ]
-    profile_providers = profile_provider_builder.providers(
-        profile_name=profile_name,
-    )
+    profile_providers = profile_provider_builder.providers(profile_name)
     post_profile = [
         OriginalEC2Provider(),
         BotoProvider(),
@@ -125,18 +123,20 @@ def create_credential_resolver(session, cache=None):
 
 
 class ProfileProviderBuilder(object):
+    """This class handles the creation of profile based providers.
 
+    NOTE: This class is only intended for internal use.
+
+    This class handles the creation and ordering of the various credential
+    providers that primarly source their configuration from the shared config.
+    This is needed to enable sharing between the default credential chain and
+    the source profile chain created by the assume role provider.
+    """
     def __init__(self, session, cache=None):
         self._session = session
         self._cache = cache
-        self._profile = (
-            self._session.get_config_variable('profile') or 'default'
-        )
 
-    def providers(self, profile_name=None):
-        if profile_name is None:
-            profile_name = self._profile
-
+    def providers(self, profile_name):
         return [
             self._create_shared_credential_provider(profile_name),
             self._create_process_provider(profile_name),
@@ -1451,7 +1451,10 @@ class AssumeRoleProvider(CredentialProvider):
 
         if self._has_static_credentials(profile) and \
                 not self._profile_provider_builder:
-            # This is only here for backwards compatibility
+            # This is only here for backwards compatibility. If this provider
+            # isn't given a profile provider builder we still want to be able
+            # handle the basic static credential case as we would before the
+            # provile provider builder parameter was added.
             return self._resolve_static_credentials_from_profile(profile)
         elif self._has_static_credentials(profile) or \
                 not self._has_assume_role_config_vars(profile):

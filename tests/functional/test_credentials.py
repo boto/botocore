@@ -155,6 +155,7 @@ class TestAssumeRole(BaseEnvVar):
         self.metadata_provider = self.mock_provider(InstanceMetadataProvider)
         self.env_provider = self.mock_provider(EnvProvider)
         self.container_provider = self.mock_provider(ContainerProvider)
+        self.mock_client_creator = mock.Mock(spec=Session.create_client)
         self.actual_client_region = None
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -185,11 +186,12 @@ class TestAssumeRole(BaseEnvVar):
             aws_access_key_id='spam',
             aws_secret_access_key='eggs',
         )
+        self.mock_client_creator.return_value = sts
         stubber = Stubber(sts)
         stubber.activate()
         assume_role_provider = AssumeRoleProvider(
             load_config=lambda: session.full_config,
-            client_creator=lambda *args, **kwargs: sts,
+            client_creator=self.mock_client_creator,
             cache={},
             profile_name=profile,
             credential_sourcer=CanonicalNameCredentialSourcer([
@@ -459,6 +461,16 @@ class TestAssumeRole(BaseEnvVar):
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
         stubber.assert_no_pending_responses()
+        # Assert that the client was created with the credentials from the
+        # credential process.
+        self.assertEqual(self.mock_client_creator.call_count, 1)
+        _, kwargs = self.mock_client_creator.call_args_list[0]
+        expected_kwargs = {
+            'aws_access_key_id': 'spam',
+            'aws_secret_access_key': 'eggs',
+            'aws_session_token': None,
+        }
+        self.assertEqual(kwargs, expected_kwargs)
 
     def test_self_referential_profile(self):
         config = (
