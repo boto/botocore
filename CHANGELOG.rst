@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.195
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.12.194
 ========
 
