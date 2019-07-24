@@ -57,10 +57,10 @@ def create_credential_resolver(session, cache=None):
 
     """
     profile_name = session.get_config_variable('profile') or 'default'
-    credential_file = session.get_config_variable('credentials_file')
-    config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    disable_env_vars = session.instance_variables().get('profile') is not None
+
     if cache is None:
         cache = {}
 
@@ -72,6 +72,8 @@ def create_credential_resolver(session, cache=None):
             num_attempts=num_attempts,
             user_agent=session.user_agent())
     )
+
+    profile_provider_builder = ProfileProviderBuilder(session, cache=cache)
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
@@ -79,26 +81,24 @@ def create_credential_resolver(session, cache=None):
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
-        ])
+        ]),
+        profile_provider_builder=profile_provider_builder,
     )
-    providers = [
+
+    pre_profile = [
         env_provider,
         assume_role_provider,
-        SharedCredentialProvider(
-            creds_filename=credential_file,
-            profile_name=profile_name
-        ),
-        ProcessProvider(profile_name=profile_name,
-                        load_config=lambda: session.full_config),
-        # The new config file has precedence over the legacy
-        # config file.
-        ConfigProvider(config_filename=config_file, profile_name=profile_name),
+    ]
+    profile_providers = profile_provider_builder.providers(profile_name)
+    post_profile = [
         OriginalEC2Provider(),
         BotoProvider(),
         container_provider,
-        instance_metadata_provider
+        instance_metadata_provider,
     ]
-    if session.instance_variables().get('profile') is not None:
+    providers = pre_profile + profile_providers + post_profile
+
+    if disable_env_vars:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.
@@ -120,6 +120,48 @@ def create_credential_resolver(session, cache=None):
 
     resolver = CredentialResolver(providers=providers)
     return resolver
+
+
+class ProfileProviderBuilder(object):
+    """This class handles the creation of profile based providers.
+
+    NOTE: This class is only intended for internal use.
+
+    This class handles the creation and ordering of the various credential
+    providers that primarly source their configuration from the shared config.
+    This is needed to enable sharing between the default credential chain and
+    the source profile chain created by the assume role provider.
+    """
+    def __init__(self, session, cache=None):
+        self._session = session
+        self._cache = cache
+
+    def providers(self, profile_name):
+        return [
+            self._create_shared_credential_provider(profile_name),
+            self._create_process_provider(profile_name),
+            self._create_config_provider(profile_name),
+        ]
+
+    def _create_process_provider(self, profile_name):
+        return ProcessProvider(
+            profile_name=profile_name,
+            load_config=lambda: self._session.full_config,
+        )
+
+    def _create_shared_credential_provider(self, profile_name):
+        credential_file = self._session.get_config_variable('credentials_file')
+        return SharedCredentialProvider(
+            profile_name=profile_name,
+            creds_filename=credential_file,
+        )
+
+    def _create_config_provider(self, profile_name):
+        config_file = self._session.get_config_variable('config_file')
+        return ConfigProvider(
+            profile_name=profile_name,
+            config_filename=config_file,
+        )
 
 
 def get_credentials(session):
@@ -1173,7 +1215,8 @@ class AssumeRoleProvider(CredentialProvider):
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass, credential_sourcer=None):
+                 prompter=getpass.getpass, credential_sourcer=None,
+                 profile_provider_builder=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1223,6 +1266,7 @@ class AssumeRoleProvider(CredentialProvider):
         # instantiated).
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
+        self._profile_provider_builder = profile_provider_builder
         self._visited_profiles = [self._profile_name]
 
     def load(self):
@@ -1362,16 +1406,6 @@ class AssumeRoleProvider(CredentialProvider):
 
         source_profile = profiles[source_profile_name]
 
-        # Ensure the profile has valid credential type
-        if not self._source_profile_has_credentials(source_profile):
-            raise InvalidConfigError(
-                error_msg=(
-                    'The source_profile "%s" must specify either static '
-                    'credentials or an assume role configuration' % (
-                        source_profile_name)
-                )
-            )
-
         # Make sure we aren't going into an infinite loop. If we haven't
         # visited the profile yet, we're good.
         if source_profile_name not in self._visited_profiles:
@@ -1415,8 +1449,28 @@ class AssumeRoleProvider(CredentialProvider):
         profiles = self._loaded_config.get('profiles', {})
         profile = profiles[profile_name]
 
-        if self._has_static_credentials(profile):
+        if self._has_static_credentials(profile) and \
+                not self._profile_provider_builder:
+            # This is only here for backwards compatibility. If this provider
+            # isn't given a profile provider builder we still want to be able
+            # handle the basic static credential case as we would before the
+            # provile provider builder parameter was added.
             return self._resolve_static_credentials_from_profile(profile)
+        elif self._has_static_credentials(profile) or \
+                not self._has_assume_role_config_vars(profile):
+            profile_providers = self._profile_provider_builder.providers(
+                profile_name=profile_name,
+            )
+            profile_chain = CredentialResolver(profile_providers)
+            credentials = profile_chain.load_credentials()
+            if credentials is None:
+                error_message = (
+                    'The source profile "%s" must have credentials.'
+                )
+                raise InvalidConfigError(
+                    error_msg=error_message % profile_name,
+                )
+            return credentials
 
         return self._load_creds_via_assume_role(profile_name)
 
