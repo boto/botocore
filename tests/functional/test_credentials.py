@@ -370,6 +370,7 @@ class TestAssumeRole(BaseEnvVar):
             '[profile A]\n'
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'source_profile = B\n'
+            'credential_source = CustomInvalidProvider\n'
             '[profile B]\n'
             'region = us-west-2\n'
         )
