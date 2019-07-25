@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.196
+========
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.12.195
 ========
 

@@ -24,11 +24,13 @@ from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
 from botocore.utils import ContainerMetadataFetcher
-from botocore.compat import json
+from botocore.compat import json, six
+from botocore.session import Session
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
-from botocore.credentials import Credentials
+from botocore.credentials import ProcessProvider
+from botocore.credentials import Credentials, ProfileProviderBuilder
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import ConfigValueStore
@@ -2307,6 +2309,55 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             ),
         ])
 
+    def test_assume_role_with_profile_provider(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        mock_builder = mock.Mock(spec=ProfileProviderBuilder)
+        mock_builder.providers.return_value = [ProfileProvider('foo-profile')]
+
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={},
+            profile_name='development',
+            profile_provider_builder=mock_builder,
+        )
+
+        creds = provider.load().get_frozen_credentials()
+
+        self.assertEqual(client_creator.call_count, 1)
+        client_creator.assert_called_with(
+            'sts',
+            aws_access_key_id='foo-profile-access-key',
+            aws_secret_access_key='foo-profile-secret-key',
+            aws_session_token='foo-profile-token',
+        )
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+
+class ProfileProvider(object):
+    METHOD = 'fake'
+
+    def __init__(self, profile_name):
+        self._profile_name = profile_name
+
+    def load(self):
+        return Credentials(
+            '%s-access-key' % self._profile_name,
+            '%s-secret-key' % self._profile_name,
+            '%s-token' % self._profile_name,
+            self.METHOD
+        )
+
 
 class TestJSONCache(unittest.TestCase):
     def setUp(self):
@@ -2628,7 +2679,7 @@ class TestProcessProvider(BaseEnvVar):
                                     spec=subprocess.Popen)
 
     def create_process_provider(self, profile_name='default'):
-        provider = credentials.ProcessProvider(profile_name, self.load_config,
+        provider = ProcessProvider(profile_name, self.load_config,
                                                popen=self.popen_mock)
         return provider
 
@@ -2871,3 +2922,22 @@ class TestProcessProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertIsNone(creds.token)
         self.assertEqual(creds.method, 'custom-process')
+
+
+class TestProfileProviderBuilder(unittest.TestCase):
+    def setUp(self):
+        super(TestProfileProviderBuilder, self).setUp()
+        self.mock_session = mock.Mock(spec=Session)
+        self.builder = ProfileProviderBuilder(self.mock_session)
+
+    def test_profile_provider_builder_order(self):
+        providers = self.builder.providers('some-profile')
+        expected_providers = [
+            SharedCredentialProvider,
+            ProcessProvider,
+            ConfigProvider,
+        ]
+        self.assertEqual(len(providers), len(expected_providers))
+        zipped_providers = six.moves.zip(providers, expected_providers)
+        for provider, expected_type in zipped_providers:
+            self.assertTrue(isinstance(provider, expected_type))

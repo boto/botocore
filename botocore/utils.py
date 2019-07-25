@@ -870,9 +870,6 @@ def check_dns_name(bucket_name):
     if n < 3 or n > 63:
         # Wrong length
         return False
-    if n == 1:
-        if not bucket_name.isalnum():
-            return False
     match = LABEL_RE.match(bucket_name)
     if match is None or match.end() != len(bucket_name):
         return False
