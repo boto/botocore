@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from nose.tools import assert_equal
+import mock
 
 import botocore.session
 
@@ -71,6 +72,7 @@ SERVICE_TO_CLASS_NAME = {
 
 def test_client_has_correct_class_name():
     session = botocore.session.get_session()
+    session.get_credentials = mock.Mock(return_value=mock.Mock())
     for service_name in SERVICE_TO_CLASS_NAME:
         client = session.create_client(service_name, REGION)
         yield (_assert_class_name_matches_ref_class_name, client,
