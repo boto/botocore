@@ -708,6 +708,7 @@ class TestS3PostPresigner(BaseSignerTest):
 class TestGenerateUrl(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
+        self.session.get_credentials = mock.Mock(return_value=mock.Mock())
         self.client = self.session.create_client('s3', region_name='us-east-1')
         self.bucket = 'mybucket'
         self.key = 'mykey'
@@ -837,6 +838,7 @@ class TestGenerateUrl(unittest.TestCase):
 class TestGeneratePresignedPost(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
+        self.session.get_credentials = mock.Mock(return_value=mock.Mock())
         self.client = self.session.create_client('s3', region_name='us-east-1')
         self.bucket = 'mybucket'
         self.key = 'mykey'

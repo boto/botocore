@@ -13,6 +13,7 @@
 # language governing permissions and limitations under the License.
 import pickle
 from tests import unittest
+import mock
 
 from nose.tools import assert_equal
 
@@ -121,6 +122,7 @@ class TestPickleExceptions(unittest.TestCase):
 
     def test_dynamic_client_error(self):
         session = botocore.session.Session()
+        session.get_credentials = mock.Mock(return_value=mock.Mock())
         client = session.create_client('s3', 'us-west-2')
         exception = client.exceptions.NoSuchKey(
             error_response={
