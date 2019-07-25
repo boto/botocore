@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.config
-from tests import unittest, create_session, temporary_file
+from tests import unittest, create_session, temporary_file, write_base_foo_config
 import os
 import logging
 import tempfile
@@ -584,7 +584,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
 
@@ -613,7 +613,7 @@ class TestCreateClient(BaseSessionTest):
             # Set the ca cert using the config file
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
 
@@ -641,7 +641,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)
             f.flush()
@@ -658,7 +658,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n'
                     '    myservice2 = %s\n' % (
@@ -684,7 +684,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)
             f.flush()
@@ -747,7 +747,7 @@ class TestClientMonitoring(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('csm_enabled=true\n')
             f.flush()
             self.assert_created_client_is_monitored(self.session)
@@ -776,7 +776,7 @@ class TestClientMonitoring(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('csm_enabled=false\n')
             f.flush()
             self.assert_created_client_is_not_monitored(self.session)

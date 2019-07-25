@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.config
-from tests import unittest, create_session, temporary_file
+from tests import unittest, create_session, temporary_file, write_base_foo_config
 import os
 import logging
 import tempfile
@@ -581,7 +581,7 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
 
@@ -611,7 +611,7 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
 
@@ -640,7 +640,7 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)
             f.flush()
@@ -658,7 +658,7 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n'
                     '    myservice2 = %s\n' % (
@@ -685,7 +685,7 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
-            f.write('[default]\n')
+            write_base_foo_config(f)
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)
             f.flush()

@@ -95,6 +95,24 @@ def create_session(**kwargs):
     return session
 
 
+def write_base_foo_config(f):
+    """Creates a bare minimum foo config.
+
+    Useful for ensuring that valid credentials will be made.
+
+    Assumes that `f` is a file handle to a temporary file.
+    """
+
+    lines = [
+        '[default]',
+        'aws_access_key_id = foo',
+        'aws_secret_access_key = bar',
+        '',  # Needs newline to ensure additional configs can be appended
+    ]
+
+    f.write('\n'.join(lines))
+
+
 @contextlib.contextmanager
 def temporary_file(mode):
     """This is a cross platform temporary file creation.
