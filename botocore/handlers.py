@@ -715,6 +715,28 @@ def decode_list_object_v2(parsed, context, **kwargs):
     )
 
 
+def decode_list_object_versions(parsed, context, **kwargs):
+    # From the documentation: If you specify encoding-type request parameter,
+    # Amazon S3 includes this element in the response, and returns encoded key
+    # name values in the following response elements:
+    # KeyMarker, NextKeyMarker, Prefix, Key, and Delimiter.
+    _decode_list_object(
+        top_level_keys=[
+            'KeyMarker',
+            'NextKeyMarker',
+            'Prefix',
+            'Delimiter',
+        ],
+        nested_keys=[
+            ('Versions', 'Key'),
+            ('DeleteMarkers', 'Key'),
+            ('CommonPrefixes', 'Prefix'),
+        ],
+        parsed=parsed,
+        context=context
+    )
+
+
 def _decode_list_object(top_level_keys, nested_keys, parsed, context):
     if parsed.get('EncodingType') == 'url' and \
                     context.get('encoding_type_auto_set'):
@@ -902,6 +924,8 @@ BUILTIN_HANDLERS = [
      set_list_objects_encoding_type_url),
     ('before-parameter-build.s3.ListObjectsV2',
      set_list_objects_encoding_type_url),
+    ('before-parameter-build.s3.ListObjectVersions',
+     set_list_objects_encoding_type_url),
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),
@@ -968,6 +992,7 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.glacier', inject_account_id),
     ('after-call.s3.ListObjects', decode_list_object),
     ('after-call.s3.ListObjectsV2', decode_list_object_v2),
+    ('after-call.s3.ListObjectVersions', decode_list_object_versions),
 
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search',

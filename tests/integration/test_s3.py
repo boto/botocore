@@ -476,6 +476,21 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertEqual(len(parsed['Contents']), 1)
         self.assertEqual(parsed['Contents'][0]['Key'], 'foo%08')
 
+    def test_unicode_system_character_with_list_object_versions(self):
+        # Verify we can use a unicode system character which would normally
+        # break the xml parser
+        key_name = 'foo\x03'
+        self.create_object(key_name)
+        self.addCleanup(self.delete_object, key_name, self.bucket_name)
+        parsed = self.client.list_object_versions(Bucket=self.bucket_name)
+        self.assertEqual(len(parsed['Versions']), 1)
+        self.assertEqual(parsed['Versions'][0]['Key'], key_name)
+
+        parsed = self.client.list_object_versions(Bucket=self.bucket_name,
+                                          EncodingType='url')
+        self.assertEqual(len(parsed['Versions']), 1)
+        self.assertEqual(parsed['Versions'][0]['Key'], 'foo%03')
+
     def test_thread_safe_auth(self):
         self.auth_paths = []
         emitter = self.session.get_component('event_emitter')
