@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.197
+========
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.196
 ========
 
