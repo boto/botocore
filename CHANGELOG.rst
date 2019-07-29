@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.198
+========
+
+* bugfix:S3: Fix an issue that would cause S3 list_object_versions to sometimes fail parsing responses with certain key values.
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
 1.12.197
 ========
 
