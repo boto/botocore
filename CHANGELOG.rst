@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.199
+========
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.12.198
 ========
 
