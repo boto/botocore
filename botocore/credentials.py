@@ -1369,6 +1369,10 @@ class AssumeRoleProvider(CredentialProvider):
     def _has_assume_role_config_vars(self, profile):
         return (
             self.ROLE_CONFIG_VAR in profile and
+            # We need to ensure this provider doesn't look at a profile when
+            # the profile has configuration for web identity. Simply relying on
+            # the order in the credential chain is insufficient as it doesn't
+            # prevent the case when we're doing an assume role chain.
             self.WEB_IDENTITY_TOKE_FILE_VAR not in profile
         )
 

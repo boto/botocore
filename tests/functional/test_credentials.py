@@ -508,6 +508,58 @@ class TestAssumeRole(BaseAssumeRoleTest):
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
         stubber.assert_no_pending_responses()
+        # Assert that the client was created with the credentials from the
+        # assume role with web identity call.
+        self.assertEqual(self.mock_client_creator.call_count, 1)
+        _, kwargs = self.mock_client_creator.call_args_list[0]
+        expected_kwargs = {
+            'aws_access_key_id': identity_creds.access_key,
+            'aws_secret_access_key': identity_creds.secret_key,
+            'aws_session_token': identity_creds.token,
+        }
+        self.assertEqual(kwargs, expected_kwargs)
+
+    def test_web_identity_source_profile_ignores_env_vars(self):
+        token_path = os.path.join(self.tempdir, 'token')
+        with open(token_path, 'w') as token_file:
+            token_file.write('a.token')
+        self.environ['AWS_ROLE_ARN'] = 'arn:aws:iam::123456789:role/RoleB'
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n'
+            '[profile B]\n'
+            'web_identity_token_file = %s\n' % token_path
+        )
+        self.write_config(config)
+
+        session, _ = self.create_session(profile='A')
+        # The config is split between the profile and the env, we
+        # should only be looking at the profile so this should raise
+        # a configuration error.
+        with self.assertRaises(InvalidConfigError):
+            session.get_credentials()
+
+    def test_web_identity_credential_source_ignores_env_vars(self):
+        token_path = os.path.join(self.tempdir, 'token')
+        with open(token_path, 'w') as token_file:
+            token_file.write('a.token')
+        self.environ['AWS_ROLE_ARN'] = 'arn:aws:iam::123456789:role/RoleB'
+        self.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = token_path
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'credential_source = Environment\n'
+        )
+        self.write_config(config)
+
+        session, _ = self.create_session(profile='A')
+        # We should not get credentials from web-identity configured in the
+        # environment when the Environment credential_source is set.
+        # There are no Environment credentials, so this should raise a
+        # retrieval error.
+        with self.assertRaises(CredentialRetrievalError):
+            session.get_credentials()
 
     def test_self_referential_profile(self):
         config = (
