@@ -22,15 +22,16 @@ import subprocess
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
-import json
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
 import botocore.configloader
 import botocore.compat
+from botocore import UNSIGNED
 from botocore.compat import total_seconds
 from botocore.compat import compat_shell_split
+from botocore.config import Config
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
@@ -41,6 +42,7 @@ from botocore.exceptions import MetadataRetrievalError
 from botocore.exceptions import CredentialRetrievalError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 from botocore.utils import ContainerMetadataFetcher
+from botocore.utils import FileWebIdentityTokenLoader
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +91,10 @@ def create_credential_resolver(session, cache=None):
         env_provider,
         assume_role_provider,
     ]
-    profile_providers = profile_provider_builder.providers(profile_name)
+    profile_providers = profile_provider_builder.providers(
+        profile_name=profile_name,
+        disable_env_vars=disable_env_vars,
+    )
     post_profile = [
         OriginalEC2Provider(),
         BotoProvider(),
@@ -136,8 +141,11 @@ class ProfileProviderBuilder(object):
         self._session = session
         self._cache = cache
 
-    def providers(self, profile_name):
+    def providers(self, profile_name, disable_env_vars=False):
         return [
+            self._create_web_identity_provider(
+                profile_name, disable_env_vars,
+            ),
             self._create_shared_credential_provider(profile_name),
             self._create_process_provider(profile_name),
             self._create_config_provider(profile_name),
@@ -161,6 +169,15 @@ class ProfileProviderBuilder(object):
         return ConfigProvider(
             profile_name=profile_name,
             config_filename=config_file,
+        )
+
+    def _create_web_identity_provider(self, profile_name, disable_env_vars):
+        return AssumeRoleWithWebIdentityProvider(
+            load_config=lambda: self._session.full_config,
+            client_creator=self._session.create_client,
+            cache=self._cache,
+            profile_name=profile_name,
+            disable_env_vars=disable_env_vars,
         )
 
 
@@ -586,11 +603,15 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
 
 
 class CachedCredentialFetcher(object):
-    def __init__(self, cache=None, expiry_window_seconds=60 * 15):
+    DEFAULT_EXPIRY_WINDOW_SECONDS = 60 * 15
+
+    def __init__(self, cache=None, expiry_window_seconds=None):
         if cache is None:
             cache = {}
         self._cache = cache
         self._cache_key = self._create_cache_key()
+        if expiry_window_seconds is None:
+            expiry_window_seconds = self.DEFAULT_EXPIRY_WINDOW_SECONDS
         self._expiry_window_seconds = expiry_window_seconds
 
     def _create_cache_key(self):
@@ -650,10 +671,59 @@ class CachedCredentialFetcher(object):
         return seconds < self._expiry_window_seconds
 
 
-class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
+class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
+    def __init__(self, client_creator, role_arn, extra_args=None,
+                 cache=None, expiry_window_seconds=None):
+        self._client_creator = client_creator
+        self._role_arn = role_arn
+
+        if extra_args is None:
+            self._assume_kwargs = {}
+        else:
+            self._assume_kwargs = deepcopy(extra_args)
+        self._assume_kwargs['RoleArn'] = self._role_arn
+
+        self._role_session_name = self._assume_kwargs.get('RoleSessionName')
+        self._using_default_session_name = False
+        if not self._role_session_name:
+            self._generate_assume_role_name()
+
+        super(BaseAssumeRoleCredentialFetcher, self).__init__(
+            cache, expiry_window_seconds
+        )
+
+    def _generate_assume_role_name(self):
+        self._role_session_name = 'botocore-session-%s' % (int(time.time()))
+        self._assume_kwargs['RoleSessionName'] = self._role_session_name
+        self._using_default_session_name = True
+
+    def _create_cache_key(self):
+        """Create a predictable cache key for the current configuration.
+
+        The cache key is intended to be compatible with file names.
+        """
+        args = deepcopy(self._assume_kwargs)
+
+        # The role session name gets randomly generated, so we don't want it
+        # in the hash.
+        if self._using_default_session_name:
+            del args['RoleSessionName']
+
+        if 'Policy' in args:
+            # To have a predictable hash, the keys of the policy must be
+            # sorted, so we have to load it here to make sure it gets sorted
+            # later on.
+            args['Policy'] = json.loads(args['Policy'])
+
+        args = json.dumps(args, sort_keys=True)
+        argument_hash = sha1(args.encode('utf-8')).hexdigest()
+        return self._make_file_safe(argument_hash)
+
+
+class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
     def __init__(self, client_creator, source_credentials, role_arn,
                  extra_args=None, mfa_prompter=None, cache=None,
-                 expiry_window_seconds=60 * 15):
+                 expiry_window_seconds=None):
         """
         :type client_creator: callable
         :param client_creator: A callable that creates a client taking
@@ -685,53 +755,15 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
         :type expiry_window_seconds: int
         :param expiry_window_seconds: The amount of time, in seconds,
         """
-        self._client_creator = client_creator
         self._source_credentials = source_credentials
-        self._role_arn = role_arn
-
-        if extra_args is None:
-            self._assume_kwargs = {}
-        else:
-            self._assume_kwargs = deepcopy(extra_args)
-        self._assume_kwargs['RoleArn'] = self._role_arn
-
-        self._role_session_name = self._assume_kwargs.get('RoleSessionName')
-        self._using_default_session_name = False
-        if not self._role_session_name:
-            self._role_session_name = 'botocore-session-%s' % (
-                int(time.time()))
-            self._assume_kwargs['RoleSessionName'] = self._role_session_name
-            self._using_default_session_name = True
-
         self._mfa_prompter = mfa_prompter
         if self._mfa_prompter is None:
             self._mfa_prompter = getpass.getpass
 
         super(AssumeRoleCredentialFetcher, self).__init__(
-            cache, expiry_window_seconds
+            client_creator, role_arn, extra_args=extra_args,
+            cache=cache, expiry_window_seconds=expiry_window_seconds
         )
-
-    def _create_cache_key(self):
-        """Create a predictable cache key for the current configuration.
-
-        The cache key is intended to be compatible with file names.
-        """
-        args = deepcopy(self._assume_kwargs)
-
-        # The role session name gets randomly generated, so we don't want it
-        # in the hash.
-        if self._using_default_session_name:
-            del args['RoleSessionName']
-
-        if 'Policy' in args:
-            # To have a predictable hash, the keys of the policy must be
-            # sorted, so we have to load it here to make sure it gets sorted
-            # later on.
-            args['Policy'] = json.loads(args['Policy'])
-
-        args = json.dumps(args, sort_keys=True)
-        argument_hash = sha1(args.encode('utf-8')).hexdigest()
-        return self._make_file_safe(argument_hash)
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
@@ -766,6 +798,63 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
             aws_secret_access_key=frozen_credentials.secret_key,
             aws_session_token=frozen_credentials.token,
         )
+
+
+class AssumeRoleWithWebIdentityCredentialFetcher(
+        BaseAssumeRoleCredentialFetcher
+):
+    def __init__(self, client_creator, web_identity_token_loader, role_arn,
+                 extra_args=None, cache=None, expiry_window_seconds=None):
+        """
+        :type client_creator: callable
+        :param client_creator: A callable that creates a client taking
+            arguments like ``Session.create_client``.
+
+        :type web_identity_token_loader: callable
+        :param web_identity_token_loader: A callable that takes no arguments
+        and returns a web identity token str.
+
+        :type role_arn: str
+        :param role_arn: The ARN of the role to be assumed.
+
+        :type extra_args: dict
+        :param extra_args: Any additional arguments to add to the assume
+            role request using the format of the botocore operation.
+            Possible keys include, but may not be limited to,
+            DurationSeconds, Policy, SerialNumber, ExternalId and
+            RoleSessionName.
+
+        :type cache: dict
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example of this is
+            the ``JSONFileCache`` class in aws-cli.
+
+        :type expiry_window_seconds: int
+        :param expiry_window_seconds: The amount of time, in seconds,
+        """
+        self._web_identity_token_loader = web_identity_token_loader
+
+        super(AssumeRoleWithWebIdentityCredentialFetcher, self).__init__(
+            client_creator, role_arn, extra_args=extra_args,
+            cache=cache, expiry_window_seconds=expiry_window_seconds
+        )
+
+    def _get_credentials(self):
+        """Get credentials by calling assume role."""
+        kwargs = self._assume_role_kwargs()
+        # Assume role with web identity does not require credentials other than
+        # the token, explicitly configure the client to not sign requests.
+        config = Config(signature_version=UNSIGNED)
+        client = self._client_creator('sts', config=config)
+        return client.assume_role_with_web_identity(**kwargs)
+
+    def _assume_role_kwargs(self):
+        """Get the arguments for assume role based on current configuration."""
+        assume_role_kwargs = deepcopy(self._assume_kwargs)
+        identity_token = self._web_identity_token_loader()
+        assume_role_kwargs['WebIdentityToken'] = identity_token
+
+        return assume_role_kwargs
 
 
 class CredentialProvider(object):
@@ -1209,6 +1298,7 @@ class AssumeRoleProvider(CredentialProvider):
     # provider as much as possible.
     CANONICAL_NAME = None
     ROLE_CONFIG_VAR = 'role_arn'
+    WEB_IDENTITY_TOKE_FILE_VAR = 'web_identity_token_file'
     # Credentials are considered expired (and will be refreshed) once the total
     # remaining time left until the credentials expires is less than the
     # EXPIRY_WINDOW.
@@ -1277,7 +1367,14 @@ class AssumeRoleProvider(CredentialProvider):
             return self._load_creds_via_assume_role(self._profile_name)
 
     def _has_assume_role_config_vars(self, profile):
-        return self.ROLE_CONFIG_VAR in profile
+        return (
+            self.ROLE_CONFIG_VAR in profile and
+            # We need to ensure this provider doesn't look at a profile when
+            # the profile has configuration for web identity. Simply relying on
+            # the order in the credential chain is insufficient as it doesn't
+            # prevent the case when we're doing an assume role chain.
+            self.WEB_IDENTITY_TOKE_FILE_VAR not in profile
+        )
 
     def _load_creds_via_assume_role(self, profile_name):
         role_config = self._get_role_config(profile_name)
@@ -1460,6 +1557,7 @@ class AssumeRoleProvider(CredentialProvider):
                 not self._has_assume_role_config_vars(profile):
             profile_providers = self._profile_provider_builder.providers(
                 profile_name=profile_name,
+                disable_env_vars=True,
             )
             profile_chain = CredentialResolver(profile_providers)
             credentials = profile_chain.load_credentials()
@@ -1498,6 +1596,95 @@ class AssumeRoleProvider(CredentialProvider):
                 )
             )
         return credentials
+
+
+class AssumeRoleWithWebIdentityProvider(CredentialProvider):
+    METHOD = 'assume-role-with-web-identity'
+    CANONICAL_NAME = None
+    _CONFIG_TO_ENV_VAR = {
+        'web_identity_token_file': 'AWS_WEB_IDENTITY_TOKEN_FILE',
+        'role_session_name': 'AWS_ROLE_SESSION_NAME',
+        'role_arn': 'AWS_ROLE_ARN',
+    }
+
+    def __init__(
+            self,
+            load_config,
+            client_creator,
+            profile_name,
+            cache=None,
+            disable_env_vars=False,
+            token_loader_cls=None,
+    ):
+        self.cache = cache
+        self._load_config = load_config
+        self._client_creator = client_creator
+        self._profile_name = profile_name
+        self._profile_config = None
+        self._disable_env_vars = disable_env_vars
+        if token_loader_cls is None:
+            token_loader_cls = FileWebIdentityTokenLoader
+        self._token_loader_cls = token_loader_cls
+
+    def load(self):
+        return self._assume_role_with_web_identity()
+
+    def _get_profile_config(self, key):
+        if self._profile_config is None:
+            loaded_config = self._load_config()
+            profiles = loaded_config.get('profiles', {})
+            self._profile_config = profiles.get(self._profile_name, {})
+        return self._profile_config.get(key)
+
+    def _get_env_config(self, key):
+        if self._disable_env_vars:
+            return None
+        env_key = self._CONFIG_TO_ENV_VAR.get(key)
+        if env_key and env_key in os.environ:
+            return os.environ[env_key]
+        return None
+
+    def _get_config(self, key):
+        env_value = self._get_env_config(key)
+        if env_value is not None:
+            return env_value
+        return self._get_profile_config(key)
+
+    def _assume_role_with_web_identity(self):
+        token_path = self._get_config('web_identity_token_file')
+        if not token_path:
+            return None
+        token_loader = self._token_loader_cls(token_path)
+
+        role_arn = self._get_config('role_arn')
+        if not role_arn:
+            error_msg = (
+                'The provided profile or the current environment is '
+                'configured to assume role with web identity but has no '
+                'role ARN configured. Ensure that the profile has the role_arn'
+                'configuration set or the AWS_ROLE_ARN env var is set.'
+            )
+            raise InvalidConfigError(error_msg=error_msg)
+
+        extra_args = {}
+        role_session_name = self._get_config('role_session_name')
+        if role_session_name is not None:
+            extra_args['RoleSessionName'] = role_session_name
+
+        fetcher = AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator=self._client_creator,
+            web_identity_token_loader=token_loader,
+            role_arn=role_arn,
+            extra_args=extra_args,
+            cache=self.cache,
+        )
+        # The initial credentials are empty and the expiration time is set
+        # to now so that we can delay the call to assume role until it is
+        # strictly needed.
+        return DeferredRefreshableCredentials(
+            method=self.METHOD,
+            refresh_using=fetcher.fetch_credentials,
+        )
 
 
 class CanonicalNameCredentialSourcer(object):
