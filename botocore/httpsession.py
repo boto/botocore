@@ -4,6 +4,7 @@ import socket
 from base64 import b64encode
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
+from urllib3.util.retry import Retry
 from urllib3.util.ssl_ import (
     ssl, OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION, DEFAULT_CIPHERS,
 )
@@ -255,7 +256,7 @@ class URLLib3Session(object):
                 url=request_target,
                 body=request.body,
                 headers=request.headers,
-                retries=False,
+                retries=Retry(False),
                 assert_same_host=False,
                 preload_content=False,
                 decode_content=False,
