@@ -4,6 +4,7 @@ from mock import patch, Mock, ANY
 from tests import unittest
 from nose.tools import raises
 from urllib3.exceptions import NewConnectionError, ProtocolError
+from urllib3.util.retry import Retry
 
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
