@@ -103,7 +103,7 @@ class TestURLLib3Session(unittest.TestCase):
             url=url,
             body=body,
             headers=headers,
-            retries=Retries(False),
+            retries=Retry(False),
             assert_same_host=False,
             preload_content=False,
             decode_content=False,
