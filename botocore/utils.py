@@ -1371,3 +1371,13 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
 
     if 'text' in content_type:
         return default
+
+
+class FileWebIdentityTokenLoader(object):
+    def __init__(self, web_identity_token_path, _open=open):
+        self._web_identity_token_path = web_identity_token_path
+        self._open = _open
+
+    def __call__(self):
+        with self._open(self._web_identity_token_path) as token_file:
+            return token_file.read()
