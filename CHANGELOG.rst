@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.201
+========
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.200
 ========
 
