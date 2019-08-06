@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.202
+========
+
+* api-change:``batch``: Update batch client to latest version
+
+
 1.12.201
 ========
 
