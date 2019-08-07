@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.203
+========
+
+* api-change:``application-insights``: Update application-insights client to latest version
+
+
 1.12.202
 ========
 
