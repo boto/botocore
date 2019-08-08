@@ -36,6 +36,12 @@
       "output_token": "NextToken",
       "result_key": "UserPoolClients"
     },
+    "ListUsers": {
+      "input_token": "PaginationToken",
+      "limit_key": "Limit",
+      "output_token": "PaginationToken",
+      "result_key": "Users"
+    },
     "ListUserPools": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
