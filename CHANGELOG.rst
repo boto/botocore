@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.204
+========
+
+* api-change:``lakeformation``: Update lakeformation client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.12.203
 ========
 
