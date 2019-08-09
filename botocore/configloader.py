@@ -147,7 +147,7 @@ def raw_config_parse(config_filename, parse_subsections=True):
         cp = six.moves.configparser.RawConfigParser()
         try:
             cp.read([path])
-        except six.moves.configparser.Error:
+        except (six.moves.configparser.Error, UnicodeDecodeError):
             raise botocore.exceptions.ConfigParseError(
                 path=_unicode_path(path))
         else:
