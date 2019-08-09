@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``guardduty``", 
+    "description": "Update guardduty client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-runtime``", 
+    "description": "Update lex-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }
+]
