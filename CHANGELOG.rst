@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.205
+========
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.12.204
 ========
 
