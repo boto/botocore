@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.206
+========
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.12.205
 ========
 

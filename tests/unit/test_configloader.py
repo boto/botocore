@@ -67,6 +67,11 @@ class TestConfigLoader(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.ConfigParseError):
             raw_config_parse(filename)
 
+    def test_config_parse_error_bad_unicode(self):
+        filename = path('aws_config_badbytes')
+        with self.assertRaises(botocore.exceptions.ConfigParseError):
+            raw_config_parse(filename)
+
     def test_config_parse_error_filesystem_encoding_none(self):
         filename = path('aws_config_bad')
         with mock.patch('sys.getfilesystemencoding') as encoding:
