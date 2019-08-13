@@ -14,6 +14,7 @@ import logging
 import functools
 
 from botocore import waiter, xform_name
+from botocore.api_rate_manager import ApiRateManager
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
@@ -72,18 +73,33 @@ class ClientCreator(object):
                       endpoint_url=None, verify=None,
                       credentials=None, scoped_config=None,
                       api_version=None,
-                      client_config=None):
+                      client_config=None,
+                      api_rate=0):
+        """
+        :param service_name:
+        :param region_name:
+        :param is_secure:
+        :param endpoint_url:
+        :param verify:
+        :param credentials:
+        :param scoped_config:
+        :param api_version:
+        :param client_config:
+        :param api_rate:
+        :return:
+        """
         responses = self._event_emitter.emit(
             'choose-service-name', service_name=service_name)
         service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
-        cls = self._create_client_class(service_name, service_model)
+        cls = self._create_client_class(service_name, service_model, api_rate)
         endpoint_bridge = ClientEndpointBridge(
             self._endpoint_resolver, scoped_config, client_config,
             service_signing_name=service_model.metadata.get('signingName'))
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
+        client_args.update({'api_rate': api_rate})
         service_client = cls(**client_args)
         self._register_retries(service_client)
         self._register_s3_events(
@@ -92,13 +108,14 @@ class ClientCreator(object):
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
+
         return service_client
 
-    def create_client_class(self, service_name, api_version=None):
+    def create_client_class(self, service_name, api_version=None, api_rate=0):
         service_model = self._load_service_model(service_name, api_version)
-        return self._create_client_class(service_name, service_model)
+        return self._create_client_class(service_name, service_model, api_rate)
 
-    def _create_client_class(self, service_name, service_model):
+    def _create_client_class(self, service_name, service_model, api_rate=0):
         class_attributes = self._create_methods(service_model)
         py_name_to_operation_name = self._create_name_mapping(service_model)
         class_attributes['_PY_TO_OP_NAME'] = py_name_to_operation_name
@@ -353,6 +370,20 @@ class ClientCreator(object):
             if args:
                 raise TypeError(
                     "%s() only accepts keyword arguments." % py_operation_name)
+
+            # If we're using an API rate limiter then wait for place at head of queue
+            mgr = self.api_rate_mgr
+            if mgr is not None:
+                if mgr.process_q is False:
+                    mgr.start()
+                queue = mgr.enqueue()
+                while queue.waiting is True:
+                    now = queue.now()
+                    if now >= queue.timeout:
+                        logger.debug('ERROR: queue timed out')
+                    pass
+                queue.registered = False
+
             # The "self" in this scope is referring to the BaseClient.
             return self._make_api_call(operation_name, kwargs)
 
@@ -571,7 +602,7 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 client_config, partition, exceptions_factory):
+                 client_config, partition, exceptions_factory, api_rate=0):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
@@ -585,6 +616,7 @@ class BaseClient(object):
         self._exceptions_factory = exceptions_factory
         self._exceptions = None
         self._register_handlers()
+        self.api_rate_mgr = ApiRateManager(api_rate) if api_rate > 0 else None
 
     def __getattr__(self, item):
         event_name = 'getattr.%s.%s' % (
