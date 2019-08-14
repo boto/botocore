@@ -431,7 +431,7 @@ class RefreshableCredentials(Credentials):
             credentials expire in which refresh attempts should
             be made.
 
-        :return: True if refresh neeeded, False otherwise.
+        :return: True if refresh needed, False otherwise.
 
         """
         if self._expiry_time is None:
