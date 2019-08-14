@@ -31,7 +31,7 @@ class MyTestCase(unittest.TestCase):
         with self.mutex:
             self.thread_end_times.append(waiter.now())
 
-    def test_10_waiters_takes_less_than_six_seconds(self):
+    def test_10_waiters_takes_less_than_ten_seconds(self):
         # Half second latency
         self.step = 500
         self.brm = ApiRateManager(self.step)
@@ -52,7 +52,7 @@ class MyTestCase(unittest.TestCase):
         self.brm.stop(True)
 
         self.record_test_metrics()
-        self.assertLess((now_millis() - self.start), 6000)
+        self.assertLess((now_millis() - self.start), 10000)
 
     def test_100_waiters_with_no_contention(self):
         self.step = 100
@@ -100,7 +100,7 @@ class MyTestCase(unittest.TestCase):
         self.brm.stop(True)
 
         self.record_test_metrics()
-        self.assertLess((now_millis() - self.start), 18000)
+        self.assertLess((now_millis() - self.start), 20000)
         self.assertTrue(self.brm.queue.empty())
 
     def test_print_metric(self):
@@ -116,7 +116,7 @@ class MyTestCase(unittest.TestCase):
         act_step = '{0: <25}'.format('Set step interval') + "= {:.2f}".format(self.step / 1000)
 
         dev = "{:.2f}".format(statistics.stdev(get_intervals(self.brm.steps, 1000)))
-        std_dev = '{0: <25}'.format('Step Standard Deviation') + f'= {dev}'
+        std_dev = 'Step Standard Deviation = ' + str(dev)
 
         self.test_metrics.append(
             self.TestMetric(

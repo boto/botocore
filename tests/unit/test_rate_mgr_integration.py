@@ -22,29 +22,44 @@ class MyTestCase(unittest.TestCase):
 
         # Uncomment for MFA token prompt, e.g. Credentials not in environment vars
         # This was tested in Pycharm with a run config containing the AWS credentials as ENV vars
-        # sts_client = session.client('sts')
+        # sts_client = session.ec2_client('sts')
         # sts_client.get_caller_identity()
 
-        # Create an EC2 client with a latency value for api rate of 250ms
-        self.client = connect_service('ec2', self.credentials, self.session.region_name, None, False, self.RATE)
-        self.client.api_rate_mgr.debug = True
+        # Create an EC2 client with a latency value for api interval of 250ms
+        self.ec2_client = connect_service('ec2', self.credentials, self.session.region_name, None, False, self.RATE)
+        self.ec2_client.api_rate_mgr.debug = True
 
-    def make_api_call(self, client, thread_id):
+        # Create an S3 client with a latency value for api interval of 250ms
+        self.s3_client = connect_service('s3', self.credentials, self.session.region_name, None, False, self.RATE)
+        self.s3_client.api_rate_mgr.debug = True
+
+    def query_ec2(self, client, thread_id):
         try:
             result = client.describe_instances()
+            self.assertTrue(result.get('Reservations') is not None)
         except (BotoCoreError, ClientError) as err:
             print(f'ERROR: Thread {thread_id} caused an exception. msg({err})')
         finally:
             with self.mutex:
                 self.thread_end_times.append(client.api_rate_mgr.now())
 
-    def test_10_threads_join_queue(self):
+    def query_s3(self, client, thread_id):
+        try:
+            result = client.list_buckets()
+            self.assertTrue(result.get('Buckets') is not None)
+        except (BotoCoreError, ClientError) as err:
+            print(f'ERROR: Thread {thread_id} caused an exception. msg({err})')
+        finally:
+            with self.mutex:
+                self.thread_end_times.append(client.api_rate_mgr.now())
+
+    def test_10_threads_query_ec2(self):
 
         threads = []
 
         # Ten threads
         for i in range(10):
-            threads.append(Thread(target=self.make_api_call, args=[self.client, i]))
+            threads.append(Thread(target=self.query_ec2, args=[self.ec2_client, i]))
 
         for t in threads:
             t.start()
@@ -52,14 +67,41 @@ class MyTestCase(unittest.TestCase):
         for t in threads:
             t.join()
 
-        self.client.api_rate_mgr.stop(True)
+        self.ec2_client.api_rate_mgr.stop(True)
 
-        self.record_test_metrics()
+        self.record_test_metrics(self.ec2_client)
+
+    def test_10_threads_query_s3(self):
+
+        threads = []
+
+        # Ten threads
+        for i in range(10):
+            threads.append(Thread(target=self.query_s3, args=[self.s3_client, i]))
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        self.s3_client.api_rate_mgr.stop(True)
+
+        self.record_test_metrics(self.s3_client)
+
+    def test_no_rate_set_still_queries_ec2(self):
+        # Can we still make a simple API call with no latency?
+        this_client = connect_service('ec2', self.credentials, self.session.region_name, None, False)
+        try:
+            result = this_client.describe_instances()
+            self.assertTrue(result.get('Reservations') is not None, 'Legacy API call caused an exception.')
+        except (BotoCoreError, ClientError) as err:
+            print(err)
 
     def test_print_metric(self):
         self.print_test_metrics()
 
-    def record_test_metrics(self):
+    def record_test_metrics(self, client):
         total = 0
         for t in self.thread_end_times:
             total += t
@@ -68,10 +110,10 @@ class MyTestCase(unittest.TestCase):
         avg_step_str = '{0: <25}'.format('Average thread time') + "= {:.2f}".format(avg)
         act_step = '{0: <25}'.format('Set step interval') + "= {:.2f}".format(self.RATE / 1000)
 
-        dev = "{:.2f}".format(statistics.stdev(get_intervals(self.client.api_rate_mgr.steps, 1000)))
-        std_dev = '{0: <25}'.format('Step Standard Deviation') + f'= {dev}'
+        dev = "{:.2f}".format(statistics.stdev(get_intervals(client.api_rate_mgr.steps, 1000)))
+        std_dev = 'Step Standard Deviation = ' + str(dev)
 
-        num_steps = '{0: <25}'.format('Number of steps in queue') + f'= {len(self.client.api_rate_mgr.steps)}'
+        num_steps = '{0: <25}'.format('Number of steps in queue = ') + str(len(client.api_rate_mgr.steps))
 
         self.test_metrics.append(
             self.TestMetric(
@@ -131,7 +173,7 @@ def now_millis():
 
 def connect_service(service, credentials, region_name=None, config=None, silent=False, api_rate=0):
     """
-    Instantiates an AWS API client
+    Instantiates an AWS API ec2_client
 
     :param api_rate:                    The period between API calls in ms
     :param service:                     Service targeted, e.g. ec2
@@ -140,7 +182,7 @@ def connect_service(service, credentials, region_name=None, config=None, silent=
     :param config:                      Configuration (optional)
     :param silent:                      Whether or not to print messages
 
-    :return: api_client:                The AWS client
+    :return: api_client:                The AWS ec2_client
     """
     api_client = None
     try:
