@@ -54,16 +54,6 @@ class ApiRateManager:
         def now():
             return int(round(time.time() * 1000))
 
-        def waiting(self):
-            """
-            Consumer must wait while in the q. de_register the waiter
-            after consumer discovers wait is over so that it is cleaned away.
-            :return: Boolean. True if still waiting
-            """
-            if self.waiting is False:
-                self.registered = False
-            return self.waiting
-
     def debug(self, debug):
         self.debug = debug
 
@@ -104,7 +94,7 @@ class ApiRateManager:
         """
         Clean away any spent waiters
         """
-        for waiter in self.spent_waiters:
+        for waiter in reversed(self.spent_waiters):
             if waiter.registered is False:
                 self.spent_waiters.remove(waiter)
 
