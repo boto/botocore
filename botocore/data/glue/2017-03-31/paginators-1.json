@@ -83,12 +83,6 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "SecurityConfigurations"
-    },
-    "GetJobBookmarks": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "JobBookmarkEntries"
     }
   }
 }
