@@ -496,3 +496,20 @@ class TestURLLib3Session(unittest.TestCase):
 
         session.send(self.request.prepare())
         self.assert_request_sent(chunked=False)
+
+    def test_close(self):
+        session = URLLib3Session()
+        session.close()
+        self.pool_manager.clear.assert_called_once_with()
+
+    def test_close_proxied(self):
+        proxies = {'https': 'http://proxy.com', 'http': 'http://proxy2.com'}
+        session = URLLib3Session(proxies=proxies)
+        for proxy, proxy_url in proxies.items():
+            self.request.url = '%s://example.com/' % proxy
+            session.send(self.request.prepare())
+
+        session.close()
+        self.proxy_manager_fun.return_value.clear.assert_called_with()
+        # One call for pool manager, one call for each of the proxies
+        self.assertEqual(self.proxy_manager_fun.return_value.clear.call_count, 1 + len(proxies))
