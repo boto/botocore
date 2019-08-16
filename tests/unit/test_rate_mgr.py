@@ -25,7 +25,7 @@ class MyTestCase(unittest.TestCase):
         while waiter.waiting is True:
             now = waiter.now()
             if now >= waiter.timeout:
-                print(f'ERROR: ThreadID {thread_id} timed-out now = {now} timeout = {waiter.timeout}')
+                print('ERROR: ThreadID ' + thread_id + ' timed-out now = ' + now + ' timeout = ' + waiter.timeout)
             pass
 
         with self.mutex:
