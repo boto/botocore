@@ -2,6 +2,46 @@
 CHANGELOG
 =========
 
+1.12.210
+========
+
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.12.209
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
+1.12.208
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.207
+========
+
+* api-change:``appsync``: Update appsync client to latest version
+
+
+1.12.206
+========
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.12.205
 ========
 
