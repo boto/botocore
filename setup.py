@@ -24,9 +24,7 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'docutils>=0.10,<0.16',
-            'monotonic>=1.5',
-            'statistics>=1.0.3.5']
+            'docutils>=0.10,<0.16']
 
 
 if sys.version_info[:2] == (2, 6):
@@ -51,6 +49,8 @@ elif sys.version_info[:2] == (3, 3):
 else:
     requires.append('urllib3>=1.20,<1.26')
 
+requires.append('monotonic>=1.5')
+requires.append('statistics>=1.0.3.5')
 
 setup(
     name='botocore',
