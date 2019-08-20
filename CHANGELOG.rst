@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.212
+========
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
 1.12.211
 ========
 
