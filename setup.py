@@ -24,7 +24,9 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'docutils>=0.10,<0.16']
+            'docutils>=0.10,<0.16',
+            'monotonic>=1.5',
+            'statistics>=1.0.3.5']
 
 
 if sys.version_info[:2] == (2, 6):
