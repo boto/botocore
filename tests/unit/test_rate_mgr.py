@@ -25,7 +25,7 @@ class MyTestCase(unittest.TestCase):
         while waiter.waiting is True:
             now = waiter.now()
             if now >= waiter.timeout:
-                print('ERROR: ThreadID ' + thread_id + ' timed-out now = ' + now + ' timeout = ' + waiter.timeout)
+                print('ERROR: ThreadID ' + str(thread_id) + ' timed-out now = ' + str(now) + ' timeout = ' + str(waiter.timeout))
             pass
 
         with self.mutex:
@@ -52,7 +52,7 @@ class MyTestCase(unittest.TestCase):
         self.brm.stop(True)
 
         self.record_test_metrics()
-        self.assertLess((now_millis() - self.start), 10000)
+        self.assertTrue((now_millis() - self.start) < 10000)
 
     def test_100_waiters_with_no_contention(self):
         self.step = 100
@@ -100,7 +100,7 @@ class MyTestCase(unittest.TestCase):
         self.brm.stop(True)
 
         self.record_test_metrics()
-        self.assertLess((now_millis() - self.start), 20000)
+        self.assertTrue((now_millis() - self.start) < 20000)
         self.assertTrue(self.brm.queue.empty())
 
     def test_print_metric(self):
@@ -111,12 +111,12 @@ class MyTestCase(unittest.TestCase):
         for t in self.thread_end_times:
             total += t
 
-        avg = get_step_average(self.thread_end_times) / 1000
-        avg_step_str = '{0: <25}'.format('Average thread time') + "= {:.2f}".format(avg)
-        act_step = '{0: <25}'.format('Set step interval') + "= {:.2f}".format(self.step / 1000)
+        avg = float(get_step_average(self.thread_end_times)) / 1000
+        avg_step_str = '{0: <25}'.format('Average thread time') + "= {0:.2f}".format(avg)
+        act_step = '{0: <25}'.format('Set step interval') + "= {0:.2f}".format(float(self.step) / 1000)
 
-        dev = "{:.2f}".format(statistics.stdev(get_intervals(self.brm.steps, 1000)))
-        std_dev = 'Step Standard Deviation = ' + str(dev)
+        dev = statistics.stdev(get_intervals(self.brm.steps, 1000))
+        std_dev = 'Step Standard Deviation = ' + str("{0:.2f}".format(dev))
 
         self.test_metrics.append(
             self.TestMetric(

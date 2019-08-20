@@ -8,6 +8,7 @@ from multiprocessing import Lock
 from threading import Thread
 
 
+# noinspection PyInterpreter
 class MyTestCase(unittest.TestCase):
 
     test_metrics = []
@@ -15,8 +16,9 @@ class MyTestCase(unittest.TestCase):
     mutex = Lock()
     RATE = 250
 
+    # noinspection PyInterpreter,PyInterpreter
     def setUp(self):
-        warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
+        # warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
         self.session = boto3.Session(profile_name='ds-nonprod')
         self.credentials = self.session.get_credentials().__dict__
 
@@ -38,7 +40,7 @@ class MyTestCase(unittest.TestCase):
             result = client.describe_instances()
             self.assertTrue(result.get('Reservations') is not None)
         except (BotoCoreError, ClientError) as err:
-            print(f'ERROR: Thread {thread_id} caused an exception. msg({err})')
+            print('ERROR: Thread ' + thread_id + ' caused an exception. msg(' + err + ')')
         finally:
             with self.mutex:
                 self.thread_end_times.append(client.api_rate_mgr.now())
@@ -48,7 +50,7 @@ class MyTestCase(unittest.TestCase):
             result = client.list_buckets()
             self.assertTrue(result.get('Buckets') is not None)
         except (BotoCoreError, ClientError) as err:
-            print(f'ERROR: Thread {thread_id} caused an exception. msg({err})')
+            print('ERROR: Thread ' + thread_id + ' caused an exception. msg(' + err + ')')
         finally:
             with self.mutex:
                 self.thread_end_times.append(client.api_rate_mgr.now())
@@ -106,11 +108,11 @@ class MyTestCase(unittest.TestCase):
         for t in self.thread_end_times:
             total += t
 
-        avg = get_step_average(self.thread_end_times) / 1000
-        avg_step_str = '{0: <25}'.format('Average thread time') + "= {:.2f}".format(avg)
-        act_step = '{0: <25}'.format('Set step interval') + "= {:.2f}".format(self.RATE / 1000)
+        avg = float(get_step_average(self.thread_end_times)) / 1000
+        avg_step_str = '{0: <25}'.format('Average thread time') + "= {0:.2f}".format(avg)
+        act_step = '{0: <25}'.format('Set step interval') + "= {0:.2f}".format(float(self.RATE) / 1000)
 
-        dev = "{:.2f}".format(statistics.stdev(get_intervals(client.api_rate_mgr.steps, 1000)))
+        dev = "{0:.2f}".format(statistics.stdev(get_intervals(client.api_rate_mgr.steps, 1000)))
         std_dev = 'Step Standard Deviation = ' + str(dev)
 
         num_steps = '{0: <25}'.format('Number of steps in queue = ') + str(len(client.api_rate_mgr.steps))
