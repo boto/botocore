@@ -108,7 +108,7 @@ class TestRateManager(unittest.TestCase):
         print_test_metrics(trm=self)
 
 
-def record_test_metrics(trm):
+def record_test_metrics(trm=None):
     total = 0
     for t in trm.thread_end_times:
         total += t
@@ -130,7 +130,7 @@ def record_test_metrics(trm):
                              )
 
 
-def print_test_metrics(trm):
+def print_test_metrics(trm=None):
     for metrics in trm.test_metrics:
         print('\n' + metrics.test_name)
         print('\t' + metrics.std_dev)
