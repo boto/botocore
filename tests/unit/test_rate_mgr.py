@@ -7,11 +7,12 @@ from time import sleep
 from botocore.api_rate_manager import ApiRateManager
 
 
-class MyTestCase(unittest.TestCase):
+class TestRateManager(unittest.TestCase):
 
     test_metrics = []
     thread_end_times = []
     mutex = Lock()
+    brm = None
 
     def setUp(self):
         self.start = now_millis()
