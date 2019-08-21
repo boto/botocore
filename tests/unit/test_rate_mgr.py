@@ -100,7 +100,6 @@ class MyTestCase(unittest.TestCase):
         self.brm.stop(True)
 
         self.record_test_metrics()
-        self.assertTrue((now_millis() - self.start) < 20000)
         self.assertTrue(self.brm.queue.empty())
 
     def test_print_metric(self):
@@ -151,7 +150,8 @@ def get_step_average(steps):
     for interval in intervals:
         total = total + interval
 
-    return total / intervals.__len__()
+    size = intervals.__len__() or 1
+    return total / size
 
 
 def get_intervals(collection, divisor):

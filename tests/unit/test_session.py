@@ -521,7 +521,7 @@ class TestCreateClient(BaseSessionTest):
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
             endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            api_version=mock.ANY, api_rate=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
@@ -533,7 +533,7 @@ class TestCreateClient(BaseSessionTest):
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
             endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            api_version=mock.ANY, api_rate=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
