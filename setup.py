@@ -49,9 +49,6 @@ elif sys.version_info[:2] == (3, 3):
 else:
     requires.append('urllib3>=1.20,<1.26')
 
-requires.append('monotonic==1.5')
-requires.append('statistics==1.0.3.5')
-
 setup(
     name='botocore',
     version=find_version("botocore", "__init__.py"),
