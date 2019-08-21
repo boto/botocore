@@ -52,7 +52,7 @@ class TestRateManager(unittest.TestCase):
 
         self.brm.stop(True)
 
-        self.record_test_metrics()
+        # self.record_test_metrics()
         self.assertTrue((now_millis() - self.start) < 10000)
 
     def test_100_waiters_with_no_contention(self):
@@ -72,7 +72,7 @@ class TestRateManager(unittest.TestCase):
             t.join()
 
         self.brm.stop(True)
-        self.record_test_metrics()
+        # self.record_test_metrics()
 
         self.assertTrue(self.brm.queue.empty())
 
@@ -100,11 +100,11 @@ class TestRateManager(unittest.TestCase):
 
         self.brm.stop(True)
 
-        self.record_test_metrics()
+        # self.record_test_metrics()
         self.assertTrue(self.brm.queue.empty())
 
-    def test_print_metric(self):
-        self.print_test_metrics()
+    # def test_print_metric(self):
+    #     self.print_test_metrics()
 
     def record_test_metrics(self):
         total = 0
