@@ -20,6 +20,7 @@ class TestRateManager(unittest.TestCase):
         self.step = 0
         self.thread_end_times = []
         self.brm = None
+        self.test_name = self._testMethodName
 
     def join_queue(self, thread_id):
         waiter = self.brm.enqueue()
@@ -107,21 +108,21 @@ class TestRateManager(unittest.TestCase):
         print_test_metrics(self)
 
 
-def record_test_metrics(self):
+def record_test_metrics(trm):
     total = 0
-    for t in self.thread_end_times:
+    for t in trm.thread_end_times:
         total += t
 
-    avg = float(get_step_average(self.thread_end_times)) / 1000
+    avg = float(get_step_average(trm.thread_end_times)) / 1000
     avg_step_str = '{0: <25}'.format('Average thread time') + "= {0:.2f}".format(avg)
-    act_step = '{0: <25}'.format('Set step interval') + "= {0:.2f}".format(float(self.step) / 1000)
+    act_step = '{0: <25}'.format('Set step interval') + "= {0:.2f}".format(float(trm.step) / 1000)
 
-    dev = statistics.stdev(get_intervals(self.brm.steps, 1001))
+    dev = statistics.stdev(get_intervals(trm.brm.steps, 1001))
     std_dev = 'Step Standard Deviation = ' + str("{0:.2f}".format(dev))
 
-    self.test_metrics.append(
+    trm.test_metrics.append(
         TestMetric(
-            test_name=self._testMethodName,
+            test_name=trm.test_name,
             std_dev=std_dev,
             act_step=act_step,
             avg_steps=avg_step_str
@@ -129,8 +130,8 @@ def record_test_metrics(self):
                              )
 
 
-def print_test_metrics(self):
-    for metrics in self.test_metrics:
+def print_test_metrics(trm):
+    for metrics in trm.test_metrics:
         print('\n' + metrics.test_name)
         print('\t' + metrics.std_dev)
         print('\t' + metrics.act_step)
