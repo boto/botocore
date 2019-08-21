@@ -525,11 +525,12 @@ class TestCreateClient(BaseSessionTest):
         self.session.set_default_client_config(config)
         self.session.create_client('sts')
 
+        # TODO insisting on specific set of args means no backward compatibility
         client_creator.return_value.create_client.assert_called_with(
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
             endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            api_version=mock.ANY, api_rate=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
