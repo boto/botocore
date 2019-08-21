@@ -115,7 +115,7 @@ class TestRateManager(unittest.TestCase):
         avg_step_str = '{0: <25}'.format('Average thread time') + "= {0:.2f}".format(avg)
         act_step = '{0: <25}'.format('Set step interval') + "= {0:.2f}".format(float(self.step) / 1000)
 
-        dev = statistics.stdev(get_intervals(self.brm.steps, 1000))
+        dev = statistics.stdev(get_intervals(self.brm.steps, 1001))
         std_dev = 'Step Standard Deviation = ' + str("{0:.2f}".format(dev))
 
         self.test_metrics.append(
