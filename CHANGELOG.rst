@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.214
+========
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.213
 ========
 
