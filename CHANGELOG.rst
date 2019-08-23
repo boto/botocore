@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.215
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
 1.12.214
 ========
 
