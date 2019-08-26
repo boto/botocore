@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.216
+========
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
 1.12.215
 ========
 
