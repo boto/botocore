@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.217
+========
+
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.12.216
 ========
 
