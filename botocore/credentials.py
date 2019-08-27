@@ -162,6 +162,7 @@ class ProfileProviderBuilder(object):
         return SharedCredentialProvider(
             profile_name=profile_name,
             creds_filename=credential_file,
+            load_config=lambda: self._session.full_config,
         )
 
     def _create_config_provider(self, profile_name):
@@ -1153,6 +1154,7 @@ class OriginalEC2Provider(CredentialProvider):
 class SharedCredentialProvider(CredentialProvider):
     METHOD = 'shared-credentials-file'
     CANONICAL_NAME = 'SharedCredentials'
+    SOURCE_CREDENTIALS_CONFIG_VAR = 'source_credentials'
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
@@ -1161,11 +1163,9 @@ class SharedCredentialProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
 
-    def __init__(self, creds_filename, profile_name=None, ini_parser=None):
+    def __init__(self, creds_filename, load_config, profile_name=None, ini_parser=None):
         self._creds_filename = creds_filename
-        if profile_name is None:
-            profile_name = 'default'
-        self._profile_name = profile_name
+        self._profile_name = self._get_profile_name(load_config, profile_name)
         if ini_parser is None:
             ini_parser = botocore.configloader.raw_config_parse
         self._ini_parser = ini_parser
@@ -1185,6 +1185,15 @@ class SharedCredentialProvider(CredentialProvider):
                 token = self._get_session_token(config)
                 return Credentials(access_key, secret_key, token,
                                    method=self.METHOD)
+
+    def _get_profile_name(self, load_config, profile_name):
+        profiles = load_config().get('profiles', {})
+        profile = profiles.get(profile_name, {})
+        if self.SOURCE_CREDENTIALS_CONFIG_VAR in profile:
+            return profile[self.SOURCE_CREDENTIALS_CONFIG_VAR]
+        elif profile_name is None:
+            return 'default'
+        return profile_name
 
     def _get_session_token(self, config):
         for token_envvar in self.TOKENS:
