@@ -14,7 +14,7 @@ import socket
 from tests import unittest
 
 from mock import Mock, patch, sentinel
-from botocore.vendored.requests import ConnectionError
+from requests import ConnectionError
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest

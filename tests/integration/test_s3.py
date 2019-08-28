@@ -22,19 +22,17 @@ import tempfile
 import shutil
 import threading
 import logging
-import mock
 from tarfile import TarFile
 from contextlib import closing
 
+import requests
 from nose.plugins.attrib import attr
 
-from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
 from botocore.compat import six, zip_longest
 import botocore.session
 import botocore.auth
 import botocore.credentials
-import botocore.vendored.requests as requests
 from botocore.config import Config
 from botocore.exceptions import ClientError
 

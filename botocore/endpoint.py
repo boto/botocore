@@ -41,7 +41,7 @@ def convert_to_response_dict(http_response, operation_model):
     This converts the requests library's HTTP response object to
     a dictionary.
 
-    :type http_response: botocore.vendored.requests.model.Response
+    :type http_response: requests.model.Response
     :param http_response: The HTTP response from an AWS service request.
 
     :rtype: dict

@@ -5,6 +5,8 @@ import threading
 from tests import unittest
 from contextlib import contextmanager
 
+from requests import exceptions as requests_exceptions
+
 import botocore.session
 from botocore.config import Config
 from botocore.vendored.six.moves import BaseHTTPServer, socketserver
@@ -12,7 +14,6 @@ from botocore.exceptions import (
     ConnectTimeoutError, ReadTimeoutError, EndpointConnectionError,
     ConnectionClosedError,
 )
-from botocore.vendored.requests import exceptions as requests_exceptions
 
 
 class TestClientHTTPBehavior(unittest.TestCase):

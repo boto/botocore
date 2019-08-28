@@ -26,8 +26,9 @@ def find_version(*file_paths):
 requires = ['jmespath>=0.7.1,<1.0.0',
             'docutils>=0.10,<0.16']
 
+python_version = sys.version_info[:2]
 
-if sys.version_info[:2] == (2, 6):
+if python_version == (2, 6):
     # For python2.6 we have a few other dependencies.
     # First we need an ordered dictionary so we use the
     # 2.6 backport.
@@ -42,9 +43,25 @@ if sys.version_info[:2] == (2, 6):
 else:
     requires.append('python-dateutil>=2.1,<3.0.0')
 
-if sys.version_info[:2] == (2, 6):
+if python_version == (2, 6):
+    # Requests has officially stopped support for
+    # Python 2.6 starting from version 2.20.0
+    requires.append('requests==2.19.1')
+elif python_version == (3, 3):
+    # Requests has implicitly stopped stopped support
+    # for Python 3.3 starting from version 2.19.0
+    requires.append('requests==2.18.4')
+elif python_version == (3, 4):
+    # Requests has officially stopped support for
+    # for Python 3.4 starting from version 2.22.0
+    requires.append('requests==2.21.0')
+else:
+    requires.append('requests==2.22.0')
+
+
+if python_version == (2, 6):
     requires.append('urllib3>=1.20,<1.24')
-elif sys.version_info[:2] == (3, 3):
+elif python_version == (3, 3):
     requires.append('urllib3>=1.20,<1.23')
 else:
     requires.append('urllib3>=1.20,<1.26')
@@ -59,8 +76,7 @@ setup(
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
-                  'botocore.vendored.requests': ['*.pem']},
+    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json']},
     include_package_data=True,
     install_requires=requires,
     extras_require={
