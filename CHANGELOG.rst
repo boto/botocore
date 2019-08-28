@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.218
+========
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.12.217
 ========
 
