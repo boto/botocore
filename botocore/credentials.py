@@ -50,7 +50,7 @@ ReadOnlyCredentials = namedtuple('ReadOnlyCredentials',
                                  ['access_key', 'secret_key', 'token'])
 
 
-def create_credential_resolver(session, cache=None):
+def create_credential_resolver(session, cache=None, region_name=None):
     """Create a default credential resolver.
 
     This creates a pre-configured credential resolver
@@ -75,10 +75,11 @@ def create_credential_resolver(session, cache=None):
             user_agent=session.user_agent())
     )
 
-    profile_provider_builder = ProfileProviderBuilder(session, cache=cache)
+    profile_provider_builder = ProfileProviderBuilder(
+        session, cache=cache, region_name=region_name)
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
-        client_creator=session.create_client,
+        client_creator=_get_client_creator(session, region_name),
         cache=cache,
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
@@ -137,9 +138,10 @@ class ProfileProviderBuilder(object):
     This is needed to enable sharing between the default credential chain and
     the source profile chain created by the assume role provider.
     """
-    def __init__(self, session, cache=None):
+    def __init__(self, session, cache=None, region_name=None):
         self._session = session
         self._cache = cache
+        self._region_name = region_name
 
     def providers(self, profile_name, disable_env_vars=False):
         return [
@@ -174,7 +176,8 @@ class ProfileProviderBuilder(object):
     def _create_web_identity_provider(self, profile_name, disable_env_vars):
         return AssumeRoleWithWebIdentityProvider(
             load_config=lambda: self._session.full_config,
-            client_creator=self._session.create_client,
+            client_creator=_get_client_creator(
+                self._session, self._region_name),
             cache=self._cache,
             profile_name=profile_name,
             disable_env_vars=disable_env_vars,
@@ -202,6 +205,17 @@ def _serialize_if_needed(value, iso=False):
             return value.isoformat()
         return value.strftime('%Y-%m-%dT%H:%M:%S%Z')
     return value
+
+
+def _get_client_creator(session, region_name):
+    def client_creator(service_name, **kwargs):
+        create_client_kwargs = {
+            'region_name': region_name
+        }
+        create_client_kwargs.update(**kwargs)
+        return session.create_client(service_name, **create_client_kwargs)
+
+    return client_creator
 
 
 def create_assume_role_refresher(client, params):

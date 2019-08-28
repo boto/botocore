@@ -378,11 +378,11 @@ class RawResponse(BytesIO):
             contents = self.read()
 
 
-class ClientHTTPStubber(object):
-    def __init__(self, client, strict=True):
+class BaseHTTPStubber(object):
+    def __init__(self, obj_with_event_emitter, strict=True):
         self.reset()
         self._strict = strict
-        self._client = client
+        self._obj_with_event_emitter = obj_with_event_emitter
 
     def reset(self):
         self.requests = []
@@ -397,11 +397,15 @@ class ClientHTTPStubber(object):
         response = AWSResponse(url, status, headers, raw)
         self.responses.append(response)
 
+    @property
+    def _events(self):
+        raise NotImplementedError('_events')
+
     def start(self):
-        self._client.meta.events.register('before-send', self)
+        self._events.register('before-send', self)
 
     def stop(self):
-        self._client.meta.events.unregister('before-send', self)
+        self._events.unregister('before-send', self)
 
     def __enter__(self):
         self.start()
@@ -422,6 +426,18 @@ class ClientHTTPStubber(object):
             raise HTTPStubberException('Insufficient responses')
         else:
             return None
+
+
+class ClientHTTPStubber(BaseHTTPStubber):
+    @property
+    def _events(self):
+        return self._obj_with_event_emitter.meta.events
+
+
+class SessionHTTPStubber(BaseHTTPStubber):
+    @property
+    def _events(self):
+        return self._obj_with_event_emitter.get_component('event_emitter')
 
 
 class ConsistencyWaiterException(Exception):
