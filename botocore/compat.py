@@ -28,60 +28,7 @@ from urllib3 import exceptions
 logger = logging.getLogger(__name__)
 
 
-if six.PY3:
-    from botocore.vendored.six.moves import http_client
-
-    class HTTPHeaders(http_client.HTTPMessage):
-        pass
-
-    from urllib.parse import quote
-    from urllib.parse import urlencode
-    from urllib.parse import unquote
-    from urllib.parse import unquote_plus
-    from urllib.parse import urlparse
-    from urllib.parse import urlsplit
-    from urllib.parse import urlunsplit
-    from urllib.parse import urljoin
-    from urllib.parse import parse_qsl
-    from urllib.parse import parse_qs
-    from http.client import HTTPResponse
-    from io import IOBase as _IOBase
-    from base64 import encodebytes
-    from email.utils import formatdate
-    from itertools import zip_longest
-    file_type = _IOBase
-    zip = zip
-
-    # In python3, unquote takes a str() object, url decodes it,
-    # then takes the bytestring and decodes it to utf-8.
-    # Python2 we'll have to do this ourself (see below).
-    unquote_str = unquote_plus
-
-    def set_socket_timeout(http_response, timeout):
-        """Set the timeout of the socket from an HTTPResponse.
-
-        :param http_response: An instance of ``httplib.HTTPResponse``
-
-        """
-        http_response._fp.fp.raw._sock.settimeout(timeout)
-
-    def accepts_kwargs(func):
-        # In python3.4.1, there's backwards incompatible
-        # changes when using getargspec with functools.partials.
-        return inspect.getfullargspec(func)[2]
-
-    def ensure_unicode(s, encoding=None, errors=None):
-        # NOOP in Python 3, because every string is already unicode
-        return s
-
-    def ensure_bytes(s, encoding='utf-8', errors='strict'):
-        if isinstance(s, str):
-            return s.encode(encoding, errors)
-        if isinstance(s, bytes):
-            return s
-        raise ValueError("Expected str or bytes, received %s." % type(s))
-
-else:
+if six.PY2:
     from urllib import quote
     from urllib import urlencode
     from urllib import unquote
@@ -140,6 +87,59 @@ else:
         if isinstance(s, str):
             return s
         raise ValueError("Expected str or unicode, received %s." % type(s))
+
+else:
+    from botocore.vendored.six.moves import http_client
+
+    class HTTPHeaders(http_client.HTTPMessage):
+        pass
+
+    from urllib.parse import quote
+    from urllib.parse import urlencode
+    from urllib.parse import unquote
+    from urllib.parse import unquote_plus
+    from urllib.parse import urlparse
+    from urllib.parse import urlsplit
+    from urllib.parse import urlunsplit
+    from urllib.parse import urljoin
+    from urllib.parse import parse_qsl
+    from urllib.parse import parse_qs
+    from http.client import HTTPResponse
+    from io import IOBase as _IOBase
+    from base64 import encodebytes
+    from email.utils import formatdate
+    from itertools import zip_longest
+    file_type = _IOBase
+    zip = zip
+
+    # In python3, unquote takes a str() object, url decodes it,
+    # then takes the bytestring and decodes it to utf-8.
+    # Python2 we'll have to do this ourself (see below).
+    unquote_str = unquote_plus
+
+    def set_socket_timeout(http_response, timeout):
+        """Set the timeout of the socket from an HTTPResponse.
+
+        :param http_response: An instance of ``httplib.HTTPResponse``
+
+        """
+        http_response._fp.fp.raw._sock.settimeout(timeout)
+
+    def accepts_kwargs(func):
+        # In python3.4.1, there's backwards incompatible
+        # changes when using getargspec with functools.partials.
+        return inspect.getfullargspec(func)[2]
+
+    def ensure_unicode(s, encoding=None, errors=None):
+        # NOOP in Python 3, because every string is already unicode
+        return s
+
+    def ensure_bytes(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, str):
+            return s.encode(encoding, errors)
+        if isinstance(s, bytes):
+            return s
+        raise ValueError("Expected str or bytes, received %s." % type(s))
 
 try:
     from collections import OrderedDict

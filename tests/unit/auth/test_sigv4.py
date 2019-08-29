@@ -64,7 +64,7 @@ TESTS_TO_IGNORE = [
     # the SDKs.
     'get-vanilla-query-order-value',
 ]
-if not six.PY3:
+if six.PY2:
     TESTS_TO_IGNORE += [
         # NO support
         'get-header-key-duplicate',
