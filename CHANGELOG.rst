@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.219
+========
+
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.218
 ========
 
