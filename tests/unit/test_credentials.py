@@ -1263,7 +1263,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
-            creds_filename='~/.aws/creds', profile_name='default',
+            load_config=lambda: {}, creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNotNone(creds)
@@ -1280,7 +1280,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
-            creds_filename='~/.aws/creds', profile_name='default',
+            load_config=lambda: {}, creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
@@ -1294,7 +1294,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
-            creds_filename='~/.aws/creds', profile_name='default',
+            load_config=lambda: {}, creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNotNone(creds)
@@ -1319,7 +1319,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         }
         # And we specify a profile_name of 'dev'.
         provider = credentials.SharedCredentialProvider(
-            creds_filename='~/.aws/creds', profile_name='dev',
+            load_config=lambda: {}, creds_filename='~/.aws/creds', profile_name='dev',
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNotNone(creds)
@@ -1334,7 +1334,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         self.ini_parser.side_effect = botocore.exceptions.ConfigNotFound(
             path='foo')
         provider = credentials.SharedCredentialProvider(
-            creds_filename='~/.aws/creds', profile_name='dev',
+            load_config=lambda: {}, creds_filename='~/.aws/creds', profile_name='dev',
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNone(creds)
