@@ -1675,6 +1675,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
         self.session.set_config_variable = \
             self.fake_set_config_variable
         self.session.instance_variables = self.fake_instance_variable_lookup
+        self.session.full_config = {}
 
     def fake_get_component(self, key):
         if key == 'config_provider':
@@ -3217,6 +3218,7 @@ class TestProfileProviderBuilder(unittest.TestCase):
         super(TestProfileProviderBuilder, self).setUp()
         self.mock_session = mock.Mock(spec=Session)
         self.builder = ProfileProviderBuilder(self.mock_session)
+        self.mock_session.full_config = {}
 
     def test_profile_provider_builder_order(self):
         providers = self.builder.providers('some-profile')
