@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.221
+========
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
 1.12.220
 ========
 
