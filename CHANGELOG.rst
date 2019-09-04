@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.222
+========
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
 1.12.221
 ========
 
