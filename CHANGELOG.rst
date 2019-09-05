@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.223
+========
+
+* api-change:``config``: Update config client to latest version
+
+
 1.12.222
 ========
 
