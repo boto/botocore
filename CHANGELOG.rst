@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.225
+========
+
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+
+
 1.12.224
 ========
 
