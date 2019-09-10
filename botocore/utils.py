@@ -129,6 +129,10 @@ EVENT_ALIASES = {
     "streams.dynamodb": "dynamodb-streams",
     "tagging": "resource-groups-tagging-api"
 }
+# As per https://blog.qualys.com/ssllabs/2013/06/25/ssl-labs-deploying-forward-secrecy
+# Additional reference https://blog.qualys.com/ssllabs/2013/08/05/configuring-apache-nginx-and-openssl-for-forward-secrecy
+# PFS verification using https://github.com/drwetter/testssl.sh
+PERFECT_FORWARD_SECRECY_TUPLE = 'kEECDH:kEDH:!aNULL:!eNULL:!DES:!3DES:!RC4', botocore.httpsession.ssl.PROTOCOL_TLSv1_2
 
 
 def ensure_boolean(val):

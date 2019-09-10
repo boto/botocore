@@ -245,8 +245,9 @@ class Endpoint(object):
 
 
 class EndpointCreator(object):
-    def __init__(self, event_emitter):
+    def __init__(self, event_emitter, http_session=None):
         self._event_emitter = event_emitter
+        self._http_session = http_session
 
     def create_endpoint(self, service_model, region_name, endpoint_url,
                         verify=None, response_parser_factory=None,
@@ -264,21 +265,22 @@ class EndpointCreator(object):
         endpoint_prefix = service_model.endpoint_prefix
 
         logger.debug('Setting %s timeout as %s', endpoint_prefix, timeout)
-        http_session = http_session_cls(
-            timeout=timeout,
-            proxies=proxies,
-            verify=self._get_verify_value(verify),
-            max_pool_connections=max_pool_connections,
-            socket_options=socket_options,
-            client_cert=client_cert,
-        )
+        if self._http_session is None:
+            self._http_session = http_session_cls(
+                timeout=timeout,
+                proxies=proxies,
+                verify=self._get_verify_value(verify),
+                max_pool_connections=max_pool_connections,
+                socket_options=socket_options,
+                client_cert=client_cert,
+            )
 
         return Endpoint(
             endpoint_url,
             endpoint_prefix=endpoint_prefix,
             event_emitter=self._event_emitter,
             response_parser_factory=response_parser_factory,
-            http_session=http_session
+            http_session=self._http_session
         )
 
     def _get_proxies(self, url):

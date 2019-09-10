@@ -151,6 +151,7 @@ class URLLib3Session(object):
                  max_pool_connections=MAX_POOL_CONNECTIONS,
                  socket_options=None,
                  client_cert=None,
+                 ssl_context=None,
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(proxies=proxies)
@@ -176,7 +177,10 @@ class URLLib3Session(object):
         if socket_options is None:
             self._socket_options = []
         self._proxy_managers = {}
-        self._manager = PoolManager(**self._get_pool_manager_kwargs())
+        pool_manager_kwargs = self._get_pool_manager_kwargs()
+        if ssl_context:
+            pool_manager_kwargs['ssl_context'] = ssl_context
+        self._manager = PoolManager(**pool_manager_kwargs)
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
 
     def _get_pool_manager_kwargs(self, **extra_kwargs):

@@ -69,7 +69,7 @@ class ClientCreator(object):
         self._config_store = config_store
 
     def create_client(self, service_name, region_name, is_secure=True,
-                      endpoint_url=None, verify=None,
+                      enforce_pfs=False, endpoint_url=None, verify=None,
                       credentials=None, scoped_config=None,
                       api_version=None,
                       client_config=None):
@@ -82,7 +82,7 @@ class ClientCreator(object):
             self._endpoint_resolver, scoped_config, client_config,
             service_signing_name=service_model.metadata.get('signingName'))
         client_args = self._get_client_args(
-            service_model, region_name, is_secure, endpoint_url,
+            service_model, region_name, is_secure, enforce_pfs, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
         service_client = cls(**client_args)
         self._register_retries(service_client)
@@ -316,7 +316,7 @@ class ClientCreator(object):
             if signature_version.endswith(suffix):
                 return 's3' + suffix
 
-    def _get_client_args(self, service_model, region_name, is_secure,
+    def _get_client_args(self, service_model, region_name, is_secure, enforce_pfs,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config, endpoint_bridge):
         args_creator = ClientArgsCreator(
@@ -324,7 +324,7 @@ class ClientCreator(object):
             self._response_parser_factory, self._loader,
             self._exceptions_factory)
         return args_creator.get_client_args(
-            service_model, region_name, is_secure, endpoint_url,
+            service_model, region_name, is_secure, enforce_pfs, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
 
     def _create_methods(self, service_model):
