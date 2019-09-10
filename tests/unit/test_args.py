@@ -52,6 +52,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'service_model': self.service_model,
             'region_name': self.region,
             'is_secure': True,
+            'enforce_pfs': True,
             'endpoint_url': self.endpoint_url,
             'verify': True,
             'credentials': None,
