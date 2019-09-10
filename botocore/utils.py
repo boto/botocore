@@ -29,6 +29,7 @@ from dateutil.tz import tzlocal, tzutc
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
+from urllib3.util.ssl_ import ssl
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
@@ -132,7 +133,7 @@ EVENT_ALIASES = {
 # As per https://blog.qualys.com/ssllabs/2013/06/25/ssl-labs-deploying-forward-secrecy
 # Additional reference https://blog.qualys.com/ssllabs/2013/08/05/configuring-apache-nginx-and-openssl-for-forward-secrecy
 # PFS verification using https://github.com/drwetter/testssl.sh
-PERFECT_FORWARD_SECRECY_TUPLE = 'kEECDH:kEDH:!aNULL:!eNULL:!DES:!3DES:!RC4', botocore.httpsession.ssl.PROTOCOL_TLSv1_2
+PERFECT_FORWARD_SECRECY_TUPLE = 'kEECDH:kEDH:!aNULL:!eNULL:!DES:!3DES:!RC4', ssl.PROTOCOL_TLSv1_2
 
 
 def ensure_boolean(val):
