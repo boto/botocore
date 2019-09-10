@@ -22,11 +22,12 @@ import socket
 
 import botocore.serialize
 import botocore.utils
-from botocore.utils import PERFECT_FORWARD_SECRECY_TUPLE
+from botocore.utils import PERFECT_FORWARD_SECRECY_CIPHERS
 from botocore.signers import RequestSigner
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
 from botocore.httpsession import URLLib3Session, create_urllib3_context
+from urllib3.util.ssl_ import ssl
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +76,8 @@ class ClientArgsCreator(object):
         new_config = Config(**config_kwargs)
         http_session = None
         if enforce_pfs:
-            ciphers, ssl_version = PERFECT_FORWARD_SECRECY_TUPLE
             http_session = URLLib3Session(ssl_context=create_urllib3_context(
-                ciphers=ciphers, ssl_version=ssl_version))
+                ciphers=PERFECT_FORWARD_SECRECY_CIPHERS))
         endpoint_creator = EndpointCreator(event_emitter=event_emitter,
             http_session=http_session)
 
