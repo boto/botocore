@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.227
+========
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``ses``: Update ses client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.12.226
 ========
 
