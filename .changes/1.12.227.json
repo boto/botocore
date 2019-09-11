@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``stepfunctions``", 
+    "description": "Update stepfunctions client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconnect``", 
+    "description": "Update mediaconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ses``", 
+    "description": "Update ses client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }
+]
