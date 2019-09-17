@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.230
+========
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.12.229
 ========
 
