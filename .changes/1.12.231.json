@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ram``", 
+    "description": "Update ram client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf-regional``", 
+    "description": "Update waf-regional client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }
+]
