@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.231
+========
+
+* api-change:``ram``: Update ram client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.12.230
 ========
 
