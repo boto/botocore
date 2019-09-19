@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.232
+========
+
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.231
 ========
 
