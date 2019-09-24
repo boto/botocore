@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehendmedical``", 
+    "description": "Update comprehendmedical client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``datasync``", 
+    "description": "Update datasync client to latest version", 
+    "type": "api-change"
+  }
+]
