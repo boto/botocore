@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.235
+========
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
 1.12.234
 ========
 
