@@ -156,7 +156,7 @@ def _validate_acceptor(acceptor, op_model, waiter_name):
         # JMESPath expression against the output.  We'll then
         # check a few things about this returned search result.
         search_result = _search_jmespath_expression(expression, op_model)
-        if not search_result:
+        if search_result is None:
             raise AssertionError("JMESPath expression did not match "
                                  "anything for waiter '%s': %s"
                                  % (waiter_name, expression))
