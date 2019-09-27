@@ -19,6 +19,7 @@ import getpass
 import threading
 import json
 import subprocess
+import sys
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
@@ -906,11 +907,13 @@ class ProcessProvider(CredentialProvider):
 
     METHOD = 'custom-process'
 
-    def __init__(self, profile_name, load_config, popen=subprocess.Popen):
+    def __init__(self, profile_name, load_config,
+                 popen=subprocess.Popen, stderr=sys.stderr):
         self._profile_name = profile_name
         self._load_config = load_config
         self._loaded_config = None
         self._popen = popen
+        self._stderr = stderr
 
     def load(self):
         credential_process = self._credential_process
@@ -936,14 +939,29 @@ class ProcessProvider(CredentialProvider):
         # We're not using shell=True, so we need to pass the
         # command and all arguments as a list.
         process_list = compat_shell_split(credential_process)
+
+        # If stderr is a tty, we won't capture stderr for error reporting,
+        # because we assume stderr is being used for communication back
+        # to the user, e.g. for MFA, passwords, or other prompting.
+        if self._stderr and self._stderr.isatty():
+            stderr = self._stderr
+        else:
+            stderr = subprocess.PIPE
+
         p = self._popen(process_list,
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+                        stderr=stderr)
+
+        output, error_output = p.communicate()
         if p.returncode != 0:
+            if error_output == None:
+                error_msg = "Non-zero exit code"
+            else:
+                error_msg = error_output.decode('utf-8')
             raise CredentialRetrievalError(
-                provider=self.METHOD, error_msg=stderr.decode('utf-8'))
-        parsed = botocore.compat.json.loads(stdout.decode('utf-8'))
+                provider=self.METHOD, error_msg=error_msg)
+
+        parsed = botocore.compat.json.loads(output.decode('utf-8'))
         version = parsed.get('Version', '<Version key not provided>')
         if version != 1:
             raise CredentialRetrievalError(

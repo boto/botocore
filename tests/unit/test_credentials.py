@@ -19,6 +19,7 @@ import tempfile
 import shutil
 import json
 import copy
+import sys
 
 from dateutil.tz import tzlocal, tzutc
 
@@ -2965,14 +2966,24 @@ class TestProcessProvider(BaseEnvVar):
         self.invoked_process = mock.Mock()
         self.popen_mock = mock.Mock(return_value=self.invoked_process,
                                     spec=subprocess.Popen)
+        self.tty = False
+        self.stderr_mock = mock.Mock(spec=sys.stderr)
+        self.stderr_mock.isatty.side_effect = lambda: self.tty
 
     def create_process_provider(self, profile_name='default'):
         provider = ProcessProvider(profile_name, self.load_config,
-                                               popen=self.popen_mock)
+                                   popen=self.popen_mock,
+                                   stderr=self.stderr_mock)
         return provider
 
     def _get_output(self, stdout, stderr=''):
-        return json.dumps(stdout).encode('utf-8'), stderr.encode('utf-8')
+        if self.tty:
+            return json.dumps(stdout).encode('utf-8'), None
+        else:
+            return json.dumps(stdout).encode('utf-8'), stderr.encode('utf-8')
+
+    def _set_tty(self, tty):
+        self.tty = tty
 
     def _set_process_return_value(self, stdout, stderr='', rc=0):
         output = self._get_output(stdout, stderr)
@@ -3013,6 +3024,31 @@ class TestProcessProvider(BaseEnvVar):
         self.popen_mock.assert_called_with(
             ['my-process'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+
+    def test_can_retrieve_via_process_passes_through_tty(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_tty(True)
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2999-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.popen_mock.assert_called_with(
+            ['my-process'],
+            stdout=subprocess.PIPE, stderr=self.stderr_mock,
         )
 
     def test_can_pass_arguments_through(self):
@@ -3081,6 +3117,18 @@ class TestProcessProvider(BaseEnvVar):
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
         with self.assertRaisesRegexp(exception, 'Error Message'):
+            provider.load()
+
+    def test_non_zero_rc_with_tty_raises_non_zero_exception(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_tty(True)
+        self._set_process_return_value('', 'Error Message', 1)
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Non-zero exit code'):
             provider.load()
 
     def test_unsupported_version_raises_mismatch(self):
