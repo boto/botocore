@@ -64,9 +64,9 @@ class TestEC2Pagination(unittest.TestCase):
         self.assertEqual(len(results), 3)
         for parsed in results:
             reserved_inst_offer = parsed['ReservedInstancesOfferings']
-            # There should only be one reserved instance offering on each
-            # page.
-            self.assertEqual(len(reserved_inst_offer), 1)
+            # There should be no more than  one reserved instance
+            # offering on each page.
+            self.assertLessEqual(len(reserved_inst_offer), 1)
 
     def test_can_fall_back_to_old_starting_token(self):
         # Using an operation that we know will paginate.
