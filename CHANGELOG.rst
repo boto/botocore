@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.238
+========
+
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.237
 ========
 
