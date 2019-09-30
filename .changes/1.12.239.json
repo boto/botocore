@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``waf``", 
+    "description": "Update waf client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mq``", 
+    "description": "Update mq client to latest version", 
+    "type": "api-change"
+  }
+]
