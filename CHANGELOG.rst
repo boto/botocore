@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.239
+========
+
+* api-change:``waf``: Update waf client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mq``: Update mq client to latest version
+
+
 1.12.238
 ========
 
