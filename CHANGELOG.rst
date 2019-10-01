@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.240
+========
+
+* api-change:``docdb``: Update docdb client to latest version
+
+
 1.12.239
 ========
 
