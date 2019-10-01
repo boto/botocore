@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``docdb``", 
+    "description": "Update docdb client to latest version", 
+    "type": "api-change"
+  }
+]
