@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.241
+========
+
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.12.240
 ========
 
