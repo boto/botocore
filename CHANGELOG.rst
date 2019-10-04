@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.243
+========
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.12.242
 ========
 
