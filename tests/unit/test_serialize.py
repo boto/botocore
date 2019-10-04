@@ -21,6 +21,7 @@ from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
 from botocore.exceptions import ParamValidationError
+from botocore.serialize import SERIALIZERS
 
 
 class BaseModelWithBlob(unittest.TestCase):

@@ -1,0 +1,12 @@
+[
+  {
+    "category": "s3", 
+    "description": "Fixed a bug where head object and bucket calls would attempt redirects incorrectly.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }
+]

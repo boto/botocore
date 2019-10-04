@@ -17,33 +17,22 @@ import logging
 import time
 import threading
 
-from botocore.vendored.requests.adapters import HTTPAdapter
-from botocore.vendored.requests.sessions import Session
-from botocore.vendored.requests.utils import get_environ_proxies
-from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
-from botocore.exceptions import UnknownEndpointError
-from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import ConnectionClosedError
-from botocore.compat import filter_ssl_warnings
-from botocore.utils import is_valid_endpoint_url
+from botocore.exceptions import HTTPClientError
+from botocore.httpsession import URLLib3Session
+from botocore.utils import is_valid_endpoint_url, get_environ_proxies
 from botocore.hooks import first_non_none_response
+from botocore.history import get_global_history_recorder
 from botocore.response import StreamingBody
 from botocore import parsers
 
 
 logger = logging.getLogger(__name__)
+history_recorder = get_global_history_recorder()
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
-filter_ssl_warnings()
-
-try:
-    from botocore.vendored.requests.packages.urllib3.contrib import pyopenssl
-    pyopenssl.extract_from_urllib3()
-except ImportError:
-    pass
 
 
 def convert_to_response_dict(http_response, operation_model):
@@ -65,39 +54,20 @@ def convert_to_response_dict(http_response, operation_model):
     response_dict = {
         'headers': http_response.headers,
         'status_code': http_response.status_code,
+        'context': {
+            'operation_name': operation_model.name,
+        }
     }
     if response_dict['status_code'] >= 300:
         response_dict['body'] = http_response.content
+    elif operation_model.has_event_stream_output:
+        response_dict['body'] = http_response.raw
     elif operation_model.has_streaming_output:
-        response_dict['body'] = StreamingBody(
-            http_response.raw, response_dict['headers'].get('content-length'))
+        length = response_dict['headers'].get('content-length')
+        response_dict['body'] = StreamingBody(http_response.raw, length)
     else:
         response_dict['body'] = http_response.content
     return response_dict
-
-
-class BotocoreHTTPSession(Session):
-    """Internal session class used to workaround requests behavior.
-
-    This class is intended to be used only by the Endpoint class.
-
-    """
-    def __init__(self, max_pool_connections=MAX_POOL_CONNECTIONS,
-                 http_adapter_cls=HTTPAdapter):
-        super(BotocoreHTTPSession, self).__init__()
-        # In order to support a user provided "max_pool_connections", we need
-        # to recreate the HTTPAdapter and pass in our max_pool_connections
-        # value.
-        adapter = http_adapter_cls(pool_maxsize=max_pool_connections)
-        # requests uses an HTTPAdapter for mounting both http:// and https://
-        self.mount('https://', adapter)
-        self.mount('http://', adapter)
-
-    def rebuild_auth(self, prepared_request, response):
-        # Keep the existing auth information from the original prepared request.
-        # Normally this method would be where auth is regenerated as needed.
-        # By making this a noop, we're keeping the existing auth info.
-        pass
 
 
 class Endpoint(object):
@@ -110,41 +80,37 @@ class Endpoint(object):
     :ivar host: The fully qualified endpoint hostname.
     :ivar session: The session object.
     """
-
-    def __init__(self, host, endpoint_prefix,
-                 event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None,
-                 max_pool_connections=MAX_POOL_CONNECTIONS):
+    def __init__(self, host, endpoint_prefix, event_emitter,
+                 response_parser_factory=None, http_session=None):
         self._endpoint_prefix = endpoint_prefix
         self._event_emitter = event_emitter
         self.host = host
-        self.verify = verify
-        if proxies is None:
-            proxies = {}
-        self.proxies = proxies
-        self.http_session = BotocoreHTTPSession(
-            max_pool_connections=max_pool_connections)
-        self.timeout = timeout
-        self.max_pool_connections = max_pool_connections
-        logger.debug('Setting %s timeout as %s', endpoint_prefix, self.timeout)
         self._lock = threading.Lock()
         if response_parser_factory is None:
             response_parser_factory = parsers.ResponseParserFactory()
         self._response_parser_factory = response_parser_factory
+        self.http_session = http_session
+        if self.http_session is None:
+            self.http_session = URLLib3Session()
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
 
     def make_request(self, operation_model, request_dict):
-        logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
-                     operation_model, self.verify, request_dict)
+        logger.debug("Making request for %s with params: %s",
+                     operation_model, request_dict)
         return self._send_request(request_dict, operation_model)
 
     def create_request(self, params, operation_model=None):
         request = create_request_object(params)
         if operation_model:
-            event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
-                endpoint_prefix=self._endpoint_prefix,
+            request.stream_output = any([
+                operation_model.has_streaming_output,
+                operation_model.has_event_stream_output
+            ])
+            service_id = operation_model.service_model.service_id.hyphenize()
+            event_name = 'request-created.{service_id}.{op_name}'.format(
+                service_id=service_id,
                 op_name=operation_model.name)
             self._event_emitter.emit(event_name, request=request,
                                      operation_name=operation_model.name)
@@ -164,8 +130,9 @@ class Endpoint(object):
     def _send_request(self, request_dict, operation_model):
         attempts = 1
         request = self.create_request(request_dict, operation_model)
+        context = request_dict['context']
         success_response, exception = self._get_response(
-            request, operation_model, attempts)
+            request, operation_model, context)
         while self._needs_retry(attempts, operation_model, request_dict,
                                 success_response, exception):
             attempts += 1
@@ -178,7 +145,7 @@ class Endpoint(object):
             request = self.create_request(
                 request_dict, operation_model)
             success_response, exception = self._get_response(
-                request, operation_model, attempts)
+                request, operation_model, context)
         if success_response is not None and \
                 'ResponseMetadata' in success_response[1]:
             # We want to share num retries, not num attempts.
@@ -190,59 +157,74 @@ class Endpoint(object):
         else:
             return success_response
 
-    def _get_response(self, request, operation_model, attempts):
+    def _get_response(self, request, operation_model, context):
         # This will return a tuple of (success_response, exception)
         # and success_response is itself a tuple of
         # (http_response, parsed_dict).
         # If an exception occurs then the success_response is None.
         # If no exception occurs then exception is None.
+        success_response, exception = self._do_get_response(
+            request, operation_model)
+        kwargs_to_emit = {
+            'response_dict': None,
+            'parsed_response': None,
+            'context': context,
+            'exception': exception,
+        }
+        if success_response is not None:
+            http_response, parsed_response = success_response
+            kwargs_to_emit['parsed_response'] = parsed_response
+            kwargs_to_emit['response_dict'] = convert_to_response_dict(
+                http_response, operation_model)
+        service_id = operation_model.service_model.service_id.hyphenize()
+        self._event_emitter.emit(
+            'response-received.%s.%s' % (
+                service_id, operation_model.name), **kwargs_to_emit)
+        return success_response, exception
+
+    def _do_get_response(self, request, operation_model):
         try:
             logger.debug("Sending http request: %s", request)
-            http_response = self.http_session.send(
-                request, verify=self.verify,
-                stream=operation_model.has_streaming_output,
-                proxies=self.proxies, timeout=self.timeout)
-        except ConnectionError as e:
-            # For a connection error, if it looks like it's a DNS
-            # lookup issue, 99% of the time this is due to a misconfigured
-            # region/endpoint so we'll raise a more specific error message
-            # to help users.
-            logger.debug("ConnectionError received when sending HTTP request.",
-                         exc_info=True)
-            if self._looks_like_dns_error(e):
-                endpoint_url = e.request.url
-                better_exception = EndpointConnectionError(
-                    endpoint_url=endpoint_url, error=e)
-                return (None, better_exception)
-            elif self._looks_like_bad_status_line(e):
-                better_exception = ConnectionClosedError(
-                    endpoint_url=e.request.url, request=e.request)
-                return (None, better_exception)
-            else:
-                return (None, e)
+            history_recorder.record('HTTP_REQUEST', {
+                'method': request.method,
+                'headers': request.headers,
+                'streaming': operation_model.has_streaming_input,
+                'url': request.url,
+                'body': request.body
+            })
+            service_id = operation_model.service_model.service_id.hyphenize()
+            event_name = 'before-send.%s.%s' % (service_id, operation_model.name)
+            responses = self._event_emitter.emit(event_name, request=request)
+            http_response = first_non_none_response(responses)
+            if http_response is None:
+                http_response = self._send(request)
+        except HTTPClientError as e:
+            return (None, e)
         except Exception as e:
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
-        response_dict = convert_to_response_dict(http_response,
-                                                 operation_model)
-        parser = self._response_parser_factory.create_parser(
-            operation_model.metadata['protocol'])
+        response_dict = convert_to_response_dict(http_response, operation_model)
+
+        http_response_record_dict = response_dict.copy()
+        http_response_record_dict['streaming'] = \
+            operation_model.has_streaming_output
+        history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
+
+        protocol = operation_model.metadata['protocol']
+        parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
+        history_recorder.record('PARSED_RESPONSE', parsed_response)
         return (http_response, parsed_response), None
-
-    def _looks_like_dns_error(self, e):
-        return 'gaierror' in str(e) and e.request is not None
-
-    def _looks_like_bad_status_line(self, e):
-        return 'BadStatusLine' in str(e) and e.request is not None
 
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):
-        event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
-                                            operation_model.name)
+        service_id = operation_model.service_model.service_id.hyphenize()
+        event_name = 'needs-retry.%s.%s' % (
+            service_id,
+            operation_model.name)
         responses = self._event_emitter.emit(
             event_name, response=response, endpoint=self,
             operation=operation_model, attempts=attempts,
@@ -258,6 +240,9 @@ class Endpoint(object):
             time.sleep(handler_response)
             return True
 
+    def _send(self, request):
+        return self.http_session.send(request)
+
 
 class EndpointCreator(object):
     def __init__(self, event_emitter):
@@ -267,21 +252,34 @@ class EndpointCreator(object):
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
                         max_pool_connections=MAX_POOL_CONNECTIONS,
-                        proxies=None):
+                        http_session_cls=URLLib3Session,
+                        proxies=None,
+                        socket_options=None,
+                        client_cert=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)
-        return Endpoint(
-            endpoint_url,
-            endpoint_prefix=service_model.endpoint_prefix,
-            event_emitter=self._event_emitter,
+        endpoint_prefix = service_model.endpoint_prefix
+
+        logger.debug('Setting %s timeout as %s', endpoint_prefix, timeout)
+        http_session = http_session_cls(
+            timeout=timeout,
             proxies=proxies,
             verify=self._get_verify_value(verify),
-            timeout=timeout,
             max_pool_connections=max_pool_connections,
-            response_parser_factory=response_parser_factory)
+            socket_options=socket_options,
+            client_cert=client_cert,
+        )
+
+        return Endpoint(
+            endpoint_url,
+            endpoint_prefix=endpoint_prefix,
+            event_emitter=self._event_emitter,
+            response_parser_factory=response_parser_factory,
+            http_session=http_session
+        )
 
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,

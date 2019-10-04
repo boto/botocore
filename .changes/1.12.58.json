@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }
+]

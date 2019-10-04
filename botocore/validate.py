@@ -75,6 +75,12 @@ def range_check(name, value, shape, error_type, errors):
         min_allowed = shape.metadata['min']
         if value < min_allowed:
             failed = True
+    elif hasattr(shape, 'serialization'):
+        # Members that can be bound to the host have an implicit min of 1
+        if shape.serialization.get('hostLabel'):
+            min_allowed = 1
+            if value < min_allowed:
+                failed = True
     if failed:
         errors.report(name, error_type, param=value,
                       valid_range=[min_allowed, max_allowed])

@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediastore``", 
+    "description": "Update mediastore client to latest version", 
+    "type": "api-change"
+  }
+]

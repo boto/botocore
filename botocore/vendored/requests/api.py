@@ -10,8 +10,25 @@ This module implements the Requests API.
 :license: Apache2, see LICENSE for more details.
 
 """
+import warnings
 
 from . import sessions
+
+
+_WARNING_MSG = (
+    "You are using the {name}() function from 'botocore.vendored.requests'.  "
+    "This is not a public API in botocore and will be removed in the future. "
+    "Additionally, this version of requests is out of date.  We recommend "
+    "you install the requests package, 'import requests' directly, and use "
+    "the requests.{name}() function instead."
+)
+
+
+warnings.filterwarnings(
+    action="always",
+    category=DeprecationWarning,
+    module=__name__,
+)
 
 
 def request(method, url, **kwargs):
@@ -45,6 +62,10 @@ def request(method, url, **kwargs):
       >>> req = requests.request('GET', 'http://httpbin.org/get')
       <Response [200]>
     """
+    warnings.warn(
+        _WARNING_MSG.format(name=method),
+        DeprecationWarning
+    )
 
     session = sessions.Session()
     response = session.request(method=method, url=url, **kwargs)

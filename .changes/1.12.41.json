@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dlm``", 
+    "description": "Update dlm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }
+]

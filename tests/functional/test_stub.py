@@ -18,7 +18,7 @@ import botocore.session
 import botocore.stub as stub
 from botocore.stub import Stubber
 from botocore.exceptions import StubResponseError, ClientError, \
-    StubAssertionError
+    StubAssertionError, UnStubbedResponseError
 from botocore.exceptions import ParamValidationError
 import botocore.client
 import botocore.retryhandler
@@ -28,9 +28,12 @@ import botocore.translate
 class TestStubber(unittest.TestCase):
     def setUp(self):
         session = botocore.session.get_session()
-        config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-        self.client = session.create_client('s3', config=config)
-
+        config = botocore.config.Config(
+            signature_version=botocore.UNSIGNED,
+            s3={'addressing_style': 'path'}
+        )
+        self.client = session.create_client(
+            's3', region_name='us-east-1', config=config)
         self.stubber = Stubber(self.client)
 
     def test_stubber_returns_response(self):
@@ -51,8 +54,8 @@ class TestStubber(unittest.TestCase):
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
         # Params one per line for readability.
-        with self.assertRaisesRegexp(StubResponseError,
-                                     "'Bucket': 'asdfasdfasdfasdf',\n"):
+        with self.assertRaisesRegexp(UnStubbedResponseError,
+                                     "Unexpected API Call"):
             self.client.list_objects(
                 Bucket='asdfasdfasdfasdf',
                 Delimiter='asdfasdfasdfasdf',
@@ -64,7 +67,7 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
         self.client.list_objects(Bucket='foo')
 
-        with self.assertRaises(StubResponseError):
+        with self.assertRaises(UnStubbedResponseError):
             self.client.list_objects(Bucket='foo')
 
     def test_client_error_response(self):
@@ -270,3 +273,43 @@ class TestStubber(unittest.TestCase):
         except StubAssertionError:
             self.fail(
                 "Stubber inappropriately raised error for same parameters.")
+
+    def test_no_stub_for_presign_url(self):
+        try:
+            with self.stubber:
+                url = self.client.generate_presigned_url(
+                    ClientMethod='get_object',
+                    Params={
+                        'Bucket': 'mybucket',
+                        'Key': 'mykey'
+                    }
+                )
+                self.assertEqual(
+                    url, 'https://s3.amazonaws.com/mybucket/mykey')
+        except StubResponseError:
+            self.fail(
+                'Stubbed responses should not be required for generating '
+                'presigned requests'
+            )
+
+    def test_can_stub_with_presign_url_mixed_in(self):
+        desired_response = {}
+        expected_params = {
+            'Bucket': 'mybucket',
+            'Prefix': 'myprefix',
+        }
+        self.stubber.add_response(
+            'list_objects', desired_response, expected_params)
+        with self.stubber:
+            url = self.client.generate_presigned_url(
+                ClientMethod='get_object',
+                Params={
+                    'Bucket': 'myotherbucket',
+                    'Key': 'myotherkey'
+                }
+            )
+            self.assertEqual(
+                    url, 'https://s3.amazonaws.com/myotherbucket/myotherkey')
+            actual_response = self.client.list_objects(**expected_params)
+            self.assertEqual(desired_response, actual_response)
+        self.stubber.assert_no_pending_responses()

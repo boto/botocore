@@ -2,6 +2,7 @@ from tests import unittest
 
 from botocore import model
 from botocore.compat import OrderedDict
+from botocore.exceptions import MissingServiceIdError
 
 
 def test_missing_model_attribute_raises_exception():
@@ -30,12 +31,23 @@ def test_missing_model_attribute_raises_exception():
         yield _test_attribute_raise_exception, name
 
 
+class TestServiceId(unittest.TestCase):
+    def test_hypenize_replaces_spaces(self):
+        self.assertEqual(
+            model.ServiceId('my service').hyphenize(), 'my-service'
+        )
+
+    def test_hyphenize_lower_cases(self):
+        self.assertEqual(model.ServiceId('MyService').hyphenize(), 'myservice')
+
+
 class TestServiceModel(unittest.TestCase):
 
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'query',
-                         'endpointPrefix': 'endpoint-prefix'},
+                         'endpointPrefix': 'endpoint-prefix',
+                         'serviceId': 'MyService'},
             'documentation': 'Documentation value',
             'operations': {},
             'shapes': {
@@ -57,6 +69,31 @@ class TestServiceModel(unittest.TestCase):
     def test_service_name_defaults_to_endpoint_prefix(self):
         self.assertEqual(self.service_model.service_name, 'endpoint-prefix')
 
+    def test_service_id(self):
+        self.assertEqual(self.service_model.service_id, 'MyService')
+
+    def test_hyphenize_service_id(self):
+        self.assertEqual(
+            self.service_model.service_id.hyphenize(), 'myservice')
+
+    def test_service_id_does_not_exist(self):
+        service_model = {
+            'metadata': {
+                'protocol': 'query',
+                'endpointPrefix': 'endpoint-prefix',
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
+        }
+        service_name = 'myservice'
+        service_model = model.ServiceModel(service_model, service_name)
+        with self.assertRaisesRegexp(model.UndefinedModelAttributeError,
+                                     service_name):
+            service_model.service_id
+
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
             self.service_model.operation_model('NoExistOperation')
@@ -70,6 +107,10 @@ class TestServiceModel(unittest.TestCase):
 
     def test_shape_names(self):
         self.assertEqual(self.service_model.shape_names, ['StringShape'])
+
+    def test_repr_has_service_name(self):
+        self.assertEqual(repr(self.service_model),
+                         'ServiceModel(endpoint-prefix)')
 
 
 class TestOperationModelFromService(unittest.TestCase):
@@ -241,6 +282,148 @@ class TestOperationModelFromService(unittest.TestCase):
         service_model = model.ServiceModel(self.model)
         operation_two = service_model.operation_model('OperationTwo')
         self.assertFalse(operation_two.deprecated)
+
+    def test_endpoint_operation_present(self):
+        self.model['operations']['OperationName']['endpointoperation'] = True
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_present_false(self):
+        self.model['operations']['OperationName']['endpointoperation'] = False
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertFalse(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_absent(self):
+        operation_two = self.service_model.operation_model('OperationName')
+        self.assertFalse(operation_two.is_endpoint_discovery_operation)
+
+    def test_endpoint_discovery_present(self):
+        operation = self.model['operations']['OperationName']
+        operation['endpointdiscovery'] = {'required': True}
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.endpoint_discovery.get('required'))
+
+    def test_endpoint_discovery_absent(self):
+        operation_name = self.service_model.operation_model('OperationName')
+        self.assertIsNone(operation_name.endpoint_discovery)
+
+
+class TestOperationModelEventStreamTypes(unittest.TestCase):
+    def setUp(self):
+        super(TestOperationModelEventStreamTypes, self).setUp()
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'endpointPrefix': 'foo'},
+            'documentation': '',
+            'operations': {
+                'OperationName': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationName',
+                    'input': {'shape': 'OperationRequest'},
+                    'output': {'shape': 'OperationResponse'},
+                }
+            },
+            'shapes': {
+                'NormalStructure': {
+                    'type': 'structure',
+                    'members': {
+                        'Input': {'shape': 'StringType'}
+                    }
+                },
+                'OperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {'shape': 'StringType'},
+                        "Body": {'shape': 'EventStreamStructure'}
+                    },
+                    'payload': 'Body'
+                },
+                'OperationResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {'shape': 'StringType'},
+                        "Body": {'shape': 'EventStreamStructure'}
+                    },
+                    'payload': 'Body'
+                },
+                'StringType': {'type': 'string'},
+                'BlobType': {'type': 'blob'},
+                'EventStreamStructure': {
+                    'eventstream': True,
+                    'type': 'structure',
+                    'members': {
+                        'EventA': {'shape': 'EventAStructure'},
+                        'EventB': {'shape': 'EventBStructure'}
+                    }
+                },
+                'EventAStructure': {
+                    'event': True,
+                    'type': 'structure',
+                    'members': {
+                        'Payload': {
+                            'shape': 'BlobType',
+                            'eventpayload': True
+                        },
+                        'Header': {
+                            'shape': 'StringType',
+                            'eventheader': True
+                        }
+                    }
+                },
+                'EventBStructure': {
+                    'event': True,
+                    'type': 'structure',
+                    'members': {
+                        'Records': {'shape': 'StringType'}
+                    }
+                }
+            }
+        }
+
+    def update_operation(self, **kwargs):
+        operation = self.model['operations']['OperationName']
+        operation.update(kwargs)
+
+    def test_event_stream_input_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_event_stream_input)
+        event_stream_input = operation.get_event_stream_input()
+        self.assertEqual(event_stream_input.name, 'EventStreamStructure')
+
+    def test_no_event_stream_input_for_operation(self):
+        self.update_operation(input={'shape': 'NormalStructure'})
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_input)
+        self.assertEqual(operation.get_event_stream_input(), None)
+
+    def test_event_stream_output_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_event_stream_output)
+        output = operation.get_event_stream_output()
+        self.assertEqual(output.name, 'EventStreamStructure')
+
+    def test_no_event_stream_output_for_operation(self):
+        self.update_operation(output={'shape': 'NormalStructure'})
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_output)
+        self.assertEqual(operation.get_event_stream_output(), None)
+
+    def test_no_output_shape(self):
+        self.update_operation(output=None)
+        del self.model['operations']['OperationName']['output']
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_output)
+        self.assertEqual(operation.get_event_stream_output(), None)
 
 
 class TestOperationModelStreamingTypes(unittest.TestCase):
@@ -686,6 +869,20 @@ class TestBuilders(unittest.TestCase):
         }).build_model()
         self.assertEqual(shape.members['A'].documentation,
                          'MyDocs')
+
+    def test_min_max_used_in_metadata(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'string',
+                'documentation': 'MyDocs',
+                'min': 2,
+                'max': 3,
+            },
+        }).build_model()
+        metadata = shape.members['A'].metadata
+        self.assertEqual(metadata.get('min'), 2)
+        self.assertEqual(metadata.get('max'), 3)
 
     def test_use_shape_name_when_provided(self):
         b = model.DenormalizedStructureBuilder()

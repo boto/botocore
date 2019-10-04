@@ -25,7 +25,7 @@ import warnings
 import uuid
 
 from botocore.compat import unquote, json, six, unquote_str, \
-    ensure_bytes, get_md5, MD5_AVAILABLE
+    ensure_bytes, get_md5, MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -35,8 +35,10 @@ from botocore.signers import add_generate_db_auth_token
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.exceptions import MissingServiceIdError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
+from botocore.utils import hyphenize_service_id
 
 from botocore import retryhandler
 from botocore import utils
@@ -56,6 +58,14 @@ REGISTER_LAST = object()
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
+
+SERVICE_NAME_ALIASES = {
+    'runtime.sagemaker': 'sagemaker-runtime'
+}
+
+
+def handle_service_name_alias(service_name, **kwargs):
+    return SERVICE_NAME_ALIASES.get(service_name, service_name)
 
 
 def check_for_200_error(response, **kwargs):
@@ -163,7 +173,8 @@ def decode_quoted_jsondoc(value):
 def json_decode_template_body(parsed, **kwargs):
     if 'TemplateBody' in parsed:
         try:
-            value = json.loads(parsed['TemplateBody'])
+            value = json.loads(
+                parsed['TemplateBody'], object_pairs_hook=OrderedDict)
             parsed['TemplateBody'] = value
         except (ValueError, TypeError):
             logger.debug('error loading JSON', exc_info=True)
@@ -253,57 +264,6 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
             sse_member_prefix + 'KeyMD5' not in params)
 
 
-# NOTE: Retries get registered in two separate places in the botocore
-# code: once when creating the client and once when you load the service
-# model from the session. While at first this handler seems unneeded, it
-# would be a breaking change for the AWS CLI to have it removed. This is
-# because it relies on the service model from the session to create commands
-# and this handler respects operation granular retry logic while the client
-# one does not. If this is ever to be removed the handler, the client
-# will have to respect per-operation level retry configuration.
-def register_retries_for_service(service_data, session,
-                                 service_name, **kwargs):
-    loader = session.get_component('data_loader')
-    endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
-    if endpoint_prefix is None:
-        logger.debug("Not registering retry handlers, could not endpoint "
-                     "prefix from model for service %s", service_name)
-        return
-    config = _load_retry_config(loader, endpoint_prefix)
-    if not config:
-        return
-    logger.debug("Registering retry handlers for service: %s", service_name)
-    handler = retryhandler.create_retry_handler(
-        config, endpoint_prefix)
-    unique_id = 'retry-config-%s' % endpoint_prefix
-    session.register('needs-retry.%s' % endpoint_prefix,
-                     handler, unique_id=unique_id)
-    _register_for_operations(config, session,
-                             service_name=endpoint_prefix)
-
-
-def _load_retry_config(loader, endpoint_prefix):
-    original_config = loader.load_data('_retry')
-    retry_config = translate.build_retry_config(
-        endpoint_prefix, original_config['retry'],
-        original_config.get('definitions', {}))
-    return retry_config
-
-
-def _register_for_operations(config, session, service_name):
-    # There's certainly a tradeoff for registering the retry config
-    # for the operations when the service is created.  In practice,
-    # there aren't a whole lot of per operation retry configs so
-    # this is ok for now.
-    for key in config:
-        if key == '__default__':
-            continue
-        handler = retryhandler.create_retry_handler(config, key)
-        unique_id = 'retry-config-%s-%s' % (service_name, key)
-        session.register('needs-retry.%s.%s' % (service_name, key),
-                         handler, unique_id=unique_id)
-
-
 def disable_signing(**kwargs):
     """
     This handler disables request signing by setting the signer
@@ -322,6 +282,21 @@ def add_expect_header(model, params, **kwargs):
             # header regardless of size.
             logger.debug("Adding expect 100 continue header to request.")
             params['headers']['Expect'] = '100-continue'
+
+
+class DeprecatedServiceDocumenter(object):
+    def __init__(self, replacement_service_name):
+        self._replacement_service_name = replacement_service_name
+
+    def inject_deprecation_notice(self, section, event_name, **kwargs):
+        section.style.start_important()
+        section.write('This service client is deprecated. Please use ')
+        section.style.ref(
+            self._replacement_service_name,
+            self._replacement_service_name,
+        )
+        section.write(' instead.')
+        section.style.end_important()
 
 
 def document_copy_source_form(section, event_name, **kwargs):
@@ -719,15 +694,57 @@ def decode_list_object(parsed, context, **kwargs):
     # Amazon S3 includes this element in the response, and returns encoded key
     # name values in the following response elements:
     # Delimiter, Marker, Prefix, NextMarker, Key.
+    _decode_list_object(
+        top_level_keys=['Delimiter', 'Marker', 'NextMarker'],
+        nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
+        parsed=parsed,
+        context=context
+    )
+
+
+def decode_list_object_v2(parsed, context, **kwargs):
+    # From the documentation: If you specify encoding-type request parameter,
+    # Amazon S3 includes this element in the response, and returns encoded key
+    # name values in the following response elements:
+    # Delimiter, Prefix, ContinuationToken, Key, and StartAfter.
+    _decode_list_object(
+        top_level_keys=['Delimiter', 'Prefix', 'StartAfter'],
+        nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
+        parsed=parsed,
+        context=context
+    )
+
+
+def decode_list_object_versions(parsed, context, **kwargs):
+    # From the documentation: If you specify encoding-type request parameter,
+    # Amazon S3 includes this element in the response, and returns encoded key
+    # name values in the following response elements:
+    # KeyMarker, NextKeyMarker, Prefix, Key, and Delimiter.
+    _decode_list_object(
+        top_level_keys=[
+            'KeyMarker',
+            'NextKeyMarker',
+            'Prefix',
+            'Delimiter',
+        ],
+        nested_keys=[
+            ('Versions', 'Key'),
+            ('DeleteMarkers', 'Key'),
+            ('CommonPrefixes', 'Prefix'),
+        ],
+        parsed=parsed,
+        context=context
+    )
+
+
+def _decode_list_object(top_level_keys, nested_keys, parsed, context):
     if parsed.get('EncodingType') == 'url' and \
                     context.get('encoding_type_auto_set'):
         # URL decode top-level keys in the response if present.
-        top_level_keys = ['Delimiter', 'Marker', 'NextMarker']
         for key in top_level_keys:
             if key in parsed:
                 parsed[key] = unquote_str(parsed[key])
         # URL decode nested keys from the response if present.
-        nested_keys = [('Contents', 'Key'), ('CommonPrefixes', 'Prefix')]
         for (top_key, child_key) in nested_keys:
             if top_key in parsed:
                 for member in parsed[top_key]:
@@ -835,11 +852,55 @@ class ClientMethodAlias(object):
     def __call__(self, client, **kwargs):
         return getattr(client, self._actual)
 
+
+class HeaderToHostHoister(object):
+    """Takes a header and moves it to the front of the hoststring.
+    """
+    def __init__(self, header_name):
+        self._header_name = header_name
+
+    def hoist(self, params, **kwargs):
+        """Hoist a header to the hostname.
+
+        Hoist a header to the beginning of the hostname with a suffix "." after
+        it. The original header should be removed from the header map. This
+        method is intended to be used as a target for the before-call event.
+        """
+        if self._header_name not in params['headers']:
+            return
+        header_value = params['headers'][self._header_name]
+        original_url = params['url']
+        new_url = self._prepend_to_host(original_url, header_value)
+        params['url'] = new_url
+
+    def _prepend_to_host(self, url, prefix):
+        url_components = urlsplit(url)
+        parts = url_components.netloc.split('.')
+        parts = [prefix] + parts
+        new_netloc = '.'.join(parts)
+        new_components = (
+            url_components.scheme,
+            new_netloc,
+            url_components.path,
+            url_components.query,
+            ''
+        )
+        new_url = urlunsplit(new_components)
+        return new_url
+
+
+def inject_api_version_header_if_needed(model, params, **kwargs):
+    if not model.is_endpoint_discovery_operation:
+        return
+    params['headers']['x-amz-api-version'] = model.service_model.api_version
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
 
 BUILTIN_HANDLERS = [
+    ('choose-service-name', handle_service_name_alias),
     ('getattr.mturk.list_hi_ts_for_qualification_type',
      ClientMethodAlias('list_hits_for_qualification_type')),
     ('before-parameter-build.s3.UploadPart',
@@ -848,7 +909,6 @@ BUILTIN_HANDLERS = [
      convert_body_to_file_like_object, REGISTER_LAST),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
-    ('creating-client-class.rds', add_generate_db_auth_token),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('after-call.iam', json_decode_policies),
 
@@ -861,6 +921,10 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.s3', validate_bucket_name),
 
     ('before-parameter-build.s3.ListObjects',
+     set_list_objects_encoding_type_url),
+    ('before-parameter-build.s3.ListObjectsV2',
+     set_list_objects_encoding_type_url),
+    ('before-parameter-build.s3.ListObjectVersions',
      set_list_objects_encoding_type_url),
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
@@ -878,6 +942,9 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
+    ('before-call.s3.PutObjectLegalHold', calculate_md5),
+    ('before-call.s3.PutObjectRetention', calculate_md5),
+    ('before-call.s3.PutObjectLockConfiguration', calculate_md5),
 
     ('before-parameter-build.s3.CopyObject',
      handle_copy_source_param),
@@ -896,20 +963,11 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
-    ('before-call.rds.CopyDBClusterSnapshot',
-     inject_presigned_url_rds),
-    ('before-call.rds.CreateDBCluster',
-     inject_presigned_url_rds),
-    ('before-call.rds.CopyDBSnapshot',
-     inject_presigned_url_rds),
-    ('before-call.rds.CreateDBInstanceReadReplica',
-     inject_presigned_url_rds),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
-    ('service-data-loaded', register_retries_for_service),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),
@@ -933,6 +991,8 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
     ('after-call.s3.ListObjects', decode_list_object),
+    ('after-call.s3.ListObjectsV2', decode_list_object_v2),
+    ('after-call.s3.ListObjectVersions', decode_list_object_versions),
 
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search',
@@ -958,16 +1018,6 @@ BUILTIN_HANDLERS = [
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
      document_base64_encoding('UserData')),
 
-    # RDS PresignedUrl documentation customizations
-    ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CreateDBCluster.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CopyDBSnapshot.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-
     # EC2 CopySnapshot documentation customizations
     ('docs.*.ec2.CopySnapshot.complete-section',
      AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
@@ -991,6 +1041,59 @@ BUILTIN_HANDLERS = [
           'PutBucketLifecycle', 'PutBucketLogging', 'PutBucketNotification',
           'PutBucketPolicy', 'PutBucketReplication', 'PutBucketRequestPayment',
           'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
-          'PutObjectAcl']).hide_param)
+          'PutObjectAcl']).hide_param),
+
+    #############
+    # RDS
+    #############
+    ('creating-client-class.rds', add_generate_db_auth_token),
+
+    ('before-call.rds.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBCluster',
+     inject_presigned_url_rds),
+    ('before-call.rds.CopyDBSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBInstanceReadReplica',
+     inject_presigned_url_rds),
+
+    # RDS PresignedUrl documentation customizations
+    ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CopyDBSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
+    #############
+    # Neptune
+    #############
+    ('before-call.neptune.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.neptune.CreateDBCluster',
+     inject_presigned_url_rds),
+
+    # RDS PresignedUrl documentation customizations
+    ('docs.*.neptune.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.neptune.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
+    #############
+    # S3 Control
+    #############
+    ('before-call.s3-control.*',
+     HeaderToHostHoister('x-amz-account-id').hoist),
+
+    ###########
+    # SMS Voice
+     ##########
+    ('docs.title.sms-voice',
+     DeprecatedServiceDocumenter(
+         'pinpoint-sms-voice').inject_deprecation_notice),
+    ('before-call', inject_api_version_header_if_needed),
+
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)

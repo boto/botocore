@@ -15,7 +15,7 @@
 
 import os
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 from mock import patch, Mock
 
 from botocore.compat import OrderedDict
@@ -29,25 +29,18 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'us-east-1'
         self.signature_version = 's3'
 
-        self.mock_response = Mock()
-        self.mock_response.content = ''
-        self.mock_response.headers = {}
-        self.mock_response.status_code = 200
         self.session.unregister('before-parameter-build.s3.ListObjects',
                                 set_list_objects_encoding_type_url)
 
-    def get_prepared_request(self, operation, params,
-                             force_hmacv1=False):
+    def get_prepared_request(self, operation, params, force_hmacv1=False):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
-        with patch('botocore.endpoint.BotocoreHTTPSession') as \
-                mock_http_session:
-            mock_send = mock_http_session.return_value.send
-            mock_send.return_value = self.mock_response
-            client = self.session.create_client('s3', self.region_name)
+        client = self.session.create_client('s3', self.region_name)
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response()
             getattr(client, operation)(**params)
             # Return the request that was sent over the wire.
-            return mock_send.call_args[0][0]
+            return http_stubber.requests[0]
 
     def enable_hmacv1(self, **kwargs):
         return 's3'
@@ -72,7 +65,7 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com/')
+                         'https://safename.s3.us-west-2.amazonaws.com/')
 
     def test_list_objects_unicode_query_string_eu_central_1(self):
         self.region_name = 'eu-central-1'
@@ -81,7 +74,7 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(
             prepared_request.url,
-            ('https://s3.eu-central-1.amazonaws.com/safename'
+            ('https://safename.s3.eu-central-1.amazonaws.com/'
              '?marker=%C3%A4%C3%B6%C3%BC-01.txt')
         )
 
@@ -91,7 +84,7 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request('list_objects', params)
         # Note how we keep the region specific endpoint here.
         self.assertEqual(prepared_request.url,
-                         'https://s3.us-gov-west-1.amazonaws.com/safename')
+                         'https://safename.s3.us-gov-west-1.amazonaws.com/')
 
     def test_list_objects_in_fips(self):
         self.region_name = 'fips-us-gov-west-1'
@@ -100,7 +93,7 @@ class TestS3Addressing(BaseSessionTest):
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
             prepared_request.url,
-            'https://s3-fips-us-gov-west-1.amazonaws.com/safename')
+            'https://safename.s3-fips-us-gov-west-1.amazonaws.com/')
 
     def test_list_objects_non_dns_name_non_classic(self):
         self.region_name = 'us-west-2'

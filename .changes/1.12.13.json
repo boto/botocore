@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``mq``", 
+    "description": "Update mq client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Event", 
+    "description": "Add the `before-send` event which allows finalized requests to be inspected before being sent across the wire and allows for custom responses to be returned.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }
+]

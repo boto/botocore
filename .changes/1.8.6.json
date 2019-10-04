@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``cloud9``", 
+    "description": "Update cloud9 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``alexaforbusiness``", 
+    "description": "Update alexaforbusiness client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]

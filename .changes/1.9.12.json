@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Credentials", 
+    "description": "Add the ability to disable fetching credentials from EC2 metadata by setting the environment variable AWS_EC2_METADATA_DISABLED to 'true'.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Credentials", 
+    "description": "Fix a race condition related to assuming a role for the first time (`#1405 <https://github.com/boto/botocore/pull/1405>`__)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }
+]

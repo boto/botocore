@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``logs``", 
+    "description": "Update logs client to latest version", 
+    "type": "api-change"
+  }
+]

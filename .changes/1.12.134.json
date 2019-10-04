@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``resource-groups``", 
+    "description": "Update resource-groups client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }
+]

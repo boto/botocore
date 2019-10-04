@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``worklink``", 
+    "description": "Update worklink client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``discovery``", 
+    "description": "Update discovery client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }
+]

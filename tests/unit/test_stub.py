@@ -15,7 +15,7 @@ from tests import unittest
 import mock
 
 from botocore.stub import Stubber
-from botocore.exceptions import ParamValidationError, StubResponseError
+from botocore.exceptions import ParamValidationError, StubResponseError, UnStubbedResponseError
 from botocore.model import ServiceModel
 from botocore import hooks
 
@@ -159,7 +159,7 @@ class TestStubber(unittest.TestCase):
         self.assertEqual(response[1]['Error']['Message'], service_message)
         self.assertEqual(response[1]['Error']['Code'], error_code)
 
-    def test_get_client_error_with_extra_keys(self):
+    def test_get_client_error_with_extra_error_meta(self):
         error_code = "foo"
         error_message = "bar"
         error_meta = {
@@ -175,9 +175,26 @@ class TestStubber(unittest.TestCase):
         self.assertIn('Endpoint', error)
         self.assertEqual(error['Endpoint'], "https://foo.bar.baz")
 
+    def test_get_client_error_with_extra_response_meta(self):
+        error_code = "foo"
+        error_message = "bar"
+        stub_response_meta = {
+            "RequestId": "79104EXAMPLEB723",
+        }
+        self.stubber.add_client_error(
+            'foo', error_code, error_message,
+            http_status_code=301,
+            response_meta=stub_response_meta)
+        with self.stubber:
+            response = self.emit_get_response_event()
+        actual_response_meta = response[1]['ResponseMetadata']
+        self.assertIn('RequestId', actual_response_meta)
+        self.assertEqual(actual_response_meta['RequestId'], "79104EXAMPLEB723")
+
+
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()
-        with self.assertRaises(StubResponseError):
+        with self.assertRaises(UnStubbedResponseError):
             self.emit_get_response_event()
 
     def test_assert_no_responses_remaining(self):

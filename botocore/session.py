@@ -20,23 +20,35 @@ import copy
 import logging
 import os
 import platform
+import socket
+import warnings
+import collections
 
 from botocore import __version__
+from botocore import UNSIGNED
 import botocore.configloader
 import botocore.credentials
 import botocore.client
+from botocore.configprovider import ConfigValueStore
+from botocore.configprovider import ConfigChainFactory
+from botocore.configprovider import create_botocore_default_config_mapping
+from botocore.configprovider import BOTOCORE_DEFAUT_SESSION_VARIABLES
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
+from botocore.hooks import EventAliaser
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
 from botocore.regions import EndpointResolver
 from botocore.model import ServiceModel
+from botocore import monitoring
 from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
+from botocore import utils
+from botocore.utils import EVENT_ALIASES
 
 
 logger = logging.getLogger(__name__)
@@ -53,57 +65,7 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
-    #: A default dictionary that maps the logical names for session variables
-    #: to the specific environment variables and configuration file names
-    #: that contain the values for these variables.
-    #: When creating a new Session object, you can pass in your own dictionary
-    #: to remap the logical names or to add new logical names.  You can then
-    #: get the current value for these variables by using the
-    #: ``get_config_variable`` method of the :class:`botocore.session.Session`
-    #: class.
-    #: These form the keys of the dictionary.  The values in the dictionary
-    #: are tuples of (<config_name>, <environment variable>, <default value>,
-    #: <conversion func>).
-    #: The conversion func is a function that takes the configuration value
-    #: as an argument and returns the converted value.  If this value is
-    #: None, then the configuration value is returned unmodified.  This
-    #: conversion function can be used to type convert config values to
-    #: values other than the default values of strings.
-    #: The ``profile`` and ``config_file`` variables should always have a
-    #: None value for the first entry in the tuple because it doesn't make
-    #: sense to look inside the config file for the location of the config
-    #: file or for the default profile to use.
-    #: The ``config_name`` is the name to look for in the configuration file,
-    #: the ``env var`` is the OS environment variable (``os.environ``) to
-    #: use, and ``default_value`` is the value to use if no value is otherwise
-    #: found.
-    SESSION_VARIABLES = {
-        # logical:  config_file, env_var,        default_value, conversion_func
-        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
-        'region': ('region', 'AWS_DEFAULT_REGION', None, None),
-        'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
-        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
-        'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
-        'api_versions': ('api_versions', None, {}, None),
-
-        # This is the shared credentials file amongst sdks.
-        'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
-                             '~/.aws/credentials', None),
-
-        # These variables only exist in the config file.
-
-        # This is the number of seconds until we time out a request to
-        # the instance metadata service.
-        'metadata_service_timeout': (
-            'metadata_service_timeout',
-            'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
-        # This is the number of request attempts we make until we give
-        # up trying to retrieve data from the instance metadata service.
-        'metadata_service_num_attempts': (
-            'metadata_service_num_attempts',
-            'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
-        'parameter_validation': ('parameter_validation', None, True, None),
-    }
+    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAUT_SESSION_VARIABLES)
 
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -134,13 +96,11 @@ class Session(object):
             the session is created.
 
         """
-        self.session_var_map = copy.copy(self.SESSION_VARIABLES)
-        if session_vars:
-            self.session_var_map.update(session_vars)
         if event_hooks is None:
-            self._events = HierarchicalEmitter()
+            self._original_handler = HierarchicalEmitter()
         else:
-            self._events = event_hooks
+            self._original_handler = event_hooks
+        self._events = EventAliaser(self._original_handler)
         if include_builtin_handlers:
             self._register_builtin_handlers(self._events)
         self.user_agent_name = 'Botocore'
@@ -160,7 +120,11 @@ class Session(object):
             self._session_instance_vars['profile'] = profile
         self._client_config = None
         self._components = ComponentLocator()
+        self._internal_components = ComponentLocator()
         self._register_components()
+        self.session_var_map = SessionVarDict(self, self.SESSION_VARIABLES)
+        if session_vars is not None:
+            self.session_var_map.update(session_vars)
 
     def _register_components(self):
         self._register_credential_provider()
@@ -169,6 +133,8 @@ class Session(object):
         self._register_event_emitter()
         self._register_response_parser_factory()
         self._register_exceptions_factory()
+        self._register_config_store()
+        self._register_monitor()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -188,7 +154,7 @@ class Session(object):
             loader = self.get_component('data_loader')
             endpoints = loader.load_data('endpoints')
             return EndpointResolver(endpoints)
-        self._components.lazy_register_component(
+        self._internal_components.lazy_register_component(
             'endpoint_resolver', create_default_resolver)
 
     def _register_response_parser_factory(self):
@@ -196,7 +162,7 @@ class Session(object):
                                             ResponseParserFactory())
 
     def _register_exceptions_factory(self):
-        self._components.register_component(
+        self._internal_components.register_component(
             'exceptions_factory', ClientExceptionsFactory())
 
     def _register_builtin_handlers(self, events):
@@ -210,6 +176,36 @@ class Session(object):
                     self._events.register_first(event_name, handler)
                 elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
+
+    def _register_config_store(self):
+        chain_builder = ConfigChainFactory(session=self)
+        config_store_component = ConfigValueStore(
+            mapping=create_botocore_default_config_mapping(chain_builder)
+        )
+        self._components.register_component('config_store',
+                                            config_store_component)
+
+    def _register_monitor(self):
+        self._internal_components.lazy_register_component(
+            'monitor', self._create_csm_monitor)
+
+    def _create_csm_monitor(self):
+        if self.get_config_variable('csm_enabled'):
+            client_id = self.get_config_variable('csm_client_id')
+            host = self.get_config_variable('csm_host')
+            port = self.get_config_variable('csm_port')
+            handler = monitoring.Monitor(
+                adapter=monitoring.MonitorEventAdapter(),
+                publisher=monitoring.SocketPublisher(
+                    socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
+                    host=host,
+                    port=port,
+                    serializer=monitoring.CSMSerializer(
+                        csm_client_id=client_id)
+                )
+            )
+            return handler
+        return None
 
     @property
     def available_profiles(self):
@@ -230,91 +226,44 @@ class Session(object):
             self._profile = profile
         return self._profile
 
-    def get_config_variable(self, logical_name,
-                            methods=('instance', 'env', 'config')):
-        """
-        Retrieve the value associated with the specified logical_name
-        from the environment or the config file.  Values found in the
-        environment variable take precedence of values found in the
-        config file.  If no value can be found, a None will be returned.
+    def get_config_variable(self, logical_name, methods=None):
+        if methods is not None:
+            return self._get_config_variable_with_custom_methods(
+                logical_name, methods)
+        return self.get_component('config_store').get_config_variable(
+            logical_name)
 
-        :type logical_name: str
-        :param logical_name: The logical name of the session variable
-            you want to retrieve.  This name will be mapped to the
-            appropriate environment variable name for this session as
-            well as the appropriate config file entry.
-
-        :type method: tuple
-        :param method: Defines which methods will be used to find
-            the variable value.  By default, all available methods
-            are tried but you can limit which methods are used
-            by supplying a different value to this parameter.
-            Valid choices are: instance|env|config
-
-        :returns: value of variable or None if not defined.
-
-        """
-        # Handle all the short circuit special cases first.
-        if logical_name not in self.session_var_map:
-            return
-        # Do the actual lookups.  We need to handle
-        # 'instance', 'env', and 'config' locations, in that order.
-        value = None
-        var_config = self.session_var_map[logical_name]
-        if self._found_in_instance_vars(methods, logical_name):
-            value = self._session_instance_vars[logical_name]
-            logger.debug(
-                "Loading variable %s from instance vars with value %r.",
-                logical_name,
-                value,
+    def _get_config_variable_with_custom_methods(self, logical_name, methods):
+        # If a custom list of methods was supplied we need to perserve the
+        # behavior with the new system. To do so a new chain that is a copy of
+        # the old one will be constructed, but only with the supplied methods
+        # being added to the chain. This chain will be consulted for a value
+        # and then thrown out. This is not efficient, nor is the methods arg
+        # used in botocore, this is just for backwards compatibility.
+        chain_builder = SubsetChainConfigFactory(session=self, methods=methods)
+        mapping = create_botocore_default_config_mapping(
+            chain_builder
+        )
+        for name, config_options in self.session_var_map.items():
+            config_name, env_vars, default, typecast = config_options
+            build_chain_config_args = {
+                'conversion_func': typecast,
+                'default': default,
+            }
+            if 'instance' in methods:
+                build_chain_config_args['instance_name'] = name
+            if 'env' in methods:
+                build_chain_config_args['env_var_names'] = env_vars
+            if 'config' in methods:
+                build_chain_config_args['config_property_name'] = config_name
+            mapping[name] = chain_builder.create_config_chain(
+                **build_chain_config_args
             )
-            return value
-        elif self._found_in_env(methods, var_config):
-            value = self._retrieve_from_env(var_config[1], os.environ)
-            logger.debug(
-                "Loading variable %s from environment with value %r.",
-                logical_name,
-                value,
-            )
-        elif self._found_in_config_file(methods, var_config):
-            value = self.get_scoped_config()[var_config[0]]
-            logger.debug(
-                "Loading variable %s from config file with value %r.",
-                logical_name,
-                value,
-            )
-        if value is None:
-            logger.debug("Loading variable %s from defaults.", logical_name)
-            value = var_config[2]
-        if var_config[3] is not None:
-            value = var_config[3](value)
+        config_store_component = ConfigValueStore(
+            mapping=mapping
+        )
+        value = config_store_component.get_config_variable(logical_name)
         return value
-
-    def _found_in_instance_vars(self, methods, logical_name):
-        if 'instance' in methods:
-            return logical_name in self._session_instance_vars
-        return False
-
-    def _found_in_env(self, methods, var_config):
-        return (
-            'env' in methods and
-            var_config[1] is not None and
-            self._retrieve_from_env(var_config[1], os.environ) is not None)
-
-    def _found_in_config_file(self, methods, var_config):
-        if 'config' in methods and var_config[0] is not None:
-            return var_config[0] in self.get_scoped_config()
-        return False
-
-    def _retrieve_from_env(self, names, environ):
-        # We need to handle the case where names is either
-        # a single value or a list of variables.
-        if not isinstance(names, list):
-            names = [names]
-        for name in names:
-            if name in environ:
-                return environ[name]
-        return None
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -346,6 +295,9 @@ class Session(object):
             value,
         )
         self._session_instance_vars[logical_name] = value
+
+    def instance_variables(self):
+        return copy.copy(self._session_instance_vars)
 
     def get_scoped_config(self):
         """
@@ -557,7 +509,8 @@ class Session(object):
             type_name='service-2',
             api_version=api_version
         )
-        self._events.emit('service-data-loaded.%s' % service_name,
+        service_id = EVENT_ALIASES.get(service_name, service_name)
+        self._events.emit('service-data-loaded.%s' % service_id,
                           service_data=service_data,
                           service_name=service_name, session=self)
         return service_data
@@ -723,7 +676,29 @@ class Session(object):
         return first_non_none_response(responses)
 
     def get_component(self, name):
-        return self._components.get_component(name)
+        try:
+            return self._components.get_component(name)
+        except ValueError:
+            if name in ['endpoint_resolver', 'exceptions_factory']:
+                warnings.warn(
+                    'Fetching the %s component with the get_component() '
+                    'method is deprecated as the component has always been '
+                    'considered an internal interface of botocore' % name,
+                    DeprecationWarning)
+                return self._internal_components.get_component(name)
+            raise
+
+    def _get_internal_component(self, name):
+        # While this method may be called by botocore classes outside of the
+        # Session, this method should **never** be used by a class that lives
+        # outside of botocore.
+        return self._internal_components.get_component(name)
+
+    def _register_internal_component(self, name, component):
+        # While this method may be called by botocore classes outside of the
+        # Session, this method should **never** be used by a class that lives
+        # outside of botocore.
+        return self._internal_components.register_component(name, component)
 
     def register_component(self, name, component):
         self._components.register_component(name, component)
@@ -835,7 +810,9 @@ class Session(object):
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_access_key_id is not None and aws_secret_access_key is not None:
+        if config is not None and config.signature_version is UNSIGNED:
+            credentials = None
+        elif aws_access_key_id is not None and aws_secret_access_key is not None:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
@@ -848,17 +825,21 @@ class Session(object):
                                                  aws_secret_access_key))
         else:
             credentials = self.get_credentials()
-        endpoint_resolver = self.get_component('endpoint_resolver')
-        exceptions_factory = self.get_component('exceptions_factory')
+        endpoint_resolver = self._get_internal_component('endpoint_resolver')
+        exceptions_factory = self._get_internal_component('exceptions_factory')
+        config_store = self.get_component('config_store')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory,
-            exceptions_factory)
+            exceptions_factory, config_store)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
             credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
+        monitor = self._get_internal_component('monitor')
+        if monitor is not None:
+            monitor.register(client.meta.events)
         return client
 
     def _missing_cred_vars(self, access_key, secret_key):
@@ -874,7 +855,7 @@ class Session(object):
         :rtype: list
         :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
         """
-        resolver = self.get_component('endpoint_resolver')
+        resolver = self._get_internal_component('endpoint_resolver')
         return resolver.get_available_partitions()
 
     def get_available_regions(self, service_name, partition_name='aws',
@@ -897,7 +878,7 @@ class Session(object):
              fips-us-gov-west-1, etc).
         :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
-        resolver = self.get_component('endpoint_resolver')
+        resolver = self._get_internal_component('endpoint_resolver')
         results = []
         try:
             service_data = self.get_service_data(service_name)
@@ -942,6 +923,91 @@ class ComponentLocator(object):
             del self._components[name]
         except KeyError:
             pass
+
+
+class SessionVarDict(collections.MutableMapping):
+    def __init__(self, session, session_vars):
+        self._session = session
+        self._store = copy.copy(session_vars)
+
+    def __getitem__(self, key):
+        return self._store[key]
+
+    def __setitem__(self, key, value):
+        self._store[key] = value
+        self._update_config_store_from_session_vars(key, value)
+
+    def __delitem__(self, key):
+        del self._store[key]
+
+    def __iter__(self):
+        return iter(self._store)
+
+    def __len__(self):
+        return len(self._store)
+
+    def _update_config_store_from_session_vars(self, logical_name,
+                                               config_options):
+        # This is for backwards compatibility. The new preferred way to
+        # modify configuration logic is to use the component system to get
+        # the config_store component from the session, and then update
+        # a key with a custom config provider(s).
+        # This backwards compatibility method takes the old session_vars
+        # list of tuples and and transforms that into a set of updates to
+        # the config_store component.
+        config_chain_builder = ConfigChainFactory(session=self._session)
+        config_name, env_vars, default, typecast = config_options
+        config_store = self._session.get_component('config_store')
+        config_store.set_config_provider(
+            logical_name,
+            config_chain_builder.create_config_chain(
+                instance_name=logical_name,
+                env_var_names=env_vars,
+                config_property_name=config_name,
+                default=default,
+                conversion_func=typecast,
+            )
+        )
+
+
+class SubsetChainConfigFactory(object):
+    """A class for creating backwards compatible configuration chains.
+
+    This class can be used instead of
+    :class:`botocore.configprovider.ConfigChainFactory` to make it honor the
+    methods argument to get_config_variable. This class can be used to filter
+    out providers that are not in the methods tuple when creating a new config
+    chain.
+    """
+    def __init__(self, session, methods, environ=None):
+        self._factory = ConfigChainFactory(session, environ)
+        self._supported_methods = methods
+
+    def create_config_chain(self, instance_name=None, env_var_names=None,
+                            config_property_name=None, default=None,
+                            conversion_func=None):
+        """Build a config chain following the standard botocore pattern.
+
+        This config chain factory will omit any providers not in the methods
+        tuple provided at initialization. For example if given the tuple
+        ('instance', 'config',) it will not inject the environment provider
+        into the standard config chain. This lets the botocore session support
+        the custom ``methods`` argument for all the default botocore config
+        variables when calling ``get_config_variable``.
+        """
+        if 'instance' not in self._supported_methods:
+            instance_name = None
+        if 'env' not in self._supported_methods:
+            env_var_names = None
+        if 'config' not in self._supported_methods:
+            config_property_name = None
+        return self._factory.create_config_chain(
+            instance_name=instance_name,
+            env_var_names=env_var_names,
+            config_property_name=config_property_name,
+            default=default,
+            conversion_func=conversion_func,
+        )
 
 
 def get_session(env_vars=None):

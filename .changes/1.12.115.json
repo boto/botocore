@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``acm``", 
+    "description": "Update acm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``acm-pca``", 
+    "description": "Update acm-pca client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }
+]

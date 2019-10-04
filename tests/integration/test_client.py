@@ -20,63 +20,6 @@ from botocore.compat import six
 from botocore.exceptions import EndpointConnectionError
 
 
-class TestBucketWithVersions(unittest.TestCase):
-    def setUp(self):
-        self.session = botocore.session.get_session()
-        self.client = self.session.create_client('s3', region_name='us-west-2')
-        self.bucket_name = 'botocoretest%s' % random_chars(50)
-
-    def extract_version_ids(self, versions):
-        version_ids = []
-        for marker in versions['DeleteMarkers']:
-            version_ids.append(marker['VersionId'])
-        for version in versions['Versions']:
-            version_ids.append(version['VersionId'])
-        return version_ids
-
-    def test_create_versioned_bucket(self):
-        # Verifies we can:
-        # 1. Create a bucket
-        # 2. Enable versioning
-        # 3. Put an Object
-        self.client.create_bucket(
-            Bucket=self.bucket_name,
-            CreateBucketConfiguration={
-                'LocationConstraint': 'us-west-2'
-            }
-        )
-        self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
-
-        self.client.put_bucket_versioning(
-            Bucket=self.bucket_name,
-            VersioningConfiguration={"Status": "Enabled"})
-        response = self.client.put_object(
-            Bucket=self.bucket_name, Key='testkey', Body='bytes body')
-        self.addCleanup(self.client.delete_object,
-                        Bucket=self.bucket_name,
-                        Key='testkey',
-                        VersionId=response['VersionId'])
-
-        response = self.client.get_object(
-            Bucket=self.bucket_name, Key='testkey')
-        self.assertEqual(response['Body'].read(), b'bytes body')
-
-        response = self.client.delete_object(Bucket=self.bucket_name,
-                                             Key='testkey')
-        # This cleanup step removes the DeleteMarker that's created
-        # from the delete_object call above.
-        self.addCleanup(self.client.delete_object,
-                        Bucket=self.bucket_name,
-                        Key='testkey',
-                        VersionId=response['VersionId'])
-        # Object does not exist anymore.
-        with self.assertRaises(ClientError):
-            self.client.get_object(Bucket=self.bucket_name, Key='testkey')
-        versions = self.client.list_object_versions(Bucket=self.bucket_name)
-        version_ids = self.extract_version_ids(versions)
-        self.assertEqual(len(version_ids), 2)
-
-
 # This is really a combination of testing the debug logging mechanism
 # as well as the response wire log, which theoretically could be
 # implemented in any number of modules, which makes it hard to pick
@@ -219,3 +162,16 @@ class TestClientInjection(unittest.TestCase):
 
         # We should now have access to the extra_client_method above.
         self.assertEqual(client.extra_client_method('foo'), 'foo')
+
+
+class TestMixedEndpointCasing(unittest.TestCase):
+    def setUp(self):
+        self.url = 'https://EC2.US-WEST-2.amazonaws.com/'
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('ec2', 'us-west-2',
+                                                 endpoint_url=self.url)
+
+    def test_sigv4_is_correct_when_mixed_endpoint_casing(self):
+        res = self.client.describe_regions()
+        status_code = res['ResponseMetadata']['HTTPStatusCode']
+        self.assertEqual(status_code, 200)

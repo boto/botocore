@@ -30,7 +30,8 @@ class TestEC2(unittest.TestCase):
         result = self.client.describe_availability_zones()
         zones = list(
             sorted(a['ZoneName'] for a in result['AvailabilityZones']))
-        self.assertEqual(zones, ['us-west-2a', 'us-west-2b', 'us-west-2c'])
+        self.assertTrue(
+            set(['us-west-2a', 'us-west-2b', 'us-west-2c']).issubset(zones))
 
     def test_get_console_output_handles_error(self):
         # Want to ensure the underlying ClientError is propogated
@@ -63,9 +64,9 @@ class TestEC2Pagination(unittest.TestCase):
         self.assertEqual(len(results), 3)
         for parsed in results:
             reserved_inst_offer = parsed['ReservedInstancesOfferings']
-            # There should only be one reserved instance offering on each
-            # page.
-            self.assertEqual(len(reserved_inst_offer), 1)
+            # There should be no more than  one reserved instance
+            # offering on each page.
+            self.assertLessEqual(len(reserved_inst_offer), 1)
 
     def test_can_fall_back_to_old_starting_token(self):
         # Using an operation that we know will paginate.

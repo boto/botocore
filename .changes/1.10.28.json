@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dlm``", 
+    "description": "Update dlm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appsync``", 
+    "description": "Update appsync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }
+]

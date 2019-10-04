@@ -453,7 +453,8 @@ def test_known_endpoints():
     # fixed list of known endpoints.  This list doesn't need to be kept 100% up
     # to date, but serves as a basis for regressions as the endpoint data
     # logic evolves.
-    resolver = _get_patched_session().get_component('endpoint_resolver')
+    resolver = _get_patched_session()._get_internal_component(
+        'endpoint_resolver')
     for region_name, service_dict in KNOWN_REGIONS.items():
         for service_name, endpoint in service_dict.items():
             yield (_test_single_service_region, service_name,
@@ -472,7 +473,7 @@ def _test_single_service_region(service_name, region_name,
 def test_all_s3_endpoints_have_s3v4():
     session = _get_patched_session()
     partitions = session.get_available_partitions()
-    resolver = session.get_component('endpoint_resolver')
+    resolver = session._get_internal_component('endpoint_resolver')
     for partition_name in partitions:
         for endpoint in session.get_available_regions('s3', partition_name):
             resolved = resolver.construct_endpoint('s3', endpoint)
@@ -481,7 +482,8 @@ def test_all_s3_endpoints_have_s3v4():
 
 
 def test_known_endpoints():
-    resolver = _get_patched_session().get_component('endpoint_resolver')
+    resolver = _get_patched_session()._get_internal_component(
+        'endpoint_resolver')
     for service_name, endpoint in KNOWN_AWS_PARTITION_WIDE.items():
         yield (_test_single_service_partition_endpoint, service_name,
                endpoint, resolver)
@@ -495,5 +497,6 @@ def _test_single_service_partition_endpoint(service_name, expected_endpoint,
 
 
 def test_non_partition_endpoint_requires_region():
-    resolver = _get_patched_session().get_component('endpoint_resolver')
+    resolver = _get_patched_session()._get_internal_component(
+        'endpoint_resolver')
     assert_raises(NoRegionError, resolver.construct_endpoint, 'ec2')

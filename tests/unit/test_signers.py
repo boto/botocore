@@ -19,10 +19,11 @@ from dateutil.tz import tzutc
 import botocore
 import botocore.session
 import botocore.auth
-from botocore.compat import six, urlparse, parse_qs
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials
+from botocore.hooks import HierarchicalEmitter
+from botocore.model import ServiceId
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
@@ -30,6 +31,7 @@ from botocore.signers import RequestSigner, S3PostPresigner, CloudFrontSigner
 from botocore.signers import generate_db_auth_token
 
 from tests import unittest
+from tests import assert_url_equal
 
 
 class BaseSignerTest(unittest.TestCase):
@@ -38,32 +40,9 @@ class BaseSignerTest(unittest.TestCase):
         self.emitter = mock.Mock()
         self.emitter.emit_until_response.return_value = (None, None)
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         self.fixed_credentials = self.credentials.get_frozen_credentials()
-
-    def _urlparse(self, url):
-        if isinstance(url, six.binary_type):
-            # Not really necessary, but it helps to reduce noise on Python 2.x
-            url = url.decode('utf8')
-        return urlparse(url)
-
-    def assert_url_equal(self, url1, url2):
-        parts1 = self._urlparse(url1)
-        parts2 = self._urlparse(url2)
-
-        # Because the query string ordering isn't relevant, we have to parse
-        # every single part manually and then handle the query string.
-        self.assertEqual(parts1.scheme, parts2.scheme)
-        self.assertEqual(parts1.netloc, parts2.netloc)
-        self.assertEqual(parts1.path, parts2.path)
-        self.assertEqual(parts1.params, parts2.params)
-        self.assertEqual(parts1.fragment, parts2.fragment)
-        self.assertEqual(parts1.username, parts2.username)
-        self.assertEqual(parts1.password, parts2.password)
-        self.assertEqual(parts1.hostname, parts2.hostname)
-        self.assertEqual(parts1.port, parts2.port)
-        self.assertEqual(parse_qs(parts1.query), parse_qs(parts2.query))
 
 
 class TestSigner(BaseSignerTest):
@@ -79,8 +58,9 @@ class TestSigner(BaseSignerTest):
 
     def test_region_required_for_sigv4(self):
         self.signer = RequestSigner(
-            'service_name', None, 'signing_name', 'v4', self.credentials,
-            self.emitter)
+            ServiceId('service_name'), None, 'signing_name', 'v4',
+            self.credentials, self.emitter
+        )
 
         with self.assertRaises(NoRegionError):
             self.signer.sign('operation_name', mock.Mock())
@@ -151,7 +131,7 @@ class TestSigner(BaseSignerTest):
             'before-sign.service_name.operation_name',
             request=mock.ANY, signing_name='signing_name',
             region_name='region_name', signature_version='v4',
-            request_signer=self.signer)
+            request_signer=self.signer, operation_name='operation_name')
 
     def test_disable_signing(self):
         # Returning botocore.UNSIGNED from choose-signer disables signing!
@@ -310,7 +290,7 @@ class TestSigner(BaseSignerTest):
             'context': {}
         }
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         with self.assertRaises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_url(
@@ -323,7 +303,7 @@ class TestSigner(BaseSignerTest):
         self.credentials = FakeCredentials('a', 'b', 'c')
 
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
 
         auth_cls = mock.Mock()
@@ -344,7 +324,7 @@ class TestSigner(BaseSignerTest):
         # the error (which they already do).
         self.credentials = None
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         auth_cls = mock.Mock()
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
@@ -555,7 +535,7 @@ class TestCloudfrontSigner(BaseSignerTest):
         expected = (
             'http://test.com/foo.txt?Expires=1451606400&Signature=c2lnbmVk'
             '&Key-Pair-Id=MY_KEY_ID')
-        self.assert_url_equal(signed_url, expected)
+        assert_url_equal(signed_url, expected)
 
     def test_generate_presign_url_with_custom_policy(self):
         policy = self.signer.build_policy(
@@ -572,14 +552,14 @@ class TestCloudfrontSigner(BaseSignerTest):
             '6IjEyLjM0LjU2Ljc4LzkifSwiRGF0ZUdyZWF0ZXJUaGFuIjp7IkFX'
             'UzpFcG9jaFRpbWUiOjE0NDg5MjgwMDB9fX1dfQ__'
             '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID')
-        self.assert_url_equal(signed_url, expected)
+        assert_url_equal(signed_url, expected)
 
 
 class TestS3PostPresigner(BaseSignerTest):
     def setUp(self):
         super(TestS3PostPresigner, self).setUp()
         self.request_signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             's3v4', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
         self.request_dict = {
@@ -718,7 +698,7 @@ class TestS3PostPresigner(BaseSignerTest):
             'context': {}
         }
         self.request_signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
         with self.assertRaises(UnsupportedSignatureVersionError):
@@ -750,7 +730,11 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            # mock.ANY is used because client parameter related events
+            # inject values into the context. So using the context's exact
+            # value for these tests will be a maintenance burden if
+            # anymore customizations are added that inject into the context.
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
@@ -771,7 +755,7 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {u'response-content-disposition': disposition},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
@@ -795,7 +779,7 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=20,
             operation_name='GetObject')
@@ -811,10 +795,43 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'PUT',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
+
+    def test_generate_presigned_url_emits_param_events(self):
+        emitter = mock.Mock(HierarchicalEmitter)
+        emitter.emit.return_value = []
+        self.client.meta.events = emitter
+        self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket, 'Key': self.key})
+        events_emitted = [
+            emit_call[0][0] for emit_call in emitter.emit.call_args_list
+        ]
+        self.assertEqual(
+            events_emitted,
+            [
+                'provide-client-params.s3.GetObject',
+                'before-parameter-build.s3.GetObject'
+            ]
+        )
+
+    def test_generate_presign_url_emits_is_presign_in_context(self):
+        emitter = mock.Mock(HierarchicalEmitter)
+        emitter.emit.return_value = []
+        self.client.meta.events = emitter
+        self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket, 'Key': self.key})
+        kwargs_emitted = [
+            emit_call[1] for emit_call in emitter.emit.call_args_list
+        ]
+        for kwargs in kwargs_emitted:
+            self.assertTrue(
+                kwargs.get('context', {}).get('is_presign_request'),
+                'The context did not have is_presign_request set to True for '
+                'the following kwargs emitted: %s' % kwargs
+            )
 
 
 class TestGeneratePresignedPost(unittest.TestCase):
@@ -910,7 +927,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
 
 class TestGenerateDBAuthToken(BaseSignerTest):
     maxDiff = None
-    
+
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client(
@@ -940,7 +957,7 @@ class TestGenerateDBAuthToken(BaseSignerTest):
 
         # A scheme needs to be appended to the beginning or urlsplit may fail
         # on certain systems.
-        self.assert_url_equal(
+        assert_url_equal(
             'https://' + result, 'https://' + expected_result)
 
     def test_custom_region(self):

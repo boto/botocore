@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot-jobs-data``", 
+    "description": "Update iot-jobs-data client to latest version", 
+    "type": "api-change"
+  }
+]

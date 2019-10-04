@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediatailor``", 
+    "description": "Update mediatailor client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sns``", 
+    "description": "Update sns client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }
+]

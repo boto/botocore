@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``greengrass``", 
+    "description": "Update greengrass client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }
+]

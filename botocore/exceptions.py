@@ -12,7 +12,20 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import unicode_literals
-from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.vendored import requests
+from botocore.vendored.requests.packages import urllib3
+
+
+def _exception_from_packed_args(exception_cls, args=None, kwargs=None):
+    # This is helpful for reducing Exceptions that only accept kwargs as
+    # only positional arguments can be provided for __reduce__
+    # Ideally, this would also be a class method on the BotoCoreError
+    # but instance methods cannot be pickled.
+    if args is None:
+        args = ()
+    if kwargs is None:
+        kwargs = {}
+    return exception_cls(*args, **kwargs)
 
 
 class BotoCoreError(Exception):
@@ -27,6 +40,9 @@ class BotoCoreError(Exception):
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
+
+    def __reduce__(self):
+        return _exception_from_packed_args, (self.__class__, None, self.kwargs)
 
 
 class DataNotFoundError(BotoCoreError):
@@ -60,20 +76,47 @@ class ApiVersionNotFoundError(BotoCoreError):
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
 
-class EndpointConnectionError(BotoCoreError):
-    fmt = (
-        'Could not connect to the endpoint URL: "{endpoint_url}"')
+class HTTPClientError(BotoCoreError):
+    fmt = 'An HTTP Client raised and unhandled exception: {error}'
+    def __init__(self, request=None, response=None, **kwargs):
+        self.request = request
+        self.response = response
+        super(HTTPClientError, self).__init__(**kwargs)
+
+    def __reduce__(self):
+        return _exception_from_packed_args, (
+            self.__class__, (self.request, self.response), self.kwargs)
 
 
-class ConnectionClosedError(ConnectionError):
+class ConnectionError(BotoCoreError):
+    fmt = 'An HTTP Client failed to establish a connection: {error}'
+
+
+class EndpointConnectionError(ConnectionError):
+    fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
+
+
+class SSLError(ConnectionError, requests.exceptions.SSLError):
+    fmt = 'SSL validation failed for {endpoint_url} {error}'
+
+
+class ConnectionClosedError(HTTPClientError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
 
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
-        kwargs.pop('endpoint_url')
-        super(ConnectionClosedError, self).__init__(msg, **kwargs)
+
+class ReadTimeoutError(HTTPClientError, requests.exceptions.ReadTimeout,
+                       urllib3.exceptions.ReadTimeoutError):
+    fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ConnectTimeoutError(ConnectionError, requests.exceptions.ConnectTimeout):
+    fmt = 'Connect timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
+    fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
 class NoCredentialsError(BotoCoreError):
@@ -371,6 +414,16 @@ class ClientError(Exception):
                                   metadata['RetryAttempts'])
         return retry_info
 
+    def __reduce__(self):
+        # Subclasses of ClientError's are dynamically generated and
+        # cannot be pickled unless they are attributes of a
+        # module. So at the very least return a ClientError back.
+        return ClientError, (self.response, self.operation_name)
+
+
+class EventStreamError(ClientError):
+    pass
+
 
 class UnsupportedTLSVersionWarning(Warning):
     """Warn when an openssl version that uses TLS 1.2 is required"""
@@ -420,11 +473,21 @@ class StubResponseError(BotoCoreError):
 
 
 class StubAssertionError(StubResponseError, AssertionError):
-    fmt = 'Error getting response stub for operation {operation_name}: {reason}'
+    pass
 
+class UnStubbedResponseError(StubResponseError):
+    pass
 
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
+
+
+class InfiniteLoopConfigError(InvalidConfigError):
+    fmt = (
+        'Infinite loop in credential configuration detected. Attempting to '
+        'load from profile {source_profile} which has already been visited. '
+        'Visited profiles: {visited_profiles}'
+    )
 
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):
@@ -437,3 +500,19 @@ class MD5UnavailableError(BotoCoreError):
 
 class MetadataRetrievalError(BotoCoreError):
     fmt = "Error retrieving metadata: {error_msg}"
+
+
+class UndefinedModelAttributeError(Exception):
+    pass
+
+
+class MissingServiceIdError(UndefinedModelAttributeError):
+    fmt = (
+        "The model being used for the service {service_name} is missing the "
+        "serviceId metadata property, which is required."
+    )
+
+    def __init__(self, **kwargs):
+        msg = self.fmt.format(**kwargs)
+        Exception.__init__(self, msg)
+        self.kwargs = kwargs

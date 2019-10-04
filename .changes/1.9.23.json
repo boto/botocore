@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``translate``", 
+    "description": "Update translate client to latest version", 
+    "type": "api-change"
+  }
+]

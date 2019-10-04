@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``athena``", 
+    "description": "Update athena client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "api-change"
+  }
+]

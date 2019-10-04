@@ -74,3 +74,15 @@ class TestPaginatorDocumenter(BaseDocsTest):
             '        - **Biz** *(string) --*',
             '        - **NextToken** *(string) --*'
         ])
+
+    def test_no_page_size_if_no_limit_key(self):
+        paginator = self.paginator_json_model["pagination"]
+        operation = paginator["SampleOperation"]
+        del operation["limit_key"]
+
+        self.paginator_documenter.document_paginators(
+            self.doc_structure)
+        self.assert_not_contains_lines([
+            '              \'PageSize\': 123,',
+            '      - **PageSize** *(integer) --*',
+        ])

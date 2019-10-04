@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mq``", 
+    "description": "Update mq client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -16,11 +16,12 @@ from pprint import pformat
 import warnings
 from nose.tools import assert_equal, assert_true
 
+from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-from botocore.vendored.requests import adapters
-from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.endpoint import Endpoint
+from botocore.exceptions import ConnectionClosedError
 
 
 # Mapping of service -> api calls to try.
@@ -82,7 +83,6 @@ SMOKE_TESTS = {
  'kms': {'ListKeys': {}},
  'lambda': {'ListFunctions': {}},
  'logs': {'DescribeLogGroups': {}},
- 'machinelearning': {'DescribeMLModels': {}},
  'opsworks': {'DescribeStacks': {}},
  'rds': {'DescribeDBInstances': {}},
  'redshift': {'DescribeClusters': {}},
@@ -91,6 +91,7 @@ SMOKE_TESTS = {
  's3': {'ListBuckets': {}},
  'sdb': {'ListDomains': {}},
  'ses': {'ListIdentities': {}},
+ 'shield': {'GetSubscriptionState': {}},
  'sns': {'ListTopics': {}},
  'sqs': {'ListQueues': {}},
  'ssm': {'ListDocuments': {}},
@@ -142,7 +143,7 @@ ERROR_TESTS = {
     'cognito-identity': {'DescribeIdentityPool': {'IdentityPoolId': 'fake'}},
     'cognito-sync': {'DescribeIdentityPoolUsage': {'IdentityPoolId': 'fake'}},
     'config': {
-        'GetResourceConfigHistory': {'resourceType': '', 'resourceId': ''},
+        'GetResourceConfigHistory': {'resourceType': '', 'resourceId': 'fake'},
         },
     'datapipeline': {'GetPipelineDefinition': {'pipelineId': 'fake'}},
     'devicefarm': {'GetDevice': {'arn': 'arn:aws:devicefarm:REGION::device:f'}},
@@ -164,15 +165,9 @@ ERROR_TESTS = {
     'gamelift': {'DescribeBuild': {'BuildId': 'fake-build-id'}},
     'glacier': {'ListVaults': {'accountId': 'fake'}},
     'iam': {'GetUser': {'UserName': 'fake'}},
-    'importexport': {'CreateJob': {
-        'JobType': 'Import',
-        'ValidateOnly': False,
-        'Manifest': 'fake',
-        }},
     'kinesis': {'DescribeStream': {'StreamName': 'fake'}},
     'kms': {'GetKeyPolicy': {'KeyId': 'fake', 'PolicyName': 'fake'}},
     'lambda': {'Invoke': {'FunctionName': 'fake'}},
-    'machinelearning': {'GetBatchPrediction': {'BatchPredictionId': 'fake'}},
     'opsworks': {'DescribeLayers': {'StackId': 'fake'}},
     'rds': {'DescribeDBInstances': {'DBInstanceIdentifier': 'fake'}},
     'redshift': {'DescribeClusters': {'ClusterIdentifier': 'fake'}},
@@ -285,17 +280,13 @@ def test_client_can_retry_request_properly():
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
-    original_send = adapters.HTTPAdapter.send
-    def mock_http_adapter_send(self, *args, **kwargs):
-        if not getattr(self, '_integ_test_error_raised', False):
-            self._integ_test_error_raised = True
-            raise ConnectionError("Simulated ConnectionError raised.")
-        else:
-            return original_send(self, *args, **kwargs)
-    with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
-                    mock_http_adapter_send):
+    exception = ConnectionClosedError(endpoint_url='https://mock.eror')
+    with ClientHTTPStubber(client, strict=False) as http_stubber:
+        http_stubber.responses.append(exception)
         try:
             response = operation(**kwargs)
         except ClientError as e:
             assert False, ('Request was not retried properly, '
                            'received error:\n%s' % pformat(e))
+        # Ensure we used the stubber as we're not using it in strict mode
+        assert len(http_stubber.responses) == 0, 'Stubber was not used!'

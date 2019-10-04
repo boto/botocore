@@ -26,6 +26,7 @@ class ServiceDocumenter(object):
         self._client = self._session.create_client(
             service_name, region_name='us-east-1', aws_access_key_id='foo',
             aws_secret_access_key='bar')
+        self._event_emitter = self._client.meta.events
 
         self.sections = [
             'title',
@@ -52,6 +53,11 @@ class ServiceDocumenter(object):
 
     def title(self, section):
         section.style.h1(self._client.__class__.__name__)
+        self._event_emitter.emit(
+            'docs.%s.%s' % ('title',
+                            self._service_name),
+            section=section
+        )
 
     def table_of_contents(self, section):
         section.style.table_of_contents(title='Table of Contents', depth=2)

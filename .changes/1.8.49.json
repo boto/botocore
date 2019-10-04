@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }
+]

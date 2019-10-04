@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``sqs``", 
+    "description": "Update sqs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotevents``", 
+    "description": "Update iotevents client to latest version", 
+    "type": "api-change"
+  }
+]

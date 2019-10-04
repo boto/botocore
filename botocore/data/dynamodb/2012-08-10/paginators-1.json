@@ -1,5 +1,11 @@
 {
   "pagination": {
+    "ListBackups": {
+      "input_token": "ExclusiveStartBackupArn",
+      "output_token": "LastEvaluatedBackupArn",
+      "limit_key": "Limit",
+      "result_key": "BackupSummaries"
+    },
     "ListTables": {
       "input_token": "ExclusiveStartTableName",
       "output_token": "LastEvaluatedTableName",
@@ -31,6 +37,11 @@
       "non_aggregate_keys": [
         "ConsumedCapacity"
       ]
+    },
+    "ListTagsOfResource": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Tags"
     }
   }
 }

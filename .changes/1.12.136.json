@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``inspector``", 
+    "description": "Update inspector client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "api-change"
+  }
+]

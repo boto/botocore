@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``athena``", 
+    "description": "Update athena client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }
+]

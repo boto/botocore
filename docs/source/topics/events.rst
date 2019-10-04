@@ -18,33 +18,33 @@ to events.
 Event Types
 -----------
 
-The table below shows all of the events emitted by botocore.  In some cases,
-the events are listed as ``<service>.<operations>.bar``, in which ``<service>``
-and ``<operation>`` are replaced with a specific service and operation, for
-example ``s3.ListObjects.bar``.
+The list below shows all of the events emitted by botocore.  In some cases, the
+events are listed as ``event-name.<service-id>.<operations>``, in which
+``<service-id>`` and ``<operation>`` are replaced with a specific service
+identifier operation, for example ``event-name.s3.ListObjects``.
 
-.. list-table:: Events
-   :header-rows: 1
+* ``'before-send.<service-id>.<operation>'``
 
-   * - Event Name
-     - Occurance
-     - Arguments
-     - Return Value
-   * - **service-created**
-     - Whenever a service is created via the Sessions ``get_service``
-       method.
-     - ``service`` - The newly created :class:`botocore.service.Service`
-       object.
-     - Ignored.
-   * - **before-call.<service>.<operation>**
-     - When an operation is being called (``Operation.call``).
-     - ``operation`` - The newly created :class:`botocore.operation.Operation`
-       object.
-     - Ignored.
-   * - **after-call.<service>.<operation>**
-     - After an operation has been called, but before the response is parsed.
-     - ``http_response`` - The HTTP response, ``parsed`` - The parsed data.
-     - Ignored.
+
+before-send
+~~~~~~~~~~~~~~~~~~~~~
+
+:Full Event Name:
+  ``'before-send.<service>.<operation>'``
+
+:Description:
+  This event is emitted when the operation has been fully serialized, signed,
+  and is ready to be sent across the wire. This event allows the finalized
+  request to be inspected and allows a response to be returned that fufills
+  the request. If no response is returned botocore will fulfill the request
+  as normal.
+
+:Keyword Arguments Emitted:
+
+  :type request: :class:`.AWSPreparedRequest`
+  :param params: An object representing the properties of an HTTP request.
+
+:Expected Return Value: None or an instance of :class:`.AWSResponse`
 
 
 Event Emission
@@ -52,3 +52,15 @@ Event Emission
 
 When an event is emitted, the handlers are invoked in the order that they were
 registered.
+
+
+Service ID
+----------
+To get the service id from a service client use the following::
+
+    import botocore
+    import botocore.session
+
+    session = botocore.session.Session()
+    client = session.create_client('elbv2')
+    service_event_name = client.meta.service_model.service_id.hyphenize()

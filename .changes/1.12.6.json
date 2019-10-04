@@ -1,0 +1,17 @@
+[
+  {
+    "category": "Serialization", 
+    "description": "Fixes `#1557 <https://github.com/boto/botocore/issues/1557>`__. Fixed a regression in serialization where request bodies would be improperly encoded.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rekognition``", 
+    "description": "Update rekognition client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }
+]

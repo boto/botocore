@@ -35,12 +35,12 @@ class Config(object):
     :param user_agent_extra: The value to append to the current User-Agent
         header value.
 
-    :type connect_timeout: int
+    :type connect_timeout: float or int
     :param connect_timeout: The time in seconds till a timeout exception is
         thrown when attempting to make a connection. The default is 60
         seconds.
 
-    :type read_timeout: int
+    :type read_timeout: float or int
     :param read_timeout: The time in seconds till a timeout exception is
         thrown when attempting to read from a connection. The default is
         60 seconds.
@@ -102,6 +102,26 @@ class Config(object):
           this value to 0 will result in no retries ever being attempted on
           the initial request. If not provided, the number of retries will
           default to whatever is modeled, which is typically four retries.
+
+    :type client_cert: str, (str, str)
+    :param client_cert: The path to a certificate for TLS client authentication.
+
+        When a str is provided it is treated as a path to a client certificate
+        to be used when creating a TLS connection.
+
+        If a client key is to be provided alongside the client certificate the
+        client_cert should be set to a tuple of length two where the first
+        element is the path to the client certificate and the second element is
+        the path to the certificate key.
+
+    :type inject_host_prefix: bool
+    :param inject_host_prefix: Whether host prefix injection should occur.
+
+        Defaults to True.
+
+        Setting this to False disables the injection of operation parameters
+        into the prefix of the hostname. This is useful for clients providing
+        custom endpoints that should not have their host prefix modified.
     """
     OPTION_DEFAULTS = OrderedDict([
         ('region_name', None),
@@ -114,7 +134,10 @@ class Config(object):
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
         ('s3', None),
-        ('retries', None)
+        ('retries', None),
+        ('client_cert', None),
+        ('inject_host_prefix', True),
+        ('endpoint_discovery_enabled', None),
     ])
 
     def __init__(self, *args, **kwargs):

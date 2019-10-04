@@ -23,6 +23,7 @@ import binascii
 import platform
 import select
 import datetime
+from io import BytesIO
 from subprocess import Popen, PIPE
 
 from dateutil.tz import tzlocal
@@ -34,11 +35,17 @@ if sys.version_info[:2] == (2, 6):
 else:
     import unittest
 
+from nose.tools import assert_equal
 
 import botocore.loaders
 import botocore.session
+from botocore.awsrequest import AWSResponse
+from botocore.compat import six
+from botocore.compat import urlparse
+from botocore.compat import parse_qs
 from botocore import utils
 from botocore import credentials
+from botocore.stub import Stubber
 
 
 _LOADER = botocore.loaders.Loader()
@@ -55,6 +62,19 @@ def skip_unless_has_memory_collection(cls):
     if platform.system() not in ['Darwin', 'Linux']:
         return unittest.skip('Memory tests only supported on mac/linux.')(cls)
     return cls
+
+
+def skip_if_windows(reason):
+    """Decorator to skip tests that should not be run on windows.
+    Example usage:
+        @skip_if_windows("Not valid")
+        def test_some_non_windows_stuff(self):
+            self.assertEqual(...)
+    """
+    def decorator(func):
+        return unittest.skipIf(
+            platform.system() not in ['Darwin', 'Linux'], reason)(func)
+    return decorator
 
 
 def random_chars(num_chars):
@@ -318,3 +338,181 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
     def _current_datetime(self):
         return datetime.datetime.now(tzlocal())
+
+
+def _urlparse(url):
+    if isinstance(url, six.binary_type):
+        # Not really necessary, but it helps to reduce noise on Python 2.x
+        url = url.decode('utf8')
+    return urlparse(url)
+
+def assert_url_equal(url1, url2):
+    parts1 = _urlparse(url1)
+    parts2 = _urlparse(url2)
+
+    # Because the query string ordering isn't relevant, we have to parse
+    # every single part manually and then handle the query string.
+    assert_equal(parts1.scheme, parts2.scheme)
+    assert_equal(parts1.netloc, parts2.netloc)
+    assert_equal(parts1.path, parts2.path)
+    assert_equal(parts1.params, parts2.params)
+    assert_equal(parts1.fragment, parts2.fragment)
+    assert_equal(parts1.username, parts2.username)
+    assert_equal(parts1.password, parts2.password)
+    assert_equal(parts1.hostname, parts2.hostname)
+    assert_equal(parts1.port, parts2.port)
+    assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))
+
+
+class HTTPStubberException(Exception):
+    pass
+
+
+class RawResponse(BytesIO):
+    # TODO: There's a few objects similar to this in various tests, let's
+    # try and consolidate to this one in a future commit.
+    def stream(self, **kwargs):
+        contents = self.read()
+        while contents:
+            yield contents
+            contents = self.read()
+
+
+class ClientHTTPStubber(object):
+    def __init__(self, client, strict=True):
+        self.reset()
+        self._strict = strict
+        self._client = client
+
+    def reset(self):
+        self.requests = []
+        self.responses = []
+
+    def add_response(self, url='https://example.com', status=200, headers=None,
+                     body=b''):
+        if headers is None:
+            headers = {}
+
+        raw = RawResponse(body)
+        response = AWSResponse(url, status, headers, raw)
+        self.responses.append(response)
+
+    def start(self):
+        self._client.meta.events.register('before-send', self)
+
+    def stop(self):
+        self._client.meta.events.unregister('before-send', self)
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
+
+    def __call__(self, request, **kwargs):
+        self.requests.append(request)
+        if self.responses:
+            response = self.responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            else:
+                return response
+        elif self._strict:
+            raise HTTPStubberException('Insufficient responses')
+        else:
+            return None
+
+
+class ConsistencyWaiterException(Exception):
+    pass
+
+
+class ConsistencyWaiter(object):
+    """
+    A waiter class for some check to reach a consistent state.
+
+    :type min_successes: int
+    :param min_successes: The minimum number of successful check calls to
+    treat the check as stable. Default of 1 success.
+
+    :type max_attempts: int
+    :param min_successes: The maximum number of times to attempt calling
+    the check. Default of 20 attempts.
+
+    :type delay: int
+    :param delay: The number of seconds to delay the next API call after a
+    failed check call. Default of 5 seconds.
+    """
+    def __init__(self, min_successes=1, max_attempts=20, delay=5,
+                 delay_initial_poll=False):
+        self.min_successes = min_successes
+        self.max_attempts = max_attempts
+        self.delay = delay
+        self.delay_initial_poll = delay_initial_poll
+
+    def wait(self, check, *args, **kwargs):
+        """
+        Wait until the check succeeds the configured number of times
+
+        :type check: callable
+        :param check: A callable that returns True or False to indicate
+        if the check succeeded or failed.
+
+        :type args: list
+        :param args: Any ordered arguments to be passed to the check.
+
+        :type kwargs: dict
+        :param kwargs: Any keyword arguments to be passed to the check.
+        """
+        attempts = 0
+        successes = 0
+        if self.delay_initial_poll:
+            time.sleep(self.delay)
+        while attempts < self.max_attempts:
+            attempts += 1
+            if check(*args, **kwargs):
+                successes += 1
+                if successes >= self.min_successes:
+                    return
+            else:
+                time.sleep(self.delay)
+        fail_msg = self._fail_message(attempts, successes)
+        raise ConsistencyWaiterException(fail_msg)
+
+    def _fail_message(self, attempts, successes):
+        format_args = (attempts, successes)
+        return 'Failed after %s attempts, only had %s successes' % format_args
+
+
+class StubbedSession(botocore.session.Session):
+    def __init__(self, *args, **kwargs):
+        super(StubbedSession, self).__init__(*args, **kwargs)
+        self._cached_clients = {}
+        self._client_stubs = {}
+
+    def create_client(self, service_name, *args, **kwargs):
+        if service_name not in self._cached_clients:
+            client = self._create_stubbed_client(service_name, *args, **kwargs)
+            self._cached_clients[service_name] = client
+        return self._cached_clients[service_name]
+
+    def _create_stubbed_client(self, service_name, *args, **kwargs):
+        client = super(StubbedSession, self).create_client(
+            service_name, *args, **kwargs)
+        stubber = Stubber(client)
+        self._client_stubs[service_name] = stubber
+        return client
+
+    def stub(self, service_name):
+        if service_name not in self._client_stubs:
+            self.create_client(service_name)
+        return self._client_stubs[service_name]
+
+    def activate_stubs(self):
+        for stub in self._client_stubs.values():
+            stub.activate()
+
+    def verify_stubs(self):
+        for stub in self._client_stubs.values():
+            stub.assert_no_pending_responses()

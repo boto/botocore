@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }
+]

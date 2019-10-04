@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``macie``", 
+    "description": "Update macie client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``neptune``", 
+    "description": "Update neptune client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "category": "CSM", 
+    "description": "Support configuration of the host used in client side metrics via AWS_CSM_HOST", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediastore``", 
+    "description": "Update mediastore client to latest version", 
+    "type": "api-change"
+  }
+]

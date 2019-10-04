@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``qldb``", 
+    "description": "Update qldb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``marketplacecommerceanalytics``", 
+    "description": "Update marketplacecommerceanalytics client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``robomaker``", 
+    "description": "Update robomaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``qldb-session``", 
+    "description": "Update qldb-session client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -24,8 +24,7 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'python-dateutil>=2.1,<3.0.0',
-            'docutils>=0.10']
+            'docutils>=0.10,<0.16']
 
 
 if sys.version_info[:2] == (2, 6):
@@ -39,6 +38,16 @@ if sys.version_info[:2] == (2, 6):
     # JSON objects.  The 2.7 json module has this.  For 2.6
     # we need simplejson.
     requires.append('simplejson==3.3.0')
+    requires.append('python-dateutil>=2.1,<2.7.0')
+else:
+    requires.append('python-dateutil>=2.1,<3.0.0')
+
+if sys.version_info[:2] == (2, 6):
+    requires.append('urllib3>=1.20,<1.24')
+elif sys.version_info[:2] == (3, 3):
+    requires.append('urllib3>=1.20,<1.23')
+else:
+    requires.append('urllib3>=1.20,<1.26')
 
 
 setup(
@@ -50,7 +59,7 @@ setup(
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['data/*.json', 'data/*/*.json'],
+    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
@@ -61,7 +70,7 @@ setup(
         ]
     },
     license="Apache License 2.0",
-    classifiers=(
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
@@ -76,5 +85,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-    ),
+        'Programming Language :: Python :: 3.7',
+    ]
 )
