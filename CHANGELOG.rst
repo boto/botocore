@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.245
+========
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
 1.12.244
 ========
 
