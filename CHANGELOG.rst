@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.248
+========
+
+* api-change:``greengrass``: Update greengrass client to latest version
+
+
 1.12.247
 ========
 
