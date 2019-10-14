@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.249
+========
+
+* api-change:``personalize``: Update personalize client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
 1.12.248
 ========
 
