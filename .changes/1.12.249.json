@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``personalize``", 
+    "description": "Update personalize client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }
+]
