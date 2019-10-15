@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.250
+========
+
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+
+
 1.12.249
 ========
 
