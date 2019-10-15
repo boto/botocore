@@ -56,6 +56,7 @@ from botocore.utils import percent_encode
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
+from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import IMDSFetcher
@@ -1584,6 +1585,94 @@ class TestS3RegionRedirector(unittest.TestCase):
         })
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
+
+
+class TestS3EndpointSetter(unittest.TestCase):
+    def setUp(self):
+        self.request = AWSRequest(
+            method='GET', headers={},
+            url='https://s3.us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        self.operation_name = 'GetObject'
+        self.signature_version = 's3v4'
+        self.region_name = 'us-west-2'
+        self.before_sign_event_kwargs = {
+            'request': self.request,
+            'operation_name': self.operation_name,
+            'signature_version': self.signature_version,
+            'region_name': self.region_name,
+        }
+
+    def test_register(self):
+        event_emitter = mock.Mock()
+        endpoint_setter = S3EndpointSetter()
+        endpoint_setter.register(event_emitter)
+        event_emitter.register.assert_called_with(
+            'before-sign.s3', endpoint_setter.set_endpoint)
+
+    def test_set_endpoint_defaults_to_auto(self):
+        endpoint_setter = S3EndpointSetter()
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://bucket.s3.us-west-2.amazonaws.com/key.txt'
+        )
+
+    def test_set_endpoint_for_auto(self):
+        endpoint_setter = S3EndpointSetter(
+            s3_config={'addressing_style': 'auto'})
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://bucket.s3.us-west-2.amazonaws.com/key.txt'
+        )
+
+    def test_set_endpoint_for_virtual(self):
+        endpoint_setter = S3EndpointSetter(
+            s3_config={'addressing_style': 'virtual'})
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://bucket.s3.us-west-2.amazonaws.com/key.txt'
+        )
+
+    def test_set_endpoint_for_path(self):
+        endpoint_setter = S3EndpointSetter(
+            s3_config={'addressing_style': 'path'})
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://s3.us-west-2.amazonaws.com/bucket/key.txt'
+        )
+
+    def test_custom_endpoint_uses_path_style(self):
+        self.request.url = 'https://foo.com/bucket/key.txt'
+        endpoint_setter = S3EndpointSetter(endpoint_url='https://foo.com')
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://foo.com/bucket/key.txt'
+        )
+
+    def test_set_endpoint_for_accelerate(self):
+        endpoint_setter = S3EndpointSetter(
+            s3_config={'use_accelerate_endpoint': True})
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://bucket.s3-accelerate.amazonaws.com/key.txt'
+        )
+
+    def test_custom_accelerate_forces_virtual_style(self):
+        endpoint_setter = S3EndpointSetter(
+            s3_config={'addressing_style': 'path'},
+            endpoint_url='https://s3-accelerate.amazonaws.com'
+        )
+        endpoint_setter.set_endpoint(**self.before_sign_event_kwargs)
+        self.assertEqual(
+            self.request.url,
+            'https://bucket.s3-accelerate.amazonaws.com/key.txt'
+        )
 
 
 class TestContainerMetadataFetcher(unittest.TestCase):

@@ -1272,6 +1272,92 @@ class S3RegionRedirector(object):
             context['signing'] = {'bucket': bucket}
 
 
+class S3EndpointSetter(object):
+    def __init__(self, s3_config=None, endpoint_url=None):
+        self._s3_config = s3_config
+        if s3_config is None:
+            self._s3_config = {}
+        self._endpoint_url = endpoint_url
+
+    def register(self, event_emitter):
+        event_emitter.register('before-sign.s3', self.set_endpoint)
+
+    def set_endpoint(self, **kwargs):
+        if self._use_accelerate_endpoint:
+            switch_host_s3_accelerate(**kwargs)
+        if self._s3_addressing_handler:
+            self._s3_addressing_handler(**kwargs)
+
+    @CachedProperty
+    def _use_accelerate_endpoint(self):
+        # Enable accelerate if the configuration is set to to true or the
+        # endpoint being used matches one of the accelerate endpoints.
+
+        # Accelerate has been explicitly configured.
+        if self._s3_config.get('use_accelerate_endpoint'):
+            return True
+
+        # Accelerate mode is turned on automatically if an endpoint url is
+        # provided that matches the accelerate scheme.
+        if self._endpoint_url is None:
+            return False
+
+        # Accelerate is only valid for Amazon endpoints.
+        netloc = urlsplit(self._endpoint_url).netloc
+        if not netloc.endswith('amazonaws.com'):
+            return False
+
+        # The first part of the url should always be s3-accelerate.
+        parts = netloc.split('.')
+        if parts[0] != 's3-accelerate':
+            return False
+
+        # Url parts between 's3-accelerate' and 'amazonaws.com' which
+        # represent different url features.
+        feature_parts = parts[1:-2]
+
+        # There should be no duplicate url parts.
+        if len(feature_parts) != len(set(feature_parts)):
+            return False
+
+        # Remaining parts must all be in the whitelist.
+        return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
+
+    @CachedProperty
+    def _addressing_style(self):
+        # Use virtual host style addressing if accelerate is enabled or if
+        # the given endpoint url is an accelerate endpoint.
+        if self._use_accelerate_endpoint:
+            return 'virtual'
+
+        # If a particular addressing style is configured, use it.
+        configured_addressing_style = self._s3_config.get('addressing_style')
+        if configured_addressing_style:
+            return configured_addressing_style
+
+    @CachedProperty
+    def _s3_addressing_handler(self):
+        # If virtual host style was configured, use it regardless of whether
+        # or not the bucket looks dns compatible.
+        if self._addressing_style == 'virtual':
+            logger.debug("Using S3 virtual host style addressing.")
+            return switch_to_virtual_host_style
+
+        # If path style is configured, no additional steps are needed. If
+        # endpoint_url was specified, don't default to virtual. We could
+        # potentially default provided endpoint urls to virtual hosted
+        # style, but for now it is avoided.
+        if self._addressing_style == 'path' or self._endpoint_url is not None:
+            logger.debug("Using S3 path style addressing.")
+            return None
+
+        logger.debug("Defaulting to S3 virtual host style addressing with "
+                     "path style addressing fallback.")
+
+        # By default, try to use virtual style with path fallback.
+        return fix_s3_host
+
+
 class ContainerMetadataFetcher(object):
 
     TIMEOUT_SECONDS = 2
