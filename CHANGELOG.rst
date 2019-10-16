@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.251
+========
+
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
 1.12.250
 ========
 
