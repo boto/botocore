@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.252
+========
+
+* api-change:``batch``: Update batch client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.251
 ========
 
