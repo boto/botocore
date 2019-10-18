@@ -193,7 +193,7 @@ ERROR_TESTS = {
         }},
     'swf': {'DescribeDomain': {'name': 'fake'}},
     'waf': {'GetWebACL': {'WebACLId': 'fake'}},
-    'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake'}},
+    'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake-directory-id'}},
 }
 
 REGION = 'us-east-1'
