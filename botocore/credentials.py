@@ -1156,6 +1156,7 @@ class SharedCredentialProvider(CredentialProvider):
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
+    EXPIRY_TIME = 'aws_expiration'
     # Same deal as the EnvProvider above.  Botocore originally supported
     # aws_security_token, but the SDKs are standardizing on aws_session_token
     # so we support both.
@@ -1171,6 +1172,25 @@ class SharedCredentialProvider(CredentialProvider):
         self._ini_parser = ini_parser
 
     def load(self):
+        config = self._parse_credentials(require_expiry=False)
+        if config:
+            if 'expiry_time' not in config:
+                return Credentials(
+                    config['access_key'],
+                    config['secret_key'],
+                    token=config['token'],
+                    method=self.METHOD)
+            else:
+                expiry_time = parse(config['expiry_time'])
+                return RefreshableCredentials(
+                    config['access_key'],
+                    config['secret_key'],
+                    config['token'],
+                    expiry_time,
+                    self._refresh,
+                    self.METHOD)
+
+    def _parse_credentials(self, require_expiry=True):
         try:
             available_creds = self._ini_parser(self._creds_filename)
         except ConfigNotFound:
@@ -1180,16 +1200,28 @@ class SharedCredentialProvider(CredentialProvider):
             if self.ACCESS_KEY in config:
                 logger.info("Found credentials in shared credentials file: %s",
                             self._creds_filename)
-                access_key, secret_key = self._extract_creds_from_mapping(
-                    config, self.ACCESS_KEY, self.SECRET_KEY)
-                token = self._get_session_token(config)
-                return Credentials(access_key, secret_key, token,
-                                   method=self.METHOD)
+                if self.SECRET_KEY not in config:
+                    raise PartialCredentialsError(
+                        provider=self.METHOD, cred_var=self.SECRET_KEY)
+                if require_expiry and self.EXPIRY_TIME not in config:
+                    raise PartialCredentialsError(
+                        provider=self.METHOD, cred_var=self.EXPIRY_TIME)
+                result = {
+                    'access_key': config[self.ACCESS_KEY],
+                    'secret_key': config[self.SECRET_KEY],
+                    'token': self._get_session_token(config),
+                }
+                if self.EXPIRY_TIME in config:
+                    result['expiry_time'] = config[self.EXPIRY_TIME]
+                return result
 
     def _get_session_token(self, config):
         for token_envvar in self.TOKENS:
             if token_envvar in config:
                 return config[token_envvar]
+
+    def _refresh(self):
+        return self._parse_credentials()
 
 
 class ConfigProvider(CredentialProvider):

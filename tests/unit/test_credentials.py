@@ -33,6 +33,7 @@ from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import ProcessProvider
 from botocore.credentials import AssumeRoleWithWebIdentityProvider
 from botocore.credentials import Credentials, ProfileProviderBuilder
+from botocore.credentials import RefreshableCredentials
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import ConfigValueStore
@@ -1338,6 +1339,71 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNone(creds)
+
+    def test_no_expiry_returns_non_refreshing_credentials(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+            },
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds', profile_name='default',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertNotIsInstance(creds, RefreshableCredentials)
+
+    def test_refreshing_credentials(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+                'aws_expiration': '1970-01-01T00:00:00Z',
+            },
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds', profile_name='default',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.assertTrue(creds.refresh_needed(), 'Expected refresh needed')
+
+        old_access_key = creds._access_key
+        old_secret_key = creds._secret_key
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'c',
+                'aws_secret_access_key': 'd',
+                'aws_expiration': '9999-01-01T00:00:00Z',
+            },
+        }
+        creds._refresh()
+
+        self.assertNotEqual(old_access_key, creds.access_key)
+        self.assertNotEqual(old_secret_key, creds.secret_key)
+        self.assertFalse(creds.refresh_needed(), 'Expected refresh not needed')
+
+    def test_missing_expiry_time_on_refresh_raises_error(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+                'aws_expiration': '1970-01-01T00:00:00Z',
+            },
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds', profile_name='default',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'c',
+                'aws_secret_access_key': 'd',
+                # intentionally missing aws_expiration
+            },
+        }
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds._refresh()
 
 
 class TestConfigFileProvider(BaseEnvVar):
