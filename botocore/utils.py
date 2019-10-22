@@ -257,6 +257,8 @@ class _RetriesExceededError(Exception):
 class IMDSFetcher(object):
 
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
+    _TOKEN_PATH = 'latest/api/token'
+    _TOKEN_TTL = '21600'
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
@@ -274,7 +276,28 @@ class IMDSFetcher(object):
             proxies=get_environ_proxies(self._base_url),
         )
 
-    def _get_request(self, url_path, retry_func):
+    def _fetch_metadata_token(self):
+        self._assert_enabled()
+        url = self._base_url + self._TOKEN_PATH
+        headers = {
+            'x-aws-ec2-metadata-token-ttl-seconds': self._TOKEN_TTL,
+        }
+        request = botocore.awsrequest.AWSRequest(
+            method='PUT', url=url, headers=headers)
+        for i in range(self._num_attempts):
+            try:
+                response = self._session.send(request.prepare())
+                if response.status_code >= 200 and response.status_code <= 299:
+                    return response.text
+                elif response.status_code not in (400, 403,):
+                    return None
+            except RETRYABLE_HTTP_ERRORS as e:
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
+        raise self._RETRIES_EXCEEDED_ERROR_CLS()
+
+    def _get_request(self, url_path, retry_func, token=None):
         """Make a get request to the Instance Metadata Service.
 
         :type url_path: str
@@ -286,14 +309,17 @@ class IMDSFetcher(object):
         :param retry_func: A function that takes the response as an argument
              and determines if it needs to retry. By default empty and non
              200 OK responses are retried.
-         """
-        if self._disabled:
-            logger.debug("Access to EC2 metadata has been disabled.")
-            raise self._RETRIES_EXCEEDED_ERROR_CLS()
+
+        :type token: str
+        :param token: Metadata token to send along with GET requests to IMDS.
+        """
+        self._assert_enabled()
         if retry_func is None:
             retry_func = self._default_retry
         url = self._base_url + url_path
         headers = {}
+        if token is not None:
+            headers ['x-aws-ec2-metadata-token'] = token
         if self._user_agent is not None:
             headers['User-Agent'] = self._user_agent
 
@@ -309,6 +335,11 @@ class IMDSFetcher(object):
                     "Caught retryable HTTP exception while making metadata "
                     "service request to %s: %s", url, e, exc_info=True)
         raise self._RETRIES_EXCEEDED_ERROR_CLS()
+
+    def _assert_enabled(self):
+        if self._disabled:
+            logger.debug("Access to EC2 metadata has been disabled.")
+            raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _default_retry(self, response):
         return (
@@ -350,8 +381,9 @@ class InstanceMetadataFetcher(IMDSFetcher):
 
     def retrieve_iam_role_credentials(self):
         try:
-            role_name = self._get_iam_role()
-            credentials = self._get_credentials(role_name)
+            token = self._fetch_metadata_token()
+            role_name = self._get_iam_role(token)
+            credentials = self._get_credentials(role_name, token)
             if self._contains_all_credential_fields(credentials):
                 return {
                     'role_name': role_name,
@@ -379,16 +411,18 @@ class InstanceMetadataFetcher(IMDSFetcher):
                          self._num_attempts)
         return {}
 
-    def _get_iam_role(self):
+    def _get_iam_role(self, token=None):
         return self._get_request(
             url_path=self._URL_PATH,
-            retry_func=self._needs_retry_for_role_name
+            retry_func=self._needs_retry_for_role_name,
+            token=token,
         ).text
 
-    def _get_credentials(self, role_name):
+    def _get_credentials(self, role_name, token=None):
         r = self._get_request(
             url_path=self._URL_PATH + role_name,
-            retry_func=self._needs_retry_for_credentials
+            retry_func=self._needs_retry_for_credentials,
+            token=token,
         )
         return json.loads(r.text)
 
