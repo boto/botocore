@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.0
+======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* feature:``botocore.vendored.requests``: Removed vendored version of ``requests`` (`#1829 <https://github.com/boto/botocore/issues/1829>`__)
+
+
 1.12.253
 ========
 
