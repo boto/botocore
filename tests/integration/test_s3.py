@@ -27,14 +27,14 @@ from tarfile import TarFile
 from contextlib import closing
 
 from nose.plugins.attrib import attr
+import urllib3
 
 from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
-from botocore.compat import six, zip_longest
+from botocore.compat import six, zip_longest, OrderedDict
 import botocore.session
 import botocore.auth
 import botocore.credentials
-import botocore.vendored.requests as requests
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -46,6 +46,24 @@ def random_bucketname():
 LOG = logging.getLogger('botocore.tests.integration')
 _SHARED_BUCKET = random_bucketname()
 _DEFAULT_REGION = 'us-west-2'
+
+
+def http_get(url):
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    response = http.request('GET', url)
+    return response
+
+
+def http_post(url, data, files):
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    merged_data = OrderedDict()
+    merged_data.update(data)
+    merged_data.update(files)
+    response = http.request(
+        'POST', url,
+        fields=merged_data,
+    )
+    return response
 
 
 def setup_module():
@@ -637,7 +655,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_with_existing_query_string_values(self):
         content_disposition = 'attachment; filename=foo.txt;'
@@ -645,10 +663,10 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={
                 'Bucket': self.bucket_name, 'Key': self.key,
                 'ResponseContentDisposition': content_disposition})
-        response = requests.get(presigned_url)
+        response = http_get(presigned_url)
         self.assertEqual(response.headers['Content-Disposition'],
                          content_disposition)
-        self.assertEqual(response.content, b'foo')
+        self.assertEqual(response.data, b'foo')
 
     def test_presign_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -663,7 +681,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to be the us-east-1 endpoint, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
 
@@ -693,9 +711,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "got: %s" % post_args['url'])
 
         # Try to retrieve the object using the presigned url.
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -727,9 +745,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to use us-east-1 endpoint, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
 
 class TestS3PresignNonUsStandard(BaseS3PresignTest):
@@ -752,7 +770,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_sigv4(self):
         # For a newly created bucket, you can't use virtualhosted
@@ -775,7 +793,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
         # Create some of the various supported conditions.
@@ -802,9 +820,9 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -835,9 +853,9 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
 
 class TestCreateBucketInOtherRegion(TestS3BaseWithBucket):

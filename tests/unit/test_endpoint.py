@@ -14,7 +14,6 @@ import socket
 from tests import unittest
 
 from mock import Mock, patch, sentinel
-from botocore.vendored.requests import ConnectionError
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
@@ -22,6 +21,7 @@ from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
+from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
 from botocore.model import OperationModel, ServiceId
 
@@ -163,8 +163,8 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_on_socket_errors(self):
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
-        self.http_session.send.side_effect = ConnectionError()
-        with self.assertRaises(ConnectionError):
+        self.http_session.send.side_effect = HTTPClientError(error='wrapped')
+        with self.assertRaises(HTTPClientError):
             self.endpoint.make_request(self._operation, request_dict())
         self.assert_events_emitted(
             self.event_emitter,
