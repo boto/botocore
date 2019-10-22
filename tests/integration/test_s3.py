@@ -31,7 +31,7 @@ import urllib3
 
 from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
-from botocore.compat import six, zip_longest
+from botocore.compat import six, zip_longest, OrderedDict
 import botocore.session
 import botocore.auth
 import botocore.credentials
@@ -56,7 +56,8 @@ def http_get(url):
 
 def http_post(url, data, files):
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
-    merged_data = data.copy()
+    merged_data = OrderedDict()
+    merged_data.update(data)
     merged_data.update(files)
     response = http.request(
         'POST', url,
@@ -665,7 +666,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         response = http_get(presigned_url)
         self.assertEqual(response.headers['Content-Disposition'],
                          content_disposition)
-        self.assertEqual(response.content, b'foo')
+        self.assertEqual(response.data, b'foo')
 
     def test_presign_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -792,7 +793,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(http_get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
         # Create some of the various supported conditions.
