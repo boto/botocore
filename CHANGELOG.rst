@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.13.1
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.13.0
 ======
 
