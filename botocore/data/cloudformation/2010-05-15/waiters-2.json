@@ -116,6 +116,33 @@
         }
       ]
     },
+    "StackDriftDetectionComplete": {
+      "delay": 30,
+      "maxAttempts": 120,
+      "operation": "DescribeStackDriftDetectionStatus",
+      "description": "Wait until stack status is DETECTION_COMPLETE.",
+      "acceptors": [
+        {
+          "argument": "DetectionStatus",
+          "expected": "DETECTION_COMPLETE",
+          "matcher": "path",
+          "state": "success"
+        },
+        {
+          "argument": "DetectionStatus",
+          "expected": "DETECTION_IN_PROGRESS",
+          "matcher": "path",
+          "state": "retry"
+        },
+        {
+          "argument": "DetectionStatus",
+          "expected": "DETECTION_FAILED",
+          "matcher": "path",
+          "state": "failure"
+        }
+      ]
+    },
+
     "StackUpdateComplete": {
       "delay": 30,
       "maxAttempts": 120,
