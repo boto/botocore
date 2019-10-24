@@ -32,7 +32,7 @@ import botocore.client
 from botocore.configprovider import ConfigValueStore
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import create_botocore_default_config_mapping
-from botocore.configprovider import BOTOCORE_DEFAUT_SESSION_VARIABLES
+from botocore.configprovider import BOTOCORE_DEFAULT_SESSION_VARIABLES
 from botocore.exceptions import (
     ConfigNotFound, ProfileNotFound, UnknownServiceError,
     PartialCredentialsError,
@@ -68,7 +68,7 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
-    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAUT_SESSION_VARIABLES)
+    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAULT_SESSION_VARIABLES)
 
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
