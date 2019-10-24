@@ -20,6 +20,9 @@ class TestClientHTTPBehavior(unittest.TestCase):
         self.port = unused_port()
         self.localhost = 'http://localhost:%s/' % self.port
         self.session = botocore.session.get_session()
+        # We need to set fake credentials to ensure credentials aren't searched
+        # for which might make additional API calls (assume role, etc).
+        self.session.set_credentials('fakeakid', 'fakesecret')
 
     @unittest.skip('Test has suddenly become extremely flakey.')
     def test_can_proxy_https_request_with_auth(self):

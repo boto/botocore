@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.13.2
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* enhancement:``sts``: Add support for configuring the use of regional STS endpoints.
+* api-change:``chime``: Update chime client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.13.1
 ======
 
