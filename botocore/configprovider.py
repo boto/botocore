@@ -79,6 +79,10 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     'endpoint_discovery_enabled': (
         'endpoint_discovery_enabled', 'AWS_ENDPOINT_DISCOVERY_ENABLED',
         False, utils.ensure_boolean),
+    'sts_regional_endpoints': (
+        'sts_regional_endpoints', 'AWS_STS_REGIONAL_ENDPOINTS', 'legacy',
+        None
+    ),
 }
 
 

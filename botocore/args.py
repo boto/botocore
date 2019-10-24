@@ -20,6 +20,7 @@ import copy
 import logging
 import socket
 
+import botocore.exceptions
 import botocore.serialize
 import botocore.utils
 from botocore.signers import RequestSigner
@@ -30,14 +31,39 @@ from botocore.endpoint import EndpointCreator
 logger = logging.getLogger(__name__)
 
 
+VALID_STS_REGIONAL_ENDPOINTS_CONFIG = [
+    'legacy',
+    'regional',
+]
+LEGACY_GLOBAL_STS_REGIONS = [
+    'ap-northeast-1',
+    'ap-south-1',
+    'ap-southeast-1',
+    'ap-southeast-2',
+    'aws-global',
+    'ca-central-1',
+    'eu-central-1',
+    'eu-north-1',
+    'eu-west-1',
+    'eu-west-2',
+    'eu-west-3',
+    'sa-east-1',
+    'us-east-1',
+    'us-east-2',
+    'us-west-1',
+    'us-west-2',
+]
+
+
 class ClientArgsCreator(object):
     def __init__(self, event_emitter, user_agent, response_parser_factory,
-                 loader, exceptions_factory):
+                 loader, exceptions_factory, config_store):
         self._event_emitter = event_emitter
         self._user_agent = user_agent
         self._response_parser_factory = response_parser_factory
         self._loader = loader
         self._exceptions_factory = exceptions_factory
+        self._config_store = config_store
 
     def get_client_args(self, service_model, region_name, is_secure,
                         endpoint_url, verify, credentials, scoped_config,
@@ -113,9 +139,6 @@ class ClientArgsCreator(object):
             if raw_value is not None:
                 parameter_validation = botocore.utils.ensure_boolean(raw_value)
 
-        endpoint_config = endpoint_bridge.resolve(
-            service_name, region_name, endpoint_url, is_secure)
-
         # Override the user agent if specified in the client config.
         user_agent = self._user_agent
         if client_config is not None:
@@ -124,6 +147,13 @@ class ClientArgsCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
+        endpoint_config = self._compute_endpoint_config(
+            service_name=service_name,
+            region_name=region_name,
+            endpoint_url=endpoint_url,
+            is_secure=is_secure,
+            endpoint_bridge=endpoint_bridge,
+        )
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
@@ -193,6 +223,42 @@ class ClientArgsCreator(object):
                     s3_configuration.update(client_config.s3)
 
         return s3_configuration
+
+    def _compute_endpoint_config(self, service_name, region_name, endpoint_url,
+                                 is_secure, endpoint_bridge):
+        endpoint_config = endpoint_bridge.resolve(
+            service_name, region_name, endpoint_url, is_secure)
+        if self._should_set_global_sts_endpoint(
+                service_name, region_name, endpoint_url):
+            self._set_global_sts_endpoint(endpoint_config, is_secure)
+        return endpoint_config
+
+    def _should_set_global_sts_endpoint(self, service_name, region_name,
+                                        endpoint_url):
+        if service_name != 'sts':
+            return False
+        if endpoint_url:
+            return False
+        return (
+            self._get_sts_regional_endpoints_config() == 'legacy' and
+            region_name in LEGACY_GLOBAL_STS_REGIONS
+        )
+
+    def _get_sts_regional_endpoints_config(self):
+        sts_regional_endpoints_config = self._config_store.get_config_variable(
+            'sts_regional_endpoints')
+        if not sts_regional_endpoints_config:
+            sts_regional_endpoints_config = 'legacy'
+        if sts_regional_endpoints_config not in \
+                VALID_STS_REGIONAL_ENDPOINTS_CONFIG:
+            raise botocore.exceptions.InvalidSTSRegionalEndpointsConfigError(
+                sts_regional_endpoints_config=sts_regional_endpoints_config)
+        return sts_regional_endpoints_config
+
+    def _set_global_sts_endpoint(self, endpoint_config, is_secure):
+        scheme = 'https' if is_secure else 'http'
+        endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
+        endpoint_config['signing_region'] = 'us-east-1'
 
     def _convert_config_to_bool(self, config_dict, keys):
         # Make sure any further modifications to this section of the config
