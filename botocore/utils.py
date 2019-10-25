@@ -254,6 +254,11 @@ class _RetriesExceededError(Exception):
     pass
 
 
+class BadIMDSRequestError(Exception):
+    def __init__(self, request):
+        self.request = request
+
+
 class IMDSFetcher(object):
 
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
@@ -282,15 +287,18 @@ class IMDSFetcher(object):
         headers = {
             'x-aws-ec2-metadata-token-ttl-seconds': self._TOKEN_TTL,
         }
+        self._add_user_agent(headers)
         request = botocore.awsrequest.AWSRequest(
             method='PUT', url=url, headers=headers)
         for i in range(self._num_attempts):
             try:
                 response = self._session.send(request.prepare())
-                if response.status_code >= 200 and response.status_code <= 299:
+                if response.status_code == 200:
                     return response.text
-                elif response.status_code not in (400, 403,):
+                elif response.status_code in (404, 403):
                     return None
+                elif response.status_code in (400,):
+                    raise BadIMDSRequestError(request)
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
@@ -302,7 +310,7 @@ class IMDSFetcher(object):
 
         :type url_path: str
         :param url_path: The path component of the URL to make a get request.
-            This arg is appended to the base_url taht was provided in the
+            This arg is appended to the base_url that was provided in the
             initializer.
 
         :type retry_func: callable
@@ -319,10 +327,8 @@ class IMDSFetcher(object):
         url = self._base_url + url_path
         headers = {}
         if token is not None:
-            headers ['x-aws-ec2-metadata-token'] = token
-        if self._user_agent is not None:
-            headers['User-Agent'] = self._user_agent
-
+            headers['x-aws-ec2-metadata-token'] = token
+        self._add_user_agent(headers)
         for i in range(self._num_attempts):
             try:
                 request = botocore.awsrequest.AWSRequest(
@@ -335,6 +341,10 @@ class IMDSFetcher(object):
                     "Caught retryable HTTP exception while making metadata "
                     "service request to %s: %s", url, e, exc_info=True)
         raise self._RETRIES_EXCEEDED_ERROR_CLS()
+
+    def _add_user_agent(self, headers):
+        if self._user_agent is not None:
+            headers['User-Agent'] = self._user_agent
 
     def _assert_enabled(self):
         if self._disabled:
@@ -409,6 +419,8 @@ class InstanceMetadataFetcher(IMDSFetcher):
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
                          self._num_attempts)
+        except BadIMDSRequestError as e:
+            logger.debug("Bad IMDS request: %s", e.request)
         return {}
 
     def _get_iam_role(self, token=None):
