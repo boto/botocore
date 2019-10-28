@@ -88,6 +88,7 @@ ENDPOINT_PREFIX_OVERRIDE = {
 }
 NOT_SUPPORTED_IN_SDK = [
     'mobileanalytics',
+    'transcribestreaming',
 ]
 
 
