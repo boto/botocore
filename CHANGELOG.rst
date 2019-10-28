@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.4
+======
+
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.13.3
 ======
 
