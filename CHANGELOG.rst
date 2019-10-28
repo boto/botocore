@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.3
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
 1.13.2
 ======
 
