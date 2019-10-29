@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.13.5
+======
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.13.4
 ======
 
