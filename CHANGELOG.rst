@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.6
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.13.5
 ======
 
