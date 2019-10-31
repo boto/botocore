@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.7
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.13.6
 ======
 
