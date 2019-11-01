@@ -2,7 +2,7 @@
   "version": 2,
   "waiters": {
     "QuerySucceeded": {
-      "delay": 15,
+      "delay": 5,
       "maxAttempts": 40,
       "operation": "GetQueryExecution",
       "acceptors": [
