@@ -15,6 +15,11 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": "ResourceTagList"
+    },
+    "ListTrails": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Trails"
     }
   }
 }
