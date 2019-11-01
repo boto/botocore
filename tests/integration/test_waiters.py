@@ -41,6 +41,49 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         self.assertEqual(parsed['Table']['TableStatus'], 'ACTIVE')
 
 
+@attr('slow')
+class TestWaiterForAthena(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('athena', 'us-west-2')
+
+    def test_waiter_query_succeeded(self):
+        query = self.client.start_query_execution(
+            QueryString='SELECT current_date'
+        )
+        query_id = query['QueryExecutionId']
+        waiter = self.client.get_waiter('query_succeeded')
+        waiter.wait(QueryExecutionId=query_id)
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)
+        self.assertEqual(execution['QueryExecution']['Status']['State'], 'SUCCEEDED')
+
+    def test_waiter_query_error(self):
+        # Table is not found.
+        query = self.client.start_query_execution(
+            QueryString='SELECT * FROM not_found_table'
+        )
+        query_id = query['QueryExecutionId']
+        waiter = self.client.get_waiter('query_succeeded')
+        with self.assertRaises(WaiterError):
+            waiter.wait(QueryExecutionId=query_id)
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)
+        self.assertEqual(execution['QueryExecution']['Status']['State'], 'FAILED')
+
+    def test_waiter_query_cancel(self):
+        query = self.client.start_query_execution(
+            QueryString='SELECT current_date'
+        )
+        query_id = query['QueryExecutionId']
+        self.client.stop_query_execution(
+            QueryExecutionId=query_id
+        )
+        waiter = self.client.get_waiter('query_succeeded')
+        with self.assertRaises(WaiterError):
+            waiter.wait(QueryExecutionId=query_id)
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)
+        self.assertEqual(execution['QueryExecution']['Status']['State'], 'CANCELED')
+
+
 class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
     def test_get_ses_waiter(self):
         # We're checking this because ses is not the endpoint prefix
