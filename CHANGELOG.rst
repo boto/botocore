@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.13.10
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codestar-notifications``: Update codestar-notifications client to latest version
+
+
 1.13.9
 ======
 
