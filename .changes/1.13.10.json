@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codestar-notifications``", 
+    "description": "Update codestar-notifications client to latest version", 
+    "type": "api-change"
+  }
+]
