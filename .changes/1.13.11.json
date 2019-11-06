@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``savingsplans``", 
+    "description": "Update savingsplans client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``signer``", 
+    "description": "Update signer client to latest version", 
+    "type": "api-change"
+  }
+]

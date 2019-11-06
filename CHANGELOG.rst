@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.13.11
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``signer``: Update signer client to latest version
+
+
 1.13.10
 =======
 
