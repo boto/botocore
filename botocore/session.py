@@ -22,7 +22,7 @@ import os
 import platform
 import socket
 import warnings
-import collections
+import collections.abc
 
 from botocore import __version__
 from botocore import UNSIGNED
@@ -944,7 +944,7 @@ class ComponentLocator(object):
             pass
 
 
-class SessionVarDict(collections.MutableMapping):
+class SessionVarDict(collections.abc.MutableMapping):
     def __init__(self, session, session_vars):
         self._session = session
         self._store = copy.copy(session_vars)
