@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.12
+=======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+
+
 1.13.11
 =======
 
