@@ -15,7 +15,7 @@ import sys
 import logging
 import functools
 import socket
-import collections
+import collections.abc
 
 import urllib3.util
 from urllib3.connection import VerifiedHTTPSConnection
@@ -621,7 +621,7 @@ class _HeaderKey(object):
         return repr(self._key)
 
 
-class HeadersDict(collections.MutableMapping):
+class HeadersDict(collections.abc.MutableMapping):
     """A case-insenseitive dictionary to represent HTTP headers. """
     def __init__(self, *args, **kwargs):
         self._dict = {}
