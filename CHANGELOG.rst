@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.13.13
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``sso``: Update sso client to latest version
+* api-change:``sso-oidc``: Update sso-oidc client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+
+
 1.13.12
 =======
 
