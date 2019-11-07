@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.13.13
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``sso``: Update sso client to latest version
+* api-change:``sso-oidc``: Update sso-oidc client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+
+
+1.13.12
+=======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+
+
+1.13.11
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``signer``: Update signer client to latest version
+
+
+1.13.10
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codestar-notifications``: Update codestar-notifications client to latest version
+
+
 1.13.9
 ======
 
