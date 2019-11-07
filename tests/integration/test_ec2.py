@@ -114,8 +114,17 @@ class TestCopySnapshotCustomization(unittest.TestCase):
         dest_client = self.session.create_client('ec2', 'us-east-1')
         self.addCleanup(dest_client.delete_snapshot,
                         SnapshotId=snapshot_id)
-        dest_client.get_waiter('snapshot_completed').wait(
-            SnapshotIds=[snapshot_id])
+        snapshot_waiter = dest_client.get_waiter('snapshot_completed')
+        # The default is 15 * 40, bumping this to 15 * 60 as we've seen this
+        # timeout on encrypted snapshots taking longer than 10 minutes
+        waiter_config = {
+            'Delay': 15,
+            'MaxAttempts': 60,
+        }
+        snapshot_waiter.wait(
+            SnapshotIds=[snapshot_id],
+            WaiterConfig=waiter_config,
+        )
 
     def test_can_copy_snapshot(self):
         volume_id = self.create_volume()
