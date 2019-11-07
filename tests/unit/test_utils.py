@@ -26,7 +26,9 @@ from botocore.awsrequest import AWSResponse
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
+from botocore.exceptions import PendingAuthorizationExpiredError
 from botocore.model import ServiceModel
+from botocore.session import Session
 from botocore.utils import ensure_boolean
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
@@ -57,8 +59,12 @@ from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import IMDSFetcher
 from botocore.utils import InstanceMetadataFetcher
+from botocore.utils import SSOTokenFetcher
+from botocore.utils import SSOTokenLoader
+from botocore.exceptions import SSOTokenLoadError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
+from botocore.stub import Stubber
 from botocore.config import Config
 
 
@@ -2000,3 +2006,333 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             body=b'{"Code":"AssumeRoleUnauthorizedAccess","Message":"error"}')
         result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})
+
+
+class TestSSOTokenFetcher(unittest.TestCase):
+    def setUp(self):
+        super(TestSSOTokenFetcher, self).setUp()
+        self.cache = {}
+        self.start_url = 'https://d-abc123.awsapps.com/start'
+        self.sso_region = 'us-west-2'
+        # The token cache key is the sha1 of the start url
+        self.token_cache_key = '40a89917e3175433e361b710a9d43528d7f1890a'
+        # This is just an arbitrary point in time that we can pin to
+        self.now = datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
+        self.now_timestamp = 1222172800
+        self.mock_time_fetcher = mock.Mock(return_value=self.now)
+        self.mock_sleep = mock.Mock()
+        self.sso_oidc = Session().create_client('sso-oidc')
+        self.stubber = Stubber(self.sso_oidc)
+        self.mock_session = mock.Mock(spec=Session)
+        self.mock_session.create_client.return_value = self.sso_oidc
+        self.sso_token_fetcher = SSOTokenFetcher(
+            self.sso_region,
+            client_creator=self.mock_session.create_client,
+            cache=self.cache,
+            time_fetcher=self.mock_time_fetcher,
+            sleep=self.mock_sleep,
+        )
+
+        self.register_expected_params = {
+            'clientName': 'botocore-client-1222172800',
+            'clientType': 'public',
+        }
+        self.register_response = {
+            'clientSecretExpiresAt': self.now_timestamp + 1000,
+            'clientId': 'foo-client-id',
+            'clientSecret': 'foo-client-secret',
+        }
+
+        self.authorization_expected_params = {
+            'clientId': 'foo-client-id',
+            'clientSecret': 'foo-client-secret',
+            'startUrl': 'https://d-abc123.awsapps.com/start',
+        }
+        self.authorization_response = {
+            'interval': 1,
+            'expiresIn': 600,
+            'userCode': 'foo',
+            'deviceCode': 'foo-device-code',
+            'verificationUri': 'https://sso.fake/device',
+            'verificationUriComplete': 'https://sso.fake/device?user_code=foo',
+        }
+
+        self.token_expected_params = {
+            'grantType': 'urn:ietf:params:oauth:grant-type:device_code',
+            'clientId': 'foo-client-id',
+            'clientSecret': 'foo-client-secret',
+            'deviceCode': 'foo-device-code',
+        }
+        self.token_response = {
+            'expiresIn': 28800,
+            'tokenType': 'Bearer',
+            'accessToken': 'foo.token.string',
+        }
+
+    def _expires_at(self, seconds):
+        return self.now + datetime.timedelta(seconds=seconds)
+
+    def _add_register_client_response(self):
+        self.stubber.add_response(
+            'register_client',
+            self.register_response,
+            self.register_expected_params,
+        )
+
+    def _add_start_device_authorization_response(self):
+        self.stubber.add_response(
+            'start_device_authorization',
+            self.authorization_response,
+            self.authorization_expected_params,
+        )
+
+    def _add_create_token_response(self):
+        self.stubber.add_response(
+            'create_token',
+            self.token_response,
+            self.token_expected_params,
+        )
+
+    def _add_basic_device_auth_flow_responses(self):
+        self._add_register_client_response()
+        self._add_start_device_authorization_response()
+        self._add_create_token_response()
+
+    def test_basic_fetch_token(self):
+        self._add_basic_device_auth_flow_responses()
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+    def test_fetch_token_writes_cache(self):
+        self._add_basic_device_auth_flow_responses()
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+        expected_client_id = {
+            'clientId': 'foo-client-id',
+            'clientSecret': 'foo-client-secret',
+            'expiresAt': self._expires_at(1000),
+        }
+        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+
+        expected_token = {
+            'region': self.sso_region,
+            'startUrl': self.start_url,
+            'accessToken': 'foo.token.string',
+            'expiresAt': self._expires_at(28800),
+        }
+        self.assertEqual(self.cache[self.token_cache_key], expected_token)
+
+    def test_fetch_token_respects_cached_client_id(self):
+        expected_client_id = {
+            'clientId': 'bar-client-id',
+            'clientSecret': 'bar-client-secret',
+            'expiresAt': self._expires_at(1000),
+        }
+        self.cache['botocore-client-id'] = expected_client_id
+
+        self.authorization_expected_params.update(
+            clientId='bar-client-id',
+            clientSecret='bar-client-secret',
+        )
+        self._add_start_device_authorization_response()
+        self.token_expected_params.update(
+            clientId='bar-client-id',
+            clientSecret='bar-client-secret',
+        )
+        self._add_create_token_response()
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+        # Ensure the cached client-id hasn't changed
+        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+
+    def test_fetch_token_respects_cached_token(self):
+        expected_token = {
+            'region': self.sso_region,
+            'startUrl': self.start_url,
+            'accessToken': 'bar.token.string',
+            'expiresAt': self._expires_at(28800),
+        }
+        self.cache[self.token_cache_key] = expected_token
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'bar.token.string')
+        self.stubber.assert_no_pending_responses()
+
+        # Ensure the cached token hasn't changed
+        self.assertEqual(self.cache[self.token_cache_key], expected_token)
+
+    def test_fetch_token_expired_cache(self):
+        expired_client_id = {
+            'clientId': 'bar-client-id',
+            'clientSecret': 'bar-client-secret',
+            'expiresAt': self._expires_at(-1),
+        }
+        self.cache['botocore-client-id'] = expired_client_id
+        expired_token = {
+            'accessToken': 'bar.token.string',
+            'expiresAt': self._expires_at(-1),
+        }
+        self.cache[self.token_cache_key] = expired_token
+
+        self._add_basic_device_auth_flow_responses()
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+        # Ensure the expired cache items were replaced
+        expected_client_id = {
+            'clientId': 'foo-client-id',
+            'clientSecret': 'foo-client-secret',
+            'expiresAt': self._expires_at(1000),
+        }
+        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+        expected_token = {
+            'region': self.sso_region,
+            'startUrl': self.start_url,
+            'accessToken': 'foo.token.string',
+            'expiresAt': self._expires_at(28800),
+        }
+        self.assertEqual(self.cache[self.token_cache_key], expected_token)
+
+    def test_fetch_token_respects_authorization_pending(self):
+        self._add_register_client_response()
+        self._add_start_device_authorization_response()
+        self.stubber.add_client_error(
+            'create_token',
+            service_error_code='AuthorizationPendingException',
+            expected_params=self.token_expected_params,
+        )
+        self._add_create_token_response()
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+    def test_fetch_token_respects_slow_down(self):
+        self._add_register_client_response()
+        self._add_start_device_authorization_response()
+        self.stubber.add_client_error(
+            'create_token',
+            service_error_code='SlowDownException',
+            expected_params=self.token_expected_params,
+        )
+        self._add_create_token_response()
+
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+        # We should have slept for longer due to the slow down exception
+        # The base delay is 1, plus 5 for the slow down exception
+        self.mock_sleep.assert_called_with(6)
+
+    def test_fetch_token_default_interval(self):
+        del self.authorization_response['interval']
+        self._add_register_client_response()
+        self._add_start_device_authorization_response()
+        self.stubber.add_client_error(
+            'create_token',
+            service_error_code='AuthorizationPendingException',
+            expected_params=self.token_expected_params,
+        )
+        self._add_create_token_response()
+        with self.stubber:
+            token = self.sso_token_fetcher.fetch_token(self.start_url)
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+        self.mock_sleep.assert_called_with(5)
+
+    def test_fetch_token_force_refresh(self):
+        expected_token = {
+            'region': self.sso_region,
+            'startUrl': self.start_url,
+            'accessToken': 'bar.token.string',
+            'expiresAt': self._expires_at(28800),
+        }
+        self.cache[self.token_cache_key] = expected_token
+
+        self._add_basic_device_auth_flow_responses()
+        with self.stubber:
+            fetcher = self.sso_token_fetcher
+            token = fetcher.fetch_token(self.start_url, force_refresh=True)
+        # Ensure we get a new token even though the old one was still valid
+        self.assertEqual(token.get('accessToken'), 'foo.token.string')
+        self.stubber.assert_no_pending_responses()
+
+    def test_on_pending_authorization_callback_called(self):
+        handler = mock.Mock()
+        self.sso_token_fetcher = SSOTokenFetcher(
+            self.sso_region,
+            client_creator=self.mock_session.create_client,
+            cache=self.cache,
+            time_fetcher=self.mock_time_fetcher,
+            sleep=self.mock_sleep,
+            on_pending_authorization=handler,
+        )
+        self._add_basic_device_auth_flow_responses()
+        with self.stubber:
+            self.sso_token_fetcher.fetch_token(self.start_url)
+        self.stubber.assert_no_pending_responses()
+        handler.assert_called_with(
+            interval=1,
+            userCode='foo',
+            deviceCode='foo-device-code',
+            expiresAt=self._expires_at(600),
+            verificationUri='https://sso.fake/device',
+            verificationUriComplete='https://sso.fake/device?user_code=foo',
+        )
+
+    def test_fetch_token_authorization_expires(self):
+        self._add_register_client_response()
+        self._add_start_device_authorization_response()
+        self.stubber.add_client_error(
+            'create_token',
+            service_error_code='ExpiredTokenException',
+            expected_params=self.token_expected_params,
+        )
+        with self.stubber:
+            with self.assertRaises(PendingAuthorizationExpiredError):
+                self.sso_token_fetcher.fetch_token(self.start_url)
+        self.stubber.assert_no_pending_responses()
+
+
+class TestSSOTokenLoader(unittest.TestCase):
+    def setUp(self):
+        super(TestSSOTokenLoader, self).setUp()
+        self.start_url = 'https://d-abc123.awsapps.com/start'
+        self.cache_key = '40a89917e3175433e361b710a9d43528d7f1890a'
+        self.access_token = 'totally.a.token'
+        self.cached_token = {
+            'accessToken': self.access_token,
+            'expiresAt': '2002-10-18T03:52:38UTC'
+        }
+        self.cache = {}
+        self.loader = SSOTokenLoader(cache=self.cache)
+
+    def test_can_load_token_exists(self):
+        self.cache[self.cache_key] = self.cached_token
+        access_token = self.loader(self.start_url)
+        self.assertEqual(self.access_token, access_token)
+
+    def test_can_handle_does_not_exist(self):
+        with self.assertRaises(SSOTokenLoadError):
+            access_token = self.loader(self.start_url)
+
+    def test_can_handle_invalid_cache(self):
+        self.cache[self.cache_key] = {}
+        with self.assertRaises(SSOTokenLoadError):
+            access_token = self.loader(self.start_url)
