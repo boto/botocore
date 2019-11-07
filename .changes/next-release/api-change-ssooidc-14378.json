@@ -1,5 +1,0 @@
-{
-  "category": "``sso-oidc``", 
-  "type": "api-change", 
-  "description": "Update sso-oidc client to latest version"
-}
