@@ -545,6 +545,6 @@ class SSOTokenLoadError(SSOError):
 class UnauthorizedSSOTokenError(SSOError):
     fmt = (
         "The SSO session associated with this profile has expired or is "
-        "otherwise invalid. To refresh this SSO session run aws sso login "
+        "otherwise invalid. To refresh this SSO session run aws2 sso login "
         "with the corresponding profile."
     )
