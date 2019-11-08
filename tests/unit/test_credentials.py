@@ -3238,7 +3238,7 @@ class TestProfileProviderBuilder(unittest.TestCase):
 
 class TestSSOCredentialFetcher(unittest.TestCase):
     def setUp(self):
-        self.sso = Session().create_client('sso')
+        self.sso = Session().create_client('sso', region_name='us-east-1')
         self.stubber = Stubber(self.sso)
         self.mock_session = mock.Mock(spec=Session)
         self.mock_session.create_client.return_value = self.sso
@@ -3317,7 +3317,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
 
 class TestSSOProvider(unittest.TestCase):
     def setUp(self):
-        self.sso = Session().create_client('sso')
+        self.sso = Session().create_client('sso', region_name='us-east-1')
         self.stubber = Stubber(self.sso)
         self.mock_session = mock.Mock(spec=Session)
         self.mock_session.create_client.return_value = self.sso
