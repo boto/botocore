@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.13.14
+=======
+
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
 1.13.13
 =======
 
