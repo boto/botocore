@@ -2021,7 +2021,10 @@ class TestSSOTokenFetcher(unittest.TestCase):
         self.now_timestamp = 1222172800
         self.mock_time_fetcher = mock.Mock(return_value=self.now)
         self.mock_sleep = mock.Mock()
-        self.sso_oidc = Session().create_client('sso-oidc')
+        self.sso_oidc = Session().create_client(
+            'sso-oidc',
+            region_name='us-west-2',
+        )
         self.stubber = Stubber(self.sso_oidc)
         self.mock_session = mock.Mock(spec=Session)
         self.mock_session.create_client.return_value = self.sso_oidc
