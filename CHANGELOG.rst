@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.13.15
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.13.14
 =======
 
