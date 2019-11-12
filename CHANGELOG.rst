@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.13.16
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.13.15
 =======
 
