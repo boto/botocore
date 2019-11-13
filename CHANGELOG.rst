@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.13.17
+=======
+
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``cloudsearch``: Update cloudsearch client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+
+
 1.13.16
 =======
 
