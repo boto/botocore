@@ -1,0 +1,5 @@
+{
+  "category": "``cloudsearch``", 
+  "type": "api-change", 
+  "description": "Update cloudsearch client to latest version"
+}
