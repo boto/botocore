@@ -484,6 +484,15 @@ class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
     )
 
 
+class InvalidS3UsEast1RegionalEndpointConfigError(BotoCoreError):
+    """Error for invalid s3 us-east-1 regional endpoints configuration"""
+    fmt = (
+        'S3 us-east-1 regional endpoint option '
+        '{s3_us_east_1_regional_endpoint_config} is '
+        'invaild. Valid options are: legacy and regional'
+    )
+
+
 class InvalidSTSRegionalEndpointsConfigError(BotoCoreError):
     """Error when invalid sts regional endpoints configuration is specified"""
     fmt = (

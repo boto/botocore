@@ -374,6 +374,11 @@ class ClientEndpointBridge(object):
 
     def _create_dualstack_endpoint(self, service_name, region_name,
                                    dns_suffix, is_secure):
+        if region_name == 'aws-global':
+            # This is to preserve behavior where if a user specified no
+            # region, it would default to us-east-1. aws-global is now the
+            # new default but does not form a valid endpoint url for dualstack.
+            region_name = 'us-east-1'
         hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
             service=service_name, region=region_name,
             dns_suffix=dns_suffix)

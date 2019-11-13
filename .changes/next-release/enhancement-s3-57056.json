@@ -1,0 +1,5 @@
+{
+  "category": "``s3``", 
+  "type": "enhancement", 
+  "description": "Add support for opting into using the us-east-1 regional endpoint."
+}
