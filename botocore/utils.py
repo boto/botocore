@@ -1394,8 +1394,6 @@ class SSOTokenFetcher(object):
     _EXPIRY_WINDOW = 15 * 60
     _CLIENT_REGISTRATION_TYPE = 'public'
     _GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code'
-    # This is the default scope as suggested by the SSO team
-    _DEFAULT_SCOPES = ['sso-portal:*']
 
     def __init__(
             self, sso_region, client_creator, cache=None,
@@ -1446,7 +1444,6 @@ class SSOTokenFetcher(object):
             clientName='botocore-client-%s' % int(timestamp),
             clientType=self._CLIENT_REGISTRATION_TYPE,
         )
-        # NOTE: If SSO models this as a timestamp we don't need to do this
         expires_at = response['clientSecretExpiresAt']
         expires_at = datetime.datetime.fromtimestamp(expires_at, tzutc())
         registration = {
@@ -1457,10 +1454,10 @@ class SSOTokenFetcher(object):
         return registration
 
     def _registration(self):
-        # Registration with the OIDC endpoint is global, is good for roughly
-        # one year, and can be shared. This is currently scoped to individual
-        # tools and as such each tool has their own <toolname>-client-id.
-        cache_key = 'botocore-client-id'
+        # Registration with the OIDC endpoint is regional, is good for roughly
+        # 90 days, and can be shared. This is currently scoped to individual
+        # tools and as such each tool has their own cached client id.
+        cache_key = 'botocore-client-id-%s' % self._sso_region
         if cache_key in self._cache:
             registration = self._cache[cache_key]
             if not self._is_expired(registration):
