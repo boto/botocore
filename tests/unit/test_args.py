@@ -100,85 +100,33 @@ class TestCreateClientArgs(unittest.TestCase):
         )
 
     def test_compute_s3_configuration(self):
-        scoped_config = {}
-        client_config = None
-        self.assertIsNone(
-            self.args_create.compute_s3_config(
-                scoped_config, client_config))
+        self.assertIsNone(self.args_create.compute_s3_config(None))
 
-    def test_compute_s3_config_only_scoped_config(self):
-        scoped_config = {
-            's3': {'use_accelerate_endpoint': True},
-        }
-        client_config = None
+    def test_compute_s3_config_only_config_store(self):
+        self.config_store.set_config_variable(
+            's3', {'use_accelerate_endpoint': True})
         self.assertEqual(
-            self.args_create.compute_s3_config(scoped_config, client_config),
-            {'use_accelerate_endpoint': True}
-        )
-
-    def test_client_s3_accelerate_from_varying_forms_of_true(self):
-        scoped_config= {'s3': {'use_accelerate_endpoint': 'True'}}
-        client_config = None
-
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_accelerate_endpoint': 'True'}},
-                client_config=None),
-            {'use_accelerate_endpoint': True}
-        )
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_accelerate_endpoint': 'true'}},
-                client_config=None),
-            {'use_accelerate_endpoint': True}
-        )
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_accelerate_endpoint': True}},
-                client_config=None),
+            self.args_create.compute_s3_config(None),
             {'use_accelerate_endpoint': True}
         )
 
     def test_client_s3_accelerate_from_client_config(self):
         self.assertEqual(
             self.args_create.compute_s3_config(
-                scoped_config=None,
                 client_config=Config(s3={'use_accelerate_endpoint': True})
             ),
             {'use_accelerate_endpoint': True}
         )
 
-    def test_client_s3_accelerate_client_config_overrides_scoped(self):
+    def test_client_s3_accelerate_client_config_overrides_config_store(self):
+        self.config_store.set_config_variable(
+            's3', {'use_accelerate_endpoint': False})
         self.assertEqual(
             self.args_create.compute_s3_config(
-                scoped_config={'s3': {'use_accelerate_endpoint': False}},
                 client_config=Config(s3={'use_accelerate_endpoint': True})
             ),
             # client_config beats scoped_config
             {'use_accelerate_endpoint': True}
-        )
-
-    def test_client_s3_dualstack_handles_varying_forms_of_true(self):
-        scoped_config= {'s3': {'use_dualstack_endpoint': 'True'}}
-        client_config = None
-
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_dualstack_endpoint': 'True'}},
-                client_config=None),
-            {'use_dualstack_endpoint': True}
-        )
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_dualstack_endpoint': 'true'}},
-                client_config=None),
-            {'use_dualstack_endpoint': True}
-        )
-        self.assertEqual(
-            self.args_create.compute_s3_config(
-                {'s3': {'use_dualstack_endpoint': True}},
-                client_config=None),
-            {'use_dualstack_endpoint': True}
         )
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):

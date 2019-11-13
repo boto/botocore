@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from tests import temporary_file
 from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
 from nose.tools import assert_equal
 
@@ -36,6 +37,126 @@ class BaseS3OperationTest(BaseSessionTest):
         self.client = self.session.create_client(
             's3', self.region)
         self.http_stubber = ClientHTTPStubber(self.client)
+
+
+class TestS3ClientConfiguration(BaseSessionTest):
+    def setUp(self):
+        super(TestS3ClientConfiguration, self).setUp()
+        self.region = 'us-west-2'
+
+    def create_s3_client(self):
+        return self.session.create_client('s3', region_name=self.region)
+
+    def set_config_file(self, fileobj, contents):
+        fileobj.write(contents)
+        fileobj.flush()
+        self.environ['AWS_CONFIG_FILE'] = fileobj.name
+
+    def test_no_s3_config(self):
+        client = self.create_s3_client()
+        self.assertIsNone(client.meta.config.s3)
+
+    def test_client_s3_dualstack_handles_uppercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    use_dualstack_endpoint = True'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['use_dualstack_endpoint'], True)
+
+    def test_client_s3_dualstack_handles_lowercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    use_dualstack_endpoint = true'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['use_dualstack_endpoint'], True)
+
+    def test_client_s3_accelerate_handles_uppercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    use_accelerate_endpoint = True'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['use_accelerate_endpoint'], True)
+
+    def test_client_s3_accelerate_handles_lowercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    use_accelerate_endpoint = true'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['use_accelerate_endpoint'], True)
+
+    def test_client_payload_signing_enabled_handles_uppercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    payload_signing_enabled = True'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['payload_signing_enabled'], True)
+
+    def test_client_payload_signing_enabled_handles_lowercase_true(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    payload_signing_enabled = true'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['payload_signing_enabled'], True)
+
+    def test_includes_unmodeled_s3_config_vars(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    unmodeled = unmodeled_val'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3['unmodeled'], 'unmodeled_val')
+
+    def test_mixed_modeled_and_unmodeled_config_vars(self):
+        with temporary_file('w') as f:
+            self.set_config_file(
+                f,
+                '[default]\n'
+                's3 = \n'
+                '    payload_signing_enabled = true\n'
+                '    unmodeled = unmodeled_val'
+            )
+            client = self.create_s3_client()
+            self.assertEqual(
+                client.meta.config.s3,
+                {
+                    'payload_signing_enabled': True,
+                    'unmodeled': 'unmodeled_val'
+                }
+            )
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
