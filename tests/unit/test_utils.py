@@ -2016,6 +2016,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
         self.sso_region = 'us-west-2'
         # The token cache key is the sha1 of the start url
         self.token_cache_key = '40a89917e3175433e361b710a9d43528d7f1890a'
+        self.client_id_key = 'botocore-client-id-us-west-2'
         # This is just an arbitrary point in time that we can pin to
         self.now = datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
         self.now_timestamp = 1222172800
@@ -2122,7 +2123,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
             'clientSecret': 'foo-client-secret',
             'expiresAt': self._expires_at(1000),
         }
-        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+        self.assertEqual(self.cache[self.client_id_key], expected_client_id)
 
         expected_token = {
             'region': self.sso_region,
@@ -2138,7 +2139,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
             'clientSecret': 'bar-client-secret',
             'expiresAt': self._expires_at(1000),
         }
-        self.cache['botocore-client-id'] = expected_client_id
+        self.cache[self.client_id_key] = expected_client_id
 
         self.authorization_expected_params.update(
             clientId='bar-client-id',
@@ -2157,7 +2158,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
         self.stubber.assert_no_pending_responses()
 
         # Ensure the cached client-id hasn't changed
-        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+        self.assertEqual(self.cache[self.client_id_key], expected_client_id)
 
     def test_fetch_token_respects_cached_token(self):
         expected_token = {
@@ -2182,7 +2183,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
             'clientSecret': 'bar-client-secret',
             'expiresAt': self._expires_at(-1),
         }
-        self.cache['botocore-client-id'] = expired_client_id
+        self.cache[self.client_id_key] = expired_client_id
         expired_token = {
             'accessToken': 'bar.token.string',
             'expiresAt': self._expires_at(-1),
@@ -2201,7 +2202,7 @@ class TestSSOTokenFetcher(unittest.TestCase):
             'clientSecret': 'foo-client-secret',
             'expiresAt': self._expires_at(1000),
         }
-        self.assertEqual(self.cache['botocore-client-id'], expected_client_id)
+        self.assertEqual(self.cache[self.client_id_key], expected_client_id)
         expected_token = {
             'region': self.sso_region,
             'startUrl': self.start_url,
