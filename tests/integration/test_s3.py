@@ -120,6 +120,9 @@ def teardown_module():
 
 
 class BaseS3ClientTest(unittest.TestCase):
+
+    DEFAULT_DELAY = 5
+
     def setUp(self):
         self.bucket_name = _SHARED_BUCKET
         self.region = _DEFAULT_REGION
@@ -145,14 +148,24 @@ class BaseS3ClientTest(unittest.TestCase):
         response = bucket_client.create_bucket(**bucket_kwargs)
         self.assert_status_code(response, 200)
         waiter = bucket_client.get_waiter('bucket_exists')
-        waiter.wait(Bucket=bucket_name)
+        consistency_waiter = ConsistencyWaiter(
+            min_successes=3, delay=self.DEFAULT_DELAY,
+            delay_initial_poll=True)
+        consistency_waiter.wait(
+            lambda: waiter.wait(Bucket=bucket_name) is None
+        )
         self.addCleanup(clear_out_bucket, bucket_name, region_name, True)
         return bucket_name
 
-    def create_object(self, key_name, body='foo'):
-        self.client.put_object(
-            Bucket=self.bucket_name, Key=key_name,
-            Body=body)
+    def create_object(self, key_name, body='foo', num_attempts=3):
+        for _ in range(num_attempts):
+            try:
+                self.client.put_object(
+                    Bucket=self.bucket_name, Key=key_name,
+                    Body=body)
+                break
+            except self.client.exceptions.NoSuchBucket:
+                time.sleep(self.DEFAULT_DELAY)
         self.wait_until_key_exists(self.bucket_name, key_name)
 
     def make_tempdir(self):
@@ -191,7 +204,7 @@ class BaseS3ClientTest(unittest.TestCase):
     def wait_until_versioning_enabled(self, bucket, min_successes=3):
         waiter = ConsistencyWaiter(
             min_successes=min_successes,
-            delay=5, delay_initial_poll=True)
+            delay=self.DEFAULT_DELAY, delay_initial_poll=True)
         waiter.wait(self._check_bucket_versioning, bucket)
 
 
