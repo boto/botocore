@@ -36,7 +36,7 @@ import botocore.session
 import botocore.auth
 import botocore.credentials
 from botocore.config import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 
 def random_bucketname():
@@ -113,6 +113,8 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
                           e, exc_info=True)
                 not_exists_waiter = s3.get_waiter('bucket_not_exists')
                 not_exists_waiter.wait(Bucket=bucket)
+            except WaiterError:
+                continue
 
 
 def teardown_module():
