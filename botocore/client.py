@@ -27,6 +27,7 @@ from botocore.paginate import Paginator
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
 from botocore.utils import S3RegionRedirector
+from botocore.utils import S3ArnParamHandler
 from botocore.utils import S3EndpointSetter
 from botocore.args import ClientArgsCreator
 from botocore import UNSIGNED
@@ -164,15 +165,19 @@ class ClientCreator(object):
             events.register('before-parameter-build',
                             block_endpoint_discovery_required_operations)
 
-
     def _register_s3_events(self, client, endpoint_bridge, endpoint_url,
                             client_config, scoped_config):
         if client.meta.service_model.service_name != 's3':
             return
         S3RegionRedirector(endpoint_bridge, client).register()
-        S3EndpointSetter(client.meta.config.s3, endpoint_url).register(
-            client.meta.events
-        )
+        S3ArnParamHandler().register(client.meta.events)
+        S3EndpointSetter(
+            endpoint_resolver=self._endpoint_resolver,
+            region=client.meta.region_name,
+            s3_config=client.meta.config.s3,
+            endpoint_url=endpoint_url,
+            partition=client.meta.partition
+        ).register(client.meta.events)
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
 

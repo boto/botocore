@@ -104,6 +104,11 @@ DEFAULT_S3_CONFIG_VARS = {
     ),
     'payload_signing_enabled': (
         ('s3', 'payload_signing_enabled'), None, None, utils.ensure_boolean
+    ),
+    'use_arn_region': (
+        ['s3_use_arn_region',
+         ('s3', 'use_arn_region')],
+        'AWS_S3_USE_ARN_REGION', None, utils.ensure_boolean
     )
 }
 
