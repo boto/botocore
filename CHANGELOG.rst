@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.13.18
+=======
+
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.13.17
 =======
 

@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``meteringmarketplace``", 
+    "description": "Update meteringmarketplace client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``connect``", 
+    "description": "Update connect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``personalize``", 
+    "description": "Update personalize client to latest version", 
+    "type": "api-change"
+  }
+]
