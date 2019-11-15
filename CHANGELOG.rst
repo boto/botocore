@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.13.19
+=======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``chime``: Update chime client to latest version
+
+
 1.13.18
 =======
 
