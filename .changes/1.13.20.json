@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-runtime``", 
+    "description": "Update sagemaker-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }
+]

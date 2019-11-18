@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.13.20
+=======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.13.19
 =======
 
