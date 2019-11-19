@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.13.21
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.13.20
 =======
 
