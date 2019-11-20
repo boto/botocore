@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.13.23
+=======
+
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``migrationhub-config``: Update migrationhub-config client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.13.22
 =======
 
