@@ -299,6 +299,8 @@ class IMDSFetcher(object):
                     return None
                 elif response.status_code in (400,):
                     raise BadIMDSRequestError(request)
+            except ReadTimeoutError:
+                return None
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
