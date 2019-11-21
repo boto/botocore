@@ -27,6 +27,7 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.exceptions import ReadTimeoutError
+from botocore.exceptions import ConnectTimeoutError
 from botocore.model import ServiceModel
 from botocore.utils import ensure_boolean
 from botocore.utils import is_json_value_header
@@ -2015,9 +2016,35 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
         self.assertEqual(result, self._expected_creds)
 
+    def test_metadata_token_not_supported_405(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=405)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
     def test_metadata_token_not_supported_timeout(self):
         user_agent = 'my-user-agent'
         self.add_imds_connection_error(ReadTimeoutError(endpoint_url='url'))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_token_not_supported_exhaust_retries(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_connection_error(ConnectTimeoutError(endpoint_url='url'))
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
 
