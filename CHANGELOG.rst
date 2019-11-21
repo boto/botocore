@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.13.24
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``connectparticipant``: Update connectparticipant client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+
+
 1.13.23
 =======
 
