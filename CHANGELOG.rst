@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.25
+=======
+
+* bugfix:IMDS metadata: Add 405 case to metadata fetching logic.
+
+
 1.13.24
 =======
 
