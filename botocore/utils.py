@@ -295,7 +295,7 @@ class IMDSFetcher(object):
                 response = self._session.send(request.prepare())
                 if response.status_code == 200:
                     return response.text
-                elif response.status_code in (404, 403):
+                elif response.status_code in (404, 403, 405):
                     return None
                 elif response.status_code in (400,):
                     raise BadIMDSRequestError(request)
@@ -305,7 +305,7 @@ class IMDSFetcher(object):
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
                     "service request to %s: %s", url, e, exc_info=True)
-        raise self._RETRIES_EXCEEDED_ERROR_CLS()
+        return None
 
     def _get_request(self, url_path, retry_func, token=None):
         """Make a get request to the Instance Metadata Service.
