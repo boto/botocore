@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.13.26
+=======
+
+* api-change:``acm``: Update acm client to latest version
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.13.25
 =======
 
