@@ -80,11 +80,6 @@ class BaseSessionTest(unittest.TestCase):
                 env_var_names='FOO_AWS_CA_BUNDLE',
                 config_property_name='foo_ca_bundle',
             ),
-            'api_versions': config_chain_builder.create_config_chain(
-                instance_name='api_versions',
-                config_property_name='foo_api_versions',
-                default={},
-            ),
         }
         for name, provider in config_updates.items():
             config_store.set_config_provider(name, provider)
@@ -448,7 +443,7 @@ class TestGetPaginatorModel(BaseSessionTest):
         self.assertIsInstance(model, PaginatorModel)
         # Verify we called the loader correctly.
         loader.load_service_model.assert_called_with(
-            'foo', 'paginators-1', None)
+            'foo', 'paginators-1')
 
 
 class TestGetWaiterModel(BaseSessionTest):
@@ -464,7 +459,7 @@ class TestGetWaiterModel(BaseSessionTest):
         self.assertEqual(model.waiter_names, [])
         # and (2) call the loader correctly.
         loader.load_service_model.assert_called_with(
-            'foo', 'waiters-2', None)
+            'foo', 'waiters-2')
 
 
 class TestCreateClient(BaseSessionTest):
@@ -520,8 +515,7 @@ class TestCreateClient(BaseSessionTest):
         client_creator.return_value.create_client.assert_called_with(
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
             endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
-            scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            scoped_config=mock.ANY, client_config=config)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
@@ -532,8 +526,7 @@ class TestCreateClient(BaseSessionTest):
         client_creator.return_value.create_client.assert_called_with(
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
             endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
-            scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            scoped_config=mock.ANY, client_config=config)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
@@ -628,72 +621,6 @@ class TestCreateClient(BaseSessionTest):
             # The verify parameter should override all the other
             # configurations
             self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_create_client_use_no_api_version_by_default(self, client_creator):
-        self.session.create_client('myservice', 'us-west-2')
-        call_kwargs = client_creator.return_value.create_client.call_args[1]
-        self.assertEqual(call_kwargs['api_version'], None)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_create_client_uses_api_version_from_config(self, client_creator):
-        config_api_version = '2012-01-01'
-        with temporary_file('w') as f:
-            del self.environ['FOO_PROFILE']
-            self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n' % config_api_version)
-            f.flush()
-
-            self.session.create_client('myservice', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
-            self.assertEqual(call_kwargs['api_version'], config_api_version)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_can_specify_multiple_versions_from_config(self, client_creator):
-        config_api_version = '2012-01-01'
-        second_config_api_version = '2013-01-01'
-        with temporary_file('w') as f:
-            del self.environ['FOO_PROFILE']
-            self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n'
-                    '    myservice2 = %s\n' % (
-                        config_api_version, second_config_api_version)
-            )
-            f.flush()
-
-            self.session.create_client('myservice', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
-            self.assertEqual(call_kwargs['api_version'], config_api_version)
-
-            self.session.create_client('myservice2', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
-            self.assertEqual(
-                call_kwargs['api_version'], second_config_api_version)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_param_api_version_overrides_config_value(self, client_creator):
-        config_api_version = '2012-01-01'
-        override_api_version = '2014-01-01'
-        with temporary_file('w') as f:
-            del self.environ['FOO_PROFILE']
-            self.environ['FOO_CONFIG_FILE'] = f.name
-            f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n' % config_api_version)
-            f.flush()
-
-            self.session.create_client(
-                'myservice', 'us-west-2', api_version=override_api_version)
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
-            self.assertEqual(call_kwargs['api_version'], override_api_version)
 
 
 class TestSessionComponent(BaseSessionTest):

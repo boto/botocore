@@ -22,7 +22,7 @@ def test_lint_shared_example_configs():
     for service in services:
         service_model = session.get_service_model(service)
         example_config = loader.load_service_model(
-            service, 'examples-1', service_model.api_version
+            service, 'examples-1'
         )
         examples = example_config.get("examples", {})
         for operation, operation_examples in examples.items():

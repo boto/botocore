@@ -89,8 +89,8 @@ class ServiceDocumenter(object):
                 self._client, service_waiter_model)
             waiter_documenter.document_waiters(section)
 
-    def get_examples(self, service_name, api_version=None):
+    def get_examples(self, service_name):
         loader = self._session.get_component('data_loader')
         examples = loader.load_service_model(
-            service_name, 'examples-1', api_version)
+            service_name, 'examples-1')
         return examples['examples']
