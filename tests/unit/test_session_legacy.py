@@ -344,9 +344,6 @@ class TestSessionConfigurationVars(BaseSessionTest):
             self.session.session_var_map['ca_bundle'],
             ('ca_bundle', 'AWS_CA_BUNDLE', None, None))
         self.assertEqual(
-            self.session.session_var_map['api_versions'],
-            ('api_versions', None, {}, None))
-        self.assertEqual(
             self.session.session_var_map['credentials_file'],
             (None, 'AWS_SHARED_CREDENTIALS_FILE', '~/.aws/credentials', None))
         self.assertEqual(
