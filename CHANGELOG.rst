@@ -2,6 +2,40 @@
 CHANGELOG
 =========
 
+1.13.27
+=======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``iotsecuretunneling``: Update iotsecuretunneling client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``ram``: Update ram client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
 1.13.26
 =======
 

@@ -1,0 +1,147 @@
+[
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``wafv2``", 
+    "description": "Update wafv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dlm``", 
+    "description": "Update dlm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-runtime``", 
+    "description": "Update lex-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``athena``", 
+    "description": "Update athena client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotsecuretunneling``", 
+    "description": "Update iotsecuretunneling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-insights``", 
+    "description": "Update application-insights client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediapackage-vod``", 
+    "description": "Update mediapackage-vod client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appconfig``", 
+    "description": "Update appconfig client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisanalyticsv2``", 
+    "description": "Update kinesisanalyticsv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sesv2``", 
+    "description": "Update sesv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``greengrass``", 
+    "description": "Update greengrass client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``alexaforbusiness``", 
+    "description": "Update alexaforbusiness client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ram``", 
+    "description": "Update ram client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }
+]
