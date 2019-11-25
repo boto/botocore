@@ -695,7 +695,7 @@ def decode_list_object(parsed, context, **kwargs):
     # name values in the following response elements:
     # Delimiter, Marker, Prefix, NextMarker, Key.
     _decode_list_object(
-        top_level_keys=['Delimiter', 'Marker', 'NextMarker'],
+        top_level_keys=['Delimiter', 'Marker', 'Prefix', 'NextMarker'],
         nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
         parsed=parsed,
         context=context

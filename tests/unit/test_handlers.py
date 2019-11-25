@@ -840,6 +840,16 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
 
+    def test_decode_list_objects_with_prefix(self):
+        parsed = {
+            'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c",
+            'EncodingType': 'url',
+        }
+        context = {'encoding_type_auto_set': True}
+        handlers.decode_list_object(parsed, context=context)
+        self.assertEqual(parsed['Prefix'], u'\xe7\xf6s% asd\x08 c')
+
+
     def test_decode_list_objects_v2(self):
         parsed = {
             'Contents': [{'Key': "%C3%A7%C3%B6s%25asd%08"}],
