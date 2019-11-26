@@ -669,7 +669,6 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
         super(CloudFrontWaitersTest, self).setUp()
         self.client = mock.Mock()
         self.service = 'cloudfront'
-        self.old_api_versions = ['2014-05-31']
 
     def assert_distribution_deployed_call_count(self):
         waiter_name = 'DistributionDeployed'
@@ -709,3 +708,28 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
                                            self.client)
         waiter.wait()
         self.assertEqual(self.client.get_streaming_distribution.call_count, 1)
+
+    def test_distribution_deployed(self):
+        # Test the latest version.
+        self.assert_distribution_deployed_call_count()
+        self.client.reset_mock()
+
+        self.assert_distribution_deployed_call_count()
+        self.client.reset_mock()
+
+    def test_invalidation_completed(self):
+        # Test the latest version.
+        self.assert_invalidation_completed_call_count()
+        self.client.reset_mock()
+
+        # Test previous api versions.
+        self.assert_invalidation_completed_call_count()
+        self.client.reset_mock()
+
+    def test_streaming_distribution_deployed(self):
+        # Test the latest version.
+        self.assert_streaming_distribution_deployed_call_count()
+        self.client.reset_mock()
+
+        self.assert_streaming_distribution_deployed_call_count()
+        self.client.reset_mock()
