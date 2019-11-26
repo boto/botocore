@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.13.28
+=======
+
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
 1.13.27
 =======
 
