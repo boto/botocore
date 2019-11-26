@@ -1,5 +1,0 @@
-{
-  "category": "``elastic-inference``", 
-  "type": "api-change", 
-  "description": "Update elastic-inference client to latest version"
-}
