@@ -1593,6 +1593,37 @@ class TestS3RegionRedirector(unittest.TestCase):
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
 
+    def test_no_redirect_from_error_for_accesspoint(self):
+        request_dict = {
+            'url': (
+                'https://myendpoint-123456789012.s3-accesspoint.'
+                'us-west-2.amazonaws.com/key'
+            ),
+            'context': {
+                's3_accesspoint': {}
+            }
+        }
+        response = (None, {
+            'Error': {'Code': '400', 'Message': 'Bad Request'},
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertEqual(redirect_response, None)
+
+    def test_no_redirect_from_cache_for_accesspoint(self):
+        self.cache['foo'] = {'endpoint': 'foo-endpoint'}
+        self.redirector = S3RegionRedirector(
+            self.endpoint_bridge, self.client, cache=self.cache)
+        params = {'Bucket': 'foo'}
+        context = {'s3_accesspoint': {}}
+        self.redirector.redirect_from_cache(params, context)
+        self.assertNotIn('signing', context)
+
 
 class TestArnParser(unittest.TestCase):
     def setUp(self):

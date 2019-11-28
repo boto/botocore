@@ -411,19 +411,6 @@ class SigV4Auth(BaseSigner):
 
 
 class S3SigV4Auth(SigV4Auth):
-    def __init__(self, credentials, service_name, region_name):
-        super(S3SigV4Auth, self).__init__(
-            credentials, service_name, region_name)
-        self._default_region_name = region_name
-
-    def add_auth(self, request):
-        # If we ever decide to share auth sessions, this could potentially be
-        # a source of concurrency bugs.
-        signing_context = request.context.get('signing', {})
-        self._region_name = signing_context.get(
-            'region', self._default_region_name)
-        super(S3SigV4Auth, self).add_auth(request)
-
     def _modify_request_before_signing(self, request):
         super(S3SigV4Auth, self)._modify_request_before_signing(request)
         if 'X-Amz-Content-SHA256' in request.headers:

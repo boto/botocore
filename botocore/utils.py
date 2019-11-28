@@ -1154,6 +1154,12 @@ class S3RegionRedirector(object):
             # transport error.
             return
 
+        if self._is_s3_accesspoint(request_dict.get('context', {})):
+            logger.debug(
+                'S3 request was previously to an accesspoint, not redirecting.'
+            )
+            return
+
         if request_dict.get('context', {}).get('s3_redirected'):
             logger.debug(
                 'S3 request was previously redirected, not redirecting.')
@@ -1265,12 +1271,17 @@ class S3RegionRedirector(object):
         This handler retrieves a given bucket's signing context from the cache
         and adds it into the request context.
         """
+        if self._is_s3_accesspoint(context):
+            return
         bucket = params.get('Bucket')
         signing_context = self._cache.get(bucket)
         if signing_context is not None:
             context['signing'] = signing_context
         else:
             context['signing'] = {'bucket': bucket}
+
+    def _is_s3_accesspoint(self, context):
+        return 's3_accesspoint' in context
 
 
 class InvalidArnException(ValueError):
@@ -1379,6 +1390,8 @@ class S3EndpointSetter(object):
             self._validate_accesspoint_supported(request)
             region_name = self._get_region_for_accesspoint_endpoint(request)
             self._switch_to_accesspoint_endpoint(request, region_name)
+            self._override_signing_region_if_needed(
+                request, region_name, kwargs['region_name'])
             return
         if self._use_accelerate_endpoint:
             switch_host_s3_accelerate(request=request, **kwargs)
@@ -1465,6 +1478,20 @@ class S3EndpointSetter(object):
         if resolved and 'dnsSuffix' in resolved:
             dns_suffix = resolved['dnsSuffix']
         return dns_suffix
+
+    def _override_signing_region_if_needed(self, request, region_name,
+                                           current_signing_region):
+        if region_name == current_signing_region:
+            return
+        signing_context = {
+            'region': region_name,
+        }
+        # S3SigV4Auth will use the context['signing']['region'] value to
+        # sign with if present. This is used by the Bucket redirector
+        # as well but we should be fine because the redirector is never
+        # used in combination with the accesspoint setting logic.
+        request.context['signing'] = signing_context
+
 
     @CachedProperty
     def _use_accelerate_endpoint(self):

@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import re
+
 from tests import temporary_file
 from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
 from nose.tools import assert_equal
@@ -17,6 +19,7 @@ from nose.tools import assert_equal
 import botocore.session
 from botocore.config import Config
 from botocore.compat import urlsplit
+from botocore.compat import parse_qs
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore import UNSIGNED
 
@@ -267,9 +270,15 @@ class TestS3ClientConfigResolution(BaseS3ClientConfigurationTest):
         )
 
 
-class TestValidationAccesspointArn(BaseS3ClientConfigurationTest):
+class TestAccesspointArn(BaseS3ClientConfigurationTest):
+    _V4_AUTH_REGEX = re.compile(
+        r'AWS4-HMAC-SHA256 '
+        r'Credential=\w+/\d+/'
+        r'(?P<signing_region>[a-z0-9-]+)/'
+    )
+
     def setUp(self):
-        super(TestValidationAccesspointArn, self).setUp()
+        super(TestAccesspointArn, self).setUp()
         self.client, self.http_stubber = self.create_stubbed_s3_client()
 
     def create_stubbed_s3_client(self, **kwargs):
@@ -277,6 +286,16 @@ class TestValidationAccesspointArn(BaseS3ClientConfigurationTest):
         http_stubber = ClientHTTPStubber(client)
         http_stubber.start()
         return client, http_stubber
+
+    def assert_signing_region(self, request, expected_region):
+        auth_header = request.headers['Authorization'].decode('utf-8')
+        actual_region = self._V4_AUTH_REGEX.match(
+            auth_header).group('signing_region')
+        self.assertEqual(expected_region, actual_region)
+
+    def assert_signing_region_in_url(self, url, expected_region):
+        qs_components = parse_qs(urlsplit(url).query)
+        self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
@@ -358,11 +377,61 @@ class TestValidationAccesspointArn(BaseS3ClientConfigurationTest):
             'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
-            region_name='cn-north-1')
+            region_name='cn-north-1',
+            config=Config(s3={'use_accelerate_endpoint': True})
+        )
         with self.assertRaises(
                 botocore.exceptions.
                 UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=accesspoint_arn)
+
+    def test_signs_with_arn_region(self):
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1')
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=accesspoint_arn)
+        self.assert_signing_region(self.http_stubber.requests[0], 'us-west-2')
+
+    def test_signs_with_client_region_when_use_arn_region_false(self):
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1',
+            config=Config(s3={'use_arn_region': False})
+        )
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=accesspoint_arn)
+        self.assert_signing_region(self.http_stubber.requests[0], 'us-east-1')
+
+    def test_presign_signs_with_arn_region(self):
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='us-east-1',
+            config=Config(signature_version='s3v4')
+        )
+        url = self.client.generate_presigned_url(
+            'get_object', {'Bucket': accesspoint_arn, 'Key': 'mykey'})
+        self.assert_signing_region_in_url(url, 'us-west-2')
+
+    def test_presign_signs_with_client_region_when_use_arn_region_false(self):
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='us-east-1',
+            config=Config(
+                signature_version='s3v4', s3={'use_arn_region': False}
+            )
+        )
+        url = self.client.generate_presigned_url(
+            'get_object', {'Bucket': accesspoint_arn, 'Key': 'mykey'})
+        self.assert_signing_region_in_url(url, 'us-east-1')
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
@@ -532,7 +601,6 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
             self.assertEqual(headers['Content-Length'], b'3')
 
 
-
 class TestRegionRedirect(BaseS3OperationTest):
     def setUp(self):
         super(TestRegionRedirect, self).setUp()
@@ -686,6 +754,20 @@ class TestRegionRedirect(BaseS3OperationTest):
             with self.assertRaises(ClientError) as e:
                 client.head_object(Bucket='foo', Key='bar')
             self.assertEqual(len(http_stubber.requests), 4)
+
+    def test_no_region_redirect_for_accesspoint(self):
+        self.http_stubber.add_response(**self.redirect_response)
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        with self.http_stubber:
+            try:
+                self.client.list_objects(Bucket=accesspoint_arn)
+            except self.client.exceptions.ClientError as e:
+                self.assertEqual(
+                    e.response['Error']['Code'], 'PermanentRedirect')
+            else:
+                self.fail('PermanentRedirect error should have been raised')
 
 
 class TestGeneratePresigned(BaseS3OperationTest):
