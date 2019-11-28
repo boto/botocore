@@ -1388,10 +1388,9 @@ class S3EndpointSetter(object):
     def set_endpoint(self, request, **kwargs):
         if self._use_accesspoint_endpoint(request):
             self._validate_accesspoint_supported(request)
-            region_name = self._get_region_for_accesspoint_endpoint(request)
+            region_name = self._resolve_region_for_accesspoint_endpoint(
+                request)
             self._switch_to_accesspoint_endpoint(request, region_name)
-            self._override_signing_region_if_needed(
-                request, region_name, kwargs['region_name'])
             return
         if self._use_accelerate_endpoint:
             switch_host_s3_accelerate(request=request, **kwargs)
@@ -1427,9 +1426,14 @@ class S3EndpointSetter(object):
                 )
             )
 
-    def _get_region_for_accesspoint_endpoint(self, request):
+    def _resolve_region_for_accesspoint_endpoint(self, request):
         if self._s3_config.get('use_arn_region', True):
-            return request.context['s3_accesspoint']['region']
+            accesspoint_region = request.context['s3_accesspoint']['region']
+            # If we are using the region from the access point,
+            # we will also want to make sure that we set it as the
+            # signing region as well
+            self._override_signing_region(request, accesspoint_region)
+            return accesspoint_region
         return self._region
 
     def _switch_to_accesspoint_endpoint(self, request, region_name):
@@ -1479,10 +1483,7 @@ class S3EndpointSetter(object):
             dns_suffix = resolved['dnsSuffix']
         return dns_suffix
 
-    def _override_signing_region_if_needed(self, request, region_name,
-                                           current_signing_region):
-        if region_name == current_signing_region:
-            return
+    def _override_signing_region(self, request, region_name):
         signing_context = {
             'region': region_name,
         }
