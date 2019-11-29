@@ -31,6 +31,8 @@ _V4_SIGNING_REGION_REGEX = re.compile(
 class TestSTSPresignedUrl(BaseSessionTest):
     def setUp(self):
         super(TestSTSPresignedUrl, self).setUp()
+        self.session.get_component('config_store').set_config_variable(
+            'sts_regional_endpoints', 'legacy')
         self.client = self.session.create_client('sts', 'us-west-2')
         # Makes sure that no requests will go through
         self.stubber = Stubber(self.client)
@@ -189,12 +191,12 @@ class TestSTSEndpoints(BaseSessionTest):
             expected_signing_region='us-east-1'
         )
 
-    def test_defaults_to_global_endpoint_for_legacy_region(self):
+    def test_defaults_to_regional_endpoint_for_legacy_region(self):
         sts = self.create_sts_client('us-west-2')
         self.assert_request_sent(
             sts,
-            expected_url='https://sts.amazonaws.com/',
-            expected_signing_region='us-east-1'
+            expected_url='https://sts.us-west-2.amazonaws.com/',
+            expected_signing_region='us-west-2'
         )
 
     def test_defaults_to_regional_endpoint_for_nonlegacy_region(self):

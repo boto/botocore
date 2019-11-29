@@ -336,17 +336,25 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(
             client_args['endpoint'].host, 'http://sts.amazonaws.com')
 
-    def test_sts_regional_endpoints_defaults_to_legacy_if_not_set(self):
+    def test_sts_regional_endpoints_defaults_to_regional_if_not_set(self):
+        resolved_endpoint = 'https://resolved-endpoint'
+        resolved_region = 'resolved-region'
+        self._set_endpoint_bridge_resolve(
+            endpoint_url=resolved_endpoint,
+            signing_region=resolved_region
+        )
         self.config_store.set_config_variable(
             'sts_regional_endpoints', None)
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=None
         )
+        print(client_args['endpoint'])
+        print(client_args['request_signer'].region_name)
         self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
+            client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
+            client_args['request_signer'].region_name, resolved_region)
 
     def test_invalid_sts_regional_endpoints(self):
         self.config_store.set_config_variable(

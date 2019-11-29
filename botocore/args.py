@@ -248,7 +248,7 @@ class ClientArgsCreator(object):
         sts_regional_endpoints_config = self._config_store.get_config_variable(
             'sts_regional_endpoints')
         if not sts_regional_endpoints_config:
-            sts_regional_endpoints_config = 'legacy'
+            sts_regional_endpoints_config = 'regional'
         if sts_regional_endpoints_config not in \
                 VALID_STS_REGIONAL_ENDPOINTS_CONFIG:
             raise botocore.exceptions.InvalidSTSRegionalEndpointsConfigError(
