@@ -85,6 +85,7 @@ ENDPOINT_PREFIX_OVERRIDE = {
     'docdb': 'rds',
     # iotevents data endpoints.json and service-2.json don't line up.
     'ioteventsdata': 'data.iotevents',
+    'iotsecuredtunneling': 'api.tunneling.iot',
 }
 NOT_SUPPORTED_IN_SDK = [
     'mobileanalytics',
