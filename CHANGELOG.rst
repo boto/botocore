@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.13.29
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``schemas``: Update schemas client to latest version
+
+
 1.13.28
 =======
 
