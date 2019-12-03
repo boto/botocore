@@ -171,8 +171,7 @@ class ClientArgsCreator(object):
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
             )
-        s3_config = self.compute_s3_config(scoped_config,
-                                           client_config)
+        s3_config = self.compute_s3_config(client_config)
         return {
             'service_name': service_name,
             'parameter_validation': parameter_validation,
@@ -184,29 +183,8 @@ class ClientArgsCreator(object):
             'socket_options': self._compute_socket_options(scoped_config)
         }
 
-    def compute_s3_config(self, scoped_config, client_config):
-        s3_configuration = None
-
-        # Check the scoped config first.
-        if scoped_config is not None:
-            s3_configuration = scoped_config.get('s3')
-            # Until we have proper validation of the config file (including
-            # nested types), we have to account for the fact that the s3
-            # key could be parsed as a string, e.g 's3 = foo'.
-            # In the case we'll ignore the key for now.
-            if not isinstance(s3_configuration, dict):
-                logger.debug("The s3 config key is not a dictionary type, "
-                             "ignoring its value of: %s", s3_configuration)
-                s3_configuration = None
-
-            # Convert logic for several s3 keys in the scoped config
-            # so that the various strings map to the appropriate boolean value.
-            if s3_configuration:
-                boolean_keys = ['use_accelerate_endpoint',
-                                'use_dualstack_endpoint',
-                                'payload_signing_enabled']
-                s3_configuration = self._convert_config_to_bool(
-                    s3_configuration, boolean_keys)
+    def compute_s3_config(self, client_config):
+        s3_configuration = self._config_store.get_config_variable('s3')
 
         # Next specific client config values takes precedence over
         # specific values in the scoped config.
@@ -259,15 +237,6 @@ class ClientArgsCreator(object):
         scheme = 'https' if is_secure else 'http'
         endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
         endpoint_config['signing_region'] = 'us-east-1'
-
-    def _convert_config_to_bool(self, config_dict, keys):
-        # Make sure any further modifications to this section of the config
-        # will not affect the scoped config by making a copy of it.
-        config_copy = config_dict.copy()
-        present_keys = [k for k in keys if k in config_copy]
-        for key in present_keys:
-            config_copy[key] = botocore.utils.ensure_boolean(config_copy[key])
-        return config_copy
 
     def _get_default_s3_region(self, service_name, endpoint_bridge):
         # If a user is providing a custom URL, the endpoint resolver will

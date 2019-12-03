@@ -33,8 +33,6 @@ from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import ProcessProvider
 from botocore.credentials import AssumeRoleWithWebIdentityProvider
 from botocore.credentials import Credentials, ProfileProviderBuilder
-from botocore.configprovider import create_botocore_default_config_mapping
-from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import ConfigValueStore
 import botocore.exceptions
 import botocore.session
@@ -1658,15 +1656,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
             'metadata_service_timeout': 1,
             'metadata_service_num_attempts': 1,
         }
-        self.fake_env_vars = {}
-
-        chain_builder = ConfigChainFactory(
-            session=self.session,
-            environ=self.fake_env_vars,
-        )
-        self.config_loader = ConfigValueStore(
-            mapping=create_botocore_default_config_mapping(chain_builder)
-        )
+        self.config_loader = ConfigValueStore()
         for name, value in self.fake_instance_variables.items():
             self.config_loader.set_config_variable(name, value)
 
@@ -1703,12 +1693,6 @@ class TestCreateCredentialResolver(BaseEnvVar):
         self.config_loader.set_config_variable('profile', None)
         resolver = credentials.create_credential_resolver(self.session)
         # Then an EnvProvider should be part of our credential lookup chain.
-        self.assertTrue(
-            any(isinstance(p, EnvProvider) for p in resolver.providers))
-
-    def test_env_provider_added_if_profile_from_env_set(self):
-        self.fake_env_vars['profile'] = 'profile-from-env'
-        resolver = credentials.create_credential_resolver(self.session)
         self.assertTrue(
             any(isinstance(p, EnvProvider) for p in resolver.providers))
 
