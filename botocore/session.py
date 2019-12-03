@@ -183,9 +183,8 @@ class Session(object):
                     self._events.register_last(event_name, handler)
 
     def _register_config_store(self):
-        chain_builder = ConfigChainFactory(session=self)
         config_store_component = ConfigValueStore(
-            mapping=create_botocore_default_config_mapping(chain_builder)
+            mapping=create_botocore_default_config_mapping(self)
         )
         self._components.register_component('config_store',
                                             config_store_component)
@@ -246,9 +245,7 @@ class Session(object):
         # and then thrown out. This is not efficient, nor is the methods arg
         # used in botocore, this is just for backwards compatibility.
         chain_builder = SubsetChainConfigFactory(session=self, methods=methods)
-        mapping = create_botocore_default_config_mapping(
-            chain_builder
-        )
+        mapping = create_botocore_default_config_mapping(self)
         for name, config_options in self.session_var_map.items():
             config_name, env_vars, default, typecast = config_options
             build_chain_config_args = {
@@ -982,7 +979,7 @@ class SessionVarDict(collections.MutableMapping):
             config_chain_builder.create_config_chain(
                 instance_name=logical_name,
                 env_var_names=env_vars,
-                config_property_name=config_name,
+                config_property_names=config_name,
                 default=default,
                 conversion_func=typecast,
             )
@@ -1023,7 +1020,7 @@ class SubsetChainConfigFactory(object):
         return self._factory.create_config_chain(
             instance_name=instance_name,
             env_var_names=env_var_names,
-            config_property_name=config_property_name,
+            config_property_names=config_property_name,
             default=default,
             conversion_func=conversion_func,
         )

@@ -57,6 +57,10 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
+VALID_S3_ARN = re.compile(
+    r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
+    r'[a-zA-Z0-9\-]{1,63}$'
+)
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {
@@ -216,10 +220,11 @@ def validate_bucket_name(params, **kwargs):
     if 'Bucket' not in params:
         return
     bucket = params['Bucket']
-    if VALID_BUCKET.search(bucket) is None:
+    if not VALID_BUCKET.search(bucket) and not VALID_S3_ARN.search(bucket):
         error_msg = (
             'Invalid bucket name "%s": Bucket name must match '
-            'the regex "%s"' % (bucket, VALID_BUCKET.pattern))
+            'the regex "%s" or be an ARN matching the regex "%s"' % (
+                bucket, VALID_BUCKET.pattern, VALID_S3_ARN.pattern))
         raise ParamValidationError(report=error_msg)
 
 

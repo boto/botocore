@@ -23,6 +23,7 @@ from botocore.compat import OrderedDict
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel, OperationModel
 from botocore.client import ClientCreator
+from botocore.configprovider import ConfigValueStore
 from botocore.loaders import Loader
 
 
@@ -80,7 +81,9 @@ class BaseDocsTest(unittest.TestCase):
             user_agent='user-agent', event_emitter=self.events,
             retry_handler_factory=mock.Mock(),
             retry_config_translator=mock.Mock(),
-            exceptions_factory=mock.Mock())
+            exceptions_factory=mock.Mock(),
+            config_store=ConfigValueStore()
+        )
 
         self.client = self.creator.create_client('myservice', 'us-east-1')
 

@@ -13,9 +13,14 @@
 """This module contains the inteface for controlling how configuration
 is loaded.
 """
+import logging
 import os
 
 from botocore import utils
+
+
+logger = logging.getLogger(__name__)
+
 
 #: A default dictionary that maps the logical names for session variables
 #: to the specific environment variables and configuration file names
@@ -83,16 +88,49 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'sts_regional_endpoints', 'AWS_STS_REGIONAL_ENDPOINTS', 'legacy',
         None
     ),
+
+}
+# A mapping for the s3 specific configuration vars. These are the configuration
+# vars that typically go in the s3 section of the config file. This mapping
+# follows the same schema as the previous session variable mapping.
+DEFAULT_S3_CONFIG_VARS = {
+    'addressing_style': (
+        ('s3', 'addressing_style'), None, None, None),
+    'use_accelerate_endpoint': (
+        ('s3', 'use_accelerate_endpoint'), None, None, utils.ensure_boolean
+    ),
+    'use_dualstack_endpoint': (
+        ('s3', 'use_dualstack_endpoint'), None, None, utils.ensure_boolean
+    ),
+    'payload_signing_enabled': (
+        ('s3', 'payload_signing_enabled'), None, None, utils.ensure_boolean
+    ),
+    'use_arn_region': (
+        ['s3_use_arn_region',
+         ('s3', 'use_arn_region')],
+        'AWS_S3_USE_ARN_REGION', None, utils.ensure_boolean
+    )
 }
 
 
-def create_botocore_default_config_mapping(chain_builder):
+def create_botocore_default_config_mapping(session):
+    chain_builder = ConfigChainFactory(session=session)
+    config_mapping = _create_config_chain_mapping(
+        chain_builder, BOTOCORE_DEFAUT_SESSION_VARIABLES)
+    config_mapping['s3'] = SectionConfigProvider(
+        's3', session, _create_config_chain_mapping(
+            chain_builder, DEFAULT_S3_CONFIG_VARS)
+    )
+    return config_mapping
+
+
+def _create_config_chain_mapping(chain_builder, config_variables):
     mapping = {}
-    for logical_name, config in BOTOCORE_DEFAUT_SESSION_VARIABLES.items():
+    for logical_name, config in config_variables.items():
         mapping[logical_name] = chain_builder.create_config_chain(
             instance_name=logical_name,
             env_var_names=config[1],
-            config_property_name=config[0],
+            config_property_names=config[0],
             default=config[2],
             conversion_func=config[3]
         )
@@ -123,7 +161,7 @@ class ConfigChainFactory(object):
         self._environ = environ
 
     def create_config_chain(self, instance_name=None, env_var_names=None,
-                            config_property_name=None, default=None,
+                            config_property_names=None, default=None,
                             conversion_func=None):
         """Build a config chain following the standard botocore pattern.
 
@@ -143,10 +181,11 @@ class ConfigChainFactory(object):
             search for this value. They are searched in order. If it is None
             it will not be added to the chain.
 
-        :type config_property_name: str or None
-        :param config_property_name: The string name of the key in the config
-            file for this config option. If it is None it will not be added to
-            the chain.
+        :type config_property_names: str/tuple or list of str/tuple or None
+        :param config_property_names: One of more strings or tuples
+            representing the name of the key in the config file for this
+            config option. They are searched in order. If it is None it will
+            not be added to the chain.
 
         :type default: Any
         :param default: Any constant value to be returned.
@@ -170,18 +209,10 @@ class ConfigChainFactory(object):
                 )
             )
         if env_var_names is not None:
-            providers.append(
-                EnvironmentProvider(
-                    names=env_var_names,
-                    env=self._environ,
-                )
-            )
-        if config_property_name is not None:
-            providers.append(
-                ScopedConfigProvider(
-                    config_var_name=config_property_name,
-                    session=self._session,
-                )
+            providers.extend(self._get_env_providers(env_var_names))
+        if config_property_names is not None:
+            providers.extend(
+                self._get_scoped_config_providers(config_property_names)
             )
         if default is not None:
             providers.append(ConstantProvider(value=default))
@@ -190,6 +221,29 @@ class ConfigChainFactory(object):
             providers=providers,
             conversion_func=conversion_func,
         )
+
+    def _get_env_providers(self, env_var_names):
+        env_var_providers = []
+        if not isinstance(env_var_names, list):
+            env_var_names = [env_var_names]
+        for env_var_name in env_var_names:
+            env_var_providers.append(
+                EnvironmentProvider(name=env_var_name, env=self._environ)
+            )
+        return env_var_providers
+
+    def _get_scoped_config_providers(self, config_property_names):
+        scoped_config_providers = []
+        if not isinstance(config_property_names, list):
+            config_property_names = [config_property_names]
+        for config_property_name in config_property_names:
+            scoped_config_providers.append(
+                ScopedConfigProvider(
+                    config_var_name=config_property_name,
+                    session=self._session,
+                )
+            )
+        return scoped_config_providers
 
 
 class ConfigValueStore(object):
@@ -371,9 +425,11 @@ class ScopedConfigProvider(BaseProvider):
     def __init__(self, config_var_name, session):
         """Initialize ScopedConfigProvider.
 
-        :type config_var_name: str
+        :type config_var_name: str or tuple
         :param config_var_name: The name of the config variable to load from
-            the configuration file.
+            the configuration file. If the value is a tuple, it must only
+            consist of two items, where the first item represents the section
+            and the second item represents the config var name in the section.
 
         :type session: :class:`botocore.session.Session`
         :param session: The botocore session to get the loaded configuration
@@ -384,9 +440,13 @@ class ScopedConfigProvider(BaseProvider):
 
     def provide(self):
         """Provide a value from a config file property."""
-        config = self._session.get_scoped_config()
-        value = config.get(self._config_var_name)
-        return value
+        scoped_config = self._session.get_scoped_config()
+        if isinstance(self._config_var_name, tuple):
+            section_config = scoped_config.get(self._config_var_name[0])
+            if not isinstance(section_config, dict):
+                return None
+            return section_config.get(self._config_var_name[1])
+        return scoped_config.get(self._config_var_name)
 
     def __repr__(self):
         return 'ScopedConfigProvider(config_var_name=%s, session=%s)' % (
@@ -397,35 +457,66 @@ class ScopedConfigProvider(BaseProvider):
 
 class EnvironmentProvider(BaseProvider):
     """This class loads config values from environment variables."""
-    def __init__(self, names, env):
+    def __init__(self, name, env):
         """Initialize with the keys in the dictionary to check.
 
-        :type names: str or list
-        :param names: If this is a str, the key with that name will
-            be loaded and returned. If this variable is
-            a list, then it must be a list of str. The same process will be
-            repeated for each string in the list, the first that returns non
-            None will be returned.
+        :type name: str
+        :param name: The key with that name will be loaded and returned.
 
         :type env: dict
         :param env: Environment variables dictionary to get variables from.
         """
-        self._names = names
+        self._name = name
         self._env = env
 
     def provide(self):
         """Provide a config value from a source dictionary."""
-        names = self._names
-        if not isinstance(names, list):
-            names = [names]
-        for name in names:
-            if name in self._env:
-                return self._env[name]
+        if self._name in self._env:
+            return self._env[self._name]
         return None
 
     def __repr__(self):
-        return 'EnvironmentProvider(names=%s, env=%s)' % (self._names,
-                                                          self._env)
+        return 'EnvironmentProvider(name=%s, env=%s)' % (self._name, self._env)
+
+
+class SectionConfigProvider(BaseProvider):
+    """Provides a dictionary from a section in the scoped config
+
+    This is useful for retrieving scoped config variables (i.e. s3) that have
+    their own set of config variables and resolving logic.
+    """
+    def __init__(self, section_name, session, override_providers=None):
+        self._section_name = section_name
+        self._session = session
+        self._scoped_config_provider = ScopedConfigProvider(
+            self._section_name, self._session)
+        self._override_providers = override_providers
+        if self._override_providers is None:
+            self._override_providers = {}
+
+    def provide(self):
+        section_config = self._scoped_config_provider.provide()
+        if section_config and not isinstance(section_config, dict):
+            logger.debug("The %s config key is not a dictionary type, "
+                         "ignoring its value of: %s", self._section_name,
+                         section_config)
+            return None
+        for section_config_var, provider in self._override_providers.items():
+            provider_val = provider.provide()
+            if provider_val is not None:
+                if section_config is None:
+                    section_config = {}
+                section_config[section_config_var] = provider_val
+        return section_config
+
+    def __repr__(self):
+        return (
+            'SectionConfigProvider(section_name=%s, '
+            'session=%s, override_providers=%s)' % (
+                self._section_name, self._session,
+                self._override_providers,
+            )
+        )
 
 
 class ConstantProvider(BaseProvider):
