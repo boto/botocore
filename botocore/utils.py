@@ -35,7 +35,8 @@ from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
-    ConnectionClosedError, ConnectTimeoutError,
+    ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
+    UnsupportedS3AccesspointConfigurationError
 )
 
 logger = logging.getLogger(__name__)
@@ -1153,6 +1154,12 @@ class S3RegionRedirector(object):
             # transport error.
             return
 
+        if self._is_s3_accesspoint(request_dict.get('context', {})):
+            logger.debug(
+                'S3 request was previously to an accesspoint, not redirecting.'
+            )
+            return
+
         if request_dict.get('context', {}).get('s3_redirected'):
             logger.debug(
                 'S3 request was previously redirected, not redirecting.')
@@ -1264,12 +1271,297 @@ class S3RegionRedirector(object):
         This handler retrieves a given bucket's signing context from the cache
         and adds it into the request context.
         """
+        if self._is_s3_accesspoint(context):
+            return
         bucket = params.get('Bucket')
         signing_context = self._cache.get(bucket)
         if signing_context is not None:
             context['signing'] = signing_context
         else:
             context['signing'] = {'bucket': bucket}
+
+    def _is_s3_accesspoint(self, context):
+        return 's3_accesspoint' in context
+
+
+class InvalidArnException(ValueError):
+    pass
+
+
+class ArnParser(object):
+    def parse_arn(self, arn):
+        arn_parts = arn.split(':', 5)
+        if len(arn_parts) < 6:
+            raise InvalidArnException(
+                'Provided ARN: %s must be of the format: '
+                'arn:partition:service:region:account:resource' % arn
+            )
+        return {
+            'partition': arn_parts[1],
+            'service': arn_parts[2],
+            'region': arn_parts[3],
+            'account': arn_parts[4],
+            'resource': arn_parts[5],
+        }
+
+
+class S3ArnParamHandler(object):
+    _ACCESSPOINT_RESOURCE_REGEX = re.compile(
+        r'^accesspoint[/:](?P<resource_name>.+)$'
+    )
+    _BLACKLISTED_OPERATIONS = [
+        'CreateBucket'
+    ]
+
+    def __init__(self, arn_parser=None):
+        self._arn_parser = arn_parser
+        if arn_parser is None:
+            self._arn_parser = ArnParser()
+
+    def register(self, event_emitter):
+        event_emitter.register('before-parameter-build.s3', self.handle_arn)
+
+    def handle_arn(self, params, model, context, **kwargs):
+        if model.name in self._BLACKLISTED_OPERATIONS:
+            return
+        arn_details = self._get_arn_details_from_bucket_param(params)
+        if arn_details is None:
+            return
+        if arn_details['resource_type'] == 'accesspoint':
+            self._store_accesspoint(params, context, arn_details)
+
+    def _get_arn_details_from_bucket_param(self, params):
+        if 'Bucket' in params:
+            try:
+                arn = params['Bucket']
+                arn_details = self._arn_parser.parse_arn(arn)
+                self._add_resource_type_and_name(arn, arn_details)
+                return arn_details
+            except InvalidArnException:
+                pass
+        return None
+
+    def _add_resource_type_and_name(self, arn, arn_details):
+        match = self._ACCESSPOINT_RESOURCE_REGEX.match(arn_details['resource'])
+        if match:
+            arn_details['resource_type'] = 'accesspoint'
+            arn_details['resource_name'] = match.group('resource_name')
+        else:
+            raise UnsupportedS3ArnError(arn=arn)
+
+    def _store_accesspoint(self, params, context, arn_details):
+        # Ideally the access-point would be stored as a parameter in the
+        # request where the serializer would then know how to serialize it,
+        # but access-points are not modeled in S3 operations so it would fail
+        # validation. Instead, we set the access-point to the bucket parameter
+        # to have some value set when serializing the request and additional
+        # information on the context from the arn to use in forming the
+        # access-point endpoint.
+        params['Bucket'] = arn_details['resource_name']
+        context['s3_accesspoint'] = {
+            'name': arn_details['resource_name'],
+            'account': arn_details['account'],
+            'partition': arn_details['partition'],
+            'region': arn_details['region'],
+        }
+
+
+class S3EndpointSetter(object):
+    _DEFAULT_PARTITION = 'aws'
+    _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
+
+    def __init__(self, endpoint_resolver, region=None,
+                 s3_config=None, endpoint_url=None, partition=None):
+        self._endpoint_resolver = endpoint_resolver
+        self._region = region
+        self._s3_config = s3_config
+        if s3_config is None:
+            self._s3_config = {}
+        self._endpoint_url = endpoint_url
+        self._partition = partition
+        if partition is None:
+            self._partition = self._DEFAULT_PARTITION
+
+    def register(self, event_emitter):
+        event_emitter.register('before-sign.s3', self.set_endpoint)
+
+    def set_endpoint(self, request, **kwargs):
+        if self._use_accesspoint_endpoint(request):
+            self._validate_accesspoint_supported(request)
+            region_name = self._resolve_region_for_accesspoint_endpoint(
+                request)
+            self._switch_to_accesspoint_endpoint(request, region_name)
+            return
+        if self._use_accelerate_endpoint:
+            switch_host_s3_accelerate(request=request, **kwargs)
+        if self._s3_addressing_handler:
+            self._s3_addressing_handler(request=request, **kwargs)
+
+    def _use_accesspoint_endpoint(self, request):
+        return 's3_accesspoint' in request.context
+
+    def _validate_accesspoint_supported(self, request):
+        if self._endpoint_url:
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client cannot use a custom "endpoint_url" when '
+                    'specifying an access-point ARN.'
+                )
+            )
+        if self._use_accelerate_endpoint:
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client does not support s3 accelerate configuration '
+                    'when and access-point ARN is specified.'
+                )
+            )
+        request_partion = request.context['s3_accesspoint']['partition']
+        if request_partion != self._partition:
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client is configured for "%s" partition, but access-point'
+                    ' ARN provided is for "%s" partition. The client and '
+                    ' access-point partition must be the same.' % (
+                        self._partition, request_partion)
+                )
+            )
+
+    def _resolve_region_for_accesspoint_endpoint(self, request):
+        if self._s3_config.get('use_arn_region', True):
+            accesspoint_region = request.context['s3_accesspoint']['region']
+            # If we are using the region from the access point,
+            # we will also want to make sure that we set it as the
+            # signing region as well
+            self._override_signing_region(request, accesspoint_region)
+            return accesspoint_region
+        return self._region
+
+    def _switch_to_accesspoint_endpoint(self, request, region_name):
+        original_components = urlsplit(request.url)
+        accesspoint_endpoint = urlunsplit((
+            original_components.scheme,
+            self._get_accesspoint_netloc(request.context, region_name),
+            self._get_accesspoint_path(
+                original_components.path, request.context),
+            original_components.query,
+            ''
+        ))
+        logger.debug(
+            'Updating URI from %s to %s' % (request.url, accesspoint_endpoint))
+        request.url = accesspoint_endpoint
+
+    def _get_accesspoint_netloc(self, request_context, region_name):
+        s3_accesspoint = request_context['s3_accesspoint']
+        accesspoint_netloc_components = [
+            '%s-%s' % (s3_accesspoint['name'], s3_accesspoint['account']),
+            's3-accesspoint'
+        ]
+        if self._s3_config.get('use_dualstack_endpoint'):
+            accesspoint_netloc_components.append('dualstack')
+        accesspoint_netloc_components.extend(
+            [
+                region_name,
+                self._get_dns_suffix(region_name)
+            ]
+        )
+        return '.'.join(accesspoint_netloc_components)
+
+    def _get_accesspoint_path(self, original_path, request_context):
+        # The Bucket parameter was substituted with the access-point name as
+        # some value was required in serializing the bucket name. Now that
+        # we are making the request directly to the access point, we will
+        # want to remove that access-point name from the path.
+        name = request_context['s3_accesspoint']['name']
+        # All S3 operations require at least a / in their path.
+        return original_path.replace('/' + name, '') or '/'
+
+    def _get_dns_suffix(self, region_name):
+        resolved = self._endpoint_resolver.construct_endpoint(
+            's3', region_name)
+        dns_suffix = self._DEFAULT_DNS_SUFFIX
+        if resolved and 'dnsSuffix' in resolved:
+            dns_suffix = resolved['dnsSuffix']
+        return dns_suffix
+
+    def _override_signing_region(self, request, region_name):
+        signing_context = {
+            'region': region_name,
+        }
+        # S3SigV4Auth will use the context['signing']['region'] value to
+        # sign with if present. This is used by the Bucket redirector
+        # as well but we should be fine because the redirector is never
+        # used in combination with the accesspoint setting logic.
+        request.context['signing'] = signing_context
+
+
+    @CachedProperty
+    def _use_accelerate_endpoint(self):
+        # Enable accelerate if the configuration is set to to true or the
+        # endpoint being used matches one of the accelerate endpoints.
+
+        # Accelerate has been explicitly configured.
+        if self._s3_config.get('use_accelerate_endpoint'):
+            return True
+
+        # Accelerate mode is turned on automatically if an endpoint url is
+        # provided that matches the accelerate scheme.
+        if self._endpoint_url is None:
+            return False
+
+        # Accelerate is only valid for Amazon endpoints.
+        netloc = urlsplit(self._endpoint_url).netloc
+        if not netloc.endswith('amazonaws.com'):
+            return False
+
+        # The first part of the url should always be s3-accelerate.
+        parts = netloc.split('.')
+        if parts[0] != 's3-accelerate':
+            return False
+
+        # Url parts between 's3-accelerate' and 'amazonaws.com' which
+        # represent different url features.
+        feature_parts = parts[1:-2]
+
+        # There should be no duplicate url parts.
+        if len(feature_parts) != len(set(feature_parts)):
+            return False
+
+        # Remaining parts must all be in the whitelist.
+        return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
+
+    @CachedProperty
+    def _addressing_style(self):
+        # Use virtual host style addressing if accelerate is enabled or if
+        # the given endpoint url is an accelerate endpoint.
+        if self._use_accelerate_endpoint:
+            return 'virtual'
+
+        # If a particular addressing style is configured, use it.
+        configured_addressing_style = self._s3_config.get('addressing_style')
+        if configured_addressing_style:
+            return configured_addressing_style
+
+    @CachedProperty
+    def _s3_addressing_handler(self):
+        # If virtual host style was configured, use it regardless of whether
+        # or not the bucket looks dns compatible.
+        if self._addressing_style == 'virtual':
+            logger.debug("Using S3 virtual host style addressing.")
+            return switch_to_virtual_host_style
+
+        # If path style is configured, no additional steps are needed. If
+        # endpoint_url was specified, don't default to virtual. We could
+        # potentially default provided endpoint urls to virtual hosted
+        # style, but for now it is avoided.
+        if self._addressing_style == 'path' or self._endpoint_url is not None:
+            logger.debug("Using S3 path style addressing.")
+            return None
+
+        logger.debug("Defaulting to S3 virtual host style addressing with "
+                     "path style addressing fallback.")
+
+        # By default, try to use virtual style with path fallback.
+        return fix_s3_host
 
 
 class ContainerMetadataFetcher(object):

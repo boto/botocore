@@ -754,6 +754,23 @@ class TestHandlers(BaseSessionTest):
     def test_validation_is_noop_if_no_bucket_param_exists(self):
         self.assertIsNone(handlers.validate_bucket_name(params={}))
 
+    def test_validation_is_s3_accesspoint_arn(self):
+        try:
+            arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint:endpoint'
+            handlers.validate_bucket_name({'Bucket': arn})
+        except ParamValidationError:
+            self.fail('The s3 arn: %s should pass validation' % arn)
+
+    def test_validation_is_global_s3_bucket_arn(self):
+        with self.assertRaises(ParamValidationError):
+            arn = 'arn:aws:s3:::mybucket'
+            handlers.validate_bucket_name({'Bucket': arn})
+
+    def test_validation_is_other_service_arn(self):
+        with self.assertRaises(ParamValidationError):
+            arn = 'arn:aws:ec2:us-west-2:123456789012:instance:myinstance'
+            handlers.validate_bucket_name({'Bucket': arn})
+
     def test_validate_non_ascii_metadata_values(self):
         with self.assertRaises(ParamValidationError):
             handlers.validate_ascii_metadata({'Metadata': {'foo': u'\u2713'}})

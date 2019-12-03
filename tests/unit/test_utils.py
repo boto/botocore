@@ -28,7 +28,11 @@ from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.exceptions import ReadTimeoutError
 from botocore.exceptions import ConnectTimeoutError
+from botocore.exceptions import UnsupportedS3ArnError
+from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
 from botocore.model import ServiceModel
+from botocore.model import OperationModel
+from botocore.regions import EndpointResolver
 from botocore.utils import ensure_boolean
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
@@ -56,6 +60,10 @@ from botocore.utils import percent_encode
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
+from botocore.utils import InvalidArnException
+from botocore.utils import ArnParser
+from botocore.utils import S3ArnParamHandler
+from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import IMDSFetcher
@@ -1584,6 +1592,355 @@ class TestS3RegionRedirector(unittest.TestCase):
         })
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
+
+    def test_no_redirect_from_error_for_accesspoint(self):
+        request_dict = {
+            'url': (
+                'https://myendpoint-123456789012.s3-accesspoint.'
+                'us-west-2.amazonaws.com/key'
+            ),
+            'context': {
+                's3_accesspoint': {}
+            }
+        }
+        response = (None, {
+            'Error': {'Code': '400', 'Message': 'Bad Request'},
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertEqual(redirect_response, None)
+
+    def test_no_redirect_from_cache_for_accesspoint(self):
+        self.cache['foo'] = {'endpoint': 'foo-endpoint'}
+        self.redirector = S3RegionRedirector(
+            self.endpoint_bridge, self.client, cache=self.cache)
+        params = {'Bucket': 'foo'}
+        context = {'s3_accesspoint': {}}
+        self.redirector.redirect_from_cache(params, context)
+        self.assertNotIn('signing', context)
+
+
+class TestArnParser(unittest.TestCase):
+    def setUp(self):
+        self.parser = ArnParser()
+
+    def test_parse(self):
+        arn = 'arn:aws:s3:us-west-2:1023456789012:myresource'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': 'us-west-2',
+                'account': '1023456789012',
+                'resource': 'myresource',
+            }
+        )
+
+    def test_parse_invalid_arn(self):
+        with self.assertRaises(InvalidArnException):
+            self.parser.parse_arn('arn:aws:s3')
+
+    def test_parse_arn_with_resource_type(self):
+        arn = 'arn:aws:s3:us-west-2:1023456789012:bucket_name:mybucket'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': 'us-west-2',
+                'account': '1023456789012',
+                'resource': 'bucket_name:mybucket',
+            }
+        )
+
+    def test_parse_arn_with_empty_elements(self):
+        arn = 'arn:aws:s3:::mybucket'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': '',
+                'account': '',
+                'resource': 'mybucket',
+            }
+        )
+
+
+class TestS3ArnParamHandler(unittest.TestCase):
+    def setUp(self):
+        self.arn_handler = S3ArnParamHandler()
+        self.model = mock.Mock(OperationModel)
+        self.model.name = 'GetObject'
+
+    def test_register(self):
+        event_emitter = mock.Mock()
+        self.arn_handler.register(event_emitter)
+        event_emitter.register.assert_called_with(
+            'before-parameter-build.s3', self.arn_handler.handle_arn)
+
+    def test_accesspoint_arn(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'endpoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_accesspoint': {
+                    'name': 'endpoint',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                }
+            }
+        )
+
+    def test_accesspoint_arn_with_colon(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:accesspoint:endpoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'endpoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_accesspoint': {
+                    'name': 'endpoint',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                }
+            }
+        )
+
+    def test_errors_for_non_accesspoint_arn(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:unsupported:resource'
+        }
+        context = {}
+        with self.assertRaises(UnsupportedS3ArnError):
+            self.arn_handler.handle_arn(params, self.model, context)
+
+    def test_ignores_bucket_names(self):
+        params = {'Bucket': 'mybucket'}
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'mybucket'})
+        self.assertEqual(context, {})
+
+    def test_ignores_create_bucket(self):
+        arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
+        params = {'Bucket': arn}
+        context = {}
+        self.model.name = 'CreateBucket'
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': arn})
+        self.assertEqual(context, {})
+
+
+class TestS3EndpointSetter(unittest.TestCase):
+    def setUp(self):
+        self.operation_name = 'GetObject'
+        self.signature_version = 's3v4'
+        self.region_name = 'us-west-2'
+        self.account = '123456789012'
+        self.bucket = 'mybucket'
+        self.key = 'key.txt'
+        self.accesspoint_name = 'myaccesspoint'
+        self.partition = 'aws'
+        self.endpoint_resolver = mock.Mock()
+        self.dns_suffix = 'amazonaws.com'
+        self.endpoint_resolver.construct_endpoint.return_value = {
+            'dnsSuffix': self.dns_suffix
+        }
+        self.endpoint_setter = self.get_endpoint_setter()
+
+    def get_endpoint_setter(self, **kwargs):
+        setter_kwargs = {
+            'endpoint_resolver': self.endpoint_resolver,
+            'region': self.region_name,
+        }
+        setter_kwargs.update(kwargs)
+        return S3EndpointSetter(**setter_kwargs)
+
+    def get_s3_request(self, bucket=None, key=None, scheme='https://',
+                       querystring=None):
+        url = scheme + 's3.us-west-2.amazonaws.com/'
+        if bucket:
+            url += bucket
+        if key:
+            url += '/%s' % key
+        if querystring:
+            url += '?%s' % querystring
+        return AWSRequest(method='GET', headers={}, url=url)
+
+    def get_s3_accesspoint_request(self, accesspoint_name=None,
+                                   accesspoint_context=None,
+                                   **s3_request_kwargs):
+        if not accesspoint_name:
+            accesspoint_name = self.accesspoint_name
+        request = self.get_s3_request(accesspoint_name, **s3_request_kwargs)
+        if accesspoint_context is None:
+            accesspoint_context = self.get_s3_accesspoint_context(
+                name=accesspoint_name)
+        request.context['s3_accesspoint'] = accesspoint_context
+        return request
+
+    def get_s3_accesspoint_context(self, **overrides):
+        accesspoint_context = {
+            'name': self.accesspoint_name,
+            'account': self.account,
+            'region': self.region_name,
+            'partition': self.partition,
+        }
+        accesspoint_context.update(overrides)
+        return accesspoint_context
+
+    def call_set_endpoint(self, endpoint_setter, request, **kwargs):
+        set_endpoint_kwargs = {
+            'request': request,
+            'operation_name': self.operation_name,
+            'signature_version': self.signature_version,
+            'region_name': self.region_name,
+        }
+        set_endpoint_kwargs.update(kwargs)
+        endpoint_setter.set_endpoint(**set_endpoint_kwargs)
+
+    def test_register(self):
+        event_emitter = mock.Mock()
+        self.endpoint_setter.register(event_emitter)
+        event_emitter.register.assert_called_with(
+            'before-sign.s3', self.endpoint_setter.set_endpoint)
+
+    def test_accesspoint_endpoint(self):
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, self.region_name
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_key_in_path(self):
+        request = self.get_s3_accesspoint_request(key=self.key)
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/%s' % (
+            self.accesspoint_name, self.account, self.region_name,
+            self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_scheme(self):
+        request = self.get_s3_accesspoint_request(scheme='http://')
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'http://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_query_string(self):
+        request = self.get_s3_accesspoint_request(querystring='acl')
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/?acl' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_uses_resolved_dns_suffix(self):
+        self.endpoint_resolver.construct_endpoint.return_value = {
+            'dnsSuffix': 'mysuffix.com'
+        }
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.mysuffix.com/' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_uses_region_of_client_if_use_arn_disabled(self):
+        client_region = 'client-region'
+        self.endpoint_setter = self.get_endpoint_setter(
+            region=client_region, s3_config={'use_arn_region': False})
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, client_region,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_errors_for_custom_endpoint(self):
+        endpoint_setter = self.get_endpoint_setter(
+            endpoint_url='https://custom.com')
+        request = self.get_s3_accesspoint_request()
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_errors_for_mismatching_partition(self):
+        endpoint_setter = self.get_endpoint_setter(partition='aws-cn')
+        accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
+        request = self.get_s3_accesspoint_request(
+            accesspoint_context=accesspoint_context)
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_errors_for_mismatching_partition_when_using_client_region(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'use_arn_region': False}, partition='aws-cn'
+        )
+        accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
+        request = self.get_s3_accesspoint_request(
+            accesspoint_context=accesspoint_context)
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_set_endpoint_for_auto(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'auto'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_virtual(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'virtual'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_path(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'path'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://s3.us-west-2.amazonaws.com/%s/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_accelerate(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'use_accelerate_endpoint': True})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3-accelerate.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
 
 
 class TestContainerMetadataFetcher(unittest.TestCase):

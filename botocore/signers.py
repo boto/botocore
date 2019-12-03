@@ -117,6 +117,7 @@ class RequestSigner(object):
         :type signing_name: str
         :param signing_name: The name to use for the service when signing.
         """
+        explicit_region_name = region_name
         if region_name is None:
             region_name = self._region_name
 
@@ -144,7 +145,9 @@ class RequestSigner(object):
             }
             if expires_in is not None:
                 kwargs['expires'] = expires_in
-
+            if not explicit_region_name and request.context.get(
+                    'signing', {}).get('region'):
+                kwargs['region_name'] = request.context['signing']['region']
             try:
                 auth = self.get_auth_instance(**kwargs)
             except UnknownSignatureVersionError as e:

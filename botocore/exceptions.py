@@ -453,6 +453,21 @@ class InvalidS3AddressingStyleError(BotoCoreError):
     )
 
 
+class UnsupportedS3ArnError(BotoCoreError):
+    """Error when S3 arn provided to Bucket parameter is not supported"""
+    fmt = (
+        'S3 ARN {arn} provided to "Bucket" parameter is invalid. Only '
+        'ARNs for S3 access-points are supported.'
+    )
+
+
+class UnsupportedS3AccesspointConfigurationError(BotoCoreError):
+    """Error when an unsupported configuration is used with access-points"""
+    fmt = (
+        'Unsupported configuration when using S3 access-points: {msg}'
+    )
+
+
 class InvalidRetryConfigurationError(BotoCoreError):
     """Error when invalid retry configuration is specified"""
     fmt = (

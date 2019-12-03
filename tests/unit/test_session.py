@@ -60,12 +60,12 @@ class BaseSessionTest(unittest.TestCase):
             'region': config_chain_builder.create_config_chain(
                 instance_name='region',
                 env_var_names='FOO_REGION',
-                config_property_name='foo_region',
+                config_property_names='foo_region',
             ),
             'data_path': config_chain_builder.create_config_chain(
                 instance_name='data_path',
                 env_var_names='FOO_DATA_PATH',
-                config_property_name='data_path',
+                config_property_names='data_path',
             ),
             'config_file': config_chain_builder.create_config_chain(
                 instance_name='config_file',
@@ -78,11 +78,11 @@ class BaseSessionTest(unittest.TestCase):
             'ca_bundle': config_chain_builder.create_config_chain(
                 instance_name='ca_bundle',
                 env_var_names='FOO_AWS_CA_BUNDLE',
-                config_property_name='foo_ca_bundle',
+                config_property_names='foo_ca_bundle',
             ),
             'api_versions': config_chain_builder.create_config_chain(
                 instance_name='api_versions',
-                config_property_name='foo_api_versions',
+                config_property_names='foo_api_versions',
                 default={},
             ),
         }
