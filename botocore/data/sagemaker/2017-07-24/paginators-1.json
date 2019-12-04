@@ -113,6 +113,84 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Results"
+    },
+    "ListApps": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Apps"
+    },
+    "ListAutoMLJobs": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AutoMLJobSummaries"
+    },
+    "ListCandidatesForAutoMLJob": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Candidates"
+    },
+    "ListDomains": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Domains"
+    },
+    "ListExperiments": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ExperimentSummaries"
+    },
+    "ListFlowDefinitions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "FlowDefinitionSummaries"
+    },
+    "ListHumanTaskUis": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "HumanTaskUiSummaries"
+    },
+    "ListMonitoringExecutions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "MonitoringExecutionSummaries"
+    },
+    "ListMonitoringSchedules": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "MonitoringScheduleSummaries"
+    },
+    "ListProcessingJobs": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ProcessingJobSummaries"
+    },
+    "ListTrialComponents": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "TrialComponentSummaries"
+    },
+    "ListTrials": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "TrialSummaries"
+    },
+    "ListUserProfiles": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "UserProfiles"
     }
   }
 }
