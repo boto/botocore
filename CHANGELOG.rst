@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.34
+=======
+
+* bugfix:s3: Fixed an issue where the request path was set incorrectly if access point name was present in key path.
+
+
 1.13.33
 =======
 

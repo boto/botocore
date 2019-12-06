@@ -1473,7 +1473,7 @@ class S3EndpointSetter(object):
         # want to remove that access-point name from the path.
         name = request_context['s3_accesspoint']['name']
         # All S3 operations require at least a / in their path.
-        return original_path.replace('/' + name, '') or '/'
+        return original_path.replace('/' + name, '', 1) or '/'
 
     def _get_dns_suffix(self, region_name):
         resolved = self._endpoint_resolver.construct_endpoint(
