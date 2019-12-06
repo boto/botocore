@@ -1222,6 +1222,20 @@ def test_correct_url_used_for_s3():
         )
     )
     yield t.case(
+        region='us-west-2', bucket=accesspoint_arn, key='myendpoint/key',
+        expected_url=(
+            'https://myendpoint-123456789012.s3-accesspoint.'
+            'us-west-2.amazonaws.com/myendpoint/key'
+        )
+    )
+    yield t.case(
+        region='us-west-2', bucket=accesspoint_arn, key='foo/myendpoint/key',
+        expected_url=(
+            'https://myendpoint-123456789012.s3-accesspoint.'
+            'us-west-2.amazonaws.com/foo/myendpoint/key'
+        )
+    )
+    yield t.case(
         # Note: The access-point arn has us-west-2 and the client's region is
         # us-east-1, for the default case the access-point arn region is used.
         region='us-east-1', bucket=accesspoint_arn, key='key',
