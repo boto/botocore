@@ -861,6 +861,8 @@ class ClientMethodAlias(object):
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
+    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)$', re.IGNORECASE)
+
     def __init__(self, header_name):
         self._header_name = header_name
 
@@ -874,9 +876,18 @@ class HeaderToHostHoister(object):
         if self._header_name not in params['headers']:
             return
         header_value = params['headers'][self._header_name]
+        self._ensure_header_is_valid_host(header_value)
         original_url = params['url']
         new_url = self._prepend_to_host(original_url, header_value)
         params['url'] = new_url
+
+    def _ensure_header_is_valid_host(self, header):
+        match = self._VALID_HOSTNAME.match(header)
+        if not match:
+            raise ParamValidationError(report=(
+                'Hostnames must contain only - and alphanumeric characters, '
+                'and between 1 and 63 characters long.'
+            ))
 
     def _prepend_to_host(self, url, prefix):
         url_components = urlsplit(url)
