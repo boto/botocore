@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.13.35
+=======
+
+* bugfix:s3: Add stricter validation to s3 control account id parameter.
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+
+
 1.13.34
 =======
 
