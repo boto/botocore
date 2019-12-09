@@ -1349,3 +1349,13 @@ class TestPrependToHost(unittest.TestCase):
         prepended = self._prepend_to_host(
             'https://bar.baz.example.com/path', 'foo')
         self.assertEqual(prepended, 'https://foo.bar.baz.example.com/path')
+
+    def test_does_validate_long_host(self):
+        with self.assertRaises(ParamValidationError):
+           self._prepend_to_host(
+               'https://example.com/path', 'toolong'*100)
+
+    def test_does_validate_host_with_illegal_char(self):
+        with self.assertRaises(ParamValidationError):
+           self._prepend_to_host(
+               'https://example.com/path', 'host#name')
