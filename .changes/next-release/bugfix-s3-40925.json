@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "s3",
-  "description": "Add stricter validation to s3 control account id parameter."
-}
