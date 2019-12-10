@@ -665,7 +665,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://%s.s3.us-east-1.amazonaws.com/%s' % (
                     self.bucket_name, self.key)),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
@@ -691,7 +691,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://%s.s3.us-east-1.amazonaws.com/%s' % (
                     self.bucket_name, self.key)),
             "Host was suppose to be the us-east-1 endpoint, instead "
             "got: %s" % presigned_url)
@@ -721,7 +721,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         # Make sure the correct endpoint is being used
         self.assertTrue(
             post_args['url'].startswith(
-                'https://%s.s3.amazonaws.com' % self.bucket_name),
+                'https://%s.s3.us-east-1.amazonaws.com' % self.bucket_name),
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
@@ -756,7 +756,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         # Make sure the correct endpoint is being used
         self.assertTrue(
             post_args['url'].startswith(
-                'https://%s.s3.amazonaws.com/' % self.bucket_name),
+                'https://%s.s3.us-east-1.amazonaws.com/' % self.bucket_name),
             "Host was suppose to use us-east-1 endpoint, instead "
             "got: %s" % post_args['url'])
 
@@ -780,7 +780,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://%s.s3.us-west-2.amazonaws.com/%s' % (
                     self.bucket_name, self.key)),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
@@ -831,7 +831,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         # Make sure the correct endpoint is being used
         self.assertTrue(
             post_args['url'].startswith(
-                'https://%s.s3.amazonaws.com' % self.bucket_name),
+                'https://%s.s3.us-west-2.amazonaws.com' % self.bucket_name),
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
@@ -864,7 +864,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         # Make sure the correct endpoint is being used
         self.assertTrue(
             post_args['url'].startswith(
-                'https://%s.s3.amazonaws.com/' % self.bucket_name),
+                'https://%s.s3.us-west-2.amazonaws.com/' % self.bucket_name),
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 

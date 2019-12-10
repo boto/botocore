@@ -285,7 +285,7 @@ class TestStubber(unittest.TestCase):
                     }
                 )
                 self.assertEqual(
-                    url, 'https://s3.amazonaws.com/mybucket/mykey')
+                    url, 'https://s3.us-east-1.amazonaws.com/mybucket/mykey')
         except StubResponseError:
             self.fail(
                 'Stubbed responses should not be required for generating '
@@ -308,8 +308,10 @@ class TestStubber(unittest.TestCase):
                     'Key': 'myotherkey'
                 }
             )
-            self.assertEqual(
-                    url, 'https://s3.amazonaws.com/myotherbucket/myotherkey')
+            expected_url = (
+                'https://s3.us-east-1.amazonaws.com/myotherbucket/myotherkey'
+            )
+            self.assertEqual(url, expected_url)
             actual_response = self.client.list_objects(**expected_params)
             self.assertEqual(desired_response, actual_response)
         self.stubber.assert_no_pending_responses()

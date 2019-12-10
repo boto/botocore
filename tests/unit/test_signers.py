@@ -742,7 +742,7 @@ class TestGenerateUrl(unittest.TestCase):
 
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': u'https://s3.us-east-1.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
@@ -765,7 +765,7 @@ class TestGenerateUrl(unittest.TestCase):
                 'ResponseContentDisposition': disposition})
         ref_request_dict = {
             'body': b'',
-            'url': (u'https://s3.amazonaws.com/mybucket/mykey'
+            'url': (u'https://s3.us-east-1.amazonaws.com/mybucket/mykey'
                     '?response-content-disposition='
                     'attachment%3B%20filename%3D%22download.jpg%22'),
             'headers': {},
@@ -791,7 +791,7 @@ class TestGenerateUrl(unittest.TestCase):
             ExpiresIn=20)
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': u'https://s3.us-east-1.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
@@ -807,7 +807,7 @@ class TestGenerateUrl(unittest.TestCase):
             HttpMethod='PUT')
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': u'https://s3.us-east-1.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
@@ -872,7 +872,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
         self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+            request_dict['url'], 'https://s3.us-east-1.amazonaws.com/mybucket')
         self.assertEqual(post_kwargs['expires_in'], 3600)
         self.assertEqual(
             conditions,
@@ -890,7 +890,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
         self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+            request_dict['url'], 'https://s3.us-east-1.amazonaws.com/mybucket')
         self.assertEqual(post_kwargs['expires_in'], 3600)
         self.assertEqual(
             conditions,
@@ -907,7 +907,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
         self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+            request_dict['url'], 'https://s3.us-east-1.amazonaws.com/mybucket')
         self.assertEqual(post_kwargs['expires_in'], 50)
         self.assertEqual(
             conditions,
@@ -928,7 +928,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
         self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+            request_dict['url'], 'https://s3.us-east-1.amazonaws.com/mybucket')
         self.assertEqual(
             conditions,
             [{'acl': 'public-read'}, {'bucket': 'mybucket'}, {'key': 'mykey'}])
