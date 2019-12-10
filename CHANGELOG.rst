@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.36
+=======
+
+* api-change:``kendra``: Update kendra client to latest version
+
+
 1.13.35
 =======
 
