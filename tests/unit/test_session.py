@@ -848,6 +848,21 @@ class TestComponentLocator(unittest.TestCase):
         with self.assertRaises(ArbitraryError):
             self.components.get_component('foo')
 
+    def test_get_same_component_does_not_throw_keyerror(self):
+        class DictOverride(dict):
+            def __contains__(self, key):
+                # Simulate multithreaded access
+                return True
+        self.components._deferred = DictOverride()
+        self.components._deferred.update({"name": dict})
+        # First time accessing `name` will succeed for sure.
+        self.assertEqual(self.components.get_component("name"), {})
+        # `name` should have been deleted after first access
+        self.assertIsNone(self.components._deferred.get("name"))
+        # Second time accessing `name` should also succeed -
+        # this simulates multithreaded access where self._deferred is
+        # not locked and del self._deferred[name] could throw KeyError
+        self.assertEqual(self.components.get_component("name"), {})
 
 class TestDefaultClientConfig(BaseSessionTest):
     def test_new_session_has_no_default_client_config(self):
