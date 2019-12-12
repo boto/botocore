@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 from tests import unittest, RawResponse
 import datetime
-import collections
 
 from dateutil.tz import tzutc
 from nose.tools import assert_equal
@@ -21,11 +20,16 @@ from botocore import parsers
 from botocore import model
 from botocore.compat import json
 
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
+
 
 # HTTP responses will typically return a custom HTTP
 # dict.  We want to ensure we're able to work with any
 # kind of mutable mapping implementation.
-class CustomHeaderDict(collections.MutableMapping):
+class CustomHeaderDict(MutableMapping):
     def __init__(self, original_dict):
         self._d = original_dict
 
