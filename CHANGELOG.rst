@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.38
+=======
+
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+
+
 1.13.37
 =======
 
