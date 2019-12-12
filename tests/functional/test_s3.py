@@ -1240,6 +1240,15 @@ def test_correct_url_used_for_s3():
         # Uses us-east-1 for no region set.
         expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
     yield t.case(
+        region='aws-global', bucket='bucket', key='key',
+        s3_config=use_dualstack,
+        # Pseudo-regions should not have any special resolving logic even when
+        # the endpoint won't work as we do not have the metadata to know that
+        # a region does not support dualstack. So just format it based on the
+        # region name.
+        expected_url=(
+            'https://bucket.s3.dualstack.aws-global.amazonaws.com/key'))
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3',
         # Still default to virtual hosted when possible on sigv2.

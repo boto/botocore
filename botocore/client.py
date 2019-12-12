@@ -331,13 +331,14 @@ class ClientEndpointBridge(object):
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
+        explicit_region = region_name is not None
         region_name, signing_region = self._pick_region_values(
             resolved, region_name, endpoint_url)
         if endpoint_url is None:
             if self._is_s3_dualstack_mode(service_name):
                 endpoint_url = self._create_dualstack_endpoint(
                     service_name, region_name,
-                    resolved['dnsSuffix'], is_secure)
+                    resolved['dnsSuffix'], is_secure, explicit_region)
             else:
                 # Use the sslCommonName over the hostname for Python 2.6 compat.
                 hostname = resolved.get('sslCommonName', resolved.get('hostname'))
@@ -373,11 +374,11 @@ class ClientEndpointBridge(object):
         return False
 
     def _create_dualstack_endpoint(self, service_name, region_name,
-                                   dns_suffix, is_secure):
-        if region_name == 'aws-global':
-            # This is to preserve behavior where if a user specified no
-            # region, it would default to us-east-1. aws-global is now the
-            # new default but does not form a valid endpoint url for dualstack.
+                                   dns_suffix, is_secure, explicit_region):
+        if not explicit_region and region_name == 'aws-global':
+            # If the region_name passed was not explicitly set, default to
+            # us-east-1 instead of the modeled default aws-global. Dualstack
+            # does not support aws-global
             region_name = 'us-east-1'
         hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
             service=service_name, region=region_name,
