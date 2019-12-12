@@ -194,9 +194,13 @@ class ClientCreator(object):
         # Check to see if the region is a region that we know about. If we
         # don't know about a region, then we can safely assume it's a new
         # region that is sigv4 only, since all new S3 regions only allow sigv4.
+        # The only exception is aws-global. This is a pseudo-region for the
+        # global endpoint, we should respect the signature versions it
+        # supports, which includes v2.
         regions = self._endpoint_resolver.get_available_endpoints(
             's3', client_meta.partition)
-        if client_meta.region_name not in regions:
+        if client_meta.region_name != 'aws-global' and \
+                client_meta.region_name not in regions:
             return
 
         # If it is a region we know about, we want to default to sigv2, so here
