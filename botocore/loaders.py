@@ -365,7 +365,7 @@ class Loader(object):
             the provided service_name.
 
         :raises: DataNotFoundError if no data could be found for the
-            service_name/type_name/api_version.
+            service_name/type_name.
 
         :return: The loaded data, as a python type (e.g. dict, list, etc).
         """
@@ -376,9 +376,11 @@ class Loader(object):
             raise UnknownServiceError(
                 service_name=service_name,
                 known_service_names=', '.join(sorted(known_services)))
+
         if api_version is None:
             api_version = self.determine_latest_version(
                 service_name, type_name)
+
         full_path = os.path.join(service_name, api_version, type_name)
         model = self.load_data(full_path)
 

@@ -137,8 +137,7 @@ def test_lint_pagination_configs():
     for service_name in services:
         service_model = session.get_service_model(service_name)
         page_config = loader.load_service_model(service_name,
-                                                'paginators-1',
-                                                service_model.api_version)
+                                                'paginators-1')
         for op_name, single_config in page_config['pagination'].items():
             yield (
                 _lint_single_paginator,

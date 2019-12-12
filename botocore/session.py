@@ -475,36 +475,32 @@ class Session(object):
         """
         return self.get_component('data_loader').load_data(data_path)
 
-    def get_service_model(self, service_name, api_version=None):
+    def get_service_model(self, service_name):
         """Get the service model object.
 
         :type service_name: string
         :param service_name: The service name
 
-        :type api_version: string
-        :param api_version: The API version of the service.  If none is
-            provided, then the latest API version will be used.
-
         :rtype: L{botocore.model.ServiceModel}
         :return: The botocore service model for the service.
 
         """
-        service_description = self.get_service_data(service_name, api_version)
+        service_description = self.get_service_data(service_name)
         return ServiceModel(service_description, service_name=service_name)
 
-    def get_waiter_model(self, service_name, api_version=None):
+    def get_waiter_model(self, service_name):
         loader = self.get_component('data_loader')
         waiter_config = loader.load_service_model(
-            service_name, 'waiters-2', api_version)
+            service_name, 'waiters-2')
         return waiter.WaiterModel(waiter_config)
 
-    def get_paginator_model(self, service_name, api_version=None):
+    def get_paginator_model(self, service_name):
         loader = self.get_component('data_loader')
         paginator_config = loader.load_service_model(
-            service_name, 'paginators-1', api_version)
+            service_name, 'paginators-1')
         return paginate.PaginatorModel(paginator_config)
 
-    def get_service_data(self, service_name, api_version=None):
+    def get_service_data(self, service_name):
         """
         Retrieve the fully merged data associated with a service.
         """
@@ -512,7 +508,6 @@ class Session(object):
         service_data = self.get_component('data_loader').load_service_model(
             data_path,
             type_name='service-2',
-            api_version=api_version
         )
         service_id = EVENT_ALIASES.get(service_name, service_name)
         self._events.emit('service-data-loaded.%s' % service_id,
@@ -711,7 +706,7 @@ class Session(object):
     def lazy_register_component(self, name, component):
         self._components.lazy_register_component(name, component)
 
-    def create_client(self, service_name, region_name=None, api_version=None,
+    def create_client(self, service_name, region_name=None,
                       use_ssl=True, verify=None, endpoint_url=None,
                       aws_access_key_id=None, aws_secret_access_key=None,
                       aws_session_token=None, config=None):
@@ -725,12 +720,6 @@ class Session(object):
         :type region_name: string
         :param region_name: The name of the region associated with the client.
             A client is associated with a single region.
-
-        :type api_version: string
-        :param api_version: The API version to use.  By default, botocore will
-            use the latest API version when creating a client.  You only need
-            to specify this parameter if you want to use a previous API version
-            of the client.
 
         :type use_ssl: boolean
         :param use_ssl: Whether or not to use SSL.  By default, SSL is used.
@@ -801,10 +790,6 @@ class Session(object):
         if verify is None:
             verify = self.get_config_variable('ca_bundle')
 
-        if api_version is None:
-            api_version = self.get_config_variable('api_versions').get(
-                service_name, None)
-
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
@@ -835,7 +820,7 @@ class Session(object):
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
             credentials=credentials, scoped_config=self.get_scoped_config(),
-            client_config=config, api_version=api_version)
+            client_config=config)
         monitor = self._get_internal_component('monitor')
         if monitor is not None:
             monitor.register(client.meta.events)

@@ -71,12 +71,11 @@ class ClientCreator(object):
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
                       credentials=None, scoped_config=None,
-                      api_version=None,
                       client_config=None):
         responses = self._event_emitter.emit(
             'choose-service-name', service_name=service_name)
         service_name = first_non_none_response(responses, default=service_name)
-        service_model = self._load_service_model(service_name, api_version)
+        service_model = self._load_service_model(service_name)
         cls = self._create_client_class(service_name, service_model)
         endpoint_bridge = ClientEndpointBridge(
             self._endpoint_resolver, scoped_config, client_config,
@@ -94,8 +93,8 @@ class ClientCreator(object):
         )
         return service_client
 
-    def create_client_class(self, service_name, api_version=None):
-        service_model = self._load_service_model(service_name, api_version)
+    def create_client_class(self, service_name):
+        service_model = self._load_service_model(service_name)
         return self._create_client_class(service_name, service_model)
 
     def _create_client_class(self, service_name, service_model):
@@ -112,9 +111,8 @@ class ClientCreator(object):
         cls = type(str(class_name), tuple(bases), class_attributes)
         return cls
 
-    def _load_service_model(self, service_name, api_version=None):
-        json_model = self._loader.load_service_model(service_name, 'service-2',
-                                                     api_version=api_version)
+    def _load_service_model(self, service_name):
+        json_model = self._loader.load_service_model(service_name, 'service-2')
         service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
 
@@ -788,8 +786,7 @@ class BaseClient(object):
             try:
                 page_config = self._loader.load_service_model(
                     self._service_model.service_name,
-                    'paginators-1',
-                    self._service_model.api_version)['pagination']
+                    'paginators-1')['pagination']
                 self._cache['page_config'] = page_config
             except DataNotFoundError:
                 self._cache['page_config'] = {}
@@ -801,8 +798,7 @@ class BaseClient(object):
             try:
                 waiter_config = self._loader.load_service_model(
                     self._service_model.service_name,
-                    'waiters-2',
-                    self._service_model.api_version)
+                    'waiters-2')
                 self._cache['waiter_config'] = waiter_config
             except DataNotFoundError:
                 self._cache['waiter_config'] = {}
