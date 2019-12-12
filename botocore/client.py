@@ -188,38 +188,16 @@ class ClientCreator(object):
             's3', client_config, scoped_config)
         if provided_signature_version is not None:
             return
-
-        # Check to see if the region is a region that we know about. If we
-        # don't know about a region, then we can safely assume it's a new
-        # region that is sigv4 only, since all new S3 regions only allow sigv4.
-        # The only exception is aws-global. This is a pseudo-region for the
-        # global endpoint, we should respect the signature versions it
-        # supports, which includes v2.
-        regions = self._endpoint_resolver.get_available_endpoints(
-            's3', client_meta.partition)
-        if client_meta.region_name != 'aws-global' and \
-                client_meta.region_name not in regions:
-            return
-
-        # If it is a region we know about, we want to default to sigv2, so here
-        # we check to see if it is available.
-        endpoint = self._endpoint_resolver.construct_endpoint(
-            's3', client_meta.region_name)
-        signature_versions = endpoint['signatureVersions']
-        if 's3' not in signature_versions:
-            return
-
-        # We now know that we're in a known region that supports sigv2 and
-        # the customer hasn't set a signature version so we default the
-        # signature version to sigv2.
+        # At this point, we want to default to sigV4 for all regions.
+        # SigV2 is no longer an option.
         client_meta.events.register(
-            'choose-signer.s3', self._default_s3_presign_to_sigv2)
+            'choose-signer.s3', self._default_s3_presign_to_sigv4)
 
-    def _default_s3_presign_to_sigv2(self, signature_version, **kwargs):
+    def _default_s3_presign_to_sigv4(self, signature_version, **kwargs):
         """
-        Returns the 's3' (sigv2) signer if presigning an s3 request. This is
+        Returns the 's3v4' signer if presigning an s3 request. This is
         intended to be used to set the default signature version for the signer
-        to sigv2.
+        to sigv4.
 
         :type signature_version: str
         :param signature_version: The current client signature version.
@@ -227,11 +205,11 @@ class ClientCreator(object):
         :type signing_name: str
         :param signing_name: The signing name of the service.
 
-        :return: 's3' if the request is an s3 presign request, None otherwise
+        :return: 's3v4' if the request is an s3 presign request, None otherwise
         """
         for suffix in ['-query', '-presign-post']:
             if signature_version.endswith(suffix):
-                return 's3' + suffix
+                return 's3v4' + suffix
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
