@@ -35,25 +35,6 @@ VALID_REGIONAL_ENDPOINTS_CONFIG = [
     'legacy',
     'regional',
 ]
-LEGACY_GLOBAL_STS_REGIONS = [
-    'ap-northeast-1',
-    'ap-south-1',
-    'ap-southeast-1',
-    'ap-southeast-2',
-    'aws-global',
-    'ca-central-1',
-    'eu-central-1',
-    'eu-north-1',
-    'eu-west-1',
-    'eu-west-2',
-    'eu-west-3',
-    'sa-east-1',
-    'us-east-1',
-    'us-east-2',
-    'us-west-1',
-    'us-west-2',
-]
-
 
 class ClientArgsCreator(object):
     def __init__(self, event_emitter, user_agent, response_parser_factory,
@@ -212,8 +193,6 @@ class ClientArgsCreator(object):
         if service_name == 's3':
             return self._compute_s3_endpoint_config(
                 s3_config=s3_config, **resolve_endpoint_kwargs)
-        if service_name == 'sts':
-            return self._compute_sts_endpoint_config(**resolve_endpoint_kwargs)
         return self._resolve_endpoint(**resolve_endpoint_kwargs)
 
     def _compute_s3_endpoint_config(self, s3_config,
@@ -260,39 +239,6 @@ class ClientArgsCreator(object):
             endpoint = endpoint_bridge.resolve('s3')
             endpoint_config['signing_region'] = endpoint['signing_region']
             endpoint_config['region_name'] = endpoint['region_name']
-
-    def _compute_sts_endpoint_config(self, **resolve_endpoint_kwargs):
-        endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
-        if self._should_set_global_sts_endpoint(
-                resolve_endpoint_kwargs['region_name'],
-                resolve_endpoint_kwargs['endpoint_url']):
-            self._set_global_sts_endpoint(
-                endpoint_config, resolve_endpoint_kwargs['is_secure'])
-        return endpoint_config
-
-    def _should_set_global_sts_endpoint(self, region_name, endpoint_url):
-        if endpoint_url:
-            return False
-        return (
-            self._get_sts_regional_endpoints_config() == 'legacy' and
-            region_name in LEGACY_GLOBAL_STS_REGIONS
-        )
-
-    def _get_sts_regional_endpoints_config(self):
-        sts_regional_endpoints_config = self._config_store.get_config_variable(
-            'sts_regional_endpoints')
-        if not sts_regional_endpoints_config:
-            sts_regional_endpoints_config = 'legacy'
-        if sts_regional_endpoints_config not in \
-                VALID_REGIONAL_ENDPOINTS_CONFIG:
-            raise botocore.exceptions.InvalidSTSRegionalEndpointsConfigError(
-                sts_regional_endpoints_config=sts_regional_endpoints_config)
-        return sts_regional_endpoints_config
-
-    def _set_global_sts_endpoint(self, endpoint_config, is_secure):
-        scheme = 'https' if is_secure else 'http'
-        endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
-        endpoint_config['signing_region'] = 'us-east-1'
 
     def _resolve_endpoint(self, service_name, region_name,
                           endpoint_url, is_secure, endpoint_bridge):

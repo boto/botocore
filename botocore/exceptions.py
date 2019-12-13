@@ -493,14 +493,6 @@ class InvalidS3UsEast1RegionalEndpointConfigError(BotoCoreError):
     )
 
 
-class InvalidSTSRegionalEndpointsConfigError(BotoCoreError):
-    """Error when invalid sts regional endpoints configuration is specified"""
-    fmt = (
-        'STS regional endpoints option {sts_regional_endpoints_config} is '
-        'invaild. Valid options are: legacy and regional'
-    )
-
-
 class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
