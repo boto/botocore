@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.39
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+
+
 1.13.38
 =======
 
