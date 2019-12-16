@@ -782,7 +782,7 @@ class BaseRestParser(ResponseParser):
             metadata['RequestId'] = headers['x-amzn-requestid']
         elif 'x-amz-request-id' in headers:
             metadata['RequestId'] = headers['x-amz-request-id']
-            # HostId is what it's called whenver this value is returned
+            # HostId is what it's called whenever this value is returned
             # in an XML response body, so to be consistent, we'll always
             # call is HostId.
             metadata['HostId'] = headers.get('x-amz-id-2', '')
