@@ -39,9 +39,6 @@ class TestS3Addressing(BaseSessionTest):
             # Return the request that was sent over the wire.
             return http_stubber.requests[0]
 
-    def enable_hmacv1(self, **kwargs):
-        return 's3v4'
-
     def test_list_objects_dns_name(self):
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request('list_objects', params)
