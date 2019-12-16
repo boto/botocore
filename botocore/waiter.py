@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import random
+
 import jmespath
 import logging
 import time
@@ -263,7 +265,7 @@ class AcceptorConfig(object):
 
 
 class Waiter(object):
-    def __init__(self, name, config, operation_method):
+    def __init__(self, name, config, operation_method, delay_method=None):
         """
 
         :type name: string
@@ -277,8 +279,15 @@ class Waiter(object):
             and returns a response.  For example, this can be
             a method from a botocore client.
 
+        :type delay_method: Optional[callable]
+        :param delay_method: A callable with a function signature matching
+            `delay_method(attempt: int, delay: int, cap: int = 600)`; the
+            callable must call `time.sleep()` to pause execution between
+            status checks; the default uses a configured delay with
+            `Waiter.retry_delay(attempt, config.delay, cap=600)`.
         """
         self._operation_method = operation_method
+        self._delay_method = delay_method or self.retry_delay
         # The two attributes are exposed to allow for introspection
         # and documentation.
         self.name = name
@@ -328,4 +337,57 @@ class Waiter(object):
                     reason='Max attempts exceeded',
                     last_response=response
                 )
-            time.sleep(sleep_amount)
+            self._delay_method(num_attempts, sleep_amount)
+
+    @staticmethod
+    def retry_delay(attempt, delay=1, cap=600):
+        """An exponential back-off delay, with random jitter.
+        There is a default maximum interval of 10 minutes.
+
+        :type attempt: int
+        :param attempt: the Nth attempt to check status
+
+        :type delay: Union[int, float]
+        :param delay: Number of seconds between status checks;
+            must be a non-negative number, defaults to 1 sec.
+
+        :type cap: Union[int, float]
+        :param cap: Max delay between status checks, in seconds;
+            must be a non-negative number, defaults to 600 sec (10 min).
+
+        Example of behavior to illustrate the range of values used for
+        random delays with up to 10 attempts and a delay of 1 sec.
+
+        .. code-block:: python
+
+            def retry_delay(attempt, delay, cap=600):
+                pause = delay + pow(attempt * 0.6, 2)
+                pause = min(pause, cap)
+                print(pause / 2, pause)
+
+            for attempt in range(10):
+                retry_delay(attempt, 1)
+
+             0.50  1.00
+             0.68  1.36
+             1.22  2.44
+             2.12  4.24
+             3.38  6.76
+             5.00 10.00
+             6.98 13.96
+             9.32 18.64
+            12.02 24.04
+            15.08 30.16
+
+        .. seealso::
+
+            - https://docs.aws.amazon.com/general/latest/gr/api-retries.html
+            - https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+        """
+        # ensure args are non-negative numbers
+        delay = abs(delay)
+        cap = abs(cap)
+        pause = delay + pow(attempt * 0.6, 2)
+        pause = min(pause, cap)
+        pause = random.uniform(pause / 2, pause)
+        time.sleep(pause)

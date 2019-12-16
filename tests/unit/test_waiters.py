@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
+import time
+
 from tests import unittest, BaseEnvVar
 
 import mock
@@ -310,6 +312,10 @@ class TestWaitersObjects(unittest.TestCase):
         config = SingleWaiterConfig(waiter_config)
         return config
 
+    @staticmethod
+    def no_delay_method(tries, delay):
+        time.sleep(0)  # don't wait
+
     def test_waiter_waits_until_acceptor_matches(self):
         config = self.create_waiter_config(
             max_attempts=3,
@@ -319,7 +325,7 @@ class TestWaitersObjects(unittest.TestCase):
         # match followed by a third call that matches the
         # acceptor.
         operation_method = mock.Mock()
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         self.client_responses_are(
             {'Foo': 'FAILURE'},
             {'Foo': 'FAILURE'},
@@ -340,7 +346,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'Foo': 'FAILURE'},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
 
@@ -357,7 +363,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'Error': {'Code': 'UnknownError', 'Message': 'bad error'}},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
 
@@ -367,7 +373,7 @@ class TestWaitersObjects(unittest.TestCase):
         operation_method = mock.Mock()
         self.client_responses_are(last_response,
                                   for_operation=operation_method)
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         with self.assertRaises(WaiterError) as e:
             waiter.wait()
         self.assertEqual(e.exception.last_response, last_response)
@@ -387,7 +393,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'Error': {'Code': error_code, 'Message': error_message}},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
 
         with self.assertRaisesRegexp(WaiterError, error_message):
             waiter.wait()
@@ -408,7 +414,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'WillNeverGetCalled': True},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
         # Not only should we raise an exception, but we should have
@@ -432,7 +438,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'NeverCalled': True},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         waiter.wait()
         self.assertEqual(operation_method.call_count, 3)
 
@@ -450,7 +456,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'Success': False},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
 
@@ -469,32 +475,65 @@ class TestWaitersObjects(unittest.TestCase):
         operation_method.assert_called_with(Foo='foo', Bar='bar',
                                             Baz='baz')
 
-    @mock.patch('time.sleep')
-    def test_waiter_honors_delay_time_between_retries(self, sleep_mock):
+    def test_waiter_calls_delay_method_between_retries(self):
         delay_time = 5
         config = self.create_waiter_config(delay=delay_time)
         operation_method = mock.Mock()
         self.client_responses_are(
-            # This is an unknown error that's not called out
-            # in any of the waiter config, so when the
-            # waiter encounters this response it will transition
-            # to the failure state.
             {'Success': False},
             {'Success': False},
             {'Success': False},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+
+        with mock.patch.object(Waiter, 'retry_delay') as mock_retry:
+            waiter = Waiter('MyWaiter', config, operation_method)
+            with self.assertRaises(WaiterError):
+                waiter.wait()
+
+            # We attempt three times, which means we need to sleep
+            # twice, once before each subsequent request.
+            self.assertEqual(mock_retry.call_count, 2)
+            mock_retry.assert_called_with(mock.ANY, delay_time)
+
+    @mock.patch('time.sleep')
+    def test_waiter_retry_delay_method(self, mock_sleep):
+        delay_max = 300
+        delay_time = 10  # something less than the default max of 600
+        Waiter.retry_delay(1, delay_time, cap=delay_max)
+        self.assertEqual(mock_sleep.call_count, 1)
+        sleep_call = mock_sleep.mock_calls[0]
+        self.assertTrue(sleep_call >= mock.call(delay_time / 2))
+        self.assertTrue(sleep_call <= mock.call(delay_max))
+
+        mock_sleep.reset_mock()
+        delay_time = 800  # when delay > max, max delay is used
+        Waiter.retry_delay(1, delay_time, cap=delay_max)
+        self.assertEqual(mock_sleep.call_count, 1)
+        sleep_call = mock_sleep.mock_calls[0]
+        self.assertTrue(sleep_call <= mock.call(delay_max))
+
+    def test_waiter_honors_custom_delay_method_between_retries(self):
+        delay_time = 5
+        config = self.create_waiter_config(delay=delay_time)
+        operation_method = mock.Mock()
+        self.client_responses_are(
+            {'Success': False},
+            {'Success': False},
+            {'Success': False},
+            for_operation=operation_method
+        )
+        delay_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method, delay_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
 
         # We attempt three times, which means we need to sleep
         # twice, once before each subsequent request.
-        self.assertEqual(sleep_mock.call_count, 2)
-        sleep_mock.assert_called_with(delay_time)
+        self.assertEqual(delay_method.call_count, 2)
+        delay_method.assert_called_with(mock.ANY, delay_time)
 
-    @mock.patch('time.sleep')
-    def test_waiter_invocation_config_honors_delay(self, sleep_mock):
+    def test_waiter_invocation_config_honors_delay(self):
         config = self.create_waiter_config()
         operation_method = mock.Mock()
         self.client_responses_are(
@@ -503,15 +542,16 @@ class TestWaitersObjects(unittest.TestCase):
             {'Success': False},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        delay_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method, delay_method)
         custom_delay = 3
         with self.assertRaises(WaiterError):
             waiter.wait(WaiterConfig={'Delay': custom_delay})
 
         # We attempt three times, which means we need to sleep
         # twice, once before each subsequent request.
-        self.assertEqual(sleep_mock.call_count, 2)
-        sleep_mock.assert_called_with(custom_delay)
+        self.assertEqual(delay_method.call_count, 2)
+        delay_method.assert_called_with(mock.ANY, custom_delay)
 
     def test_waiter_invocation_config_honors_max_attempts(self):
         config = self.create_waiter_config()
@@ -521,7 +561,7 @@ class TestWaitersObjects(unittest.TestCase):
             {'Success': False},
             for_operation=operation_method
         )
-        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method, self.no_delay_method)
         custom_max = 2
         with self.assertRaises(WaiterError):
             waiter.wait(WaiterConfig={'MaxAttempts': custom_max})
