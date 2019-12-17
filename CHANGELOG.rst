@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.13.41
+=======
+
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.13.40
 =======
 
