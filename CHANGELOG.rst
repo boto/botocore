@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.13.42
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* enhancement:``s3``: Add support for opting into using the us-east-1 regional endpoint.
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.13.41
 =======
 
