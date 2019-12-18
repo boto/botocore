@@ -91,6 +91,18 @@ class Config(object):
           * path -- Addressing style is always by path. Endpoints will be
             addressed as such: s3.amazonaws.com/mybucket
 
+        * 'us_east_1_regional_endpoint' - Refers to what S3 endpoint to use
+          when the region is configured to be us-east-1. Values must be a
+          string that equals:
+
+           * regional -- Use the us-east-1.amazonaws.com endpoint if the
+             client is configured to use the us-east-1 region.
+
+           * legacy -- Use the s3.amazonaws.com endpoint if the client is
+             configured to use the us-east-1 region. This is the default if
+             the configuration option is not specified.
+
+
     :type retries: dict
     :param retries: A dictionary for retry specific configurations.
         Valid keys are:

@@ -109,6 +109,11 @@ DEFAULT_S3_CONFIG_VARS = {
         ['s3_use_arn_region',
          ('s3', 'use_arn_region')],
         'AWS_S3_USE_ARN_REGION', None, utils.ensure_boolean
+    ),
+    'us_east_1_regional_endpoint': (
+        ['s3_us_east_1_regional_endpoint',
+         ('s3', 'us_east_1_regional_endpoint')],
+        'AWS_S3_US_EAST_1_REGIONAL_ENDPOINT', None, None
     )
 }
 
