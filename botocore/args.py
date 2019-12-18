@@ -31,7 +31,7 @@ from botocore.endpoint import EndpointCreator
 logger = logging.getLogger(__name__)
 
 
-VALID_STS_REGIONAL_ENDPOINTS_CONFIG = [
+VALID_REGIONAL_ENDPOINTS_CONFIG = [
     'legacy',
     'regional',
 ]
@@ -83,10 +83,6 @@ class ClientArgsCreator(object):
 
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
-        if signing_region is None and endpoint_region_name is None:
-            signing_region, endpoint_region_name = \
-                self._get_default_s3_region(service_name, endpoint_bridge)
-            config_kwargs['region_name'] = endpoint_region_name
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
@@ -147,12 +143,14 @@ class ClientArgsCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
+        s3_config = self.compute_s3_config(client_config)
         endpoint_config = self._compute_endpoint_config(
             service_name=service_name,
             region_name=region_name,
             endpoint_url=endpoint_url,
             is_secure=is_secure,
             endpoint_bridge=endpoint_bridge,
+            s3_config=s3_config,
         )
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
@@ -203,18 +201,76 @@ class ClientArgsCreator(object):
         return s3_configuration
 
     def _compute_endpoint_config(self, service_name, region_name, endpoint_url,
-                                 is_secure, endpoint_bridge):
-        endpoint_config = endpoint_bridge.resolve(
-            service_name, region_name, endpoint_url, is_secure)
-        if self._should_set_global_sts_endpoint(
-                service_name, region_name, endpoint_url):
-            self._set_global_sts_endpoint(endpoint_config, is_secure)
+                                 is_secure, endpoint_bridge, s3_config):
+        resolve_endpoint_kwargs = {
+            'service_name': service_name,
+            'region_name': region_name,
+            'endpoint_url': endpoint_url,
+            'is_secure': is_secure,
+            'endpoint_bridge': endpoint_bridge,
+        }
+        if service_name == 's3':
+            return self._compute_s3_endpoint_config(
+                s3_config=s3_config, **resolve_endpoint_kwargs)
+        if service_name == 'sts':
+            return self._compute_sts_endpoint_config(**resolve_endpoint_kwargs)
+        return self._resolve_endpoint(**resolve_endpoint_kwargs)
+
+    def _compute_s3_endpoint_config(self, s3_config,
+                                    **resolve_endpoint_kwargs):
+        force_s3_global = self._should_force_s3_global(
+            resolve_endpoint_kwargs['region_name'], s3_config)
+        if force_s3_global:
+            resolve_endpoint_kwargs['region_name'] = None
+        endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
+        self._set_region_if_custom_s3_endpoint(
+            endpoint_config, resolve_endpoint_kwargs['endpoint_bridge'])
+        # For backwards compatibility reasons, we want to make sure the
+        # client.meta.region_name will remain us-east-1 if we forced the
+        # endpoint to be the global region. Specifically, if this value
+        # changes to aws-global, it breaks logic where a user is checking
+        # for us-east-1 as the global endpoint such as in creating buckets.
+        if force_s3_global and endpoint_config['region_name'] == 'aws-global':
+            endpoint_config['region_name'] = 'us-east-1'
         return endpoint_config
 
-    def _should_set_global_sts_endpoint(self, service_name, region_name,
-                                        endpoint_url):
-        if service_name != 'sts':
-            return False
+    def _should_force_s3_global(self, region_name, s3_config):
+        s3_regional_config = 'legacy'
+        if s3_config and 'us_east_1_regional_endpoint' in s3_config:
+            s3_regional_config = s3_config['us_east_1_regional_endpoint']
+            self._validate_s3_regional_config(s3_regional_config)
+        return (
+            s3_regional_config == 'legacy' and
+            region_name in ['us-east-1', None]
+        )
+
+    def _validate_s3_regional_config(self, config_val):
+        if config_val not in VALID_REGIONAL_ENDPOINTS_CONFIG:
+            raise botocore.exceptions.\
+                InvalidS3UsEast1RegionalEndpointConfigError(
+                    s3_us_east_1_regional_endpoint_config=config_val)
+
+    def _set_region_if_custom_s3_endpoint(self, endpoint_config,
+                                          endpoint_bridge):
+        # If a user is providing a custom URL, the endpoint resolver will
+        # refuse to infer a signing region. If we want to default to s3v4,
+        # we have to account for this.
+        if endpoint_config['signing_region'] is None \
+                and endpoint_config['region_name'] is None:
+            endpoint = endpoint_bridge.resolve('s3')
+            endpoint_config['signing_region'] = endpoint['signing_region']
+            endpoint_config['region_name'] = endpoint['region_name']
+
+    def _compute_sts_endpoint_config(self, **resolve_endpoint_kwargs):
+        endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
+        if self._should_set_global_sts_endpoint(
+                resolve_endpoint_kwargs['region_name'],
+                resolve_endpoint_kwargs['endpoint_url']):
+            self._set_global_sts_endpoint(
+                endpoint_config, resolve_endpoint_kwargs['is_secure'])
+        return endpoint_config
+
+    def _should_set_global_sts_endpoint(self, region_name, endpoint_url):
         if endpoint_url:
             return False
         return (
@@ -228,7 +284,7 @@ class ClientArgsCreator(object):
         if not sts_regional_endpoints_config:
             sts_regional_endpoints_config = 'legacy'
         if sts_regional_endpoints_config not in \
-                VALID_STS_REGIONAL_ENDPOINTS_CONFIG:
+                VALID_REGIONAL_ENDPOINTS_CONFIG:
             raise botocore.exceptions.InvalidSTSRegionalEndpointsConfigError(
                 sts_regional_endpoints_config=sts_regional_endpoints_config)
         return sts_regional_endpoints_config
@@ -238,14 +294,10 @@ class ClientArgsCreator(object):
         endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
         endpoint_config['signing_region'] = 'us-east-1'
 
-    def _get_default_s3_region(self, service_name, endpoint_bridge):
-        # If a user is providing a custom URL, the endpoint resolver will
-        # refuse to infer a signing region. If we want to default to s3v4,
-        # we have to account for this.
-        if service_name == 's3':
-            endpoint = endpoint_bridge.resolve('s3')
-            return endpoint['signing_region'], endpoint['region_name']
-        return None, None
+    def _resolve_endpoint(self, service_name, region_name,
+                          endpoint_url, is_secure, endpoint_bridge):
+        return endpoint_bridge.resolve(
+            service_name, region_name, endpoint_url, is_secure)
 
     def _compute_socket_options(self, scoped_config):
         # This disables Nagle's algorithm and is the default socket options
