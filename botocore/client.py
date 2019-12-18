@@ -194,9 +194,13 @@ class ClientCreator(object):
         # Check to see if the region is a region that we know about. If we
         # don't know about a region, then we can safely assume it's a new
         # region that is sigv4 only, since all new S3 regions only allow sigv4.
+        # The only exception is aws-global. This is a pseudo-region for the
+        # global endpoint, we should respect the signature versions it
+        # supports, which includes v2.
         regions = self._endpoint_resolver.get_available_endpoints(
             's3', client_meta.partition)
-        if client_meta.region_name not in regions:
+        if client_meta.region_name != 'aws-global' and \
+                client_meta.region_name not in regions:
             return
 
         # If it is a region we know about, we want to default to sigv2, so here
@@ -331,13 +335,14 @@ class ClientEndpointBridge(object):
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
+        explicit_region = region_name is not None
         region_name, signing_region = self._pick_region_values(
             resolved, region_name, endpoint_url)
         if endpoint_url is None:
             if self._is_s3_dualstack_mode(service_name):
                 endpoint_url = self._create_dualstack_endpoint(
                     service_name, region_name,
-                    resolved['dnsSuffix'], is_secure)
+                    resolved['dnsSuffix'], is_secure, explicit_region)
             else:
                 # Use the sslCommonName over the hostname for Python 2.6 compat.
                 hostname = resolved.get('sslCommonName', resolved.get('hostname'))
@@ -373,7 +378,12 @@ class ClientEndpointBridge(object):
         return False
 
     def _create_dualstack_endpoint(self, service_name, region_name,
-                                   dns_suffix, is_secure):
+                                   dns_suffix, is_secure, explicit_region):
+        if not explicit_region and region_name == 'aws-global':
+            # If the region_name passed was not explicitly set, default to
+            # us-east-1 instead of the modeled default aws-global. Dualstack
+            # does not support aws-global
+            region_name = 'us-east-1'
         hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
             service=service_name, region=region_name,
             dns_suffix=dns_suffix)

@@ -718,9 +718,13 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
 
 
 def _should_use_global_endpoint(client):
-    use_dualstack_endpoint = False
-    if client.meta.config.s3 is not None:
-        use_dualstack_endpoint = client.meta.config.s3.get(
-            'use_dualstack_endpoint', False)
-    return (client.meta.partition == 'aws' and
-            not use_dualstack_endpoint)
+    if client.meta.partition != 'aws':
+        return False
+    s3_config = client.meta.config.s3
+    if s3_config:
+        if s3_config.get('use_dualstack_endpoint', False):
+            return False
+        if s3_config.get('us_east_1_regional_endpoint') == 'regional' and \
+                client.meta.config.region_name == 'us-east-1':
+            return False
+    return True
