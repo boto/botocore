@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.13.43
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.13.42
 =======
 
