@@ -25,13 +25,8 @@ from urllib3.connectionpool import HTTPSConnectionPool
 import botocore.utils
 from botocore.compat import six
 from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
-     urlencode
+     urlencode, MutableMapping
 from botocore.exceptions import UnseekableStreamError
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
 
 
 logger = logging.getLogger(__name__)

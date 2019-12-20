@@ -18,12 +18,7 @@ from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
-from botocore.compat import json
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
+from botocore.compat import json, MutableMapping
 
 
 # HTTP responses will typically return a custom HTTP

@@ -48,11 +48,7 @@ from botocore import waiter
 from botocore import retryhandler, translate
 from botocore import utils
 from botocore.utils import EVENT_ALIASES
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
+from botocore.compat import MutableMapping
 
 
 logger = logging.getLogger(__name__)
