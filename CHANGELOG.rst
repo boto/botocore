@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.13.44
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
 1.13.43
 =======
 
