@@ -22,7 +22,6 @@ import os
 import platform
 import socket
 import warnings
-import collections
 
 from botocore import __version__
 from botocore import UNSIGNED
@@ -49,6 +48,7 @@ from botocore import waiter
 from botocore import retryhandler, translate
 from botocore import utils
 from botocore.utils import EVENT_ALIASES
+from botocore.compat import MutableMapping
 
 
 logger = logging.getLogger(__name__)
@@ -941,7 +941,7 @@ class ComponentLocator(object):
             pass
 
 
-class SessionVarDict(collections.MutableMapping):
+class SessionVarDict(MutableMapping):
     def __init__(self, session, session_vars):
         self._session = session
         self._store = copy.copy(session_vars)
