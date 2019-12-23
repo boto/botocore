@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.45
+=======
+
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``health``: Update health client to latest version
+* api-change:``detective``: Update detective client to latest version
+
+
 1.13.44
 =======
 
