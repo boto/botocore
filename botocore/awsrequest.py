@@ -15,7 +15,6 @@ import sys
 import logging
 import functools
 import socket
-import collections
 
 import urllib3.util
 from urllib3.connection import VerifiedHTTPSConnection
@@ -26,7 +25,7 @@ from urllib3.connectionpool import HTTPSConnectionPool
 import botocore.utils
 from botocore.compat import six
 from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
-     urlencode
+     urlencode, MutableMapping
 from botocore.exceptions import UnseekableStreamError
 
 
@@ -621,7 +620,7 @@ class _HeaderKey(object):
         return repr(self._key)
 
 
-class HeadersDict(collections.MutableMapping):
+class HeadersDict(MutableMapping):
     """A case-insenseitive dictionary to represent HTTP headers. """
     def __init__(self, *args, **kwargs):
         self._dict = {}

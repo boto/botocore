@@ -415,6 +415,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "TrafficMirrorTargets"
+    },
+    "DescribeExportImageTasks": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ExportImageTasks"
+    },
+    "DescribeFastSnapshotRestores": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "FastSnapshotRestores"
     }
   }
 }

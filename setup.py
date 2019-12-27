@@ -40,7 +40,7 @@ if sys.version_info[:2] == (2, 6):
     requires.append('simplejson==3.3.0')
     requires.append('python-dateutil>=2.1,<2.7.0')
 else:
-    requires.append('python-dateutil>=2.1,<2.8.1')
+    requires.append('python-dateutil>=2.1,<3.0.0')
 
 if sys.version_info[:2] == (2, 6):
     requires.append('urllib3>=1.20,<1.24')
@@ -86,5 +86,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ]
 )

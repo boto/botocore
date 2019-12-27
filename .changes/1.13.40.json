@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``mq``", 
+    "description": "Update mq client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehendmedical``", 
+    "description": "Update comprehendmedical client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]

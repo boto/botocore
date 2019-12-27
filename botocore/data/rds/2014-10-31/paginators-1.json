@@ -186,6 +186,24 @@
       "limit_key": "MaxRecords",
       "output_token": "Marker",
       "result_key": "InstallationMedia"
+    },
+    "DescribeDBProxies": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "DBProxies"
+    },
+    "DescribeDBProxyTargetGroups": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "TargetGroups"
+    },
+    "DescribeDBProxyTargets": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "Targets"
     }
   }
 }

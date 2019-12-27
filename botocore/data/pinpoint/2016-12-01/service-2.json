@@ -132,7 +132,7 @@
           "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
         }
       ],
-      "documentation": "<p>Creates a message template that you can use in messages that are sent through the email channel.</p>"
+      "documentation": "<p>Creates a message template for messages that are sent through the email channel.</p>"
     },
     "CreateExportJob": {
       "name": "CreateExportJob",
@@ -296,7 +296,7 @@
           "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
         }
       ],
-      "documentation": "<p>Creates a message template that you can use in messages that are sent through a push notification channel.</p>"
+      "documentation": "<p>Creates a message template for messages that are sent through a push notification channel.</p>"
     },
     "CreateSegment": {
       "name": "CreateSegment",
@@ -376,7 +376,45 @@
           "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
         }
       ],
-      "documentation": "<p>Creates a message template that you can use in messages that are sent through the SMS channel.</p>"
+      "documentation": "<p>Creates a message template for messages that are sent through the SMS channel.</p>"
+    },
+    "CreateVoiceTemplate": {
+      "name": "CreateVoiceTemplate",
+      "http": {
+        "method": "POST",
+        "requestUri": "/v1/templates/{template-name}/voice",
+        "responseCode": 201
+      },
+      "input": {
+        "shape": "CreateVoiceTemplateRequest"
+      },
+      "output": {
+        "shape": "CreateVoiceTemplateResponse",
+        "documentation": "<p>The request succeeded and the specified resource was created.</p>"
+      },
+      "errors": [
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        },
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        }
+      ],
+      "documentation": "<p>Creates a message template for messages that are sent through the voice channel.</p>"
     },
     "DeleteAdmChannel": {
       "name": "DeleteAdmChannel",
@@ -796,7 +834,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Deletes a message template that was designed for use in messages that were sent through the email channel.</p>"
+      "documentation": "<p>Deletes a message template for messages that were sent through the email channel.</p>"
     },
     "DeleteEndpoint": {
       "name": "DeleteEndpoint",
@@ -1006,7 +1044,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Deletes a message template that was designed for use in messages that were sent through a push notification channel.</p>"
+      "documentation": "<p>Deletes a message template for messages that were sent through a push notification channel.</p>"
     },
     "DeleteSegment": {
       "name": "DeleteSegment",
@@ -1132,7 +1170,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Deletes a message template that was designed for use in messages that were sent through the SMS channel.</p>"
+      "documentation": "<p>Deletes a message template for messages that were sent through the SMS channel.</p>"
     },
     "DeleteUserEndpoints": {
       "name": "DeleteUserEndpoints",
@@ -1217,6 +1255,48 @@
         }
       ],
       "documentation": "<p>Disables the voice channel for an application and deletes any existing settings for the channel.</p>"
+    },
+    "DeleteVoiceTemplate": {
+      "name": "DeleteVoiceTemplate",
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/v1/templates/{template-name}/voice",
+        "responseCode": 202
+      },
+      "input": {
+        "shape": "DeleteVoiceTemplateRequest"
+      },
+      "output": {
+        "shape": "DeleteVoiceTemplateResponse",
+        "documentation": "<p>The request was accepted for processing. Processing may not be complete.</p>"
+      },
+      "errors": [
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        },
+        {
+          "shape": "NotFoundException",
+          "documentation": "<p>The request failed because the specified resource was not found (NotFoundException).</p>"
+        },
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        }
+      ],
+      "documentation": "<p>Deletes a message template for messages that were sent through the voice channel.</p>"
     },
     "GetAdmChannel": {
       "name": "GetAdmChannel",
@@ -1594,7 +1674,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Retrieves information about all of your applications.</p>"
+      "documentation": "<p>Retrieves information about all the applications that are associated with your Amazon Pinpoint account.</p>"
     },
     "GetBaiduChannel": {
       "name": "GetBaiduChannel",
@@ -2014,7 +2094,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Retrieves the content and settings for a message template that you can use in messages that are sent through the email channel.</p>"
+      "documentation": "<p>Retrieves the content and settings of a message template for messages that are sent through the email channel.</p>"
     },
     "GetEndpoint": {
       "name": "GetEndpoint",
@@ -2518,7 +2598,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Retrieves the content and settings for a message template that you can use in messages that are sent through a push notification channel.</p>"
+      "documentation": "<p>Retrieves the content and settings of a message template for messages that are sent through a push notification channel.</p>"
     },
     "GetSegment": {
       "name": "GetSegment",
@@ -2728,7 +2808,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Retrieves information about the configuration, dimension, and other settings for all versions of a specific segment that's associated with an application.</p>"
+      "documentation": "<p>Retrieves information about the configuration, dimension, and other settings for all the versions of a specific segment that's associated with an application.</p>"
     },
     "GetSegments": {
       "name": "GetSegments",
@@ -2854,7 +2934,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Retrieves the content and settings for a message template that you can use in messages that are sent through the SMS channel.</p>"
+      "documentation": "<p>Retrieves the content and settings of a message template for messages that are sent through the SMS channel.</p>"
     },
     "GetUserEndpoints": {
       "name": "GetUserEndpoints",
@@ -2940,6 +3020,48 @@
       ],
       "documentation": "<p>Retrieves information about the status and settings of the voice channel for an application.</p>"
     },
+    "GetVoiceTemplate": {
+      "name": "GetVoiceTemplate",
+      "http": {
+        "method": "GET",
+        "requestUri": "/v1/templates/{template-name}/voice",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "GetVoiceTemplateRequest"
+      },
+      "output": {
+        "shape": "GetVoiceTemplateResponse",
+        "documentation": "<p>The request succeeded.</p>"
+      },
+      "errors": [
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        },
+        {
+          "shape": "NotFoundException",
+          "documentation": "<p>The request failed because the specified resource was not found (NotFoundException).</p>"
+        },
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        }
+      ],
+      "documentation": "<p>Retrieves the content and settings of a message template for messages that are sent through the voice channel.</p>"
+    },
     "ListJourneys": {
       "name": "ListJourneys",
       "http": {
@@ -2996,10 +3118,50 @@
         "shape": "ListTagsForResourceResponse",
         "documentation": "<p>The request succeeded.</p>"
       },
-      "errors": [
-
-      ],
+      "errors": [],
       "documentation": "<p>Retrieves all the tags (keys and values) that are associated with an application, campaign, journey, message template, or segment.</p>"
+    },
+    "ListTemplateVersions": {
+      "name": "ListTemplateVersions",
+      "http": {
+        "method": "GET",
+        "requestUri": "/v1/templates/{template-name}/{template-type}/versions",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "ListTemplateVersionsRequest"
+      },
+      "output": {
+        "shape": "ListTemplateVersionsResponse",
+        "documentation": "<p>The request succeeded.</p>"
+      },
+      "errors": [
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        },
+        {
+          "shape": "NotFoundException",
+          "documentation": "<p>The request failed because the specified resource was not found (NotFoundException).</p>"
+        },
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        }
+      ],
+      "documentation": "<p>Retrieves information about all the versions of a specific message template.</p>"
     },
     "ListTemplates": {
       "name": "ListTemplates",
@@ -3301,9 +3463,7 @@
       "input": {
         "shape": "TagResourceRequest"
       },
-      "errors": [
-
-      ],
+      "errors": [],
       "documentation": "<p>Adds one or more tags (keys and values) to an application, campaign, journey, message template, or segment.</p>"
     },
     "UntagResource": {
@@ -3316,9 +3476,7 @@
       "input": {
         "shape": "UntagResourceRequest"
       },
-      "errors": [
-
-      ],
+      "errors": [],
       "documentation": "<p>Removes one or more tags (keys and values) from an application, campaign, journey, message template, or segment.</p>"
     },
     "UpdateAdmChannel": {
@@ -3739,7 +3897,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Updates an existing message template that you can use in messages that are sent through the email channel.</p>"
+      "documentation": "<p>Updates an existing message template for messages that are sent through the email channel.</p>"
     },
     "UpdateEndpoint": {
       "name": "UpdateEndpoint",
@@ -3949,7 +4107,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Cancels an active journey.</p>"
+      "documentation": "<p>Cancels (stops) an active journey.</p>"
     },
     "UpdatePushTemplate": {
       "name": "UpdatePushTemplate",
@@ -3991,7 +4149,7 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Updates an existing message template that you can use in messages that are sent through a push notification channel.</p>"
+      "documentation": "<p>Updates an existing message template for messages that are sent through a push notification channel.</p>"
     },
     "UpdateSegment": {
       "name": "UpdateSegment",
@@ -4117,7 +4275,49 @@
           "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
         }
       ],
-      "documentation": "<p>Updates an existing message template that you can use in messages that are sent through the SMS channel.</p>"
+      "documentation": "<p>Updates an existing message template for messages that are sent through the SMS channel.</p>"
+    },
+    "UpdateTemplateActiveVersion": {
+      "name": "UpdateTemplateActiveVersion",
+      "http": {
+        "method": "PUT",
+        "requestUri": "/v1/templates/{template-name}/{template-type}/active-version",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "UpdateTemplateActiveVersionRequest"
+      },
+      "output": {
+        "shape": "UpdateTemplateActiveVersionResponse",
+        "documentation": "<p>The request succeeded.</p>"
+      },
+      "errors": [
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        },
+        {
+          "shape": "NotFoundException",
+          "documentation": "<p>The request failed because the specified resource was not found (NotFoundException).</p>"
+        },
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        }
+      ],
+      "documentation": "<p>Changes the status of a specific version of a message template to <i>active</i>.</p>"
     },
     "UpdateVoiceChannel": {
       "name": "UpdateVoiceChannel",
@@ -4160,6 +4360,48 @@
         }
       ],
       "documentation": "<p>Enables the voice channel for an application or updates the status and settings of the voice channel for an application.</p>"
+    },
+    "UpdateVoiceTemplate": {
+      "name": "UpdateVoiceTemplate",
+      "http": {
+        "method": "PUT",
+        "requestUri": "/v1/templates/{template-name}/voice",
+        "responseCode": 202
+      },
+      "input": {
+        "shape": "UpdateVoiceTemplateRequest"
+      },
+      "output": {
+        "shape": "UpdateVoiceTemplateResponse",
+        "documentation": "<p>The request was accepted for processing. Processing may not be complete.</p>"
+      },
+      "errors": [
+        {
+          "shape": "BadRequestException",
+          "documentation": "<p>The request contains a syntax error (BadRequestException).</p>"
+        },
+        {
+          "shape": "InternalServerErrorException",
+          "documentation": "<p>The request failed due to an unknown internal server error, exception, or failure (InternalServerErrorException).</p>"
+        },
+        {
+          "shape": "ForbiddenException",
+          "documentation": "<p>The request was denied because access to the specified resource is forbidden (ForbiddenException).</p>"
+        },
+        {
+          "shape": "NotFoundException",
+          "documentation": "<p>The request failed because the specified resource was not found (NotFoundException).</p>"
+        },
+        {
+          "shape": "MethodNotAllowedException",
+          "documentation": "<p>The request failed because the method is not allowed for the specified resource (MethodNotAllowedException).</p>"
+        },
+        {
+          "shape": "TooManyRequestsException",
+          "documentation": "<p>The request failed because too many requests were sent during a certain amount of time (TooManyRequestsException).</p>"
+        }
+      ],
+      "documentation": "<p>Updates an existing message template for messages that are sent through the voice channel.</p>"
     }
   },
   "shapes": {
@@ -4275,7 +4517,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. If specified, this value overrides all other content for the message.</p>"
         },
         "SilentPush": {
           "shape": "__boolean",
@@ -4444,7 +4686,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides all other content for the message.</p> <note><p>If you specify the raw content of an APNs push notification, the message payload has to include the content-available key. The value of the content-available key has to be an integer, and can only be 0 or 1. If you're sending a standard notification, set the value of content-available to 0. If you're sending a silent (background) notification, set the value of content-available to 1. Additionally, silent notification payloads can't include the alert, badge, or sound keys. For more information, see <a href=\"https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification\">Generating a Remote Notification</a> and <a href=\"https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/pushing_background_updates_to_your_app\">Pushing Background Updates to Your App</a> on the Apple Developer website.</p></note>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. If specified, this value overrides all other content for the message.</p> <note><p>If you specify the raw content of an APNs push notification, the message payload has to include the content-available key. The value of the content-available key has to be an integer, and can only be 0 or 1. If you're sending a standard notification, set the value of content-available to 0. If you're sending a silent (background) notification, set the value of content-available to 1. Additionally, silent notification payloads can't include the alert, badge, or sound keys. For more information, see <a href=\"https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification\">Generating a Remote Notification</a> and <a href=\"https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/pushing_background_updates_to_your_app\">Pushing Background Updates to Your App</a> on the Apple Developer website.</p></note>"
         },
         "SilentPush": {
           "shape": "__boolean",
@@ -4491,6 +4733,10 @@
         "MediaUrl": {
           "shape": "__string",
           "documentation": "<p>The URL of an image or video to display in push notifications that are based on the message template.</p>"
+        },
+        "RawContent": {
+          "shape": "__string",
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for push notifications that are based on the message template. If specified, this value overrides all other content for the message template.</p>"
         },
         "Sound": {
           "shape": "__string",
@@ -4838,7 +5084,7 @@
         },
         "MultiCondition": {
           "shape": "MultiConditionalSplitActivity",
-          "documentation": "<p>The settings for a multivariate split activity. This type of activity sends participants down one of as many as five paths in a journey, based on conditions that you specify.</p>"
+          "documentation": "<p>The settings for a multivariate split activity. This type of activity sends participants down one of as many as five paths (including a default <i>Else</i> path) in a journey, based on conditions that you specify.</p>"
         },
         "RandomSplit": {
           "shape": "RandomSplitActivity",
@@ -4931,11 +5177,11 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the message. If specified, this value overrides all other values for the message.</p>"
         },
         "Substitutions": {
           "shape": "MapOfListOf__string",
-          "documentation": "<p>An object that maps variable values for the message. Amazon Pinpoint merges these values with the variable values specified by properties of the DefaultMessage object. The substitutions in this map take precedence over all other substitutions.</p>"
+          "documentation": "<p>A map of the message variables to merge with the variables specified by properties of the DefaultMessage object. The variables specified in this map take precedence over all other variables.</p>"
         },
         "TitleOverride": {
           "shape": "__string",
@@ -4962,6 +5208,10 @@
         "ImageUrl": {
           "shape": "__string",
           "documentation": "<p>The URL of an image to display in a push notification that's based on the message template.</p>"
+        },
+        "RawContent": {
+          "shape": "__string",
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for a push notification that's based on the message template. If specified, this value overrides all other content for the message template.</p>"
         },
         "SmallImageIconUrl": {
           "shape": "__string",
@@ -5259,7 +5509,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. If specified, this value overrides all other content for the message.</p>"
         },
         "SilentPush": {
           "shape": "__boolean",
@@ -5352,7 +5602,7 @@
       "members": {
         "Body": {
           "shape": "__string",
-          "documentation": "<p>The body of the email for recipients whose email clients don't support HTML content.</p>"
+          "documentation": "<p>The body of the email for recipients whose email clients don't render HTML content.</p>"
         },
         "FromAddress": {
           "shape": "__string",
@@ -5360,7 +5610,7 @@
         },
         "HtmlBody": {
           "shape": "__string",
-          "documentation": "<p>The body of the email, in HTML format, for recipients whose email clients support HTML content.</p>"
+          "documentation": "<p>The body of the email, in HTML format, for recipients whose email clients render HTML content.</p>"
         },
         "Title": {
           "shape": "__string",
@@ -5381,7 +5631,7 @@
         },
         "FilterType": {
           "shape": "FilterType",
-          "documentation": "<p>The type of event that causes the campaign to be sent. Valid values are: SYSTEM, sends the campaign when a system event occurs; and, ENDPOINT, sends the campaign when an endpoint event (<link  linkend=\"apps-application-id-events\">Events resource</link>) occurs.</p>"
+          "documentation": "<p>The type of event that causes the campaign to be sent. Valid values are: SYSTEM, sends the campaign when a system event occurs; and, ENDPOINT, sends the campaign when an endpoint event (<link  linkend=\"apps-application-id-events\">Events</link> resource) occurs.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for events that cause a campaign to be sent.</p>",
@@ -5447,7 +5697,7 @@
         },
         "CreationDate": {
           "shape": "__string",
-          "documentation": "<p>The date, ISO 8601 format, when the campaign was created.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the campaign was created.</p>"
         },
         "DefaultState": {
           "shape": "CampaignState",
@@ -5692,11 +5942,11 @@
         },
         "FalseActivity": {
           "shape": "__string",
-          "documentation": "<p>The unique identifier for the activity to perform if the condition isn't met.</p>"
+          "documentation": "<p>The unique identifier for the activity to perform if the conditions aren't met.</p>"
         },
         "TrueActivity": {
           "shape": "__string",
-          "documentation": "<p>The unique identifier for the activity to perform if the condition is met.</p>"
+          "documentation": "<p>The unique identifier for the activity to perform if the conditions are met.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for a yes/no split activity in a journey. This type of activity sends participants down one of two paths in a journey, based on conditions that you specify.</p>"
@@ -5778,8 +6028,7 @@
       "type": "structure",
       "members": {
         "EmailTemplateRequest": {
-          "shape": "EmailTemplateRequest",
-          "documentation": "<p>Creates a new message template that you can use in messages that are sent through the email channel.</p>"
+          "shape": "EmailTemplateRequest"
         },
         "TemplateName": {
           "shape": "__string",
@@ -5903,8 +6152,7 @@
       "type": "structure",
       "members": {
         "PushNotificationTemplateRequest": {
-          "shape": "PushNotificationTemplateRequest",
-          "documentation": "<p>Creates a message template that you can use in messages that are sent through a push notification channel.</p>"
+          "shape": "PushNotificationTemplateRequest"
         },
         "TemplateName": {
           "shape": "__string",
@@ -5966,8 +6214,7 @@
       "type": "structure",
       "members": {
         "SMSTemplateRequest": {
-          "shape": "SMSTemplateRequest",
-          "documentation": "<p>Creates a message template that you can use in messages that are sent through the SMS channel.</p>"
+          "shape": "SMSTemplateRequest"
         },
         "TemplateName": {
           "shape": "__string",
@@ -6012,19 +6259,50 @@
       },
       "documentation": "<p>Provides information about a request to create a message template.</p>"
     },
+    "CreateVoiceTemplateRequest": {
+      "type": "structure",
+      "members": {
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "VoiceTemplateRequest": {
+          "shape": "VoiceTemplateRequest"
+        }
+      },
+      "required": [
+        "TemplateName",
+        "VoiceTemplateRequest"
+      ],
+      "payload": "VoiceTemplateRequest"
+    },
+    "CreateVoiceTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "CreateTemplateMessageBody": {
+          "shape": "CreateTemplateMessageBody"
+        }
+      },
+      "required": [
+        "CreateTemplateMessageBody"
+      ],
+      "payload": "CreateTemplateMessageBody"
+    },
     "DefaultMessage": {
       "type": "structure",
       "members": {
         "Body": {
           "shape": "__string",
-          "documentation": "<p>The default message body of the push notification, email, or SMS message.</p>"
+          "documentation": "<p>The default body of the message.</p>"
         },
         "Substitutions": {
           "shape": "MapOfListOf__string",
-          "documentation": "<p>The default message variables to use in the push notification, email, or SMS message. You can override these default variables with individual address variables.</p>"
+          "documentation": "<p>The default message variables to use in the message. You can override these default variables with individual address variables.</p>"
         }
       },
-      "documentation": "<p>Specifies the default message to use for all channels.</p>"
+      "documentation": "<p>Specifies the default message for all channels.</p>"
     },
     "DefaultPushNotificationMessage": {
       "type": "structure",
@@ -6335,6 +6613,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -6479,6 +6763,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -6564,6 +6854,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -6641,6 +6937,38 @@
       ],
       "payload": "VoiceChannelResponse"
     },
+    "DeleteVoiceTemplateRequest": {
+      "type": "structure",
+      "members": {
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
+        }
+      },
+      "required": [
+        "TemplateName"
+      ]
+    },
+    "DeleteVoiceTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "MessageBody": {
+          "shape": "MessageBody"
+        }
+      },
+      "required": [
+        "MessageBody"
+      ],
+      "payload": "MessageBody"
+    },
     "DeliveryStatus": {
       "type": "string",
       "enum": [
@@ -6677,7 +7005,7 @@
         },
         "DefaultMessage": {
           "shape": "DefaultMessage",
-          "documentation": "<p>The default message body for all channels.</p>"
+          "documentation": "<p>The default message for all channels.</p>"
         },
         "DefaultPushNotificationMessage": {
           "shape": "DefaultPushNotificationMessage",
@@ -6858,6 +7186,10 @@
         "TemplateName": {
           "shape": "__string",
           "documentation": "<p>The name of the email template to use for the message.</p>"
+        },
+        "TemplateVersion": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier for the version of the email template to use for the message. If specified, this value must match the identifier for an existing template version. To retrieve a list of versions and version identifiers for a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If you don't specify a value for this property, Amazon Pinpoint uses the <i>active</i> version of the template. The <i>active</i> version is typically the version of a template that's been most recently reviewed and approved for use, depending on your workflow. It isn't necessarily the latest version of a template.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for an email activity in a journey. This type of activity sends an email message to participants.</p>"
@@ -6865,9 +7197,13 @@
     "EmailTemplateRequest": {
       "type": "structure",
       "members": {
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>A JSON object that specifies the default values to use for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable. When you create a message that's based on the template, you can override these defaults with message-specific and address-specific variables and values.</p>"
+        },
         "HtmlPart": {
           "shape": "__string",
-          "documentation": "<p>The message body, in HTML format, to use in email messages that are based on the message template. We recommend using HTML format for email clients that support HTML. You can include links, formatted text, and more in an HTML message.</p>"
+          "documentation": "<p>The message body, in HTML format, to use in email messages that are based on the message template. We recommend using HTML format for email clients that render HTML content. You can include links, formatted text, and more in an HTML message.</p>"
         },
         "Subject": {
           "shape": "__string",
@@ -6878,9 +7214,13 @@
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that defines the tags to associate with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
         },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>A custom description of the message template.</p>"
+        },
         "TextPart": {
           "shape": "__string",
-          "documentation": "<p>The message body, in text format, to use in email messages that are based on the message template. We recommend using text format for email clients that don't support HTML and clients that are connected to high-latency networks, such as mobile devices.</p>"
+          "documentation": "<p>The message body, in plain text format, to use in email messages that are based on the message template. We recommend using plain text format for email clients that don't render HTML content and clients that are connected to high-latency networks, such as mobile devices.</p>"
         }
       },
       "documentation": "<p>Specifies the content and settings for a message template that can be used in messages that are sent through the email channel.</p>"
@@ -6894,7 +7234,11 @@
         },
         "CreationDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was created.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was created.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>The JSON object that specifies the default values that are used for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
         },
         "HtmlPart": {
           "shape": "__string",
@@ -6902,7 +7246,7 @@
         },
         "LastModifiedDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was last modified.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was last modified.</p>"
         },
         "Subject": {
           "shape": "__string",
@@ -6912,6 +7256,10 @@
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that identifies the tags that are associated with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the message template.</p>"
         },
         "TemplateName": {
           "shape": "__string",
@@ -6923,7 +7271,11 @@
         },
         "TextPart": {
           "shape": "__string",
-          "documentation": "<p>The message body, in text format, that's used in email messages that are based on the message template.</p>"
+          "documentation": "<p>The message body, in plain text format, that's used in email messages that are based on the message template.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier, as an integer, for the active version of the message template, or the version of the template that you specified by using the version parameter in your request.</p>"
         }
       },
       "documentation": "<p>Provides information about the content and settings for a message template that can be used in messages that are sent through the email channel.</p>",
@@ -7014,11 +7366,11 @@
         },
         "Make": {
           "shape": "__string",
-          "documentation": "<p>The manufacturer of the endpoint device, such as Apple or Samsung.</p>"
+          "documentation": "<p>The manufacturer of the endpoint device, such as apple or samsung.</p>"
         },
         "Model": {
           "shape": "__string",
-          "documentation": "<p>The model name or number of the endpoint device, such as iPhone.</p>"
+          "documentation": "<p>The model name or number of the endpoint device, such as iPhone or SM-G900F.</p>"
         },
         "ModelVersion": {
           "shape": "__string",
@@ -7026,7 +7378,7 @@
         },
         "Platform": {
           "shape": "__string",
-          "documentation": "<p>The platform of the endpoint device, such as iOS or Android.</p>"
+          "documentation": "<p>The platform of the endpoint device, such as ios.</p>"
         },
         "PlatformVersion": {
           "shape": "__string",
@@ -7246,7 +7598,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the message. If specified, this value overrides the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the message. If specified, this value overrides all other values for the message.</p>"
         },
         "Substitutions": {
           "shape": "MapOfListOf__string",
@@ -7747,7 +8099,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. If specified, this value overrides all other content for the message.</p>"
         },
         "RestrictedPackageName": {
           "shape": "__string",
@@ -7988,7 +8340,7 @@
           "shape": "__timestampIso8601",
           "location": "querystring",
           "locationName": "end-time",
-          "documentation": "<p>The last date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format, for example: 2019-07-19T00:00:00Z for July 19, 2019 and 2019-07-19T20:00:00Z for 8:00 PM July 19, 2019.</p>"
+          "documentation": "<p>The last date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format and use Coordinated Universal Time (UTC), for example: 2019-07-26T20:00:00Z for 8:00 PM UTC July 26, 2019.</p>"
         },
         "KpiName": {
           "shape": "__string",
@@ -8012,7 +8364,7 @@
           "shape": "__timestampIso8601",
           "location": "querystring",
           "locationName": "start-time",
-          "documentation": "<p>The first date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format, for example: 2019-07-15T00:00:00Z for July 15, 2019 and 2019-07-15T16:00:00Z for 4:00 PM July 15, 2019.</p>"
+          "documentation": "<p>The first date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format and use Coordinated Universal Time (UTC), for example: 2019-07-19T20:00:00Z for 8:00 PM UTC July 19, 2019. This value should also be fewer than 90 days from the current day.</p>"
         }
       },
       "required": [
@@ -8177,7 +8529,7 @@
           "shape": "__timestampIso8601",
           "location": "querystring",
           "locationName": "end-time",
-          "documentation": "<p>The last date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format, for example: 2019-07-19T00:00:00Z for July 19, 2019 and 2019-07-19T20:00:00Z for 8:00 PM July 19, 2019.</p>"
+          "documentation": "<p>The last date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format and use Coordinated Universal Time (UTC), for example: 2019-07-26T20:00:00Z for 8:00 PM UTC July 26, 2019.</p>"
         },
         "KpiName": {
           "shape": "__string",
@@ -8201,7 +8553,7 @@
           "shape": "__timestampIso8601",
           "location": "querystring",
           "locationName": "start-time",
-          "documentation": "<p>The first date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format, for example: 2019-07-15T00:00:00Z for July 15, 2019 and 2019-07-15T16:00:00Z for 4:00 PM July 15, 2019.</p>"
+          "documentation": "<p>The first date and time to retrieve data for, as part of an inclusive date range that filters the query results. This value should be in extended ISO 8601 format and use Coordinated Universal Time (UTC), for example: 2019-07-19T20:00:00Z for 8:00 PM UTC July 19, 2019. This value should also be fewer than 90 days from the current day.</p>"
         }
       },
       "required": [
@@ -8438,6 +8790,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -8885,6 +9243,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -9183,6 +9547,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -9260,6 +9630,38 @@
       ],
       "payload": "VoiceChannelResponse"
     },
+    "GetVoiceTemplateRequest": {
+      "type": "structure",
+      "members": {
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
+        }
+      },
+      "required": [
+        "TemplateName"
+      ]
+    },
+    "GetVoiceTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "VoiceTemplateResponse": {
+          "shape": "VoiceTemplateResponse"
+        }
+      },
+      "required": [
+        "VoiceTemplateResponse"
+      ],
+      "payload": "VoiceTemplateResponse"
+    },
     "HoldoutActivity": {
       "type": "structure",
       "members": {
@@ -9269,7 +9671,7 @@
         },
         "Percentage": {
           "shape": "__integer",
-          "documentation": "<p>The percentage of participants who shouldn't continue the journey.</p>"
+          "documentation": "<p>The percentage of participants who shouldn't continue the journey.</p> <p>To determine which participants are held out, Amazon Pinpoint applies a probability-based algorithm to the percentage that you specify. Therefore, the actual percentage of participants who are held out may not be equal to the percentage that you specify.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for a holdout activity in a journey. This type of activity stops a journey for a specified percentage of participants.</p>",
@@ -9610,7 +10012,7 @@
           "documentation": "<p>A JSON object that contains the results of the query. For information about the structure and contents of the results, see the <a href=\"https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html\">Amazon Pinpoint Developer Guide</a>.</p>"
         }
       },
-      "documentation": "<p>Provides the results of a query that retrieved the data for a standard execution metric that applies to a journey.</p>",
+      "documentation": "<p>Provides the results of a query that retrieved the data for a standard execution metric that applies to a journey, and provides information about that query.</p>",
       "required": [
         "Metrics",
         "JourneyId",
@@ -9641,7 +10043,7 @@
       "members": {
         "Activities": {
           "shape": "MapOfActivity",
-          "documentation": "<p>The configuration and other settings for the activities that comprise the journey.</p>"
+          "documentation": "<p>A map that contains a set of Activity objects, one object for each activity in the journey. For each Activity object, the key is the unique identifier (string) for an activity and the value is the settings for the activity.</p>"
         },
         "ApplicationId": {
           "shape": "__string",
@@ -9693,7 +10095,7 @@
         },
         "State": {
           "shape": "State",
-          "documentation": "<p>The current status of the journey. Possible values are:</p> <ul><li><p>DRAFT - The journey is being developed and hasn't been published yet.</p></li> <li><p>ACTIVE - The journey has been developed and published. Depending on the journey's schedule, the journey may currently be running or scheduled to start running at a later time. If a journey's status is ACTIVE, you can't add, change, or remove activities from it.</p></li> <li><p>COMPLETED - The journey has been published and has finished running. All participants have entered the journey and no participants are waiting to complete the journey or any activities in the journey.</p></li> <li><p>CANCELLED - The journey has been stopped. If a journey's status is CANCELLED, you can't add, change, or remove activities or segment settings from the journey.</p></li> <li><p>CLOSED - The journey has been published and has started running. It may have also passed its scheduled end time, or passed its scheduled start time and a refresh frequency hasn't been specified for it. If a journey's status is CLOSED, you can't add participants to it, and no existing participants can enter the journey for the first time. However, any existing participants who are currently waiting to start an activity may resume the journey.</p></li></ul>"
+          "documentation": "<p>The current status of the journey. Possible values are:</p> <ul><li><p>DRAFT - The journey is being developed and hasn't been published yet.</p></li> <li><p>ACTIVE - The journey has been developed and published. Depending on the journey's schedule, the journey may currently be running or scheduled to start running at a later time. If a journey's status is ACTIVE, you can't add, change, or remove activities from it.</p></li> <li><p>COMPLETED - The journey has been published and has finished running. All participants have entered the journey and no participants are waiting to complete the journey or any activities in the journey.</p></li> <li><p>CANCELLED - The journey has been stopped. If a journey's status is CANCELLED, you can't add, change, or remove activities or segment settings from the journey.</p></li> <li><p>CLOSED - The journey has been published and has started running. It may have also passed its scheduled end time, or passed its scheduled start time and a refresh frequency hasn't been specified for it. If a journey's status is CLOSED, you can't add participants to it, and no existing participants can enter the journey for the first time. However, any existing participants who are currently waiting to start an activity may continue the journey.</p></li></ul>"
         },
         "tags": {
           "shape": "MapOf__string",
@@ -9817,6 +10219,51 @@
       ],
       "payload": "TagsModel"
     },
+    "ListTemplateVersionsRequest": {
+      "type": "structure",
+      "members": {
+        "NextToken": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "next-token",
+          "documentation": "<p>The  string that specifies which page of results to return in a paginated response. This parameter is currently not supported for application, campaign, and journey metrics.</p>"
+        },
+        "PageSize": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "page-size",
+          "documentation": "<p>The maximum number of items to include in each page of a paginated response. This parameter is currently not supported for application, campaign, and journey metrics.</p>"
+        },
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "TemplateType": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-type",
+          "documentation": "<p>The type of channel that the message template is designed for. Valid values are: EMAIL, PUSH, SMS, and VOICE.</p>"
+        }
+      },
+      "required": [
+        "TemplateName",
+        "TemplateType"
+      ]
+    },
+    "ListTemplateVersionsResponse": {
+      "type": "structure",
+      "members": {
+        "TemplateVersionsResponse": {
+          "shape": "TemplateVersionsResponse"
+        }
+      },
+      "required": [
+        "TemplateVersionsResponse"
+      ],
+      "payload": "TemplateVersionsResponse"
+    },
     "ListTemplatesRequest": {
       "type": "structure",
       "members": {
@@ -9842,7 +10289,7 @@
           "shape": "__string",
           "location": "querystring",
           "locationName": "template-type",
-          "documentation": "<p>The type of message template to include in the results. Valid values are: EMAIL, SMS, and PUSH. To include all types of templates in the results, don't include this parameter in your request.</p>"
+          "documentation": "<p>The type of message template to include in the results. Valid values are: EMAIL, PUSH, SMS, and VOICE. To include all types of templates in the results, don't include this parameter in your request.</p>"
         }
       }
     },
@@ -9891,7 +10338,7 @@
         },
         "RawContent": {
           "shape": "__string",
-          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. This value overrides other values for the message.</p>"
+          "documentation": "<p>The raw, JSON-formatted string to use as the payload for the notification message. If specified, this value overrides all other content for the message.</p>"
         },
         "SilentPush": {
           "shape": "__boolean",
@@ -9977,7 +10424,7 @@
         },
         "MessageConfiguration": {
           "shape": "DirectMessageConfiguration",
-          "documentation": "<p>The set of properties that defines the configuration settings for the message.</p>"
+          "documentation": "<p>The settings and content for the default message and any default messages that you defined for specific channels.</p>"
         },
         "TemplateConfiguration": {
           "shape": "TemplateConfiguration",
@@ -9988,7 +10435,7 @@
           "documentation": "<p>The unique identifier for tracing the message. This identifier is visible to message recipients.</p>"
         }
       },
-      "documentation": "<p>Specifies the objects that define configuration and other settings for a message.</p>",
+      "documentation": "<p>Specifies the configuration and other settings for a message.</p>",
       "required": [
         "MessageConfiguration"
       ]
@@ -10121,14 +10568,14 @@
         },
         "DefaultActivity": {
           "shape": "__string",
-          "documentation": "<p>The activity to perform by default for any path in the activity.</p>"
+          "documentation": "<p>The unique identifier for the activity to perform for participants who don't meet any of the conditions specified for other paths in the activity.</p>"
         },
         "EvaluationWaitTime": {
           "shape": "WaitTime",
           "documentation": "<p>The amount of time to wait or the date and time when Amazon Pinpoint determines whether the conditions are met.</p>"
         }
       },
-      "documentation": "<p>Specifies the settings for a multivariate split activity in a journey. This type of activity sends participants down one of as many as five paths in a journey, based on conditions that you specify.</p>"
+      "documentation": "<p>Specifies the settings for a multivariate split activity in a journey. This type of activity sends participants down one of as many as five paths (including a default <i>Else</i> path) in a journey, based on conditions that you specify.</p>"
     },
     "NotFoundException": {
       "type": "structure",
@@ -10324,6 +10771,10 @@
           "shape": "DefaultPushNotificationTemplate",
           "documentation": "<p>The default message template to use for push notification channels.</p>"
         },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>A JSON object that specifies the default values to use for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable. When you create a message that's based on the template, you can override these defaults with message-specific and address-specific variables and values.</p>"
+        },
         "GCM": {
           "shape": "AndroidPushNotificationTemplate",
           "documentation": "<p>The message template to use for the GCM channel, which is used to send notifications through the Firebase Cloud Messaging (FCM), formerly Google Cloud Messaging (GCM), service. This message template overrides the default template for push notification channels (DefaultPushNotificationTemplate).</p>"
@@ -10332,6 +10783,10 @@
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that defines the tags to associate with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>A custom description of the message template.</p>"
         }
       },
       "documentation": "<p>Specifies the content and settings for a message template that can be used in messages that are sent through a push notification channel.</p>"
@@ -10357,11 +10812,15 @@
         },
         "CreationDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was created.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was created.</p>"
         },
         "Default": {
           "shape": "DefaultPushNotificationTemplate",
           "documentation": "<p>The default message template that's used for push notification channels.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>The JSON object that specifies the default values that are used for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
         },
         "GCM": {
           "shape": "AndroidPushNotificationTemplate",
@@ -10369,12 +10828,16 @@
         },
         "LastModifiedDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was last modified.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was last modified.</p>"
         },
         "tags": {
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that identifies the tags that are associated with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the message template.</p>"
         },
         "TemplateName": {
           "shape": "__string",
@@ -10383,14 +10846,18 @@
         "TemplateType": {
           "shape": "TemplateType",
           "documentation": "<p>The type of channel that the message template is designed for. For a push notification template, this value is PUSH.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier, as an integer, for the active version of the message template, or the version of the template that you specified by using the version parameter in your request.</p>"
         }
       },
       "documentation": "<p>Provides information about the content and settings for a message template that can be used in messages that are sent through a push notification channel.</p>",
       "required": [
         "LastModifiedDate",
         "CreationDate",
-        "TemplateName",
-        "TemplateType"
+        "TemplateType",
+        "TemplateName"
       ]
     },
     "PutEventStreamRequest": {
@@ -10488,7 +10955,7 @@
         },
         "Percentage": {
           "shape": "__integer",
-          "documentation": "<p>The percentage of participants to send down the activity path.</p>"
+          "documentation": "<p>The percentage of participants to send down the activity path.</p> <p>To determine which participants are sent down each path, Amazon Pinpoint applies a probability-based algorithm to the percentages that you specify for the paths. Therefore, the actual percentage of participants who are sent down a path may not be equal to the percentage that you specify.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for a path in a random split activity in a journey.</p>"
@@ -10730,10 +11197,18 @@
           "shape": "__string",
           "documentation": "<p>The message body to use in text messages that are based on the message template.</p>"
         },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>A JSON object that specifies the default values to use for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable. When you create a message that's based on the template, you can override these defaults with message-specific and address-specific variables and values.</p>"
+        },
         "tags": {
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that defines the tags to associate with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>A custom description of the message template.</p>"
         }
       },
       "documentation": "<p>Specifies the content and settings for a message template that can be used in text messages that are sent through the SMS channel.</p>"
@@ -10751,16 +11226,24 @@
         },
         "CreationDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was created.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was created.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>The JSON object that specifies the default values that are used for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
         },
         "LastModifiedDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was last modified.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was last modified.</p>"
         },
         "tags": {
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that identifies the tags that are associated with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the message template.</p>"
         },
         "TemplateName": {
           "shape": "__string",
@@ -10769,6 +11252,10 @@
         "TemplateType": {
           "shape": "TemplateType",
           "documentation": "<p>The type of channel that the message template is designed for. For an SMS template, this value is SMS.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier, as an integer, for the active version of the message template, or the version of the template that you specified by using the version parameter in your request.</p>"
         }
       },
       "documentation": "<p>Provides information about the content and settings for a message template that can be used in text messages that are sent through the SMS channel.</p>",
@@ -11129,7 +11616,7 @@
         },
         "MessageConfiguration": {
           "shape": "DirectMessageConfiguration",
-          "documentation": "<p>The message definitions for the default message and any default messages that you defined for specific channels.</p>"
+          "documentation": "<p>The settings and content for the default message and any default messages that you defined for specific channels.</p>"
         },
         "TemplateConfiguration": {
           "shape": "TemplateConfiguration",
@@ -11269,7 +11756,7 @@
       "members": {
         "HtmlPart": {
           "shape": "SimpleEmailPart",
-          "documentation": "<p>The body of the email message, in HTML format. We recommend using an HTML part for email clients that support HTML. You can include links, formatted text, and more in an HTML message.</p>"
+          "documentation": "<p>The body of the email message, in HTML format. We recommend using HTML format for email clients that render HTML content. You can include links, formatted text, and more in an HTML message.</p>"
         },
         "Subject": {
           "shape": "SimpleEmailPart",
@@ -11277,7 +11764,7 @@
         },
         "TextPart": {
           "shape": "SimpleEmailPart",
-          "documentation": "<p>The body of the email message, in text format. We recommend using a text part for email clients that don't support HTML and clients that are connected to high-latency networks, such as mobile devices.</p>"
+          "documentation": "<p>The body of the email message, in plain text format. We recommend using plain text format for email clients that don't render HTML content and clients that are connected to high-latency networks, such as mobile devices.</p>"
         }
       },
       "documentation": "<p>Specifies the contents of an email message, composed of a subject, a text part, and an HTML part.</p>"
@@ -11367,9 +11854,23 @@
         "Name": {
           "shape": "__string",
           "documentation": "<p>The name of the message template to use for the message. If specified, this value must match the name of an existing message template.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier for the version of the message template to use for the message. If specified, this value must match the identifier for an existing template version. To retrieve a list of versions and version identifiers for a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If you don't specify a value for this property, Amazon Pinpoint uses the <i>active</i> version of the template. The <i>active</i> version is typically the version of a template that's been most recently reviewed and approved for use, depending on your workflow. It isn't necessarily the latest version of a template.</p>"
         }
       },
-      "documentation": "<p>Specifies the name of the message template to use for the message.</p>"
+      "documentation": "<p>Specifies the name and version of the message template to use for the message.</p>"
+    },
+    "TemplateActiveVersionRequest": {
+      "type": "structure",
+      "members": {
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier for the version of the message template to use as the active version of the template. If specified, this value must match the identifier for an existing template version. To retrieve a list of versions and version identifiers for a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p>"
+        }
+      },
+      "documentation": "<p>Specifies which version of a message template to use as the active version of the template.</p>"
     },
     "TemplateConfiguration": {
       "type": "structure",
@@ -11385,9 +11886,13 @@
         "SMSTemplate": {
           "shape": "Template",
           "documentation": "<p>The SMS template to use for the message.</p>"
+        },
+        "VoiceTemplate": {
+          "shape": "Template",
+          "documentation": "<p>The voice template to use for the message.</p>"
         }
       },
-      "documentation": "<p>Specifies the message template for each type of channel.</p>"
+      "documentation": "<p>Specifies the message template to use for the message, for each type of channel.</p>"
     },
     "TemplateResponse": {
       "type": "structure",
@@ -11398,16 +11903,24 @@
         },
         "CreationDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was created.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was created.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>The JSON object that specifies the default values that are used for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
         },
         "LastModifiedDate": {
           "shape": "__string",
-          "documentation": "<p>The date when the message template was last modified.</p>"
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was last modified.</p>"
         },
         "tags": {
           "shape": "MapOf__string",
           "locationName": "tags",
           "documentation": "<p>A string-to-string map of key-value pairs that identifies the tags that are associated with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the message template.</p>"
         },
         "TemplateName": {
           "shape": "__string",
@@ -11415,7 +11928,11 @@
         },
         "TemplateType": {
           "shape": "TemplateType",
-          "documentation": "<p>The type of channel that the message template is designed for.</p>"
+          "documentation": "<p>The type of channel that the message template is designed for. Possible values are: EMAIL, PUSH, SMS, and VOICE.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier, as an integer, for the active version of the message template.</p>"
         }
       },
       "documentation": "<p>Provides information about a message template that's associated with your Amazon Pinpoint account.</p>",
@@ -11433,6 +11950,71 @@
         "SMS",
         "VOICE",
         "PUSH"
+      ]
+    },
+    "TemplateVersionResponse": {
+      "type": "structure",
+      "members": {
+        "CreationDate": {
+          "shape": "__string",
+          "documentation": "<p>The date, in ISO 8601 format, when the version of the message template was created.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>A JSON object that specifies the default values that are used for message variables in the version of the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
+        },
+        "LastModifiedDate": {
+          "shape": "__string",
+          "documentation": "<p>The date, in ISO 8601 format, when the version of the message template was last modified.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the version of the message template.</p>"
+        },
+        "TemplateName": {
+          "shape": "__string",
+          "documentation": "<p>The name of the message template.</p>"
+        },
+        "TemplateType": {
+          "shape": "__string",
+          "documentation": "<p>The type of channel that the message template is designed for. Possible values are: EMAIL, PUSH, SMS, and VOICE.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier for the version of the message template. This value is an integer that Amazon Pinpoint automatically increments and assigns to each new version of a template.</p>"
+        }
+      },
+      "documentation": "<p>Provides information about a specific version of a message template.</p>",
+      "required": [
+        "LastModifiedDate",
+        "CreationDate",
+        "TemplateName",
+        "TemplateType"
+      ]
+    },
+    "TemplateVersionsResponse": {
+      "type": "structure",
+      "members": {
+        "Item": {
+          "shape": "ListOfTemplateVersionResponse",
+          "documentation": "<p>An array of responses, one for each version of the message template.</p>"
+        },
+        "Message": {
+          "shape": "__string",
+          "documentation": "<p>The message that's returned from the API for the request to retrieve information about all the versions of the message template.</p>"
+        },
+        "NextToken": {
+          "shape": "__string",
+          "documentation": "<p>The string to use in a subsequent request to get the next page of results in a paginated response. This value is null if there are no additional pages.</p>"
+        },
+        "RequestID": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier for the request to retrieve information about all the versions of the message template.</p>"
+        }
+      },
+      "documentation": "<p>Provides information about all the versions of a specific message template.</p>",
+      "required": [
+        "Item"
       ]
     },
     "TemplatesResponse": {
@@ -11840,6 +12422,12 @@
     "UpdateEmailTemplateRequest": {
       "type": "structure",
       "members": {
+        "CreateNewVersion": {
+          "shape": "__boolean",
+          "location": "querystring",
+          "locationName": "create-new-version",
+          "documentation": "<p>Specifies whether to save the updates as a new version of the message template. Valid values are: true, save the updates as a new version; and, false, save the updates to the latest existing version of the template.</p><p> If you don't specify a value for this parameter, Amazon Pinpoint saves the updates to the latest existing version of the template. If you specify a value of true for this parameter, don't specify a value for the version parameter. Otherwise, an error will occur.</p>"
+        },
         "EmailTemplateRequest": {
           "shape": "EmailTemplateRequest"
         },
@@ -11848,6 +12436,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -12047,15 +12641,26 @@
     "UpdatePushTemplateRequest": {
       "type": "structure",
       "members": {
+        "CreateNewVersion": {
+          "shape": "__boolean",
+          "location": "querystring",
+          "locationName": "create-new-version",
+          "documentation": "<p>Specifies whether to save the updates as a new version of the message template. Valid values are: true, save the updates as a new version; and, false, save the updates to the latest existing version of the template.</p><p> If you don't specify a value for this parameter, Amazon Pinpoint saves the updates to the latest existing version of the template. If you specify a value of true for this parameter, don't specify a value for the version parameter. Otherwise, an error will occur.</p>"
+        },
         "PushNotificationTemplateRequest": {
-          "shape": "PushNotificationTemplateRequest",
-          "documentation": "<p>Updates an existing message template that you can use in messages that are sent through a push notification channel.</p>"
+          "shape": "PushNotificationTemplateRequest"
         },
         "TemplateName": {
           "shape": "__string",
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -12148,6 +12753,12 @@
     "UpdateSmsTemplateRequest": {
       "type": "structure",
       "members": {
+        "CreateNewVersion": {
+          "shape": "__boolean",
+          "location": "querystring",
+          "locationName": "create-new-version",
+          "documentation": "<p>Specifies whether to save the updates as a new version of the message template. Valid values are: true, save the updates as a new version; and, false, save the updates to the latest existing version of the template.</p><p> If you don't specify a value for this parameter, Amazon Pinpoint saves the updates to the latest existing version of the template. If you specify a value of true for this parameter, don't specify a value for the version parameter. Otherwise, an error will occur.</p>"
+        },
         "SMSTemplateRequest": {
           "shape": "SMSTemplateRequest"
         },
@@ -12156,6 +12767,12 @@
           "location": "uri",
           "locationName": "template-name",
           "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
         }
       },
       "required": [
@@ -12165,6 +12782,44 @@
       "payload": "SMSTemplateRequest"
     },
     "UpdateSmsTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "MessageBody": {
+          "shape": "MessageBody"
+        }
+      },
+      "required": [
+        "MessageBody"
+      ],
+      "payload": "MessageBody"
+    },
+    "UpdateTemplateActiveVersionRequest": {
+      "type": "structure",
+      "members": {
+        "TemplateActiveVersionRequest": {
+          "shape": "TemplateActiveVersionRequest"
+        },
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "TemplateType": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-type",
+          "documentation": "<p>The type of channel that the message template is designed for. Valid values are: EMAIL, PUSH, SMS, and VOICE.</p>"
+        }
+      },
+      "required": [
+        "TemplateName",
+        "TemplateType",
+        "TemplateActiveVersionRequest"
+      ],
+      "payload": "TemplateActiveVersionRequest"
+    },
+    "UpdateTemplateActiveVersionResponse": {
       "type": "structure",
       "members": {
         "MessageBody": {
@@ -12206,6 +12861,49 @@
         "VoiceChannelResponse"
       ],
       "payload": "VoiceChannelResponse"
+    },
+    "UpdateVoiceTemplateRequest": {
+      "type": "structure",
+      "members": {
+        "CreateNewVersion": {
+          "shape": "__boolean",
+          "location": "querystring",
+          "locationName": "create-new-version",
+          "documentation": "<p>Specifies whether to save the updates as a new version of the message template. Valid values are: true, save the updates as a new version; and, false, save the updates to the latest existing version of the template.</p><p> If you don't specify a value for this parameter, Amazon Pinpoint saves the updates to the latest existing version of the template. If you specify a value of true for this parameter, don't specify a value for the version parameter. Otherwise, an error will occur.</p>"
+        },
+        "TemplateName": {
+          "shape": "__string",
+          "location": "uri",
+          "locationName": "template-name",
+          "documentation": "<p>The name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "location": "querystring",
+          "locationName": "version",
+          "documentation": "<p>The unique identifier for the version of the message template to update, retrieve information about, or delete. To retrieve identifiers and other information for all the versions of a template, use the <link  linkend=\"templates-template-name-template-type-versions\">Template Versions</link> resource.</p> <p>If specified, this value must match the identifier of an existing template version. If specified for an update operation, this value must match the identifier of the latest existing version of the template. This restriction helps ensure that race conditions don't occur.</p> <p>If you don't specify a value for this parameter, Amazon Pinpoint does the following:</p> <ul><li><p>For a get operation, retrieves information about the active version of the template.</p></li> <li><p>For an update operation, saves the updates to the latest existing version of the template, if the create-new-version parameter isn't used or is set to false.</p></li> <li><p>For a delete operation, deletes the template, including all versions of the template.</p></li></ul>"
+        },
+        "VoiceTemplateRequest": {
+          "shape": "VoiceTemplateRequest"
+        }
+      },
+      "required": [
+        "TemplateName",
+        "VoiceTemplateRequest"
+      ],
+      "payload": "VoiceTemplateRequest"
+    },
+    "UpdateVoiceTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "MessageBody": {
+          "shape": "MessageBody"
+        }
+      },
+      "required": [
+        "MessageBody"
+      ],
+      "payload": "MessageBody"
     },
     "VoiceChannelRequest": {
       "type": "structure",
@@ -12271,11 +12969,11 @@
       "members": {
         "Body": {
           "shape": "__string",
-          "documentation": "<p>The text script for the voice message.</p>"
+          "documentation": "<p>The text of the script to use for the voice message.</p>"
         },
         "LanguageCode": {
           "shape": "__string",
-          "documentation": "<p>The language to use when delivering the message. For a list of supported languages, see the <a href=\"AmazonPollyDG.html\">Amazon Polly Developer Guide</a>.</p>"
+          "documentation": "<p>The code for the language to use when synthesizing the text of the message script. For a list of supported languages and the code for each one, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
         },
         "OriginationNumber": {
           "shape": "__string",
@@ -12287,10 +12985,102 @@
         },
         "VoiceId": {
           "shape": "__string",
-          "documentation": "<p>The name of the voice to use when delivering the message. For a list of supported voices, see the <a href=\"AmazonPollyDG.html\">Amazon Polly Developer Guide</a>.</p>"
+          "documentation": "<p>The name of the voice to use when delivering the message. For a list of supported voices, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
         }
       },
       "documentation": "<p>Specifies the settings for a one-time voice message that's sent directly to an endpoint through the voice channel.</p>"
+    },
+    "VoiceTemplateRequest": {
+      "type": "structure",
+      "members": {
+        "Body": {
+          "shape": "__string",
+          "documentation": "<p>The text of the script to use in messages that are based on the message template, in plain text format.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>A JSON object that specifies the default values to use for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable. When you create a message that's based on the template, you can override these defaults with message-specific and address-specific variables and values.</p>"
+        },
+        "LanguageCode": {
+          "shape": "__string",
+          "documentation": "<p>The code for the language to use when synthesizing the text of the script in messages that are based on the message template. For a list of supported languages and the code for each one, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
+        },
+        "tags": {
+          "shape": "MapOf__string",
+          "locationName": "tags",
+          "documentation": "<p>A string-to-string map of key-value pairs that defines the tags to associate with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>A custom description of the message template.</p>"
+        },
+        "VoiceId": {
+          "shape": "__string",
+          "documentation": "<p>The name of the voice to use when delivering messages that are based on the message template. For a list of supported voices, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
+        }
+      },
+      "documentation": "<p>Specifies the content and settings for a message template that can be used in messages that are sent through the voice channel.</p>"
+    },
+    "VoiceTemplateResponse": {
+      "type": "structure",
+      "members": {
+        "Arn": {
+          "shape": "__string",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the message template.</p>"
+        },
+        "Body": {
+          "shape": "__string",
+          "documentation": "<p>The text of the script that's used in messages that are based on the message template, in plain text format.</p>"
+        },
+        "CreationDate": {
+          "shape": "__string",
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was created.</p>"
+        },
+        "DefaultSubstitutions": {
+          "shape": "__string",
+          "documentation": "<p>The JSON object that specifies the default values that are used for message variables in the message template. This object is a set of key-value pairs. Each key defines a message variable in the template. The corresponding value defines the default value for that variable.</p>"
+        },
+        "LanguageCode": {
+          "shape": "__string",
+          "documentation": "<p>The code for the language that's used when synthesizing the text of the script in messages that are based on the message template. For a list of supported languages and the code for each one, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
+        },
+        "LastModifiedDate": {
+          "shape": "__string",
+          "documentation": "<p>The date, in ISO 8601 format, when the message template was last modified.</p>"
+        },
+        "tags": {
+          "shape": "MapOf__string",
+          "locationName": "tags",
+          "documentation": "<p>A string-to-string map of key-value pairs that identifies the tags that are associated with the message template. Each tag consists of a required tag key and an associated tag value.</p>"
+        },
+        "TemplateDescription": {
+          "shape": "__string",
+          "documentation": "<p>The custom description of the message template.</p>"
+        },
+        "TemplateName": {
+          "shape": "__string",
+          "documentation": "<p>The name of the message template.</p>"
+        },
+        "TemplateType": {
+          "shape": "TemplateType",
+          "documentation": "<p>The type of channel that the message template is designed for. For a voice template, this value is VOICE.</p>"
+        },
+        "Version": {
+          "shape": "__string",
+          "documentation": "<p>The unique identifier, as an integer, for the active version of the message template, or the version of the template that you specified by using the version parameter in your request.</p>"
+        },
+        "VoiceId": {
+          "shape": "__string",
+          "documentation": "<p>The name of the voice that's used when delivering messages that are based on the message template. For a list of supported voices, see the <a href=\"https://docs.aws.amazon.com/polly/latest/dg/what-is.html\">Amazon Polly Developer Guide</a>.</p>"
+        }
+      },
+      "documentation": "<p>Provides information about the content and settings for a message template that can be used in messages that are sent through the voice channel.</p>",
+      "required": [
+        "LastModifiedDate",
+        "CreationDate",
+        "TemplateName",
+        "TemplateType"
+      ]
     },
     "WaitActivity": {
       "type": "structure",
@@ -12311,7 +13101,7 @@
       "members": {
         "WaitFor": {
           "shape": "__string",
-          "documentation": "<p>The amount of time, as a duration in ISO 8601 format, to wait before determining whether the activity's conditions have been met or moving participants to the next activity in the journey.</p>"
+          "documentation": "<p>The amount of time to wait, as a duration in ISO 8601 format, before determining whether the activity's conditions have been met or moving participants to the next activity in the journey.</p>"
         },
         "WaitUntil": {
           "shape": "__string",
@@ -12351,7 +13141,7 @@
         },
         "Description": {
           "shape": "__string",
-          "documentation": "<p>The custom description of the campaign.</p>"
+          "documentation": "<p>A custom description of the campaign.</p>"
         },
         "HoldoutPercent": {
           "shape": "__integer",
@@ -12400,7 +13190,7 @@
         },
         "TreatmentDescription": {
           "shape": "__string",
-          "documentation": "<p>The custom description of a variation of the campaign to use for A/B testing.</p>"
+          "documentation": "<p>A custom description of a variation of the campaign to use for A/B testing.</p>"
         },
         "TreatmentName": {
           "shape": "__string",
@@ -12432,7 +13222,7 @@
       "members": {
         "Activities": {
           "shape": "MapOfActivity",
-          "documentation": "<p>The configuration and other settings for the activities that comprise the journey.</p>"
+          "documentation": "<p>A map that contains a set of Activity objects, one object for each activity in the journey. For each Activity object, the key is the unique identifier (string) for an activity and the value is the settings for the activity. An activity identifier can contain a maximum of 128 characters. The characters must be alphanumeric characters.</p>"
         },
         "CreationDate": {
           "shape": "__string",
@@ -12468,7 +13258,7 @@
         },
         "StartActivity": {
           "shape": "__string",
-          "documentation": "<p>The unique identifier for the first activity in the journey.</p>"
+          "documentation": "<p>The unique identifier for the first activity in the journey. An activity identifier can contain a maximum of 128 characters. The characters must be alphanumeric characters.</p>"
         },
         "StartCondition": {
           "shape": "StartCondition",
@@ -12528,7 +13318,7 @@
         },
         "TreatmentDescription": {
           "shape": "__string",
-          "documentation": "<p>The custom description of the treatment.</p>"
+          "documentation": "<p>A custom description of the treatment.</p>"
         },
         "TreatmentName": {
           "shape": "__string",
@@ -12655,6 +13445,12 @@
       "type": "list",
       "member": {
         "shape": "TemplateResponse"
+      }
+    },
+    "ListOfTemplateVersionResponse": {
+      "type": "list",
+      "member": {
+        "shape": "TemplateVersionResponse"
       }
     },
     "ListOfTreatmentResource": {

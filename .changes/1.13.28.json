@@ -1,0 +1,57 @@
+[
+  {
+    "category": "``rds-data``", 
+    "description": "Update rds-data client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``resourcegroupstaggingapi``", 
+    "description": "Update resourcegroupstaggingapi client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elastic-inference``", 
+    "description": "Update elastic-inference client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediatailor``", 
+    "description": "Update mediatailor client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }
+]
