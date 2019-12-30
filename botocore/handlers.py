@@ -57,6 +57,10 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
+VALID_S3_ARN = re.compile(
+    r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
+    r'[a-zA-Z0-9\-]{1,63}$'
+)
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {
@@ -216,10 +220,11 @@ def validate_bucket_name(params, **kwargs):
     if 'Bucket' not in params:
         return
     bucket = params['Bucket']
-    if VALID_BUCKET.search(bucket) is None:
+    if not VALID_BUCKET.search(bucket) and not VALID_S3_ARN.search(bucket):
         error_msg = (
             'Invalid bucket name "%s": Bucket name must match '
-            'the regex "%s"' % (bucket, VALID_BUCKET.pattern))
+            'the regex "%s" or be an ARN matching the regex "%s"' % (
+                bucket, VALID_BUCKET.pattern, VALID_S3_ARN.pattern))
         raise ParamValidationError(report=error_msg)
 
 
@@ -856,6 +861,8 @@ class ClientMethodAlias(object):
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
+    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)$', re.IGNORECASE)
+
     def __init__(self, header_name):
         self._header_name = header_name
 
@@ -869,9 +876,18 @@ class HeaderToHostHoister(object):
         if self._header_name not in params['headers']:
             return
         header_value = params['headers'][self._header_name]
+        self._ensure_header_is_valid_host(header_value)
         original_url = params['url']
         new_url = self._prepend_to_host(original_url, header_value)
         params['url'] = new_url
+
+    def _ensure_header_is_valid_host(self, header):
+        match = self._VALID_HOSTNAME.match(header)
+        if not match:
+            raise ParamValidationError(report=(
+                'Hostnames must contain only - and alphanumeric characters, '
+                'and between 1 and 63 characters long.'
+            ))
 
     def _prepend_to_host(self, url, prefix):
         url_components = urlsplit(url)

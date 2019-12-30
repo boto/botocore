@@ -19,6 +19,7 @@ from dateutil.tz import tzutc
 import botocore
 import botocore.session
 import botocore.auth
+import botocore.awsrequest
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials
@@ -43,6 +44,7 @@ class BaseSignerTest(unittest.TestCase):
             ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         self.fixed_credentials = self.credentials.get_frozen_credentials()
+        self.request = botocore.awsrequest.AWSRequest()
 
 
 class TestSigner(BaseSignerTest):
@@ -63,7 +65,7 @@ class TestSigner(BaseSignerTest):
         )
 
         with self.assertRaises(NoRegionError):
-            self.signer.sign('operation_name', mock.Mock())
+            self.signer.sign('operation_name', self.request)
 
     def test_get_auth(self):
         auth_cls = mock.Mock()
@@ -96,11 +98,9 @@ class TestSigner(BaseSignerTest):
                                  signature_version='bad')
 
     def test_emits_choose_signer(self):
-        request = mock.Mock()
-
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': mock.Mock()}):
-            self.signer.sign('operation_name', request)
+            self.signer.sign('operation_name', self.request)
 
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.operation_name',
@@ -108,41 +108,37 @@ class TestSigner(BaseSignerTest):
             signature_version='v4', context=mock.ANY)
 
     def test_choose_signer_override(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth.REQUIRES_REGION = False
         self.emitter.emit_until_response.return_value = (None, 'custom')
 
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'custom': auth}):
-            self.signer.sign('operation_name', request)
+            self.signer.sign('operation_name', self.request)
 
         auth.assert_called_with(credentials=self.fixed_credentials)
-        auth.return_value.add_auth.assert_called_with(request)
+        auth.return_value.add_auth.assert_called_with(self.request)
 
     def test_emits_before_sign(self):
-        request = mock.Mock()
-
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': mock.Mock()}):
-            self.signer.sign('operation_name', request)
+            self.signer.sign('operation_name', self.request)
 
         self.emitter.emit.assert_called_with(
             'before-sign.service_name.operation_name',
-            request=mock.ANY, signing_name='signing_name',
+            request=self.request, signing_name='signing_name',
             region_name='region_name', signature_version='v4',
             request_signer=self.signer, operation_name='operation_name')
 
     def test_disable_signing(self):
         # Returning botocore.UNSIGNED from choose-signer disables signing!
-        request = mock.Mock()
         auth = mock.Mock()
         self.emitter.emit_until_response.return_value = (None,
                                                          botocore.UNSIGNED)
 
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth}):
-            self.signer.sign('operation_name', request)
+            self.signer.sign('operation_name', self.request)
 
         auth.assert_not_called()
 
@@ -166,12 +162,11 @@ class TestSigner(BaseSignerTest):
             signature_version='v4-query', context=mock.ANY)
 
     def test_choose_signer_passes_context(self):
-        request = mock.Mock()
-        request.context = {'foo': 'bar'}
+        self.request.context = {'foo': 'bar'}
 
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': mock.Mock()}):
-            self.signer.sign('operation_name', request)
+            self.signer.sign('operation_name', self.request)
 
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.operation_name',
@@ -341,14 +336,13 @@ class TestSigner(BaseSignerTest):
         auth = mock.Mock()
         post_auth = mock.Mock()
         query_auth = mock.Mock()
-        request = mock.Mock()
         auth_types = {
             'v4-presign-post': post_auth,
             'v4-query': query_auth,
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request,
+            self.signer.sign('operation_name', self.request,
                              signing_type='standard')
         self.assertFalse(post_auth.called)
         self.assertFalse(query_auth.called)
@@ -362,14 +356,13 @@ class TestSigner(BaseSignerTest):
         auth = mock.Mock()
         post_auth = mock.Mock()
         query_auth = mock.Mock()
-        request = mock.Mock()
         auth_types = {
             'v4-presign-post': post_auth,
             'v4-query': query_auth,
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request,
+            self.signer.sign('operation_name', self.request,
                              signing_type='presign-url')
         self.assertFalse(post_auth.called)
         self.assertFalse(auth.called)
@@ -383,14 +376,13 @@ class TestSigner(BaseSignerTest):
         auth = mock.Mock()
         post_auth = mock.Mock()
         query_auth = mock.Mock()
-        request = mock.Mock()
         auth_types = {
             'v4-presign-post': post_auth,
             'v4-query': query_auth,
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request,
+            self.signer.sign('operation_name', self.request,
                              signing_type='presign-post')
         self.assertFalse(auth.called)
         self.assertFalse(query_auth.called)
@@ -401,27 +393,54 @@ class TestSigner(BaseSignerTest):
         )
 
     def test_sign_with_region_name(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth_types = {
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request, region_name='foo')
+            self.signer.sign('operation_name', self.request, region_name='foo')
         auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='signing_name',
             region_name='foo'
         )
 
+    def test_sign_override_region_from_context(self):
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        self.request.context = {'signing': {'region': 'my-override-region'}}
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', self.request)
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='my-override-region'
+        )
+
+    def test_sign_with_region_name_overrides_context(self):
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        self.request.context = {'signing': {'region': 'context-override'}}
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', self.request,
+                             region_name='param-override')
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='param-override'
+        )
+
     def test_sign_with_expires_in(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth_types = {
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request, expires_in=2)
+            self.signer.sign('operation_name', self.request, expires_in=2)
         auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='signing_name',
@@ -430,13 +449,13 @@ class TestSigner(BaseSignerTest):
         )
 
     def test_sign_with_custom_signing_name(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth_types = {
             'v4': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            self.signer.sign('operation_name', request, signing_name='foo')
+            self.signer.sign('operation_name', self.request,
+                             signing_name='foo')
         auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='foo',
@@ -467,7 +486,6 @@ class TestSigner(BaseSignerTest):
         self.assertEqual(presigned_url, 'https://foo.com')
 
     def test_unknown_signer_raises_unknown_on_standard(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth_types = {
             'v4': auth
@@ -475,11 +493,10 @@ class TestSigner(BaseSignerTest):
         self.emitter.emit_until_response.return_value = (None, 'custom')
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
             with self.assertRaises(UnknownSignatureVersionError):
-                self.signer.sign('operation_name', request,
+                self.signer.sign('operation_name', self.request,
                                  signing_type='standard')
 
     def test_unknown_signer_raises_unsupported_when_not_standard(self):
-        request = mock.Mock()
         auth = mock.Mock()
         auth_types = {
             'v4': auth
@@ -487,11 +504,11 @@ class TestSigner(BaseSignerTest):
         self.emitter.emit_until_response.return_value = (None, 'custom')
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
             with self.assertRaises(UnsupportedSignatureVersionError):
-                self.signer.sign('operation_name', request,
+                self.signer.sign('operation_name', self.request,
                                  signing_type='presign-url')
 
             with self.assertRaises(UnsupportedSignatureVersionError):
-                self.signer.sign('operation_name', request,
+                self.signer.sign('operation_name', self.request,
                                  signing_type='presign-post')
 
 

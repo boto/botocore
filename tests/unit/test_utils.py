@@ -29,6 +29,13 @@ from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.exceptions import PendingAuthorizationExpiredError
 from botocore.model import ServiceModel
 from botocore.session import Session
+from botocore.exceptions import ReadTimeoutError
+from botocore.exceptions import ConnectTimeoutError
+from botocore.exceptions import UnsupportedS3ArnError
+from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
+from botocore.model import ServiceModel
+from botocore.model import OperationModel
+from botocore.regions import EndpointResolver
 from botocore.utils import ensure_boolean
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
@@ -56,12 +63,17 @@ from botocore.utils import percent_encode
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
+from botocore.utils import InvalidArnException
+from botocore.utils import ArnParser
+from botocore.utils import S3ArnParamHandler
+from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
-from botocore.utils import IMDSFetcher
 from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenFetcher
 from botocore.utils import SSOTokenLoader
 from botocore.exceptions import SSOTokenLoadError
+from botocore.utils import IMDSFetcher
+from botocore.utils import BadIMDSRequestError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.stub import Stubber
@@ -1588,6 +1600,355 @@ class TestS3RegionRedirector(unittest.TestCase):
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
 
+    def test_no_redirect_from_error_for_accesspoint(self):
+        request_dict = {
+            'url': (
+                'https://myendpoint-123456789012.s3-accesspoint.'
+                'us-west-2.amazonaws.com/key'
+            ),
+            'context': {
+                's3_accesspoint': {}
+            }
+        }
+        response = (None, {
+            'Error': {'Code': '400', 'Message': 'Bad Request'},
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertEqual(redirect_response, None)
+
+    def test_no_redirect_from_cache_for_accesspoint(self):
+        self.cache['foo'] = {'endpoint': 'foo-endpoint'}
+        self.redirector = S3RegionRedirector(
+            self.endpoint_bridge, self.client, cache=self.cache)
+        params = {'Bucket': 'foo'}
+        context = {'s3_accesspoint': {}}
+        self.redirector.redirect_from_cache(params, context)
+        self.assertNotIn('signing', context)
+
+
+class TestArnParser(unittest.TestCase):
+    def setUp(self):
+        self.parser = ArnParser()
+
+    def test_parse(self):
+        arn = 'arn:aws:s3:us-west-2:1023456789012:myresource'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': 'us-west-2',
+                'account': '1023456789012',
+                'resource': 'myresource',
+            }
+        )
+
+    def test_parse_invalid_arn(self):
+        with self.assertRaises(InvalidArnException):
+            self.parser.parse_arn('arn:aws:s3')
+
+    def test_parse_arn_with_resource_type(self):
+        arn = 'arn:aws:s3:us-west-2:1023456789012:bucket_name:mybucket'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': 'us-west-2',
+                'account': '1023456789012',
+                'resource': 'bucket_name:mybucket',
+            }
+        )
+
+    def test_parse_arn_with_empty_elements(self):
+        arn = 'arn:aws:s3:::mybucket'
+        self.assertEqual(
+            self.parser.parse_arn(arn),
+            {
+                'partition': 'aws',
+                'service': 's3',
+                'region': '',
+                'account': '',
+                'resource': 'mybucket',
+            }
+        )
+
+
+class TestS3ArnParamHandler(unittest.TestCase):
+    def setUp(self):
+        self.arn_handler = S3ArnParamHandler()
+        self.model = mock.Mock(OperationModel)
+        self.model.name = 'GetObject'
+
+    def test_register(self):
+        event_emitter = mock.Mock()
+        self.arn_handler.register(event_emitter)
+        event_emitter.register.assert_called_with(
+            'before-parameter-build.s3', self.arn_handler.handle_arn)
+
+    def test_accesspoint_arn(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'endpoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_accesspoint': {
+                    'name': 'endpoint',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                }
+            }
+        )
+
+    def test_accesspoint_arn_with_colon(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:accesspoint:endpoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'endpoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_accesspoint': {
+                    'name': 'endpoint',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                }
+            }
+        )
+
+    def test_errors_for_non_accesspoint_arn(self):
+        params = {
+            'Bucket': 'arn:aws:s3:us-west-2:123456789012:unsupported:resource'
+        }
+        context = {}
+        with self.assertRaises(UnsupportedS3ArnError):
+            self.arn_handler.handle_arn(params, self.model, context)
+
+    def test_ignores_bucket_names(self):
+        params = {'Bucket': 'mybucket'}
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'mybucket'})
+        self.assertEqual(context, {})
+
+    def test_ignores_create_bucket(self):
+        arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
+        params = {'Bucket': arn}
+        context = {}
+        self.model.name = 'CreateBucket'
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': arn})
+        self.assertEqual(context, {})
+
+
+class TestS3EndpointSetter(unittest.TestCase):
+    def setUp(self):
+        self.operation_name = 'GetObject'
+        self.signature_version = 's3v4'
+        self.region_name = 'us-west-2'
+        self.account = '123456789012'
+        self.bucket = 'mybucket'
+        self.key = 'key.txt'
+        self.accesspoint_name = 'myaccesspoint'
+        self.partition = 'aws'
+        self.endpoint_resolver = mock.Mock()
+        self.dns_suffix = 'amazonaws.com'
+        self.endpoint_resolver.construct_endpoint.return_value = {
+            'dnsSuffix': self.dns_suffix
+        }
+        self.endpoint_setter = self.get_endpoint_setter()
+
+    def get_endpoint_setter(self, **kwargs):
+        setter_kwargs = {
+            'endpoint_resolver': self.endpoint_resolver,
+            'region': self.region_name,
+        }
+        setter_kwargs.update(kwargs)
+        return S3EndpointSetter(**setter_kwargs)
+
+    def get_s3_request(self, bucket=None, key=None, scheme='https://',
+                       querystring=None):
+        url = scheme + 's3.us-west-2.amazonaws.com/'
+        if bucket:
+            url += bucket
+        if key:
+            url += '/%s' % key
+        if querystring:
+            url += '?%s' % querystring
+        return AWSRequest(method='GET', headers={}, url=url)
+
+    def get_s3_accesspoint_request(self, accesspoint_name=None,
+                                   accesspoint_context=None,
+                                   **s3_request_kwargs):
+        if not accesspoint_name:
+            accesspoint_name = self.accesspoint_name
+        request = self.get_s3_request(accesspoint_name, **s3_request_kwargs)
+        if accesspoint_context is None:
+            accesspoint_context = self.get_s3_accesspoint_context(
+                name=accesspoint_name)
+        request.context['s3_accesspoint'] = accesspoint_context
+        return request
+
+    def get_s3_accesspoint_context(self, **overrides):
+        accesspoint_context = {
+            'name': self.accesspoint_name,
+            'account': self.account,
+            'region': self.region_name,
+            'partition': self.partition,
+        }
+        accesspoint_context.update(overrides)
+        return accesspoint_context
+
+    def call_set_endpoint(self, endpoint_setter, request, **kwargs):
+        set_endpoint_kwargs = {
+            'request': request,
+            'operation_name': self.operation_name,
+            'signature_version': self.signature_version,
+            'region_name': self.region_name,
+        }
+        set_endpoint_kwargs.update(kwargs)
+        endpoint_setter.set_endpoint(**set_endpoint_kwargs)
+
+    def test_register(self):
+        event_emitter = mock.Mock()
+        self.endpoint_setter.register(event_emitter)
+        event_emitter.register.assert_called_with(
+            'before-sign.s3', self.endpoint_setter.set_endpoint)
+
+    def test_accesspoint_endpoint(self):
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, self.region_name
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_key_in_path(self):
+        request = self.get_s3_accesspoint_request(key=self.key)
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/%s' % (
+            self.accesspoint_name, self.account, self.region_name,
+            self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_scheme(self):
+        request = self.get_s3_accesspoint_request(scheme='http://')
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'http://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_preserves_query_string(self):
+        request = self.get_s3_accesspoint_request(querystring='acl')
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/?acl' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_uses_resolved_dns_suffix(self):
+        self.endpoint_resolver.construct_endpoint.return_value = {
+            'dnsSuffix': 'mysuffix.com'
+        }
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.mysuffix.com/' % (
+            self.accesspoint_name, self.account, self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_uses_region_of_client_if_use_arn_disabled(self):
+        client_region = 'client-region'
+        self.endpoint_setter = self.get_endpoint_setter(
+            region=client_region, s3_config={'use_arn_region': False})
+        request = self.get_s3_accesspoint_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, client_region,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_accesspoint_errors_for_custom_endpoint(self):
+        endpoint_setter = self.get_endpoint_setter(
+            endpoint_url='https://custom.com')
+        request = self.get_s3_accesspoint_request()
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_errors_for_mismatching_partition(self):
+        endpoint_setter = self.get_endpoint_setter(partition='aws-cn')
+        accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
+        request = self.get_s3_accesspoint_request(
+            accesspoint_context=accesspoint_context)
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_errors_for_mismatching_partition_when_using_client_region(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'use_arn_region': False}, partition='aws-cn'
+        )
+        accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
+        request = self.get_s3_accesspoint_request(
+            accesspoint_context=accesspoint_context)
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.call_set_endpoint(endpoint_setter, request=request)
+
+    def test_set_endpoint_for_auto(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'auto'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_virtual(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'virtual'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_path(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'addressing_style': 'path'})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://s3.us-west-2.amazonaws.com/%s/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_set_endpoint_for_accelerate(self):
+        endpoint_setter = self.get_endpoint_setter(
+            s3_config={'use_accelerate_endpoint': True})
+        request = self.get_s3_request(self.bucket, self.key)
+        self.call_set_endpoint(endpoint_setter, request)
+        expected_url = 'https://%s.s3-accelerate.amazonaws.com/%s' % (
+            self.bucket, self.key
+        )
+        self.assertEqual(request.url, expected_url)
+
 
 class TestContainerMetadataFetcher(unittest.TestCase):
     def setUp(self):
@@ -1790,6 +2151,13 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             'Token': 'spam-token',
             'Expiration': 'something',
         }
+        self._expected_creds = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
 
     def tearDown(self):
         self._urllib3_patch.stop()
@@ -1812,6 +2180,13 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         if creds is None:
             creds = self._creds
         self.add_imds_response(body=json.dumps(creds).encode('utf-8'))
+
+    def add_get_token_imds_response(self, token, status_code=200):
+        self.add_imds_response(body=token.encode('utf-8'),
+                               status_code=status_code)
+
+    def add_metadata_token_not_supported_response(self):
+        self.add_imds_response(b'', status_code=404)
 
     def add_imds_connection_error(self, exception):
         self._imds_responses.append(exception)
@@ -1840,84 +2215,63 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         url = 'https://example.com/'
         env = {'AWS_EC2_METADATA_DISABLED': 'false'}
 
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
 
         fetcher = InstanceMetadataFetcher(base_url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
 
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_includes_user_agent_header(self):
         user_agent = 'my-user-agent'
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
 
         InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
 
-        headers = self._send.call_args[0][0].headers
-        self.assertEqual(headers['User-Agent'], user_agent)
+        self.assertEqual(self._send.call_count, 3)
+        for call in self._send.calls:
+            self.assertTrue(call[0][0].headers['User-Agent'], user_agent)
 
     def test_non_200_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
         # be retried.
+        self.add_get_token_imds_response(token='token')
         self.add_imds_response(
             status_code=429, body=b'{"message": "Slow down"}')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_http_connection_error_for_role_name_is_retried(self):
         # Connection related errors should be retried
+        self.add_get_token_imds_response(token='token')
         self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_empty_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
         # be retried.
+        self.add_get_token_imds_response(token='token')
         self.add_imds_response(body=b'')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_non_200_response_is_retried(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         # Response for creds that has a 200 status code but has an empty
         # body should be retried.
@@ -1926,32 +2280,20 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_http_connection_errors_is_retried(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         # Connection related errors should be retried
         self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_empty_response_is_retried(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         # Response for creds that has a 200 status code but is empty.
         # This should be retried.
@@ -1959,16 +2301,10 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_invalid_json_is_retried(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         # Response for creds that has a 200 status code but is invalid JSON.
         # This should be retried.
@@ -1976,22 +2312,17 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        expected_result = {
-            'access_key': self._creds['AccessKeyId'],
-            'secret_key': self._creds['SecretAccessKey'],
-            'token': self._creds['Token'],
-            'expiry_time': self._creds['Expiration'],
-            'role_name': self._role_name
-        }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, self._expected_creds)
 
     def test_exhaust_retries_on_role_name_request(self):
+        self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
     def test_exhaust_retries_on_credentials_request(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
@@ -1999,12 +2330,100 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(result, {})
 
     def test_missing_fields_in_credentials_response(self):
+        self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         # Response for creds that has a 200 status code and a JSON body
         # representing an error. We do not necessarily want to retry this.
         self.add_imds_response(
             body=b'{"Code":"AssumeRoleUnauthorizedAccess","Message":"error"}')
         result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_token_is_included(self):
+        user_agent = 'my-user-agent'
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        # Check that subsequent calls after getting the token include the token.
+        self.assertEqual(self._send.call_count, 3)
+        for call in self._send.call_args_list[1:]:
+            self.assertEqual(call[0][0].headers['x-aws-ec2-metadata-token'], 'token')
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_404(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=404)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_403(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=403)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_405(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=405)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_timeout(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_connection_error(ReadTimeoutError(endpoint_url='url'))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_token_not_supported_exhaust_retries(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_connection_error(ConnectTimeoutError(endpoint_url='url'))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_bad_request_yields_no_credentials(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=400)
+        result = InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
 

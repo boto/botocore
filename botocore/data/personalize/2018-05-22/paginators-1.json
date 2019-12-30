@@ -53,6 +53,12 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "solutions"
+    },
+    "ListBatchInferenceJobs": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "batchInferenceJobs"
     }
   }
 }

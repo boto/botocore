@@ -117,6 +117,7 @@ class RequestSigner(object):
         :type signing_name: str
         :param signing_name: The name to use for the service when signing.
         """
+        explicit_region_name = region_name
         if region_name is None:
             region_name = self._region_name
 
@@ -144,7 +145,9 @@ class RequestSigner(object):
             }
             if expires_in is not None:
                 kwargs['expires'] = expires_in
-
+            if not explicit_region_name and request.context.get(
+                    'signing', {}).get('region'):
+                kwargs['region_name'] = request.context['signing']['region']
             try:
                 auth = self.get_auth_instance(**kwargs)
             except UnknownSignatureVersionError as e:
@@ -715,9 +718,13 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
 
 
 def _should_use_global_endpoint(client):
-    use_dualstack_endpoint = False
-    if client.meta.config.s3 is not None:
-        use_dualstack_endpoint = client.meta.config.s3.get(
-            'use_dualstack_endpoint', False)
-    return (client.meta.partition == 'aws' and
-            not use_dualstack_endpoint)
+    if client.meta.partition != 'aws':
+        return False
+    s3_config = client.meta.config.s3
+    if s3_config:
+        if s3_config.get('use_dualstack_endpoint', False):
+            return False
+        if s3_config.get('us_east_1_regional_endpoint') == 'regional' and \
+                client.meta.config.region_name == 'us-east-1':
+            return False
+    return True
