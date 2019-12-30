@@ -143,6 +143,11 @@ def ensure_boolean(val):
         return val.lower() == 'true'
 
 
+def falsey_to_none(val):
+    """Transforms falsey value to None. If the value parameter is not falsey, it is returned as is."""
+    return val or None
+
+
 def is_json_value_header(shape):
     """Determines if the provided shape is the special header type jsonvalue.
 

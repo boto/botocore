@@ -28,6 +28,7 @@ from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
 from botocore.paginate import PaginatorModel
+from botocore import utils
 import botocore.loaders
 
 
@@ -334,7 +335,7 @@ class TestSessionConfigurationVars(BaseSessionTest):
                          ('region', 'AWS_DEFAULT_REGION', None, None))
         self.assertEqual(
             self.session.session_var_map['profile'],
-            (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None))
+            (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, utils.falsey_to_none))
         self.assertEqual(
             self.session.session_var_map['data_path'],
             ('data_path', 'AWS_DATA_PATH', None, None))

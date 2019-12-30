@@ -34,6 +34,7 @@ from botocore.model import ServiceModel
 from botocore.model import OperationModel
 from botocore.regions import EndpointResolver
 from botocore.utils import ensure_boolean
+from botocore.utils import falsey_to_none
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
@@ -88,6 +89,26 @@ class TestEnsureBoolean(unittest.TestCase):
 
     def test_string_lowercase_true(self):
         self.assertEqual(ensure_boolean('true'), True)
+
+
+class TestFalseToNone(unittest.TestCase):
+    def test_string_empty(self):
+        self.assertEqual(falsey_to_none(""), None)
+
+    def test_string_whitespaces(self):
+        self.assertEqual(falsey_to_none("   "), "   ")
+
+    def test_string_non_empty(self):
+        self.assertEqual(falsey_to_none("Hello, World!"), "Hello, World!")
+
+    def test_none(self):
+        self.assertEqual(falsey_to_none(None), None)
+
+    def test_integer_zero(self):
+        self.assertEqual(falsey_to_none(0), None)
+
+    def test_integer_ten(self):
+        self.assertEqual(falsey_to_none(10), 10)
 
 
 class TestIsJSONValueHeader(unittest.TestCase):

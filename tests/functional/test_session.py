@@ -91,6 +91,16 @@ class TestSession(unittest.TestCase):
             self.assertEqual(creds.access_key, 'env_var_akid')
             self.assertEqual(creds.secret_key, 'env_var_sak')
 
+    def test_empty_profile(self):
+        self.environ['AWS_PROFILE'] = ''
+        self.environ['AWS_ACCESS_KEY_ID'] = 'env_var_akid'
+        self.environ['AWS_SECRET_ACCESS_KEY'] = 'env_var_sak'
+
+        creds = self.session.get_credentials()
+
+        self.assertEqual(creds.access_key, 'env_var_akid')
+        self.assertEqual(creds.secret_key, 'env_var_sak')
+
     def test_provides_available_regions_for_same_endpoint_prefix(self):
         regions = self.session.get_available_regions('s3')
         self.assertTrue(regions)
