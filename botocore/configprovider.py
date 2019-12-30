@@ -270,7 +270,7 @@ class ConfigValueStore(object):
 
     def get_config_variable(self, logical_name):
         """
-        Retrieve the value associeated with the specified logical_name
+        Retrieve the value associated with the specified logical_name
         from the corresponding provider. If no value is found None will
         be returned.
 
