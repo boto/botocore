@@ -216,35 +216,6 @@ class TestCreateClientArgs(unittest.TestCase):
                 ]
             )
 
-    def test_sts_override_resolved_endpoint_for_legacy_region(self):
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
-        client_args = self.call_get_client_args(
-            service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None
-        )
-        self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
-        self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
-
-    def test_sts_use_resolved_endpoint_for_nonlegacy_region(self):
-        resolved_endpoint = 'https://resolved-endpoint'
-        resolved_region = 'resolved-region'
-        self._set_endpoint_bridge_resolve(
-            endpoint_url=resolved_endpoint,
-            signing_region=resolved_region
-        )
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
-        client_args = self.call_get_client_args(
-            service_model=self._get_service_model('sts'),
-            region_name='ap-east-1', endpoint_url=None
-        )
-        self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
-        self.assertEqual(
-            client_args['request_signer'].region_name, resolved_region)
-
     def test_sts_use_resolved_endpoint_for_regional_configuration(self):
         resolved_endpoint = 'https://resolved-endpoint'
         resolved_region = 'resolved-region'
@@ -252,8 +223,6 @@ class TestCreateClientArgs(unittest.TestCase):
             endpoint_url=resolved_endpoint,
             signing_region=resolved_region
         )
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'regional')
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=None
@@ -261,47 +230,3 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
             client_args['request_signer'].region_name, resolved_region)
-
-    def test_sts_with_endpoint_override_and_legacy_configured(self):
-        override_endpoint = 'https://override-endpoint'
-        self._set_endpoint_bridge_resolve(endpoint_url=override_endpoint)
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
-        client_args = self.call_get_client_args(
-            service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=override_endpoint
-        )
-        self.assertEqual(client_args['endpoint'].host, override_endpoint)
-
-    def test_sts_http_scheme_for_override_endpoint(self):
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
-        client_args = self.call_get_client_args(
-            service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None, is_secure=False,
-
-        )
-        self.assertEqual(
-            client_args['endpoint'].host, 'http://sts.amazonaws.com')
-
-    def test_sts_regional_endpoints_defaults_to_legacy_if_not_set(self):
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', None)
-        client_args = self.call_get_client_args(
-            service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None
-        )
-        self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
-        self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
-
-    def test_invalid_sts_regional_endpoints(self):
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'invalid')
-        with self.assertRaises(
-                exceptions.InvalidSTSRegionalEndpointsConfigError):
-            self.call_get_client_args(
-                service_model=self._get_service_model('sts'),
-                region_name='us-west-2', endpoint_url=None
-            )

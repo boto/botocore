@@ -44,12 +44,12 @@ class TestSTSPresignedUrl(BaseSessionTest):
 
         # There should be no 'content-type' in x-amz-signedheaders
         expected_url = (
-            'https://sts.amazonaws.com/?Action=GetCallerIdentity&'
+            'https://sts.us-west-2.amazonaws.com/?Action=GetCallerIdentity&'
             'Version=2011-06-15&X-Amz-Algorithm=AWS4-HMAC-SHA256&'
-            'X-Amz-Credential=access_key%2F20170322%2Fus-east-1%2Fsts%2F'
+            'X-Amz-Credential=access_key%2F20170322%2Fus-west-2%2Fsts%2F'
             'aws4_request&X-Amz-Date=20170322T000000Z&X-Amz-Expires=3600&'
-            'X-Amz-SignedHeaders=host&X-Amz-Signature=767845d2ee858069a598d5f'
-            '8b497b75c7d57356885b1b3dba46dbbc0fc62bf5a'
+            'X-Amz-SignedHeaders=host&X-Amz-Signature=6544a55c35d587a56d10'
+            '41de1abf443791f63be1f75f555ca11b609879cd2020'
         )
         assert_url_equal(url, expected_url)
 
@@ -99,17 +99,7 @@ class TestSTSEndpoints(BaseSessionTest):
         match = _V4_SIGNING_REGION_REGEX.match(authorization_val)
         return match.group('signing_region')
 
-    def test_legacy_region_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        sts = self.create_sts_client('us-west-2')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.amazonaws.com/',
-            expected_signing_region='us-east-1'
-        )
-
-    def test_legacy_region_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
+    def test_sts_standard_endpoint(self):
         sts = self.create_sts_client('us-west-2')
         self.assert_request_sent(
             sts,
@@ -117,8 +107,7 @@ class TestSTSEndpoints(BaseSessionTest):
             expected_signing_region='us-west-2'
         )
 
-    def test_fips_endpoint_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
+    def test_fips_endpoint(self):
         sts = self.create_sts_client('us-west-2-fips')
         self.assert_request_sent(
             sts,
@@ -126,119 +115,18 @@ class TestSTSEndpoints(BaseSessionTest):
             expected_signing_region='us-west-2'
         )
 
-    def test_fips_endpoint_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
-        sts = self.create_sts_client('us-west-2-fips')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts-fips.us-west-2.amazonaws.com/',
-            expected_signing_region='us-west-2'
-        )
-
-    def test_nonlegacy_region_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        sts = self.create_sts_client('ap-east-1')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.ap-east-1.amazonaws.com/',
-            expected_signing_region='ap-east-1'
-        )
-
-    def test_nonlegacy_region_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
-        sts = self.create_sts_client('ap-east-1')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.ap-east-1.amazonaws.com/',
-            expected_signing_region='ap-east-1'
-        )
-
-    def test_nonaws_partition_region_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
+    def test_nonaws_partition_region(self):
         sts = self.create_sts_client('cn-north-1')
         self.assert_request_sent(
             sts,
             expected_url='https://sts.cn-north-1.amazonaws.com.cn/',
             expected_signing_region='cn-north-1'
-        )
-
-    def test_nonaws_partition_region_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
-        sts = self.create_sts_client('cn-north-1')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.cn-north-1.amazonaws.com.cn/',
-            expected_signing_region='cn-north-1'
-        )
-
-    def test_global_region_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        sts = self.create_sts_client('aws-global')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.amazonaws.com/',
-            expected_signing_region='us-east-1',
         )
 
     def test_global_region_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
         sts = self.create_sts_client('aws-global')
         self.assert_request_sent(
             sts,
             expected_url='https://sts.amazonaws.com/',
             expected_signing_region='us-east-1'
         )
-
-    def test_defaults_to_global_endpoint_for_legacy_region(self):
-        sts = self.create_sts_client('us-west-2')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.amazonaws.com/',
-            expected_signing_region='us-east-1'
-        )
-
-    def test_defaults_to_regional_endpoint_for_nonlegacy_region(self):
-        sts = self.create_sts_client('ap-east-1')
-        self.assert_request_sent(
-            sts,
-            expected_url='https://sts.ap-east-1.amazonaws.com/',
-            expected_signing_region='ap-east-1'
-        )
-
-    def test_configure_sts_regional_from_config_file(self):
-        with temporary_file('w') as f:
-            self.set_sts_regional_for_config_file(f, 'regional')
-            sts = self.create_sts_client('us-west-2')
-            self.assert_request_sent(
-                sts,
-                expected_url='https://sts.us-west-2.amazonaws.com/',
-            )
-
-    def test_env_var_overrides_config_file(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        with temporary_file('w') as f:
-            self.set_sts_regional_for_config_file(f, 'regional')
-            sts = self.create_sts_client('us-west-2')
-            self.assert_request_sent(
-                sts, expected_url='https://sts.amazonaws.com/')
-
-    def test_user_provided_endpoint_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        sts = self.create_sts_client(
-            'us-west-2', endpoint_url='https://custom.com')
-        self.assert_request_sent(
-            sts, expected_url='https://custom.com/')
-
-    def test_user_provided_endpoint_with_regional_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
-        sts = self.create_sts_client(
-            'us-west-2', endpoint_url='https://custom.com')
-        self.assert_request_sent(
-            sts, expected_url='https://custom.com/')
-
-    def test_http_with_legacy_configured(self):
-        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
-        sts = self.create_sts_client(
-            'us-west-2', use_ssl=False)
-        self.assert_request_sent(
-            sts, expected_url='http://sts.amazonaws.com/')
