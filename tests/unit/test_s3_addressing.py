@@ -50,14 +50,14 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com/')
+                         'https://safename.s3.us-east-1.amazonaws.com/')
 
     def test_list_objects_non_dns_name(self):
         params = {'Bucket': 'un_safe_name'}
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://s3.amazonaws.com/un_safe_name')
+                         'https://s3.us-east-1.amazonaws.com/un_safe_name')
 
     def test_list_objects_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -136,7 +136,7 @@ class TestS3Addressing(BaseSessionTest):
             prepared_request = self.get_prepared_request('put_object', params)
             self.assertEqual(
                 prepared_request.url,
-                'https://s3.amazonaws.com/my.valid.name/mykeyname')
+                'https://s3.us-east-1.amazonaws.com/my.valid.name/mykeyname')
 
     def test_put_object_dns_name_single_letter_non_classic(self):
         self.region_name = 'us-west-2'
@@ -174,8 +174,10 @@ class TestS3Addressing(BaseSessionTest):
             'Key': 'mykeyname'
         }
         prepared_request = self.get_prepared_request('get_object', params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3.amazonaws.com/AnInvalidName/mykeyname')
+        expected_url = (
+            'https://s3.us-east-1.amazonaws.com/AnInvalidName/mykeyname'
+        )
+        self.assertEqual(prepared_request.url, expected_url)
 
     def test_get_object_ip_address_name_non_classic(self):
         self.region_name = 'us-west-2'
