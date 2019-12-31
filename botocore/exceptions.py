@@ -484,15 +484,6 @@ class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
     )
 
 
-class InvalidS3UsEast1RegionalEndpointConfigError(BotoCoreError):
-    """Error for invalid s3 us-east-1 regional endpoints configuration"""
-    fmt = (
-        'S3 us-east-1 regional endpoint option '
-        '{s3_us_east_1_regional_endpoint_config} is '
-        'invaild. Valid options are: legacy and regional'
-    )
-
-
 class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 

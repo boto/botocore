@@ -31,11 +31,6 @@ from botocore.endpoint import EndpointCreator
 logger = logging.getLogger(__name__)
 
 
-VALID_REGIONAL_ENDPOINTS_CONFIG = [
-    'legacy',
-    'regional',
-]
-
 class ClientArgsCreator(object):
     def __init__(self, event_emitter, user_agent, response_parser_factory,
                  loader, exceptions_factory, config_store):
@@ -197,37 +192,10 @@ class ClientArgsCreator(object):
 
     def _compute_s3_endpoint_config(self, s3_config,
                                     **resolve_endpoint_kwargs):
-        force_s3_global = self._should_force_s3_global(
-            resolve_endpoint_kwargs['region_name'], s3_config)
-        if force_s3_global:
-            resolve_endpoint_kwargs['region_name'] = None
         endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
         self._set_region_if_custom_s3_endpoint(
             endpoint_config, resolve_endpoint_kwargs['endpoint_bridge'])
-        # For backwards compatibility reasons, we want to make sure the
-        # client.meta.region_name will remain us-east-1 if we forced the
-        # endpoint to be the global region. Specifically, if this value
-        # changes to aws-global, it breaks logic where a user is checking
-        # for us-east-1 as the global endpoint such as in creating buckets.
-        if force_s3_global and endpoint_config['region_name'] == 'aws-global':
-            endpoint_config['region_name'] = 'us-east-1'
         return endpoint_config
-
-    def _should_force_s3_global(self, region_name, s3_config):
-        s3_regional_config = 'legacy'
-        if s3_config and 'us_east_1_regional_endpoint' in s3_config:
-            s3_regional_config = s3_config['us_east_1_regional_endpoint']
-            self._validate_s3_regional_config(s3_regional_config)
-        return (
-            s3_regional_config == 'legacy' and
-            region_name in ['us-east-1', None]
-        )
-
-    def _validate_s3_regional_config(self, config_val):
-        if config_val not in VALID_REGIONAL_ENDPOINTS_CONFIG:
-            raise botocore.exceptions.\
-                InvalidS3UsEast1RegionalEndpointConfigError(
-                    s3_us_east_1_regional_endpoint_config=config_val)
 
     def _set_region_if_custom_s3_endpoint(self, endpoint_config,
                                           endpoint_bridge):
