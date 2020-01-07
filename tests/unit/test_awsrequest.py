@@ -351,6 +351,25 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # continue.
             self.assertIn(b'body', s.sent_data)
 
+    def test_handles_expect_100_with_no_reason_phrase(self):
+        with patch('urllib3.util.wait_for_read') as wait_mock:
+            # Shows the server first sending a 100 continue response
+            # then a 200 ok response, but without reason phrases.
+            s = FakeSocket(b'HTTP/1.1 100 \r\n\r\nHTTP/1.1 200 \r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            wait_mock.return_value = True
+            conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
+                         {'Expect': b'100-continue', 'Content-Length': b'4'})
+            response = conn.getresponse()
+            # Now we should verify that our final response is the 200 OK.
+            self.assertEqual(response.status, 200)
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
+            # Verify that we went the request body because we got a 100
+            # continue.
+            self.assertIn(b'body', s.sent_data)
+
     def test_expect_100_sends_connection_header(self):
         # When using squid as an HTTP proxy, it will also send
         # a Connection: keep-alive header back with the 100 continue
@@ -383,6 +402,26 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # then a 200 ok response.
             s = FakeSocket(
                 b'HTTP/1.1 307 Temporary Redirect\r\n'
+                b'Location: http://example.org\r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            wait_mock.return_value = True
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
+            response = conn.getresponse()
+            # Now we should verify that our final response is the 307.
+            self.assertEqual(response.status, 307)
+
+    def test_expect_100_continue_sends_307_with_no_reason_phrase(self):
+        # This is the case where we send a 100 continue and the server
+        # immediately sends a 307 without a reason phrase
+        with patch('urllib3.util.wait_for_read') as wait_mock:
+            # Shows the server first sending a 100 continue response
+            # then a 200 ok response.
+            s = FakeSocket(
+                b'HTTP/1.1 307\r\n'
                 b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s

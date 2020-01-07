@@ -199,7 +199,7 @@ class AWSConnection(object):
                 logger.debug("100 Continue response seen, "
                              "now sending request body.")
                 self._send_message_body(message_body)
-            elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
+            elif len(parts) >= 2 and parts[0].startswith(b'HTTP/'):
                 # From the RFC:
                 # Requirements for HTTP/1.1 origin servers:
                 #
@@ -214,8 +214,10 @@ class AWSConnection(object):
                 # and don't send the message_body.
                 logger.debug("Received a non 100 Continue response "
                              "from the server, NOT sending request body.")
+                has_reason = len(parts) > 2
+                status_reason = parts[2].decode('ascii') if has_reason else u''
                 status_tuple = (parts[0].decode('ascii'),
-                                int(parts[1]), parts[2].decode('ascii'))
+                                int(parts[1]), status_reason)
                 response_class = functools.partial(
                     AWSHTTPResponse, status_tuple=status_tuple)
                 self.response_class = response_class
@@ -238,7 +240,7 @@ class AWSConnection(object):
         parts = maybe_status_line.split(None, 2)
         # Check for HTTP/<version> 100 Continue\r\n
         return (
-            len(parts) >= 3 and parts[0].startswith(b'HTTP/') and
+            len(parts) >= 2 and parts[0].startswith(b'HTTP/') and
             parts[1] == b'100')
 
 
