@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.48
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
 1.13.47
 =======
 
