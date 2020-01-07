@@ -17,6 +17,7 @@ from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.exceptions import InvalidRetryConfigurationError
 from botocore.exceptions import InvalidMaxRetryAttemptsError
+from botocore.exceptions import InvalidRetryModeError
 
 
 class Config(object):
@@ -107,6 +108,14 @@ class Config(object):
     :param retries: A dictionary for retry specific configurations.
         Valid keys are:
 
+        * 'total_max_attempts' -- An integer representing the maximum number of
+          total attempts that will be made on a single request.  This includes
+          the initial request, so a value of 1 indicates that no requests
+          will be retried.  If ``total_max_attempts`` and ``max_attempts``
+          are both provided, ``total_max_attempts`` takes precedence.
+          ``total_max_attempts`` is preferred over ``max_attempts`` because
+          it maps to the ``AWS_MAX_ATTEMPTS`` environment variable and
+          the ``max_attempts`` config file value.
         * 'max_attempts' -- An integer representing the maximum number of
           retry attempts that will be made on a single request. For
           example, setting this value to 2 will result in the request
@@ -114,6 +123,12 @@ class Config(object):
           this value to 0 will result in no retries ever being attempted on
           the initial request. If not provided, the number of retries will
           default to whatever is modeled, which is typically four retries.
+        * 'mode' -- A string representing the type of retry mode botocore
+          should use.  Valid values are:
+              * ``legacy`` - The pre-existing retry behavior.
+              * ``standard`` - The standardized set of retry rules.  This
+                will also default to 3 max attempts unless overridden.
+              * ``adaptive`` - Retries with additional client side throttling.
 
     :type client_cert: str, (str, str)
     :param client_cert: The path to a certificate for TLS client authentication.
@@ -211,13 +226,24 @@ class Config(object):
 
     def _validate_retry_configuration(self, retries):
         if retries is not None:
-            for key in retries:
-                if key not in ['max_attempts']:
+            for key, value in retries.items():
+                if key not in ['max_attempts', 'mode', 'total_max_attempts']:
                     raise InvalidRetryConfigurationError(
                         retry_config_option=key)
-                if key == 'max_attempts' and retries[key] < 0:
+                if key == 'max_attempts' and value < 0:
                     raise InvalidMaxRetryAttemptsError(
-                        provided_max_attempts=retries[key]
+                        provided_max_attempts=value,
+                        min_value=0,
+                    )
+                if key == 'total_max_attempts' and value < 1:
+                    raise InvalidMaxRetryAttemptsError(
+                        provided_max_attempts=value,
+                        min_value=1,
+                    )
+                if key == 'mode' and value not in ['legacy', 'standard',
+                                                   'adaptive']:
+                    raise InvalidRetryModeError(
+                        provided_retry_mode=value
                     )
 
     def merge(self, other_config):

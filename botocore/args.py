@@ -169,6 +169,7 @@ class ClientArgsCreator(object):
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
             )
+        self._compute_retry_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
         return {
             'service_name': service_name,
@@ -309,6 +310,56 @@ class ClientArgsCreator(object):
                 socket_options.append(
                     (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
         return socket_options
+
+    def _compute_retry_config(self, config_kwargs):
+        self._compute_retry_max_attempts(config_kwargs)
+        self._compute_retry_mode(config_kwargs)
+
+    def _compute_retry_max_attempts(self, config_kwargs):
+        # There's a pre-existing max_attempts client config value that actually
+        # means max *retry* attempts.  There's also a `max_attempts` we pull
+        # from the config store that means *total attempts*, which includes the
+        # intitial request.  We can't change what `max_attempts` means in
+        # client config so we try to normalize everything to a new
+        # "total_max_attempts" variable.  We ensure that after this, the only
+        # configuration for "max attempts" is the 'total_max_attempts' key.
+        # An explicitly provided max_attempts in the client config
+        # overrides everything.
+        retries = config_kwargs.get('retries')
+        if retries is not None:
+            if 'total_max_attempts' in retries:
+                retries.pop('max_attempts', None)
+                return
+            if 'max_attempts' in retries:
+                value = retries.pop('max_attempts')
+                # client config max_attempts means total retries so we
+                # have to add one for 'total_max_attempts' to account
+                # for the initial request.
+                retries['total_max_attempts'] = value + 1
+                return
+        # Otherwise we'll check the config store which checks env vars,
+        # config files, etc.  There is no default value for max_attempts
+        # so if this returns None and we don't set a default value here.
+        max_attempts = self._config_store.get_config_variable('max_attempts')
+        if max_attempts is not None:
+            if retries is None:
+                retries = {}
+                config_kwargs['retries'] = retries
+            retries['total_max_attempts'] = max_attempts
+
+    def _compute_retry_mode(self, config_kwargs):
+        retries = config_kwargs.get('retries')
+        if retries is None:
+            retries = {}
+            config_kwargs['retries'] = retries
+        elif 'mode' in retries:
+            # If there's a retry mode explicitly set in the client config
+            # that overrides everything.
+            return
+        retry_mode = self._config_store.get_config_variable('retry_mode')
+        if retry_mode is None:
+            retry_mode = 'legacy'
+        retries['mode'] = retry_mode
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):
