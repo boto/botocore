@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``sesv2``", 
+    "description": "Update sesv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dataexchange``", 
+    "description": "Update dataexchange client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudsearch``", 
+    "description": "Update cloudsearch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dlm``", 
+    "description": "Update dlm client to latest version", 
+    "type": "api-change"
+  }
+]

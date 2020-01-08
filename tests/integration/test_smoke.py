@@ -14,6 +14,7 @@ import os
 import mock
 from pprint import pformat
 import warnings
+import logging
 from nose.tools import assert_equal, assert_true
 
 from tests import ClientHTTPStubber
@@ -109,6 +110,7 @@ SMOKE_TESTS = {
  'workspaces': {'DescribeWorkspaces': {}},
 }
 
+
 # Same thing as the SMOKE_TESTS hash above, except these verify
 # that we get an error response back from the server because
 # we've sent invalid params.
@@ -193,7 +195,7 @@ ERROR_TESTS = {
         }},
     'swf': {'DescribeDomain': {'name': 'fake'}},
     'waf': {'GetWebACL': {'WebACLId': 'fake'}},
-    'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake'}},
+    'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake-directory-id'}},
 }
 
 REGION = 'us-east-1'
@@ -202,6 +204,8 @@ REGION_OVERRIDES = {
     'efs': 'us-west-2',
     'inspector': 'us-west-2',
 }
+MAX_RETRIES = 8
+logger = logging.getLogger(__name__)
 
 
 def _get_client(session, service):
@@ -209,7 +213,24 @@ def _get_client(session, service):
         region_name = os.environ['AWS_SMOKE_TEST_REGION']
     else:
         region_name = REGION_OVERRIDES.get(service, REGION)
-    return session.create_client(service, region_name=region_name)
+    client = session.create_client(service, region_name=region_name)
+    client.meta.events.register_first('needs-retry.*.*', retry_handler)
+    return client
+
+
+def retry_handler(response, attempts, **kwargs):
+    if response is not None:
+        _, parsed = response
+        code = parsed.get('Error', {}).get('Code')
+        # Catch ThrottleException, Throttling.
+        is_throttle_error = code is not None and 'throttl' in code.lower()
+        if is_throttle_error and attempts <= MAX_RETRIES:
+            # We want the exponential behavior with a fixed 10 second
+            # minimum, e.g. 11, 12, 14, 18, 26.  With a max retries of 8,
+            # this is about 7-8 minutes total we'll retry.
+            retry_delay = (2 ** (attempts - 1)) + 10
+            logger.debug("Using custom retry delay of: %s", retry_delay)
+            return retry_delay
 
 
 def _list_services(dict_entries):

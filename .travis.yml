@@ -12,7 +12,7 @@ matrix:
       dist: xenial
     - python: 3.8
       dist: xenial
-
+ 
 cache: pip
 before_install:
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then

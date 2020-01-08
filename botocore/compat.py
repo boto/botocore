@@ -377,3 +377,9 @@ def _windows_shell_split(s):
         components.append(''.join(buff))
 
     return components
+
+
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping

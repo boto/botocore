@@ -21,6 +21,7 @@ from botocore.configprovider import BaseProvider
 from botocore.configprovider import InstanceVarProvider
 from botocore.configprovider import EnvironmentProvider
 from botocore.configprovider import ScopedConfigProvider
+from botocore.configprovider import SectionConfigProvider
 from botocore.configprovider import ConstantProvider
 from botocore.configprovider import ChainProvider
 from botocore.configprovider import ConfigChainFactory
@@ -74,15 +75,150 @@ class TestConfigChainFactory(unittest.TestCase):
             expected_value='from-env',
         )
 
+    def test_does_provide_none_if_no_variable_exists_in_env_var_list(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO'],
+            },
+            expected_value=None,
+        )
+
+    def test_does_provide_value_if_variable_exists_in_env_var_list(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={'FOO': 'bar'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO'],
+            },
+            expected_value='bar',
+        )
+
+    def test_does_provide_first_non_none_value_first_in_env_var_list(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={'FOO': 'baz'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO', 'BAR'],
+            },
+            expected_value='baz',
+        )
+
+    def test_does_provide_first_non_none_value_second_in_env_var_list(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={'BAR': 'baz'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO', 'BAR'],
+            },
+            expected_value='baz',
+        )
+
+    def test_does_provide_none_if_all_list_env_vars_are_none(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO', 'BAR'],
+            },
+            expected_value=None,
+        )
+
+    def test_does_provide_first_value_when_both_env_vars_exist(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={'FOO': 'baz', 'BAR': 'buz'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': ['FOO', 'BAR'],
+            },
+            expected_value='baz',
+        )
+
     def test_chain_builder_can_provide_config_var(self):
         self.assert_chain_does_provide(
             instance_map={},
             environ_map={},
             scoped_config_map={'config_var': 'from-config'},
             create_config_chain_args={
-                'config_property_name': 'config_var',
+                'config_property_names': 'config_var',
             },
             expected_value='from-config',
+        )
+
+    def test_chain_builder_can_provide_nested_config_var(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={'config_var': {'nested-key': 'nested-val'}},
+            create_config_chain_args={
+                'config_property_names': ('config_var', 'nested-key'),
+            },
+            expected_value='nested-val',
+        )
+
+    def test_provide_value_from_config_list(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={'var': 'val'},
+            create_config_chain_args={
+                'config_property_names': ['var'],
+            },
+            expected_value='val',
+        )
+
+    def test_provide_value_from_config_list_looks_for_non_none_vals(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={'non_none_var': 'non_none_val'},
+            create_config_chain_args={
+                'config_property_names': ['none_var', 'non_none_var'],
+            },
+            expected_value='non_none_val',
+        )
+
+    def test_provide_value_from_config_list_retrieves_first_non_none_val(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={
+                'first': 'first_val',
+                'second': 'second_val'
+            },
+            create_config_chain_args={
+                'config_property_names': ['first', 'second'],
+            },
+            expected_value='first_val',
+        )
+
+    def test_provide_value_from_config_list_if_all_vars_are_none(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={},
+            create_config_chain_args={
+                'config_property_names': ['config1', 'config2'],
+            },
+            expected_value=None,
+        )
+
+    def test_provide_value_from_list_with_nested_var(self):
+        self.assert_chain_does_provide(
+            instance_map={},
+            environ_map={},
+            scoped_config_map={'section': {'nested_var': 'nested_val'}},
+            create_config_chain_args={
+                'config_property_names': [('section', 'nested_var')],
+            },
+            expected_value='nested_val',
         )
 
     def test_chain_builder_can_provide_default(self):
@@ -104,7 +240,7 @@ class TestConfigChainFactory(unittest.TestCase):
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_var',
+                'config_property_names': 'config_var',
                 'default': 'from-default',
             },
             expected_value='from-instance',
@@ -118,7 +254,7 @@ class TestConfigChainFactory(unittest.TestCase):
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_var',
+                'config_property_names': 'config_var',
                 'default': 'from-default',
             },
             expected_value='from-env',
@@ -132,7 +268,7 @@ class TestConfigChainFactory(unittest.TestCase):
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_var',
+                'config_property_names': 'config_var',
                 'default': 'from-default',
             },
             expected_value='from-config',
@@ -146,7 +282,7 @@ class TestConfigChainFactory(unittest.TestCase):
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_var',
+                'config_property_names': 'config_var',
                 'default': 'from-default',
             },
             expected_value='from-default',
@@ -220,76 +356,25 @@ class TestInstanceVarProvider(unittest.TestCase):
 
 
 class TestEnvironmentProvider(unittest.TestCase):
-    def assert_does_provide(self, env, names, expected_value):
-        provider = EnvironmentProvider(names=names, env=env)
+    def assert_does_provide(self, env, name, expected_value):
+        provider = EnvironmentProvider(name=name, env=env)
         value = provider.provide()
         self.assertEqual(value, expected_value)
 
     def test_does_provide_none_if_no_variable_exists(self):
         self.assert_does_provide(
-            names='FOO',
+            name='FOO',
             env={},
             expected_value=None,
         )
 
     def test_does_provide_value_if_variable_exists(self):
         self.assert_does_provide(
-            names='FOO',
+            name='FOO',
             env={
                 'FOO': 'bar',
             },
             expected_value='bar',
-        )
-
-    def test_does_provide_none_if_no_variable_exists_in_list(self):
-        self.assert_does_provide(
-            names=['FOO'],
-            env={},
-            expected_value=None,
-        )
-
-    def test_does_provide_value_if_variable_exists_in_list(self):
-        self.assert_does_provide(
-            names=['FOO'],
-            env={
-                'FOO': 'bar',
-            },
-            expected_value='bar',
-        )
-
-    def test_does_provide_first_non_none_value_first(self):
-        self.assert_does_provide(
-            names=['FOO', 'BAR'],
-            env={
-                'FOO': 'baz',
-            },
-            expected_value='baz',
-        )
-
-    def test_does_provide_first_non_none_value_second(self):
-        self.assert_does_provide(
-            names=['FOO', 'BAR'],
-            env={
-                'BAR': 'baz',
-            },
-            expected_value='baz',
-        )
-
-    def test_does_provide_none_if_all_list_variables_are_none(self):
-        self.assert_does_provide(
-            names=['FOO', 'BAR'],
-            env={},
-            expected_value=None,
-        )
-
-    def test_does_provide_first_value_when_both_exist(self):
-        self.assert_does_provide(
-            names=['FOO', 'BAR'],
-            env={
-                'FOO': 'baz',
-                'BAR': 'buz',
-            },
-            expected_value='baz',
         )
 
 
@@ -320,6 +405,26 @@ class TestScopedConfigProvider(unittest.TestCase):
                 'foo': 'bar'
             },
             config_var_name='no_such_var',
+            expected_value=None,
+        )
+
+    def test_provide_nested_value(self):
+        self.assert_provides_value(
+            config_file_values={
+                'section': {
+                    'nested_var': 'nested_val'
+                }
+            },
+            config_var_name=('section', 'nested_var'),
+            expected_value='nested_val',
+        )
+
+    def test_provide_nested_value_but_not_section(self):
+        self.assert_provides_value(
+            config_file_values={
+                'section': 'not-nested'
+            },
+            config_var_name=('section', 'nested_var'),
             expected_value=None,
         )
 
@@ -384,3 +489,68 @@ class TestConstantProvider(unittest.TestCase):
         provider = ConstantProvider(value='foo')
         value = provider.provide()
         self.assertEqual(value, 'foo')
+
+
+class TestSectionConfigProvider(unittest.TestCase):
+    def assert_provides_value(self, config_file_values, section_name,
+                              expected_value, override_providers=None):
+        fake_session = mock.Mock(spec=session.Session)
+        fake_session.get_scoped_config.return_value = config_file_values
+        provider = SectionConfigProvider(
+            section_name=section_name,
+            session=fake_session,
+            override_providers=override_providers
+        )
+        value = provider.provide()
+        self.assertEqual(value, expected_value)
+
+    def test_provide_section_config(self):
+        self.assert_provides_value(
+            config_file_values={
+                'mysection': {
+                    'section_var': 'section_val'
+                }
+            },
+            section_name='mysection',
+            expected_value={'section_var': 'section_val'},
+        )
+
+    def test_provide_service_config_missing_service(self):
+        self.assert_provides_value(
+            config_file_values={},
+            section_name='mysection',
+            expected_value=None,
+        )
+
+    def test_provide_service_config_not_a_section(self):
+        self.assert_provides_value(
+            config_file_values={'myservice': 'not-a-section'},
+            section_name='mysection',
+            expected_value=None,
+        )
+
+    def test_provide_section_config_with_overrides(self):
+        self.assert_provides_value(
+            config_file_values={
+                'mysection': {
+                    'override_var': 'from_config_file',
+                    'no_override_var': 'from_config_file'
+                }
+            },
+            section_name='mysection',
+            override_providers={'override_var': ConstantProvider('override')},
+            expected_value={
+                'override_var': 'override',
+                'no_override_var': 'from_config_file'
+            }
+        )
+
+    def test_provide_section_config_with_only_overrides(self):
+        self.assert_provides_value(
+            config_file_values={},
+            section_name='mysection',
+            override_providers={'override_var': ConstantProvider('override')},
+            expected_value={
+                'override_var': 'override',
+            }
+        )

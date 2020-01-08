@@ -35,6 +35,18 @@
       "limit_key": "MaxItems",
       "output_token": "NextMarker",
       "result_key": "Versions"
+    },
+    "ListFunctionEventInvokeConfigs": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "FunctionEventInvokeConfigs"
+    },
+    "ListProvisionedConcurrencyConfigs": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "ProvisionedConcurrencyConfigs"
     }
   }
 }

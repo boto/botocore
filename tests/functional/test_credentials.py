@@ -25,7 +25,7 @@ from dateutil.tz import tzlocal
 from botocore.exceptions import CredentialRetrievalError
 
 from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
-from tests import temporary_file, StubbedSession
+from tests import temporary_file, StubbedSession, SessionHTTPStubber
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
@@ -762,3 +762,94 @@ class TestProcessProvider(unittest.TestCase):
             reg = r"(?s)^((?!b').)*$"
             with self.assertRaisesRegexp(CredentialRetrievalError, reg):
                 session.get_credentials()
+
+
+class TestSTSRegional(BaseAssumeRoleTest):
+    def add_assume_role_http_response(self, stubber):
+        stubber.add_response(
+            body=self._get_assume_role_body('AssumeRole'))
+
+    def add_assume_role_with_web_identity_http_response(self, stubber):
+        stubber.add_response(
+            body=self._get_assume_role_body('AssumeRoleWithWebIdentity'))
+
+    def _get_assume_role_body(self, method_name):
+        expiration = self.some_future_time()
+        body = (
+            '<{method_name}Response>'
+            '  <{method_name}Result>'
+            '    <AssumedRoleUser>'
+            '      <Arn>arn:aws:sts::0123456:user</Arn>'
+            '      <AssumedRoleId>AKID:mysession-1567020004</AssumedRoleId>'
+            '    </AssumedRoleUser>'
+            '    <Credentials>'
+            '      <AccessKeyId>AccessKey</AccessKeyId>'
+            '      <SecretAccessKey>SecretKey</SecretAccessKey>'
+            '      <SessionToken>SessionToken</SessionToken>'
+            '      <Expiration>{expiration}</Expiration>'
+            '    </Credentials>'
+            '  </{method_name}Result>'
+            '</{method_name}Response>'
+        ).format(method_name=method_name, expiration=expiration)
+        return body.encode('utf-8')
+
+    def make_stubbed_client_call_to_region(self, session, stubber, region):
+        ec2 = session.create_client('ec2', region_name=region)
+        stubber.add_response(body=b'<DescribeRegionsResponse/>')
+        ec2.describe_regions()
+
+    def test_assume_role_uses_same_region_as_client(self):
+        config = (
+            '[profile A]\n'
+            'sts_regional_endpoints = regional\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n\n'
+            '[profile B]\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n'
+        )
+        self.write_config(config)
+
+        session = Session(profile='A')
+        with SessionHTTPStubber(session) as stubber:
+            self.add_assume_role_http_response(stubber)
+            # Make an arbitrary client and API call as we are really only
+            # looking to make sure the STS assume role call uses the correct
+            # endpoint.
+            self.make_stubbed_client_call_to_region(
+                session, stubber, 'us-west-2')
+            self.assertEqual(
+                stubber.requests[0].url,
+                'https://sts.us-west-2.amazonaws.com/'
+            )
+
+    def test_assume_role_web_identity_uses_same_region_as_client(self):
+        token_file = os.path.join(self.tempdir, 'token.jwt')
+        with open(token_file, 'w') as f:
+            f.write('some-token')
+        config = (
+            '[profile A]\n'
+            'sts_regional_endpoints = regional\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'web_identity_token_file = %s\n'
+            'source_profile = B\n\n'
+            '[profile B]\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n' % token_file
+        )
+        self.write_config(config)
+        # Make an arbitrary client and API call as we are really only
+        # looking to make sure the STS assume role call uses the correct
+        # endpoint.
+        session = Session(profile='A')
+        with SessionHTTPStubber(session) as stubber:
+            self.add_assume_role_with_web_identity_http_response(stubber)
+            # Make an arbitrary client and API call as we are really only
+            # looking to make sure the STS assume role call uses the correct
+            # endpoint.
+            self.make_stubbed_client_call_to_region(
+                session, stubber, 'us-west-2')
+            self.assertEqual(
+                stubber.requests[0].url,
+                'https://sts.us-west-2.amazonaws.com/'
+            )

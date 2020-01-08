@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``kinesis-video-archived-media``", 
+    "description": "Update kinesis-video-archived-media client to latest version", 
+    "type": "api-change"
+  }
+]

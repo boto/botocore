@@ -27,16 +27,16 @@ from tarfile import TarFile
 from contextlib import closing
 
 from nose.plugins.attrib import attr
+import urllib3
 
 from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
-from botocore.compat import six, zip_longest
+from botocore.compat import six, zip_longest, OrderedDict
 import botocore.session
 import botocore.auth
 import botocore.credentials
-import botocore.vendored.requests as requests
 from botocore.config import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 
 def random_bucketname():
@@ -46,6 +46,24 @@ def random_bucketname():
 LOG = logging.getLogger('botocore.tests.integration')
 _SHARED_BUCKET = random_bucketname()
 _DEFAULT_REGION = 'us-west-2'
+
+
+def http_get(url):
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    response = http.request('GET', url)
+    return response
+
+
+def http_post(url, data, files):
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    merged_data = OrderedDict()
+    merged_data.update(data)
+    merged_data.update(files)
+    response = http.request(
+        'POST', url,
+        fields=merged_data,
+    )
+    return response
 
 
 def setup_module():
@@ -95,6 +113,8 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
                           e, exc_info=True)
                 not_exists_waiter = s3.get_waiter('bucket_not_exists')
                 not_exists_waiter.wait(Bucket=bucket)
+            except WaiterError:
+                continue
 
 
 def teardown_module():
@@ -102,6 +122,9 @@ def teardown_module():
 
 
 class BaseS3ClientTest(unittest.TestCase):
+
+    DEFAULT_DELAY = 5
+
     def setUp(self):
         self.bucket_name = _SHARED_BUCKET
         self.region = _DEFAULT_REGION
@@ -127,14 +150,24 @@ class BaseS3ClientTest(unittest.TestCase):
         response = bucket_client.create_bucket(**bucket_kwargs)
         self.assert_status_code(response, 200)
         waiter = bucket_client.get_waiter('bucket_exists')
-        waiter.wait(Bucket=bucket_name)
+        consistency_waiter = ConsistencyWaiter(
+            min_successes=3, delay=self.DEFAULT_DELAY,
+            delay_initial_poll=True)
+        consistency_waiter.wait(
+            lambda: waiter.wait(Bucket=bucket_name) is None
+        )
         self.addCleanup(clear_out_bucket, bucket_name, region_name, True)
         return bucket_name
 
-    def create_object(self, key_name, body='foo'):
-        self.client.put_object(
-            Bucket=self.bucket_name, Key=key_name,
-            Body=body)
+    def create_object(self, key_name, body='foo', num_attempts=3):
+        for _ in range(num_attempts):
+            try:
+                self.client.put_object(
+                    Bucket=self.bucket_name, Key=key_name,
+                    Body=body)
+                break
+            except self.client.exceptions.NoSuchBucket:
+                time.sleep(self.DEFAULT_DELAY)
         self.wait_until_key_exists(self.bucket_name, key_name)
 
     def make_tempdir(self):
@@ -173,7 +206,7 @@ class BaseS3ClientTest(unittest.TestCase):
     def wait_until_versioning_enabled(self, bucket, min_successes=3):
         waiter = ConsistencyWaiter(
             min_successes=min_successes,
-            delay=5, delay_initial_poll=True)
+            delay=self.DEFAULT_DELAY, delay_initial_poll=True)
         waiter.wait(self._check_bucket_versioning, bucket)
 
 
@@ -637,7 +670,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_with_existing_query_string_values(self):
         content_disposition = 'attachment; filename=foo.txt;'
@@ -645,10 +678,10 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={
                 'Bucket': self.bucket_name, 'Key': self.key,
                 'ResponseContentDisposition': content_disposition})
-        response = requests.get(presigned_url)
+        response = http_get(presigned_url)
         self.assertEqual(response.headers['Content-Disposition'],
                          content_disposition)
-        self.assertEqual(response.content, b'foo')
+        self.assertEqual(response.data, b'foo')
 
     def test_presign_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -663,7 +696,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to be the us-east-1 endpoint, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
 
@@ -693,9 +726,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "got: %s" % post_args['url'])
 
         # Try to retrieve the object using the presigned url.
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -727,9 +760,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "Host was suppose to use us-east-1 endpoint, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
 
 class TestS3PresignNonUsStandard(BaseS3PresignTest):
@@ -752,7 +785,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_sigv4(self):
         # For a newly created bucket, you can't use virtualhosted
@@ -775,7 +808,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
-        self.assertEqual(requests.get(presigned_url).content, b'foo')
+        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
         # Create some of the various supported conditions.
@@ -802,9 +835,9 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -835,9 +868,9 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
-        r = requests.post(
-            post_args['url'], data=post_args['fields'], files=files)
-        self.assertEqual(r.status_code, 204)
+        r = http_post(post_args['url'], data=post_args['fields'],
+                      files=files)
+        self.assertEqual(r.status, 204)
 
 
 class TestCreateBucketInOtherRegion(TestS3BaseWithBucket):

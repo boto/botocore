@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``kinesisvideo``", 
+    "description": "Update kinesisvideo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesis-video-signaling``", 
+    "description": "Update kinesis-video-signaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigatewayv2``", 
+    "description": "Update apigatewayv2 client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "category": "``textract``", 
+    "description": "Update textract client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3control``", 
+    "description": "Update s3control client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``outposts``", 
+    "description": "Update outposts client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kendra``", 
+    "description": "Update kendra client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``networkmanager``", 
+    "description": "Update networkmanager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``compute-optimizer``", 
+    "description": "Update compute-optimizer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``frauddetector``", 
+    "description": "Update frauddetector client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-a2i-runtime``", 
+    "description": "Update sagemaker-a2i-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codeguru-reviewer``", 
+    "description": "Update codeguru-reviewer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codeguruprofiler``", 
+    "description": "Update codeguruprofiler client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "api-change"
+  }
+]

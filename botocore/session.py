@@ -22,7 +22,6 @@ import os
 import platform
 import socket
 import warnings
-import collections
 
 from botocore import __version__
 from botocore import UNSIGNED
@@ -49,6 +48,7 @@ from botocore import waiter
 from botocore import retryhandler, translate
 from botocore import utils
 from botocore.utils import EVENT_ALIASES
+from botocore.compat import MutableMapping
 
 
 logger = logging.getLogger(__name__)
@@ -119,6 +119,7 @@ class Session(object):
         if profile is not None:
             self._session_instance_vars['profile'] = profile
         self._client_config = None
+        self._last_client_region_used = None
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
@@ -141,8 +142,12 @@ class Session(object):
 
     def _register_credential_provider(self):
         self._components.lazy_register_component(
-            'credential_provider',
-            lambda:  botocore.credentials.create_credential_resolver(self))
+            'credential_provider', self._create_credential_resolver)
+
+    def _create_credential_resolver(self):
+        return botocore.credentials.create_credential_resolver(
+            self, region_name=self._last_client_region_used
+        )
 
     def _register_data_loader(self):
         self._components.lazy_register_component(
@@ -178,9 +183,8 @@ class Session(object):
                     self._events.register_last(event_name, handler)
 
     def _register_config_store(self):
-        chain_builder = ConfigChainFactory(session=self)
         config_store_component = ConfigValueStore(
-            mapping=create_botocore_default_config_mapping(chain_builder)
+            mapping=create_botocore_default_config_mapping(self)
         )
         self._components.register_component('config_store',
                                             config_store_component)
@@ -241,9 +245,7 @@ class Session(object):
         # and then thrown out. This is not efficient, nor is the methods arg
         # used in botocore, this is just for backwards compatibility.
         chain_builder = SubsetChainConfigFactory(session=self, methods=methods)
-        mapping = create_botocore_default_config_mapping(
-            chain_builder
-        )
+        mapping = create_botocore_default_config_mapping(self)
         for name, config_options in self.session_var_map.items():
             config_name, env_vars, default, typecast = config_options
             build_chain_config_args = {
@@ -789,13 +791,7 @@ class Session(object):
         elif default_client_config is not None:
             config = default_client_config
 
-        # Figure out the user-provided region based on the various
-        # configuration options.
-        if region_name is None:
-            if config and config.region_name is not None:
-                region_name = config.region_name
-            else:
-                region_name = self.get_config_variable('region')
+        region_name = self._resolve_region_name(region_name, config)
 
         # Figure out the verify value base on the various
         # configuration options.
@@ -841,6 +837,26 @@ class Session(object):
         if monitor is not None:
             monitor.register(client.meta.events)
         return client
+
+    def _resolve_region_name(self, region_name, config):
+        # Figure out the user-provided region based on the various
+        # configuration options.
+        if region_name is None:
+            if config and config.region_name is not None:
+                region_name = config.region_name
+            else:
+                region_name = self.get_config_variable('region')
+        # For any client that we create in retrieving credentials
+        # we want to create it using the same region as specified in
+        # creating this client. It is important to note though that the
+        # credentials client is only created once per session. So if a new
+        # client is created with a different region, its credential resolver
+        # will use the region of the first client. However, that is not an
+        # issue as of now because the credential resolver uses only STS and
+        # the credentials returned at regional endpoints are valid across
+        # all regions in the partition.
+        self._last_client_region_used = region_name
+        return region_name
 
     def _missing_cred_vars(self, access_key, secret_key):
         if access_key is not None and secret_key is None:
@@ -925,7 +941,7 @@ class ComponentLocator(object):
             pass
 
 
-class SessionVarDict(collections.MutableMapping):
+class SessionVarDict(MutableMapping):
     def __init__(self, session, session_vars):
         self._session = session
         self._store = copy.copy(session_vars)
@@ -963,7 +979,7 @@ class SessionVarDict(collections.MutableMapping):
             config_chain_builder.create_config_chain(
                 instance_name=logical_name,
                 env_var_names=env_vars,
-                config_property_name=config_name,
+                config_property_names=config_name,
                 default=default,
                 conversion_func=typecast,
             )
@@ -1004,7 +1020,7 @@ class SubsetChainConfigFactory(object):
         return self._factory.create_config_chain(
             instance_name=instance_name,
             env_var_names=env_var_names,
-            config_property_name=config_property_name,
+            config_property_names=config_property_name,
             default=default,
             conversion_func=conversion_func,
         )
