@@ -25,9 +25,6 @@ def _reload_six():
     # moved modules are reset.
     if sys.version_info < (3, 0):
         reload(six)
-    elif sys.version_info < (3, 4):
-        import imp
-        imp.reload(six)
     else:
         import importlib
         importlib.reload(six)
