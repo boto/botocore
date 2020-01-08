@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.13.49
+=======
+
+* api-change:``fms``: Update fms client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
 1.13.48
 =======
 
