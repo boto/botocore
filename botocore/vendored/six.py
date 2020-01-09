@@ -785,7 +785,7 @@ if sys.version_info[:2] < (3, 3):
 
 _add_doc(reraise, """Reraise an exception.""")
 
-if sys.version_info[0:2] < (3, 4):
+if not PY34:
     def wraps(wrapped, assigned=functools.WRAPPER_ASSIGNMENTS,
               updated=functools.WRAPPER_UPDATES):
         def wrapper(f):
