@@ -702,6 +702,26 @@ class TestShapeResolver(unittest.TestCase):
         self.assertEqual(member.metadata['max'], 128)
         self.assertEqual(member.metadata['sensitive'], True)
 
+    def test_error_shape_metadata(self):
+        shapes = {
+            'ResourceNotFoundException': {
+                'type': 'structure',
+                'members': {
+                    'message': {
+                        'shape': 'ErrorMessage',
+                    }
+                },
+                'exception': True,
+                'retryable': {'throttling': True}
+            }
+        }
+        resolver = model.ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('ResourceNotFoundException')
+        self.assertEqual(
+            shape.metadata,
+            {'exception': True, 'retryable': {'throttling': True}}
+        )
+
     def test_shape_list(self):
         shapes = {
             'mfaDeviceListType': {
