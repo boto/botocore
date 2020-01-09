@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.13.50
+=======
+
+* api-change:``logs``: Update logs client to latest version
+
+
 1.13.49
 =======
 
