@@ -188,28 +188,6 @@ class ClientCreator(object):
             's3', client_config, scoped_config)
         if provided_signature_version is not None:
             return
-        # At this point, we want to default to sigV4 for all regions.
-        # SigV2 is no longer an option.
-        client_meta.events.register(
-            'choose-signer.s3', self._default_s3_presign_to_sigv4)
-
-    def _default_s3_presign_to_sigv4(self, signature_version, **kwargs):
-        """
-        Returns the 's3v4' signer if presigning an s3 request. This is
-        intended to be used to set the default signature version for the signer
-        to sigv4.
-
-        :type signature_version: str
-        :param signature_version: The current client signature version.
-
-        :type signing_name: str
-        :param signing_name: The signing name of the service.
-
-        :return: 's3v4' if the request is an s3 presign request, None otherwise
-        """
-        for suffix in ['-query', '-presign-post']:
-            if signature_version.endswith(suffix):
-                return 's3v4' + suffix
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,

@@ -898,18 +898,15 @@ def test_correct_url_used_for_s3():
     # we construct the expect endpoint url.
     t = S3AddressingCases(_verify_expected_endpoint_url)
 
-    # The default behavior for sigv2. DNS compatible buckets
+    # The default behavior for DNS compatible buckets
     yield t.case(region='us-west-2', bucket='bucket', key='key',
-                 signature_version='s3v4',
                  expected_url='https://bucket.s3.us-west-2.amazonaws.com/key')
     yield t.case(region='us-east-1', bucket='bucket', key='key',
-                 signature_version='s3v4',
                  expected_url='https://bucket.s3.us-east-1.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
-                 signature_version='s3v4',
                  expected_url='https://bucket.s3.us-west-1.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
-                 signature_version='s3v4', is_secure=False,
+                 is_secure=False,
                  expected_url='http://bucket.s3.us-west-1.amazonaws.com/key')
 
     # Virtual host addressing is independent of signature version.
