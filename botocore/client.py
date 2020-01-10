@@ -176,18 +176,6 @@ class ClientCreator(object):
             endpoint_url=endpoint_url,
             partition=client.meta.partition
         ).register(client.meta.events)
-        self._set_s3_presign_signature_version(
-            client.meta, client_config, scoped_config)
-
-    def _set_s3_presign_signature_version(self, client_meta,
-                                          client_config, scoped_config):
-        # This will return the manually configured signature version, or None
-        # if none was manually set. If a customer manually sets the signature
-        # version, we always want to use what they set.
-        provided_signature_version = _get_configured_signature_version(
-            's3', client_config, scoped_config)
-        if provided_signature_version is not None:
-            return
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
