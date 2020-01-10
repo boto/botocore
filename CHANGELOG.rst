@@ -2,6 +2,57 @@
 CHANGELOG
 =========
 
+1.14.0
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* feature:Python: Dropped support for Python 2.6 and 3.3.
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.13.50
+=======
+
+* api-change:``logs``: Update logs client to latest version
+
+
+1.13.49
+=======
+
+* api-change:``fms``: Update fms client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
+1.13.48
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
+1.13.47
+=======
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.13.46
+=======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
 1.13.45
 =======
 

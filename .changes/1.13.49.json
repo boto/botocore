@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``fms``", 
+    "description": "Update fms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``translate``", 
+    "description": "Update translate client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }
+]
