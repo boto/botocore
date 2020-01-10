@@ -892,18 +892,6 @@ class TestGeneratePresigned(BaseS3OperationTest):
         }
         self.assertEqual(parts, expected)
 
-    def test_presign_uses_v2_for_aws_global(self):
-        client = self.session.create_client('s3', 'aws-global')
-        url = client.generate_presigned_url(
-            'get_object', {'Bucket': 'mybucket', 'Key': 'mykey'})
-        self.assert_is_v2_presigned_url(url)
-
-    def test_presign_uses_v2_for_us_east_1(self):
-        client = self.session.create_client('s3', 'us-east-1')
-        url = client.generate_presigned_url(
-            'get_object', {'Bucket': 'mybucket', 'Key': 'mykey'})
-        self.assert_is_v2_presigned_url(url)
-
 
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,
