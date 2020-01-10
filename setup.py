@@ -24,30 +24,9 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'docutils>=0.10,<0.16']
-
-
-if sys.version_info[:2] == (2, 6):
-    # For python2.6 we have a few other dependencies.
-    # First we need an ordered dictionary so we use the
-    # 2.6 backport.
-    requires.append('ordereddict==1.1')
-    # Then we need simplejson.  This is because we need
-    # a json version that allows us to specify we want to
-    # use an ordereddict instead of a normal dict for the
-    # JSON objects.  The 2.7 json module has this.  For 2.6
-    # we need simplejson.
-    requires.append('simplejson==3.3.0')
-    requires.append('python-dateutil>=2.1,<2.7.0')
-else:
-    requires.append('python-dateutil>=2.1,<3.0.0')
-
-if sys.version_info[:2] == (2, 6):
-    requires.append('urllib3>=1.20,<1.24')
-elif sys.version_info[:2] == (3, 3):
-    requires.append('urllib3>=1.20,<1.23')
-else:
-    requires.append('urllib3>=1.20,<1.26')
+            'docutils>=0.10,<0.16',
+            'python-dateutil>=2.1,<3.0.0',
+            'urllib3>=1.20,<1.26']
 
 
 setup(
@@ -63,12 +42,7 @@ setup(
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
-    extras_require={
-        ':python_version=="2.6"': [
-            'ordereddict==1.1',
-            'simplejson==3.3.0',
-        ]
-    },
+    extras_require={},
     license="Apache License 2.0",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -78,10 +52,8 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

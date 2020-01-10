@@ -81,38 +81,6 @@ class AWSConnection(object):
         self._expect_header_set = False
         self.response_class = self._original_response_cls
 
-    def _tunnel(self):
-        # Works around a bug in py26 which is fixed in later versions of
-        # python. Bug involves hitting an infinite loop if readline() returns
-        # nothing as opposed to just ``\r\n``.
-        # As much as I don't like having if py2: <foo> code blocks, this seems
-        # the cleanest way to handle this workaround.  Fortunately, the
-        # difference from py26 to py3 is very minimal.  We're essentially
-        # just overriding the while loop.
-        if sys.version_info[:2] != (2, 6):
-            return super(AWSConnection, self)._tunnel()
-
-        # Otherwise we workaround the issue.
-        self._set_hostport(self._tunnel_host, self._tunnel_port)
-        self.send("CONNECT %s:%d HTTP/1.0\r\n" % (self.host, self.port))
-        for header, value in self._tunnel_headers.iteritems():
-            self.send("%s: %s\r\n" % (header, value))
-        self.send("\r\n")
-        response = self.response_class(self.sock, strict=self.strict,
-                                       method=self._method)
-        (version, code, message) = response._read_status()
-
-        if code != 200:
-            self.close()
-            raise socket.error("Tunnel connection failed: %d %s" %
-                               (code, message.strip()))
-        while True:
-            line = response.fp.readline()
-            if not line:
-                break
-            if line in (b'\r\n', b'\n', b''):
-                break
-
     def _send_request(self, method, url, body, headers, *args, **kwargs):
         self._response_received = False
         if headers.get('Expect', b'') == b'100-continue':

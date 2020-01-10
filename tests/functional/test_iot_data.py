@@ -16,8 +16,6 @@ from tests import unittest, mock, BaseSessionTest
 from botocore.exceptions import UnsupportedTLSVersionWarning
 
 
-@unittest.skipIf(sys.version_info[:2] == (2, 6),
-                 ("py26 is unable to detect openssl version"))
 class TestOpensslVersion(BaseSessionTest):
     def test_incompatible_openssl_version(self):
         with mock.patch('ssl.OPENSSL_VERSION_INFO', new=(0, 9, 8, 11, 15)):
