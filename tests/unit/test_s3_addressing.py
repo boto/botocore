@@ -16,7 +16,6 @@
 import os
 
 from tests import BaseSessionTest, ClientHTTPStubber
-from mock import patch, Mock
 
 from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url
@@ -27,14 +26,12 @@ class TestS3Addressing(BaseSessionTest):
     def setUp(self):
         super(TestS3Addressing, self).setUp()
         self.region_name = 'us-east-1'
-        self.signature_version = 's3'
+        self.signature_version = 's3v4'
 
         self.session.unregister('before-parameter-build.s3.ListObjects',
                                 set_list_objects_encoding_type_url)
 
-    def get_prepared_request(self, operation, params, force_hmacv1=False):
-        if force_hmacv1:
-            self.session.register('choose-signer', self.enable_hmacv1)
+    def get_prepared_request(self, operation, params):
         client = self.session.create_client('s3', self.region_name)
         with ClientHTTPStubber(client) as http_stubber:
             http_stubber.add_response()
@@ -42,28 +39,22 @@ class TestS3Addressing(BaseSessionTest):
             # Return the request that was sent over the wire.
             return http_stubber.requests[0]
 
-    def enable_hmacv1(self, **kwargs):
-        return 's3'
-
     def test_list_objects_dns_name(self):
         params = {'Bucket': 'safename'}
-        prepared_request = self.get_prepared_request('list_objects', params,
-                                                     force_hmacv1=True)
+        prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(prepared_request.url,
                          'https://safename.s3.us-east-1.amazonaws.com/')
 
     def test_list_objects_non_dns_name(self):
         params = {'Bucket': 'un_safe_name'}
-        prepared_request = self.get_prepared_request('list_objects', params,
-                                                     force_hmacv1=True)
+        prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(prepared_request.url,
                          'https://s3.us-east-1.amazonaws.com/un_safe_name')
 
     def test_list_objects_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
         params = {'Bucket': 'safename'}
-        prepared_request = self.get_prepared_request('list_objects', params,
-                                                     force_hmacv1=True)
+        prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(prepared_request.url,
                          'https://safename.s3.us-west-2.amazonaws.com/')
 
