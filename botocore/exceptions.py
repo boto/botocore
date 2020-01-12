@@ -391,18 +391,33 @@ class ClientError(Exception):
         'An error occurred ({error_code}) when calling the {operation_name} '
         'operation{retry_info}: {error_message}')
 
+    NO_MSG_PRESENT_TEMPLATE = (
+        'Response from {operation_name} operation: {body}, '
+        'you can access the body using the "response" attribute on the exception'
+    )
+
     def __init__(self, error_response, operation_name):
         retry_info = self._get_retry_info(error_response)
         error = error_response.get('Error', {})
+        error_message = self._get_error_message(error, operation_name)
         msg = self.MSG_TEMPLATE.format(
             error_code=error.get('Code', 'Unknown'),
-            error_message=error.get('Message', 'Unknown'),
+            error_message=error_message,
             operation_name=operation_name,
             retry_info=retry_info,
         )
         super(ClientError, self).__init__(msg)
         self.response = error_response
         self.operation_name = operation_name
+
+    def _get_error_message(self, error, operation_name):
+        error_message = error.get('Message', 'Unknown')
+        if 'Body' in error:
+            error_message = self.NO_MSG_PRESENT_TEMPLATE.format(
+                operation_name=operation_name,
+                body=error.get('Body', {})
+            )
+        return error_message
 
     def _get_retry_info(self, response):
         retry_info = ''

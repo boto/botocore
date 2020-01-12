@@ -601,6 +601,14 @@ class BaseJSONParser(ResponseParser):
         # so we need to check for both.
         error['Error']['Message'] = body.get('message',
                                              body.get('Message', ''))
+
+        # In the event there is no error message we should return the body back to the consumer
+        # Some servies like Lex do not return a 'message' or 'Message' key, they return
+        # a body which contains information on how to fix the problem under different keys.
+        # We should give the body to the client to give them the option to handle the error using the body
+        if error['Error']['Message'] == '':
+            error['Error']['Body'] = body
+        
         # if the message did not contain an error code
         # include the response status code
         response_code = response.get('status_code')

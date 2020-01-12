@@ -1008,6 +1008,24 @@ class TestParseErrorResponses(unittest.TestCase):
             'Code': 'ResourceNotFoundException',
             'Message': 'Function not found: foo',
         })
+    
+    def test_can_parse_rest_json_errors_with_no_message(self):
+        body = (
+            '{"NotMessage":"Function not found: foo","Type":"User"}'
+        ).encode('utf-8')
+        headers = {
+            'x-amzn-requestid': 'request-id',
+            'x-amzn-errortype': 'ResourceNotFoundException:http://url/',
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse({
+            'body': body, 'headers': headers, 'status_code': 400}, None)
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': 'ResourceNotFoundException',
+            'Message': '',
+            'Body': {"NotMessage":"Function not found: foo","Type":"User"}
+        })
 
     def test_error_response_with_no_body_rest_json(self):
         parser = parsers.RestJSONParser()
@@ -1187,6 +1205,20 @@ class TestParseErrorResponses(unittest.TestCase):
         # Even though there's no <Message /> we should
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
+
+    def test_can_parse_lex_with_missing_message(self):
+        body = (b'{"exampleReference": {"name": "botName", "version": 1},"referenceType":"BotAlias"}')
+        headers = {
+             'x-amzn-requestid': 'request-id',
+             'x-amzn-errortype': 'ResourceInUseException:http://url/',
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None)
+        print(parsed)
+        self.assertEqual(parsed['Error'], {'Message': '',
+                                           'Code': 'ResourceInUseException',
+                                           'Body': {'exampleReference': {'name': 'botName', 'version': 1}, 'referenceType': 'BotAlias'}})
 
 
 def test_can_handle_generic_error_message():

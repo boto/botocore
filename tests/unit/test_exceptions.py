@@ -38,6 +38,12 @@ def test_client_error_set_correct_operation_name():
     exception = exceptions.ClientError(response, 'blackhole')
     assert_equal(exception.operation_name, 'blackhole')
 
+def test_response_body_added_when_present():
+    body = { 'foo', 'bar '}
+    response = {'Error': { 'Body': body, 'Code': 'ResourceInUseException' } }
+    error_message_with_body = exceptions.ClientError.NO_MSG_PRESENT_TEMPLATE.format(operation_name='blackhole', body=body)
+    expect = 'An error occurred (ResourceInUseException) when calling the blackhole operation: ' + error_message_with_body
+    assert_equal(str(exceptions.ClientError(response, 'blackhole')), expect)
 
 def test_retry_info_added_when_present():
     response = {
