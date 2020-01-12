@@ -392,8 +392,7 @@ class ClientError(Exception):
         'operation{retry_info}: {error_message}')
 
     NO_MSG_PRESENT_TEMPLATE = (
-        'Response from {operation_name} operation: {body}, '
-        'you can access the body using the "response" attribute on the exception'
+        'Response from {operation_name} operation: {body}'
     )
 
     def __init__(self, error_response, operation_name):
