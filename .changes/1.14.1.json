@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }
+]

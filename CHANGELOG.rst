@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.14.1
+======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``backup``: Update backup client to latest version
+
+
 1.14.0
 ======
 
