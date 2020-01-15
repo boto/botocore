@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.14.3
+======
+
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.14.2
 ======
 
