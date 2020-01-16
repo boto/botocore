@@ -11,33 +11,40 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import contextlib
+import json
 from tests import BaseSessionTest, mock, ClientHTTPStubber
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
 
 
-class TestRetry(BaseSessionTest):
+class BaseRetryTest(BaseSessionTest):
     def setUp(self):
-        super(TestRetry, self).setUp()
+        super(BaseRetryTest, self).setUp()
         self.region = 'us-west-2'
         self.sleep_patch = mock.patch('time.sleep')
         self.sleep_patch.start()
 
     def tearDown(self):
+        super(BaseRetryTest, self).tearDown()
         self.sleep_patch.stop()
 
     @contextlib.contextmanager
-    def assert_will_retry_n_times(self, client, num_retries):
+    def assert_will_retry_n_times(self, client, num_retries,
+                                  status=500, body=b'{}'):
         num_responses = num_retries + 1
+        if not isinstance(body, bytes):
+            body = json.dumps(body).encode()
         with ClientHTTPStubber(client) as http_stubber:
             for _ in range(num_responses):
-                http_stubber.add_response(status=500, body=b'{}')
+                http_stubber.add_response(status=status, body=body)
             with self.assertRaisesRegexp(
                     ClientError, 'reached max retries: %s' % num_retries):
                 yield
             self.assertEqual(len(http_stubber.requests), num_responses)
 
+
+class TestLegacyRetry(BaseRetryTest):
     def test_can_override_max_attempts(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(

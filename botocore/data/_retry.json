@@ -162,6 +162,14 @@
                 "http_status_code": 503
               }
             }
+          },
+          "ec2_throttled_exception": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "EC2ThrottledException",
+                "http_status_code": 503
+              }
+            }
           }
         }
       }

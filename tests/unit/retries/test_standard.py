@@ -81,6 +81,7 @@ RETRYABLE_MODELED_ERRORS = [
     # because the shape has a error code defined for it.
     (400, 'ErrorCodeRetryable', True),
     (400, 'NonRetryableError', False),
+    (None, ConnectionError(error='unknown'), False),
 ]
 
 
@@ -122,7 +123,7 @@ SERVICE_DESCRIPTION_WITH_RETRIES = {
                 }
             },
             'exception': True,
-            'retryable': {'throttling': True}
+            'retryable': {}
         },
         'ModeledRetryableErrorWithCode': {
             'type': 'structure',
@@ -427,7 +428,6 @@ class TestExponentialBackoff(unittest.TestCase):
         self.assertEqual(backoffs,
                          [1, 2, 4, 8, 16, 20, 20, 20, 20])
 
-
     def test_exponential_backoff_with_jitter(self):
         backoff = standard.ExponentialBackoff()
         backoffs = [
@@ -446,14 +446,17 @@ class TestRetryQuotaChecker(unittest.TestCase):
         self.quota_checker = standard.RetryQuotaChecker(self.quota)
         self.request_context = {}
 
-    def create_context(self, is_timeout_error=False):
+    def create_context(self, is_timeout_error=False, status_code=200):
         caught_exception = None
         if is_timeout_error:
             caught_exception = ReadTimeoutError(endpoint_url='https://foo')
+        http_response = AWSResponse(status_code=status_code, raw=None,
+                                    headers={}, url='https://foo/')
         context = standard.RetryContext(
             attempt_number=1,
             request_context=self.request_context,
             caught_exception=caught_exception,
+            http_response=http_response,
         )
         return context
 
@@ -470,14 +473,32 @@ class TestRetryQuotaChecker(unittest.TestCase):
         )
         self.assertEqual(self.request_context['retry_quota_capacity'], 10)
 
-    def test_can_release_quota_based_on_context_value(self):
+    def test_can_release_quota_based_on_context_value_on_success(self):
         context = self.create_context()
+        # This is where we had to retry the request but eventually
+        # succeeded.
+        http_response = self.create_context(status_code=200).http_response
         self.assertTrue(
             self.quota_checker.acquire_retry_quota(context)
         )
         self.assertEqual(self.quota.available_capacity, 495)
-        self.quota_checker.release_retry_quota(context.request_context)
+        self.quota_checker.release_retry_quota(context.request_context,
+                                               http_response=http_response)
         self.assertEqual(self.quota.available_capacity, 500)
+
+    def test_dont_release_quota_if_all_retries_failed(self):
+        context = self.create_context()
+        # If max_attempts_reached is True, then it means we used up all
+        # our retry attempts and still failed.  In this case we shouldn't
+        # give any retry quota back.
+        http_response = self.create_context(status_code=500).http_response
+        self.assertTrue(
+            self.quota_checker.acquire_retry_quota(context)
+        )
+        self.assertEqual(self.quota.available_capacity, 495)
+        self.quota_checker.release_retry_quota(context.request_context,
+                                               http_response=http_response)
+        self.assertEqual(self.quota.available_capacity, 495)
 
     def test_can_release_default_quota_if_not_in_context(self):
         context = self.create_context()
@@ -486,8 +507,10 @@ class TestRetryQuotaChecker(unittest.TestCase):
         )
         self.assertEqual(self.quota.available_capacity, 495)
         # We're going to remove the quota amount from the request context.
+        # This represents a successful request with no retries.
         self.request_context.pop('retry_quota_capacity')
-        self.quota_checker.release_retry_quota(context.request_context)
+        self.quota_checker.release_retry_quota(context.request_context,
+                                               context.http_response)
         # We expect only 1 unit was released.
         self.assertEqual(self.quota.available_capacity, 496)
 
@@ -515,6 +538,17 @@ class TestRetryQuotaChecker(unittest.TestCase):
             {'RetryQuotaReached': True}
         )
 
+    def test_single_failed_request_does_not_give_back_quota(self):
+        context = self.create_context()
+        http_response = self.create_context(status_code=400).http_response
+        # First deduct some amount of the retry quota so we're not hitting
+        # the upper bound.
+        self.quota.acquire(50)
+        self.assertEqual(self.quota.available_capacity, 450)
+        self.quota_checker.release_retry_quota(context.request_context,
+                                               http_response=http_response)
+        self.assertEqual(self.quota.available_capacity, 450)
+
 
 class TestRetryContext(unittest.TestCase):
     def test_can_get_error_code(self):
@@ -537,3 +571,107 @@ class TestRetryContext(unittest.TestCase):
         context.add_retry_metadata(MaxAttemptsReached=True)
         self.assertEqual(context.get_retry_metadata(),
                          {'MaxAttemptsReached': True})
+
+
+class TestThrottlingErrorDetector(unittest.TestCase):
+    def setUp(self):
+        self.throttling_detector = standard.ThrottlingErrorDetector(
+            standard.RetryEventAdapter())
+
+    def create_needs_retry_kwargs(self, **kwargs):
+        retry_kwargs = {
+            'response': None,
+            'attempts': 1,
+            'operation': None,
+            'caught_exception': None,
+            'request_dict': {'context': {}},
+        }
+        retry_kwargs.update(kwargs)
+        return retry_kwargs
+
+    def test_can_check_error_from_code(self):
+        kwargs = self.create_needs_retry_kwargs()
+        kwargs['response'] = (None, {'Error': {'Code': 'ThrottledException'}})
+        self.assertTrue(
+            self.throttling_detector.is_throttling_error(**kwargs)
+        )
+
+    def test_no_throttling_error(self):
+        kwargs = self.create_needs_retry_kwargs()
+        kwargs['response'] = (None, {'Error': {'Code': 'RandomError'}})
+        self.assertFalse(
+            self.throttling_detector.is_throttling_error(**kwargs)
+        )
+
+    def test_detects_modeled_errors(self):
+        kwargs = self.create_needs_retry_kwargs()
+        kwargs['response'] = (
+            None, {'Error': {'Code': 'ModeledThrottlingError'}}
+        )
+        kwargs['operation'] = get_operation_model_with_retries()
+        self.assertTrue(
+            self.throttling_detector.is_throttling_error(**kwargs)
+        )
+
+
+class TestModeledRetryErrorDetector(unittest.TestCase):
+    def setUp(self):
+        self.modeled_error = standard.ModeledRetryErrorDetector()
+
+    def test_not_retryable(self):
+        context = arbitrary_retry_context()
+        self.assertIsNone(self.modeled_error.detect_error_type(context))
+
+    def test_transient_error(self):
+        context = arbitrary_retry_context()
+        context.parsed_response['Error']['Code'] = 'ModeledRetryableError'
+        context.operation_model = get_operation_model_with_retries()
+        self.assertEqual(
+            self.modeled_error.detect_error_type(context),
+            self.modeled_error.TRANSIENT_ERROR
+        )
+
+    def test_throttling_error(self):
+        context = arbitrary_retry_context()
+        context.parsed_response['Error']['Code'] = 'ModeledThrottlingError'
+        context.operation_model = get_operation_model_with_retries()
+        self.assertEqual(
+            self.modeled_error.detect_error_type(context),
+            self.modeled_error.THROTTLING_ERROR
+        )
+
+
+class Yes(standard.BaseRetryableChecker):
+    def is_retryable(self, context):
+        return True
+
+
+class No(standard.BaseRetryableChecker):
+    def is_retryable(self, context):
+        return False
+
+
+class TestOrRetryChecker(unittest.TestCase):
+    def test_can_match_any_checker(self):
+        self.assertTrue(
+            standard.OrRetryChecker(
+                [Yes(), No()]
+            )
+        )
+        self.assertTrue(
+            standard.OrRetryChecker(
+                [No(), Yes()]
+            )
+        )
+        self.assertTrue(
+            standard.OrRetryChecker(
+                [Yes(), Yes()]
+            )
+        )
+
+    def test_false_if_no_checkers_match(self):
+        self.assertTrue(
+            standard.OrRetryChecker(
+                [No(), No(), No()]
+            )
+        )

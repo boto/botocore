@@ -29,7 +29,8 @@ import logging
 from botocore.exceptions import ConnectionError, HTTPClientError
 from botocore.exceptions import ReadTimeoutError, ConnectTimeoutError
 from botocore.retries import quota
-
+from botocore.retries import special
+from botocore.retries.base import BaseRetryBackoff, BaseRetryableChecker
 
 DEFAULT_MAX_ATTEMPTS = 3
 logger = logging.getLogger(__name__)
@@ -159,6 +160,10 @@ class RetryContext(object):
     This class guarantees that at least one of the above attributes will be
     non None.
 
+    This class is meant to provide a read-only view into the properties
+    associated with a possible retryable response.  None of the properties
+    are meant to be modified directly.
+
     """
     def __init__(self, attempt_number, operation_model=None,
                  parsed_response=None, http_response=None,
@@ -222,17 +227,6 @@ class RetryPolicy(object):
         return self._retry_backoff.delay_amount(context)
 
 
-class BaseRetryBackoff(object):
-
-    def delay_amount(self, context):
-        """Calculate how long we should delay before retrying.
-
-        :type context: RetryContext
-
-        """
-        raise NotImplementedError("delay_amount")
-
-
 class ExponentialBackoff(BaseRetryBackoff):
 
     _BASE = 2
@@ -261,24 +255,6 @@ class ExponentialBackoff(BaseRetryBackoff):
             self._random() * (self._base ** (context.attempt_number - 1)),
             self._max_backoff
         )
-
-
-class BaseRetryableChecker(object):
-    """Base class for determining if a retry should happen.
-
-    This base class checks for specific retryable conditions.
-    A single retryable checker doesn't necessarily indicate a retry
-    will happen.  It's up to the ``RetryPolicy`` to use its
-    ``BaseRetryableCheckers`` to make the final decision on whether a retry
-    should happen.
-    """
-
-    def is_retryable(self, context):
-        """Returns True if retryable, False if not.
-
-        :type context: RetryContext
-        """
-        raise NotImplementedError("is_retryable")
 
 
 class MaxAttemptsChecker(BaseRetryableChecker):
@@ -365,15 +341,39 @@ class ThrottledRetryableChecker(BaseRetryableChecker):
 class ModeledRetryableChecker(BaseRetryableChecker):
     """Check if an error has been modeled as retryable."""
 
+    def __init__(self):
+        self._error_detector = ModeledRetryErrorDetector()
+
     def is_retryable(self, context):
         error_code = context.get_error_code()
         if error_code is None:
             return False
-        return self._is_modeled_retryable(error_code, context.operation_model)
+        return self._error_detector.detect_error_type(context) is not None
 
-    def _is_modeled_retryable(self, error_code, op_model):
+
+class ModeledRetryErrorDetector(object):
+    """Checks whether or not an error is a modeled retryable error."""
+    # There are return values from the detect_error_type() method.
+    TRANSIENT_ERROR = 'TRANSIENT_ERROR'
+    THROTTLING_ERROR = 'THROTTLING_ERROR'
+    # This class is lower level than ModeledRetryableChecker, which
+    # implements BaseRetryableChecker.  This object allows you to distinguish
+    # between the various types of retryable errors.
+
+    def detect_error_type(self, context):
+        """Detect the error type associated with an error code and model.
+
+        This will either return:
+
+            * ``self.TRANSIENT_ERROR`` - If the error is a transient error
+            * ``self.THROTTLING_ERROR`` - If the error is a throttling error
+            * ``None`` - If the error is neither type of error.
+
+        """
+        error_code = context.get_error_code()
+        op_model = context.operation_model
         if op_model is None or not op_model.error_shapes:
-            return False
+            return
         for shape in op_model.error_shapes:
             if shape.metadata.get('retryable') is not None:
                 # Check if this error code matches the shape.  This can
@@ -383,8 +383,24 @@ class ModeledRetryableChecker(BaseRetryableChecker):
                     or shape.name
                 )
                 if error_code == error_code_to_check:
-                    return True
-        return False
+                    if shape.metadata['retryable'].get('throttling'):
+                        return self.THROTTLING_ERROR
+                    return self.TRANSIENT_ERROR
+
+
+class ThrottlingErrorDetector(object):
+    def __init__(self, retry_event_adapter):
+        self._modeled_error_detector = ModeledRetryErrorDetector()
+        self._fixed_error_code_detector = ThrottledRetryableChecker()
+        self._retry_event_adapter = retry_event_adapter
+
+    # This expects the kwargs from needs-retry to be passed through.
+    def is_throttling_error(self, **kwargs):
+        context = self._retry_event_adapter.create_retry_context(**kwargs)
+        if self._fixed_error_code_detector.is_retryable(context):
+            return True
+        error_type = self._modeled_error_detector.detect_error_type(context)
+        return error_type == self._modeled_error_detector.THROTTLING_ERROR
 
 
 class StandardRetryConditions(BaseRetryableChecker):
@@ -392,26 +408,35 @@ class StandardRetryConditions(BaseRetryableChecker):
 
     Specifically:
 
-        not max_attempts and (transient or throttled)
+        not max_attempts and (transient or throttled or modeled_retry)
 
     """
 
     def __init__(self, max_attempts=DEFAULT_MAX_ATTEMPTS):
         # Note: This class is for convenience so you can have the
-        # standard retry condition in a single class.  If you wanted
-        # to expand on this you could have things like CompositeCheckers(),
-        # AndCheckers(), OrCheckers(), etc, but at this point that's overkill
-        # for what we need.
-        self._transient_response_checker = TransientRetryableChecker()
-        self._throttled_response_checker = ThrottledRetryableChecker()
+        # standard retry condition in a single class.
         self._max_attempts_checker = MaxAttemptsChecker(max_attempts)
-        self._modeled_retry_checker = ModeledRetryableChecker()
+        self._additional_checkers = OrRetryChecker([
+            TransientRetryableChecker(),
+            ThrottledRetryableChecker(),
+            ModeledRetryableChecker(),
+            OrRetryChecker([
+                special.RetryIDPCommunicationError(),
+                special.RetryDDBChecksumError(),
+            ])
+        ])
 
     def is_retryable(self, context):
         return (self._max_attempts_checker.is_retryable(context) and
-                (self._transient_response_checker.is_retryable(context) or
-                 self._throttled_response_checker.is_retryable(context) or
-                 self._modeled_retry_checker.is_retryable(context)))
+                self._additional_checkers.is_retryable(context))
+
+
+class OrRetryChecker(BaseRetryableChecker):
+    def __init__(self, checkers):
+        self._checkers = checkers
+
+    def is_retryable(self, context):
+        return any(checker.is_retryable(context) for checker in self._checkers)
 
 
 class RetryQuotaChecker(object):
@@ -450,10 +475,21 @@ class RetryQuotaChecker(object):
         return isinstance(context.caught_exception, self._TIMEOUT_EXCEPTIONS)
 
     # This is intended to be hooked up to ``after-call``.
-    def release_retry_quota(self, context, **kwargs):
-        # If we can find a capacity amount, we'll release that much back
-        # to the quota tracker.  Otherwise, this was a successful request
-        # without any retries so we'll release _NO_RETRY_INCREMENT.
-        capacity_amount = context.get('retry_quota_capacity',
-                                      self._NO_RETRY_INCREMENT)
-        self._quota.release(capacity_amount)
+    def release_retry_quota(self, context, http_response, **kwargs):
+        # There's three possible options.
+        # 1. The HTTP response did not have a 2xx response.  In that case we
+        #    give no quota back.
+        # 2. The HTTP request was successful and was never retried.  In
+        #    that case we give _NO_RETRY_INCREMENT back.
+        # 3. The API call had retries, and we eventually receive an HTTP
+        #    response with a 2xx status code.  In that case we give back
+        #    whatever quota was associated with the last acquisition.
+        if http_response is None:
+            return
+        status_code = http_response.status_code
+        if 200 <= status_code < 300:
+            if 'retry_quota_capacity' not in context:
+                self._quota.release(self._NO_RETRY_INCREMENT)
+            else:
+                capacity_amount = context['retry_quota_capacity']
+                self._quota.release(capacity_amount)

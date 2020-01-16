@@ -557,3 +557,9 @@ class MissingServiceIdError(UndefinedModelAttributeError):
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
+
+
+class CapacityNotAvailableError(BotoCoreError):
+    fmt = (
+        'Insufficient request capacity available.'
+    )

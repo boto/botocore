@@ -1,6 +1,5 @@
 from tests import unittest
 
-import mock
 
 from botocore.retries import quota
 
