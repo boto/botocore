@@ -25,7 +25,6 @@ def find_version(*file_paths):
 
 requires = [
     'jmespath>=0.7.1,<1.0.0',
-    'docutils>=0.10,<0.16',
     'python-dateutil>=2.1,<3.0.0',
 ]
 
@@ -33,8 +32,11 @@ requires = [
 if sys.version_info[:2] == (3, 4):
     # urllib3 dropped support for python 3.4 in point release 1.25.8
     requires.append('urllib3>=1.20,<1.25.8')
+    # docutils dropped support for python 3.4 in release 0.16
+    requires.append('docutils>=0.10,<0.16')
 else:
     requires.append('urllib3>=1.20,<1.26')
+    requires.append('docutils>=0.10')
 
 
 
