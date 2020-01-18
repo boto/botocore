@@ -141,42 +141,13 @@ else:
             return s
         raise ValueError("Expected str or unicode, received %s." % type(s))
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    # Python2.6 we use the 3rd party back port.
-    from ordereddict import OrderedDict
+
+from collections import OrderedDict
 
 
-if sys.version_info[:2] == (2, 6):
-    import simplejson as json
-    # In py26, invalid xml parsed by element tree
-    # will raise a plain old SyntaxError instead of
-    # a real exception, so we need to abstract this change.
-    XMLParseError = SyntaxError
-
-    # Handle https://github.com/shazow/urllib3/issues/497 for py2.6.  In
-    # python2.6, there is a known issue where sometimes we cannot read the SAN
-    # from an SSL cert (http://bugs.python.org/issue13034).  However, newer
-    # versions of urllib3 will warn you when there is no SAN.  While we could
-    # just turn off this warning in urllib3 altogether, we _do_ want warnings
-    # when they're legitimate warnings.  This method tries to scope the warning
-    # filter to be as specific as possible.
-    def filter_ssl_san_warnings():
-        warnings.filterwarnings(
-            'ignore',
-            message="Certificate has no.*subjectAltName.*",
-            category=exceptions.SecurityWarning,
-            module=r".*urllib3\.connection")
-else:
-    import xml.etree.cElementTree
-    XMLParseError = xml.etree.cElementTree.ParseError
-    import json
-
-    def filter_ssl_san_warnings():
-        # Noop for non-py26 versions.  We will parse the SAN
-        # appropriately.
-        pass
+import xml.etree.cElementTree
+XMLParseError = xml.etree.cElementTree.ParseError
+import json
 
 
 def filter_ssl_warnings():
@@ -186,7 +157,6 @@ def filter_ssl_warnings():
         message="A true SSLContext object is not available.*",
         category=exceptions.InsecurePlatformWarning,
         module=r".*urllib3\.util\.ssl_")
-    filter_ssl_san_warnings()
 
 
 @classmethod
@@ -210,19 +180,9 @@ HTTPHeaders.from_pairs = from_pairs
 
 def copy_kwargs(kwargs):
     """
-    There is a bug in Python versions < 2.6.5 that prevents you
-    from passing unicode keyword args (#4978).  This function
-    takes a dictionary of kwargs and returns a copy.  If you are
-    using Python < 2.6.5, it also encodes the keys to avoid this bug.
-    Oh, and version_info wasn't a namedtuple back then, either!
+    This used to be a compat shim for 2.6 but is now just an alias.
     """
-    vi = sys.version_info
-    if vi[0] == 2 and vi[1] <= 6 and vi[3] < 5:
-        copy_kwargs = {}
-        for key in kwargs:
-            copy_kwargs[key.encode('utf-8')] = kwargs[key]
-    else:
-        copy_kwargs = copy.copy(kwargs)
+    copy_kwargs = copy.copy(kwargs)
     return copy_kwargs
 
 
@@ -230,22 +190,12 @@ def total_seconds(delta):
     """
     Returns the total seconds in a ``datetime.timedelta``.
 
-    Python 2.6 does not have ``timedelta.total_seconds()``, so we have
-    to calculate this ourselves. On 2.7 or better, we'll take advantage of the
-    built-in method.
-
-    The math was pulled from the ``datetime`` docs
-    (http://docs.python.org/2.7/library/datetime.html#datetime.timedelta.total_seconds).
+    This used to be a compat shim for 2.6 but is now just an alias.
 
     :param delta: The timedelta object
     :type delta: ``datetime.timedelta``
     """
-    if sys.version_info[:2] != (2, 6):
-        return delta.total_seconds()
-
-    day_in_seconds = delta.days * 24 * 3600.0
-    micro_in_seconds = delta.microseconds / 10.0**6
-    return day_in_seconds + delta.seconds + micro_in_seconds
+    return delta.total_seconds()
 
 
 # Checks to see if md5 is available on this system. A given system might not

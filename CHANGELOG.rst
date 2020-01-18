@@ -2,6 +2,74 @@
 CHANGELOG
 =========
 
+1.14.5
+======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.14.4
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``ds``: Update ds client to latest version
+
+
+1.14.3
+======
+
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.14.2
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.14.1
+======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``backup``: Update backup client to latest version
+
+
+1.14.0
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* feature:Python: Dropped support for Python 2.6 and 3.3.
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.13.50
+=======
+
+* api-change:``logs``: Update logs client to latest version
+
+
+1.13.49
+=======
+
+* api-change:``fms``: Update fms client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
 1.13.48
 =======
 
