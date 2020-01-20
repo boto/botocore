@@ -1,5 +1,0 @@
-{
-  "category": "``cloudwatch``", 
-  "type": "api-change", 
-  "description": "Update cloudwatch client to latest version"
-}
