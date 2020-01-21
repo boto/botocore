@@ -37,7 +37,6 @@ from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
-from botocore.hooks import EventAliaser
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
 from botocore.regions import EndpointResolver
@@ -97,10 +96,9 @@ class Session(object):
 
         """
         if event_hooks is None:
-            self._original_handler = HierarchicalEmitter()
+            self._events = HierarchicalEmitter()
         else:
-            self._original_handler = event_hooks
-        self._events = EventAliaser(self._original_handler)
+            self._events = event_hooks
         if include_builtin_handlers:
             self._register_builtin_handlers(self._events)
         self.user_agent_name = 'Botocore'
