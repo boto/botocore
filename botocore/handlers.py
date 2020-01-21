@@ -976,7 +976,7 @@ BUILTIN_HANDLERS = [
 
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
-    ('before-call.apigateway', add_accept_header),
+    ('before-call.api-gateway', add_accept_header),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),

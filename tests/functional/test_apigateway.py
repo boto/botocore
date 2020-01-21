@@ -37,3 +37,17 @@ class TestApiGateway(BaseSessionTest):
             request = self.http_stubber.requests[0]
             self.assertEqual(request.method, 'GET')
             self.assertEqual(request.headers.get('Accept'), b'application/yaml')
+
+    def test_defaults_accept(self):
+        params = {
+            'restApiId': 'foo',
+            'stageName': 'bar',
+            'exportType': 'swagger'
+        }
+
+        self.http_stubber.add_response(body=b'{}')
+        with self.http_stubber:
+            self.client.get_export(**params)
+            request = self.http_stubber.requests[0]
+            self.assertEqual(request.method, 'GET')
+            self.assertEqual(request.headers.get('Accept'), b'application/json')
