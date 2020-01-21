@@ -545,7 +545,8 @@ class TestCreateWaiter(unittest.TestCase):
         self.waiter_model = WaiterModel(self.waiter_config)
         self.service_json_model = {
             'metadata': {
-                'serviceFullName': 'Amazon MyService'
+                'serviceFullName': 'Amazon MyService',
+                'serviceId': 'MyService',
             },
             'operations': {
                 'Foo': {

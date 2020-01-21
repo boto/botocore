@@ -1003,7 +1003,7 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.s3.UploadPartCopy', sse_md5),
     ('before-parameter-build.s3.UploadPartCopy', copy_source_sse_md5),
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
-    ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
+    ('before-parameter-build.auto-scaling.CreateLaunchConfiguration',
      base64_encode_user_data),
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
@@ -1032,7 +1032,7 @@ BUILTIN_HANDLERS = [
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section',
      document_base64_encoding('UserData')),
-    ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
+    ('docs.*.auto-scaling.CreateLaunchConfiguration.complete-section',
      document_base64_encoding('UserData')),
 
     # EC2 CopySnapshot documentation customizations
@@ -1107,7 +1107,7 @@ BUILTIN_HANDLERS = [
     ###########
     # SMS Voice
      ##########
-    ('docs.title.sms-voice',
+    ('docs.title.pinpoint-sms-voice',
      DeprecatedServiceDocumenter(
          'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),

@@ -53,9 +53,9 @@ class ServiceDocumenter(object):
 
     def title(self, section):
         section.style.h1(self._client.__class__.__name__)
+        service_id = self._client.meta.service_model.service_id.hyphenize()
         self._event_emitter.emit(
-            'docs.%s.%s' % ('title',
-                            self._service_name),
+            'docs.%s.%s' % ('title', service_id),
             section=section
         )
 

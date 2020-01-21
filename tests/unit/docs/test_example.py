@@ -24,10 +24,10 @@ class BaseExampleDocumenterTest(BaseDocsTest):
         super(BaseExampleDocumenterTest, self).setUp()
         self.event_emitter = HierarchicalEmitter()
         self.request_example = RequestExampleDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_example = ResponseExampleDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
 
@@ -90,10 +90,10 @@ class TestTraverseAndDocumentShape(BaseExampleDocumenterTest):
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
         self.event_emitter = mock.Mock()
         self.request_example = RequestExampleDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_example = ResponseExampleDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
     def test_events_emitted_response_example(self):

@@ -24,10 +24,10 @@ class BaseParamsDocumenterTest(BaseDocsTest):
         super(BaseParamsDocumenterTest, self).setUp()
         self.event_emitter = HierarchicalEmitter()
         self.request_params = RequestParamsDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_params = ResponseParamsDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
 
@@ -59,10 +59,10 @@ class TestTraverseAndDocumentShape(BaseParamsDocumenterTest):
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
         self.event_emitter = mock.Mock()
         self.request_params = RequestParamsDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_params = ResponseParamsDocumenter(
-            service_name='myservice', operation_name='SampleOperation',
+            service_id='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
     def test_events_emitted_response_params(self):
