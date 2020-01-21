@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.14.7
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
 1.14.6
 ======
 
