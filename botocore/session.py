@@ -46,7 +46,6 @@ from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
 from botocore import utils
-from botocore.utils import EVENT_ALIASES
 from botocore.compat import MutableMapping
 
 
@@ -504,10 +503,6 @@ class Session(object):
             data_path,
             type_name='service-2',
         )
-        service_id = EVENT_ALIASES.get(service_name, service_name)
-        self._events.emit('service-data-loaded.%s' % service_id,
-                          service_data=service_data,
-                          service_name=service_name, session=self)
         return service_data
 
     def get_available_services(self):
