@@ -28,6 +28,23 @@ class TestRoute53Pagination(unittest.TestCase):
             'MaxItems': '1'
         }
         self.operation_name = 'list_hosted_zones'
+        self.final_params = {}
+
+    def _store_final_params(self, params, **kwargs):
+        self.final_params = params
+
+    def test_route53_id_conversion(self):
+        # This conversion is handled in the before-parameter-build event, but
+        # because the stubber asserts on the same event first, we don't see
+        # the modified value meaning we need to use a custom handler
+        self.client.meta.events.register_last(
+            'before-parameter-build', self._store_final_params,
+        )
+
+        self.stubber.add_response(self.operation_name, self.response)
+        with self.stubber:
+            self.client.list_hosted_zones(DelegationSetId='/foo/abc123')
+        self.assertEqual(self.final_params.get('DelegationSetId'), 'abc123')
 
     def test_paginate_with_max_items_int(self):
         # Route53 has a string type for MaxItems.  We need to ensure that this

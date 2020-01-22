@@ -1005,7 +1005,7 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.auto-scaling.CreateLaunchConfiguration',
      base64_encode_user_data),
-    ('before-parameter-build.route53', fix_route53_ids),
+    ('before-parameter-build.route-53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
     ('after-call.s3.ListObjects', decode_list_object),
     ('after-call.s3.ListObjectsV2', decode_list_object_v2),

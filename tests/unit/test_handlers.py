@@ -453,7 +453,7 @@ class TestHandlers(BaseSessionTest):
         handlers.check_for_200_error(None)
 
     def test_route53_resource_id(self):
-        event = 'before-parameter-build.route53.GetHostedZone'
+        event = 'before-parameter-build.route-53.GetHostedZone'
         params = {'Id': '/hostedzone/ABC123',
                   'HostedZoneId': '/hostedzone/ABC123',
                   'ResourceId': '/hostedzone/DEF456',
@@ -511,7 +511,7 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['Other'], '/hostedzone/foo')
 
     def test_route53_resource_id_missing_input_shape(self):
-        event = 'before-parameter-build.route53.GetHostedZone'
+        event = 'before-parameter-build.route-53.GetHostedZone'
         params = {'HostedZoneId': '/hostedzone/ABC123'}
         operation_def = {
             'name': 'GetHostedZone'
