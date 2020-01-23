@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.14.8
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
 1.14.7
 ======
 
