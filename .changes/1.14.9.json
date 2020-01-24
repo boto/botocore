@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``opsworkscm``", 
+    "description": "Update opsworkscm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``datasync``", 
+    "description": "Update datasync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }
+]
