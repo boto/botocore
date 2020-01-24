@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.14.9
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
 1.14.8
 ======
 
