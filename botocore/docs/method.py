@@ -206,7 +206,7 @@ def document_model_driven_method(section, method_name, operation_model,
 
     if operation_model.input_shape:
         RequestExampleDocumenter(
-            service_name=operation_model.service_model.service_name,
+            service_id=operation_model.service_model.service_id.hyphenize(),
             operation_name=operation_model.name,
             event_emitter=event_emitter, context=context).document_example(
                 example_section, operation_model.input_shape,
@@ -221,7 +221,7 @@ def document_model_driven_method(section, method_name, operation_model,
     request_params_section = section.add_new_section('request-params')
     if operation_model.input_shape:
         RequestParamsDocumenter(
-            service_name=operation_model.service_model.service_name,
+            service_id=operation_model.service_model.service_id.hyphenize(),
             operation_name=operation_model.name,
             event_emitter=event_emitter, context=context).document_params(
                 request_params_section, operation_model.input_shape,
@@ -257,7 +257,7 @@ def document_model_driven_method(section, method_name, operation_model,
         return_example_section.style.bold('Response Syntax')
         return_example_section.style.new_paragraph()
         ResponseExampleDocumenter(
-            service_name=operation_model.service_model.service_name,
+            service_id=operation_model.service_model.service_id.hyphenize(),
             operation_name=operation_model.name,
             event_emitter=event_emitter,
             context=context).document_example(
@@ -271,7 +271,7 @@ def document_model_driven_method(section, method_name, operation_model,
         return_description_section.style.bold('Response Structure')
         return_description_section.style.new_paragraph()
         ResponseParamsDocumenter(
-            service_name=operation_model.service_model.service_name,
+            service_id=operation_model.service_model.service_id.hyphenize(),
             operation_name=operation_model.name,
             event_emitter=event_emitter,
             context=context).document_params(

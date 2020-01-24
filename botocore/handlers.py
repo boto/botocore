@@ -772,8 +772,8 @@ def _add_parameter_aliases(handler_list):
     # alias to expose in documentation.
     aliases = {
         'ec2.*.Filter': 'Filters',
-        'logs.CreateExportTask.from': 'fromTime',
-        'cloudsearchdomain.Search.return': 'returnFields'
+        'cloudwatch-logs.CreateExportTask.from': 'fromTime',
+        'cloudsearch-domain.Search.return': 'returnFields'
     }
 
     for original, new_name in aliases.items():
@@ -925,7 +925,8 @@ BUILTIN_HANDLERS = [
      convert_body_to_file_like_object, REGISTER_LAST),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
-    ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
+    ('creating-client-class.iot-data-plane',
+     check_openssl_supports_tls_version_1_2),
     ('after-call.iam', json_decode_policies),
 
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
@@ -975,11 +976,11 @@ BUILTIN_HANDLERS = [
 
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
-    ('before-call.apigateway', add_accept_header),
+    ('before-call.api-gateway', add_accept_header),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
-    ('request-created.machinelearning.Predict', switch_host_machinelearning),
+    ('request-created.machine-learning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
@@ -1002,16 +1003,16 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.s3.UploadPartCopy', sse_md5),
     ('before-parameter-build.s3.UploadPartCopy', copy_source_sse_md5),
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
-    ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
+    ('before-parameter-build.auto-scaling.CreateLaunchConfiguration',
      base64_encode_user_data),
-    ('before-parameter-build.route53', fix_route53_ids),
+    ('before-parameter-build.route-53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
     ('after-call.s3.ListObjects', decode_list_object),
     ('after-call.s3.ListObjectsV2', decode_list_object_v2),
     ('after-call.s3.ListObjectVersions', decode_list_object_versions),
 
     # Cloudsearchdomain search operation will be sent by HTTP POST
-    ('request-created.cloudsearchdomain.Search',
+    ('request-created.cloudsearch-domain.Search',
      change_get_to_post),
     # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
@@ -1031,7 +1032,7 @@ BUILTIN_HANDLERS = [
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section',
      document_base64_encoding('UserData')),
-    ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
+    ('docs.*.auto-scaling.CreateLaunchConfiguration.complete-section',
      document_base64_encoding('UserData')),
 
     # EC2 CopySnapshot documentation customizations
@@ -1106,7 +1107,7 @@ BUILTIN_HANDLERS = [
     ###########
     # SMS Voice
      ##########
-    ('docs.title.sms-voice',
+    ('docs.title.pinpoint-sms-voice',
      DeprecatedServiceDocumenter(
          'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),
