@@ -2060,6 +2060,7 @@
           "eu-west-1" : { },
           "eu-west-2" : { },
           "eu-west-3" : { },
+          "me-south-1" : { },
           "sa-east-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
@@ -2091,6 +2092,7 @@
       },
       "kinesisanalytics" : {
         "endpoints" : {
+          "ap-east-1" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
           "ap-south-1" : { },
@@ -2102,6 +2104,7 @@
           "eu-west-1" : { },
           "eu-west-2" : { },
           "eu-west-3" : { },
+          "me-south-1" : { },
           "sa-east-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
@@ -2666,11 +2669,18 @@
       },
       "outposts" : {
         "endpoints" : {
+          "ap-east-1" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
+          "ap-southeast-1" : { },
           "ap-southeast-2" : { },
+          "ca-central-1" : { },
           "eu-central-1" : { },
+          "eu-north-1" : { },
           "eu-west-1" : { },
+          "eu-west-2" : { },
+          "eu-west-3" : { },
+          "me-south-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
           "us-west-1" : { },
@@ -2716,6 +2726,7 @@
       },
       "polly" : {
         "endpoints" : {
+          "ap-east-1" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
           "ap-south-1" : { },
@@ -2727,6 +2738,7 @@
           "eu-west-1" : { },
           "eu-west-2" : { },
           "eu-west-3" : { },
+          "me-south-1" : { },
           "sa-east-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
@@ -4118,6 +4130,16 @@
           "cn-northwest-1" : { }
         }
       },
+      "appsync" : {
+        "endpoints" : {
+          "cn-north-1" : { }
+        }
+      },
+      "athena" : {
+        "endpoints" : {
+          "cn-northwest-1" : { }
+        }
+      },
       "autoscaling" : {
         "defaults" : {
           "protocols" : [ "http", "https" ]
@@ -4247,6 +4269,12 @@
         }
       },
       "elasticbeanstalk" : {
+        "endpoints" : {
+          "cn-north-1" : { },
+          "cn-northwest-1" : { }
+        }
+      },
+      "elasticfilesystem" : {
         "endpoints" : {
           "cn-north-1" : { },
           "cn-northwest-1" : { }
@@ -4394,6 +4422,16 @@
           "cn-northwest-1" : { }
         }
       },
+      "neptune" : {
+        "endpoints" : {
+          "cn-northwest-1" : {
+            "credentialScope" : {
+              "region" : "cn-northwest-1"
+            },
+            "hostname" : "rds.cn-northwest-1.amazonaws.com.cn"
+          }
+        }
+      },
       "polly" : {
         "endpoints" : {
           "cn-northwest-1" : { }
@@ -4447,6 +4485,19 @@
         "endpoints" : {
           "cn-north-1" : { },
           "cn-northwest-1" : { }
+        }
+      },
+      "serverlessrepo" : {
+        "defaults" : {
+          "protocols" : [ "https" ]
+        },
+        "endpoints" : {
+          "cn-north-1" : {
+            "protocols" : [ "https" ]
+          },
+          "cn-northwest-1" : {
+            "protocols" : [ "https" ]
+          }
         }
       },
       "sms" : {
@@ -4669,6 +4720,15 @@
           }
         }
       },
+      "autoscaling-plans" : {
+        "defaults" : {
+          "protocols" : [ "http", "https" ]
+        },
+        "endpoints" : {
+          "us-gov-east-1" : { },
+          "us-gov-west-1" : { }
+        }
+      },
       "clouddirectory" : {
         "endpoints" : {
           "us-gov-west-1" : { }
@@ -4736,6 +4796,11 @@
         "defaults" : {
           "protocols" : [ "https" ]
         },
+        "endpoints" : {
+          "us-gov-west-1" : { }
+        }
+      },
+      "comprehendmedical" : {
         "endpoints" : {
           "us-gov-west-1" : { }
         }
@@ -5291,6 +5356,7 @@
           "protocols" : [ "https" ]
         },
         "endpoints" : {
+          "us-gov-east-1" : { },
           "us-gov-west-1" : { }
         }
       },
