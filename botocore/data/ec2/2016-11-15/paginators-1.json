@@ -427,6 +427,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "FastSnapshotRestores"
+    },
+    "DescribeIpv6Pools": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Ipv6Pools"
+    },
+    "GetAssociatedIpv6PoolCidrs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Ipv6CidrAssociations"
     }
   }
 }

@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-insights``", 
+    "description": "Update application-insights client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``alexaforbusiness``", 
+    "description": "Update alexaforbusiness client to latest version", 
+    "type": "api-change"
+  }
+]
