@@ -49,15 +49,12 @@ history_recorder = get_global_history_recorder()
 class ClientCreator(object):
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
-                 retry_handler_factory, retry_config_translator,
                  response_parser_factory=None, exceptions_factory=None,
                  config_store=None):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
         self._user_agent = user_agent
         self._event_emitter = event_emitter
-        self._retry_handler_factory = retry_handler_factory
-        self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
         self._exceptions_factory = exceptions_factory
         # TODO: Migrate things away from scoped_config in favor of the

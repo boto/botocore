@@ -41,7 +41,6 @@ from botocore.utils import switch_host_with_param
 from botocore.utils import hyphenize_service_id
 
 from botocore import utils
-from botocore import translate
 import botocore
 import botocore.auth
 
