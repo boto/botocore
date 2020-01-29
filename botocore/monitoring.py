@@ -16,7 +16,16 @@ import re
 import time
 
 from botocore.compat import ensure_unicode, ensure_bytes, urlparse
-from botocore.retryhandler import EXCEPTION_MAP as RETRYABLE_EXCEPTIONS
+from botocore.exceptions import (
+    EndpointConnectionError, ReadTimeoutError,
+    ConnectionError, ConnectionClosedError,
+)
+
+
+RETRYABLE_EXCEPTIONS = (
+	ConnectionError, ConnectionClosedError, ReadTimeoutError,
+	EndpointConnectionError
+)
 
 
 logger = logging.getLogger(__name__)
@@ -139,7 +148,7 @@ class MonitorEventAdapter(object):
 
     def _is_retryable_exception(self, exception):
         return isinstance(
-            exception, tuple(RETRYABLE_EXCEPTIONS['GENERAL_CONNECTION_ERROR']))
+            exception, RETRYABLE_EXCEPTIONS)
 
     def _complete_api_call(self, context):
         call_event = context.pop('current_api_call_event')

@@ -47,7 +47,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
     def _read_timeout_server(self):
         config = Config(
             read_timeout=0.1,
-            retries={'max_attempts': 0},
+            retries={'max_attempts': 1},
             region_name='us-weast-2',
         )
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
@@ -87,7 +87,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
     def test_connect_timeout_exception(self):
         config = Config(
             connect_timeout=0.2,
-            retries={'max_attempts': 0},
+            retries={'max_attempts': 1},
             region_name='us-weast-2',
         )
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
@@ -110,7 +110,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             client_call_ended_event.set()
 
     def test_invalid_host_gaierror(self):
-        config = Config(retries={'max_attempts': 0}, region_name='us-weast-1')
+        config = Config(retries={'max_attempts': 1}, region_name='us-weast-1')
         endpoint = 'https://ec2.us-weast-1.amazonaws.com/'
         client = self.session.create_client('ec2', endpoint_url=endpoint,
                                             config=config)
@@ -118,7 +118,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             client.describe_regions()
 
     def test_bad_status_line(self):
-        config = Config(retries={'max_attempts': 0}, region_name='us-weast-2')
+        config = Config(retries={'max_attempts': 1}, region_name='us-weast-2')
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
 

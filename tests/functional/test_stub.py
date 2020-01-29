@@ -21,7 +21,6 @@ from botocore.exceptions import StubResponseError, ClientError, \
     StubAssertionError, UnStubbedResponseError
 from botocore.exceptions import ParamValidationError
 import botocore.client
-import botocore.retryhandler
 import botocore.translate
 
 

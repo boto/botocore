@@ -83,10 +83,8 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     'endpoint_discovery_enabled': (
         'endpoint_discovery_enabled', 'AWS_ENDPOINT_DISCOVERY_ENABLED',
         False, utils.ensure_boolean),
-    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'legacy', None),
-    # We can't have a default here for v1 because we need to defer to
-    # whatever the defaults are in _retry.json.
-    'max_attempts': ('max_attempts', 'AWS_MAX_ATTEMPTS', None, int),
+    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'standard', None),
+    'max_attempts': ('max_attempts', 'AWS_MAX_ATTEMPTS', 3, int),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping

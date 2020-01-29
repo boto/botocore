@@ -253,7 +253,7 @@ class TestCreateClientArgs(unittest.TestCase):
         config = self.call_get_client_args(
                 client_config=Config(retries=None)
         )['client_config']
-        self.assertEqual(config.retries, {'mode': 'legacy'})
+        self.assertEqual(config.retries, {'mode': 'standard'})
 
     def test_retry_mode_set_on_config_store(self):
         self.config_store.set_config_variable('retry_mode', 'standard')
@@ -267,7 +267,7 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(config.retries['mode'], 'standard')
 
     def test_client_config_beats_config_store(self):
-        self.config_store.set_config_variable('retry_mode', 'legacy')
+        self.config_store.set_config_variable('retry_mode', 'other-mode')
         config = self.call_get_client_args(
                 client_config=Config(retries={'mode': 'standard'})
         )['client_config']

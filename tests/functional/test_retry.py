@@ -41,14 +41,14 @@ class TestRetry(BaseSessionTest):
     def test_can_override_max_attempts(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
-                retries={'max_attempts': 1}))
+                retries={'max_attempts': 2}))
         with self.assert_will_retry_n_times(client, 1):
             client.list_tables()
 
     def test_do_not_attempt_retries(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
-                retries={'max_attempts': 0}))
+                retries={'max_attempts': 1}))
         with self.assert_will_retry_n_times(client, 0):
             client.list_tables()
 
@@ -62,31 +62,12 @@ class TestRetry(BaseSessionTest):
         client = self.session.create_client('codecommit', self.region)
         # It should use the default max retries, which should be four retries
         # for this service.
-        with self.assert_will_retry_n_times(client, 4):
-            client.list_repositories()
-
-    def test_service_specific_defaults_do_not_mutate_general_defaults(self):
-        # This tests for a bug where if you created a client for a service
-        # with specific retry configurations and then created a client for
-        # a service whose retry configurations fallback to the general
-        # defaults, the second client would actually use the defaults of
-        # the first client.
-
-        # Make a dynamodb client. It's a special case client that is
-        # configured to a make a maximum of 10 requests (9 retries).
-        client = self.session.create_client('dynamodb', self.region)
-        with self.assert_will_retry_n_times(client, 9):
-            client.list_tables()
-
-        # A codecommit client is not a special case for retries. It will at
-        # most make 5 requests (4 retries) for its default.
-        client = self.session.create_client('codecommit', self.region)
-        with self.assert_will_retry_n_times(client, 4):
+        with self.assert_will_retry_n_times(client, 2):
             client.list_repositories()
 
     def test_set_max_attempts_on_session(self):
         self.session.set_default_client_config(
-            Config(retries={'max_attempts': 1}))
+            Config(retries={'max_attempts': 2}))
         # Max attempts should be inherited from the session.
         client = self.session.create_client('codecommit', self.region)
         with self.assert_will_retry_n_times(client, 1):
@@ -94,10 +75,10 @@ class TestRetry(BaseSessionTest):
 
     def test_can_clobber_max_attempts_on_session(self):
         self.session.set_default_client_config(
-            Config(retries={'max_attempts': 1}))
+            Config(retries={'max_attempts': 5}))
         # Max attempts should override the session's configured max attempts.
         client = self.session.create_client(
             'codecommit', self.region, config=Config(
-                retries={'max_attempts': 0}))
-        with self.assert_will_retry_n_times(client, 0):
+                retries={'max_attempts': 3}))
+        with self.assert_will_retry_n_times(client, 2):
             client.list_repositories()
