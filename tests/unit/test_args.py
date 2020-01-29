@@ -180,7 +180,7 @@ class TestCreateClientArgs(unittest.TestCase):
         config = botocore.config.Config(retries={'max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
-            client_args['client_config'].retries, {'max_attempts': 10})
+            client_args['client_config'].retries['max_attempts'], 10)
 
     def test_tcp_keepalive_enabled(self):
         scoped_config = {'tcp_keepalive': 'true'}
@@ -230,3 +230,45 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
             client_args['request_signer'].region_name, resolved_region)
+
+    def test_can_merge_max_attempts(self):
+        self.config_store.set_config_variable('max_attempts', 4)
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.retries['max_attempts'], 4)
+
+    def test_uses_config_value_if_present_for_max_attempts(self):
+        config = self.call_get_client_args(
+                client_config=Config(retries={'max_attempts': 2})
+        )['client_config']
+        self.assertEqual(config.retries['max_attempts'], 2)
+
+    def test_uses_client_config_over_config_store_max_attempts(self):
+        self.config_store.set_config_variable('max_attempts', 4)
+        config = self.call_get_client_args(
+                client_config=Config(retries={'max_attempts': 2})
+        )['client_config']
+        self.assertEqual(config.retries['max_attempts'], 2)
+
+    def test_max_attempts_unset_if_retries_is_none(self):
+        config = self.call_get_client_args(
+                client_config=Config(retries=None)
+        )['client_config']
+        self.assertEqual(config.retries, {'mode': 'legacy'})
+
+    def test_retry_mode_set_on_config_store(self):
+        self.config_store.set_config_variable('retry_mode', 'standard')
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.retries['mode'], 'standard')
+
+    def test_retry_mode_set_on_client_config(self):
+        config = self.call_get_client_args(
+                client_config=Config(retries={'mode': 'standard'})
+        )['client_config']
+        self.assertEqual(config.retries['mode'], 'standard')
+
+    def test_client_config_beats_config_store(self):
+        self.config_store.set_config_variable('retry_mode', 'legacy')
+        config = self.call_get_client_args(
+                client_config=Config(retries={'mode': 'standard'})
+        )['client_config']
+        self.assertEqual(config.retries['mode'], 'standard')

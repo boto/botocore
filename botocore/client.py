@@ -39,6 +39,7 @@ from botocore.discovery import (
     EndpointDiscoveryHandler, EndpointDiscoveryManager,
     block_endpoint_discovery_required_operations
 )
+from botocore.retries import standard
 
 
 logger = logging.getLogger(__name__)
@@ -114,6 +115,20 @@ class ClientCreator(object):
         return service_model
 
     def _register_retries(self, client):
+        retry_mode = client.meta.config.retries['mode']
+        if retry_mode == 'standard':
+            self._register_v2_standard_retries(client)
+        elif retry_mode == 'legacy':
+            self._register_legacy_retries(client)
+
+    def _register_v2_standard_retries(self, client):
+        max_attempts = client.meta.config.retries.get('max_attempts')
+        kwargs = {'client': client}
+        if max_attempts is not None:
+            kwargs['max_attempts'] = max_attempts
+        standard.register_retry_handler(**kwargs)
+
+    def _register_legacy_retries(self, client):
         endpoint_prefix = client.meta.service_model.endpoint_prefix
         service_id = client.meta.service_model.service_id
         service_event_name = service_id.hyphenize()

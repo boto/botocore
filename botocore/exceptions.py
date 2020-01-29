@@ -484,6 +484,14 @@ class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
     )
 
 
+class InvalidRetryModeError(InvalidRetryConfigurationError):
+    """Error when invalid retry mode configuration is specified"""
+    fmt = (
+        'Invalid value provided to "mode": "{provided_retry_mode}" must '
+        'be one of: "legacy", "standard"'
+    )
+
+
 class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
