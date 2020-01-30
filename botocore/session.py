@@ -44,7 +44,6 @@ from botocore.model import ServiceModel
 from botocore import monitoring
 from botocore import paginate
 from botocore import waiter
-from botocore import retryhandler, translate
 from botocore import utils
 from botocore.compat import MutableMapping
 
@@ -804,8 +803,7 @@ class Session(object):
         config_store = self.get_component('config_store')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
-            retryhandler, translate, response_parser_factory,
-            exceptions_factory, config_store)
+            response_parser_factory, exceptions_factory, config_store)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,

@@ -111,7 +111,7 @@ def _setup_shared_config(fileobj, shared_config_options, environ):
 
 def _setup_max_retry_attempts(session, case_configuration):
     config = botocore.config.Config(
-        retries={'max_attempts': case_configuration['maxRetries']})
+        retries={'max_attempts': case_configuration['maxRetries'] + 1})
     session.set_default_client_config(config)
 
 

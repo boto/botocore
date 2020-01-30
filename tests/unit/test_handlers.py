@@ -1023,19 +1023,19 @@ class TestRetryHandlerOrder(BaseSessionTest):
         operation = service_model.operation_model('CopyObject')
         responses = client.meta.events.emit(
             'needs-retry.s3.CopyObject',
-            request_dict={},
+            request_dict={'context': {}},
             response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
             operation=operation, attempts=1, caught_exception=None)
         # This is implementation specific, but we're trying to verify that
         # the check_for_200_error is before any of the retry logic in
-        # botocore.retryhandlers.
+        # botocore.retries.*.
         # Technically, as long as the relative order is preserved, we don't
         # care about the absolute order.
         names = self.get_handler_names(responses)
         self.assertIn('check_for_200_error', names)
-        self.assertIn('RetryHandler', names)
+        self.assertIn('needs_retry', names)
         s3_200_handler = names.index('check_for_200_error')
-        general_retry_handler = names.index('RetryHandler')
+        general_retry_handler = names.index('needs_retry')
         self.assertTrue(s3_200_handler < general_retry_handler,
                         "S3 200 error handler was supposed to be before "
                         "the general retry handler, but it was not.")

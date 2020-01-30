@@ -39,6 +39,7 @@ from botocore.discovery import (
     EndpointDiscoveryHandler, EndpointDiscoveryManager,
     block_endpoint_discovery_required_operations
 )
+from botocore.retries import standard
 
 
 logger = logging.getLogger(__name__)
@@ -48,15 +49,12 @@ history_recorder = get_global_history_recorder()
 class ClientCreator(object):
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
-                 retry_handler_factory, retry_config_translator,
                  response_parser_factory=None, exceptions_factory=None,
                  config_store=None):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
         self._user_agent = user_agent
         self._event_emitter = event_emitter
-        self._retry_handler_factory = retry_handler_factory
-        self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
         self._exceptions_factory = exceptions_factory
         # TODO: Migrate things away from scoped_config in favor of the
@@ -114,31 +112,16 @@ class ClientCreator(object):
         return service_model
 
     def _register_retries(self, client):
-        endpoint_prefix = client.meta.service_model.endpoint_prefix
-        service_id = client.meta.service_model.service_id
-        service_event_name = service_id.hyphenize()
+        retry_mode = client.meta.config.retries['mode']
+        if retry_mode == 'standard':
+            self._register_v2_standard_retries(client)
 
-        # First, we load the entire retry config for all services,
-        # then pull out just the information we need.
-        original_config = self._loader.load_data('_retry')
-        if not original_config:
-            return
-
-        retry_config = self._retry_config_translator.build_retry_config(
-            endpoint_prefix, original_config.get('retry', {}),
-            original_config.get('definitions', {}),
-            client.meta.config.retries
-        )
-
-        logger.debug("Registering retry handlers for service: %s",
-                     client.meta.service_model.service_name)
-        handler = self._retry_handler_factory.create_retry_handler(
-            retry_config, endpoint_prefix)
-        unique_id = 'retry-config-%s' % service_event_name
-        client.meta.events.register(
-            'needs-retry.%s' % service_event_name, handler,
-            unique_id=unique_id
-        )
+    def _register_v2_standard_retries(self, client):
+        max_attempts = client.meta.config.retries.get('max_attempts')
+        kwargs = {'client': client}
+        if max_attempts is not None:
+            kwargs['max_attempts'] = max_attempts
+        standard.register_retry_handler(**kwargs)
 
     def _register_endpoint_discovery(self, client, endpoint_url, config):
         if endpoint_url is not None:

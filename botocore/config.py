@@ -17,6 +17,7 @@ from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.exceptions import InvalidRetryConfigurationError
 from botocore.exceptions import InvalidMaxRetryAttemptsError
+from botocore.exceptions import InvalidRetryModeError
 
 
 class Config(object):
@@ -95,13 +96,17 @@ class Config(object):
     :param retries: A dictionary for retry specific configurations.
         Valid keys are:
 
-        * 'max_attempts' -- An integer representing the maximum number of
-          retry attempts that will be made on a single request. For
-          example, setting this value to 2 will result in the request
-          being retried at most two times after the initial request. Setting
-          this value to 0 will result in no retries ever being attempted on
-          the initial request. If not provided, the number of retries will
-          default to whatever is modeled, which is typically four retries.
+        * 'max_attempts' -- An integer representing the maximum number of total
+        attempts that will be made on a single API call, including the initial
+        attempt. For example, setting this value to 3 will result in the
+        request being retried at most two times after the initial request.
+        Setting this value to 1 will result in no retries ever being attempted
+        on the initial request. If not provided, the number of retries will
+        default to whatever is modeled, which is typically four retries.
+        * 'mode' -- A string representing the type of retry mode botocore
+          should use.  Valid values are:
+              * ``standard`` - The standardized set of retry rules.  This
+                will also default to 3 max attempts unless overridden.
 
     :type client_cert: str, (str, str)
     :param client_cert: The path to a certificate for TLS client authentication.
@@ -199,13 +204,17 @@ class Config(object):
 
     def _validate_retry_configuration(self, retries):
         if retries is not None:
-            for key in retries:
-                if key not in ['max_attempts']:
+            for key, value in retries.items():
+                if key not in ['max_attempts', 'mode']:
                     raise InvalidRetryConfigurationError(
                         retry_config_option=key)
-                if key == 'max_attempts' and retries[key] < 0:
+                if key == 'max_attempts' and value < 1:
                     raise InvalidMaxRetryAttemptsError(
-                        provided_max_attempts=retries[key]
+                        provided_max_attempts=value
+                    )
+                if key == 'mode' and value not in ['standard']:
+                    raise InvalidRetryModeError(
+                        provided_retry_mode=value
                     )
 
     def merge(self, other_config):

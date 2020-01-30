@@ -55,7 +55,7 @@ class Shape(object):
                         'jsonvalue', 'timestampFormat', 'hostLabel']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception',
-                      'endpointdiscoveryid']
+                      'endpointdiscoveryid', 'retryable']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):

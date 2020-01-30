@@ -79,8 +79,6 @@ class BaseDocsTest(unittest.TestCase):
         self.creator = ClientCreator(
             loader=self.loader, endpoint_resolver=endpoint_resolver,
             user_agent='user-agent', event_emitter=self.events,
-            retry_handler_factory=mock.Mock(),
-            retry_config_translator=mock.Mock(),
             exceptions_factory=mock.Mock(),
             config_store=ConfigValueStore()
         )
