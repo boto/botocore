@@ -268,11 +268,7 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
             num_uploads, amount_seen))
 
     def create_client(self):
-        # Even though the default signature_version is s3,
-        # we're being explicit in case this ever changes.
-        client_config = Config(signature_version='s3')
-        return self.session.create_client('s3', self.region,
-                                          config=client_config)
+        return self.session.create_client('s3', self.region)
 
     def assert_can_put_object(self, body):
         client = self.create_client()
@@ -653,24 +649,11 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
     def setUp(self):
         super(TestS3PresignUsStandard, self).setUp()
         self.region = 'us-east-1'
-        self.client_config = Config(
-            region_name=self.region, signature_version='s3')
+        self.client_config = Config(region_name=self.region)
         self.client = self.session.create_client(
             's3', config=self.client_config)
         self.bucket_name = self.create_bucket(self.region)
         self.setup_bucket()
-
-    def test_presign_sigv2(self):
-        presigned_url = self.client.generate_presigned_url(
-            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
-        self.assertTrue(
-            presigned_url.startswith(
-                'https://%s.s3.us-east-1.amazonaws.com/%s' % (
-                    self.bucket_name, self.key)),
-            "Host was suppose to use DNS style, instead "
-            "got: %s" % presigned_url)
-        # Try to retrieve the object using the presigned url.
-        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_with_existing_query_string_values(self):
         content_disposition = 'attachment; filename=foo.txt;'
@@ -697,38 +680,6 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
         self.assertEqual(http_get(presigned_url).data, b'foo')
-
-    def test_presign_post_sigv2(self):
-
-        # Create some of the various supported conditions.
-        conditions = [
-            {"acl": "public-read"},
-        ]
-
-        # Create the fields that follow the policy.
-        fields = {
-            'acl': 'public-read',
-        }
-
-        # Retrieve the args for the presigned post.
-        post_args = self.client.generate_presigned_post(
-            self.bucket_name, self.key, Fields=fields,
-            Conditions=conditions)
-
-        # Make sure that the form can be posted successfully.
-        files = {'file': ('baz', 'some data')}
-
-        # Make sure the correct endpoint is being used
-        self.assertTrue(
-            post_args['url'].startswith(
-                'https://%s.s3.us-east-1.amazonaws.com' % self.bucket_name),
-            "Host was suppose to use DNS style, instead "
-            "got: %s" % post_args['url'])
-
-        # Try to retrieve the object using the presigned url.
-        r = http_post(post_args['url'], data=post_args['fields'],
-                      files=files)
-        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -769,23 +720,10 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
     def setUp(self):
         super(TestS3PresignNonUsStandard, self).setUp()
-        self.client_config = Config(
-            region_name=self.region, signature_version='s3')
+        self.client_config = Config(region_name=self.region)
         self.client = self.session.create_client(
             's3', config=self.client_config)
         self.setup_bucket()
-
-    def test_presign_sigv2(self):
-        presigned_url = self.client.generate_presigned_url(
-            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
-        self.assertTrue(
-            presigned_url.startswith(
-                'https://%s.s3.us-west-2.amazonaws.com/%s' % (
-                    self.bucket_name, self.key)),
-            "Host was suppose to use DNS style, instead "
-            "got: %s" % presigned_url)
-        # Try to retrieve the object using the presigned url.
-        self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_sigv4(self):
         # For a newly created bucket, you can't use virtualhosted
@@ -809,35 +747,6 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "got: %s" % presigned_url)
         # Try to retrieve the object using the presigned url.
         self.assertEqual(http_get(presigned_url).data, b'foo')
-
-    def test_presign_post_sigv2(self):
-        # Create some of the various supported conditions.
-        conditions = [
-            {"acl": "public-read"},
-        ]
-
-        # Create the fields that follow the policy.
-        fields = {
-            'acl': 'public-read',
-        }
-
-        # Retrieve the args for the presigned post.
-        post_args = self.client.generate_presigned_post(
-            self.bucket_name, self.key, Fields=fields, Conditions=conditions)
-
-        # Make sure that the form can be posted successfully.
-        files = {'file': ('baz', 'some data')}
-
-        # Make sure the correct endpoint is being used
-        self.assertTrue(
-            post_args['url'].startswith(
-                'https://%s.s3.us-west-2.amazonaws.com' % self.bucket_name),
-            "Host was suppose to use DNS style, instead "
-            "got: %s" % post_args['url'])
-
-        r = http_post(post_args['url'], data=post_args['fields'],
-                      files=files)
-        self.assertEqual(r.status, 204)
 
     def test_presign_post_sigv4(self):
         self.client_config.signature_version = 's3v4'
@@ -1172,7 +1081,7 @@ class TestAutoS3Addressing(BaseS3ClientTest):
         self.addressing_style = 'auto'
         self.client = self.create_client()
 
-    def create_client(self, signature_version='s3'):
+    def create_client(self, signature_version='s3v4'):
         return self.session.create_client(
             's3', region_name=self.region,
             config=Config(s3={
@@ -1238,17 +1147,6 @@ class TestRegionRedirect(BaseS3ClientTest):
             error = e.response['Error'].get('Code', None)
             if error == 'PermanentRedirect':
                 self.fail("S3 client failed to redirect to the proper region.")
-
-    def test_region_redirect_sigv2_to_sigv4_raises_error(self):
-        self.bucket_region = 'eu-central-1'
-        sigv2_client = self.session.create_client(
-            's3', region_name=self.client_region,
-            config=Config(signature_version='s3'))
-
-        eu_bucket = self.create_bucket(self.bucket_region)
-        msg = 'The authorization mechanism you have provided is not supported.'
-        with self.assertRaisesRegexp(ClientError, msg):
-            sigv2_client.list_objects(Bucket=eu_bucket)
 
     def test_region_redirects_multiple_requests(self):
         try:
