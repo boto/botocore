@@ -12,9 +12,15 @@
 # language governing permissions and limitations under the License.
 import copy
 import logging
+
 from collections import defaultdict, deque, namedtuple
 from botocore.compat import accepts_kwargs, six
 from botocore.utils import EVENT_ALIASES
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
 
 logger = logging.getLogger(__name__)
 
@@ -386,10 +392,9 @@ class EventAliaser(BaseEventHooks):
         return self._emitter.unregister(
             aliased_event_name, handler, unique_id, unique_id_uses_count
         )
-
+    @lru_cache(maxsize=1024)
     def _alias_event_name(self, event_name):
         for old_part, new_part in self._event_aliases.items():
-
             # We can't simply do a string replace for everything, otherwise we
             # might end up translating substrings that we never intended to
             # translate. When there aren't any dots in the old event name
@@ -413,9 +418,7 @@ class EventAliaser(BaseEventHooks):
                 continue
 
             new_name = '.'.join(event_parts)
-            logger.debug("Changing event name from %s to %s" % (
-                event_name, new_name
-            ))
+            logger.debug("Changing event name from %s to %s", event_name, new_name)
             return new_name
         return event_name
 

@@ -26,7 +26,8 @@ def find_version(*file_paths):
 requires = ['jmespath>=0.7.1,<1.0.0',
             'docutils>=0.10,<0.16',
             'python-dateutil>=2.1,<3.0.0',
-            'urllib3>=1.20,<1.26']
+            'urllib3>=1.20,<1.26',
+            'backports.functools-lru-cache>=1.6.1; python_version < "3.3"']
 
 
 setup(
