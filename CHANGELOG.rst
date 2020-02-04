@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.14.10
+=======
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.14.9
 ======
 
