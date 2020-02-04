@@ -1105,9 +1105,6 @@ BUILTIN_HANDLERS = [
     ###########
     # SMS Voice
      ##########
-    ('docs.title.pinpoint-sms-voice',
-     DeprecatedServiceDocumenter(
-         'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),
 
 ]
