@@ -269,10 +269,10 @@ class ClientEndpointBridge(object):
                     service_name, region_name,
                     resolved['dnsSuffix'], is_secure, explicit_region)
             else:
-                # Use the sslCommonName over the hostname for Python 2.6 compat.
-                hostname = resolved.get('sslCommonName', resolved.get('hostname'))
-                endpoint_url = self._make_url(hostname, is_secure,
-                                            resolved.get('protocols', []))
+                endpoint_url = self._make_url(
+                    resolved.get('hostname'), is_secure,
+                    resolved.get('protocols', [])
+                )
         signature_version = self._resolve_signature_version(
             service_name, resolved)
         signing_name = self._resolve_signing_name(service_name, resolved)
