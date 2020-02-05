@@ -17,6 +17,7 @@ from nose.tools import assert_equal, assert_raises
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
+from botocore.compat import urlparse
 
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
@@ -465,7 +466,8 @@ def _test_single_service_region(service_name, region_name,
                                 expected_endpoint, resolver):
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
-    if not expected_endpoint.startswith('http'):
+    scheme = urlparse(expected_endpoint).scheme
+    if not scheme:
         expected_endpoint = 'https://%s' % expected_endpoint
     assert_equal(result['endpoint_url'], expected_endpoint)
 
