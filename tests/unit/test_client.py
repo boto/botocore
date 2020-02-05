@@ -1607,17 +1607,21 @@ class TestClientEndpointBridge(unittest.TestCase):
         self.assertEqual('https://foo', resolved['endpoint_url'])
         self.assertEqual('v2', resolved['signature_version'])
 
-    def test_uses_ssl_common_name_over_hostname_if_present(self):
+    def test_dont_use_ssl_common_name_over_hostname_if_present(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
-            'partition': 'aws', 'hostname': 'do-not-use-this',
-            'signatureVersions': ['v4'], 'sslCommonName': 'common-name.com',
-            'endpointName': 'us-west-2', 'protocols': ['https']}
+            'partition': 'aws',
+            'hostname': 'expected-host-name',
+            'signatureVersions': ['v4'],
+            'sslCommonName': 'ssl-common-name-do-not-use',
+            'endpointName': 'us-west-2', 'protocols': ['https']
+        }
         bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-west-2')
         self.assertEqual('us-west-2', resolved['region_name'])
         self.assertEqual('us-west-2', resolved['signing_region'])
-        self.assertEqual('https://common-name.com', resolved['endpoint_url'])
+        self.assertEqual('https://expected-host-name',
+                         resolved['endpoint_url'])
 
     def test_can_create_http_urls(self):
         resolver = mock.Mock()

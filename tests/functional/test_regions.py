@@ -17,6 +17,7 @@ from nose.tools import assert_equal, assert_raises
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
+from botocore.compat import urlparse
 
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
@@ -45,7 +46,7 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.ap-northeast-1.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.ap-northeast-1.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.ap-northeast-1.amazonaws.com',
-        'elasticmapreduce': 'ap-northeast-1.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.ap-northeast-1.amazonaws.com',
         'elastictranscoder': 'elastictranscoder.ap-northeast-1.amazonaws.com',
         'glacier': 'glacier.ap-northeast-1.amazonaws.com',
         'iot': 'iot.ap-northeast-1.amazonaws.com',
@@ -56,13 +57,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-northeast-1.amazonaws.com',
         'rds': 'rds.ap-northeast-1.amazonaws.com',
         'redshift': 'redshift.ap-northeast-1.amazonaws.com',
-        's3': 's3-ap-northeast-1.amazonaws.com',
+        's3': 's3.ap-northeast-1.amazonaws.com',
         'sdb': 'sdb.ap-northeast-1.amazonaws.com',
         'sns': 'sns.ap-northeast-1.amazonaws.com',
-        'sqs': 'ap-northeast-1.queue.amazonaws.com',
+        'sqs': 'sqs.ap-northeast-1.amazonaws.com',
         'storagegateway': 'storagegateway.ap-northeast-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-northeast-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-northeast-1.amazonaws.com',
         'swf': 'swf.ap-northeast-1.amazonaws.com',
         'workspaces': 'workspaces.ap-northeast-1.amazonaws.com'
     },
@@ -80,7 +81,7 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.ap-southeast-1.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.ap-southeast-1.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.ap-southeast-1.amazonaws.com',
-        'elasticmapreduce': 'ap-southeast-1.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.ap-southeast-1.amazonaws.com',
         'elastictranscoder': 'elastictranscoder.ap-southeast-1.amazonaws.com',
         'kinesis': 'kinesis.ap-southeast-1.amazonaws.com',
         'kms': 'kms.ap-southeast-1.amazonaws.com',
@@ -88,13 +89,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-southeast-1.amazonaws.com',
         'rds': 'rds.ap-southeast-1.amazonaws.com',
         'redshift': 'redshift.ap-southeast-1.amazonaws.com',
-        's3': 's3-ap-southeast-1.amazonaws.com',
+        's3': 's3.ap-southeast-1.amazonaws.com',
         'sdb': 'sdb.ap-southeast-1.amazonaws.com',
         'sns': 'sns.ap-southeast-1.amazonaws.com',
-        'sqs': 'ap-southeast-1.queue.amazonaws.com',
+        'sqs': 'sqs.ap-southeast-1.amazonaws.com',
         'storagegateway': 'storagegateway.ap-southeast-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-southeast-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-southeast-1.amazonaws.com',
         'swf': 'swf.ap-southeast-1.amazonaws.com',
         'workspaces': 'workspaces.ap-southeast-1.amazonaws.com'
     },
@@ -115,7 +116,7 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.ap-southeast-2.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.ap-southeast-2.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.ap-southeast-2.amazonaws.com',
-        'elasticmapreduce': 'ap-southeast-2.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.ap-southeast-2.amazonaws.com',
         'glacier': 'glacier.ap-southeast-2.amazonaws.com',
         'kinesis': 'kinesis.ap-southeast-2.amazonaws.com',
         'kms': 'kms.ap-southeast-2.amazonaws.com',
@@ -123,13 +124,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-southeast-2.amazonaws.com',
         'rds': 'rds.ap-southeast-2.amazonaws.com',
         'redshift': 'redshift.ap-southeast-2.amazonaws.com',
-        's3': 's3-ap-southeast-2.amazonaws.com',
+        's3': 's3.ap-southeast-2.amazonaws.com',
         'sdb': 'sdb.ap-southeast-2.amazonaws.com',
         'sns': 'sns.ap-southeast-2.amazonaws.com',
-        'sqs': 'ap-southeast-2.queue.amazonaws.com',
+        'sqs': 'sqs.ap-southeast-2.amazonaws.com',
         'storagegateway': 'storagegateway.ap-southeast-2.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-southeast-2.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-southeast-2.amazonaws.com',
         'swf': 'swf.ap-southeast-2.amazonaws.com',
         'workspaces': 'workspaces.ap-southeast-2.amazonaws.com'
     },
@@ -154,7 +155,7 @@ KNOWN_REGIONS = {
         'rds': 'rds.cn-north-1.amazonaws.com.cn',
         's3': 's3.cn-north-1.amazonaws.com.cn',
         'sns': 'sns.cn-north-1.amazonaws.com.cn',
-        'sqs': 'cn-north-1.queue.amazonaws.com.cn',
+        'sqs': 'sqs.cn-north-1.amazonaws.com.cn',
         'storagegateway': 'storagegateway.cn-north-1.amazonaws.com.cn',
         'streams.dynamodb': 'streams.dynamodb.cn-north-1.amazonaws.com.cn',
         'sts': 'sts.cn-north-1.amazonaws.com.cn',
@@ -184,10 +185,10 @@ KNOWN_REGIONS = {
         'redshift': 'redshift.eu-central-1.amazonaws.com',
         's3': 's3.eu-central-1.amazonaws.com',
         'sns': 'sns.eu-central-1.amazonaws.com',
-        'sqs': 'eu-central-1.queue.amazonaws.com',
+        'sqs': 'sqs.eu-central-1.amazonaws.com',
         'storagegateway': 'storagegateway.eu-central-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.eu-central-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.eu-central-1.amazonaws.com',
         'swf': 'swf.eu-central-1.amazonaws.com'
     },
     'eu-west-1': {
@@ -210,7 +211,7 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.eu-west-1.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.eu-west-1.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.eu-west-1.amazonaws.com',
-        'elasticmapreduce': 'eu-west-1.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.eu-west-1.amazonaws.com',
         'elastictranscoder': 'elastictranscoder.eu-west-1.amazonaws.com',
         'email': 'email.eu-west-1.amazonaws.com',
         'glacier': 'glacier.eu-west-1.amazonaws.com',
@@ -223,14 +224,14 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.eu-west-1.amazonaws.com',
         'rds': 'rds.eu-west-1.amazonaws.com',
         'redshift': 'redshift.eu-west-1.amazonaws.com',
-        's3': 's3-eu-west-1.amazonaws.com',
+        's3': 's3.eu-west-1.amazonaws.com',
         'sdb': 'sdb.eu-west-1.amazonaws.com',
         'sns': 'sns.eu-west-1.amazonaws.com',
-        'sqs': 'eu-west-1.queue.amazonaws.com',
+        'sqs': 'sqs.eu-west-1.amazonaws.com',
         'ssm': 'ssm.eu-west-1.amazonaws.com',
         'storagegateway': 'storagegateway.eu-west-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.eu-west-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.eu-west-1.amazonaws.com',
         'swf': 'swf.eu-west-1.amazonaws.com',
         'workspaces': 'workspaces.eu-west-1.amazonaws.com'
     },
@@ -238,7 +239,7 @@ KNOWN_REGIONS = {
         's3': 's3-fips-us-gov-west-1.amazonaws.com'
     },
     'local': {
-        'dynamodb': 'localhost:8000'
+        'dynamodb': 'http://localhost:8000'
     },
     's3-external-1': {
         's3': 's3-external-1.amazonaws.com'
@@ -255,17 +256,17 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.sa-east-1.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.sa-east-1.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.sa-east-1.amazonaws.com',
-        'elasticmapreduce': 'sa-east-1.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.sa-east-1.amazonaws.com',
         'kms': 'kms.sa-east-1.amazonaws.com',
         'monitoring': 'monitoring.sa-east-1.amazonaws.com',
         'rds': 'rds.sa-east-1.amazonaws.com',
-        's3': 's3-sa-east-1.amazonaws.com',
+        's3': 's3.sa-east-1.amazonaws.com',
         'sdb': 'sdb.sa-east-1.amazonaws.com',
         'sns': 'sns.sa-east-1.amazonaws.com',
-        'sqs': 'sa-east-1.queue.amazonaws.com',
+        'sqs': 'sqs.sa-east-1.amazonaws.com',
         'storagegateway': 'storagegateway.sa-east-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.sa-east-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.sa-east-1.amazonaws.com',
         'swf': 'swf.sa-east-1.amazonaws.com'
     },
     'us-east-1': {
@@ -307,18 +308,18 @@ KNOWN_REGIONS = {
         'mobileanalytics': 'mobileanalytics.us-east-1.amazonaws.com',
         'monitoring': 'monitoring.us-east-1.amazonaws.com',
         'opsworks': 'opsworks.us-east-1.amazonaws.com',
-        'rds': 'rds.amazonaws.com',
+        'rds': 'rds.us-east-1.amazonaws.com',
         'redshift': 'redshift.us-east-1.amazonaws.com',
         'route53': 'route53.amazonaws.com',
         'route53domains': 'route53domains.us-east-1.amazonaws.com',
-        's3': 's3.amazonaws.com',
+        's3': 's3.us-east-1.amazonaws.com',
         'sdb': 'sdb.amazonaws.com',
         'sns': 'sns.us-east-1.amazonaws.com',
-        'sqs': 'queue.amazonaws.com',
+        'sqs': 'sqs.us-east-1.amazonaws.com',
         'ssm': 'ssm.us-east-1.amazonaws.com',
         'storagegateway': 'storagegateway.us-east-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-east-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-east-1.amazonaws.com',
         'support': 'support.us-east-1.amazonaws.com',
         'swf': 'swf.us-east-1.amazonaws.com',
         'workspaces': 'workspaces.us-east-1.amazonaws.com',
@@ -340,9 +341,9 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.us-gov-west-1.amazonaws.com',
         'rds': 'rds.us-gov-west-1.amazonaws.com',
         'redshift': 'redshift.us-gov-west-1.amazonaws.com',
-        's3': 's3-us-gov-west-1.amazonaws.com',
+        's3': 's3.us-gov-west-1.amazonaws.com',
         'sns': 'sns.us-gov-west-1.amazonaws.com',
-        'sqs': 'us-gov-west-1.queue.amazonaws.com',
+        'sqs': 'sqs.us-gov-west-1.amazonaws.com',
         'sts': 'sts.us-gov-west-1.amazonaws.com',
         'swf': 'swf.us-gov-west-1.amazonaws.com'
     },
@@ -359,7 +360,7 @@ KNOWN_REGIONS = {
         'elasticache': 'elasticache.us-west-1.amazonaws.com',
         'elasticbeanstalk': 'elasticbeanstalk.us-west-1.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.us-west-1.amazonaws.com',
-        'elasticmapreduce': 'us-west-1.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.us-west-1.amazonaws.com',
         'elastictranscoder': 'elastictranscoder.us-west-1.amazonaws.com',
         'glacier': 'glacier.us-west-1.amazonaws.com',
         'kinesis': 'kinesis.us-west-1.amazonaws.com',
@@ -367,13 +368,13 @@ KNOWN_REGIONS = {
         'logs': 'logs.us-west-1.amazonaws.com',
         'monitoring': 'monitoring.us-west-1.amazonaws.com',
         'rds': 'rds.us-west-1.amazonaws.com',
-        's3': 's3-us-west-1.amazonaws.com',
+        's3': 's3.us-west-1.amazonaws.com',
         'sdb': 'sdb.us-west-1.amazonaws.com',
         'sns': 'sns.us-west-1.amazonaws.com',
-        'sqs': 'us-west-1.queue.amazonaws.com',
+        'sqs': 'sqs.us-west-1.amazonaws.com',
         'storagegateway': 'storagegateway.us-west-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-west-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-west-1.amazonaws.com',
         'swf': 'swf.us-west-1.amazonaws.com'
     },
     'us-west-2': {
@@ -397,7 +398,7 @@ KNOWN_REGIONS = {
         'elasticbeanstalk': 'elasticbeanstalk.us-west-2.amazonaws.com',
         'elasticfilesystem': 'elasticfilesystem.us-west-2.amazonaws.com',
         'elasticloadbalancing': 'elasticloadbalancing.us-west-2.amazonaws.com',
-        'elasticmapreduce': 'us-west-2.elasticmapreduce.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.us-west-2.amazonaws.com',
         'elastictranscoder': 'elastictranscoder.us-west-2.amazonaws.com',
         'email': 'email.us-west-2.amazonaws.com',
         'glacier': 'glacier.us-west-2.amazonaws.com',
@@ -409,14 +410,14 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.us-west-2.amazonaws.com',
         'rds': 'rds.us-west-2.amazonaws.com',
         'redshift': 'redshift.us-west-2.amazonaws.com',
-        's3': 's3-us-west-2.amazonaws.com',
+        's3': 's3.us-west-2.amazonaws.com',
         'sdb': 'sdb.us-west-2.amazonaws.com',
         'sns': 'sns.us-west-2.amazonaws.com',
-        'sqs': 'us-west-2.queue.amazonaws.com',
+        'sqs': 'sqs.us-west-2.amazonaws.com',
         'ssm': 'ssm.us-west-2.amazonaws.com',
         'storagegateway': 'storagegateway.us-west-2.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-west-2.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-west-2.amazonaws.com',
         'swf': 'swf.us-west-2.amazonaws.com',
         'workspaces': 'workspaces.us-west-2.amazonaws.com'
     }
@@ -446,7 +447,7 @@ def _get_patched_session():
     return session
 
 
-def test_known_endpoints():
+def test_all_known_endpoints():
     # Verify the actual values from the partition files.  While
     # TestEndpointHeuristics verified the generic functionality given any
     # endpoints file, this test actually verifies the partition data against a
@@ -465,8 +466,10 @@ def _test_single_service_region(service_name, region_name,
                                 expected_endpoint, resolver):
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
-    expected = 'https://%s' % expected_endpoint
-    assert_equal(result['endpoint_url'], expected)
+    scheme = urlparse(expected_endpoint).scheme
+    if not scheme:
+        expected_endpoint = 'https://%s' % expected_endpoint
+    assert_equal(result['endpoint_url'], expected_endpoint)
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
