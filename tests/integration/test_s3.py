@@ -37,7 +37,7 @@ import botocore.auth
 import botocore.credentials
 from botocore.config import Config
 from botocore.exceptions import ClientError, WaiterError
-
+from botocore.httpsession import DEFAULT_CA_BUNDLE
 
 def random_bucketname():
     return 'botocoretest-' + random_chars(50)
@@ -49,13 +49,15 @@ _DEFAULT_REGION = 'us-west-2'
 
 
 def http_get(url):
-    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',
+                               ca_certs=DEFAULT_CA_BUNDLE)
     response = http.request('GET', url)
     return response
 
 
 def http_post(url, data, files):
-    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED')
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',
+                               ca_certs=DEFAULT_CA_BUNDLE)
     merged_data = OrderedDict()
     merged_data.update(data)
     merged_data.update(files)
