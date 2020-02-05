@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.14.11
+=======
+
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``forecastquery``: Update forecastquery client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
 1.14.10
 =======
 
