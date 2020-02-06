@@ -330,10 +330,11 @@ class TestSessionConfigurationVars(BaseSessionTest):
         # information from the session and that it has the expected value.
         self.session = create_session()
         self.assertEqual(self.session.session_var_map['region'],
-                         ('region', 'AWS_DEFAULT_REGION', None, None))
+                         ('region', ['AWS_REGION', 'AWS_DEFAULT_REGION'],
+                          None, None))
         self.assertEqual(
             self.session.session_var_map['profile'],
-            (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None))
+            (None, ['AWS_PROFILE', 'AWS_DEFAULT_PROFILE'], None, None))
         self.assertEqual(
             self.session.session_var_map['data_path'],
             ('data_path', 'AWS_DATA_PATH', None, None))
