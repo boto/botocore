@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``ebs``", 
+    "description": "Update ebs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appsync``", 
+    "description": "Update appsync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-models``", 
+    "description": "Update lex-models client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecr``", 
+    "description": "Update ecr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }
+]
