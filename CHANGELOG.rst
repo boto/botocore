@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.14.12
+=======
+
+* api-change:``ebs``: Update ebs client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.14.11
 =======
 
