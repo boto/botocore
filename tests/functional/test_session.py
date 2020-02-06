@@ -33,6 +33,17 @@ class TestSession(unittest.TestCase):
         self.session.set_config_variable('profile', 'from_session_instance')
         self.assertEqual(self.session.profile, 'from_session_instance')
 
+    def test_env_var_precedence_for_profile(self):
+        self.environ['AWS_PROFILE'] = 'from_aws_profile'
+        self.environ['AWS_DEFAULT_PROFILE'] = 'from_aws_default_profile'
+        self.assertEqual(self.session.profile, 'from_aws_profile')
+
+    def test_env_var_precedence_for_region(self):
+        self.environ['AWS_REGION'] = 'from_aws_region'
+        self.environ['AWS_DEFAULT_REGION'] = 'from_aws_default_region'
+        self.assertEqual(self.session.get_config_variable('region'),
+                         'from_aws_region')
+
     def test_credentials_with_profile_precedence(self):
         self.environ['AWS_PROFILE'] = 'from_env_var'
         self.session.set_config_variable('profile',  'from_session_instance')
