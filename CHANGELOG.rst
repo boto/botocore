@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.14.13
+=======
+
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.14.12
 =======
 
