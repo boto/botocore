@@ -631,7 +631,14 @@ def parse_posix_timestamp(value):
     # We convert to local time manually, then force-replace the timezone
     # object, due to the platform-dependent nature of datetime.astimezone()
     # and datetime.fromtimestamp()
-    dt = EPOCH + datetime.timedelta(seconds=value + time.localtime().tm_gmtoff)
+
+    if six.PY3:
+        # It's better to get the UTC offset in real-time in case it changes during
+        # runtime. However it seems to only be supported in Python 3.3+
+        utc_offset = time.localtime().tm_gmtoff
+    else:
+        utc_offset = time.timezone
+    dt = EPOCH + datetime.timedelta(seconds=value + utc_offset)
     return dt.replace(tzinfo=tzlocal())
 
 
