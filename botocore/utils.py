@@ -130,6 +130,7 @@ EVENT_ALIASES = {
     "streams.dynamodb": "dynamodb-streams",
     "tagging": "resource-groups-tagging-api"
 }
+EPOCH = datetime.datetime(1970, 1, 1, tzinfo=tzutc())
 
 
 def ensure_boolean(val):
@@ -604,12 +605,14 @@ def parse_timestamp(value):
     """
     if isinstance(value, (int, float)):
         # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzlocal())
+        return parse_posix_timestamp(value)
     else:
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzlocal())
+            value_f = float(value)
         except (TypeError, ValueError):
             pass
+        else:
+            return parse_posix_timestamp(value_f)
     try:
         # In certain cases, a timestamp marked with GMT can be parsed into a
         # different time zone, so here we provide a context which will
@@ -617,6 +620,19 @@ def parse_timestamp(value):
         return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+
+
+def parse_posix_timestamp(value):
+    """Parse a Posix timestamp into a localised datetime object.
+
+    The ``value`` parameter should be a numerical type, representing
+    number of seconds after January 1st, 1970 UTC.
+    """
+    # We convert to local time manually, then force-replace the timezone
+    # object, due to the platform-dependent nature of datetime.astimezone()
+    # and datetime.fromtimestamp()
+    dt = EPOCH + datetime.timedelta(seconds=value + time.localtime().tm_gmtoff)
+    return dt.replace(tzinfo=tzlocal())
 
 
 def parse_to_aware_datetime(value):

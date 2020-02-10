@@ -313,6 +313,8 @@ class TestParseEC2CredentialsFile(unittest.TestCase):
 
 
 class TestParseTimestamps(unittest.TestCase):
+    # NOTE: These tests assume the system timezone is set to UTC.
+
     def test_parse_iso8601(self):
         self.assertEqual(
             parse_timestamp('1970-01-01T00:10:00.000Z'),
@@ -327,6 +329,11 @@ class TestParseTimestamps(unittest.TestCase):
         self.assertEqual(
             parse_timestamp(0),
             datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc()))
+
+    def test_parse_epoch_negative_time(self):
+        self.assertEqual(
+            parse_timestamp(-1),
+            datetime.datetime(1969, 12, 31, 23, 59, 59, tzinfo=tzutc()))
 
     def test_parse_epoch_as_string(self):
         self.assertEqual(
