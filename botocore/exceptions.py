@@ -563,3 +563,9 @@ class UnauthorizedSSOTokenError(SSOError):
         "otherwise invalid. To refresh this SSO session run aws2 sso login "
         "with the corresponding profile."
     )
+
+
+class CapacityNotAvailableError(BotoCoreError):
+    fmt = (
+        'Insufficient request capacity available.'
+    )
