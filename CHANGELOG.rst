@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.14.15
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.14.14
 =======
 
