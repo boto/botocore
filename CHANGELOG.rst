@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.14.16
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+
+
 1.14.15
 =======
 
