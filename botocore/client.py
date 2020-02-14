@@ -39,6 +39,8 @@ from botocore.discovery import (
     EndpointDiscoveryHandler, EndpointDiscoveryManager,
     block_endpoint_discovery_required_operations
 )
+from botocore.retries import standard
+from botocore.retries import adaptive
 
 
 logger = logging.getLogger(__name__)
@@ -116,6 +118,26 @@ class ClientCreator(object):
         return service_model
 
     def _register_retries(self, client):
+        retry_mode = client.meta.config.retries['mode']
+        if retry_mode == 'standard':
+            self._register_v2_standard_retries(client)
+        elif retry_mode == 'adaptive':
+            self._register_v2_standard_retries(client)
+            self._register_v2_adaptive_retries(client)
+        elif retry_mode == 'legacy':
+            self._register_legacy_retries(client)
+
+    def _register_v2_standard_retries(self, client):
+        max_attempts = client.meta.config.retries.get('total_max_attempts')
+        kwargs = {'client': client}
+        if max_attempts is not None:
+            kwargs['max_attempts'] = max_attempts
+        standard.register_retry_handler(**kwargs)
+
+    def _register_v2_adaptive_retries(self, client):
+        adaptive.register_retry_handler(client)
+
+    def _register_legacy_retries(self, client):
         endpoint_prefix = client.meta.service_model.endpoint_prefix
         service_id = client.meta.service_model.service_id
         service_event_name = service_id.hyphenize()
@@ -126,10 +148,11 @@ class ClientCreator(object):
         if not original_config:
             return
 
+        retries = self._transform_legacy_retries(client.meta.config.retries)
         retry_config = self._retry_config_translator.build_retry_config(
             endpoint_prefix, original_config.get('retry', {}),
             original_config.get('definitions', {}),
-            client.meta.config.retries
+            retries
         )
 
         logger.debug("Registering retry handlers for service: %s",
@@ -141,6 +164,23 @@ class ClientCreator(object):
             'needs-retry.%s' % service_event_name, handler,
             unique_id=unique_id
         )
+
+    def _transform_legacy_retries(self, retries):
+        if retries is None:
+            return
+        copied_args = retries.copy()
+        if 'total_max_attempts' in retries:
+            copied_args = retries.copy()
+            copied_args['max_attempts'] = (
+                copied_args.pop('total_max_attempts') - 1)
+        return copied_args
+
+    def _get_retry_mode(self, client, config_store):
+        client_retries = client.meta.config.retries
+        if client_retries is not None and \
+                client_retries.get('mode') is not None:
+            return client_retries['mode']
+        return config_store.get_config_variable('retry_mode') or 'legacy'
 
     def _register_endpoint_discovery(self, client, endpoint_url, config):
         if endpoint_url is not None:
