@@ -40,6 +40,7 @@ from botocore.discovery import (
     block_endpoint_discovery_required_operations
 )
 from botocore.retries import standard
+from botocore.retries import adaptive
 
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,9 @@ class ClientCreator(object):
         retry_mode = client.meta.config.retries['mode']
         if retry_mode == 'standard':
             self._register_v2_standard_retries(client)
+        elif retry_mode == 'adaptive':
+            self._register_v2_standard_retries(client)
+            self._register_v2_adaptive_retries(client)
 
     def _register_v2_standard_retries(self, client):
         max_attempts = client.meta.config.retries.get('max_attempts')
@@ -122,6 +126,9 @@ class ClientCreator(object):
         if max_attempts is not None:
             kwargs['max_attempts'] = max_attempts
         standard.register_retry_handler(**kwargs)
+
+    def _register_v2_adaptive_retries(self, client):
+        adaptive.register_retry_handler(client)
 
     def _register_endpoint_discovery(self, client, endpoint_url, config):
         if endpoint_url is not None:
