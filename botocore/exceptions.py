@@ -480,7 +480,15 @@ class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
     """Error when invalid retry configuration is specified"""
     fmt = (
         'Value provided to "max_attempts": {provided_max_attempts} must '
-        'be an integer greater than or equal to zero.'
+        'be an integer greater than or equal to {min_value}.'
+    )
+
+
+class InvalidRetryModeError(InvalidRetryConfigurationError):
+    """Error when invalid retry mode configuration is specified"""
+    fmt = (
+        'Invalid value provided to "mode": "{provided_retry_mode}" must '
+        'be one of: "legacy", "standard", "adaptive"'
     )
 
 
@@ -549,3 +557,9 @@ class MissingServiceIdError(UndefinedModelAttributeError):
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
+
+
+class CapacityNotAvailableError(BotoCoreError):
+    fmt = (
+        'Insufficient request capacity available.'
+    )
