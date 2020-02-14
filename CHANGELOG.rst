@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.0
+======
+
+* feature:retries: Add support for retry modes, including ``standard`` and ``adaptive`` modes (`#1972 <https://github.com/boto/botocore/issues/1972>`__)
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``shield``: Update shield client to latest version
+
+
 1.14.17
 =======
 
