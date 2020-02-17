@@ -4001,7 +4001,7 @@
         },
         "Account":{
           "shape":"Account",
-          "documentation":"<p>[Self-managed permissions] The name of the AWS account that the stack instance is associated with.</p>"
+          "documentation":"<p>[Self-managed permissions] The AWS account ID that the stack instance is associated with.</p>"
         },
         "StackId":{
           "shape":"StackId",
