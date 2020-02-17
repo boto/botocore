@@ -2652,7 +2652,7 @@
         },
         "StackInstanceAccount":{
           "shape":"Account",
-          "documentation":"<p>The name of the AWS account that you want to list stack instances for.</p>"
+          "documentation":"<p>The AWS account ID that you want to list stack instances for.</p>"
         },
         "StackInstanceRegion":{
           "shape":"Region",
@@ -4001,7 +4001,7 @@
         },
         "Account":{
           "shape":"Account",
-          "documentation":"<p>[Self-managed permissions] The name of the AWS account that the stack instance is associated with.</p>"
+          "documentation":"<p>[Self-managed permissions] The AWS account ID that the stack instance is associated with.</p>"
         },
         "StackId":{
           "shape":"StackId",
@@ -4071,7 +4071,7 @@
         },
         "Account":{
           "shape":"Account",
-          "documentation":"<p>[Self-managed permissions] The name of the AWS account that the stack instance is associated with.</p>"
+          "documentation":"<p>[Self-managed permissions] The AWS account ID that the stack instance is associated with.</p>"
         },
         "StackId":{
           "shape":"StackId",
@@ -4645,7 +4645,7 @@
       "members":{
         "Account":{
           "shape":"Account",
-          "documentation":"<p>[Self-managed permissions] The name of the AWS account for this operation result.</p>"
+          "documentation":"<p>[Self-managed permissions] The AWS account ID for this operation result.</p>"
         },
         "Region":{
           "shape":"Region",
