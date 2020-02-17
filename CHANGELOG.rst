@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.1
+======
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.15.0
 ======
 
