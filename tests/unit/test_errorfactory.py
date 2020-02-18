@@ -103,6 +103,8 @@ class TestClientExceptionsFactory(unittest.TestCase):
         modeled_exception = exceptions.ExceptionWithModeledCode
         self.assertEqual(
             modeled_exception.__name__, 'ExceptionWithModeledCode')
+        self.assertEqual(
+            modeled_exception.code, 'ModeledCode')
         self.assertTrue(issubclass(modeled_exception, ClientError))
 
     def test_collects_modeled_exceptions_for_all_operations(self):

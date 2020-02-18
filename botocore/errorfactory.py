@@ -80,8 +80,8 @@ class ClientExceptionsFactory(object):
             shape = service_model.shape_for(shape_name)
             if shape.metadata.get('exception', False):
                 exception_name = str(shape.name)
-                exception_cls = type(exception_name, (ClientError,), {})
                 code = shape.metadata.get("error", {}).get("code")
+                exception_cls = type(exception_name, (ClientError,), {'code': code})
                 cls_props[exception_name] = exception_cls
                 if code:
                     code_to_exception[code] = exception_cls
