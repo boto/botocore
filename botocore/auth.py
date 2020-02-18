@@ -212,10 +212,15 @@ class SigV4Auth(BaseSigner):
 
     def _canonical_query_string_params(self, params):
         l = []
-        for param in sorted(params):
+        # Encode params before sorting.
+        encoded_params = {}
+        for param in params:
             value = str(params[param])
-            l.append('%s=%s' % (quote(param, safe='-_.~'),
-                                quote(value, safe='-_.~')))
+            encoded_params[quote(param, safe='-_.~')] = quote(value,
+                                                              safe='-_.~')
+        for param in sorted(encoded_params):
+            value = encoded_params[param]
+            l.append('%s=%s' % (param, value))
         cqs = '&'.join(l)
         return cqs
 
