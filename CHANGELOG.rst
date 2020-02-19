@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.3
+======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.15.2
 ======
 
