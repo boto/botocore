@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.4
+======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.15.3
 ======
 
