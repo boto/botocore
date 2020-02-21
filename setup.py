@@ -62,7 +62,7 @@ setup(
     package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
-    python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     install_requires=requires,
     extras_require={
         ':python_version=="2.6"': [
