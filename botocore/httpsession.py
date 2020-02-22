@@ -104,13 +104,14 @@ class ProxyConfiguration(object):
             proxy = self._fix_proxy_url(proxy)
         return proxy
 
-    def proxy_headers_for(self, proxy_url):
+    def proxy_headers_for(self, url, proxy_url):
         """Retrirves the corresponding proxy headers for a given proxy url. """
         headers = {}
         username, password = self._get_auth_from_url(proxy_url)
         if username and password:
             basic_auth = self._construct_basic_auth(username, password)
             headers['Proxy-Authorization'] = basic_auth
+        headers['Host'] = self._get_host_from_url(url)
         return headers
 
     def _fix_proxy_url(self, proxy_url):
@@ -132,6 +133,10 @@ class ProxyConfiguration(object):
             return unquote(parsed_url.username), unquote(parsed_url.password)
         except (AttributeError, TypeError):
             return None, None
+
+    def _get_host_from_url(self, url):
+        parsed_url = urlparse(url)
+        return parsed_url.netloc
 
 
 class URLLib3Session(object):
@@ -196,9 +201,9 @@ class URLLib3Session(object):
     def _get_ssl_context(self):
         return create_urllib3_context()
 
-    def _get_proxy_manager(self, proxy_url):
+    def _get_proxy_manager(self, url, proxy_url):
         if proxy_url not in self._proxy_managers:
-            proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
+            proxy_headers = self._proxy_config.proxy_headers_for(url, proxy_url)
             proxy_manager_kwargs = self._get_pool_manager_kwargs(
                 proxy_headers=proxy_headers)
             proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
@@ -226,7 +231,7 @@ class URLLib3Session(object):
 
     def _get_connection_manager(self, url, proxy_url=None):
         if proxy_url:
-            manager = self._get_proxy_manager(proxy_url)
+            manager = self._get_proxy_manager(url, proxy_url)
         else:
             manager = self._manager
         return manager

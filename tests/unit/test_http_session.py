@@ -15,7 +15,8 @@ from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 
 class TestProxyConfiguration(unittest.TestCase):
     def setUp(self):
-        self.url = 'http://localhost/'
+        self.url='http://example.com/'
+        self.proxy_url = 'http://localhost/'
         self.auth_url = 'http://user:pass@localhost/'
         self.proxy_config = ProxyConfiguration(
             proxies={'http': 'http://localhost:8081/'}
@@ -27,26 +28,29 @@ class TestProxyConfiguration(unittest.TestCase):
         )
 
     def test_construct_proxy_headers_with_auth(self):
-        headers = self.proxy_config.proxy_headers_for(self.auth_url)
+        headers = self.proxy_config.proxy_headers_for(self.url, self.auth_url)
+        proxy_host = headers.get('Host')
         proxy_auth = headers.get('Proxy-Authorization')
+        self.assertEqual('example.com', proxy_host)
         self.assertEqual('Basic dXNlcjpwYXNz', proxy_auth)
 
     def test_construct_proxy_headers_without_auth(self):
-        headers = self.proxy_config.proxy_headers_for(self.url)
-        self.assertEqual({}, headers)
+        headers = self.proxy_config.proxy_headers_for(self.url, self.proxy_url)
+        proxy_host = headers.get('Host')
+        self.assertEqual('example.com', proxy_host)
 
     def test_proxy_for_url_no_slashes(self):
         self.update_http_proxy('localhost:8081/')
-        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        proxy_url = self.proxy_config.proxy_url_for(self.proxy_url)
         self.assertEqual('http://localhost:8081/', proxy_url)
 
     def test_proxy_for_url_no_protocol(self):
         self.update_http_proxy('//localhost:8081/')
-        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        proxy_url = self.proxy_config.proxy_url_for(self.proxy_url)
         self.assertEqual('http://localhost:8081/', proxy_url)
 
     def test_fix_proxy_url_has_protocol_http(self):
-        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        proxy_url = self.proxy_config.proxy_url_for(self.proxy_url)
         self.assertEqual('http://localhost:8081/', proxy_url)
 
 
@@ -148,7 +152,7 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         self.assert_proxy_manager_call(
             proxies['https'],
-            proxy_headers={},
+            proxy_headers={'Host': 'example.com'},
             cert_file='/some/cert',
             key_file=None,
         )
@@ -162,7 +166,7 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         self.assert_proxy_manager_call(
             proxies['https'],
-            proxy_headers={},
+            proxy_headers={'Host': 'example.com'},
             cert_file=cert[0],
             key_file=cert[1],
         )
@@ -192,7 +196,7 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session(proxies=proxies)
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
-        self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
+        self.assert_proxy_manager_call(proxies['https'], proxy_headers={'Host': 'example.com'})
         self.assert_request_sent()
 
     def test_basic_proxy_request_caches_manager(self):
@@ -201,7 +205,7 @@ class TestURLLib3Session(unittest.TestCase):
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         # assert we created the proxy manager
-        self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
+        self.assert_proxy_manager_call(proxies['https'], proxy_headers={'Host': 'example.com'})
         session.send(self.request.prepare())
         # assert that we did not create another proxy manager
         self.assertEqual(self.proxy_manager_fun.call_count, 1)
@@ -210,7 +214,7 @@ class TestURLLib3Session(unittest.TestCase):
         proxies = {'http': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
         session.send(self.request.prepare())
-        self.assert_proxy_manager_call(proxies['http'], proxy_headers={})
+        self.assert_proxy_manager_call(proxies['http'], proxy_headers={'Host': 'example.com'})
         self.assert_request_sent(url=self.request.url)
 
     def test_ssl_context_is_explicit(self):
@@ -241,7 +245,7 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         self.assert_proxy_manager_call(
             proxies['http'],
-            proxy_headers={},
+            proxy_headers={'Host': 'example.com'},
             socket_options=socket_options,
         )
 
