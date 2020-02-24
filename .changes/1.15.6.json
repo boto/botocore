@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``iotevents``", 
+    "description": "Update iotevents client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``docdb``", 
+    "description": "Update docdb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``snowball``", 
+    "description": "Update snowball client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fsx``", 
+    "description": "Update fsx client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }
+]
