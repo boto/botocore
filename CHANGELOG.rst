@@ -2,6 +2,108 @@
 CHANGELOG
 =========
 
+1.15.6
+======
+
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``events``: Update events client to latest version
+
+
+1.15.5
+======
+
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.15.4
+======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.15.3
+======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.15.2
+======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.15.1
+======
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.15.0
+======
+
+* feature:retries: Add support for retry modes, including ``standard`` and ``adaptive`` modes (`#1972 <https://github.com/boto/botocore/issues/1972>`__)
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``shield``: Update shield client to latest version
+
+
+1.14.17
+=======
+
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+
+
+1.14.16
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+
+
+1.14.15
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
+1.14.14
+=======
+
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
+1.14.13
+=======
+
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.14.12
 =======
 

@@ -1,0 +1,27 @@
+[
+  {
+    "category": "retries", 
+    "description": "Add support for retry modes, including ``standard`` and ``adaptive`` modes (`#1972 <https://github.com/boto/botocore/issues/1972>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediatailor``", 
+    "description": "Update mediatailor client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``securityhub``", 
+    "description": "Update securityhub client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``shield``", 
+    "description": "Update shield client to latest version", 
+    "type": "api-change"
+  }
+]

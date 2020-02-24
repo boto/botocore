@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``savingsplans``", 
+    "description": "Update savingsplans client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appconfig``", 
+    "description": "Update appconfig client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }
+]
