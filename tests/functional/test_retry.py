@@ -26,6 +26,7 @@ class TestRetry(BaseSessionTest):
         self.sleep_patch.start()
 
     def tearDown(self):
+        super(TestRetry, self).tearDown()
         self.sleep_patch.stop()
 
     @contextlib.contextmanager

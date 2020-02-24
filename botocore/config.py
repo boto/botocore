@@ -107,6 +107,7 @@ class Config(object):
           should use.  Valid values are:
               * ``standard`` - The standardized set of retry rules.  This
                 will also default to 3 max attempts unless overridden.
+              * ``adaptive`` - Retries with additional client side throttling.
 
     :type client_cert: str, (str, str)
     :param client_cert: The path to a certificate for TLS client authentication.
@@ -212,7 +213,7 @@ class Config(object):
                     raise InvalidMaxRetryAttemptsError(
                         provided_max_attempts=value
                     )
-                if key == 'mode' and value not in ['standard']:
+                if key == 'mode' and value not in ['standard', 'adaptive']:
                     raise InvalidRetryModeError(
                         provided_retry_mode=value
                     )
