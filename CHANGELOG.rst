@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.7
+======
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+
+
 1.15.6
 ======
 

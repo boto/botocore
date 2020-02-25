@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``stepfunctions``", 
+    "description": "Update stepfunctions client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``secretsmanager``", 
+    "description": "Update secretsmanager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``outposts``", 
+    "description": "Update outposts client to latest version", 
+    "type": "api-change"
+  }
+]
