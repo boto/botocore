@@ -24,7 +24,7 @@ import socket
 import cgi
 
 import dateutil.parser
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzlocal, tzutc, tzwinlocal
 
 import botocore
 import botocore.awsrequest
@@ -602,6 +602,8 @@ def parse_timestamp(value):
     This will return a ``datetime.datetime`` object.
 
     """
+    # Prefer tzwinlocal when available to handle negative timestamps.
+    tzlocal = tzwinlocal or tzlocal
     if isinstance(value, (int, float)):
         # Possibly an epoch time.
         return datetime.datetime.fromtimestamp(value, tzlocal())
