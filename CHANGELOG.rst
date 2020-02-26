@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.8
+======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
 1.15.7
 ======
 
