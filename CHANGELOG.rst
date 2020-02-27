@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.15.9
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+
+
 1.15.8
 ======
 
