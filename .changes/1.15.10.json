@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-a2i-runtime``", 
+    "description": "Update sagemaker-a2i-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workdocs``", 
+    "description": "Update workdocs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``accessanalyzer``", 
+    "description": "Update accessanalyzer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codeguruprofiler``", 
+    "description": "Update codeguruprofiler client to latest version", 
+    "type": "api-change"
+  }
+]

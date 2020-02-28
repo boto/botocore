@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.15.10
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
 1.15.9
 ======
 
