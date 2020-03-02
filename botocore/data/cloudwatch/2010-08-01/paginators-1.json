@@ -10,7 +10,10 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxRecords",
-      "result_key": "MetricAlarms"
+      "result_key": [
+        "MetricAlarms",
+        "CompositeAlarms"
+      ]
     },
     "ListDashboards": {
       "input_token": "NextToken",
