@@ -2,6 +2,51 @@
 CHANGELOG
 =========
 
+1.15.11
+=======
+
+* api-change:``config``: Update config client to latest version
+
+
+1.15.10
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
+1.15.9
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+
+
+1.15.8
+======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.15.7
+======
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+
+
 1.15.6
 ======
 
