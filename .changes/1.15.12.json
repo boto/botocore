@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehendmedical``", 
+    "description": "Update comprehendmedical client to latest version", 
+    "type": "api-change"
+  }
+]
