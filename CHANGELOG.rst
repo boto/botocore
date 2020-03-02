@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.15.12
+=======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+
+
 1.15.11
 =======
 
