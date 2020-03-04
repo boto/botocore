@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.15.14
+=======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.15.13
 =======
 
