@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.15
+=======
+
+* api-change:``eks``: Update eks client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.15.14
 =======
 
