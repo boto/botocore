@@ -1,0 +1,5 @@
+{
+  "category": "``signer``", 
+  "type": "api-change", 
+  "description": "Update signer client to latest version"
+}
