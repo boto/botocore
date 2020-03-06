@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.16
+=======
+
+* api-change:``signer``: Update signer client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
 1.15.15
 =======
 
