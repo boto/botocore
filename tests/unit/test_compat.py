@@ -17,7 +17,8 @@ from nose.tools import assert_equal, assert_raises
 
 from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
-    total_seconds, unquote_str, six, ensure_bytes, get_md5, compat_shell_split
+    total_seconds, unquote_str, six, ensure_bytes, get_md5,
+    compat_shell_split, get_tzinfo_options
 )
 from tests import BaseEnvVar, unittest
 
@@ -165,3 +166,12 @@ class ShellSplitTestRunner(object):
 
     def assert_raises(self, s, exception_cls, platform):
         assert_raises(exception_cls, compat_shell_split, s, platform)
+
+
+class TestTimezoneOperations(unittest.TestCase):
+    def test_get_tzinfo_options(self):
+        options = get_tzinfo_options()
+        self.assertTrue(len(options) > 0)
+
+        for tzinfo in options:
+            self.assertIsInstance(tzinfo(), datetime.tzinfo)
