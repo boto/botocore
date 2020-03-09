@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.17
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.15.16
 =======
 
