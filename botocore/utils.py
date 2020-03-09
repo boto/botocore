@@ -24,13 +24,13 @@ import socket
 import cgi
 
 import dateutil.parser
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzutc
 
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.compat import OrderedDict, six, urlparse
+from botocore.compat import OrderedDict, six, urlparse, get_tzinfo_options
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
@@ -590,6 +590,25 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     return quote(input_str, safe=safe)
 
 
+def _parse_timestamp_with_tzinfo(value, tzinfo):
+    """Parse timestamp with pluggable tzinfo options."""
+    if isinstance(value, (int, float)):
+        # Possibly an epoch time.
+        return datetime.datetime.fromtimestamp(value, tzinfo())
+    else:
+        try:
+            return datetime.datetime.fromtimestamp(float(value), tzinfo())
+        except (TypeError, ValueError):
+            pass
+    try:
+        # In certain cases, a timestamp marked with GMT can be parsed into a
+        # different time zone, so here we provide a context which will
+        # enforce that GMT == UTC.
+        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
+    except (TypeError, ValueError) as e:
+        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+
+
 def parse_timestamp(value):
     """Parse a timestamp into a datetime object.
 
@@ -602,21 +621,14 @@ def parse_timestamp(value):
     This will return a ``datetime.datetime`` object.
 
     """
-    if isinstance(value, (int, float)):
-        # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzlocal())
-    else:
+    for tzinfo in get_tzinfo_options():
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzlocal())
-        except (TypeError, ValueError):
-            pass
-    try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
-    except (TypeError, ValueError) as e:
-        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+            return _parse_timestamp_with_tzinfo(value, tzinfo)
+        except OSError as e:
+            logger.debug('Unable to parse timestamp with "%s" timezone info.',
+                         tzinfo.__name__, exc_info=e)
+    raise RuntimeError('Unable to calculate correct timezone offset for '
+                       '"%s"' % value)
 
 
 def parse_to_aware_datetime(value):
