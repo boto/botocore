@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotevents``", 
+    "description": "Update iotevents client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "timezones", 
+    "description": "Improved timezone parsing for Windows with new fallback method (#1939)", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``marketplacecommerceanalytics``", 
+    "description": "Update marketplacecommerceanalytics client to latest version", 
+    "type": "api-change"
+  }
+]
