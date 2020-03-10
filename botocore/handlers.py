@@ -484,7 +484,7 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     # The "parsed" passed in only has the ResponseMetadata
     # filled out.  This handler will fill in the LocationConstraint
     # value.
-    if 'LocationConstraint' in parsed:
+    if 'LocationConstraint' in parsed or 'Error' in parsed:
         # Response already set - a stub?
         return
     response_body = http_response.content
