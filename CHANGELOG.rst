@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.18
+=======
+
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:timezones: Improved timezone parsing for Windows with new fallback method (#1939)
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
 1.15.17
 =======
 

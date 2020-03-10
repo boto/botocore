@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "timezones",
-  "description": "Improved timezone parsing for Windows with new fallback method (#1939)"
-}
