@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.15.19
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.15.18
 =======
 
