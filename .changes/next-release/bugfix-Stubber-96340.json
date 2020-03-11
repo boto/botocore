@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Stubber",
+  "description": "fixes `#1884 <https://github.com/boto/botocore/issues/1884>`__"
+}
