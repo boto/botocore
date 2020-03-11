@@ -1,0 +1,5 @@
+{
+  "category": "``efs``", 
+  "type": "api-change", 
+  "description": "Update efs client to latest version"
+}
