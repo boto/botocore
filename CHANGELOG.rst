@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.20
+=======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.15.19
 =======
 
