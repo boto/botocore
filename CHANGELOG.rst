@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.15.21
+=======
+
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
 1.15.20
 =======
 
