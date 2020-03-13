@@ -921,13 +921,6 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
                          u'\xe7\xf6s% asd\x08 c')
 
-    def test_get_bucket_location_optional(self):
-        # This handler should no-op if another hook (i.e. stubber) has already
-        # filled in response
-        response = {"LocationConstraint": "eu-west-1"}
-        handlers.parse_get_bucket_location(response, None),
-        self.assertEqual(response["LocationConstraint"], "eu-west-1")
-
     def test_set_operation_specific_signer_no_auth_type(self):
         signing_name = 'myservice'
         context = {'auth_type': None}
