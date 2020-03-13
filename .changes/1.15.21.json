@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``appconfig``", 
+    "description": "Update appconfig client to latest version", 
+    "type": "api-change"
+  }
+]
