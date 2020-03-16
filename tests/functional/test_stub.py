@@ -313,3 +313,21 @@ class TestStubber(unittest.TestCase):
             actual_response = self.client.list_objects(**expected_params)
             self.assertEqual(desired_response, actual_response)
         self.stubber.assert_no_pending_responses()
+
+    def test_parse_get_bucket_location(self):
+        error_code = "NoSuchBucket"
+        error_message = "The specified bucket does not exist"
+        self.stubber.add_client_error(
+            'get_bucket_location', error_code, error_message)
+        self.stubber.activate()
+
+        with self.assertRaises(ClientError):
+            self.client.get_bucket_location(Bucket='foo')
+
+    def test_parse_get_bucket_location_returns_response(self):
+        service_response = {"LocationConstraint": "us-west-2"}
+        self.stubber.add_response('get_bucket_location',service_response)
+        self.stubber.activate()
+        response = self.client.get_bucket_location(Bucket='foo')
+        self.assertEqual(response, service_response)
+
