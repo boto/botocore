@@ -2,6 +2,58 @@
 CHANGELOG
 =========
 
+1.15.22
+=======
+
+* api-change:``s3control``: Update s3control client to latest version
+* bugfix:Stubber: fixes `#1884 <https://github.com/boto/botocore/issues/1884>`__
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.15.21
+=======
+
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
+1.15.20
+=======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.15.19
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.15.18
+=======
+
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:timezones: Improved timezone parsing for Windows with new fallback method (#1939)
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.15.17
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.15.16
 =======
 
