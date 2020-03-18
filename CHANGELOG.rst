@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.15.23
 =======
 
