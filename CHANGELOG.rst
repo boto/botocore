@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.15.26
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.15.25
 =======
 
