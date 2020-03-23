@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+1.15.27
+=======
+
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
+1.15.26
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.15.25
+=======
+
+* api-change:``outposts``: Update outposts client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.15.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
+1.15.23
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.15.22
 =======
 
