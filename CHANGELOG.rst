@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.27
+=======
+
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.15.26
 =======
 
