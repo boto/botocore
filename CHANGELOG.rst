@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.28
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.15.27
 =======
 
