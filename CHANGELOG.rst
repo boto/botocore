@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.15.29
+=======
+
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
 1.15.28
 =======
 
