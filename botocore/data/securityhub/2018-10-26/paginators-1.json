@@ -1,5 +1,29 @@
 {
   "pagination": {
+    "DescribeActionTargets": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ActionTargets"
+    },
+    "DescribeProducts": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Products"
+    },
+    "DescribeStandards": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Standards"
+    },
+    "DescribeStandardsControls": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Controls"
+    },
     "GetEnabledStandards": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
