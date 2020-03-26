@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.30
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
 1.15.29
 =======
 
