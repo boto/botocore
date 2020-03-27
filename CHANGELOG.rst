@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.31
+=======
+
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.15.30
 =======
 
