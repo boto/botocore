@@ -2,6 +2,42 @@
 CHANGELOG
 =========
 
+1.15.31
+=======
+
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.15.30
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.15.29
+=======
+
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
+1.15.28
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.15.27
 =======
 
