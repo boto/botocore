@@ -438,7 +438,7 @@
           "CodeSha256": "",
           "CodeSize": 123,
           "Description": "",
-          "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:myFunction:1",
+          "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:myFunction",
           "FunctionName": "myFunction",
           "Handler": "index.handler",
           "LastModified": "2016-11-21T19:49:20.006+0000",
