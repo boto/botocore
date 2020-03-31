@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.15.33
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
 1.15.32
 =======
 
