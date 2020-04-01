@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.15.34
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
 1.15.33
 =======
 
