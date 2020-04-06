@@ -2,6 +2,63 @@
 CHANGELOG
 =========
 
+1.15.37
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
+1.15.36
+=======
+
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.15.35
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.15.34
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
+1.15.33
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
+1.15.32
+=======
+
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+
+
 1.15.31
 =======
 
