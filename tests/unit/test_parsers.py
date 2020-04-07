@@ -862,6 +862,21 @@ class TestParseErrorResponses(unittest.TestCase):
     # this into the shared protocol tests in the future,
     # so consolidating them into a single class will make
     # this easier.
+    def setUp(self):
+        self.error_shape = model.StructureShape(
+            'ErrorShape',
+            {
+                'type': 'structure',
+                'exception': True,
+                'members': {
+                    'ModeledField': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+
     def test_response_metadata_errors_for_json_protocol(self):
         parser = parsers.JSONParser()
         response = {
@@ -1164,6 +1179,53 @@ class TestParseErrorResponses(unittest.TestCase):
             {'body': body, 'headers': headers, 'status_code': 400}, None)
         self.assertEqual(parsed['Error'], {'Message': 'Access denied',
                                            'Code': 'AccessDeniedException'})
+
+    def test_can_parse_rest_json_modeled_fields(self):
+        body = (
+            b'{"ModeledField":"Some modeled field",'
+            b'"Message":"Some message"}'
+        )
+        parser = parsers.RestJSONParser()
+        response_dict = {
+            'status_code': 400,
+            'headers': {},
+            'body': body,
+        }
+        parsed = parser.parse(response_dict, self.error_shape)
+        expected_parsed = {
+            'ModeledField': 'Some modeled field',
+        }
+        self.assertEqual(parsed, expected_parsed)
+
+    def test_can_parse_rest_xml_modeled_fields(self):
+        # TODO
+        parser = parsers.RestXMLParser()
+
+    def test_can_parse_ec2_modeled_fields(self):
+        # TODO
+        parser = parsers.EC2QueryParser()
+
+    def test_can_parse_query_modeled_fields(self):
+        # TODO
+        parser = parsers.QueryParser()
+
+    def test_can_parse_json_modeled_fields(self):
+        body = (
+            b'{"ModeledField":"Some modeled field",'
+            b'"Message":"Some message",'
+            b'"__type": "Prefix#SomeError"}'
+        )
+        parser = parsers.JSONParser()
+        response_dict = {
+            'status_code': 400,
+            'headers': {},
+            'body': body,
+        }
+        parsed = parser.parse(response_dict, self.error_shape)
+        expected_parsed = {
+            'ModeledField': 'Some modeled field',
+        }
+        self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_route53_with_missing_message(self):
         # The message isn't always in the XML response (or even the headers).
