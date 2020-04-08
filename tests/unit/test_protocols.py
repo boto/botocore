@@ -56,6 +56,7 @@ import copy
 from base64 import b64decode
 from dateutil.tz import tzutc
 
+from botocore.awsrequest import HeadersDict
 from botocore.compat import json, OrderedDict, urlsplit
 from botocore.eventstream import EventStream
 from botocore.model import ServiceModel, OperationModel
@@ -168,10 +169,24 @@ def _test_output(json_description, case, basename):
         # botocore boundary, so it expects to work with bytes.
         body_bytes = case['response']['body'].encode('utf-8')
         case['response']['body'] = body_bytes
+        # We need the headers to be case insensitive
+        headers = HeadersDict(case['response']['headers'])
+        case['response']['headers'] = headers
         # If this is an event stream fake the raw streamed response
         if operation_model.has_event_stream_output:
             case['response']['body'] = MockRawResponse(body_bytes)
-        parsed = parser.parse(case['response'], operation_model.output_shape)
+        if 'error' in case:
+            output_shape = operation_model.output_shape
+            parsed = parser.parse(case['response'], output_shape)
+            try:
+                error_shape = model.shape_for(parsed['Error']['Code'])
+                error_parse = parser.parse(case['response'], error_shape)
+                parsed.update(error_parse)
+            except:
+                pass
+        else:
+            output_shape = operation_model.output_shape
+            parsed = parser.parse(case['response'], output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
         msg = (
@@ -182,7 +197,17 @@ def _test_output(json_description, case, basename):
                 case['description'], case['suite_id'], case['test_id']))
         raise AssertionError(msg)
     try:
-        assert_equal(parsed, case['result'], "Body")
+        if 'error' in case:
+            expected_result = {
+                'Error': {
+                    'Code': case.get('errorCode', ''),
+                    'Message': case.get('errorMessage', ''),
+                }
+            }
+            expected_result.update(case['error'])
+        else:
+            expected_result = case['result']
+        assert_equal(parsed, expected_result, "Body")
     except Exception as e:
         _output_failure_message(model.metadata['protocol'],
                                 case, parsed, e)
@@ -240,6 +265,10 @@ def _compliance_timestamp_parser(value):
 
 
 def _output_failure_message(protocol_type, case, actual_parsed, error):
+    if 'error' in case:
+        expected_result = case['error']
+    else:
+        expected_result = case['result']
     j = _try_json_dump
     error_message = (
         "\nDescription           : %s (%s:%s)\n"
@@ -252,7 +281,7 @@ def _output_failure_message(protocol_type, case, actual_parsed, error):
             case['description'], case['suite_id'],
             case['test_id'], protocol_type,
             j(case['given']), j(case['response']),
-            j(case['result']), j(actual_parsed), error))
+            j(expected_result), j(actual_parsed), error))
     raise AssertionError(error_message)
 
 
