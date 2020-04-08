@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.15.39
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``migrationhub-config``: Update migrationhub-config client to latest version
+
+
 1.15.38
 =======
 
