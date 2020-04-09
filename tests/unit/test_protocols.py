@@ -67,6 +67,7 @@ from botocore.parsers import QueryParser, JSONParser, \
 from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
+from botocore.model import NoShapeFoundError
 
 from nose.tools import assert_equal as _assert_equal
 
@@ -180,10 +181,11 @@ def _test_output(json_description, case, basename):
             parsed = parser.parse(case['response'], output_shape)
             try:
                 error_shape = model.shape_for(parsed['Error']['Code'])
+            except NoShapeFoundError:
+                error_shape = None
+            if error_shape is not None:
                 error_parse = parser.parse(case['response'], error_shape)
                 parsed.update(error_parse)
-            except:
-                pass
         else:
             output_shape = operation_model.output_shape
             parsed = parser.parse(case['response'], output_shape)
@@ -210,7 +212,7 @@ def _test_output(json_description, case, basename):
         assert_equal(parsed, expected_result, "Body")
     except Exception as e:
         _output_failure_message(model.metadata['protocol'],
-                                case, parsed, e)
+                                case, parsed, expected_result, e)
 
 
 def _fixup_parsed_result(parsed):
@@ -264,11 +266,10 @@ def _compliance_timestamp_parser(value):
     return int(timegm(datetime.timetuple()))
 
 
-def _output_failure_message(protocol_type, case, actual_parsed, error):
-    if 'error' in case:
-        expected_result = case['error']
-    else:
-        expected_result = case['result']
+def _output_failure_message(
+    protocol_type, case, actual_parsed,
+    expected_result, error
+):
     j = _try_json_dump
     error_message = (
         "\nDescription           : %s (%s:%s)\n"
