@@ -92,6 +92,7 @@ class Endpoint(object):
         self.http_session = http_session
         if self.http_session is None:
             self.http_session = URLLib3Session()
+        self._error_code_cache = None
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
@@ -225,14 +226,22 @@ class Endpoint(object):
         history_recorder.record('PARSED_RESPONSE', parsed_response)
         return (http_response, parsed_response), None
 
+    def _create_error_code_cache(self, service_model):
+        error_code_cache = {}
+        for shape_name in service_model.shape_names:
+            shape = service_model.shape_for(shape_name)
+            if not shape.metadata.get('exception', False):
+                continue
+            code = shape.metadata.get("error", {}).get("code", str(shape.name))
+            error_code_cache[code] = shape
+        return error_code_cache
+
     def _error_shape_from_code(self, operation_model, error_code):
-        # TODO: this sucks, figure out a way to cache this resolution
-        service_model = operation_model.service_model
-        try:
-            error_shape = service_model.shape_for(error_code)
-        except (NoShapeFoundError, InvalidShapeError):
-            error_shape = None
-        return error_shape
+        if self._error_code_cache is None:
+            service_model = operation_model.service_model
+            cache = self._create_error_code_cache(service_model)
+            self._error_code_cache = cache
+        return self._error_code_cache.get(error_code, None)
 
     def _add_modeled_error_fields(
             self, response_dict, parsed_response,
