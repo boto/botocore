@@ -129,13 +129,9 @@ class TestEndpointFeatures(TestEndpointBase):
         # Setup the service model to have exceptions to generate the mapping
         self.service_model = Mock(spec=ServiceModel)
         self.op.service_model = self.service_model
-        self.service_model.shape_names = ['ExceptionShape']
         self.exception_shape = Mock(spec=StructureShape)
-        self.exception_shape.name = 'ExceptionShape'
-        self.exception_shape.metadata = {
-            'exception': True,
-        }
-        self.service_model.shape_for.return_value = self.exception_shape
+        shape_for_error_code = self.service_model.shape_for_error_code
+        shape_for_error_code.return_value = self.exception_shape
 
         r = request_dict()
         self.http_session.send.return_value = Mock(
