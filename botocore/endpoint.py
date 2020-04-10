@@ -217,6 +217,10 @@ class Endpoint(object):
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
         # Do a second parsing pass to pick up on any modeled error fields
+        # NOTE: Ideally, we would push this down into the parser classes but
+        # they currently have no reference to the operation or service model
+        # The parsers should probably take the operation model instead of
+        # output shape but we can't change that now
         if http_response.status_code >= 300:
             self._add_modeled_error_fields(
                 response_dict, parsed_response,

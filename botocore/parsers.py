@@ -509,12 +509,12 @@ class QueryParser(BaseXMLResponseParser):
         return parsed
 
     def _do_modeled_error_parse(self, response, shape):
-        return self.__do_modeled_parse(response, shape, inject_metadata=False)
+        return self._parse_body_as_xml(response, shape, inject_metadata=False)
 
     def _do_parse(self, response, shape):
-        return self.__do_modeled_parse(response, shape, inject_metadata=True)
+        return self._parse_body_as_xml(response, shape, inject_metadata=True)
 
-    def __do_modeled_parse(self, response, shape, inject_metadata=True):
+    def _parse_body_as_xml(self, response, shape, inject_metadata=True):
         xml_contents = response['body']
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = {}
