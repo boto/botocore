@@ -3,47 +3,56 @@
     "ListComponentBuildVersions": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "component_build_versions"
     },
     "ListComponents": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "components"
     },
     "ListDistributionConfigurations": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "distribution_configurations"
     },
     "ListImageBuildVersions": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "image_build_versions"
     },
     "ListImagePipelineImages": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "image_pipeline_images"
     },
     "ListImagePipelines": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "image_pipelines"
     },
     "ListImageRecipes": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "image_recipes"
     },
     "ListImages": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "images"
     },
     "ListInfrastructureConfigurations": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "maxResults"
+      "limit_key": "maxResults",
+      "result_key": "infrastructure_configurations"
     }
   }
 }
