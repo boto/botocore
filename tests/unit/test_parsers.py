@@ -1198,8 +1198,25 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_rest_xml_modeled_fields(self):
-        # TODO
         parser = parsers.RestXMLParser()
+        body = (
+            b'<?xml version="1.0"?>\n<ErrorResponse xmlns="http://foo.bar">'
+            b'<Error><Type>Sender</Type><Code>NoSuchDistribution</Code>'
+            b'<Message>The specified distribution does not exist.</Message>'
+            b'<ModeledField>Some modeled field</ModeledField>'
+            b'</Error>'
+            b'</ErrorResponse>'
+        )
+        response_dict = {
+            'status_code': 400,
+            'headers': {},
+            'body': body,
+        }
+        parsed = parser.parse(response_dict, self.error_shape)
+        expected_parsed = {
+            'ModeledField': 'Some modeled field',
+        }
+        self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_ec2_modeled_fields(self):
         # TODO

@@ -238,6 +238,15 @@ def _fixup_parsed_result(parsed):
         if isinstance(value, EventStream):
             parsed[key] = _convert_bytes_to_str(list(value))
             break
+    # 4. We parse the entire error body into the "Error" field for rest-xml
+    # which causes some modeled fields in the response to be placed under the
+    # error key. We don't have enough information in the test suite to assert
+    # these properly, and they probably shouldn't be there in the first place.
+    if 'Error' in parsed:
+        error_keys = list(parsed['Error'].keys())
+        for key in error_keys:
+            if key not in ['Code', 'Message']:
+                del parsed['Error'][key]
     return parsed
 
 

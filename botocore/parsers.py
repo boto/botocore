@@ -839,6 +839,8 @@ class BaseRestParser(ResponseParser):
                     body_shape, original_parsed)
         else:
             original_parsed = self._initial_body_parse(response['body'])
+            if shape.metadata.get('exception', False):
+                original_parsed = self._get_error_root(original_parsed)
             body_parsed = self._parse_shape(shape, original_parsed)
             final_parsed.update(body_parsed)
 
@@ -881,6 +883,9 @@ class BaseRestParser(ResponseParser):
         # to convert types, but this method will do the first round
         # of parsing.
         raise NotImplementedError("_initial_body_parse")
+
+    def _get_error_root(self, original_parsed):
+        return original_parsed
 
     def _handle_string(self, shape, value):
         parsed = value
@@ -964,6 +969,13 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
                 'HostId': response['headers'].get('x-amz-id-2', ''),
             }
         }
+
+    def _get_error_root(self, original_root):
+        if self._node_tag(original_root) == 'ErrorResponse':
+            for child in original_root:
+                if self._node_tag(child) == 'Error':
+                    return child
+        return original_root
 
     def _parse_error_from_body(self, response):
         xml_contents = response['body']
