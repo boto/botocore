@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.15.40
+=======
+
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.15.39
 =======
 
