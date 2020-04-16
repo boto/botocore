@@ -574,10 +574,19 @@ class EC2QueryParser(QueryParser):
         # This is different from QueryParser in that it's RequestID,
         # not RequestId
         original = super(EC2QueryParser, self)._do_error_parse(response, shape)
-        original['ResponseMetadata'] = {
-            'RequestId': original.pop('RequestID')
-        }
+        if 'RequestID' in original:
+            original['ResponseMetadata'] = {
+                'RequestId': original.pop('RequestID')
+            }
         return original
+
+    def _get_error_root(self, original_root):
+        for child in original_root:
+            if self._node_tag(child) == 'Errors':
+                for errors_child in child:
+                    if self._node_tag(errors_child) == 'Error':
+                        return errors_child
+        return original_root
 
 
 class BaseJSONParser(ResponseParser):

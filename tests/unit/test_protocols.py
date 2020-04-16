@@ -63,7 +63,7 @@ from botocore.model import ServiceModel, OperationModel
 from botocore.serialize import EC2Serializer, QuerySerializer, \
         JSONSerializer, RestJSONSerializer, RestXMLSerializer
 from botocore.parsers import QueryParser, JSONParser, \
-        RestJSONParser, RestXMLParser
+        RestJSONParser, RestXMLParser, EC2QueryParser
 from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
@@ -83,8 +83,7 @@ PROTOCOL_SERIALIZERS = {
     'rest-xml': RestXMLSerializer,
 }
 PROTOCOL_PARSERS = {
-    # ec2/query have the same response parsing logic.
-    'ec2': QueryParser,
+    'ec2': EC2QueryParser,
     'query': QueryParser,
     'json': JSONParser,
     'rest-json': RestJSONParser,

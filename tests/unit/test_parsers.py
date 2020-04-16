@@ -1219,8 +1219,24 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_ec2_modeled_fields(self):
-        # TODO
+        body = (
+            b'<Response><Errors><Error>'
+            b'<Code>ExceptionShape</Code>'
+            b'<Message>Foo message</Message>'
+            b'<ModeledField>Some modeled field</ModeledField>'
+            b'</Error></Errors></Response>'
+        )
         parser = parsers.EC2QueryParser()
+        response_dict = {
+            'status_code': 400,
+            'headers': {},
+            'body': body,
+        }
+        parsed = parser.parse(response_dict, self.error_shape)
+        expected_parsed = {
+            'ModeledField': 'Some modeled field',
+        }
+        self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_query_modeled_fields(self):
         parser = parsers.QueryParser()
