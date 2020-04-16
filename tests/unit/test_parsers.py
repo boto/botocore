@@ -1223,8 +1223,25 @@ class TestParseErrorResponses(unittest.TestCase):
         parser = parsers.EC2QueryParser()
 
     def test_can_parse_query_modeled_fields(self):
-        # TODO
         parser = parsers.QueryParser()
+        body = (
+            b'<?xml version="1.0"?>\n<ErrorResponse xmlns="http://foo.bar">'
+            b'<Error><Type>Sender</Type><Code>SomeCode</Code>'
+            b'<Message>A message</Message>'
+            b'<ModeledField>Some modeled field</ModeledField>'
+            b'</Error>'
+            b'</ErrorResponse>'
+        )
+        response_dict = {
+            'status_code': 400,
+            'headers': {},
+            'body': body,
+        }
+        parsed = parser.parse(response_dict, self.error_shape)
+        expected_parsed = {
+            'ModeledField': 'Some modeled field',
+        }
+        self.assertEqual(parsed, expected_parsed)
 
     def test_can_parse_json_modeled_fields(self):
         body = (

@@ -25,6 +25,45 @@ class TestModeledExceptions(BaseSessionTest):
         http_stubber = ClientHTTPStubber(client)
         return client, http_stubber
 
+    def test_query_service(self):
+        body = (
+            b'<ErrorResponse xmlns="http://ses.amazonaws.com/doc/2010-12-01/">'
+            b'<Error><Type>Sender</Type>'
+            b'<Name>foobar</Name>'
+            b'<Code>AlreadyExists</Code>'
+            b'<Message>Template already exists</Message>'
+            b'</Error></ErrorResponse>'
+        )
+        response = {
+            'Error': {
+                # NOTE: The name and type are also present here as we return
+                # the entire Error node as the 'Error' field for query
+                'Name': 'foobar',
+                'Type': 'Sender',
+                'Code': 'AlreadyExists',
+                'Message': 'Template already exists',
+            },
+            'ResponseMetadata': {
+                'HTTPStatusCode': 400,
+                'HTTPHeaders': {},
+                'RetryAttempts': 0,
+            },
+            # Modeled properties on the exception shape
+            'Name': 'foobar',
+        }
+        ses, http_stubber = self._create_client('ses')
+        exception_cls = ses.exceptions.AlreadyExistsException
+        with http_stubber as stubber:
+            stubber.add_response(status=400, headers={}, body=body)
+            with self.assertRaises(exception_cls) as assertion_context:
+                template = {
+                    'TemplateName': 'foobar',
+                    'SubjectPart': 'foo',
+                    'TextPart': 'bar'
+                }
+                ses.create_template(Template=template)
+            self.assertEqual(assertion_context.exception.response, response)
+
     def test_rest_xml_service(self):
         body = (
             b'<?xml version="1.0"?>\n'
