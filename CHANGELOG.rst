@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.15.41
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+
+
 1.15.40
 =======
 
