@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.42
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+
+
 1.15.41
 =======
 
