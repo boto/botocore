@@ -434,7 +434,8 @@ class BaseXMLResponseParser(ResponseParser):
         except XMLParseError as e:
             raise ResponseParserError(
                 "Unable to parse response (%s), "
-                "invalid XML received:\n%s" % (e, xml_string))
+                "invalid XML received. Further retries may succeed:\n%s" %
+                (e, xml_string))
         return root
 
     def _replace_nodes(self, parsed):
