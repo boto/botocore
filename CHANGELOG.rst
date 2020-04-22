@@ -2,6 +2,59 @@
 CHANGELOG
 =========
 
+1.15.44
+=======
+
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``fms``: Update fms client to latest version
+
+
+1.15.43
+=======
+
+* api-change:``route53domains``: Update route53domains client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.15.42
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+
+
+1.15.41
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+
+
+1.15.40
+=======
+
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.15.39
 =======
 

@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``synthetics``", 
+    "description": "Update synthetics client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigatewayv2``", 
+    "description": "Update apigatewayv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotevents``", 
+    "description": "Update iotevents client to latest version", 
+    "type": "api-change"
+  }
+]
