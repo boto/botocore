@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``route53domains``", 
+    "description": "Update route53domains client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``guardduty``", 
+    "description": "Update guardduty client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }
+]
