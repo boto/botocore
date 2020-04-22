@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``codeguru-reviewer``", 
+    "description": "Update codeguru-reviewer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fms``", 
+    "description": "Update fms client to latest version", 
+    "type": "api-change"
+  }
+]
