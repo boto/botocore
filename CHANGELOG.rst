@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.44
+=======
+
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``fms``: Update fms client to latest version
+
+
 1.15.43
 =======
 
