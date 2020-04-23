@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.15.45
+=======
+
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ram``: Update ram client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
 1.15.44
 =======
 
