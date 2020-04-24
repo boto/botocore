@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.15.46
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+
+
 1.15.45
 =======
 
