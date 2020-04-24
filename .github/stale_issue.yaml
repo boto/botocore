@@ -6,7 +6,7 @@ on:
   - cron: "*/15 * * * *"
 
 jobs:
-  cleanup:
+  issue-cleanup:
     runs-on: ubuntu-latest
     name: Stale issue job
     steps:
@@ -14,15 +14,15 @@ jobs:
       with:
         # Setting messages to an empty string will cause the automation to skip
         # that category
-        ancient-issue-message: This is a very old issue that is probably not getting as much attention as it deservers. We encourage you to check if this is still an issue in the latest release and if you find that this is still a problem, please feel free to open a new one.
-        stale-issue-message: It looks like this issue hasn’t been active in longer than a week. We encourage you to check if this is still an issue in the latest release. Because it has been longer than a week since the last update on this, and in the absence of more information, we will be closing this issue soon. If you find that this is still a problem, please feel free to provide a comment or add an upvote to prevent automatic closure, or if the issue is already closed, please feel free to open a new one.
-        stale-pr-message: It looks like this PR hasn’t been active in longer than a week, add a comment or an upvote to prevent automatic closure, or if the issue is already closed, please feel free to open a new one.
+        ancient-issue-message: Greetings! It looks like this issue hasn’t been active in longer than three years. We encourage you to check if this is still an issue in the latest release. Because it has been longer than three years since the last update on this, and in the absence of more information, we will be closing this issue soon. If you find that this is still a problem, please feel free to provide a comment to prevent automatic closure, or if the issue is already closed, please feel free to reopen it.
+        stale-issue-message: Greetings! It looks like this issue hasn’t been active in longer than a week. We encourage you to check if this is still an issue in the latest release. Because it has been longer than a week since the last update on this, and in the absence of more information, we will be closing this issue soon. If you find that this is still a problem, please feel free to provide a comment or add an upvote to prevent automatic closure, or if the issue is already closed, please feel free to open a new one.
+        stale-pr-message: Greetings! It looks like this PR hasn’t been active in longer than a week, add a comment or an upvote to prevent automatic closure, or if the issue is already closed, please feel free to open a new one.
 
         # These labels are required
         stale-issue-label: closing-soon
-        exempt-issue-label: exempt-auto-label
+        exempt-issue-label: auto-label-exempt
         stale-pr-label: closing-soon
-        exempt-pr-label: awaiting-approval
+        exempt-pr-label: auto-label-exempt
         response-requested-label: response-requested
 
         # Don't set closed-for-staleness label to skip closing very old issues
@@ -30,7 +30,7 @@ jobs:
         closed-for-staleness-label: closed-for-staleness
 
         # Issue timing
-        days-before-stale: 14
+        days-before-stale: 7
         days-before-close: 4
         days-before-ancient: 1095
         # If you don't want to mark a issue as being ancient based on a
