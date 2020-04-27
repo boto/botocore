@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.15.47
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.15.46
 =======
 
