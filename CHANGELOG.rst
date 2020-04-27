@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.15.47
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.15.46
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+
+
+1.15.45
+=======
+
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ram``: Update ram client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
 1.15.44
 =======
 
