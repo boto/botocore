@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``mediapackage-vod``", 
+    "description": "Update mediapackage-vod client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ram``", 
+    "description": "Update ram client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transfer``", 
+    "description": "Update transfer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``firehose``", 
+    "description": "Update firehose client to latest version", 
+    "type": "api-change"
+  }
+]
