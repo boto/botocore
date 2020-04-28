@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.15.48
+=======
+
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.15.47
 =======
 
