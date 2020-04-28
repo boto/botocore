@@ -18,10 +18,10 @@ from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import urlsplit
-from botocore.compat import parse_qs
+from botocore.compat import datetime, urlsplit, parse_qs
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.exceptions import InvalidS3UsEast1RegionalEndpointConfigError
+from botocore.parsers import ResponseParserError
 from botocore import UNSIGNED
 
 
@@ -407,6 +407,63 @@ class TestS3ClientConfigResolution(BaseS3ClientConfigurationTest):
         self.environ['AWS_S3_US_EAST_1_REGIONAL_ENDPOINT'] = 'regional'
         client = self.create_s3_client(region_name='aws-global')
         self.assertEqual(client.meta.region_name, 'aws-global')
+
+
+class TestS3Copy(BaseS3OperationTest):
+
+    def create_s3_client(self, **kwargs):
+        client_kwargs = {
+            'region_name': self.region
+        }
+        client_kwargs.update(kwargs)
+        return self.session.create_client('s3', **client_kwargs)
+
+    def create_stubbed_s3_client(self, **kwargs):
+        client = self.create_s3_client(**kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        return client, http_stubber
+
+    def test_s3_copy_object_with_empty_response(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1'
+        )
+
+        empty_body = b''
+        complete_body = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n\n'
+            b'<CopyObjectResult '
+            b'xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            b'<LastModified>2020-04-21T21:03:31.000Z</LastModified>'
+            b'<ETag>&quot;s0mEcH3cK5uM&quot;</ETag></CopyObjectResult>'
+        )
+
+        self.http_stubber.add_response(status=200, body=empty_body)
+        self.http_stubber.add_response(status=200, body=complete_body)
+        response = self.client.copy_object(
+            Bucket='bucket',
+            CopySource='other-bucket/test.txt',
+            Key='test.txt',
+        )
+
+        # Validate we retried and got second body
+        self.assertEquals(len(self.http_stubber.requests), 2)
+        self.assertEquals(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assertTrue('CopyObjectResult' in response)
+
+    def test_s3_copy_object_with_incomplete_response(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1'
+        )
+
+        incomplete_body = b'<?xml version="1.0" encoding="UTF-8"?>\n\n\n'
+        self.http_stubber.add_response(status=200, body=incomplete_body)
+        with self.assertRaises(ResponseParserError):
+            self.client.copy_object(
+                Bucket='bucket',
+                CopySource='other-bucket/test.txt',
+                Key='test.txt',
+            )
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):

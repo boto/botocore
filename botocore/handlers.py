@@ -24,8 +24,10 @@ import re
 import warnings
 import uuid
 
-from botocore.compat import unquote, json, six, unquote_str, \
-    ensure_bytes, get_md5, MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit
+from botocore.compat import (
+    unquote, json, six, unquote_str, ensure_bytes, get_md5,
+    MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit, XMLParseError
+)
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -102,11 +104,17 @@ def check_for_200_error(response, **kwargs):
 
 def _looks_like_special_case_error(http_response):
     if http_response.status_code == 200:
-        parser = xml.etree.cElementTree.XMLParser(
-            target=xml.etree.cElementTree.TreeBuilder(),
-            encoding='utf-8')
-        parser.feed(http_response.content)
-        root = parser.close()
+        try:
+            parser = xml.etree.cElementTree.XMLParser(
+                target=xml.etree.cElementTree.TreeBuilder(),
+                encoding='utf-8')
+            parser.feed(http_response.content)
+            root = parser.close()
+        except XMLParseError:
+            # In cases of network disruptions, we may end up with a partial
+            # streamed response from S3. We need to treat these cases as
+            # 500 Service Errors and try again.
+            return True
         if root.tag == 'Error':
             return True
     return False
