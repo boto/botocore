@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "Exceptions",
+  "description": "Added support for parsing modeled exception fields."
+}
