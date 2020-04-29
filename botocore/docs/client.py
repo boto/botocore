@@ -19,6 +19,7 @@ from botocore.docs.method import get_instance_public_methods
 from botocore.docs.sharedexample import document_shared_examples
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
+from botocore.docs.utils import DocumentedShape
 
 
 class ClientDocumenter(object):
@@ -134,6 +135,30 @@ class ClientExceptionsDocumenter(object):
         'https://boto3.amazonaws.com/'
         'v1/documentation/api/latest/guide/error-handling.html'
     )
+    _GENERIC_ERROR_SHAPE = DocumentedShape(
+        name='Error',
+        type_name='structure',
+        documentation=(
+            'Normalized access to common exception attributes.'
+        ),
+        members={
+            'Code': DocumentedShape(
+                name='Code',
+                type_name='string',
+                documentation=(
+                    'An identifier specifying the exception type.'
+                ),
+            ),
+            'Message': DocumentedShape(
+                name='Message',
+                type_name='string',
+                documentation=(
+                    'A descriptive message explaining why the exception '
+                    'occured.'
+                ),
+            ),
+        },
+    )
 
     def __init__(self, client):
         self._client = client
@@ -151,7 +176,7 @@ class ClientExceptionsDocumenter(object):
     def _add_overview(self, section):
         section.style.new_line()
         section.write(
-            'In botocore client exceptions are available on a client instance '
+            'Client exceptions are available on a client instance '
             'via the ``exceptions`` property. For more detailed instructions '
             'and examples on the exact usage of client exceptions, see the '
             'error handling '
@@ -189,36 +214,76 @@ class ClientExceptionsDocumenter(object):
         class_section = section.add_new_section(shape.name)
         class_name = self._exception_class_name(shape)
         class_section.style.start_sphinx_py_class(class_name=class_name)
+        self._add_top_level_documentation(class_section, shape)
+        self._add_exception_catch_example(class_section, shape)
         self._add_response_attr(class_section, shape)
         class_section.style.end_sphinx_py_class()
+
+    def _add_top_level_documentation(self, section, shape):
+        if shape.documentation:
+            section.style.new_line()
+            section.include_doc_string(shape.documentation)
+            section.style.new_line()
+
+    def _add_exception_catch_example(self, section, shape):
+        section.style.new_line()
+        section.style.bold('Example')
+        section.style.start_codeblock()
+        section.write('try:')
+        section.style.indent()
+        section.style.new_line()
+        section.write('...')
+        section.style.dedent()
+        section.style.new_line()
+        section.write('except client.exceptions.%s as e:' % shape.name)
+        section.style.indent()
+        section.style.new_line()
+        section.write('print(e.response)')
+        section.style.dedent()
+        section.style.end_codeblock()
 
     def _add_response_attr(self, section, shape):
         response_section = section.add_new_section('response')
         response_section.style.start_sphinx_py_attr('response')
+        self._add_response_attr_description(response_section)
         self._add_response_example(response_section, shape)
         self._add_response_params(response_section, shape)
         response_section.style.end_sphinx_py_attr()
 
+    def _add_response_attr_description(self, section):
+        section.style.new_line()
+        section.include_doc_string(
+            'The parsed error response. All exceptions have a top level '
+            '``Error`` key that provides normalized access to common '
+            'exception atrributes. All other keys are specific to this '
+            'service or exception class.'
+        )
+        section.style.new_line()
+
     def _add_response_example(self, section, shape):
-        example_section = section.add_new_section('example')
+        example_section = section.add_new_section('syntax')
         example_section.style.new_line()
-        example_section.style.bold('Response Syntax')
+        example_section.style.bold('Syntax')
         example_section.style.new_paragraph()
         documenter = ResponseExampleDocumenter(
             service_name=self._service_name,
             operation_name=None,
             event_emitter=self._client.meta.events,
         )
-        documenter.document_example(example_section, shape)
+        documenter.document_example(
+            example_section, shape, include=[self._GENERIC_ERROR_SHAPE],
+        )
 
     def _add_response_params(self, section, shape):
-        params_section = section.add_new_section('params')
+        params_section = section.add_new_section('Structure')
         params_section.style.new_line()
-        params_section.style.bold('Response Structure')
+        params_section.style.bold('Structure')
         params_section.style.new_paragraph()
         documenter = ResponseParamsDocumenter(
             service_name=self._service_name,
             operation_name=None,
             event_emitter=self._client.meta.events,
         )
-        documenter.document_params(params_section, shape)
+        documenter.document_params(
+            params_section, shape, include=[self._GENERIC_ERROR_SHAPE],
+        )

@@ -56,7 +56,7 @@ class TestServiceDocumenter(BaseDocsTest):
             '=================',
             'Client Exceptions',
             '=================',
-            'In botocore client exceptions are',
+            'Client exceptions are available',
             '==========',
             'Paginators',
             '==========',

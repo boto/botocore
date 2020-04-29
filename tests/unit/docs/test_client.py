@@ -82,10 +82,10 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
         self.setup_documenter()
         self.exceptions_documenter.document_exceptions(self.doc_structure)
         self.assert_contains_lines_in_order([
-            '===========',
+            '=================',
             'Client Exceptions',
             '=================',
-            'In botocore client exceptions are available on a client ',
+            'Client exceptions are available',
             'This client has no modeled exception classes.',
         ])
 
@@ -103,20 +103,28 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
         self.setup_documenter()
         self.exceptions_documenter.document_exceptions(self.doc_structure)
         self.assert_contains_lines_in_order([
-            '===========',
+            '=================',
             'Client Exceptions',
             '=================',
-            'In botocore client exceptions are available on a client ',
+            'Client exceptions are available',
             'The available client exceptions are:',
             '* :py:class:`MyService.Client.exceptions.SomeException`',
             '.. py:class:: MyService.Client.exceptions.SomeException',
+            '**Example** ::',
+            'except client.exceptions.SomeException as e:',
             '.. py:attribute:: response',
-            '**Response Syntax**',
-            '::',
+            '**Syntax**',
             '{',
+            "'Message': 'string',",
+            "'Error': {",
+            "'Code': 'string',",
             "'Message': 'string'",
             '}',
-            '**Response Structure**',
+            '}',
+            '**Structure**',
             '- *(dict) --*',
-            '- **Message** *(string) --*',
+            '- **Message** *(string) --* ',
+            '- **Error** *(dict) --* ',
+            '- **Code** *(string) --* ',
+            '- **Message** *(string) --* ',
         ])
