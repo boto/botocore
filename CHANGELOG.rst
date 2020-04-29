@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.15.49
+=======
+
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
 1.15.48
 =======
 
