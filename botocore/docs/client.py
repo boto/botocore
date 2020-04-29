@@ -20,6 +20,7 @@ from botocore.docs.sharedexample import document_shared_examples
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
 from botocore.docs.utils import DocumentedShape
+from botocore.compat import OrderedDict
 
 
 class ClientDocumenter(object):
@@ -141,23 +142,23 @@ class ClientExceptionsDocumenter(object):
         documentation=(
             'Normalized access to common exception attributes.'
         ),
-        members={
-            'Code': DocumentedShape(
+        members=OrderedDict([
+            ('Code', DocumentedShape(
                 name='Code',
                 type_name='string',
                 documentation=(
                     'An identifier specifying the exception type.'
                 ),
-            ),
-            'Message': DocumentedShape(
+            )),
+            ('Message', DocumentedShape(
                 name='Message',
                 type_name='string',
                 documentation=(
                     'A descriptive message explaining why the exception '
                     'occured.'
                 ),
-            ),
-        },
+            )),
+        ]),
     )
 
     def __init__(self, client):
