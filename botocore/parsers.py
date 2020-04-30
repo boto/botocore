@@ -236,6 +236,10 @@ class ResponseParser(object):
         if response['status_code'] >= 301:
             if self._is_generic_error_response(response):
                 parsed = self._do_generic_error_parse(response)
+            elif self._is_modeled_error_shape(shape):
+                parsed = self._do_modeled_error_parse(response, shape)
+                # We don't want to decorate the modeled fields with metadata
+                return parsed
             else:
                 parsed = self._do_error_parse(response, shape)
         else:
@@ -257,6 +261,9 @@ class ResponseParser(object):
             response_metadata['HTTPHeaders'] = lowercase_dict(headers)
             parsed['ResponseMetadata'] = response_metadata
         return parsed
+
+    def _is_modeled_error_shape(self, shape):
+        return shape is not None and shape.metadata.get('exception', False)
 
     def _is_generic_error_response(self, response):
         # There are times when a service will respond with a generic
@@ -295,6 +302,10 @@ class ResponseParser(object):
     def _do_error_parse(self, response, shape):
         raise NotImplementedError(
             "%s._do_error_parse" % self.__class__.__name__)
+
+    def _do_modeled_error_parse(self, response, shape, parsed):
+        raise NotImplementedError(
+            "%s._do_modeled_error_parse" % self.__class__.__name__)
 
     def _parse_shape(self, shape, node):
         handler = getattr(self, '_handle_%s' % shape.type_name,
@@ -362,6 +373,8 @@ class BaseXMLResponseParser(ResponseParser):
     def _handle_structure(self, shape, node):
         parsed = {}
         members = shape.members
+        if shape.metadata.get('exception', False):
+            node = self._get_error_root(node)
         xml_dict = self._build_name_to_xml_node(node)
         for member_name in members:
             member_shape = members[member_name]
@@ -385,6 +398,13 @@ class BaseXMLResponseParser(ResponseParser):
                 if location_name in attribs:
                     parsed[member_name] = attribs[location_name]
         return parsed
+
+    def _get_error_root(self, original_root):
+        if self._node_tag(original_root) == 'ErrorResponse':
+            for child in original_root:
+                if self._node_tag(child) == 'Error':
+                    return child
+        return original_root
 
     def _member_key_name(self, shape, member_name):
         # This method is needed because we have to special case flattened list
@@ -497,7 +517,13 @@ class QueryParser(BaseXMLResponseParser):
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         return parsed
 
+    def _do_modeled_error_parse(self, response, shape):
+        return self._parse_body_as_xml(response, shape, inject_metadata=False)
+
     def _do_parse(self, response, shape):
+        return self._parse_body_as_xml(response, shape, inject_metadata=True)
+
+    def _parse_body_as_xml(self, response, shape, inject_metadata=True):
         xml_contents = response['body']
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = {}
@@ -508,7 +534,8 @@ class QueryParser(BaseXMLResponseParser):
                     shape.serialization['resultWrapper'],
                     root)
             parsed = self._parse_shape(shape, start)
-        self._inject_response_metadata(root, parsed)
+        if inject_metadata:
+            self._inject_response_metadata(root, parsed)
         return parsed
 
     def _find_result_wrapped_shape(self, element_name, xml_root_node):
@@ -547,10 +574,19 @@ class EC2QueryParser(QueryParser):
         # This is different from QueryParser in that it's RequestID,
         # not RequestId
         original = super(EC2QueryParser, self)._do_error_parse(response, shape)
-        original['ResponseMetadata'] = {
-            'RequestId': original.pop('RequestID')
-        }
+        if 'RequestID' in original:
+            original['ResponseMetadata'] = {
+                'RequestId': original.pop('RequestID')
+            }
         return original
+
+    def _get_error_root(self, original_root):
+        for child in original_root:
+            if self._node_tag(child) == 'Errors':
+                for errors_child in child:
+                    if self._node_tag(errors_child) == 'Error':
+                        return errors_child
+        return original_root
 
 
 class BaseJSONParser(ResponseParser):
@@ -742,6 +778,9 @@ class JSONParser(BaseJSONParser):
         self._inject_response_metadata(parsed, response['headers'])
         return parsed
 
+    def _do_modeled_error_parse(self, response, shape):
+        return self._handle_json_body(response['body'], shape)
+
     def _handle_event_stream(self, response, shape, event_name):
         event_stream_shape = shape.members[event_name]
         event_stream = self._create_event_stream(response, event_stream_shape)
@@ -768,12 +807,20 @@ class BaseRestParser(ResponseParser):
         final_parsed = {}
         final_parsed['ResponseMetadata'] = self._populate_response_metadata(
             response)
+        self._add_modeled_parse(response, shape, final_parsed)
+        return final_parsed
+
+    def _add_modeled_parse(self, response, shape, final_parsed):
         if shape is None:
             return final_parsed
         member_shapes = shape.members
         self._parse_non_payload_attrs(response, shape,
                                       member_shapes, final_parsed)
         self._parse_payload(response, shape, member_shapes, final_parsed)
+
+    def _do_modeled_error_parse(self, response, shape):
+        final_parsed = {}
+        self._add_modeled_parse(response, shape, final_parsed)
         return final_parsed
 
     def _populate_response_metadata(self, response):

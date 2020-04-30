@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.16.0
+======
+
+* api-change:``schemas``: Update schemas client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* feature:Exceptions: Added support for parsing modeled exception fields.
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.15.49
 =======
 
