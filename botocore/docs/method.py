@@ -279,4 +279,3 @@ def document_model_driven_method(section, method_name, operation_model,
                 include=include_output, exclude=exclude_output)
     else:
         return_section.write(':returns: None')
-

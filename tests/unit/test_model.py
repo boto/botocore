@@ -54,6 +54,21 @@ class TestServiceModel(unittest.TestCase):
                 'StringShape': {'type': 'string'}
             }
         }
+        self.error_shapes = {
+            'ExceptionOne': {
+                'exception': True,
+                'type': 'structure',
+                'members': {},
+            },
+            'ExceptionTwo': {
+                'exception': True,
+                'type': 'structure',
+                'members': {},
+                'error': {
+                    'code': 'FooCode'
+                }
+            },
+        }
         self.service_model = model.ServiceModel(self.model)
 
     def test_metadata_available(self):
@@ -111,6 +126,23 @@ class TestServiceModel(unittest.TestCase):
     def test_repr_has_service_name(self):
         self.assertEqual(repr(self.service_model),
                          'ServiceModel(endpoint-prefix)')
+
+    def test_shape_for_error_code(self):
+        self.model['shapes'].update(self.error_shapes)
+        self.service_model = model.ServiceModel(self.model)
+        shape = self.service_model.shape_for_error_code('ExceptionOne')
+        self.assertEqual(shape.name, 'ExceptionOne')
+        shape = self.service_model.shape_for_error_code('FooCode')
+        self.assertEqual(shape.name, 'ExceptionTwo')
+
+    def test_error_shapes(self):
+        self.model['shapes'].update(self.error_shapes)
+        self.service_model = model.ServiceModel(self.model)
+        error_shapes = self.service_model.error_shapes
+        error_shape_names = [shape.name for shape in error_shapes]
+        self.assertEqual(len(error_shape_names), 2)
+        self.assertIn('ExceptionOne', error_shape_names)
+        self.assertIn('ExceptionTwo', error_shape_names)
 
 
 class TestOperationModelFromService(unittest.TestCase):
@@ -675,6 +707,27 @@ class TestShapeResolver(unittest.TestCase):
                          ['NewPassword', 'OldPassword'])
         self.assertEqual(shape.members['OldPassword'].name, 'passwordType')
         self.assertEqual(shape.members['OldPassword'].type_name, 'string')
+        self.assertEqual(shape.error_code, None)
+
+    def test_exception_error_code(self):
+        shapes = {
+            'FooException': {
+                'exception': True,
+                'type': 'structure',
+                'members': {}
+            }
+        }
+        # Test without explicit error code
+        resolver = model.ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('FooException')
+        self.assertTrue(shape.metadata['exception'])
+        self.assertEqual(shape.error_code, 'FooException')
+        # Test with explicit error code
+        shapes['FooException']['error'] = {'code': 'ExceptionCode'}
+        resolver = model.ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('FooException')
+        self.assertTrue(shape.metadata['exception'])
+        self.assertEqual(shape.error_code, 'ExceptionCode')
 
     def test_shape_metadata(self):
         shapes = {

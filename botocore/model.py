@@ -194,6 +194,17 @@ class StructureShape(Shape):
                 return member_name
         return None
 
+    @CachedProperty
+    def error_code(self):
+        if not self.metadata.get('exception', False):
+            return None
+        error_metadata = self.metadata.get("error", {})
+        code = error_metadata.get("code")
+        if code:
+            return code
+        # Use the exception name if there is no explicit code modeled
+        return self.name
+
 
 class ListShape(Shape):
     @CachedProperty
@@ -258,12 +269,32 @@ class ServiceModel(object):
         return self._shape_resolver.get_shape_by_name(
             shape_name, member_traits)
 
+    def shape_for_error_code(self, error_code):
+        return self._error_code_cache.get(error_code, None)
+
+    @CachedProperty
+    def _error_code_cache(self):
+        error_code_cache = {}
+        for error_shape in self.error_shapes:
+            code = error_shape.error_code
+            error_code_cache[code] = error_shape
+        return error_code_cache
+
     def resolve_shape_ref(self, shape_ref):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
 
     @CachedProperty
     def shape_names(self):
         return list(self._service_description.get('shapes', {}))
+
+    @CachedProperty
+    def error_shapes(self):
+        error_shapes = []
+        for shape_name in self.shape_names:
+            error_shape = self.shape_for(shape_name)
+            if error_shape.metadata.get('exception', False):
+                error_shapes.append(error_shape)
+        return error_shapes
 
     @instance_cache
     def operation_model(self, operation_name):
