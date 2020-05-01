@@ -215,7 +215,7 @@
           "BatchSize": 5,
           "EventSourceArn": "arn:aws:sqs:us-west-2:123456789012:my-queue",
           "FunctionArn": "arn:aws:lambda:us-east-2:123456789012:function:my-function",
-          "LastModified": "${timestamp}",
+          "LastModified": "2016-11-21T19:49:20.006+0000",
           "State": "Enabled",
           "StateTransitionReason": "USER_INITIATED",
           "UUID": "14e0db71-xmpl-4eb5-b481-8945cf9d10c2"
@@ -379,7 +379,7 @@
           },
           "EventSourceArn": "arn:aws:sqs:us-east-2:123456789012:mySQSqueue",
           "FunctionArn": "arn:aws:lambda:us-east-2:123456789012:function:myFunction",
-          "LastModified": "${timestamp}",
+          "LastModified": "2016-11-21T19:49:20.006+0000",
           "LastProcessingResult": "No records processed",
           "MaximumRecordAgeInSeconds": 604800,
           "MaximumRetryAttempts": 10000,
@@ -529,7 +529,7 @@
             }
           },
           "FunctionArn": "arn:aws:lambda:us-east-2:123456789012:function:my-function:BLUE",
-          "LastModified": "${timestamp}",
+          "LastModified": "2016-11-21T19:49:20.006+0000",
           "MaximumEventAgeInSeconds": 3600,
           "MaximumRetryAttempts": 0
         },
@@ -1227,7 +1227,7 @@
             }
           },
           "FunctionArn": "arn:aws:lambda:us-east-2:123456789012:function:my-function:$LATEST",
-          "LastModified": "${timestamp}",
+          "LastModified": "2016-11-21T19:49:20.006+0000",
           "MaximumEventAgeInSeconds": 3600,
           "MaximumRetryAttempts": 0
         },
