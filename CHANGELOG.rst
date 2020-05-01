@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.16.1
+======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.16.0
 ======
 
