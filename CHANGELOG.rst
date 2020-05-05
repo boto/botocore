@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.16.3
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.16.2
 ======
 
