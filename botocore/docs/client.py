@@ -163,7 +163,7 @@ class ClientExceptionsDocumenter(object):
 
     def __init__(self, client):
         self._client = client
-        self._service_name = self._client.meta.service_model.service_name
+        self._service_id = self._client.meta.service_model.service_id
 
     def document_exceptions(self, section):
         self._add_title(section)
@@ -267,7 +267,7 @@ class ClientExceptionsDocumenter(object):
         example_section.style.bold('Syntax')
         example_section.style.new_paragraph()
         documenter = ResponseExampleDocumenter(
-            service_name=self._service_name,
+            service_id=self._service_id,
             operation_name=None,
             event_emitter=self._client.meta.events,
         )
@@ -281,7 +281,7 @@ class ClientExceptionsDocumenter(object):
         params_section.style.bold('Structure')
         params_section.style.new_paragraph()
         documenter = ResponseParamsDocumenter(
-            service_name=self._service_name,
+            service_id=self._service_id,
             operation_name=None,
             event_emitter=self._client.meta.events,
         )
