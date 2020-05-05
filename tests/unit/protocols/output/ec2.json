@@ -518,5 +518,95 @@
         }
       }
     ]
+  },
+  {
+    "description": "Modeled exceptions",
+    "metadata": {
+      "protocol": "ec2"
+    },
+    "shapes": {
+      "ExceptionShape": {
+        "exception": true,
+        "type": "structure",
+        "members": {
+          "BodyMember": {
+            "shape": "StringType"
+          },
+          "Message": {
+            "shape": "StringType"
+          }
+        }
+      },
+      "OtherExceptionShape": {
+        "exception": true,
+        "type": "structure",
+        "members": {
+          "BodyMember": {
+              "shape": "StringType"
+          }
+        }
+      },
+      "StatusShape": {
+        "type": "integer"
+      },
+      "StringType": {
+        "type": "string"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "errors": [
+            {"shape": "ExceptionShape"}
+          ],
+          "name": "OperationName"
+        },
+        "error": {
+          "BodyMember": "mybody",
+          "Message": "mymessage"
+        },
+        "errorCode": "ExceptionShape",
+        "errorMessage": "mymessage",
+        "response": {
+          "status_code": 400,
+          "headers": {},
+          "body": "<Response><Errors><Error><Code>ExceptionShape</Code><Message>mymessage</Message><BodyMember>mybody</BodyMember></Error></Errors></Response>"
+        }
+      },
+      {
+        "given": {
+          "errors": [
+            {"shape": "ExceptionShape"}
+          ],
+          "name": "OperationName"
+        },
+        "error": {
+          "BodyMember": "mybody"
+        },
+        "errorCode": "OtherExceptionShape",
+        "errorMessage": "mymessage",
+        "response": {
+          "status_code": 400,
+          "headers": {},
+          "body": "<Response><Errors><Error><Code>OtherExceptionShape</Code><Message>mymessage</Message><BodyMember>mybody</BodyMember></Error></Errors></Response>"
+        }
+      },
+      {
+        "given": {
+          "errors": [
+            {"shape": "ExceptionShape"}
+          ],
+          "name": "OperationName"
+        },
+        "error": {},
+        "errorCode": "UndefinedShape",
+        "errorMessage": "mymessage",
+        "response": {
+          "status_code": 400,
+          "headers": {},
+          "body": "<Response><Errors><Error><Code>UndefinedShape</Code><Message>mymessage</Message><BodyMember>mybody</BodyMember></Error></Errors></Response>"
+        }
+      }
+    ]
   }
 ]

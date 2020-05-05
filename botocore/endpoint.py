@@ -216,8 +216,33 @@ class Endpoint(object):
         parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
+        # Do a second parsing pass to pick up on any modeled error fields
+        # NOTE: Ideally, we would push this down into the parser classes but
+        # they currently have no reference to the operation or service model
+        # The parsers should probably take the operation model instead of
+        # output shape but we can't change that now
+        if http_response.status_code >= 300:
+            self._add_modeled_error_fields(
+                response_dict, parsed_response,
+                operation_model, parser,
+            )
         history_recorder.record('PARSED_RESPONSE', parsed_response)
         return (http_response, parsed_response), None
+
+    def _add_modeled_error_fields(
+            self, response_dict, parsed_response,
+            operation_model, parser,
+    ):
+        error_code = parsed_response.get("Error", {}).get("Code")
+        if error_code is None:
+            return
+        service_model = operation_model.service_model
+        error_shape = service_model.shape_for_error_code(error_code)
+        if error_shape is None:
+            return
+        modeled_parse = parser.parse(response_dict, error_shape)
+        # TODO: avoid naming conflicts with ResponseMetadata and Error
+        parsed_response.update(modeled_parse)
 
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):

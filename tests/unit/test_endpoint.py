@@ -24,6 +24,7 @@ from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
 from botocore.model import OperationModel, ServiceId
+from botocore.model import ServiceModel, StructureShape
 
 
 def request_dict(**kwargs):
@@ -123,6 +124,45 @@ class TestEndpointFeatures(TestEndpointBase):
             self.endpoint.make_request(self.op, r)
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
+
+    def test_parses_modeled_exception_fields(self):
+        # Setup the service model to have exceptions to generate the mapping
+        self.service_model = Mock(spec=ServiceModel)
+        self.op.service_model = self.service_model
+        self.exception_shape = Mock(spec=StructureShape)
+        shape_for_error_code = self.service_model.shape_for_error_code
+        shape_for_error_code.return_value = self.exception_shape
+
+        r = request_dict()
+        self.http_session.send.return_value = Mock(
+            status_code=400, headers={}, content=b'',
+        )
+        parser = Mock()
+        parser.parse.side_effect = [
+            {
+                'Error': {
+                    'Code': 'ExceptionShape',
+                    'Message': 'Some message',
+                }
+            },
+            {'SomeField': 'Foo'},
+        ]
+        self.factory.return_value.create_parser.return_value = parser
+        _, response = self.endpoint.make_request(self.op, r)
+        # The parser should be called twice, once for the original
+        # error parse and once again for the modeled exception parse
+        self.assertEqual(parser.parse.call_count, 2)
+        parse_calls = parser.parse.call_args_list
+        self.assertEqual(parse_calls[1][0][1], self.exception_shape)
+        self.assertEqual(parse_calls[0][0][1], self.op.output_shape)
+        expected_response = {
+            'Error': {
+                'Code': 'ExceptionShape',
+                'Message': 'Some message',
+            },
+            'SomeField': 'Foo',
+        }
+        self.assertEqual(response, expected_response)
 
 
 class TestRetryInterface(TestEndpointBase):
