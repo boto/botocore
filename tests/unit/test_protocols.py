@@ -56,16 +56,18 @@ import copy
 from base64 import b64decode
 from dateutil.tz import tzutc
 
+from botocore.awsrequest import HeadersDict
 from botocore.compat import json, OrderedDict, urlsplit
 from botocore.eventstream import EventStream
 from botocore.model import ServiceModel, OperationModel
 from botocore.serialize import EC2Serializer, QuerySerializer, \
         JSONSerializer, RestJSONSerializer, RestXMLSerializer
 from botocore.parsers import QueryParser, JSONParser, \
-        RestJSONParser, RestXMLParser
+        RestJSONParser, RestXMLParser, EC2QueryParser
 from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
+from botocore.model import NoShapeFoundError
 
 from nose.tools import assert_equal as _assert_equal
 
@@ -81,8 +83,7 @@ PROTOCOL_SERIALIZERS = {
     'rest-xml': RestXMLSerializer,
 }
 PROTOCOL_PARSERS = {
-    # ec2/query have the same response parsing logic.
-    'ec2': QueryParser,
+    'ec2': EC2QueryParser,
     'query': QueryParser,
     'json': JSONParser,
     'rest-json': RestJSONParser,
@@ -168,10 +169,25 @@ def _test_output(json_description, case, basename):
         # botocore boundary, so it expects to work with bytes.
         body_bytes = case['response']['body'].encode('utf-8')
         case['response']['body'] = body_bytes
+        # We need the headers to be case insensitive
+        headers = HeadersDict(case['response']['headers'])
+        case['response']['headers'] = headers
         # If this is an event stream fake the raw streamed response
         if operation_model.has_event_stream_output:
             case['response']['body'] = MockRawResponse(body_bytes)
-        parsed = parser.parse(case['response'], operation_model.output_shape)
+        if 'error' in case:
+            output_shape = operation_model.output_shape
+            parsed = parser.parse(case['response'], output_shape)
+            try:
+                error_shape = model.shape_for(parsed['Error']['Code'])
+            except NoShapeFoundError:
+                error_shape = None
+            if error_shape is not None:
+                error_parse = parser.parse(case['response'], error_shape)
+                parsed.update(error_parse)
+        else:
+            output_shape = operation_model.output_shape
+            parsed = parser.parse(case['response'], output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
         msg = (
@@ -182,10 +198,20 @@ def _test_output(json_description, case, basename):
                 case['description'], case['suite_id'], case['test_id']))
         raise AssertionError(msg)
     try:
-        assert_equal(parsed, case['result'], "Body")
+        if 'error' in case:
+            expected_result = {
+                'Error': {
+                    'Code': case.get('errorCode', ''),
+                    'Message': case.get('errorMessage', ''),
+                }
+            }
+            expected_result.update(case['error'])
+        else:
+            expected_result = case['result']
+        assert_equal(parsed, expected_result, "Body")
     except Exception as e:
         _output_failure_message(model.metadata['protocol'],
-                                case, parsed, e)
+                                case, parsed, expected_result, e)
 
 
 def _fixup_parsed_result(parsed):
@@ -211,6 +237,15 @@ def _fixup_parsed_result(parsed):
         if isinstance(value, EventStream):
             parsed[key] = _convert_bytes_to_str(list(value))
             break
+    # 4. We parse the entire error body into the "Error" field for rest-xml
+    # which causes some modeled fields in the response to be placed under the
+    # error key. We don't have enough information in the test suite to assert
+    # these properly, and they probably shouldn't be there in the first place.
+    if 'Error' in parsed:
+        error_keys = list(parsed['Error'].keys())
+        for key in error_keys:
+            if key not in ['Code', 'Message']:
+                del parsed['Error'][key]
     return parsed
 
 
@@ -239,7 +274,10 @@ def _compliance_timestamp_parser(value):
     return int(timegm(datetime.timetuple()))
 
 
-def _output_failure_message(protocol_type, case, actual_parsed, error):
+def _output_failure_message(
+    protocol_type, case, actual_parsed,
+    expected_result, error
+):
     j = _try_json_dump
     error_message = (
         "\nDescription           : %s (%s:%s)\n"
@@ -252,7 +290,7 @@ def _output_failure_message(protocol_type, case, actual_parsed, error):
             case['description'], case['suite_id'],
             case['test_id'], protocol_type,
             j(case['given']), j(case['response']),
-            j(case['result']), j(actual_parsed), error))
+            j(expected_result), j(actual_parsed), error))
     raise AssertionError(error_message)
 
 

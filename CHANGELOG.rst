@@ -2,6 +2,62 @@
 CHANGELOG
 =========
 
+1.16.3
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.2
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+
+
+1.16.1
+======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.16.0
+======
+
+* api-change:``schemas``: Update schemas client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* feature:Exceptions: Added support for parsing modeled exception fields.
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.15.49
+=======
+
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
+1.15.48
+=======
+
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.15.47
 =======
 

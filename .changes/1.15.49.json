@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``iotsitewise``", 
+    "description": "Update iotsitewise client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf``", 
+    "description": "Update waf client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf-regional``", 
+    "description": "Update waf-regional client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicediscovery``", 
+    "description": "Update servicediscovery client to latest version", 
+    "type": "api-change"
+  }
+]
