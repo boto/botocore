@@ -1,0 +1,5 @@
+{
+  "type": "enchancement",
+  "category": "Endpoints",
+  "description": "Improved endpoint resolution for clients with unknown regions"
+}
