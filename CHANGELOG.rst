@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.16.5
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
 1.16.4
 ======
 
