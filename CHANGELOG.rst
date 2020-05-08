@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.16.6
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
 1.16.5
 ======
 
