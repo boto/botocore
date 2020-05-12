@@ -2,6 +2,30 @@
 CHANGELOG
 =========
 
+1.16.8
+======
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* enchancement:Endpoints: Improved endpoint resolution for clients with unknown regions
+
+
+1.16.7
+======
+
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+
+
+1.16.6
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
 1.16.5
 ======
 

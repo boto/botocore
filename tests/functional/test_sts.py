@@ -130,3 +130,11 @@ class TestSTSEndpoints(BaseSessionTest):
             expected_url='https://sts.amazonaws.com/',
             expected_signing_region='us-east-1'
         )
+
+    def test_client_for_unknown_region(self):
+        sts = self.create_sts_client('not-real')
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.not-real.amazonaws.com/',
+            expected_signing_region='not-real'
+        )
