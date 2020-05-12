@@ -1538,11 +1538,6 @@ def test_correct_url_used_for_s3():
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
     yield t.case(
-        region='unknown', bucket='bucket', key='key',
-        s3_config=us_east_1_regional_endpoint,
-        expected_url=(
-            'https://bucket.s3.unknown.amazonaws.com/key'))
-    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
             'use_dualstack_endpoint': True,
