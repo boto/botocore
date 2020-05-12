@@ -1092,6 +1092,10 @@ def test_correct_url_used_for_s3():
         s3_config=virtual_hosting,
         customer_provided_endpoint='https://foo.amazonaws.com',
         expected_url='https://bucket.foo.amazonaws.com/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=virtual_hosting,
+        expected_url='https://bucket.s3.unknown.amazonaws.com/key')
 
     # Test us-gov with virtual addressing.
     yield t.case(
@@ -1114,6 +1118,10 @@ def test_correct_url_used_for_s3():
         s3_config=path_style,
         customer_provided_endpoint='https://foo.amazonaws.com/',
         expected_url='https://foo.amazonaws.com/bucket/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=path_style,
+        expected_url='https://s3.unknown.amazonaws.com/bucket/key')
 
     # S3 accelerate
     use_accelerate = {'use_accelerate_endpoint': True}
@@ -1159,6 +1167,10 @@ def test_correct_url_used_for_s3():
         # Extra components must be whitelisted.
         customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
         expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=use_accelerate,
+        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
     # Use virtual even if path is specified for s3 accelerate because
     # path style will not work with S3 accelerate.
     yield t.case(
@@ -1199,6 +1211,10 @@ def test_correct_url_used_for_s3():
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=use_dualstack, signature_version='s3v4',
+        expected_url='https://bucket.s3.dualstack.unknown.amazonaws.com/key')
     # Non DNS compatible buckets use path style for dual stack.
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
@@ -1381,6 +1397,14 @@ def test_correct_url_used_for_s3():
             'unknown.amazonaws.com/key'
         )
     )
+    yield t.case(
+        region='unknown', bucket=accesspoint_arn, key='key',
+        s3_config={'use_arn_region': True},
+        expected_url=(
+            'https://myendpoint-123456789012.s3-accesspoint.'
+            'us-west-2.amazonaws.com/key'
+        )
+    )
     accesspoint_arn_cn = (
         'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
     )
@@ -1513,6 +1537,11 @@ def test_correct_url_used_for_s3():
         region=None, bucket='bucket', key='key',
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=us_east_1_regional_endpoint,
+        expected_url=(
+            'https://bucket.s3.unknown.amazonaws.com/key'))
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
