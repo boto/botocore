@@ -242,3 +242,26 @@ class TestSTSEndpoints(BaseSessionTest):
             'us-west-2', use_ssl=False)
         self.assert_request_sent(
             sts, expected_url='http://sts.amazonaws.com/')
+
+    def test_client_for_unknown_region(self):
+        sts = self.create_sts_client('not-real')
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.not-real.amazonaws.com/',
+            expected_signing_region='not-real'
+        )
+
+    def test_client_for_unknown_region_with_legacy_configured(self):
+        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
+        sts = self.create_sts_client('not-real')
+        self.assert_request_sent(
+            sts,expected_url='https://sts.not-real.amazonaws.com/')
+
+    def test_client_for_unknown_region_with_regional_configured(self):
+        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
+        sts = self.create_sts_client('not-real')
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.not-real.amazonaws.com/',
+            expected_signing_region='not-real'
+        )
