@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``workmail``", 
+    "description": "Update workmail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotsitewise``", 
+    "description": "Update iotsitewise client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Endpoints", 
+    "description": "Improved endpoint resolution for clients with unknown regions", 
+    "type": "enchancement"
+  }
+]

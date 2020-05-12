@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.16.8
+======
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* enchancement:Endpoints: Improved endpoint resolution for clients with unknown regions
+
+
 1.16.7
 ======
 
