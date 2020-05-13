@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.16.9
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.16.8
 ======
 
