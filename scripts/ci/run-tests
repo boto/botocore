@@ -4,6 +4,7 @@
 # binary package not from the CWD.
 
 import os
+import argparse
 from subprocess import check_call
 
 _dname = os.path.dirname
@@ -13,8 +14,21 @@ os.chdir(os.path.join(REPO_ROOT, 'tests'))
 
 
 def run(command):
-    return check_call(command, shell=True)
+    return check_call(command)
 
 
-run('nosetests --with-coverage --cover-erase --cover-package botocore '
-    '--with-xunit --cover-xml unit/ functional/')
+parser = argparse.ArgumentParser()
+parser.add_argument('noseargs', nargs='*', default=['unit/', 'functional/'], help='BAR!')
+parsed = parser.parse_args()
+
+command = [
+    'nosetests',
+    '--with-coverage',
+    '--cover-erase',
+    '--cover-package',
+    'botocore',
+    '--with-xunit',
+    '--cover-xml',
+]
+command += parsed.noseargs
+run(command)
