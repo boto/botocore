@@ -112,7 +112,8 @@ class ZipTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             egg_path = self._create_bdist_egg(tmp_dir)
             script, libpath = self._create_venv(tmp_dir, extra_sys_path=egg_path)
-            script += 'import botocore.loaders; botocore.loaders.Loader().load_data("endpoints");'
+            script += 'import botocore.loaders;'
+            script += 'botocore.loaders.Loader().load_data("endpoints");'
             self._run_isolated_python_subprocess_or_fail(script)
 
     @unittest.skipIf(
@@ -123,7 +124,8 @@ class ZipTest(unittest.TestCase):
             egg_path = self._create_bdist_egg(tmp_dir)
             script, libpath = self._create_venv(tmp_dir)
             shutil.unpack_archive(egg_path, libpath, format='zip')
-            script += 'import botocore.loaders; botocore.loaders.Loader().load_data("endpoints");'
+            script += 'import botocore.loaders;'
+            script += 'botocore.loaders.Loader().load_data("endpoints");'
             self._run_isolated_python_subprocess_or_fail(script)
 
     @unittest.skipIf(
@@ -133,8 +135,10 @@ class ZipTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             egg_path = self._create_bdist_egg(tmp_dir)
             script, libpath = self._create_venv(tmp_dir, extra_sys_path=egg_path)
-            script += 'import botocore.httpsession; path = botocore.httpsession.get_cert_path(verify=True);'
-            script += 'fd = open(path); fd.read(); fd.close();'
+            script += 'import botocore.httpsession; import botocore.awsrequest;'
+            script += 'req = botocore.awsrequest.AWSRequest(method="GET", url="https://www.amazon.com/");'
+            script += 'session = botocore.httpsession.URLLib3Session(timeout=10);'
+            script += 'session.send(req.prepare());'
             self._run_isolated_python_subprocess_or_fail(script)
 
     @unittest.skipIf(
@@ -145,6 +149,8 @@ class ZipTest(unittest.TestCase):
             egg_path = self._create_bdist_egg(tmp_dir)
             script, libpath = self._create_venv(tmp_dir)
             shutil.unpack_archive(egg_path, libpath, format='zip')
-            script += 'import botocore.httpsession; path = botocore.httpsession.get_cert_path(verify=True);'
-            script += 'fd = open(path); fd.read(); fd.close();'
+            script += 'import botocore.httpsession; import botocore.awsrequest;'
+            script += 'req = botocore.awsrequest.AWSRequest(method="GET", url="https://www.amazon.com/");'
+            script += 'session = botocore.httpsession.URLLib3Session(timeout=10);'
+            script += 'session.send(req.prepare());'
             self._run_isolated_python_subprocess_or_fail(script)

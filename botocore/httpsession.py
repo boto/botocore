@@ -1,6 +1,8 @@
 import os.path
 import logging
 import socket
+import tempfile
+import shutil
 from base64 import b64encode
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
@@ -31,13 +33,42 @@ filter_ssl_warnings()
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
-DEFAULT_CA_BUNDLE = os.path.join(os.path.dirname(__file__), 'cacert.pem')
+DEFAULT_CA_BUNDLE_FILENAME = 'cacert.pem'
 
 try:
     from certifi import where
 except ImportError:
-    def where():
-        return DEFAULT_CA_BUNDLE
+    try:
+        from importlib import resources
+        _ca_bundle_path = None
+        def where():
+            # Unfortunately urllib3s HTTPSConnectionPool currently
+            # only accepts a file path, not ca_cert_data
+            # like the pooled HTTPSConnection.
+            global _ca_bundle_path
+            if _ca_bundle_path is None:
+                # Check if importlib.resources thinks this is already
+                # a real file - if so, we should just return the actual
+                # file path instead of creating a tempfile for it.
+                with resources.path('botocore', DEFAULT_CA_BUNDLE_FILENAME) as res:
+                    filename = res
+                if os.path.exists(filename):
+                    return filename
+                # If resources.path made (and deleted) a temporary file, we
+                # need to manifest it without cleaning up the file
+                cert = resources.open_binary('botocore', DEFAULT_CA_BUNDLE_FILENAME)
+                fd, raw_path = tempfile.mkstemp()
+                os.write(fd, cert.read())
+                os.close(fd)
+                cert.close()
+                _ca_bundle_path = raw_path
+            return _ca_bundle_path
+    except ImportError:
+        def where():
+            # Fallback to __file__-based approach for pre-3.7
+            return os.path.join(
+                os.path.dirname(__file__),
+                DEFAULT_CA_BUNDLE_FILENAME)
 
 
 def get_cert_path(verify):
@@ -219,7 +250,10 @@ class URLLib3Session(object):
     def _setup_ssl_cert(self, conn, url, verify):
         if url.lower().startswith('https') and verify:
             conn.cert_reqs = 'CERT_REQUIRED'
-            conn.ca_certs = get_cert_path(verify)
+            try:
+                conn.ca_certs = next(get_cert_path(verify))
+            except TypeError:
+                conn.ca_certs = get_cert_path(verify)
         else:
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
