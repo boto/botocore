@@ -77,15 +77,14 @@ class PathAdapter(object):
         """Return True if path_or_package is
         a directory or package."""
         parsed = botocore.compat.urlparse(path_or_package)
-        if parsed.scheme == PACKAGE_SCHEME:
-            if importlib.resources is not None:
-                path_parts = split_path(parsed.path)
-                path_parts.insert(0, parsed.netloc)
-                try:
-                    importlib.import_module('.'.join(path_parts))
-                    return True
-                except ModuleNotFoundError:
-                    return False
+        if parsed.scheme == PACKAGE_SCHEME and importlib.resources is not None:
+            path_parts = split_path(parsed.path)
+            path_parts.insert(0, parsed.netloc)
+            try:
+                importlib.import_module('.'.join(path_parts))
+                return True
+            except ModuleNotFoundError:
+                return False
         return _os_or_module_path_op(path_or_package, os.path.isdir)
 
     def isfile(self, path_or_package):

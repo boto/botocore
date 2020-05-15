@@ -170,10 +170,7 @@ class JSONFileLoader(object):
             return
 
         logger.debug("Loading JSON file: %s", full_path)
-        # TODO: Handle loading resources here.
-        # By default the file will be opened with locale encoding on Python 3.
-        # We specify "utf8" here to ensure the correct behavior.
-        return json.loads(read_text(full_path))
+        return json.loads(read_text(full_path, encoding='utf-8'))
 
 
 def create_loader(search_path_string=None):
