@@ -104,7 +104,6 @@ which don't represent the actual service api.
 import os
 import logging
 
-from botocore import BOTOCORE_ROOT
 from botocore.compat import json
 from botocore.compat import OrderedDict
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
