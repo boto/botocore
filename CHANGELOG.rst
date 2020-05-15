@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.16.11
+=======
+
+* api-change:``sts``: Update sts client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.16.10
 =======
 
