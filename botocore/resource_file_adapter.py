@@ -134,6 +134,11 @@ class OSAdapter(object):
     def listdir(self, path_or_package):
         """Lists the contents of a directory
         or package."""
+        parsed = botocore.compat.urlparse(path_or_package)
+        if parsed.scheme == PACKAGE_SCHEME and importlib.resources is not None:
+            path_parts = split_path(parsed.path)
+            path_parts.insert(0, parsed.netloc)
+            return importlib.resources.contents('.'.join(path_parts))
         return _os_or_module_path_op(path_or_package, os.listdir)
 
     def __init__(self):
