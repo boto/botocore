@@ -110,6 +110,9 @@ from botocore.compat import OrderedDict
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 
+from botocore.resource_file_adapter import os_adapter
+from botocore.resource_file_adapter import read_text
+
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +154,7 @@ class JSONFileLoader(object):
         :return: True if file path exists, False otherwise.
 
         """
-        return os.path.isfile(file_path + '.json')
+        return os_adapter.path.isfile(file_path + '.json')
 
     def load_file(self, file_path):
         """Attempt to load the file path.
@@ -164,15 +167,14 @@ class JSONFileLoader(object):
 
         """
         full_path = file_path + '.json'
-        if not os.path.isfile(full_path):
+        if not os_adapter.path.isfile(full_path):
             return
 
+        logger.debug("Loading JSON file: %s", full_path)
+        # TODO: Handle loading resources here.
         # By default the file will be opened with locale encoding on Python 3.
         # We specify "utf8" here to ensure the correct behavior.
-        with open(full_path, 'rb') as fp:
-            payload = fp.read().decode('utf-8')
-            logger.debug("Loading JSON file: %s", full_path)
-            return json.loads(payload, object_pairs_hook=OrderedDict)
+        return json.loads(read_text(full_path))
 
 
 def create_loader(search_path_string=None):
@@ -210,7 +212,7 @@ class Loader(object):
     """
     FILE_LOADER_CLASS = JSONFileLoader
     # The included models in botocore/data/ that we ship with botocore.
-    BUILTIN_DATA_PATH = os.path.join(BOTOCORE_ROOT, 'data')
+    BUILTIN_DATA_PATH = 'pkg://botocore/data'
     # For convenience we automatically add ~/.aws/models to the data path.
     CUSTOMER_DATA_PATH = os.path.join(os.path.expanduser('~'),
                                       '.aws', 'models')
@@ -272,13 +274,19 @@ class Loader(object):
             # by searching for the corresponding type_name in each
             # potential directory.
             possible_services = [
-                d for d in os.listdir(possible_path)
-                if os.path.isdir(os.path.join(possible_path, d))]
+                d for d in os_adapter.listdir(possible_path)
+                if os_adapter.path.isdir(os_adapter.path.join(possible_path, d))]
             for service_name in possible_services:
-                full_dirname = os.path.join(possible_path, service_name)
-                api_versions = os.listdir(full_dirname)
+                full_dirname = os_adapter.path.join(possible_path, service_name)
+                # TODO: This should rely on the api version finder above
+                # instead of directly interfacing with the directories
+                api_versions = list(os_adapter.listdir(full_dirname))
+                try:
+                    api_versions.remove('__init__.py')
+                except ValueError:
+                    pass
                 for api_version in api_versions:
-                    full_load_path = os.path.join(full_dirname,
+                    full_load_path = os_adapter.path.join(full_dirname,
                                                   api_version,
                                                   type_name)
                     if self.file_loader.exists(full_load_path):
@@ -328,8 +336,8 @@ class Loader(object):
         for possible_path in self._potential_locations(service_name,
                                                        must_exist=True,
                                                        is_dir=True):
-            for dirname in os.listdir(possible_path):
-                full_path = os.path.join(possible_path, dirname, type_name)
+            for dirname in os_adapter.listdir(possible_path):
+                full_path = os_adapter.path.join(possible_path, dirname, type_name)
                 # Only add to the known_api_versions if the directory
                 # contains a service-2, paginators-1, etc. file corresponding
                 # to the type_name passed in.
@@ -379,7 +387,7 @@ class Loader(object):
         if api_version is None:
             api_version = self.determine_latest_version(
                 service_name, type_name)
-        full_path = os.path.join(service_name, api_version, type_name)
+        full_path = os_adapter.path.join(service_name, api_version, type_name)
         model = self.load_data(full_path)
 
         # Load in all the extras
@@ -398,6 +406,30 @@ class Loader(object):
                 yield self.load_data(full_path)
             except DataNotFoundError:
                 pass
+
+    @instance_cache
+    def _new_load_data(self, name):
+        """Load data given a data path.
+
+        This is a low level method that will search through the various
+        search paths until it's able to load a value.  This is typically
+        only needed to load *non* model files (such as _endpoints and
+        _retry).  If you need to load model files, you should prefer
+        ``load_service_model``.
+
+        :type name: str
+        :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
+
+        :return: The loaded data.  If no data could be found then
+            a DataNotFoundError is raised.
+
+        """
+        for possible_path in self._potential_locations(name):
+            found = self.file_loader.load_file(possible_path)
+            if found is not None:
+                return found
+        # We didn't find anything that matched on any path.
+        raise DataNotFoundError(data_path=name)
 
     @instance_cache
     def load_data(self, name):
@@ -428,16 +460,16 @@ class Loader(object):
         # Will give an iterator over the full path of potential locations
         # according to the search path.
         for path in self.search_paths:
-            if os.path.isdir(path):
+            if os_adapter.path.isdir(path):
                 full_path = path
                 if name is not None:
-                    full_path = os.path.join(path, name)
+                    full_path = os_adapter.path.join(path, name)
                 if not must_exist:
                     yield full_path
                 else:
-                    if is_dir and os.path.isdir(full_path):
+                    if is_dir and os_adapter.path.isdir(full_path):
                         yield full_path
-                    elif os.path.exists(full_path):
+                    elif os_adapter.path.exists(full_path):
                         yield full_path
 
 
