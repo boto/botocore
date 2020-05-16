@@ -16,6 +16,7 @@ import datetime
 from hashlib import sha256
 from hashlib import sha1
 import hmac
+from io import BytesIO
 import logging
 from email.utils import formatdate
 from operator import itemgetter
@@ -23,6 +24,9 @@ import functools
 import time
 import calendar
 import json
+
+import awscrt.auth
+import awscrt.http
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -52,6 +56,36 @@ SIGNED_HEADERS_BLACKLIST = [
     'x-amzn-trace-id',
 ]
 UNSIGNED_PAYLOAD = 'UNSIGNED-PAYLOAD'
+
+
+def _host_from_url(url):
+    # Given URL, derive value for host header. Ensure that value:
+    # 1) is lowercase
+    # 2) excludes port, if it was the default port
+    # 3) excludes userinfo
+    url_parts = urlsplit(url)
+    host = url_parts.hostname  # urlsplit's hostname is always lowercase
+    default_ports = {
+        'http': 80,
+        'https': 443
+    }
+    if url_parts.port is not None:
+        if url_parts.port != default_ports.get(url_parts.scheme):
+            host = '%s:%d' % (host, url_parts.port)
+    return host
+
+
+def _get_body_as_dict(request):
+    # For query services, request.data is form-encoded and is already a
+    # dict, but for other services such as rest-json it could be a json
+    # string or bytes. In those cases we attempt to load the data as a
+    # dict.
+    data = request.data
+    if isinstance(data, six.binary_type):
+        data = json.loads(data.decode('utf-8'))
+    elif isinstance(data, six.string_types):
+        data = json.loads(data)
+    return data
 
 
 class BaseSigner(object):
@@ -180,25 +214,10 @@ class SigV4Auth(BaseSigner):
             if lname not in SIGNED_HEADERS_BLACKLIST:
                 header_map[lname] = value
         if 'host' not in header_map:
-            # Ensure we sign the lowercased version of the host, as that
-            # is what will ultimately be sent on the wire.
             # TODO: We should set the host ourselves, instead of relying on our
             # HTTP client to set it for us.
-            header_map['host'] = self._canonical_host(request.url).lower()
+            header_map['host'] = _host_from_url(request.url)
         return header_map
-
-    def _canonical_host(self, url):
-        url_parts = urlsplit(url)
-        default_ports = {
-            'http': 80,
-            'https': 443
-        }
-        if any(url_parts.scheme == scheme and url_parts.port == port
-               for scheme, port in default_ports.items()):
-            # No need to include the port if it's the default port.
-            return url_parts.hostname
-        # Strip out auth if it's present in the netloc.
-        return url_parts.netloc.rsplit('@', 1)[-1]
 
     def canonical_query_string(self, request):
         # The query string can come from two parts.  One is the
@@ -246,7 +265,7 @@ class SigV4Auth(BaseSigner):
         sorted_header_names = sorted(set(headers_to_sign))
         for key in sorted_header_names:
             value = ','.join(self._header_value(v) for v in
-                             sorted(headers_to_sign.get_all(key)))
+                             headers_to_sign.get_all(key))
             headers.append('%s:%s' % (key, ensure_unicode(value)))
         return '\n'.join(headers)
 
@@ -509,7 +528,7 @@ class SigV4QueryAuth(SigV4Auth):
         if request.data:
             # We also need to move the body params into the query string. To
             # do this, we first have to convert it to a dict.
-            query_dict.update(self._get_body_as_dict(request))
+            query_dict.update(_get_body_as_dict(request))
             request.data = ''
         if query_dict:
             operation_params = percent_encode_sequence(query_dict) + '&'
@@ -526,18 +545,6 @@ class SigV4QueryAuth(SigV4Auth):
         p = url_parts
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
-
-    def _get_body_as_dict(self, request):
-        # For query services, request.data is form-encoded and is already a
-        # dict, but for other services such as rest-json it could be a json
-        # string or bytes. In those cases we attempt to load the data as a
-        # dict.
-        data = request.data
-        if isinstance(data, six.binary_type):
-            data = json.loads(data.decode('utf-8'))
-        elif isinstance(data, six.string_types):
-            data = json.loads(data)
-        return data
 
     def _inject_signature_to_request(self, request, signature):
         # Rather than calculating an "Authorization" header, for the query
@@ -615,6 +622,180 @@ class S3SigV4PostAuth(SigV4Auth):
         request.context['s3-presign-post-policy'] = policy
 
 
+class CrtSigV4Auth(BaseSigner):
+    REQUIRES_REGION = True
+    _PRESIGNED_HEADERS_BLACKLIST = [
+        'Authorization',
+        'X-Amz-Date',
+        'X-Amz-Content-SHA256',
+        'X-Amz-Security-Token',
+    ]
+    _SIGNATURE_TYPE = awscrt.auth.AwsSignatureType.HTTP_REQUEST_HEADERS
+
+    def __init__(self, credentials, service_name, region_name):
+        self.credentials = credentials
+        self._service_name = service_name
+        self._region_name = region_name
+        self._expiration_in_seconds = None
+
+    def _crt_request_from_aws_request(self, aws_request):
+        url_parts = urlsplit(aws_request.url)
+        crt_path = url_parts.path if url_parts.path else '/'
+        if aws_request.params:
+            array = []
+            for (param, value) in aws_request.params.items():
+                value = str(value)
+                array.append('%s=%s' % (param, value))
+            crt_path = crt_path + '?' + '&'.join(array)
+        elif url_parts.query:
+            crt_path = '%s?%s' % (crt_path, url_parts.query)
+
+        crt_headers = awscrt.http.HttpHeaders(aws_request.headers.items())
+
+        # CRT requires body (if it exists) to be an I/O stream.
+        crt_body_stream = None
+        if aws_request.body:
+            if hasattr(aws_request.body, 'seek'):
+                crt_body_stream = aws_request.body
+            else:
+                crt_body_stream = BytesIO(aws_request.body)
+
+        crt_request = awscrt.http.HttpRequest(
+            method=aws_request.method,
+            path=crt_path,
+            headers=crt_headers,
+            body_stream=crt_body_stream)
+        return crt_request
+
+    def _apply_signing_changes(self, aws_request, signed_crt_request):
+        # Apply changes from signed CRT request to the AWSRequest
+        aws_request.headers = HTTPHeaders.from_pairs(
+            list(signed_crt_request.headers))
+
+        if self._SIGNATURE_TYPE == \
+                awscrt.auth.AwsSignatureType.HTTP_REQUEST_QUERY_PARAMS:
+
+            new_query_string = urlsplit(signed_crt_request.path).query
+            p = urlsplit(aws_request.url)
+            # urlsplit() returns a tuple (and therefore immutable) so we
+            # need to create new url with the new query string.
+            # <part>   - <index>
+            # scheme   - 0
+            # netloc   - 1
+            # path     - 2
+            # query    - 3  <-- we're replacing this.
+            # fragment - 4
+            aws_request.url = urlunsplit(
+                (p[0], p[1], p[2], new_query_string, p[4]))
+
+    def _should_sign_header(self, name, **kwargs):
+        return name.lower() not in SIGNED_HEADERS_BLACKLIST
+
+    def _modify_request_before_signing(self, request):
+        # This could be a retry. Make sure the previous
+        # authorization headers are removed first.
+        for h in self._PRESIGNED_HEADERS_BLACKLIST:
+            if h in request.headers:
+                del request.headers[h]
+        # If necessary, add the host header
+        if 'host' not in request.headers:
+            request.headers['host'] = _host_from_url(request.url)
+
+    def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
+
+        # Use utcnow() because that's what gets mocked by tests, but set
+        # timezone because CRT assumes naive datetime is local time.
+        datetime_now = datetime.datetime.utcnow().replace(
+            tzinfo=datetime.timezone.utc)
+
+        self._modify_request_before_signing(request)
+
+        credentials_provider = awscrt.auth.AwsCredentialsProvider.new_static(
+            access_key_id=self.credentials.access_key,
+            secret_access_key=self.credentials.secret_key,
+            session_token=self.credentials.token)
+
+        if request.context.get('payload_signing_enabled', True):
+            signed_body_value_type = awscrt.auth.AwsSignedBodyValueType.PAYLOAD
+            signed_body_header_type = awscrt.auth.AwsSignedBodyHeaderType.NONE
+        else:
+            signed_body_value_type = \
+                awscrt.auth.AwsSignedBodyValueType.UNSIGNED_PAYLOAD
+            signed_body_header_type = \
+                awscrt.auth.AwsSignedBodyHeaderType.X_AMZ_CONTENT_SHA_256
+
+        signing_config = awscrt.auth.AwsSigningConfig(
+            algorithm=awscrt.auth.AwsSigningAlgorithm.V4,
+            signature_type=self._SIGNATURE_TYPE,
+            credentials_provider=credentials_provider,
+            region=self._region_name,
+            service=self._service_name,
+            date=datetime_now,
+            should_sign_header=self._should_sign_header,
+            signed_body_value_type=signed_body_value_type,
+            signed_body_header_type=signed_body_header_type,
+            expiration_in_seconds=self._expiration_in_seconds,
+            )
+        crt_request = self._crt_request_from_aws_request(request)
+        future = awscrt.auth.aws_sign_request(crt_request, signing_config)
+        future.result()
+        self._apply_signing_changes(request, crt_request)
+
+
+class CrtSigV4QueryAuth(CrtSigV4Auth):
+    DEFAULT_EXPIRES = 3600
+    _SIGNATURE_TYPE = awscrt.auth.AwsSignatureType.HTTP_REQUEST_QUERY_PARAMS
+
+    def __init__(self, credentials, service_name, region_name,
+                 expires=DEFAULT_EXPIRES):
+        super().__init__(credentials, service_name, region_name)
+        self._expiration_in_seconds = expires
+
+    def _modify_request_before_signing(self, request):
+        super()._modify_request_before_signing(request)
+
+        # We automatically set this header, so if it's the auto-set value we
+        # want to get rid of it since it doesn't make sense for presigned urls.
+        content_type = request.headers.get('content-type')
+        if content_type == 'application/x-www-form-urlencoded; charset=utf-8':
+            del request.headers['content-type']
+
+        # Now parse the original query string to a dict, inject our new query
+        # params, and serialize back to a query string.
+        url_parts = urlsplit(request.url)
+        # parse_qs makes each value a list, but in our case we know we won't
+        # have repeated keys so we know we have single element lists which we
+        # can convert back to scalar values.
+        query_dict = dict(
+            [(k, v[0]) for k, v in
+             parse_qs(url_parts.query, keep_blank_values=True).items()])
+        # The spec is particular about this.  It *has* to be:
+        # https://<endpoint>?<operation params>&<auth params>
+        # You can't mix the two types of params together, i.e just keep doing
+        # new_query_params.update(op_params)
+        # new_query_params.update(auth_params)
+        # percent_encode_sequence(new_query_params)
+        if request.data:
+            # We also need to move the body params into the query string. To
+            # do this, we first have to convert it to a dict.
+            query_dict.update(_get_body_as_dict(request))
+            request.data = ''
+        new_query_string = percent_encode_sequence(query_dict)
+        # url_parts is a tuple (and therefore immutable) so we need to create
+        # a new url_parts with the new query string.
+        # <part>   - <index>
+        # scheme   - 0
+        # netloc   - 1
+        # path     - 2
+        # query    - 3  <-- we're replacing this.
+        # fragment - 4
+        p = url_parts
+        new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
+        request.url = urlunsplit(new_url_parts)
+
+
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
@@ -626,5 +807,5 @@ AUTH_TYPE_MAPS = {
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,
-
+    'v4-crt': CrtSigV4Auth,
 }

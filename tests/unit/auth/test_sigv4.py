@@ -15,7 +15,7 @@
 
 AWS provides a test suite for signature version 4:
 
-    http://docs.aws.amazon.com/general/latest/gr/signature-v4-test-suite.html
+https://github.com/awslabs/aws-c-auth/tree/v0.3.15/tests/aws-sig-v4-test-suite
 
 This module contains logic to run these tests.  The test files were
 placed in ./aws4_testsuite, and we're using nose's test generators to
@@ -26,6 +26,7 @@ import os
 import logging
 import io
 import datetime
+import re
 from botocore.compat import six
 
 import mock
@@ -42,10 +43,11 @@ except ImportError:
     from urlparse import parse_qsl
 
 
-CREDENTIAL_SCOPE = "KEYNAME/20110909/us-west-1/s3/aws4_request"
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY = 'AKIDEXAMPLE'
-DATE_STRING = 'Mon, 09 Sep 2011 23:36:00 GMT'
+DATE = datetime.datetime(2015, 8, 30, 12, 36, 0)
+SERVICE = 'service'
+REGION = 'us-east-1'
 
 TESTSUITE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'aws4_testsuite')
@@ -53,16 +55,17 @@ TESTSUITE_DIR = os.path.join(
 # The following tests are not run.  Each test has a comment as
 # to why the test is being ignored.
 TESTS_TO_IGNORE = [
-    # Bad POST syntax, python's HTTP parser chokes on this.
-    'post-vanilla-query-space',
-    # Bad POST syntax, python's HTTP parser chokes on this.
-    'post-vanilla-query-nonunreserved',
-    # Multiple query params of the same key not supported by
-    # the SDKs.
+    # Bad request-line syntax, python's HTTP parser chokes on this.
+    'normalize-path/get-space',
+    # Multiple query params of the same key not supported by the SDKs.
     'get-vanilla-query-order-key-case',
-    # Multiple query params of the same key not supported by
-    # the SDKs.
+    'get-vanilla-query-order-key',
     'get-vanilla-query-order-value',
+    # Test seems wrong: multiline header value should not get commas inserted.
+    'get-header-value-multiline',
+    # Test seems wrong: String-to-sign's hash of the canonical request is off.
+    'post-x-www-form-urlencoded',
+    'post-x-www-form-urlencoded-parameters',
 ]
 if not six.PY3:
     TESTS_TO_IGNORE += [
@@ -95,30 +98,28 @@ def test_generator():
         mock.Mock(wraps=datetime.datetime)
     )
     mocked_datetime = datetime_patcher.start()
-    mocked_datetime.utcnow.return_value = datetime.datetime(2011, 9, 9, 23, 36)
-    formatdate_patcher = mock.patch('botocore.auth.formatdate')
-    formatdate = formatdate_patcher.start()
-    # We have to change this because Sep 9, 2011 was actually
-    # a Friday, but the tests have this set to a Monday.
-    formatdate.return_value = 'Mon, 09 Sep 2011 23:36:00 GMT'
-    for test_case in set(os.path.splitext(i)[0]
-                         for i in os.listdir(TESTSUITE_DIR)):
+    mocked_datetime.utcnow.return_value = DATE
+    for (dirpath, dirnames, filenames) in os.walk(TESTSUITE_DIR):
+        if not any(f.endswith('.req') for f in filenames):
+            continue
+
+        test_case = os.path.relpath(dirpath, TESTSUITE_DIR)
         if test_case in TESTS_TO_IGNORE:
             log.debug("Skipping test: %s", test_case)
             continue
-        yield (_test_signature_version_4, test_case)
+
+        yield (_test_signature_version_4, test_case, 'boto')
+        yield (_test_signature_version_4, test_case, 'crt')
     datetime_patcher.stop()
-    formatdate_patcher.stop()
 
 
 def create_request_from_raw_request(raw_request):
-    raw_request = raw_request.replace('http/1.1', 'HTTP/1.1')
     request = AWSRequest()
     raw = RawHTTPRequest(raw_request)
     if raw.error_code is not None:
         raise Exception(raw.error_message)
     request.method = raw.command
-    datetime_now = datetime.datetime(2011, 9, 9, 23, 36)
+    datetime_now = DATE
     request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
     for key, val in raw.headers.items():
         request.headers[key] = val
@@ -140,25 +141,39 @@ def create_request_from_raw_request(raw_request):
     return request
 
 
-def _test_signature_version_4(test_case):
+def _test_signature_version_4(test_case, signer):
     test_case = _SignatureTestCase(test_case)
     request = create_request_from_raw_request(test_case.raw_request)
 
-    auth = botocore.auth.SigV4Auth(test_case.credentials, 'host', 'us-east-1')
+    if signer == 'crt':
+        # Use CRT logging to diagnose interim steps (canonical request, etc)
+        # import awscrt.io
+        # awscrt.io.init_logging(awscrt.io.LogLevel.Trace, 'stdout')
+        auth = botocore.auth.CrtSigV4Auth(test_case.credentials,
+                                          SERVICE, REGION)
+        auth.add_auth(request)
+        actual_auth_header = request.headers['Authorization']
+        assert_equal(actual_auth_header, test_case.authorization_header,
+                     test_case.raw_request, 'authheader')
+    else:
+        auth = botocore.auth.SigV4Auth(test_case.credentials, SERVICE, REGION)
+        actual_canonical_request = auth.canonical_request(request)
+        actual_string_to_sign = auth.string_to_sign(request,
+                                                    actual_canonical_request)
+        auth.add_auth(request)
+        actual_auth_header = request.headers['Authorization']
 
-    actual_canonical_request = auth.canonical_request(request)
-    assert_equal(actual_canonical_request, test_case.canonical_request,
-                 test_case.raw_request, 'canonical_request')
+        # Some stuff only works right when you go through auth.add_auth()
+        # So don't assert the interim steps unless the end result was wrong.
+        if actual_auth_header != test_case.authorization_header:
+            assert_equal(actual_canonical_request, test_case.canonical_request,
+                         test_case.raw_request, 'canonical_request')
 
-    actual_string_to_sign = auth.string_to_sign(request,
-                                                actual_canonical_request)
-    assert_equal(actual_string_to_sign, test_case.string_to_sign,
-                 test_case.raw_request, 'string_to_sign')
+            assert_equal(actual_string_to_sign, test_case.string_to_sign,
+                         test_case.raw_request, 'string_to_sign')
 
-    auth.add_auth(request)
-    actual_auth_header = request.headers['Authorization']
-    assert_equal(actual_auth_header, test_case.authorization_header,
-                 test_case.raw_request, 'authheader')
+            assert_equal(actual_auth_header, test_case.authorization_header,
+                         test_case.raw_request, 'authheader')
 
 
 def assert_equal(actual, expected, raw_request, part):
@@ -171,21 +186,26 @@ def assert_equal(actual, expected, raw_request, part):
 
 class _SignatureTestCase(object):
     def __init__(self, test_case):
-        p = os.path.join
+        filepath = os.path.join(TESTSUITE_DIR, test_case,
+                                os.path.basename(test_case))
         # We're using io.open() because we need to open these files with
         # a specific encoding, and in 2.x io.open is the best way to do this.
-        self.raw_request = io.open(p(TESTSUITE_DIR, test_case + '.req'),
+        self.raw_request = io.open(filepath + '.req',
                                    encoding='utf-8').read()
         self.canonical_request = io.open(
-            p(TESTSUITE_DIR, test_case + '.creq'),
+            filepath + '.creq',
             encoding='utf-8').read().replace('\r', '')
         self.string_to_sign = io.open(
-            p(TESTSUITE_DIR, test_case + '.sts'),
+            filepath + '.sts',
             encoding='utf-8').read().replace('\r', '')
         self.authorization_header = io.open(
-            p(TESTSUITE_DIR, test_case + '.authz'),
+            filepath + '.authz',
             encoding='utf-8').read().replace('\r', '')
-        self.signed_request = io.open(p(TESTSUITE_DIR, test_case + '.sreq'),
+        self.signed_request = io.open(filepath + '.sreq',
                                       encoding='utf-8').read()
 
-        self.credentials = Credentials(ACCESS_KEY, SECRET_KEY)
+        token_pattern = r'^x-amz-security-token:(.*)$'
+        token_match = re.search(token_pattern, self.canonical_request,
+                                re.MULTILINE)
+        token = token_match.group(1) if token_match else None
+        self.credentials = Credentials(ACCESS_KEY, SECRET_KEY, token)

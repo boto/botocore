@@ -500,6 +500,7 @@ class BasePresignTest(unittest.TestCase):
 class TestSigV4Presign(BasePresignTest):
 
     maxDiff = None
+    AuthClass = botocore.auth.SigV4QueryAuth
 
     def setUp(self):
         self.access_key = 'access_key'
@@ -508,7 +509,7 @@ class TestSigV4Presign(BasePresignTest):
                                                             self.secret_key)
         self.service_name = 'myservice'
         self.region_name = 'myregion'
-        self.auth = botocore.auth.SigV4QueryAuth(
+        self.auth = self.AuthClass(
             self.credentials, self.service_name, self.region_name, expires=60)
         self.datetime_patcher = mock.patch.object(
             botocore.auth.datetime, 'datetime',
@@ -665,6 +666,17 @@ class TestSigV4Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(request)
         signed_headers = query_string.get('X-Amz-SignedHeaders')
         self.assertNotIn('content-type', signed_headers)
+
+
+class TestCrtSigV4Presign(TestSigV4Presign):
+    # Run same tests against CRT auth
+    AuthClass = botocore.auth.CrtSigV4QueryAuth
+
+    def setUp(self):
+        # Use CRT logging to see interim steps (canonical request, string to sign)
+        # import awscrt.io
+        # awscrt.io.init_logging(awscrt.io.LogLevel.Trace, 'stderr')
+        super().setUp()
 
 
 class BaseS3PresignPostTest(unittest.TestCase):
