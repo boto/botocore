@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.16.13
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``health``: Update health client to latest version
+* api-change:``chime``: Update chime client to latest version
+
+
+1.16.12
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
+1.16.11
+=======
+
+* api-change:``sts``: Update sts client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.16.10
 =======
 

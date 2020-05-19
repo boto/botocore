@@ -28,7 +28,10 @@
       "input_token": "nextToken",
       "limit_key": "maxResults",
       "output_token": "nextToken",
-      "result_key": "affectedAccounts"
+      "result_key": "affectedAccounts",
+      "non_aggregate_keys": [
+        "eventScopeCode"
+      ]
     },
     "DescribeAffectedEntitiesForOrganization": {
       "input_token": "nextToken",
