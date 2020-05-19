@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.16.13
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``health``: Update health client to latest version
+* api-change:``chime``: Update chime client to latest version
+
+
 1.16.12
 =======
 
