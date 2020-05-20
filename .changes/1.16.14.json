@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``securityhub``", 
+    "description": "Update securityhub client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``chime``", 
+    "description": "Update chime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }
+]
