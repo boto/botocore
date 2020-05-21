@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.16.15
+=======
+
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.14
+=======
+
+* api-change:``backup``: Update backup client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+
+
 1.16.13
 =======
 
