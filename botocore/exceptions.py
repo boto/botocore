@@ -448,7 +448,7 @@ class InvalidDNSNameError(BotoCoreError):
 class InvalidS3AddressingStyleError(BotoCoreError):
     """Error when an invalid path style is specified"""
     fmt = (
-        'S3 addressing style {s3_addressing_style} is invaild. Valid options '
+        'S3 addressing style {s3_addressing_style} is invalid. Valid options '
         'are: \'auto\', \'virtual\', and \'path\''
     )
 
