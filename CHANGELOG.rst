@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.16.15
+=======
+
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.16.14
 =======
 
