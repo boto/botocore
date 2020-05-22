@@ -291,10 +291,13 @@ class Waiter(object):
         config = kwargs.pop('WaiterConfig', {})
         sleep_amount = config.get('Delay', self.config.delay)
         max_attempts = config.get('MaxAttempts', self.config.max_attempts)
+        callback = kwargs.get('WaiterCallback')
         num_attempts = 0
 
         while True:
             response = self._operation_method(**kwargs)
+            if callable(callback):
+                callback(response)
             num_attempts += 1
             for acceptor in acceptors:
                 if acceptor.matcher_func(response):

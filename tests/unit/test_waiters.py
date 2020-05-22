@@ -528,6 +528,32 @@ class TestWaitersObjects(unittest.TestCase):
 
         self.assertEqual(operation_method.call_count, 2)
 
+    def test_waiter_callback(self):
+        config = self.create_waiter_config(
+            max_attempts=3,
+            acceptors=[{'state': 'success', 'matcher': 'path',
+                        'argument': 'Foo', 'expected': 'SUCCESS'}])
+        # Simulate the client having two calls that don't
+        # match followed by a third call that matches the
+        # acceptor.
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        self.client_responses_are(
+            {'Foo': 'FAILURE'},
+            {'Foo': 'FAILURE'},
+            {'Foo': 'SUCCESS'},
+            for_operation=operation_method
+        )
+
+        resps = []
+
+        def count(resps, ret):
+            resps.append(ret)
+
+        waiter.wait(WaiterCallback=lambda x: count(resps, x))
+        self.assertEqual(operation_method.call_count, 3)
+        self.assertEqual(len(resps), 3)
+
 
 class TestCreateWaiter(unittest.TestCase):
     def setUp(self):
