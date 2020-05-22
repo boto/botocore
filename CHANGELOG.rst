@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.16.16
+=======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+
+
 1.16.15
 =======
 

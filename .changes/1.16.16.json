@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotsitewise``", 
+    "description": "Update iotsitewise client to latest version", 
+    "type": "api-change"
+  }
+]
