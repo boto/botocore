@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.16.17
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``macie``: Update macie client to latest version
+
+
 1.16.16
 =======
 
