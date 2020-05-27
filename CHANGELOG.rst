@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.16.18
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.16.17
 =======
 
