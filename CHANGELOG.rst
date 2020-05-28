@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.16.19
+=======
+
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+
+
 1.16.18
 =======
 
