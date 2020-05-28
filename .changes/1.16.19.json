@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``marketplace-catalog``", 
+    "description": "Update marketplace-catalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``qldb-session``", 
+    "description": "Update qldb-session client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workmail``", 
+    "description": "Update workmail client to latest version", 
+    "type": "api-change"
+  }
+]
