@@ -438,7 +438,7 @@ class Session(object):
         Where:
 
          - agent_name is the value of the `user_agent_name` attribute
-           of the session object (`Boto` by default).
+           of the session object (`Botocore` by default).
          - agent_version is the value of the `user_agent_version`
            attribute of the session object (the botocore version by default).
            by default.
