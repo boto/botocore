@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.16.20
+=======
+
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.16.19
 =======
 
