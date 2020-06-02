@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``guardduty``", 
+    "description": "Update guardduty client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }
+]

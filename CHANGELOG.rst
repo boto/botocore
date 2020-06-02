@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.16.21
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
+1.16.20
+=======
+
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.16.19
+=======
+
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+
+
+1.16.18
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.16.17
 =======
 
