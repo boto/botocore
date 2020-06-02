@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import base64
 import re
 import time
 import logging
@@ -29,8 +30,10 @@ from dateutil.tz import tzutc
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
-from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.compat import OrderedDict, six, urlparse, get_tzinfo_options
+from botocore.compat import (
+        json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
+        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE
+)
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
@@ -1723,6 +1726,37 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
 
     if 'text' in content_type:
         return default
+
+
+def calculate_md5(body, **kwargs):
+    if isinstance(body, (bytes, bytearray)):
+        binary_md5 = _calculate_md5_from_bytes(body)
+    else:
+        binary_md5 = _calculate_md5_from_file(body)
+    return base64.b64encode(binary_md5).decode('ascii')
+
+
+def _calculate_md5_from_bytes(body_bytes):
+    md5 = get_md5(body_bytes)
+    return md5.digest()
+
+
+def _calculate_md5_from_file(fileobj):
+    start_position = fileobj.tell()
+    md5 = get_md5()
+    for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
+        md5.update(chunk)
+    fileobj.seek(start_position)
+    return md5.digest()
+
+
+def conditionally_calculate_md5(params, **kwargs):
+    """Only add a Content-MD5 if the system supports it."""
+    headers = params['headers']
+    body = params['body']
+    if MD5_AVAILABLE and body and 'Content-MD5' not in headers:
+        md5_digest = calculate_md5(body, **kwargs)
+        params['headers']['Content-MD5'] = md5_digest
 
 
 class FileWebIdentityTokenLoader(object):

@@ -41,6 +41,7 @@ from botocore.exceptions import MissingServiceIdError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
 from botocore.utils import hyphenize_service_id
+from botocore.utils import conditionally_calculate_md5
 
 from botocore import retryhandler
 from botocore import utils
@@ -190,38 +191,6 @@ def json_decode_template_body(parsed, **kwargs):
             parsed['TemplateBody'] = value
         except (ValueError, TypeError):
             logger.debug('error loading JSON', exc_info=True)
-
-
-def calculate_md5(params, **kwargs):
-    request_dict = params
-    if request_dict['body'] and 'Content-MD5' not in params['headers']:
-        body = request_dict['body']
-        if isinstance(body, (bytes, bytearray)):
-            binary_md5 = _calculate_md5_from_bytes(body)
-        else:
-            binary_md5 = _calculate_md5_from_file(body)
-        base64_md5 = base64.b64encode(binary_md5).decode('ascii')
-        params['headers']['Content-MD5'] = base64_md5
-
-
-def _calculate_md5_from_bytes(body_bytes):
-    md5 = get_md5(body_bytes)
-    return md5.digest()
-
-
-def _calculate_md5_from_file(fileobj):
-    start_position = fileobj.tell()
-    md5 = get_md5()
-    for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
-        md5.update(chunk)
-    fileobj.seek(start_position)
-    return md5.digest()
-
-
-def conditionally_calculate_md5(params, context, request_signer, **kwargs):
-    """Only add a Content-MD5 if the system supports it."""
-    if MD5_AVAILABLE:
-        calculate_md5(params, **kwargs)
 
 
 def validate_bucket_name(params, **kwargs):
@@ -949,26 +918,6 @@ BUILTIN_HANDLERS = [
      set_list_objects_encoding_type_url),
     ('before-parameter-build.s3.ListObjectVersions',
      set_list_objects_encoding_type_url),
-    ('before-call.s3.PutBucketTagging', calculate_md5),
-    ('before-call.s3.PutBucketLifecycle', calculate_md5),
-    ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),
-    ('before-call.s3.PutBucketCors', calculate_md5),
-    ('before-call.s3.DeleteObjects', calculate_md5),
-    ('before-call.s3.PutBucketReplication', calculate_md5),
-    ('before-call.s3.PutObject', conditionally_calculate_md5),
-    ('before-call.s3.UploadPart', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketAcl', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketLogging', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketNotification', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketPolicy', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketRequestPayment', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
-    ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
-    ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
-    ('before-call.s3.PutObjectLegalHold', calculate_md5),
-    ('before-call.s3.PutObjectRetention', calculate_md5),
-    ('before-call.s3.PutObjectLockConfiguration', calculate_md5),
-
     ('before-parameter-build.s3.CopyObject',
      handle_copy_source_param),
     ('before-parameter-build.s3.UploadPartCopy',
@@ -983,6 +932,8 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
+    ('before-call.s3.PutObject', conditionally_calculate_md5),
+    ('before-call.s3.UploadPart', conditionally_calculate_md5),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
