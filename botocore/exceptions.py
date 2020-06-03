@@ -448,7 +448,7 @@ class InvalidDNSNameError(BotoCoreError):
 class InvalidS3AddressingStyleError(BotoCoreError):
     """Error when an invalid path style is specified"""
     fmt = (
-        'S3 addressing style {s3_addressing_style} is invaild. Valid options '
+        'S3 addressing style {s3_addressing_style} is invalid. Valid options '
         'are: \'auto\', \'virtual\', and \'path\''
     )
 
@@ -497,7 +497,7 @@ class InvalidS3UsEast1RegionalEndpointConfigError(BotoCoreError):
     fmt = (
         'S3 us-east-1 regional endpoint option '
         '{s3_us_east_1_regional_endpoint_config} is '
-        'invaild. Valid options are: legacy and regional'
+        'invalid. Valid options are: legacy and regional'
     )
 
 
@@ -505,7 +505,7 @@ class InvalidSTSRegionalEndpointsConfigError(BotoCoreError):
     """Error when invalid sts regional endpoints configuration is specified"""
     fmt = (
         'STS regional endpoints option {sts_regional_endpoints_config} is '
-        'invaild. Valid options are: legacy and regional'
+        'invalid. Valid options are: legacy and regional'
     )
 
 

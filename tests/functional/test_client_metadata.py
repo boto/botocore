@@ -41,4 +41,4 @@ class TestClientMeta(unittest.TestCase):
 
     def test_client_has_no_partition_on_meta_if_custom_region(self):
         client = self.session.create_client('s3', 'myregion')
-        self.assertEqual(client.meta.partition, None)
+        self.assertEqual(client.meta.partition, 'aws')

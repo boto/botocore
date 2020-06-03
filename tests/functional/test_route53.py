@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+from tests import unittest, BaseSessionTest, ClientHTTPStubber
 
 import botocore.session
 from botocore.stub import Stubber
@@ -49,3 +49,24 @@ class TestRoute53Pagination(unittest.TestCase):
             config={'PageSize': '1'}
             results = list(paginator.paginate(PaginationConfig=config))
             self.assertTrue(len(results) >= 0)
+
+class TestRoute53EndpointResolution(BaseSessionTest):
+
+    def create_stubbed_client(self, service_name, region_name, **kwargs):
+        client = self.session.create_client(service_name, region_name, **kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        http_stubber.add_response()
+        return client, http_stubber
+
+    def test_unregionalized_client_endpoint_resolution(self):
+        client, stubber = self.create_stubbed_client('route53', 'us-west-2')
+        client.list_geo_locations()
+        expected_url = 'https://route53.amazonaws.com/'
+        self.assertTrue(stubber.requests[0].url.startswith(expected_url))
+
+    def test_unregionalized_client_with_unknown_region(self):
+        client, stubber = self.create_stubbed_client('route53', 'not-real')
+        client.list_geo_locations()
+        expected_url = 'https://route53.amazonaws.com/'
+        self.assertTrue(stubber.requests[0].url.startswith(expected_url))

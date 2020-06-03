@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``kinesisvideo``", 
+    "description": "Update kinesisvideo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesis-video-archived-media``", 
+    "description": "Update kinesis-video-archived-media client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecr``", 
+    "description": "Update ecr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }
+]

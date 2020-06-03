@@ -359,6 +359,15 @@ class ClientEndpointBridge(object):
         region_name = self._check_default_region(service_name, region_name)
         resolved = self.endpoint_resolver.construct_endpoint(
             service_name, region_name)
+
+        # If we can't resolve the region, we'll attempt to get a global
+        # endpoint for non-regionalized services (iam, route53, etc)
+        if not resolved:
+            # TODO: fallback partition_name should be configurable in the
+            # future for users to define as needed.
+            resolved = self.endpoint_resolver.construct_endpoint(
+                service_name, region_name, partition_name='aws')
+
         if resolved:
             return self._create_endpoint(
                 resolved, service_name, region_name, endpoint_url, is_secure)

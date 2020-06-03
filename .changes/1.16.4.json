@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``codestar-connections``", 
+    "description": "Update codestar-connections client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehendmedical``", 
+    "description": "Update comprehendmedical client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -104,11 +104,17 @@ def check_for_200_error(response, **kwargs):
 
 def _looks_like_special_case_error(http_response):
     if http_response.status_code == 200:
-        parser = ETree.XMLParser(
-            target=ETree.TreeBuilder(),
-            encoding='utf-8')
-        parser.feed(http_response.content)
-        root = parser.close()
+        try:
+            parser = ETree.XMLParser(
+                target=ETree.TreeBuilder(),
+                encoding='utf-8')
+            parser.feed(http_response.content)
+            root = parser.close()
+        except XMLParseError:
+            # In cases of network disruptions, we may end up with a partial
+            # streamed response from S3. We need to treat these cases as
+            # 500 Service Errors and try again.
+            return True
         if root.tag == 'Error':
             return True
     return False

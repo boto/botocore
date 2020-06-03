@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``fsx``", 
+    "description": "Update fsx client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``athena``", 
+    "description": "Update athena client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``worklink``", 
+    "description": "Update worklink client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lightsail``", 
+    "description": "Update lightsail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appconfig``", 
+    "description": "Update appconfig client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``logs``", 
+    "description": "Update logs client to latest version", 
+    "type": "api-change"
+  }
+]

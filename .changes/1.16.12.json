@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``chime``", 
+    "description": "Update chime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``qldb``", 
+    "description": "Update qldb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``macie2``", 
+    "description": "Update macie2 client to latest version", 
+    "type": "api-change"
+  }
+]
