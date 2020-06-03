@@ -771,7 +771,7 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_content_sha256_set_if_md5_is_unavailable(self):
         with mock.patch('botocore.auth.MD5_AVAILABLE', False):
-            with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+            with mock.patch('botocore.utils.MD5_AVAILABLE', False):
                 with self.http_stubber:
                     self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
@@ -1105,6 +1105,65 @@ class TestGeneratePresigned(BaseS3OperationTest):
         url = client.generate_presigned_url(
             'get_object', {'Bucket': 'mybucket', 'Key': 'mykey'})
         self.assert_is_v2_presigned_url(url)
+
+def test_checksums_included_in_expected_operations():
+    """Validate expected calls include Content-MD5 header"""
+
+    t = S3ChecksumCases(_verify_checksum_in_headers)
+    yield t.case('put_bucket_tagging',
+            {"Bucket": "foo", "Tagging":{"TagSet":[]}})
+    yield t.case('put_bucket_lifecycle',
+            {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
+    yield t.case('put_bucket_lifecycle_configuration',
+            {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
+    yield t.case('put_bucket_cors',
+            {"Bucket": "foo", "CORSConfiguration":{"CORSRules": []}})
+    yield t.case('delete_objects',
+            {"Bucket": "foo", "Delete": {"Objects": [{"Key": "bar"}]}})
+    yield t.case('put_bucket_replication',
+            {"Bucket": "foo",
+             "ReplicationConfiguration": {"Role":"", "Rules": []}})
+    yield t.case('put_bucket_acl',
+            {"Bucket": "foo", "AccessControlPolicy":{}})
+    yield t.case('put_bucket_logging',
+            {"Bucket": "foo",
+             "BucketLoggingStatus":{}})
+    yield t.case('put_bucket_notification',
+            {"Bucket": "foo", "NotificationConfiguration":{}})
+    yield t.case('put_bucket_policy',
+            {"Bucket": "foo", "Policy": "<bucket-policy>"})
+    yield t.case('put_bucket_request_payment',
+            {"Bucket": "foo", "RequestPaymentConfiguration":{"Payer": ""}})
+    yield t.case('put_bucket_versioning',
+            {"Bucket": "foo", "VersioningConfiguration":{}})
+    yield t.case('put_bucket_website',
+            {"Bucket": "foo",
+             "WebsiteConfiguration":{}})
+    yield t.case('put_object_acl',
+            {"Bucket": "foo", "Key": "bar", "AccessControlPolicy":{}})
+    yield t.case('put_object_legal_hold',
+            {"Bucket": "foo", "Key": "bar", "LegalHold":{"Status": "ON"}})
+    yield t.case('put_object_retention',
+            {"Bucket": "foo", "Key": "bar",
+             "Retention":{"RetainUntilDate":"2020-11-05"}})
+    yield t.case('put_object_lock_configuration',
+            {"Bucket": "foo", "ObjectLockConfiguration":{}})
+
+
+def _verify_checksum_in_headers(operation, operation_kwargs):
+    environ = {}
+    with mock.patch('os.environ', environ):
+        environ['AWS_ACCESS_KEY_ID'] = 'access_key'
+        environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        session = create_session()
+        session.config_filename = 'no-exist-foo'
+        client = session.create_client('s3')
+        with ClientHTTPStubber(client) as stub:
+            stub.add_response()
+            call = getattr(client, operation)
+            call(**operation_kwargs)
+            assert 'Content-MD5' in stub.requests[-1].headers
 
 
 def test_correct_url_used_for_s3():
@@ -1759,10 +1818,15 @@ def test_correct_url_used_for_s3():
             'https://bucket.s3.unknown.amazonaws.com/key'))
 
 
-class S3AddressingCases(object):
+class BaseTestCase:
     def __init__(self, verify_function):
         self._verify = verify_function
 
+    def case(self, **kwargs):
+        return self._verify, kwargs
+
+
+class S3AddressingCases(BaseTestCase):
     def case(self, region=None, bucket='bucket', key='key',
              s3_config=None, is_secure=True, customer_provided_endpoint=None,
              expected_url=None, signature_version=None):
@@ -1770,6 +1834,11 @@ class S3AddressingCases(object):
             self._verify, region, bucket, key, s3_config, is_secure,
             customer_provided_endpoint, expected_url, signature_version
         )
+
+
+class S3ChecksumCases(BaseTestCase):
+    def case(self, operation, operation_args):
+        return self._verify, operation, operation_args
 
 
 def _verify_expected_endpoint_url(region, bucket, key, s3_config,
