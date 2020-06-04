@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.16.22
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.16.21
 =======
 

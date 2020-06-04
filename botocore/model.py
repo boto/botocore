@@ -520,6 +520,10 @@ class OperationModel(object):
         return self._operation_model.get('endpoint')
 
     @CachedProperty
+    def http_checksum_required(self):
+        return self._operation_model.get('httpChecksumRequired', False)
+
+    @CachedProperty
     def has_event_stream_input(self):
         return self.get_event_stream_input() is not None
 

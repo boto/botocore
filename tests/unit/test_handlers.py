@@ -38,6 +38,7 @@ from botocore.model import DenormalizedStructureBuilder
 from botocore.session import Session
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
+from botocore.utils import conditionally_calculate_md5
 from botocore import handlers
 
 
@@ -1124,7 +1125,7 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
         context = self.get_context()
-        handlers.conditionally_calculate_md5(
+        conditionally_calculate_md5(
             request_dict, request_signer=request_signer, context=context)
         self.assertTrue('Content-MD5' in request_dict['headers'])
 
@@ -1138,7 +1139,7 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
         context = self.get_context({'payload_signing_enabled': False})
-        handlers.conditionally_calculate_md5(
+        conditionally_calculate_md5(
             request_dict, request_signer=request_signer, context=context)
         self.assertTrue('Content-MD5' in request_dict['headers'])
 
@@ -1153,8 +1154,8 @@ class TestAddMD5(BaseMD5Test):
 
         context = self.get_context()
         self.set_md5_available(False)
-        with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
-            handlers.conditionally_calculate_md5(
+        with mock.patch('botocore.utils.MD5_AVAILABLE', False):
+            conditionally_calculate_md5(
                 request_dict, request_signer=request_signer, context=context)
             self.assertFalse('Content-MD5' in request_dict['headers'])
 
@@ -1169,7 +1170,7 @@ class TestAddMD5(BaseMD5Test):
 
         self.set_md5_available(False)
         with self.assertRaises(MD5UnavailableError):
-            handlers.calculate_md5(
+            conditionally_calculate_md5(
                 request_dict, request_signer=request_signer)
 
     def test_adds_md5_when_s3v2(self):
@@ -1181,7 +1182,7 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
         context = self.get_context()
-        handlers.conditionally_calculate_md5(
+        conditionally_calculate_md5(
             request_dict, request_signer=request_signer, context=context)
         self.assertTrue('Content-MD5' in request_dict['headers'])
 
@@ -1191,7 +1192,7 @@ class TestAddMD5(BaseMD5Test):
             'headers': {}
         }
         self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
-        handlers.calculate_md5(request_dict)
+        conditionally_calculate_md5(request_dict)
         self.assertEqual(request_dict['headers']['Content-MD5'],
                          'OFj2IjCsPJFfMAxmQxLGPw==')
 
@@ -1201,7 +1202,7 @@ class TestAddMD5(BaseMD5Test):
             'headers': {}
         }
         self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
-        handlers.calculate_md5(request_dict)
+        conditionally_calculate_md5(request_dict)
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
@@ -1212,7 +1213,7 @@ class TestAddMD5(BaseMD5Test):
             'headers': {}
         }
         self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
-        handlers.calculate_md5(request_dict)
+        conditionally_calculate_md5(request_dict)
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
