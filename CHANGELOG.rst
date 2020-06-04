@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.16.23
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.16.22
 =======
 
