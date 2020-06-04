@@ -49,7 +49,7 @@ class DataNotFoundError(BotoCoreError):
     """
     The data associated with a particular path could not be loaded.
 
-    :ivar path: The data path that the user attempted to load.
+    :ivar data_path: The data path that the user attempted to load.
     """
     fmt = 'Unable to load data for: {data_path}'
 
@@ -67,11 +67,11 @@ class UnknownServiceError(DataNotFoundError):
 
 class ApiVersionNotFoundError(BotoCoreError):
     """
-    The data associated with either an API version or a compatible one
+    The data associated with either the API version or a compatible one
     could not be loaded.
 
-    :ivar path: The data path that the user attempted to load.
-    :ivar path: The API version that the user attempted to load.
+    :ivar data_path: The data path that the user attempted to load.
+    :ivar api_version: The API version that the user attempted to load.
     """
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
@@ -121,7 +121,7 @@ class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
 
 class NoCredentialsError(BotoCoreError):
     """
-    No credentials could be found
+    No credentials could be found.
     """
     fmt = 'Unable to locate credentials'
 
