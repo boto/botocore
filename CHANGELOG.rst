@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.16.23
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.22
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.16.21
 =======
 
