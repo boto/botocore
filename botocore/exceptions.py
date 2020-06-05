@@ -559,6 +559,22 @@ class MissingServiceIdError(UndefinedModelAttributeError):
         self.kwargs = kwargs
 
 
+class SSOError(BotoCoreError):
+    fmt = "An unspecified error happened when resolving SSO credentials"
+
+
+class SSOTokenLoadError(SSOError):
+    fmt = "Error loading SSO Token: {error_msg}"
+
+
+class UnauthorizedSSOTokenError(SSOError):
+    fmt = (
+        "The SSO session associated with this profile has expired or is "
+        "otherwise invalid. To refresh this SSO session run aws sso login "
+        "with the corresponding profile."
+    )
+
+
 class CapacityNotAvailableError(BotoCoreError):
     fmt = (
         'Insufficient request capacity available.'

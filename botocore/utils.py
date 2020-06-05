@@ -39,7 +39,7 @@ from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
-    UnsupportedS3AccesspointConfigurationError
+    UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
 )
 
 logger = logging.getLogger(__name__)
@@ -1767,3 +1767,26 @@ class FileWebIdentityTokenLoader(object):
     def __call__(self):
         with self._open(self._web_identity_token_path) as token_file:
             return token_file.read()
+
+
+class SSOTokenLoader(object):
+    def __init__(self, cache=None):
+        if cache is None:
+            cache = {}
+        self._cache = cache
+
+    def _generate_cache_key(self, start_url):
+        return hashlib.sha1(start_url.encode('utf-8')).hexdigest()
+
+    def __call__(self, start_url):
+        cache_key = self._generate_cache_key(start_url)
+        try:
+            token = self._cache[cache_key]
+            return token['accessToken']
+        except KeyError:
+            logger.debug('Failed to load SSO token:', exc_info=True)
+            error_msg = (
+                'The SSO access token has either expired or is otherwise '
+                'invalid.'
+            )
+            raise SSOTokenLoadError(error_msg=error_msg)
