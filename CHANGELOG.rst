@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.16.24
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.16.23
 =======
 
