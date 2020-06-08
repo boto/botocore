@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.16.25
+=======
+
+* api-change:``shield``: Update shield client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
 1.16.24
 =======
 
