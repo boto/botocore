@@ -514,9 +514,9 @@ class StubbedSession(botocore.session.Session):
         self._client_stubs[service_name] = stubber
         return client
 
-    def stub(self, service_name):
+    def stub(self, service_name, *args, **kwargs):
         if service_name not in self._client_stubs:
-            self.create_client(service_name)
+            self.create_client(service_name, *args, **kwargs)
         return self._client_stubs[service_name]
 
     def activate_stubs(self):

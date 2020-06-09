@@ -26,13 +26,16 @@ from botocore import credentials
 from botocore.utils import ContainerMetadataFetcher
 from botocore.compat import json, six
 from botocore.session import Session
-from botocore.utils import FileWebIdentityTokenLoader
+from botocore.stub import Stubber
+from botocore.utils import datetime2timestamp
+from botocore.utils import FileWebIdentityTokenLoader, SSOTokenLoader
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import ProcessProvider
 from botocore.credentials import AssumeRoleWithWebIdentityProvider
 from botocore.credentials import Credentials, ProfileProviderBuilder
+from botocore.credentials import SSOCredentialFetcher, SSOProvider
 from botocore.configprovider import ConfigValueStore
 import botocore.exceptions
 import botocore.session
@@ -3206,6 +3209,7 @@ class TestProfileProviderBuilder(unittest.TestCase):
         providers = self.builder.providers('some-profile')
         expected_providers = [
             AssumeRoleWithWebIdentityProvider,
+            SSOProvider,
             SharedCredentialProvider,
             ProcessProvider,
             ConfigProvider,
@@ -3214,3 +3218,196 @@ class TestProfileProviderBuilder(unittest.TestCase):
         zipped_providers = six.moves.zip(providers, expected_providers)
         for provider, expected_type in zipped_providers:
             self.assertTrue(isinstance(provider, expected_type))
+
+
+class TestSSOCredentialFetcher(unittest.TestCase):
+    def setUp(self):
+        self.sso = Session().create_client('sso', region_name='us-east-1')
+        self.stubber = Stubber(self.sso)
+        self.mock_session = mock.Mock(spec=Session)
+        self.mock_session.create_client.return_value = self.sso
+
+        self.cache = {}
+        self.sso_region = 'us-east-1'
+        self.start_url = 'https://d-92671207e4.awsapps.com/start'
+        self.role_name = 'test-role'
+        self.account_id = '1234567890'
+        self.access_token = 'some.sso.token'
+        # This is just an arbitrary point in time we can pin to
+        self.now = datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
+        # The SSO endpoint uses ms whereas the OIDC endpoint uses seconds
+        self.now_timestamp = 1222172800000
+
+        self.loader = mock.Mock(spec=SSOTokenLoader)
+        self.loader.return_value = self.access_token
+        self.fetcher = SSOCredentialFetcher(
+            self.start_url, self.sso_region, self.role_name, self.account_id,
+            self.mock_session.create_client, token_loader=self.loader,
+            cache=self.cache,
+        )
+
+    def test_can_fetch_credentials(self):
+        expected_params = {
+            'roleName': self.role_name,
+            'accountId': self.account_id,
+            'accessToken': self.access_token,
+        }
+        expected_response = {
+            'roleCredentials': {
+                'accessKeyId': 'foo',
+                'secretAccessKey': 'bar',
+                'sessionToken': 'baz',
+                'expiration': self.now_timestamp + 1000000,
+            }
+        }
+        self.stubber.add_response(
+            'get_role_credentials',
+            expected_response,
+            expected_params=expected_params,
+        )
+        with self.stubber:
+            credentials = self.fetcher.fetch_credentials()
+        self.assertEqual(credentials['access_key'], 'foo')
+        self.assertEqual(credentials['secret_key'], 'bar')
+        self.assertEqual(credentials['token'], 'baz')
+        self.assertEqual(credentials['expiry_time'], '2008-09-23T12:43:20UTC')
+        cache_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
+        expected_cached_credentials = {
+            'ProviderType': 'sso',
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2008-09-23T12:43:20UTC',
+            }
+        }
+        self.assertEqual(self.cache[cache_key], expected_cached_credentials)
+
+    def test_raises_helpful_message_on_unauthorized_exception(self):
+        expected_params = {
+            'roleName': self.role_name,
+            'accountId': self.account_id,
+            'accessToken': self.access_token,
+        }
+        self.stubber.add_client_error(
+            'get_role_credentials',
+            service_error_code='UnauthorizedException',
+            expected_params=expected_params,
+        )
+        with self.assertRaises(botocore.exceptions.UnauthorizedSSOTokenError):
+            with self.stubber:
+                credentials = self.fetcher.fetch_credentials()
+
+
+class TestSSOProvider(unittest.TestCase):
+    def setUp(self):
+        self.sso = Session().create_client('sso', region_name='us-east-1')
+        self.stubber = Stubber(self.sso)
+        self.mock_session = mock.Mock(spec=Session)
+        self.mock_session.create_client.return_value = self.sso
+
+        self.sso_region = 'us-east-1'
+        self.start_url = 'https://d-92671207e4.awsapps.com/start'
+        self.role_name = 'test-role'
+        self.account_id = '1234567890'
+        self.access_token = 'some.sso.token'
+
+        self.profile_name = 'sso-profile'
+        self.config = {
+            'sso_region': self.sso_region,
+            'sso_start_url': self.start_url,
+            'sso_role_name': self.role_name,
+            'sso_account_id': self.account_id,
+        }
+        self.expires_at =  datetime.now(tzlocal()) + timedelta(hours=24)
+        self.cached_creds_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
+        self.cached_token_key = '13f9d35043871d073ab260e020f0ffde092cb14b'
+        self.cache = {
+            self.cached_token_key: {
+                'accessToken': self.access_token,
+                'expiresAt': self.expires_at.strftime('%Y-%m-%dT%H:%M:%S%Z'),
+            }
+        }
+        self.provider = SSOProvider(
+            load_config=self._mock_load_config,
+            client_creator=self.mock_session.create_client,
+            profile_name=self.profile_name,
+            cache=self.cache,
+            token_cache=self.cache,
+        )
+
+        self.expected_get_role_credentials_params = {
+            'roleName': self.role_name,
+            'accountId': self.account_id,
+            'accessToken': self.access_token,
+        }
+        expiration = datetime2timestamp(self.expires_at)
+        self.expected_get_role_credentials_response = {
+            'roleCredentials': {
+                'accessKeyId': 'foo',
+                'secretAccessKey': 'bar',
+                'sessionToken': 'baz',
+                'expiration': int(expiration * 1000),
+            }
+        }
+
+    def _mock_load_config(self):
+        return {
+            'profiles': {
+                self.profile_name: self.config,
+            }
+        }
+
+    def _add_get_role_credentials_response(self):
+        self.stubber.add_response(
+            'get_role_credentials',
+            self.expected_get_role_credentials_response,
+            self.expected_get_role_credentials_params,
+        )
+
+    def test_load_sso_credentials_without_cache(self):
+        self._add_get_role_credentials_response()
+        with self.stubber:
+            credentials = self.provider.load()
+            self.assertEqual(credentials.access_key, 'foo')
+            self.assertEqual(credentials.secret_key, 'bar')
+            self.assertEqual(credentials.token, 'baz')
+
+    def test_load_sso_credentials_with_cache(self):
+        cached_creds = {
+            'Credentials': {
+                'AccessKeyId': 'cached-akid',
+                'SecretAccessKey': 'cached-sak',
+                'SessionToken': 'cached-st',
+                'Expiration': self.expires_at.strftime('%Y-%m-%dT%H:%M:%S%Z'),
+            }
+        }
+        self.cache[self.cached_creds_key] = cached_creds
+        credentials = self.provider.load()
+        self.assertEqual(credentials.access_key, 'cached-akid')
+        self.assertEqual(credentials.secret_key, 'cached-sak')
+        self.assertEqual(credentials.token, 'cached-st')
+
+    def test_load_sso_credentials_with_cache_expired(self):
+        cached_creds = {
+            'Credentials': {
+                'AccessKeyId': 'expired-akid',
+                'SecretAccessKey': 'expired-sak',
+                'SessionToken': 'expired-st',
+                'Expiration': '2002-10-22T20:52:11UTC',
+            }
+        }
+        self.cache[self.cached_creds_key] = cached_creds
+
+        self._add_get_role_credentials_response()
+        with self.stubber:
+            credentials = self.provider.load()
+            self.assertEqual(credentials.access_key, 'foo')
+            self.assertEqual(credentials.secret_key, 'bar')
+            self.assertEqual(credentials.token, 'baz')
+
+    def test_required_config_not_set(self):
+        del self.config['sso_start_url']
+        # If any required configuration is missing we should get an error
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            self.provider.load()
