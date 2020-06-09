@@ -105,5 +105,5 @@ class TestTokenBucketThreading(unittest.TestCase):
         # thread acquisition(), e.g. must be with a 2 stddev range, but we
         # can sanity check that our implementation isn't drastically
         # starving a thread.  So we'll arbitrarily say that a thread
-        # can't have less than 30% of the mean allocations per thread.
-        self.assertTrue(not any(x < (0.3 * mean) for x in distribution))
+        # can't have less than 20% of the mean allocations per thread.
+        self.assertTrue(not any(x < (0.2 * mean) for x in distribution))
