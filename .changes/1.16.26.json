@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``transfer``", 
+    "description": "Update transfer client to latest version", 
+    "type": "api-change"
+  }
+]
