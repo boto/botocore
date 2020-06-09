@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "SSO",
+  "description": "Added support for the SSO credential provider. This allows the SDK to retrieve temporary AWS credentials from a profile configured to use SSO credentials."
+}
