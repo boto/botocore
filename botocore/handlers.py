@@ -1049,10 +1049,20 @@ BUILTIN_HANDLERS = [
     ('before-call.neptune.CreateDBCluster',
      inject_presigned_url_rds),
 
-    # RDS PresignedUrl documentation customizations
+    # Neptune PresignedUrl documentation customizations
     ('docs.*.neptune.CopyDBClusterSnapshot.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
     ('docs.*.neptune.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
+    #############
+    # DocDB
+    #############
+    ('before-call.docdb.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+
+    # DocDB PresignedUrl documentation customizations
+    ('docs.*.docdb.CopyDBClusterSnapshot.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 
     #############
