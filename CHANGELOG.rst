@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.16.26
+=======
+
+* api-change:``transfer``: Update transfer client to latest version
+
+
 1.16.25
 =======
 
