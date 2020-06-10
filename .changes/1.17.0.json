@@ -1,0 +1,52 @@
+[
+  {
+    "category": "``macie2``", 
+    "description": "Update macie2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codeartifact``", 
+    "description": "Update codeartifact client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``compute-optimizer``", 
+    "description": "Update compute-optimizer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``shield``", 
+    "description": "Update shield client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lightsail``", 
+    "description": "Update lightsail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appconfig``", 
+    "description": "Update appconfig client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "SSO", 
+    "description": "Added support for the SSO credential provider. This allows the SDK to retrieve temporary AWS credentials from a profile configured to use SSO credentials.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``dlm``", 
+    "description": "Update dlm client to latest version", 
+    "type": "api-change"
+  }
+]

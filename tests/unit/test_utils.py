@@ -66,6 +66,8 @@ from botocore.utils import S3ArnParamHandler
 from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
+from botocore.utils import SSOTokenLoader
+from botocore.exceptions import SSOTokenLoadError
 from botocore.utils import IMDSFetcher
 from botocore.utils import BadIMDSRequestError
 from botocore.model import DenormalizedStructureBuilder
@@ -2428,3 +2430,31 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
+
+
+class TestSSOTokenLoader(unittest.TestCase):
+    def setUp(self):
+        super(TestSSOTokenLoader, self).setUp()
+        self.start_url = 'https://d-abc123.awsapps.com/start'
+        self.cache_key = '40a89917e3175433e361b710a9d43528d7f1890a'
+        self.access_token = 'totally.a.token'
+        self.cached_token = {
+            'accessToken': self.access_token,
+            'expiresAt': '2002-10-18T03:52:38UTC'
+        }
+        self.cache = {}
+        self.loader = SSOTokenLoader(cache=self.cache)
+
+    def test_can_load_token_exists(self):
+        self.cache[self.cache_key] = self.cached_token
+        access_token = self.loader(self.start_url)
+        self.assertEqual(self.access_token, access_token)
+
+    def test_can_handle_does_not_exist(self):
+        with self.assertRaises(SSOTokenLoadError):
+            access_token = self.loader(self.start_url)
+
+    def test_can_handle_invalid_cache(self):
+        self.cache[self.cache_key] = {}
+        with self.assertRaises(SSOTokenLoadError):
+            access_token = self.loader(self.start_url)
