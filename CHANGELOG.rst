@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.17.0
+======
+
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``codeartifact``: Update codeartifact client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* feature:SSO: Added support for the SSO credential provider. This allows the SDK to retrieve temporary AWS credentials from a profile configured to use SSO credentials.
+* api-change:``dlm``: Update dlm client to latest version
+
+
 1.16.26
 =======
 
