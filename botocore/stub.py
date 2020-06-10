@@ -239,6 +239,7 @@ class Stubber(object):
         self._validate_response(operation_name, service_response)
 
         # Add the service_response to the queue for returning responses
+        service_response = service_response.copy()
         response = {
             'operation_name': operation_name,
             'response': (http_response, service_response),

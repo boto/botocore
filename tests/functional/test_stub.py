@@ -331,3 +331,14 @@ class TestStubber(unittest.TestCase):
         response = self.client.get_bucket_location(Bucket='foo')
         self.assertEqual(response, service_response)
 
+    def test_multiple_add_response(self):
+        service_response = {'ResponseMetadata': {'foo': 'bar'}}
+        for i in range(2):
+            service_response["Name"] = "bucket_{}".format(i)
+            expected_params = {"Bucket": "bucket_{}".format(i)}
+            self.stubber.add_response("list_objects", service_response, expected_params)
+
+        self.stubber.activate()
+        for i in range(2):
+            response = self.client.list_objects(Bucket="bucket_{}".format(i))
+            self.assertEqual(response["Name"], 'bucket_{}'.format(i))
