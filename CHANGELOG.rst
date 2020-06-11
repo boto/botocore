@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.1
+======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``iot-data``: Update iot-data client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.17.0
 ======
 
