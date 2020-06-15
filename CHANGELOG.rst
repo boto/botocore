@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.3
+======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.17.2
 ======
 
