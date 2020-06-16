@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.17.4
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``polly``: Update polly client to latest version
+
+
+1.17.3
+======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.17.2
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
 1.17.1
 ======
 
