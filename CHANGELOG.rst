@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.17.4
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``polly``: Update polly client to latest version
+
+
 1.17.3
 ======
 
