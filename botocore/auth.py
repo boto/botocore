@@ -230,13 +230,19 @@ class SigV4Auth(BaseSigner):
             return self._canonical_query_string_url(urlsplit(request.url))
 
     def _canonical_query_string_params(self, params):
-        l = []
-        for param in sorted(params):
-            value = str(params[param])
-            l.append('%s=%s' % (quote(param, safe='-_.~'),
-                                quote(value, safe='-_.~')))
-        cqs = '&'.join(l)
-        return cqs
+        # [(key, value), (key2, value2)]
+        key_val_pairs = []
+        for key in params:
+            value = str(params[key])
+            key_val_pairs.append((quote(key, safe='-_.~'),
+                                  quote(value, safe='-_.~')))
+        sorted_key_vals = []
+        # Sort by the URI-encoded key names, and in the case of
+        # repeated keys, then sort by the value.
+        for key, value in sorted(key_val_pairs):
+            sorted_key_vals.append('%s=%s' % (key, value))
+        canonical_query_string = '&'.join(sorted_key_vals)
+        return canonical_query_string
 
     def _canonical_query_string_url(self, parts):
         canonical_query_string = ''
@@ -247,7 +253,7 @@ class SigV4Auth(BaseSigner):
                 key, _, value = pair.partition('=')
                 key_val_pairs.append((key, value))
             sorted_key_vals = []
-            # Sort by the key names, and in the case of
+            # Sort by the URI-encoded key names, and in the case of
             # repeated keys, then sort by the value.
             for key, value in sorted(key_val_pairs):
                 sorted_key_vals.append('%s=%s' % (key, value))
@@ -631,6 +637,8 @@ class CrtSigV4Auth(BaseSigner):
         'X-Amz-Security-Token',
     ]
     _SIGNATURE_TYPE = awscrt.auth.AwsSignatureType.HTTP_REQUEST_HEADERS
+    _USE_DOUBLE_URI_ENCODE = True
+    _SHOULD_NORMALIZE_URI_PATH = True
 
     def __init__(self, credentials, service_name, region_name):
         self.credentials = credentials
@@ -701,6 +709,23 @@ class CrtSigV4Auth(BaseSigner):
         if 'host' not in request.headers:
             request.headers['host'] = _host_from_url(request.url)
 
+    def _get_existing_sha256(self, request):
+        return request.headers.get('X-Amz-Content-SHA256')
+
+    def _should_sha256_sign_payload(self, request):
+        # Payloads will always be signed over insecure connections.
+        if not request.url.startswith('https'):
+            return True
+
+        # Certain operations may have payload signing disabled by default.
+        # Since we don't have access to the operation model, we pass in this
+        # bit of metadata through the request context.
+        return request.context.get('payload_signing_enabled', True)
+
+    def _should_add_content_sha256_header(self, explicit_payload):
+        # only add X-Amz-Content-SHA256 header if payload is explicitly set
+        return explicit_payload is not None
+
     def add_auth(self, request):
         if self.credentials is None:
             raise NoCredentialsError
@@ -710,6 +735,9 @@ class CrtSigV4Auth(BaseSigner):
         datetime_now = datetime.datetime.utcnow().replace(
             tzinfo=datetime.timezone.utc)
 
+        # Use existing 'X-Amz-Content-SHA256' header if able
+        existing_sha256 = self._get_existing_sha256(request)
+
         self._modify_request_before_signing(request)
 
         credentials_provider = awscrt.auth.AwsCredentialsProvider.new_static(
@@ -717,14 +745,19 @@ class CrtSigV4Auth(BaseSigner):
             secret_access_key=self.credentials.secret_key,
             session_token=self.credentials.token)
 
-        if request.context.get('payload_signing_enabled', True):
-            signed_body_value_type = awscrt.auth.AwsSignedBodyValueType.PAYLOAD
-            signed_body_header_type = awscrt.auth.AwsSignedBodyHeaderType.NONE
+        if self._should_sha256_sign_payload(request):
+            if existing_sha256:
+                explicit_payload = existing_sha256
+            else:
+                explicit_payload = None  # to be calculated during signing
         else:
-            signed_body_value_type = \
-                awscrt.auth.AwsSignedBodyValueType.UNSIGNED_PAYLOAD
-            signed_body_header_type = \
+            explicit_payload = UNSIGNED_PAYLOAD
+
+        if self._should_add_content_sha256_header(explicit_payload):
+            body_header = \
                 awscrt.auth.AwsSignedBodyHeaderType.X_AMZ_CONTENT_SHA_256
+        else:
+            body_header = awscrt.auth.AwsSignedBodyHeaderType.NONE
 
         signing_config = awscrt.auth.AwsSigningConfig(
             algorithm=awscrt.auth.AwsSigningAlgorithm.V4,
@@ -734,14 +767,64 @@ class CrtSigV4Auth(BaseSigner):
             service=self._service_name,
             date=datetime_now,
             should_sign_header=self._should_sign_header,
-            signed_body_value_type=signed_body_value_type,
-            signed_body_header_type=signed_body_header_type,
+            use_double_uri_encode=self._USE_DOUBLE_URI_ENCODE,
+            should_normalize_uri_path=self._SHOULD_NORMALIZE_URI_PATH,
+            signed_body_value=explicit_payload,
+            signed_body_header_type=body_header,
             expiration_in_seconds=self._expiration_in_seconds,
             )
         crt_request = self._crt_request_from_aws_request(request)
         future = awscrt.auth.aws_sign_request(crt_request, signing_config)
         future.result()
         self._apply_signing_changes(request, crt_request)
+
+
+class CrtS3SigV4Auth(CrtSigV4Auth):
+    # For S3, we do not normalize the path.
+    _USE_DOUBLE_URI_ENCODE = False
+    _SHOULD_NORMALIZE_URI_PATH = False
+
+    def _get_existing_sha256(self, request):
+        # always recalculate
+        return None
+
+    def _should_sha256_sign_payload(self, request):
+        # S3 allows optional body signing, so to minimize the performance
+        # impact, we opt to not SHA256 sign the body on streaming uploads,
+        # provided that we're on https.
+        client_config = request.context.get('client_config')
+        s3_config = getattr(client_config, 's3', None)
+
+        # The config could be None if it isn't set, or if the customer sets it
+        # to None.
+        if s3_config is None:
+            s3_config = {}
+
+        # The explicit configuration takes precedence over any implicit
+        # configuration.
+        sign_payload = s3_config.get('payload_signing_enabled', None)
+        if sign_payload is not None:
+            return sign_payload
+
+        # We require that both content-md5 be present and https be enabled
+        # to implicitly disable body signing. The combination of TLS and
+        # content-md5 is sufficiently secure and durable for us to be
+        # confident in the request without body signing.
+        if not request.url.startswith('https') or \
+                'Content-MD5' not in request.headers:
+            return True
+
+        # If the input is streaming we disable body signing by default.
+        if request.context.get('has_streaming_input', False):
+            return False
+
+        # If the S3-specific checks had no results, delegate to the generic
+        # checks.
+        return super()._should_sha256_sign_payload(request)
+
+    def _should_add_content_sha256_header(self, explicit_payload):
+        # Always add X-Amz-Content-SHA256 header
+        return True
 
 
 class CrtSigV4QueryAuth(CrtSigV4Auth):
@@ -796,6 +879,34 @@ class CrtSigV4QueryAuth(CrtSigV4Auth):
         request.url = urlunsplit(new_url_parts)
 
 
+class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
+    """S3 SigV4 auth using query parameters.
+
+    This signer will sign a request using query parameters and signature
+    version 4, i.e a "presigned url" signer.
+
+    Based off of:
+
+    http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+
+    """
+
+    # For S3, we do not normalize the path.
+    _USE_DOUBLE_URI_ENCODE = False
+    _SHOULD_NORMALIZE_URI_PATH = False
+
+    def _should_sha256_sign_payload(self, request):
+        # From the doc link above:
+        # "You don't include a payload hash in the Canonical Request, because
+        # when you create a presigned URL, you don't know anything about the
+        # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
+        return False
+
+    def _should_add_content_sha256_header(self, explicit_payload):
+        # Never add X-Amz-Content-SHA256 header
+        return False
+
+
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
@@ -807,5 +918,9 @@ AUTH_TYPE_MAPS = {
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,
-    'v4-crt': CrtSigV4Auth,
+    'crt-v4': CrtSigV4Auth,
+    'crt-v4-query': CrtSigV4QueryAuth,
+    'crt-s3v4': CrtS3SigV4Auth,
+    'crt-s3v4-query': CrtS3SigV4QueryAuth,
+
 }

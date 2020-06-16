@@ -108,7 +108,7 @@ def test_generator():
             log.debug("Skipping test: %s", test_case)
             continue
 
-        yield (_test_signature_version_4, test_case, 'boto')
+        yield (_test_signature_version_4, test_case, 'old')
         yield (_test_signature_version_4, test_case, 'crt')
     datetime_patcher.stop()
 

@@ -38,8 +38,8 @@ class TestSTSPresignedUrl(BaseSessionTest):
 
     def test_presigned_url_contains_no_content_type(self):
         timestamp = datetime(2017, 3, 22, 0, 0)
-        with mock.patch('botocore.auth.datetime') as _datetime:
-            _datetime.datetime.utcnow.return_value = timestamp
+        with mock.patch('botocore.auth.datetime.datetime') as _datetime:
+            _datetime.utcnow.return_value = timestamp
             url = self.client.generate_presigned_url('get_caller_identity', {})
 
         # There should be no 'content-type' in x-amz-signedheaders
