@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.5
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.17.4
 ======
 
