@@ -45,6 +45,11 @@ class TestProxyConfiguration(unittest.TestCase):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
         self.assertEqual('http://localhost:8081/', proxy_url)
 
+    def test_proxy_for_socks5(self):
+        self.update_http_proxy('socks5://localhost:8081/')
+        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        self.assertEqual('socks5://localhost:8081/', proxy_url)
+
     def test_fix_proxy_url_has_protocol_http(self):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
         self.assertEqual('http://localhost:8081/', proxy_url)
