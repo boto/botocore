@@ -17,6 +17,12 @@ try:
     from urllib3.contrib.pyopenssl import orig_util_SSLContext as SSLContext
 except ImportError:
     from urllib3.util.ssl_ import SSLContext
+try:
+    # To avoid dependency warnings from urllib3.contrib.socks, we only import SOCKSProxyManager if socks module is available
+    import socks
+    from urllib3.contrib.socks import SOCKSProxyManager
+except ImportError:
+    pass
 
 import botocore.awsrequest
 from botocore.vendored import six
@@ -99,9 +105,7 @@ class ProxyConfiguration(object):
     def proxy_url_for(self, url):
         """Retrirves the corresponding proxy url for a given url. """
         parsed_url = urlparse(url)
-        proxy = self._proxies.get(parsed_url.scheme)
-        if proxy:
-            proxy = self._fix_proxy_url(proxy)
+        proxy = self.proxy_url_for_scheme(parsed_url.scheme)
         return proxy
 
     def proxy_headers_for(self, proxy_url):
@@ -113,13 +117,27 @@ class ProxyConfiguration(object):
             headers['Proxy-Authorization'] = basic_auth
         return headers
 
+    def proxy_url_for_scheme(self, scheme):
+        proxy = self._proxies.get(scheme)
+        if proxy:
+            proxy = self._fix_proxy_url(proxy)
+        return proxy
+
     def _fix_proxy_url(self, proxy_url):
         if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
+            return proxy_url
+        elif self.is_socks_proxy(proxy_url):
             return proxy_url
         elif proxy_url.startswith('//'):
             return 'http:' + proxy_url
         else:
             return 'http://' + proxy_url
+
+    def is_socks_proxy(self, proxy_url):
+        if proxy_url:
+            parsed_proxy_url = urlparse(proxy_url)
+            return parsed_proxy_url.scheme in ['socks5', 'socks5h', 'socks4', 'socks4a']
+        return False;
 
     def _construct_basic_auth(self, username, password):
         auth_str = '{0}:{1}'.format(username, password)
@@ -132,7 +150,6 @@ class ProxyConfiguration(object):
             return unquote(parsed_url.username), unquote(parsed_url.password)
         except (AttributeError, TypeError):
             return None, None
-
 
 class URLLib3Session(object):
     """A basic HTTP client that supports connection pooling and proxies.
@@ -155,10 +172,7 @@ class URLLib3Session(object):
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(proxies=proxies)
-        self._pool_classes_by_scheme = {
-            'http': botocore.awsrequest.AWSHTTPConnectionPool,
-            'https': botocore.awsrequest.AWSHTTPSConnectionPool,
-        }
+        self._pool_classes_by_scheme = self._get_pool_classes_by_scheme()
         if timeout is None:
             timeout = DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
@@ -196,12 +210,38 @@ class URLLib3Session(object):
     def _get_ssl_context(self):
         return create_urllib3_context()
 
+    def _get_pool_classes_by_scheme(self):
+        http_proxy = self._proxy_config.proxy_url_for_scheme('http')
+        https_proxy = self._proxy_config.proxy_url_for_scheme('https')
+
+        if self._proxy_config.is_socks_proxy(http_proxy):
+            http_proxy_class = botocore.awsrequest.AWSSOCKSHTTPConnectionPool
+        else:
+            http_proxy_class = botocore.awsrequest.AWSHTTPConnectionPool
+
+        if self._proxy_config.is_socks_proxy(https_proxy):
+            https_proxy_class = botocore.awsrequest.AWSSOCKSHTTPSConnectionPool
+        else:
+            https_proxy_class = botocore.awsrequest.AWSHTTPSConnectionPool
+
+        pool_classes_by_scheme = {
+            'http': http_proxy_class,
+            'https': https_proxy_class,
+        }
+
+        return pool_classes_by_scheme
+
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
-            proxy_manager_kwargs = self._get_pool_manager_kwargs(
-                proxy_headers=proxy_headers)
-            proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
+            if self._proxy_config.is_socks_proxy(proxy_url):
+                proxy_manager_kwargs = self._get_pool_manager_kwargs(
+                    headers=proxy_headers)
+                proxy_manager = SOCKSProxyManager(proxy_url, **proxy_manager_kwargs)
+            else:
+                proxy_manager_kwargs = self._get_pool_manager_kwargs(
+                    proxy_headers=proxy_headers)
+                proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
 

@@ -225,6 +225,28 @@ class AWSHTTPConnectionPool(HTTPConnectionPool):
 class AWSHTTPSConnectionPool(HTTPSConnectionPool):
     ConnectionCls = AWSHTTPSConnection
 
+# To avoid dependency warnings from urllib3.contrib.socks, we only create SOCKS-related classes if socks module is available
+try:
+    import socks
+    from urllib3.contrib.socks import SOCKSConnection, SOCKSHTTPSConnection, SOCKSHTTPConnectionPool, SOCKSHTTPSConnectionPool
+
+    class AWSSOCKSHTTPConnection(AWSConnection, SOCKSConnection):
+        """ An HTTPConnection that supports 100 Continue behavior. """
+
+
+    class AWSSOCKSHTTPSConnection(AWSConnection, SOCKSHTTPSConnection):
+        """ An HTTPSConnection that supports 100 Continue behavior. """
+
+
+    class AWSSOCKSHTTPConnectionPool(SOCKSHTTPConnectionPool):
+        ConnectionCls = AWSSOCKSHTTPConnection
+
+
+    class AWSSOCKSHTTPSConnectionPool(SOCKSHTTPSConnectionPool):
+        ConnectionCls = AWSSOCKSHTTPSConnection
+
+except ImportError:
+    pass
 
 def prepare_request_dict(request_dict, endpoint_url, context=None,
                          user_agent=None):
