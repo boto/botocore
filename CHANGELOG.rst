@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.17.6
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+
+
+1.17.5
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.17.4
 ======
 
