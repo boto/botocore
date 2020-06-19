@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.7
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.17.6
 ======
 
