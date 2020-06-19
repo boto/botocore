@@ -97,7 +97,7 @@ class ProxyConfiguration(object):
         self._proxies = proxies
 
     def proxy_url_for(self, url):
-        """Retrirves the corresponding proxy url for a given url. """
+        """Retrieves the corresponding proxy url for a given url. """
         parsed_url = urlparse(url)
         proxy = self._proxies.get(parsed_url.scheme)
         if proxy:
@@ -105,7 +105,7 @@ class ProxyConfiguration(object):
         return proxy
 
     def proxy_headers_for(self, proxy_url):
-        """Retrirves the corresponding proxy headers for a given proxy url. """
+        """Retrieves the corresponding proxy headers for a given proxy url. """
         headers = {}
         username, password = self._get_auth_from_url(proxy_url)
         if username and password:
