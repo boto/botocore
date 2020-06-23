@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.17.9
+======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.17.8
 ======
 
