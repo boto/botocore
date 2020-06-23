@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.17.9
+======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.17.8
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+
+
+1.17.7
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.17.6
 ======
 
