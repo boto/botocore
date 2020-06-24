@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fsx``", 
+    "description": "Update fsx client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplify``", 
+    "description": "Update amplify client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``honeycode``", 
+    "description": "Update honeycode client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }
+]
