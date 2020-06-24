@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.17.10
+=======
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``backup``: Update backup client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``honeycode``: Update honeycode client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.17.9
 ======
 
