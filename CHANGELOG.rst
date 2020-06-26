@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.12
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.17.11
 =======
 
