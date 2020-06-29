@@ -964,13 +964,11 @@ class ProcessProvider(CredentialProvider):
         # We're not using shell=True, so we need to pass the
         # command and all arguments as a list.
         process_list = compat_shell_split(credential_process)
-        p = self._popen(process_list,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        p = self._popen(process_list, stdout=subprocess.PIPE)
+        stdout, _ = p.communicate()
         if p.returncode != 0:
             raise CredentialRetrievalError(
-                provider=self.METHOD, error_msg=stderr.decode('utf-8'))
+                provider=self.METHOD, error_msg=("non-zero exit code '%s'" % p.returncode))
         parsed = botocore.compat.json.loads(stdout.decode('utf-8'))
         version = parsed.get('Version', '<Version key not provided>')
         if version != 1:

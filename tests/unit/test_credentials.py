@@ -2999,10 +2999,7 @@ class TestProcessProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
         self.assertEqual(creds.method, 'custom-process')
-        self.popen_mock.assert_called_with(
-            ['my-process'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        self.popen_mock.assert_called_with(['my-process'], stdout=subprocess.PIPE)
 
     def test_can_pass_arguments_through(self):
         self.loaded_config['profiles'] = {
@@ -3022,8 +3019,7 @@ class TestProcessProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNotNone(creds)
         self.popen_mock.assert_called_with(
-            ['my-process', '--foo', '--bar', 'one two'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ['my-process', '--foo', '--bar', 'one two'], stdout=subprocess.PIPE
         )
 
     def test_can_refresh_credentials(self):
@@ -3069,7 +3065,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Error Message'):
+        with self.assertRaisesRegexp(exception, 'non-zero exit code \'1\''):
             provider.load()
 
     def test_unsupported_version_raises_mismatch(self):
