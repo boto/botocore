@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.13
+=======
+
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.17.12
 =======
 
