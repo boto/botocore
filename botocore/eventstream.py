@@ -83,6 +83,7 @@ class DecodeUtils(object):
     UINT8_BYTE_FORMAT = '!B'
     UINT16_BYTE_FORMAT = '!H'
     UINT32_BYTE_FORMAT = '!I'
+    INT8_BYTE_FORMAT = '!b'
     INT16_BYTE_FORMAT = '!h'
     INT32_BYTE_FORMAT = '!i'
     INT64_BYTE_FORMAT = '!q'
@@ -146,6 +147,19 @@ class DecodeUtils(object):
         """
         value = unpack(DecodeUtils.UINT32_BYTE_FORMAT, data[:4])[0]
         return value, 4
+
+    @staticmethod
+    def unpack_int8(data):
+        """Parse a signed 8-bit integer from the bytes.
+
+        :type data: bytes
+        :param data: The bytes to parse from.
+
+        :rtype: (int, int)
+        :returns: A tuple containing the (parsed integer value, bytes consumed)
+        """
+        value = unpack(DecodeUtils.INT8_BYTE_FORMAT, data[:1])[0]
+        return value, 1
 
     @staticmethod
     def unpack_int16(data):
@@ -349,7 +363,7 @@ class EventStreamHeaderParser(object):
         # boolean_false
         1: DecodeUtils.unpack_false,
         # byte
-        2: DecodeUtils.unpack_uint8,
+        2: DecodeUtils.unpack_int8,
         # short
         3: DecodeUtils.unpack_int16,
         # integer

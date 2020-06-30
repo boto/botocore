@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.17.14
+=======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.13
+=======
+
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
+1.17.12
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.17.11
 =======
 
