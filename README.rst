@@ -83,3 +83,18 @@ applicable for ``botocore``:
 * Come join the AWS Python community chat on `gitter <https://gitter.im/boto/boto3>`__
 * Open a support ticket with `AWS Support <https://console.aws.amazon.com/support/home#/>`__
 * If it turns out that you may have found a bug, please `open an issue <https://github.com/boto/botocore/issues/new>`__
+
+
+Contributing
+------------
+
+We value feedback and contributions from our community. Whether it's a bug report, new feature, correction, or additional documentation, we welcome your issues and pull requests. Please read through this `CONTRIBUTING <https://github.com/boto/botocore/blob/develop/CONTRIBUTING.rst>`__ document before submitting any issues or pull requests to ensure we have all the necessary information to effectively respond to your contribution. 
+
+
+More Resources
+--------------
+
+* `NOTICE <https://github.com/boto/botocore/blob/develop/NOTICE>`__
+* `Changelog <https://github.com/boto/botocore/blob/develop/CHANGELOG.rst>`__
+* `License <https://github.com/boto/botocore/blob/develop/LICENSE.txt>`__
+
