@@ -21,7 +21,7 @@ this `blog post <https://aws.amazon.com/blogs/developer/deprecation-of-python-2-
 
 Getting Started
 ---------------
-Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this:
+Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this or you can install the library using ``pip``:
 
 .. code-block:: sh
 
@@ -32,14 +32,14 @@ Assuming that you have Python and ``virtualenv`` installed, set up your environm
     $ . venv/bin/activate
     $ pip install -r requirements.txt
     $ pip install -e .
-    
-Using Botocore
-~~~~~~~~~~~~~~
-First, install the library and set a default region:
 
 .. code-block:: sh
 
     $ pip install botocore
+    
+Using Botocore
+~~~~~~~~~~~~~~
+After installing botocore 
 
 Next, set up credentials (in e.g. ``~/.aws/credentials``):
 
