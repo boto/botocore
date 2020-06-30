@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.14
+=======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.17.13
 =======
 
