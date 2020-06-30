@@ -19,6 +19,52 @@ on Python 2.6 or 3.3 will need to upgrade their version of Python or pin the
 version of Botocore in use prior to 01/10/2020. For more information, see
 this `blog post <https://aws.amazon.com/blogs/developer/deprecation-of-python-2-6-and-python-3-3-in-botocore-boto3-and-the-aws-cli/>`__.
 
+Getting Started
+---------------
+Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this:
+
+.. code-block:: sh
+
+    $ git clone https://github.com/boto/botocore.git
+    $ cd botocore
+    $ virtualenv venv
+    ...
+    $ . venv/bin/activate
+    $ pip install -r requirements.txt
+    $ pip install -e .
+    
+Using Botocore
+~~~~~~~~~~~~~~
+First, install the library and set a default region:
+
+.. code-block:: sh
+
+    $ pip install botocore
+
+Next, set up credentials (in e.g. ``~/.aws/credentials``):
+
+.. code-block:: ini
+
+    [default]
+    aws_access_key_id = YOUR_KEY
+    aws_secret_access_key = YOUR_SECRET
+
+Then, set up a default region (in e.g. ``~/.aws/config``):
+
+.. code-block:: ini
+
+    [default]
+    region=us-east-1
+
+Then, from a Python interpreter:
+
+.. code-block:: python
+
+    >>> import botocore.session
+    >>> session = botocore.session.get_session()
+    >>> client = session.create_client('ec2')
+    >>> print(client.describe_instances())
+
 
 Documentation
 -------------
