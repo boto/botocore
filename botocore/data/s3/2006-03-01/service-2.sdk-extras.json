@@ -1,0 +1,25 @@
+{
+    "version": 1.0,
+    "merge": {
+        "shapes": {
+            "GetObjectTaggingRequest":{
+                "members":{
+                    "RequestPayer":{
+                        "shape":"RequestPayer",
+                        "location":"header",
+                        "locationName":"x-amz-request-payer"
+                    }
+                }
+            },
+            "PutObjectTaggingRequest":{
+                "members":{
+                    "RequestPayer":{
+                        "shape":"RequestPayer",
+                        "location":"header",
+                        "locationName":"x-amz-request-payer"
+                    }
+                }
+            }
+        }
+    }
+}
