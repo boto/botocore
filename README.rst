@@ -66,11 +66,6 @@ Then, from a Python interpreter:
     >>> print(client.describe_instances())
 
 
-Documentation
--------------
-Documentation for ``botocore`` can be found  `here <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html>`__.
-
-
 Getting Help
 ------------
 
