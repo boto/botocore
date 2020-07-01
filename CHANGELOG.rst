@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.17.15
+=======
+
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.17.14
 =======
 
