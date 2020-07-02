@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.17.16
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.17.15
 =======
 
