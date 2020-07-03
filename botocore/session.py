@@ -906,6 +906,32 @@ class Session(object):
             pass
         return results
 
+    def assume_role(self, role_arn, extra_args=None):
+        """
+        :type role_arn: str
+        :param role_arn: The ARN of the role to be assumed.
+
+        :type extra_args: dict
+        :param extra_args: Any additional arguments to add to the assume
+            role request using the format of the botocore operation.
+            Possible keys include, but may not be limited to,
+            DurationSeconds, Policy, and RoleSessionName.
+        """
+        assume_role_provider = botocore.credentials.ProgrammaticAssumeRoleProvider(
+            self.client_creator,
+            self.get_credentials(),
+            role_arn,
+            extra_args=extra_args,
+        )
+
+        assumed_role_session = Session()
+        assumed_role_session.register_component(
+            'credential_provider',
+            botocore.credentials.CredentialResolver([assume_role_provider])
+        )
+
+        return assumed_role_session
+
 
 class ComponentLocator(object):
     """Service locator for session components."""

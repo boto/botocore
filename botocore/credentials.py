@@ -1625,6 +1625,78 @@ class AssumeRoleProvider(CredentialProvider):
             )
         return credentials
 
+class ProgrammaticAssumeRoleProvider(CredentialProvider):
+    METHOD = 'programmatic-assume-role'
+
+    def __init__(self, client_creator, source_credentials, role_arn,
+            extra_args=None, prompter=getpass.getpass, cache=None, expiry_window_seconds=None):
+        """
+        :type client_creator: callable
+        :param client_creator: A factory function that will create
+            a client when called.  Has the same interface as
+            ``botocore.session.Session.create_client``.
+
+        :type source_credentials: Credentials
+        :param source_credentials: The credentials to use to create the
+            client for the call to AssumeRole.
+
+        :type role_arn: str
+        :param role_arn: The ARN of the role to be assumed.
+
+        :type extra_args: dict
+        :param extra_args: Any additional arguments to add to the assume
+            role request using the format of the botocore operation.
+            Possible keys include, but may not be limited to,
+            DurationSeconds, Policy, and RoleSessionName.
+
+        :type prompter: callable
+        :param prompter: A callable that returns input provided
+            by the user (i.e raw_input, getpass.getpass, etc.).
+
+        :type cache: dict
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example of this is
+            the ``JSONFileCache`` class in aws-cli.
+
+        :type expiry_window_seconds: int
+        :param expiry_window_seconds: The amount of time, in seconds,
+        """
+
+        self._client_creator = client_creator
+        self._source_credentials = source_credentials
+        self._role_arn = role_arn
+        self._extra_args = extra_args
+        self._prompter = prompter
+        if cache is None:
+            cache = {}
+        self._cache = cache
+        self._expiry_window_seconds = expiry_window_seconds
+
+        self._fetcher = None
+
+
+    def _get_fetcher(self):
+        if not self._fetcher:
+            self._fetcher = AssumeRoleCredentialFetcher(
+                self._client_creator,
+                self._source_credentials,
+                self._role_arn,
+                extra_args=self._extra_args,
+                mfa_prompter=self._prompter,
+                cache=self._cache,
+                expiry_window_seconds=self._expiry_window_seconds
+            )
+        return self._fetcher
+
+    def load(self):
+        refresher = self._get_fetcher().fetch_credentials
+        if self._extra_args and 'SerialNumber' in self._extra_args:
+            refresher = create_mfa_serial_refresher(refresher)
+        return DeferredRefreshableCredentials(
+            method=self.METHOD,
+            refresh_using=refresher,
+            time_fetcher=_local_now
+        )
 
 class AssumeRoleWithWebIdentityProvider(CredentialProvider):
     METHOD = 'assume-role-with-web-identity'
