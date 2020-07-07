@@ -2,6 +2,25 @@
 CHANGELOG
 =========
 
+1.17.18
+=======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``lakeformation``: Update lakeformation client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.17.17
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+
+
 1.17.16
 =======
 
