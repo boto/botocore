@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.19
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.17.18
 =======
 
