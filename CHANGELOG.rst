@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.17.20
+=======
+
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``ebs``: Update ebs client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+
+
 1.17.19
 =======
 
