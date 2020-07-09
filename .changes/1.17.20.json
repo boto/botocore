@@ -1,0 +1,57 @@
+[
+  {
+    "category": "``amplify``", 
+    "description": "Update amplify client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``wafv2``", 
+    "description": "Update wafv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ebs``", 
+    "description": "Update ebs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudhsmv2``", 
+    "description": "Update cloudhsmv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appmesh``", 
+    "description": "Update appmesh client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``alexaforbusiness``", 
+    "description": "Update alexaforbusiness client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sns``", 
+    "description": "Update sns client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``secretsmanager``", 
+    "description": "Update secretsmanager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }
+]
