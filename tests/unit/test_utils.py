@@ -1743,6 +1743,62 @@ class TestS3ArnParamHandler(unittest.TestCase):
         with self.assertRaises(UnsupportedS3ArnError):
             self.arn_handler.handle_arn(params, self.model, context)
 
+    def test_outpost_arn_with_colon(self):
+        params = {
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'myaccesspoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_outpost': {
+                    'name': 'myaccesspoint',
+                    'outpost_name': 'op-01234567890123456',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                    'service': 's3-outposts',
+                }
+            }
+        )
+
+    def test_outpost_arn_with_slash(self):
+        params = {
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/op-01234567890123456/accesspoint/myaccesspoint'
+        }
+        context = {}
+        self.arn_handler.handle_arn(params, self.model, context)
+        self.assertEqual(params, {'Bucket': 'myaccesspoint'})
+        self.assertEqual(
+            context,
+            {
+                's3_outpost': {
+                    'name': 'myaccesspoint',
+                    'outpost_name': 'op-01234567890123456',
+                    'account': '123456789012',
+                    'region': 'us-west-2',
+                    'partition': 'aws',
+                    'service': 's3-outposts',
+                }
+            }
+        )
+
+    def test_outpost_arn_errors_for_missing_fields(self):
+        params = {
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/op-01234567890123456/accesspoint'
+        }
+        with self.assertRaises(RuntimeError):
+            self.arn_handler.handle_arn(params, self.model, {})
+
+    def test_outpost_arn_errors_for_empty_fields(self):
+        params = {
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost//accesspoint/myaccesspoint'
+        }
+        with self.assertRaises(RuntimeError):
+            self.arn_handler.handle_arn(params, self.model, {})
+
     def test_ignores_bucket_names(self):
         params = {'Bucket': 'mybucket'}
         context = {}
