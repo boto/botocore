@@ -1712,6 +1712,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
                     'account': '123456789012',
                     'region': 'us-west-2',
                     'partition': 'aws',
+                    'service': 's3',
                 }
             }
         )
@@ -1731,6 +1732,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
                     'account': '123456789012',
                     'region': 'us-west-2',
                     'partition': 'aws',
+                    'service': 's3',
                 }
             }
         )
@@ -1745,7 +1747,10 @@ class TestS3ArnParamHandler(unittest.TestCase):
 
     def test_outpost_arn_with_colon(self):
         params = {
-            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
+            'Bucket': (
+                'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+                'op-01234567890123456:accesspoint:myaccesspoint'
+            )
         }
         context = {}
         self.arn_handler.handle_arn(params, self.model, context)
@@ -1753,7 +1758,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
         self.assertEqual(
             context,
             {
-                's3_outpost': {
+                's3_accesspoint': {
                     'name': 'myaccesspoint',
                     'outpost_name': 'op-01234567890123456',
                     'account': '123456789012',
@@ -1766,7 +1771,10 @@ class TestS3ArnParamHandler(unittest.TestCase):
 
     def test_outpost_arn_with_slash(self):
         params = {
-            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/op-01234567890123456/accesspoint/myaccesspoint'
+            'Bucket': (
+                'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
+                'op-01234567890123456/accesspoint/myaccesspoint'
+            )
         }
         context = {}
         self.arn_handler.handle_arn(params, self.model, context)
@@ -1774,7 +1782,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
         self.assertEqual(
             context,
             {
-                's3_outpost': {
+                's3_accesspoint': {
                     'name': 'myaccesspoint',
                     'outpost_name': 'op-01234567890123456',
                     'account': '123456789012',
@@ -1787,16 +1795,18 @@ class TestS3ArnParamHandler(unittest.TestCase):
 
     def test_outpost_arn_errors_for_missing_fields(self):
         params = {
-            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/op-01234567890123456/accesspoint'
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
+            'op-01234567890123456/accesspoint'
         }
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             self.arn_handler.handle_arn(params, self.model, {})
 
     def test_outpost_arn_errors_for_empty_fields(self):
         params = {
-            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost//accesspoint/myaccesspoint'
+            'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
+            '/accesspoint/myaccesspoint'
         }
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             self.arn_handler.handle_arn(params, self.model, {})
 
     def test_ignores_bucket_names(self):
@@ -1821,10 +1831,12 @@ class TestS3EndpointSetter(unittest.TestCase):
         self.operation_name = 'GetObject'
         self.signature_version = 's3v4'
         self.region_name = 'us-west-2'
+        self.service = 's3'
         self.account = '123456789012'
         self.bucket = 'mybucket'
         self.key = 'key.txt'
         self.accesspoint_name = 'myaccesspoint'
+        self.outpost_name = 'op-123456789012'
         self.partition = 'aws'
         self.endpoint_resolver = mock.Mock()
         self.dns_suffix = 'amazonaws.com'
@@ -1852,6 +1864,14 @@ class TestS3EndpointSetter(unittest.TestCase):
             url += '?%s' % querystring
         return AWSRequest(method='GET', headers={}, url=url)
 
+    def get_s3_outpost_request(self, **s3_request_kwargs):
+        request = self.get_s3_request(
+            self.accesspoint_name, **s3_request_kwargs)
+        accesspoint_context = self.get_s3_accesspoint_context(
+            name=self.accesspoint_name, outpost_name=self.outpost_name)
+        request.context['s3_accesspoint'] = accesspoint_context
+        return request
+
     def get_s3_accesspoint_request(self, accesspoint_name=None,
                                    accesspoint_context=None,
                                    **s3_request_kwargs):
@@ -1870,6 +1890,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             'account': self.account,
             'region': self.region_name,
             'partition': self.partition,
+            'service': self.service,
         }
         accesspoint_context.update(overrides)
         return accesspoint_context
@@ -1889,6 +1910,24 @@ class TestS3EndpointSetter(unittest.TestCase):
         self.endpoint_setter.register(event_emitter)
         event_emitter.register.assert_called_with(
             'before-sign.s3', self.endpoint_setter.set_endpoint)
+
+    def test_outpost_endpoint(self):
+        request = self.get_s3_outpost_request()
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.%s.s3-outposts.%s.amazonaws.com/' % (
+            self.accesspoint_name, self.account, self.outpost_name,
+            self.region_name,
+        )
+        self.assertEqual(request.url, expected_url)
+
+    def test_outpost_endpoint_preserves_key_in_path(self):
+        request = self.get_s3_outpost_request(key=self.key)
+        self.call_set_endpoint(self.endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.%s.s3-outposts.%s.amazonaws.com/%s' % (
+            self.accesspoint_name, self.account, self.outpost_name,
+            self.region_name, self.key
+        )
+        self.assertEqual(request.url, expected_url)
 
     def test_accesspoint_endpoint(self):
         request = self.get_s3_accesspoint_request()

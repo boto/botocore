@@ -716,6 +716,68 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             )
         )
 
+    def test_outpost_arn_with_s3_accelerate(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            config=Config(s3={'use_accelerate_endpoint': True}))
+        with self.assertRaises(
+                botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_outpost_arn_with_s3_dualstack(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            config=Config(s3={'use_dualstack_endpoint': True}))
+        with self.assertRaises(
+                botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_format(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_no_accesspoint(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_resource_format(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:myaccesspoint'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_sub_resources(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:mybucket:object:foo'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_invalid_character(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-0123456.890123456:accesspoint:myaccesspoint'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
     def test_validates_non_ascii_chars_trigger_validation_error(self):
