@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.17.21
+=======
+
+* api-change:``ivs``: Update ivs client to latest version
+
+
 1.17.20
 =======
 
