@@ -14,6 +14,12 @@
       "limit_key": "MaxItems",
       "result_key": "HostedZones"
     },
+    "ListHostedZonesByVPC": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxItems",
+      "result_key": "HostedZoneSummaries"
+    },
     "ListResourceRecordSets": {
       "more_results": "IsTruncated",
       "limit_key": "MaxItems",
