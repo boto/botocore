@@ -30,6 +30,7 @@ from botocore.exceptions import ReadTimeoutError
 from botocore.exceptions import ConnectTimeoutError
 from botocore.exceptions import UnsupportedS3ArnError
 from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
+from botocore.exceptions import UnsupportedOutpostResourceError
 from botocore.model import ServiceModel
 from botocore.model import OperationModel
 from botocore.regions import EndpointResolver
@@ -1798,7 +1799,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
             'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
             'op-01234567890123456/accesspoint'
         }
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UnsupportedOutpostResourceError):
             self.arn_handler.handle_arn(params, self.model, {})
 
     def test_outpost_arn_errors_for_empty_fields(self):
@@ -1806,7 +1807,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
             'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
             '/accesspoint/myaccesspoint'
         }
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UnsupportedOutpostResourceError):
             self.arn_handler.handle_arn(params, self.model, {})
 
     def test_ignores_bucket_names(self):

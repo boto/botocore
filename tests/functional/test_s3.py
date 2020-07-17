@@ -471,6 +471,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         r'AWS4-HMAC-SHA256 '
         r'Credential=\w+/\d+/'
         r'(?P<signing_region>[a-z0-9-]+)/'
+        r'(?P<signing_name>[a-z0-9-]+)/'
     )
 
     def setUp(self):
@@ -489,6 +490,12 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             auth_header).group('signing_region')
         self.assertEqual(expected_region, actual_region)
 
+    def assert_signing_name(self, request, expected_name):
+        auth_header = request.headers['Authorization'].decode('utf-8')
+        actual_name = self._V4_AUTH_REGEX.match(
+            auth_header).group('signing_name')
+        self.assertEqual(expected_name, actual_name)
+
     def assert_signing_region_in_url(self, url, expected_region):
         qs_components = parse_qs(urlsplit(url).query)
         self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
@@ -504,6 +511,10 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         http_stubber.add_response(
             body=b'<CopyObjectResult></CopyObjectResult>'
         )
+
+    def assert_endpoint(self, request, expected_endpoint):
+        actual_endpoint = urlsplit(request.url).netloc
+        self.assertEqual(actual_endpoint, expected_endpoint)
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
@@ -715,6 +726,24 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
                 b'myendpoint/object/myprefix/myobject?versionId=myversionid'
             )
         )
+
+    def test_basic_outpost_arn(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1')
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=outpost_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-outposts')
+        self.assert_signing_region(request, 'us-west-2')
+        expected_endpoint = (
+            'myaccesspoint-123456789012.op-01234567890123456.'
+            's3-outposts.us-west-2.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
 
     def test_outpost_arn_with_s3_accelerate(self):
         outpost_arn = (

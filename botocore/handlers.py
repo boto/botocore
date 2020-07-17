@@ -60,12 +60,15 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
-VALID_S3_ARN = re.compile(
-    r'(^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
-    r'[a-zA-Z0-9\-]{1,63}$)'
-    r'|(^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
-    r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$)'
+_ACCESSPOINT_ARN = (
+    r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
+    r'[a-zA-Z0-9\-]{1,63}$'
 )
+_OUTPOST_ARN = (
+    r'^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
+    r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$'
+)
+VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {

@@ -40,7 +40,7 @@ from botocore.exceptions import (
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
-    InvalidRegionError,
+    InvalidRegionError, UnsupportedOutpostResourceError,
 )
 
 logger = logging.getLogger(__name__)
@@ -1335,6 +1335,10 @@ class S3ArnParamHandler(object):
     _RESOURCE_REGEX = re.compile(
         r'^(?P<resource_type>accesspoint|outpost)[/:](?P<resource_name>.+)$'
     )
+    _OUTPOST_RESOURCE_REGEX = re.compile(
+        r'^(?P<outpost_name>[a-zA-Z0-9\-]{1,63})[/:]accesspoint[/:]'
+        r'(?P<accesspoint_name>[a-zA-Z0-9\-]{1,63}$)'
+    )
     _BLACKLISTED_OPERATIONS = [
         'CreateBucket'
     ]
@@ -1396,18 +1400,16 @@ class S3ArnParamHandler(object):
 
     def _store_outpost(self, params, context, arn_details):
         resource_name = arn_details['resource_name']
-        name_parts = re.split('[:/]', resource_name)
-        if len(name_parts) != 3 or any(not part for part in name_parts):
-            # The arn should already be validated but ensure the length of
-            # the subresources is correct just in case
-            raise ValueError('Invalid outpost resource: %s' % resource_name)
-        outpost_name, _, accesspoint_name = name_parts
+        match = self._OUTPOST_RESOURCE_REGEX.match(resource_name)
+        if not match:
+            raise UnsupportedOutpostResourceError(resource_name=resource_name)
         # Because we need to set the bucket name to something to pass
         # validation we're going to use the access point name to be consistent
         # with normal access point arns.
+        accesspoint_name = match.group('accesspoint_name')
         params['Bucket'] = accesspoint_name
         context['s3_accesspoint'] = {
-            'outpost_name': outpost_name,
+            'outpost_name': match.group('outpost_name'),
             'name': accesspoint_name,
             'account': arn_details['account'],
             'partition': arn_details['partition'],
