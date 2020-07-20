@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.17.24
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
 1.17.23
 =======
 
