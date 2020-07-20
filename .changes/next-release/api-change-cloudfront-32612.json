@@ -1,0 +1,5 @@
+{
+  "category": "``cloudfront``", 
+  "type": "api-change", 
+  "description": "Update cloudfront client to latest version"
+}

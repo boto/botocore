@@ -1,0 +1,5 @@
+{
+  "category": "``frauddetector``", 
+  "type": "api-change", 
+  "description": "Update frauddetector client to latest version"
+}
