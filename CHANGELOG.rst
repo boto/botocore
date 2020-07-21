@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+1.17.25
+=======
+
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
+1.17.24
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.17.23
+=======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.22
+=======
+
+* enhancement:examples: Pull in latest examples from EFS.
+
+
 1.17.21
 =======
 
