@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.17.25
+=======
+
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
 1.17.24
 =======
 
