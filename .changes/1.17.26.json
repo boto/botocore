@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }
+]
