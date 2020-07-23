@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.17.27
+=======
+
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
+1.17.26
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.17.25
 =======
 
