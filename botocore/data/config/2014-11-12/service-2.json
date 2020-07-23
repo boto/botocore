@@ -6061,7 +6061,8 @@
         "AWS::ServiceCatalog::Portfolio",
         "AWS::SQS::Queue",
         "AWS::KMS::Key",
-        "AWS::QLDB::Ledger"
+        "AWS::QLDB::Ledger",
+        "AWS::SNS::Topic"
       ]
     },
     "ResourceTypeList":{
