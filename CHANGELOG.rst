@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.17.28
+=======
+
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``mq``: Update mq client to latest version
+
+
 1.17.27
 =======
 
