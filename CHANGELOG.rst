@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.17.29
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.17.28
 =======
 
