@@ -2,6 +2,43 @@
 CHANGELOG
 =========
 
+1.17.30
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+
+
+1.17.29
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.17.28
+=======
+
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``mq``: Update mq client to latest version
+
+
 1.17.27
 =======
 
