@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.17.30
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+
+
 1.17.29
 =======
 
