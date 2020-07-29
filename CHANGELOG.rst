@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.17.31
+=======
+
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.17.30
 =======
 
