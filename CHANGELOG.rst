@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.17.32
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+
+
+1.17.31
+=======
+
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.17.30
 =======
 
