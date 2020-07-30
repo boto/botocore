@@ -1,7 +1,10 @@
 {
   "pagination": {
     "ListGroups": {
-      "result_key": ["GroupIdentifiers", "Groups"],
+      "result_key": [
+        "GroupIdentifiers",
+        "Groups"
+      ],
       "output_token": "NextToken",
       "input_token": "NextToken",
       "limit_key": "MaxResults"
