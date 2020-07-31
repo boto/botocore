@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.33
+=======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+
+
 1.17.32
 =======
 
