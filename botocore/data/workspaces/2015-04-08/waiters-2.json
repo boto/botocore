@@ -1,0 +1,152 @@
+{
+  "version": 2,
+  "waiters": {
+    "WorkspaceRunning": {
+      "delay": 15,
+      "operation": "DescribeWorkspaces",
+      "maxAttempts": 80,
+      "acceptors": [
+        {
+          "expected": "AVAILABLE",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "PENDING",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STARTING",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPED",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATED",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        }
+      ]
+    },
+    "WorkspaceStopped": {
+      "delay": 15,
+      "operation": "DescribeWorkspaces",
+      "maxAttempts": 80,
+      "acceptors": [
+        {
+          "expected": "AVAILABLE",
+          "matcher": "pathAll",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "PENDING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STARTING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPING",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPED",
+          "matcher": "pathAny",
+          "state": "success",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATED",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        }
+      ]
+    },
+    "WorkspaceTerminated": {
+      "delay": 15,
+      "operation": "DescribeWorkspaces",
+      "maxAttempts": 80,
+      "acceptors": [
+        {
+          "expected": "AVAILABLE",
+          "matcher": "pathAll",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "PENDING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STARTING",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPING",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "STOPPED",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATING",
+          "matcher": "pathAny",
+          "state": "retry",
+          "argument": "Workspaces[].State"
+        },
+        {
+          "expected": "TERMINATED",
+          "matcher": "pathAny",
+          "state": "success",
+          "argument": "Workspaces[].State"
+        }
+      ]
+    }
+  }
+}
