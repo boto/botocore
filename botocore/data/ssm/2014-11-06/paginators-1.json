@@ -239,6 +239,24 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "ResourceDataSyncItems"
+    },
+    "DescribeOpsItems": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "OpsItemSummaries"
+    },
+    "DescribePatchProperties": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Properties"
+    },
+    "GetOpsSummary": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Entities"
     }
   }
 }
