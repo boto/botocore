@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.17.34
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.17.33
 =======
 
