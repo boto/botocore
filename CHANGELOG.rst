@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.17.35
+=======
+
+* api-change:``health``: Update health client to latest version
+
+
+1.17.34
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.17.33
+=======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+
+
 1.17.32
 =======
 
