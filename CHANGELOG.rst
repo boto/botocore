@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.17.35
+=======
+
+* api-change:``health``: Update health client to latest version
+
+
 1.17.34
 =======
 
