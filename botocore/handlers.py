@@ -849,6 +849,7 @@ class ClientMethodAlias(object):
         return getattr(client, self._actual)
 
 
+# TODO: Remove this class as it is no longer used
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
@@ -1079,12 +1080,6 @@ BUILTIN_HANDLERS = [
     # DocDB PresignedUrl documentation customizations
     ('docs.*.docdb.CopyDBClusterSnapshot.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-
-    #############
-    # S3 Control
-    #############
-    ('before-call.s3-control.*',
-     HeaderToHostHoister('x-amz-account-id').hoist),
 
     ###########
     # SMS Voice
