@@ -547,6 +547,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "CapacityReservationGroups"
+    },
+    "DescribeCarrierGateways": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "CarrierGateways"
     }
   }
 }

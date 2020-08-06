@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.17.37
+=======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``personalize-events``: Update personalize-events client to latest version
+
+
 1.17.36
 =======
 
