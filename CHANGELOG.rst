@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.38
+=======
+
+* api-change:``sms``: Update sms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.17.37
 =======
 
