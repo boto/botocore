@@ -95,7 +95,7 @@ class TestSTSEndpoints(BaseSessionTest):
                 )
 
     def _get_signing_region(self, request):
-        authorization_val = request.headers['Authorization'].decode('utf-8')
+        authorization_val = request.headers['Authorization']
         match = _V4_SIGNING_REGION_REGEX.match(authorization_val)
         return match.group('signing_region')
 

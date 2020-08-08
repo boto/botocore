@@ -48,13 +48,13 @@ class TestLex(BaseSessionTest):
         authorization = request.headers.get('authorization')
 
         expected_authorization = (
-            b'AWS4-HMAC-SHA256 '
-            b'Credential=access_key/20170322/us-west-2/lex/aws4_request, '
-            b'SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,'
-            b' Signature='
-            b'7f93fde5c36163dce6ee116fcfebab13474ab903782fea04c00bb1dedc3fc4cc'
+            'AWS4-HMAC-SHA256 '
+            'Credential=access_key/20170322/us-west-2/lex/aws4_request, '
+            'SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,'
+            ' Signature='
+            '7f93fde5c36163dce6ee116fcfebab13474ab903782fea04c00bb1dedc3fc4cc'
         )
         self.assertEqual(authorization, expected_authorization)
 
         content_header = request.headers.get('x-amz-content-sha256')
-        self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')
+        self.assertEqual(content_header, 'UNSIGNED-PAYLOAD')

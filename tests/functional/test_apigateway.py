@@ -36,4 +36,4 @@ class TestApiGateway(BaseSessionTest):
             self.client.get_export(**params)
             request = self.http_stubber.requests[0]
             self.assertEqual(request.method, 'GET')
-            self.assertEqual(request.headers.get('Accept'), b'application/yaml')
+            self.assertEqual(request.headers.get('Accept'), 'application/yaml')

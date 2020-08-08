@@ -484,7 +484,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         return client, http_stubber
 
     def assert_signing_region(self, request, expected_region):
-        auth_header = request.headers['Authorization'].decode('utf-8')
+        auth_header = request.headers['Authorization']
         actual_region = self._V4_AUTH_REGEX.match(
             auth_header).group('signing_region')
         self.assertEqual(expected_region, actual_region)
@@ -767,7 +767,7 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
         sha_header = sent_headers.get('x-amz-content-sha256')
-        self.assertEqual(sha_header, b'UNSIGNED-PAYLOAD')
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
     def test_content_sha256_set_if_md5_is_unavailable(self):
         with mock.patch('botocore.auth.MD5_AVAILABLE', False):
@@ -794,7 +794,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
             # Verify that the request integer value of 3 has been converted to
             # string '3'.  This also means we've made it pass the signer which
             # expects string values in order to sign properly.
-            self.assertEqual(headers['Content-Length'], b'3')
+            self.assertEqual(headers['Content-Length'], '3')
 
 
 class TestRegionRedirect(BaseS3OperationTest):

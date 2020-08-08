@@ -125,6 +125,17 @@ class TestEndpointFeatures(TestEndpointBase):
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
 
+    def test_make_request_encode_headers(self):
+        r = request_dict()
+        r['headers'] = {'User-Agent': "TestUserAgent", "Authorization":
+                        "Blaargh"}
+        self.endpoint.make_request(self.op, r)
+        prepared_request = self.http_session.send.call_args[0][0]
+        headers = prepared_request.headers
+        self.assertEqual(type(headers['User-Agent']), str)
+        self.assertEqual(type(headers['Authorization']), str)
+
+
     def test_parses_modeled_exception_fields(self):
         # Setup the service model to have exceptions to generate the mapping
         self.service_model = Mock(spec=ServiceModel)
