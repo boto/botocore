@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.17.39
+=======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.17.38
 =======
 
