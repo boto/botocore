@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.40
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.17.39
 =======
 
