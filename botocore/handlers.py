@@ -307,6 +307,12 @@ def document_copy_source_form(section, event_name, **kwargs):
             "the string format because it is more explicit.  The dictionary "
             "format is: {'Bucket': 'bucket', 'Key': 'key', 'VersionId': 'id'}."
             "  Note that the VersionId key is optional and may be omitted."
+            " To specify an S3 access point, provide the access point"
+            " ARN for the ``Bucket`` key in the copy source dictionary. If you"
+            " want to provide the copy source for an S3 access point as a"
+            " string instead of a dictionary, the ARN provided must be the"
+            " full S3 access point object ARN"
+            " (i.e. {accesspoint_arn}/object/{key})"
         )
 
 
@@ -340,12 +346,16 @@ def handle_copy_source_param(params, **kwargs):
 def _quote_source_header_from_dict(source_dict):
     try:
         bucket = source_dict['Bucket']
-        key = percent_encode(source_dict['Key'], safe=SAFE_CHARS + '/')
+        key = source_dict['Key']
         version_id = source_dict.get('VersionId')
+        if VALID_S3_ARN.search(bucket):
+            final = '%s/object/%s' % (bucket, key)
+        else:
+            final = '%s/%s' % (bucket, key)
     except KeyError as e:
         raise ParamValidationError(
             report='Missing required parameter: %s' % str(e))
-    final = '%s/%s' % (bucket, key)
+    final = percent_encode(final, safe=SAFE_CHARS + '/')
     if version_id is not None:
         final += '?versionId=%s' % version_id
     return final
