@@ -493,6 +493,18 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         qs_components = parse_qs(urlsplit(url).query)
         self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
 
+    def assert_expected_copy_source_header(self,
+                                           http_stubber, expected_copy_source):
+        request = self.http_stubber.requests[0]
+        self.assertIn('x-amz-copy-source', request.headers)
+        self.assertEqual(
+            request.headers['x-amz-copy-source'], expected_copy_source)
+
+    def add_copy_object_response(self, http_stubber):
+        http_stubber.add_response(
+            body=b'<CopyObjectResult></CopyObjectResult>'
+        )
+
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
             'arn:aws:s3::123456789012:accesspoint:myendpoint'
@@ -628,6 +640,81 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         url = self.client.generate_presigned_url(
             'get_object', {'Bucket': accesspoint_arn, 'Key': 'mykey'})
         self.assert_signing_region_in_url(url, 'us-east-1')
+
+    def test_copy_source_str_with_accesspoint_arn(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_str_with_accesspoint_arn_and_version_id(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject?versionId=myversionid'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn_and_version_id(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+            'VersionId': 'myversionid'
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
