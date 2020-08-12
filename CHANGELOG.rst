@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.17.41
+=======
+
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``cloud9``: Update cloud9 client to latest version
+
+
 1.17.40
 =======
 
