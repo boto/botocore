@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``transfer``", 
+    "description": "Update transfer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fsx``", 
+    "description": "Update fsx client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloud9``", 
+    "description": "Update cloud9 client to latest version", 
+    "type": "api-change"
+  }
+]
