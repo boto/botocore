@@ -220,6 +220,69 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "violationEvents"
+    },
+    "ListAuditMitigationActionsExecutions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "actionsExecutions"
+    },
+    "ListAuditMitigationActionsTasks": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "tasks"
+    },
+    "ListAuditSuppressions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "suppressions"
+    },
+    "ListDimensions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "dimensionNames"
+    },
+    "ListDomainConfigurations": {
+      "input_token": "marker",
+      "limit_key": "pageSize",
+      "output_token": "nextMarker",
+      "result_key": "domainConfigurations"
+    },
+    "ListMitigationActions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "actionIdentifiers"
+    },
+    "ListProvisioningTemplateVersions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "versions"
+    },
+    "ListProvisioningTemplates": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "templates"
+    },
+    "ListThingRegistrationTaskReports": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "non_aggregate_keys": [
+        "reportType"
+      ],
+      "output_token": "nextToken",
+      "result_key": "resourceLinks"
+    },
+    "ListTopicRuleDestinations": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "destinationSummaries"
     }
   }
 }
