@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.17.42
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``braket``: Update braket client to latest version
+
+
 1.17.41
 =======
 
