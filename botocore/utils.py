@@ -40,6 +40,7 @@ from botocore.exceptions import (
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
+    InvalidRegionError,
 )
 
 logger = logging.getLogger(__name__)
@@ -915,6 +916,16 @@ def is_valid_endpoint_url(endpoint_url):
         r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
         re.IGNORECASE)
     return allowed.match(hostname)
+
+
+def validate_region_name(region_name):
+    """Provided region_name must be a valid host label."""
+    if region_name is None:
+        return
+    valid_host_label = re.compile(r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+    valid = valid_host_label.match(region_name)
+    if not valid:
+        raise InvalidRegionError(region_name=region_name)
 
 
 def check_dns_name(bucket_name):
