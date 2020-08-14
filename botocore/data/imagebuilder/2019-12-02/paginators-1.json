@@ -10,7 +10,7 @@
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "components"
+      "result_key": "component_versions"
     },
     "ListDistributionConfigurations": {
       "input_token": "nextToken",
