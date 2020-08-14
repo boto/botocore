@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.43
+=======
+
+* api-change:``braket``: Update braket client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.17.42
 =======
 
