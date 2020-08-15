@@ -4,55 +4,55 @@
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "component_build_versions"
+      "result_key": "componentSummaryList"
     },
     "ListComponents": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "components"
+      "result_key": "componentVersionList"
     },
     "ListDistributionConfigurations": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "distribution_configurations"
+      "result_key": "distributionConfigurationSummaryList"
     },
     "ListImageBuildVersions": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "image_build_versions"
+      "result_key": "imageSummaryList"
     },
     "ListImagePipelineImages": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "image_pipeline_images"
+      "result_key": "imageSummaryList"
     },
     "ListImagePipelines": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "image_pipelines"
+      "result_key": "imagePipelineList"
     },
     "ListImageRecipes": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "image_recipes"
+      "result_key": "imageRecipeSummaryList"
     },
     "ListImages": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "images"
+      "result_key": "imageVersionList"
     },
     "ListInfrastructureConfigurations": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "infrastructure_configurations"
+      "result_key": "infrastructureConfigurationSummaryList"
     }
   }
 }
