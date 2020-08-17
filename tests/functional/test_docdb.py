@@ -30,6 +30,26 @@ class TestDocDBPresignUrlInjection(BaseSessionTest):
         self.assertIn('PreSignedUrl', body)
         self.assertNotIn('SourceRegion', body)
 
+    def test_create_db_cluster(self):
+        params = {
+            'DBClusterIdentifier': 'my-cluster',
+            'Engine': 'docdb',
+            'SourceRegion': 'us-east-1',
+            'MasterUsername': 'master',
+            'MasterUserPassword': 'mypassword'
+        }
+        response_body = (
+            b'<CreateDBClusterResponse>'
+            b'<CreateDBClusterResult>'
+            b'</CreateDBClusterResult>'
+            b'</CreateDBClusterResponse>'
+        )
+        self.http_stubber.add_response(body=response_body)
+        with self.http_stubber:
+            self.client.create_db_cluster(**params)
+            sent_request = self.http_stubber.requests[0]
+            self.assert_presigned_url_injected_in_request(sent_request.body)
+
     def test_copy_db_cluster_snapshot(self):
         params = {
             'SourceDBClusterSnapshotIdentifier': 'source-db',
