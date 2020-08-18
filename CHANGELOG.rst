@@ -2,6 +2,40 @@
 CHANGELOG
 =========
 
+1.17.45
+=======
+
+* api-change:``identitystore``: Update identitystore client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.17.44
+=======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``elb``: Update elb client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
+1.17.43
+=======
+
+* api-change:``braket``: Update braket client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.17.42
 =======
 

@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``identitystore``", 
+    "description": "Update identitystore client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``datasync``", 
+    "description": "Update datasync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sesv2``", 
+    "description": "Update sesv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``securityhub``", 
+    "description": "Update securityhub client to latest version", 
+    "type": "api-change"
+  }
+]
