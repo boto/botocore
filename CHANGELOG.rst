@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.17.47
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
+1.17.46
+=======
+
+* api-change:``lakeformation``: Update lakeformation client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.17.45
 =======
 
