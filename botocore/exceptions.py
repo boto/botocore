@@ -298,6 +298,17 @@ class UnknownParameterError(ValidationError):
     )
 
 
+class InvalidRegionError(ValidationError, ValueError):
+    """
+    Invalid region_name provided to client or resource.
+
+    :ivar region_name: region_name that was being validated.
+    """
+    fmt = (
+        "Provided region_name '{region_name}' doesn't match a supported format."
+    )
+
+
 class AliasConflictParameterError(ValidationError):
     """
     Error when an alias is provided for a parameter as well as the original.
