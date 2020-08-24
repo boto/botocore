@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.17.48
+=======
+
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+
+
 1.17.47
 =======
 
