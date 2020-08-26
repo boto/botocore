@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``chime``", 
+    "description": "Update chime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``fsx``", 
+    "description": "Update fsx client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigatewayv2``", 
+    "description": "Update apigatewayv2 client to latest version", 
+    "type": "api-change"
+  }
+]

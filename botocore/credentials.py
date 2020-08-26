@@ -24,7 +24,7 @@ from copy import deepcopy
 from hashlib import sha1
 
 from dateutil.parser import parse
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal, tzutc
 
 import botocore.configloader
 import botocore.compat
@@ -40,9 +40,11 @@ from botocore.exceptions import InfiniteLoopConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.exceptions import CredentialRetrievalError
+from botocore.exceptions import UnauthorizedSSOTokenError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import FileWebIdentityTokenLoader
+from botocore.utils import SSOTokenLoader
 
 
 logger = logging.getLogger(__name__)
@@ -138,16 +140,19 @@ class ProfileProviderBuilder(object):
     This is needed to enable sharing between the default credential chain and
     the source profile chain created by the assume role provider.
     """
-    def __init__(self, session, cache=None, region_name=None):
+    def __init__(self, session, cache=None, region_name=None,
+                 sso_token_cache=None):
         self._session = session
         self._cache = cache
         self._region_name = region_name
+        self._sso_token_cache = sso_token_cache
 
     def providers(self, profile_name, disable_env_vars=False):
         return [
             self._create_web_identity_provider(
                 profile_name, disable_env_vars,
             ),
+            self._create_sso_provider(profile_name),
             self._create_shared_credential_provider(profile_name),
             self._create_process_provider(profile_name),
             self._create_config_provider(profile_name),
@@ -181,6 +186,15 @@ class ProfileProviderBuilder(object):
             cache=self._cache,
             profile_name=profile_name,
             disable_env_vars=disable_env_vars,
+        )
+
+    def _create_sso_provider(self, profile_name):
+        return SSOProvider(
+            load_config=lambda: self._session.full_config,
+            client_creator=self._session.create_client,
+            profile_name=profile_name,
+            cache=self._cache,
+            token_cache=self._sso_token_cache,
         )
 
 
@@ -445,7 +459,7 @@ class RefreshableCredentials(Credentials):
             credentials expire in which refresh attempts should
             be made.
 
-        :return: True if refresh neeeded, False otherwise.
+        :return: True if refresh needed, False otherwise.
 
         """
         if self._expiry_time is None:
@@ -1956,3 +1970,148 @@ class CredentialResolver(object):
         # +1
         # -js
         return None
+
+
+class SSOCredentialFetcher(CachedCredentialFetcher):
+    def __init__(self, start_url, sso_region, role_name, account_id,
+                 client_creator, token_loader=None, cache=None,
+                 expiry_window_seconds=None):
+        self._client_creator = client_creator
+        self._sso_region = sso_region
+        self._role_name = role_name
+        self._account_id = account_id
+        self._start_url = start_url
+        self._token_loader = token_loader
+
+        super(SSOCredentialFetcher, self).__init__(
+            cache, expiry_window_seconds
+        )
+
+    def _create_cache_key(self):
+        """Create a predictable cache key for the current configuration.
+
+        The cache key is intended to be compatible with file names.
+        """
+        args = {
+            'startUrl': self._start_url,
+            'roleName': self._role_name,
+            'accountId': self._account_id,
+        }
+        # NOTE: It would be good to hoist this cache key construction logic
+        # into the CachedCredentialFetcher class as we should be consistent.
+        # Unfortunately, the current assume role fetchers that sub class don't
+        # pass separators resulting in non-minified JSON. In the long term,
+        # all fetchers should use the below caching scheme.
+        args = json.dumps(args, sort_keys=True, separators=(',', ':'))
+        argument_hash = sha1(args.encode('utf-8')).hexdigest()
+        return self._make_file_safe(argument_hash)
+
+    def _parse_timestamp(self, timestamp_ms):
+        # fromtimestamp expects seconds so: milliseconds / 1000 = seconds
+        timestamp_seconds = timestamp_ms / 1000.0
+        timestamp = datetime.datetime.fromtimestamp(timestamp_seconds, tzutc())
+        return _serialize_if_needed(timestamp)
+
+    def _get_credentials(self):
+        """Get credentials by calling SSO get role credentials."""
+        config = Config(
+            signature_version=UNSIGNED,
+            region_name=self._sso_region,
+        )
+        client = self._client_creator('sso', config=config)
+
+        kwargs = {
+            'roleName': self._role_name,
+            'accountId': self._account_id,
+            'accessToken': self._token_loader(self._start_url),
+        }
+        try:
+            response = client.get_role_credentials(**kwargs)
+        except client.exceptions.UnauthorizedException:
+            raise UnauthorizedSSOTokenError()
+        credentials = response['roleCredentials']
+
+        credentials = {
+            'ProviderType': 'sso',
+            'Credentials': {
+                'AccessKeyId': credentials['accessKeyId'],
+                'SecretAccessKey': credentials['secretAccessKey'],
+                'SessionToken': credentials['sessionToken'],
+                'Expiration': self._parse_timestamp(credentials['expiration']),
+            }
+        }
+        return credentials
+
+
+class SSOProvider(CredentialProvider):
+    METHOD = 'sso'
+
+    _SSO_TOKEN_CACHE_DIR = os.path.expanduser(
+        os.path.join('~', '.aws', 'sso', 'cache')
+    )
+    _SSO_CONFIG_VARS = [
+        'sso_start_url',
+        'sso_region',
+        'sso_role_name',
+        'sso_account_id',
+    ]
+
+    def __init__(self, load_config, client_creator, profile_name,
+                 cache=None, token_cache=None):
+        if token_cache is None:
+            token_cache = JSONFileCache(self._SSO_TOKEN_CACHE_DIR)
+        self._token_cache = token_cache
+        if cache is None:
+            cache = {}
+        self.cache = cache
+        self._load_config = load_config
+        self._client_creator = client_creator
+        self._profile_name = profile_name
+
+    def _load_sso_config(self):
+        loaded_config = self._load_config()
+        profiles = loaded_config.get('profiles', {})
+        profile_name = self._profile_name
+        profile_config = profiles.get(self._profile_name, {})
+
+        if all(c not in profile_config for c in self._SSO_CONFIG_VARS):
+            return None
+
+        config = {}
+        missing_config_vars = []
+        for config_var in self._SSO_CONFIG_VARS:
+            if config_var in profile_config:
+                config[config_var] = profile_config[config_var]
+            else:
+                missing_config_vars.append(config_var)
+
+        if missing_config_vars:
+            missing = ', '.join(missing_config_vars)
+            raise InvalidConfigError(
+                error_msg=(
+                    'The profile "%s" is configured to use SSO but is missing '
+                    'required configuration: %s' % (profile_name, missing)
+                )
+            )
+
+        return config
+
+    def load(self):
+        sso_config = self._load_sso_config()
+        if not sso_config:
+            return None
+
+        sso_fetcher = SSOCredentialFetcher(
+            sso_config['sso_start_url'],
+            sso_config['sso_region'],
+            sso_config['sso_role_name'],
+            sso_config['sso_account_id'],
+            self._client_creator,
+            token_loader=SSOTokenLoader(cache=self._token_cache),
+            cache=self.cache,
+        )
+
+        return DeferredRefreshableCredentials(
+            method=self.METHOD,
+            refresh_using=sso_fetcher.fetch_credentials,
+        )

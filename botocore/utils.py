@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import base64
 import re
 import time
 import logging
@@ -24,19 +25,22 @@ import socket
 import cgi
 
 import dateutil.parser
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzutc
 
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
-from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.compat import OrderedDict, six, urlparse
+from botocore.compat import (
+        json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
+        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE
+)
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
-    UnsupportedS3AccesspointConfigurationError
+    UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
+    InvalidRegionError,
 )
 
 logger = logging.getLogger(__name__)
@@ -590,6 +594,25 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     return quote(input_str, safe=safe)
 
 
+def _parse_timestamp_with_tzinfo(value, tzinfo):
+    """Parse timestamp with pluggable tzinfo options."""
+    if isinstance(value, (int, float)):
+        # Possibly an epoch time.
+        return datetime.datetime.fromtimestamp(value, tzinfo())
+    else:
+        try:
+            return datetime.datetime.fromtimestamp(float(value), tzinfo())
+        except (TypeError, ValueError):
+            pass
+    try:
+        # In certain cases, a timestamp marked with GMT can be parsed into a
+        # different time zone, so here we provide a context which will
+        # enforce that GMT == UTC.
+        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
+    except (TypeError, ValueError) as e:
+        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+
+
 def parse_timestamp(value):
     """Parse a timestamp into a datetime object.
 
@@ -602,21 +625,14 @@ def parse_timestamp(value):
     This will return a ``datetime.datetime`` object.
 
     """
-    if isinstance(value, (int, float)):
-        # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzlocal())
-    else:
+    for tzinfo in get_tzinfo_options():
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzlocal())
-        except (TypeError, ValueError):
-            pass
-    try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
-    except (TypeError, ValueError) as e:
-        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+            return _parse_timestamp_with_tzinfo(value, tzinfo)
+        except OSError as e:
+            logger.debug('Unable to parse timestamp with "%s" timezone info.',
+                         tzinfo.__name__, exc_info=e)
+    raise RuntimeError('Unable to calculate correct timezone offset for '
+                       '"%s"' % value)
 
 
 def parse_to_aware_datetime(value):
@@ -900,6 +916,16 @@ def is_valid_endpoint_url(endpoint_url):
         r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
         re.IGNORECASE)
     return allowed.match(hostname)
+
+
+def validate_region_name(region_name):
+    """Provided region_name must be a valid host label."""
+    if region_name is None:
+        return
+    valid_host_label = re.compile(r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+    valid = valid_host_label.match(region_name)
+    if not valid:
+        raise InvalidRegionError(region_name=region_name)
 
 
 def check_dns_name(bucket_name):
@@ -1713,6 +1739,37 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
         return default
 
 
+def calculate_md5(body, **kwargs):
+    if isinstance(body, (bytes, bytearray)):
+        binary_md5 = _calculate_md5_from_bytes(body)
+    else:
+        binary_md5 = _calculate_md5_from_file(body)
+    return base64.b64encode(binary_md5).decode('ascii')
+
+
+def _calculate_md5_from_bytes(body_bytes):
+    md5 = get_md5(body_bytes)
+    return md5.digest()
+
+
+def _calculate_md5_from_file(fileobj):
+    start_position = fileobj.tell()
+    md5 = get_md5()
+    for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
+        md5.update(chunk)
+    fileobj.seek(start_position)
+    return md5.digest()
+
+
+def conditionally_calculate_md5(params, **kwargs):
+    """Only add a Content-MD5 if the system supports it."""
+    headers = params['headers']
+    body = params['body']
+    if MD5_AVAILABLE and body and 'Content-MD5' not in headers:
+        md5_digest = calculate_md5(body, **kwargs)
+        params['headers']['Content-MD5'] = md5_digest
+
+
 class FileWebIdentityTokenLoader(object):
     def __init__(self, web_identity_token_path, _open=open):
         self._web_identity_token_path = web_identity_token_path
@@ -1721,3 +1778,26 @@ class FileWebIdentityTokenLoader(object):
     def __call__(self):
         with self._open(self._web_identity_token_path) as token_file:
             return token_file.read()
+
+
+class SSOTokenLoader(object):
+    def __init__(self, cache=None):
+        if cache is None:
+            cache = {}
+        self._cache = cache
+
+    def _generate_cache_key(self, start_url):
+        return hashlib.sha1(start_url.encode('utf-8')).hexdigest()
+
+    def __call__(self, start_url):
+        cache_key = self._generate_cache_key(start_url)
+        try:
+            token = self._cache[cache_key]
+            return token['accessToken']
+        except KeyError:
+            logger.debug('Failed to load SSO token:', exc_info=True)
+            error_msg = (
+                'The SSO access token has either expired or is otherwise '
+                'invalid.'
+            )
+            raise SSOTokenLoadError(error_msg=error_msg)

@@ -18,10 +18,10 @@ from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import urlsplit
-from botocore.compat import parse_qs
+from botocore.compat import datetime, urlsplit, parse_qs
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.exceptions import InvalidS3UsEast1RegionalEndpointConfigError
+from botocore.parsers import ResponseParserError
 from botocore import UNSIGNED
 
 
@@ -409,6 +409,63 @@ class TestS3ClientConfigResolution(BaseS3ClientConfigurationTest):
         self.assertEqual(client.meta.region_name, 'aws-global')
 
 
+class TestS3Copy(BaseS3OperationTest):
+
+    def create_s3_client(self, **kwargs):
+        client_kwargs = {
+            'region_name': self.region
+        }
+        client_kwargs.update(kwargs)
+        return self.session.create_client('s3', **client_kwargs)
+
+    def create_stubbed_s3_client(self, **kwargs):
+        client = self.create_s3_client(**kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        return client, http_stubber
+
+    def test_s3_copy_object_with_empty_response(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1'
+        )
+
+        empty_body = b''
+        complete_body = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n\n'
+            b'<CopyObjectResult '
+            b'xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            b'<LastModified>2020-04-21T21:03:31.000Z</LastModified>'
+            b'<ETag>&quot;s0mEcH3cK5uM&quot;</ETag></CopyObjectResult>'
+        )
+
+        self.http_stubber.add_response(status=200, body=empty_body)
+        self.http_stubber.add_response(status=200, body=complete_body)
+        response = self.client.copy_object(
+            Bucket='bucket',
+            CopySource='other-bucket/test.txt',
+            Key='test.txt',
+        )
+
+        # Validate we retried and got second body
+        self.assertEquals(len(self.http_stubber.requests), 2)
+        self.assertEquals(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assertTrue('CopyObjectResult' in response)
+
+    def test_s3_copy_object_with_incomplete_response(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1'
+        )
+
+        incomplete_body = b'<?xml version="1.0" encoding="UTF-8"?>\n\n\n'
+        self.http_stubber.add_response(status=200, body=incomplete_body)
+        with self.assertRaises(ResponseParserError):
+            self.client.copy_object(
+                Bucket='bucket',
+                CopySource='other-bucket/test.txt',
+                Key='test.txt',
+            )
+
+
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
     _V4_AUTH_REGEX = re.compile(
         r'AWS4-HMAC-SHA256 '
@@ -435,6 +492,18 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
     def assert_signing_region_in_url(self, url, expected_region):
         qs_components = parse_qs(urlsplit(url).query)
         self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
+
+    def assert_expected_copy_source_header(self,
+                                           http_stubber, expected_copy_source):
+        request = self.http_stubber.requests[0]
+        self.assertIn('x-amz-copy-source', request.headers)
+        self.assertEqual(
+            request.headers['x-amz-copy-source'], expected_copy_source)
+
+    def add_copy_object_response(self, http_stubber):
+        http_stubber.add_response(
+            body=b'<CopyObjectResult></CopyObjectResult>'
+        )
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
@@ -571,6 +640,81 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         url = self.client.generate_presigned_url(
             'get_object', {'Bucket': accesspoint_arn, 'Key': 'mykey'})
         self.assert_signing_region_in_url(url, 'us-east-1')
+
+    def test_copy_source_str_with_accesspoint_arn(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_str_with_accesspoint_arn_and_version_id(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject?versionId=myversionid'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn_and_version_id(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+            'VersionId': 'myversionid'
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
@@ -714,7 +858,7 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_content_sha256_set_if_md5_is_unavailable(self):
         with mock.patch('botocore.auth.MD5_AVAILABLE', False):
-            with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+            with mock.patch('botocore.utils.MD5_AVAILABLE', False):
                 with self.http_stubber:
                     self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
@@ -1049,6 +1193,65 @@ class TestGeneratePresigned(BaseS3OperationTest):
             'get_object', {'Bucket': 'mybucket', 'Key': 'mykey'})
         self.assert_is_v2_presigned_url(url)
 
+def test_checksums_included_in_expected_operations():
+    """Validate expected calls include Content-MD5 header"""
+
+    t = S3ChecksumCases(_verify_checksum_in_headers)
+    yield t.case('put_bucket_tagging',
+            {"Bucket": "foo", "Tagging":{"TagSet":[]}})
+    yield t.case('put_bucket_lifecycle',
+            {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
+    yield t.case('put_bucket_lifecycle_configuration',
+            {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
+    yield t.case('put_bucket_cors',
+            {"Bucket": "foo", "CORSConfiguration":{"CORSRules": []}})
+    yield t.case('delete_objects',
+            {"Bucket": "foo", "Delete": {"Objects": [{"Key": "bar"}]}})
+    yield t.case('put_bucket_replication',
+            {"Bucket": "foo",
+             "ReplicationConfiguration": {"Role":"", "Rules": []}})
+    yield t.case('put_bucket_acl',
+            {"Bucket": "foo", "AccessControlPolicy":{}})
+    yield t.case('put_bucket_logging',
+            {"Bucket": "foo",
+             "BucketLoggingStatus":{}})
+    yield t.case('put_bucket_notification',
+            {"Bucket": "foo", "NotificationConfiguration":{}})
+    yield t.case('put_bucket_policy',
+            {"Bucket": "foo", "Policy": "<bucket-policy>"})
+    yield t.case('put_bucket_request_payment',
+            {"Bucket": "foo", "RequestPaymentConfiguration":{"Payer": ""}})
+    yield t.case('put_bucket_versioning',
+            {"Bucket": "foo", "VersioningConfiguration":{}})
+    yield t.case('put_bucket_website',
+            {"Bucket": "foo",
+             "WebsiteConfiguration":{}})
+    yield t.case('put_object_acl',
+            {"Bucket": "foo", "Key": "bar", "AccessControlPolicy":{}})
+    yield t.case('put_object_legal_hold',
+            {"Bucket": "foo", "Key": "bar", "LegalHold":{"Status": "ON"}})
+    yield t.case('put_object_retention',
+            {"Bucket": "foo", "Key": "bar",
+             "Retention":{"RetainUntilDate":"2020-11-05"}})
+    yield t.case('put_object_lock_configuration',
+            {"Bucket": "foo", "ObjectLockConfiguration":{}})
+
+
+def _verify_checksum_in_headers(operation, operation_kwargs):
+    environ = {}
+    with mock.patch('os.environ', environ):
+        environ['AWS_ACCESS_KEY_ID'] = 'access_key'
+        environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        session = create_session()
+        session.config_filename = 'no-exist-foo'
+        client = session.create_client('s3')
+        with ClientHTTPStubber(client) as stub:
+            stub.add_response()
+            call = getattr(client, operation)
+            call(**operation_kwargs)
+            assert 'Content-MD5' in stub.requests[-1].headers
+
 
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,
@@ -1192,6 +1395,10 @@ def test_correct_url_used_for_s3():
         s3_config=virtual_hosting,
         customer_provided_endpoint='https://foo.amazonaws.com',
         expected_url='https://bucket.foo.amazonaws.com/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=virtual_hosting,
+        expected_url='https://bucket.s3.unknown.amazonaws.com/key')
 
     # Test us-gov with virtual addressing.
     yield t.case(
@@ -1220,6 +1427,10 @@ def test_correct_url_used_for_s3():
         s3_config=path_style,
         customer_provided_endpoint='https://foo.amazonaws.com/',
         expected_url='https://foo.amazonaws.com/bucket/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=path_style,
+        expected_url='https://s3.unknown.amazonaws.com/bucket/key')
 
     # S3 accelerate
     use_accelerate = {'use_accelerate_endpoint': True}
@@ -1261,6 +1472,10 @@ def test_correct_url_used_for_s3():
         # Extra components must be whitelisted.
         customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
         expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=use_accelerate,
+        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
     # Use virtual even if path is specified for s3 accelerate because
     # path style will not work with S3 accelerate.
     yield t.case(
@@ -1303,6 +1518,10 @@ def test_correct_url_used_for_s3():
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=use_dualstack, signature_version='s3v4',
+        expected_url='https://bucket.s3.dualstack.unknown.amazonaws.com/key')
     # Non DNS compatible buckets use path style for dual stack.
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
@@ -1485,6 +1704,14 @@ def test_correct_url_used_for_s3():
             'unknown.amazonaws.com/key'
         )
     )
+    yield t.case(
+        region='unknown', bucket=accesspoint_arn, key='key',
+        s3_config={'use_arn_region': True},
+        expected_url=(
+            'https://myendpoint-123456789012.s3-accesspoint.'
+            'us-west-2.amazonaws.com/key'
+        )
+    )
     accesspoint_arn_cn = (
         'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
     )
@@ -1625,6 +1852,11 @@ def test_correct_url_used_for_s3():
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
     yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=us_east_1_regional_endpoint,
+        expected_url=(
+            'https://bucket.s3.unknown.amazonaws.com/key'))
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
             'us_east_1_regional_endpoint': 'regional',
@@ -1666,11 +1898,22 @@ def test_correct_url_used_for_s3():
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
 
+    yield t.case(
+        region='unknown', bucket='bucket', key='key',
+        s3_config=us_east_1_regional_endpoint_legacy,
+        expected_url=(
+            'https://bucket.s3.unknown.amazonaws.com/key'))
 
-class S3AddressingCases(object):
+
+class BaseTestCase:
     def __init__(self, verify_function):
         self._verify = verify_function
 
+    def case(self, **kwargs):
+        return self._verify, kwargs
+
+
+class S3AddressingCases(BaseTestCase):
     def case(self, region=None, bucket='bucket', key='key',
              s3_config=None, is_secure=True, customer_provided_endpoint=None,
              expected_url=None, signature_version=None):
@@ -1678,6 +1921,11 @@ class S3AddressingCases(object):
             self._verify, region, bucket, key, s3_config, is_secure,
             customer_provided_endpoint, expected_url, signature_version
         )
+
+
+class S3ChecksumCases(BaseTestCase):
+    def case(self, operation, operation_args):
+        return self._verify, operation, operation_args
 
 
 def _verify_expected_endpoint_url(region, bucket, key, s3_config,

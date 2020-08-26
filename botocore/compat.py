@@ -23,6 +23,7 @@ from math import floor
 
 from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
+from dateutil.tz import tzlocal
 from urllib3 import exceptions
 
 logger = logging.getLogger(__name__)
@@ -145,8 +146,12 @@ else:
 from collections import OrderedDict
 
 
-import xml.etree.cElementTree
-XMLParseError = xml.etree.cElementTree.ParseError
+try:
+    import xml.etree.cElementTree as ETree
+except ImportError:
+    # cElementTree does not exist from Python3.9+
+    import xml.etree.ElementTree as ETree
+XMLParseError = ETree.ParseError
 import json
 
 
@@ -327,6 +332,17 @@ def _windows_shell_split(s):
         components.append(''.join(buff))
 
     return components
+
+
+def get_tzinfo_options():
+    # Due to dateutil/dateutil#197, Windows may fail to parse times in the past
+    # with the system clock. We can alternatively fallback to tzwininfo when
+    # this happens, which will get time info from the Windows registry.
+    if sys.platform == 'win32':
+        from dateutil.tz import tzwinlocal
+        return (tzlocal, tzwinlocal)
+    else:
+        return (tzlocal,)
 
 
 try:

@@ -49,7 +49,7 @@ class DataNotFoundError(BotoCoreError):
     """
     The data associated with a particular path could not be loaded.
 
-    :ivar path: The data path that the user attempted to load.
+    :ivar data_path: The data path that the user attempted to load.
     """
     fmt = 'Unable to load data for: {data_path}'
 
@@ -67,17 +67,17 @@ class UnknownServiceError(DataNotFoundError):
 
 class ApiVersionNotFoundError(BotoCoreError):
     """
-    The data associated with either that API version or a compatible one
+    The data associated with either the API version or a compatible one
     could not be loaded.
 
-    :ivar path: The data path that the user attempted to load.
-    :ivar path: The API version that the user attempted to load.
+    :ivar data_path: The data path that the user attempted to load.
+    :ivar api_version: The API version that the user attempted to load.
     """
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
 
 class HTTPClientError(BotoCoreError):
-    fmt = 'An HTTP Client raised and unhandled exception: {error}'
+    fmt = 'An HTTP Client raised an unhandled exception: {error}'
     def __init__(self, request=None, response=None, **kwargs):
         self.request = request
         self.response = response
@@ -121,7 +121,7 @@ class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
 
 class NoCredentialsError(BotoCoreError):
     """
-    No credentials could be found
+    No credentials could be found.
     """
     fmt = 'Unable to locate credentials'
 
@@ -141,7 +141,7 @@ class CredentialRetrievalError(BotoCoreError):
     Error attempting to retrieve credentials from a remote source.
 
     :ivar provider: The name of the credential provider.
-    :ivar error_msg: The msg explaning why credentials could not be
+    :ivar error_msg: The msg explaining why credentials could not be
         retrieved.
 
     """
@@ -261,7 +261,7 @@ class ParamValidationError(BotoCoreError):
 # error.
 class UnknownKeyError(ValidationError):
     """
-    Unknown key in a struct paramster.
+    Unknown key in a struct parameter.
 
     :ivar value: The value that was being checked.
     :ivar param: The name of the parameter.
@@ -295,6 +295,17 @@ class UnknownParameterError(ValidationError):
     fmt = (
         "Unknown parameter '{name}' for operation {operation}.  Must be one "
         "of: {choices}"
+    )
+
+
+class InvalidRegionError(ValidationError, ValueError):
+    """
+    Invalid region_name provided to client or resource.
+
+    :ivar region_name: region_name that was being validated.
+    """
+    fmt = (
+        "Provided region_name '{region_name}' doesn't match a supported format."
     )
 
 
@@ -382,7 +393,7 @@ class UnknownClientMethodError(BotoCoreError):
 
 
 class UnsupportedSignatureVersionError(BotoCoreError):
-    """Error when trying to access a method on a client that does not exist."""
+    """Error when trying to use an unsupported Signature Version."""
     fmt = 'Signature version is not supported: {signature_version}'
 
 
@@ -448,13 +459,13 @@ class InvalidDNSNameError(BotoCoreError):
 class InvalidS3AddressingStyleError(BotoCoreError):
     """Error when an invalid path style is specified"""
     fmt = (
-        'S3 addressing style {s3_addressing_style} is invaild. Valid options '
+        'S3 addressing style {s3_addressing_style} is invalid. Valid options '
         'are: \'auto\', \'virtual\', and \'path\''
     )
 
 
 class UnsupportedS3ArnError(BotoCoreError):
-    """Error when S3 arn provided to Bucket parameter is not supported"""
+    """Error when S3 ARN provided to Bucket parameter is not supported"""
     fmt = (
         'S3 ARN {arn} provided to "Bucket" parameter is invalid. Only '
         'ARNs for S3 access-points are supported.'
@@ -497,7 +508,7 @@ class InvalidS3UsEast1RegionalEndpointConfigError(BotoCoreError):
     fmt = (
         'S3 us-east-1 regional endpoint option '
         '{s3_us_east_1_regional_endpoint_config} is '
-        'invaild. Valid options are: legacy and regional'
+        'invalid. Valid options are: "legacy", "regional"'
     )
 
 
@@ -505,7 +516,7 @@ class InvalidSTSRegionalEndpointsConfigError(BotoCoreError):
     """Error when invalid sts regional endpoints configuration is specified"""
     fmt = (
         'STS regional endpoints option {sts_regional_endpoints_config} is '
-        'invaild. Valid options are: legacy and regional'
+        'invalid. Valid options are: "legacy", "regional"'
     )
 
 
@@ -516,8 +527,10 @@ class StubResponseError(BotoCoreError):
 class StubAssertionError(StubResponseError, AssertionError):
     pass
 
+
 class UnStubbedResponseError(StubResponseError):
     pass
+
 
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
@@ -557,6 +570,22 @@ class MissingServiceIdError(UndefinedModelAttributeError):
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
+
+
+class SSOError(BotoCoreError):
+    fmt = "An unspecified error happened when resolving SSO credentials"
+
+
+class SSOTokenLoadError(SSOError):
+    fmt = "Error loading SSO Token: {error_msg}"
+
+
+class UnauthorizedSSOTokenError(SSOError):
+    fmt = (
+        "The SSO session associated with this profile has expired or is "
+        "otherwise invalid. To refresh this SSO session run aws sso login "
+        "with the corresponding profile."
+    )
 
 
 class CapacityNotAvailableError(BotoCoreError):

@@ -142,7 +142,7 @@
         {"shape":"ResourceInUseException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Deletes the specified organization config rule and all of its evaluation results from all member accounts in that organization. Only a master account can delete an organization config rule.</p> <p>AWS Config sets the state of a rule to DELETE_IN_PROGRESS until the deletion is complete. You cannot update a rule while it is in this state.</p>"
+      "documentation":"<p>Deletes the specified organization config rule and all of its evaluation results from all member accounts in that organization. </p> <p>Only a master account and a delegated administrator account can delete an organization config rule. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <p>AWS Config sets the state of a rule to DELETE_IN_PROGRESS until the deletion is complete. You cannot update a rule while it is in this state.</p>"
     },
     "DeleteOrganizationConformancePack":{
       "name":"DeleteOrganizationConformancePack",
@@ -156,7 +156,7 @@
         {"shape":"ResourceInUseException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Deletes the specified organization conformance pack and all of the config rules and remediation actions from all member accounts in that organization. Only a master account can delete an organization conformance pack.</p> <p>AWS Config sets the state of a conformance pack to DELETE_IN_PROGRESS until the deletion is complete. You cannot update a conformance pack while it is in this state. </p>"
+      "documentation":"<p>Deletes the specified organization conformance pack and all of the config rules and remediation actions from all member accounts in that organization. </p> <p> Only a master account or a delegated administrator account can delete an organization conformance pack. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <p>AWS Config sets the state of a conformance pack to DELETE_IN_PROGRESS until the deletion is complete. You cannot update a conformance pack while it is in this state. </p>"
     },
     "DeletePendingAggregationRequest":{
       "name":"DeletePendingAggregationRequest",
@@ -180,7 +180,8 @@
       "output":{"shape":"DeleteRemediationConfigurationResponse"},
       "errors":[
         {"shape":"NoSuchRemediationConfigurationException"},
-        {"shape":"RemediationInProgressException"}
+        {"shape":"RemediationInProgressException"},
+        {"shape":"InsufficientPermissionsException"}
       ],
       "documentation":"<p>Deletes the remediation configuration.</p>"
     },
@@ -195,7 +196,7 @@
       "errors":[
         {"shape":"NoSuchRemediationExceptionException"}
       ],
-      "documentation":"<p>Deletes one or more remediation exceptions mentioned in the resource keys.</p>"
+      "documentation":"<p>Deletes one or more remediation exceptions mentioned in the resource keys.</p> <note> <p>AWS Config generates a remediation exception when a problem occurs executing a remediation action to a specific resource. Remediation exceptions blocks auto-remediation until the exception is cleared.</p> </note>"
     },
     "DeleteResourceConfig":{
       "name":"DeleteResourceConfig",
@@ -412,7 +413,8 @@
       "output":{"shape":"DescribeConformancePackStatusResponse"},
       "errors":[
         {"shape":"InvalidLimitException"},
-        {"shape":"InvalidNextTokenException"}
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InvalidParameterValueException"}
       ],
       "documentation":"<p>Provides one or more conformance packs deployment status.</p> <note> <p>If there are no conformance packs then you will see an empty result.</p> </note>"
     },
@@ -427,7 +429,8 @@
       "errors":[
         {"shape":"NoSuchConformancePackException"},
         {"shape":"InvalidLimitException"},
-        {"shape":"InvalidNextTokenException"}
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InvalidParameterValueException"}
       ],
       "documentation":"<p>Returns a list of one or more conformance packs.</p>"
     },
@@ -471,7 +474,7 @@
         {"shape":"InvalidNextTokenException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Provides organization config rule deployment status for an organization.</p> <note> <p>The status is not considered successful until organization config rule is successfully deployed in all the member accounts with an exception of excluded accounts.</p> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization config rule names. It is only applicable, when you request all the organization config rules.</p> <p>Only a master account can call this API.</p> </note>"
+      "documentation":"<p>Provides organization config rule deployment status for an organization.</p> <p>Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <note> <p>The status is not considered successful until organization config rule is successfully deployed in all the member accounts with an exception of excluded accounts.</p> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization config rule names. It is only applicable, when you request all the organization config rules.</p> </note>"
     },
     "DescribeOrganizationConfigRules":{
       "name":"DescribeOrganizationConfigRules",
@@ -487,7 +490,7 @@
         {"shape":"InvalidLimitException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Returns a list of organization config rules.</p> <note> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization config rule names. It is only applicable, when you request all the organization config rules.</p> <p>Only a master account can call this API.</p> </note>"
+      "documentation":"<p>Returns a list of organization config rules. </p> <p>Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.&#x2028;</p> <note> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization config rule names. It is only applicable, when you request all the organization config rules.</p> </note>"
     },
     "DescribeOrganizationConformancePackStatuses":{
       "name":"DescribeOrganizationConformancePackStatuses",
@@ -503,7 +506,7 @@
         {"shape":"InvalidNextTokenException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Provides organization conformance pack deployment status for an organization.</p> <note> <p>The status is not considered successful until organization conformance pack is successfully deployed in all the member accounts with an exception of excluded accounts.</p> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization conformance pack names. They are only applicable, when you request all the organization conformance packs.</p> <p>Only a master account can call this API.</p> </note>"
+      "documentation":"<p>Provides organization conformance pack deployment status for an organization. </p> <p> Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <note> <p>The status is not considered successful until organization conformance pack is successfully deployed in all the member accounts with an exception of excluded accounts.</p> <p>When you specify the limit and the next token, you receive a paginated response. Limit and next token are not applicable if you specify organization conformance pack names. They are only applicable, when you request all the organization conformance packs.</p> </note>"
     },
     "DescribeOrganizationConformancePacks":{
       "name":"DescribeOrganizationConformancePacks",
@@ -519,7 +522,7 @@
         {"shape":"InvalidLimitException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Returns a list of organization conformance packs.</p> <note> <p>When you specify the limit and the next token, you receive a paginated response. </p> <p>Limit and next token are not applicable if you specify organization conformance packs names. They are only applicable, when you request all the organization conformance packs. </p> <p>Only a master account can call this API.</p> </note>"
+      "documentation":"<p>Returns a list of organization conformance packs. </p> <p>Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <note> <p>When you specify the limit and the next token, you receive a paginated response. </p> <p>Limit and next token are not applicable if you specify organization conformance packs names. They are only applicable, when you request all the organization conformance packs. </p> </note>"
     },
     "DescribePendingAggregationRequests":{
       "name":"DescribePendingAggregationRequests",
@@ -558,7 +561,7 @@
         {"shape":"InvalidNextTokenException"},
         {"shape":"InvalidParameterValueException"}
       ],
-      "documentation":"<p>Returns the details of one or more remediation exceptions. A detailed view of a remediation exception for a set of resources that includes an explanation of an exception and the time when the exception will be deleted. When you specify the limit and the next token, you receive a paginated response. </p> <note> <p>When you specify the limit and the next token, you receive a paginated response. </p> <p>Limit and next token are not applicable if you request resources in batch. It is only applicable, when you request all resources.</p> </note>"
+      "documentation":"<p>Returns the details of one or more remediation exceptions. A detailed view of a remediation exception for a set of resources that includes an explanation of an exception and the time when the exception will be deleted. When you specify the limit and the next token, you receive a paginated response. </p> <note> <p>AWS Config generates a remediation exception when a problem occurs executing a remediation action to a specific resource. Remediation exceptions blocks auto-remediation until the exception is cleared.</p> <p>When you specify the limit and the next token, you receive a paginated response. </p> <p>Limit and next token are not applicable if you request resources in batch. It is only applicable, when you request all resources.</p> </note>"
     },
     "DescribeRemediationExecutionStatus":{
       "name":"DescribeRemediationExecutionStatus",
@@ -764,7 +767,7 @@
         {"shape":"InvalidNextTokenException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Returns detailed status for each member account within an organization for a given organization config rule.</p> <note> <p>Only a master account can call this API.</p> </note>"
+      "documentation":"<p>Returns detailed status for each member account within an organization for a given organization config rule.</p> <p>Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p>"
     },
     "GetOrganizationConformancePackDetailedStatus":{
       "name":"GetOrganizationConformancePackDetailedStatus",
@@ -780,7 +783,7 @@
         {"shape":"InvalidNextTokenException"},
         {"shape":"OrganizationAccessDeniedException"}
       ],
-      "documentation":"<p>Returns detailed status for each member account within an organization for a given organization conformance pack.</p> <p>Only a master account can call this API.</p>"
+      "documentation":"<p>Returns detailed status for each member account within an organization for a given organization conformance pack.</p> <p>Only a master account and a delegated administrator account can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p>"
     },
     "GetResourceConfigHistory":{
       "name":"GetResourceConfigHistory",
@@ -925,7 +928,7 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"MaxNumberOfConformancePacksExceededException"}
       ],
-      "documentation":"<p>Creates or updates a conformance pack. A conformance pack is a collection of AWS Config rules that can be easily deployed in an account and a region and across AWS Organization.</p> <p>This API creates a service linked role <code>AWSServiceRoleForConfigConforms</code> in your account. The service linked role is created only when the role does not exist in your account. AWS Config verifies the existence of role with <code>GetRole</code> action.</p> <note> <p>You must specify either the <code>TemplateS3Uri</code> or the <code>TemplateBody</code> parameter, but not both. If you provide both AWS Config uses the <code>TemplateS3Uri</code> parameter and ignores the <code>TemplateBody</code> parameter.</p> </note>"
+      "documentation":"<p>Creates or updates a conformance pack. A conformance pack is a collection of AWS Config rules that can be easily deployed in an account and a region and across AWS Organization.</p> <p>This API creates a service linked role <code>AWSServiceRoleForConfigConforms</code> in your account. The service linked role is created only when the role does not exist in your account. </p> <note> <p>You must specify either the <code>TemplateS3Uri</code> or the <code>TemplateBody</code> parameter, but not both. If you provide both AWS Config uses the <code>TemplateS3Uri</code> parameter and ignores the <code>TemplateBody</code> parameter.</p> </note>"
     },
     "PutDeliveryChannel":{
       "name":"PutDeliveryChannel",
@@ -978,7 +981,7 @@
         {"shape":"OrganizationAllFeaturesNotEnabledException"},
         {"shape":"InsufficientPermissionsException"}
       ],
-      "documentation":"<p>Adds or updates organization config rule for your entire organization evaluating whether your AWS resources comply with your desired configurations. Only a master account can create or update an organization config rule.</p> <p>This API enables organization service access through the <code>EnableAWSServiceAccess</code> action and creates a service linked role <code>AWSServiceRoleForConfigMultiAccountSetup</code> in the master account of your organization. The service linked role is created only when the role does not exist in the master account. AWS Config verifies the existence of role with <code>GetRole</code> action.</p> <p>You can use this action to create both custom AWS Config rules and AWS managed Config rules. If you are adding a new custom AWS Config rule, you must first create AWS Lambda function in the master account that the rule invokes to evaluate your resources. When you use the <code>PutOrganizationConfigRule</code> action to add the rule to AWS Config, you must specify the Amazon Resource Name (ARN) that AWS Lambda assigns to the function. If you are adding an AWS managed Config rule, specify the rule's identifier for the <code>RuleIdentifier</code> key.</p> <p>The maximum number of organization config rules that AWS Config supports is 150.</p> <note> <p>Specify either <code>OrganizationCustomRuleMetadata</code> or <code>OrganizationManagedRuleMetadata</code>.</p> </note>"
+      "documentation":"<p>Adds or updates organization config rule for your entire organization evaluating whether your AWS resources comply with your desired configurations.</p> <p> Only a master account and a delegated administrator can create or update an organization config rule. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added. </p> <p>This API enables organization service access through the <code>EnableAWSServiceAccess</code> action and creates a service linked role <code>AWSServiceRoleForConfigMultiAccountSetup</code> in the master or delegated administrator account of your organization. The service linked role is created only when the role does not exist in the caller account. AWS Config verifies the existence of role with <code>GetRole</code> action.</p> <p>To use this API with delegated administrator, register a delegated administrator by calling AWS Organization <code>register-delegated-administrator</code> for <code>config-multiaccountsetup.amazonaws.com</code>. </p> <p>You can use this action to create both custom AWS Config rules and AWS managed Config rules. If you are adding a new custom AWS Config rule, you must first create AWS Lambda function in the master account or a delegated administrator that the rule invokes to evaluate your resources. When you use the <code>PutOrganizationConfigRule</code> action to add the rule to AWS Config, you must specify the Amazon Resource Name (ARN) that AWS Lambda assigns to the function. If you are adding an AWS managed Config rule, specify the rule's identifier for the <code>RuleIdentifier</code> key.</p> <p>The maximum number of organization config rules that AWS Config supports is 150 and 3 delegated administrator per organization. </p> <note> <p>Prerequisite: Ensure you call <code>EnableAllFeatures</code> API to enable all features in an organization.</p> <p>Specify either <code>OrganizationCustomRuleMetadata</code> or <code>OrganizationManagedRuleMetadata</code>.</p> </note>"
     },
     "PutOrganizationConformancePack":{
       "name":"PutOrganizationConformancePack",
@@ -998,7 +1001,7 @@
         {"shape":"OrganizationAllFeaturesNotEnabledException"},
         {"shape":"NoAvailableOrganizationException"}
       ],
-      "documentation":"<p>Deploys conformance packs across member accounts in an AWS Organization.</p> <p>This API enables organization service access for <code>config-multiaccountsetup.amazonaws.com</code> through the <code>EnableAWSServiceAccess</code> action and creates a service linked role <code>AWSServiceRoleForConfigMultiAccountSetup</code> in the master account of your organization. The service linked role is created only when the role does not exist in the master account. AWS Config verifies the existence of role with GetRole action.</p> <note> <p>You must specify either the <code>TemplateS3Uri</code> or the <code>TemplateBody</code> parameter, but not both. If you provide both AWS Config uses the <code>TemplateS3Uri</code> parameter and ignores the <code>TemplateBody</code> parameter.</p> <p>AWS Config sets the state of a conformance pack to CREATE_IN_PROGRESS and UPDATE_IN_PROGRESS until the confomance pack is created or updated. You cannot update a conformance pack while it is in this state.</p> <p>You can create 6 conformance packs with 25 AWS Config rules in each pack.</p> </note>"
+      "documentation":"<p>Deploys conformance packs across member accounts in an AWS Organization.</p> <p>Only a master account and a delegated administrator can call this API. When calling this API with a delegated administrator, you must ensure AWS Organizations <code>ListDelegatedAdministrator</code> permissions are added.</p> <p>This API enables organization service access for <code>config-multiaccountsetup.amazonaws.com</code> through the <code>EnableAWSServiceAccess</code> action and creates a service linked role <code>AWSServiceRoleForConfigMultiAccountSetup</code> in the master or delegated administrator account of your organization. The service linked role is created only when the role does not exist in the caller account. To use this API with delegated administrator, register a delegated administrator by calling AWS Organization <code>register-delegate-admin</code> for <code>config-multiaccountsetup.amazonaws.com</code>.</p> <note> <p>Prerequisite: Ensure you call <code>EnableAllFeatures</code> API to enable all features in an organization.</p> <p>You must specify either the <code>TemplateS3Uri</code> or the <code>TemplateBody</code> parameter, but not both. If you provide both AWS Config uses the <code>TemplateS3Uri</code> parameter and ignores the <code>TemplateBody</code> parameter.</p> <p>AWS Config sets the state of a conformance pack to CREATE_IN_PROGRESS and UPDATE_IN_PROGRESS until the conformance pack is created or updated. You cannot update a conformance pack while it is in this state.</p> <p>You can create 6 conformance packs with 25 AWS Config rules in each pack and 3 delegated administrator per organization. </p> </note>"
     },
     "PutRemediationConfigurations":{
       "name":"PutRemediationConfigurations",
@@ -1012,7 +1015,7 @@
         {"shape":"InsufficientPermissionsException"},
         {"shape":"InvalidParameterValueException"}
       ],
-      "documentation":"<p>Adds or updates the remediation configuration with a specific AWS Config rule with the selected target or action. The API creates the <code>RemediationConfiguration</code> object for the AWS Config rule. The AWS Config rule must already exist for you to add a remediation configuration. The target (SSM document) must exist and have permissions to use the target. </p>"
+      "documentation":"<p>Adds or updates the remediation configuration with a specific AWS Config rule with the selected target or action. The API creates the <code>RemediationConfiguration</code> object for the AWS Config rule. The AWS Config rule must already exist for you to add a remediation configuration. The target (SSM document) must exist and have permissions to use the target. </p> <note> <p>If you make backward incompatible changes to the SSM document, you must call this again to ensure the remediations can run.</p> </note>"
     },
     "PutRemediationExceptions":{
       "name":"PutRemediationExceptions",
@@ -1023,9 +1026,10 @@
       "input":{"shape":"PutRemediationExceptionsRequest"},
       "output":{"shape":"PutRemediationExceptionsResponse"},
       "errors":[
-        {"shape":"InvalidParameterValueException"}
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"InsufficientPermissionsException"}
       ],
-      "documentation":"<p>A remediation exception is when a specific resource is no longer considered for auto-remediation. This API adds a new exception or updates an exisiting exception for a specific resource with a specific AWS Config rule. </p>"
+      "documentation":"<p>A remediation exception is when a specific resource is no longer considered for auto-remediation. This API adds a new exception or updates an exisiting exception for a specific resource with a specific AWS Config rule. </p> <note> <p>AWS Config generates a remediation exception when a problem occurs executing a remediation action to a specific resource. Remediation exceptions blocks auto-remediation until the exception is cleared.</p> </note>"
     },
     "PutResourceConfig":{
       "name":"PutResourceConfig",
@@ -1040,7 +1044,7 @@
         {"shape":"NoRunningConfigurationRecorderException"},
         {"shape":"MaxActiveResourcesExceededException"}
       ],
-      "documentation":"<p>Records the configuration state for the resource provided in the request. The configuration state of a resource is represented in AWS Config as Configuration Items. Once this API records the configuration item, you can retrieve the list of configuration items for the custom resource type using existing AWS Config APIs. </p> <note> <p>The custom resource type must be registered with AWS CloudFormation. This API accepts the configuration item registered with AWS CloudFormation.</p> <p>When you call this API, AWS Config only stores configuration state of the resource provided in the request. This API does not change or remediate the configuration of the resource. </p> </note>"
+      "documentation":"<p>Records the configuration state for the resource provided in the request. The configuration state of a resource is represented in AWS Config as Configuration Items. Once this API records the configuration item, you can retrieve the list of configuration items for the custom resource type using existing AWS Config APIs. </p> <note> <p>The custom resource type must be registered with AWS CloudFormation. This API accepts the configuration item registered with AWS CloudFormation.</p> <p>When you call this API, AWS Config only stores configuration state of the resource provided in the request. This API does not change or remediate the configuration of the resource. </p> <p>Write-only schema properites are not recorded as part of the published configuration item.</p> </note>"
     },
     "PutRetentionConfiguration":{
       "name":"PutRetentionConfiguration",
@@ -1055,6 +1059,22 @@
         {"shape":"MaxNumberOfRetentionConfigurationsExceededException"}
       ],
       "documentation":"<p>Creates and updates the retention configuration with details about retention period (number of days) that AWS Config stores your historical information. The API creates the <code>RetentionConfiguration</code> object and names the object as <b>default</b>. When you have a <code>RetentionConfiguration</code> object named <b>default</b>, calling the API modifies the default object. </p> <note> <p>Currently, AWS Config supports only one retention configuration per region in your account.</p> </note>"
+    },
+    "SelectAggregateResourceConfig":{
+      "name":"SelectAggregateResourceConfig",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"SelectAggregateResourceConfigRequest"},
+      "output":{"shape":"SelectAggregateResourceConfigResponse"},
+      "errors":[
+        {"shape":"InvalidExpressionException"},
+        {"shape":"NoSuchConfigurationAggregatorException"},
+        {"shape":"InvalidLimitException"},
+        {"shape":"InvalidNextTokenException"}
+      ],
+      "documentation":"<p>Accepts a structured query language (SQL) SELECT command and an aggregator to query configuration state of AWS resources across multiple accounts and regions, performs the corresponding search, and returns resource configurations matching the properties.</p> <p>For more information about query components, see the <a href=\"https://docs.aws.amazon.com/config/latest/developerguide/query-components.html\"> <b>Query Components</b> </a> section in the AWS Config Developer Guide.</p>"
     },
     "SelectResourceConfig":{
       "name":"SelectResourceConfig",
@@ -1397,7 +1417,7 @@
     "AllSupported":{"type":"boolean"},
     "AmazonResourceName":{
       "type":"string",
-      "max":256,
+      "max":1000,
       "min":1
     },
     "Annotation":{
@@ -1440,7 +1460,7 @@
         },
         "configurationItemStatus":{
           "shape":"ConfigurationItemStatus",
-          "documentation":"<p>The configuration item status.</p>"
+          "documentation":"<p>The configuration item status. The valid values are:</p> <ul> <li> <p>OK – The resource configuration has been updated</p> </li> <li> <p>ResourceDiscovered – The resource was newly discovered</p> </li> <li> <p>ResourceNotRecorded – The resource was discovered but its configuration was not recorded since the recorder excludes the recording of resources of this type</p> </li> <li> <p>ResourceDeleted – The resource was deleted</p> </li> <li> <p>ResourceDeletedNotRecorded – The resource was deleted but its configuration was not recorded since the recorder excludes the recording of resources of this type</p> </li> </ul> <note> <p>The CIs do not incur any cost.</p> </note>"
         },
         "configurationStateId":{
           "shape":"ConfigurationStateId",
@@ -1720,15 +1740,15 @@
       "required":["Source"],
       "members":{
         "ConfigRuleName":{
-          "shape":"StringWithCharLimit64",
+          "shape":"ConfigRuleName",
           "documentation":"<p>The name that you assign to the AWS Config rule. The name is required if you are adding a new rule.</p>"
         },
         "ConfigRuleArn":{
-          "shape":"String",
+          "shape":"StringWithCharLimit256",
           "documentation":"<p>The Amazon Resource Name (ARN) of the AWS Config rule.</p>"
         },
         "ConfigRuleId":{
-          "shape":"String",
+          "shape":"StringWithCharLimit64",
           "documentation":"<p>The ID of the AWS Config rule.</p>"
         },
         "Description":{
@@ -1737,7 +1757,7 @@
         },
         "Scope":{
           "shape":"Scope",
-          "documentation":"<p>Defines which resources can trigger an evaluation for the rule. The scope can include one or more resource types, a combination of one resource type and one resource ID, or a combination of a tag key and value. Specify a scope to constrain the resources that can trigger an evaluation for the rule. If you do not specify a scope, evaluations are triggered when any resource in the recording group changes.</p>"
+          "documentation":"<p>Defines which resources can trigger an evaluation for the rule. The scope can include one or more resource types, a combination of one resource type and one resource ID, or a combination of a tag key and value. Specify a scope to constrain the resources that can trigger an evaluation for the rule. If you do not specify a scope, evaluations are triggered when any resource in the recording group changes.</p> <note> <p>The scope can be empty. </p> </note>"
         },
         "Source":{
           "shape":"Source",
@@ -1809,7 +1829,7 @@
       "type":"structure",
       "members":{
         "ConfigRuleName":{
-          "shape":"StringWithCharLimit64",
+          "shape":"ConfigRuleName",
           "documentation":"<p>The name of the AWS Config rule.</p>"
         },
         "ConfigRuleArn":{
@@ -1839,6 +1859,10 @@
         "FirstActivatedTime":{
           "shape":"Date",
           "documentation":"<p>The time that you first activated the AWS Config rule.</p>"
+        },
+        "LastDeactivatedTime":{
+          "shape":"Date",
+          "documentation":"<p>The time that you last turned off the AWS Config rule.</p>"
         },
         "LastErrorCode":{
           "shape":"String",
@@ -1943,6 +1967,10 @@
         "LastUpdatedTime":{
           "shape":"Date",
           "documentation":"<p>The time of the last update.</p>"
+        },
+        "CreatedBy":{
+          "shape":"StringWithCharLimit256",
+          "documentation":"<p>AWS service that created the configuration aggregator.</p>"
         }
       },
       "documentation":"<p>The details about the configuration aggregator, including information about source accounts, regions, and metadata of the aggregator. </p>"
@@ -1984,7 +2012,7 @@
         },
         "configurationItemStatus":{
           "shape":"ConfigurationItemStatus",
-          "documentation":"<p>The configuration item status.</p>"
+          "documentation":"<p>The configuration item status. The valid values are:</p> <ul> <li> <p>OK – The resource configuration has been updated</p> </li> <li> <p>ResourceDiscovered – The resource was newly discovered</p> </li> <li> <p>ResourceNotRecorded – The resource was discovered but its configuration was not recorded since the recorder excludes the recording of resources of this type</p> </li> <li> <p>ResourceDeleted – The resource was deleted</p> </li> <li> <p>ResourceDeletedNotRecorded – The resource was deleted but its configuration was not recorded since the recorder excludes the recording of resources of this type</p> </li> </ul> <note> <p>The CIs do not incur any cost.</p> </note>"
         },
         "configurationStateId":{
           "shape":"ConfigurationStateId",
@@ -2314,7 +2342,7 @@
           "documentation":"<p>Another part of the key-value pair. </p>"
         }
       },
-      "documentation":"<p>Input parameters in the form of key-value pairs for the conformance pack, both of which you define. Keys can have a maximum character length of 128 characters, and values can have a maximum length of 256 characters.</p>"
+      "documentation":"<p>Input parameters in the form of key-value pairs for the conformance pack, both of which you define. Keys can have a maximum character length of 255 characters, and values can have a maximum length of 4096 characters.</p>"
     },
     "ConformancePackInputParameters":{
       "type":"list",
@@ -2468,7 +2496,7 @@
       "required":["ConfigRuleName"],
       "members":{
         "ConfigRuleName":{
-          "shape":"StringWithCharLimit64",
+          "shape":"ConfigRuleName",
           "documentation":"<p>The name of the AWS Config rule that you want to delete.</p>"
         }
       },
@@ -3543,7 +3571,7 @@
       "type":"structure",
       "members":{
         "ConfigRuleName":{
-          "shape":"StringWithCharLimit64",
+          "shape":"ConfigRuleName",
           "documentation":"<p>The name of the AWS Config rule that was used in the evaluation.</p>"
         },
         "ResourceType":{
@@ -5532,7 +5560,7 @@
     },
     "ReevaluateConfigRuleNames":{
       "type":"list",
-      "member":{"shape":"StringWithCharLimit64"},
+      "member":{"shape":"ConfigRuleName"},
       "max":25,
       "min":1
     },
@@ -5590,7 +5618,7 @@
         },
         "TargetVersion":{
           "shape":"String",
-          "documentation":"<p>Version of the target. For example, version of the SSM document.</p>"
+          "documentation":"<p>Version of the target. For example, version of the SSM document.</p> <note> <p>If you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run.</p> </note>"
         },
         "Parameters":{
           "shape":"RemediationParameters",
@@ -5610,11 +5638,11 @@
         },
         "MaximumAutomaticAttempts":{
           "shape":"AutoRemediationAttempts",
-          "documentation":"<p>The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.</p> <p>For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptsSeconds as 50 seconds, AWS Config throws an exception after the 5th failed attempt within 50 seconds.</p>"
+          "documentation":"<p>The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.</p> <p>For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptsSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.</p>"
         },
         "RetryAttemptSeconds":{
           "shape":"AutoRemediationAttemptSeconds",
-          "documentation":"<p>Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds. </p> <p>For example, if you specify RetryAttemptsSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception. </p>"
+          "documentation":"<p>Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds. </p> <p>For example, if you specify RetryAttemptsSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.</p>"
         },
         "Arn":{
           "shape":"StringWithCharLimit1024",
@@ -5976,6 +6004,7 @@
         "AWS::EC2::VPCEndpointService",
         "AWS::EC2::FlowLog",
         "AWS::EC2::VPCPeeringConnection",
+        "AWS::Elasticsearch::Domain",
         "AWS::IAM::Group",
         "AWS::IAM::Policy",
         "AWS::IAM::Role",
@@ -5983,13 +6012,10 @@
         "AWS::ElasticLoadBalancingV2::LoadBalancer",
         "AWS::ACM::Certificate",
         "AWS::RDS::DBInstance",
-        "AWS::RDS::DBParameterGroup",
-        "AWS::RDS::DBOptionGroup",
         "AWS::RDS::DBSubnetGroup",
         "AWS::RDS::DBSecurityGroup",
         "AWS::RDS::DBSnapshot",
         "AWS::RDS::DBCluster",
-        "AWS::RDS::DBClusterParameterGroup",
         "AWS::RDS::DBClusterSnapshot",
         "AWS::RDS::EventSubscription",
         "AWS::S3::Bucket",
@@ -6020,30 +6046,35 @@
         "AWS::WAFRegional::WebACL",
         "AWS::CloudFront::Distribution",
         "AWS::CloudFront::StreamingDistribution",
-        "AWS::Lambda::Alias",
         "AWS::Lambda::Function",
         "AWS::ElasticBeanstalk::Application",
         "AWS::ElasticBeanstalk::ApplicationVersion",
         "AWS::ElasticBeanstalk::Environment",
-        "AWS::MobileHub::Project",
+        "AWS::WAFv2::WebACL",
+        "AWS::WAFv2::RuleGroup",
+        "AWS::WAFv2::IPSet",
+        "AWS::WAFv2::RegexPatternSet",
+        "AWS::WAFv2::ManagedRuleSet",
         "AWS::XRay::EncryptionConfig",
         "AWS::SSM::AssociationCompliance",
         "AWS::SSM::PatchCompliance",
         "AWS::Shield::Protection",
         "AWS::ShieldRegional::Protection",
         "AWS::Config::ResourceCompliance",
-        "AWS::LicenseManager::LicenseConfiguration",
-        "AWS::ApiGateway::DomainName",
-        "AWS::ApiGateway::Method",
         "AWS::ApiGateway::Stage",
         "AWS::ApiGateway::RestApi",
-        "AWS::ApiGatewayV2::DomainName",
         "AWS::ApiGatewayV2::Stage",
         "AWS::ApiGatewayV2::Api",
         "AWS::CodePipeline::Pipeline",
         "AWS::ServiceCatalog::CloudFormationProvisionedProduct",
         "AWS::ServiceCatalog::CloudFormationProduct",
-        "AWS::ServiceCatalog::Portfolio"
+        "AWS::ServiceCatalog::Portfolio",
+        "AWS::SQS::Queue",
+        "AWS::KMS::Key",
+        "AWS::QLDB::Ledger",
+        "AWS::SecretsManager::Secret",
+        "AWS::SNS::Topic",
+        "AWS::SSM::FileData"
       ]
     },
     "ResourceTypeList":{
@@ -6157,6 +6188,49 @@
         }
       },
       "documentation":"<p>Defines which resources trigger an evaluation for an AWS Config rule. The scope can include one or more resource types, a combination of a tag key and value, or a combination of one resource type and one resource ID. Specify a scope to constrain which resources trigger an evaluation for a rule. Otherwise, evaluations for the rule are triggered when any resource in your recording group changes in configuration.</p>"
+    },
+    "SelectAggregateResourceConfigRequest":{
+      "type":"structure",
+      "required":[
+        "Expression",
+        "ConfigurationAggregatorName"
+      ],
+      "members":{
+        "Expression":{
+          "shape":"Expression",
+          "documentation":"<p>The SQL query SELECT command. </p>"
+        },
+        "ConfigurationAggregatorName":{
+          "shape":"ConfigurationAggregatorName",
+          "documentation":"<p>The name of the configuration aggregator.</p>"
+        },
+        "Limit":{
+          "shape":"Limit",
+          "documentation":"<p>The maximum number of query results returned on each page. </p>"
+        },
+        "MaxResults":{
+          "shape":"Limit",
+          "documentation":"<p>The maximum number of query results returned on each page. AWS Config also allows the Limit request parameter.</p>"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The nextToken string returned in a previous request that you use to request the next page of results in a paginated response. </p>"
+        }
+      }
+    },
+    "SelectAggregateResourceConfigResponse":{
+      "type":"structure",
+      "members":{
+        "Results":{
+          "shape":"Results",
+          "documentation":"<p>Returns the results for the SQL query.</p>"
+        },
+        "QueryInfo":{"shape":"QueryInfo"},
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>The nextToken string returned in a previous request that you use to request the next page of results in a paginated response. </p>"
+        }
+      }
     },
     "SelectResourceConfigRequest":{
       "type":"structure",

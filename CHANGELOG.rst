@@ -2,6 +2,1136 @@
 CHANGELOG
 =========
 
+1.17.48
+=======
+
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+
+
+1.17.47
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
+1.17.46
+=======
+
+* api-change:``lakeformation``: Update lakeformation client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.17.45
+=======
+
+* api-change:``identitystore``: Update identitystore client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.17.44
+=======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``elb``: Update elb client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
+1.17.43
+=======
+
+* api-change:``braket``: Update braket client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.17.42
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``braket``: Update braket client to latest version
+
+
+1.17.41
+=======
+
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``cloud9``: Update cloud9 client to latest version
+
+
+1.17.40
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.39
+=======
+
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.38
+=======
+
+* api-change:``sms``: Update sms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
+1.17.37
+=======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``personalize-events``: Update personalize-events client to latest version
+
+
+1.17.36
+=======
+
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
+1.17.35
+=======
+
+* api-change:``health``: Update health client to latest version
+
+
+1.17.34
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.17.33
+=======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+
+
+1.17.32
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+
+
+1.17.31
+=======
+
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
+1.17.30
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+
+
+1.17.29
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.17.28
+=======
+
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``mq``: Update mq client to latest version
+
+
+1.17.27
+=======
+
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
+1.17.26
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.17.25
+=======
+
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
+1.17.24
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.17.23
+=======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.22
+=======
+
+* enhancement:examples: Pull in latest examples from EFS.
+
+
+1.17.21
+=======
+
+* api-change:``ivs``: Update ivs client to latest version
+
+
+1.17.20
+=======
+
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``ebs``: Update ebs client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+
+
+1.17.19
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.17.18
+=======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``lakeformation``: Update lakeformation client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.17.17
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+
+
+1.17.16
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
+1.17.15
+=======
+
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.17.14
+=======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.13
+=======
+
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
+1.17.12
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.17.11
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.10
+=======
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``backup``: Update backup client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``honeycode``: Update honeycode client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
+1.17.9
+======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.17.8
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+
+
+1.17.7
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.17.6
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+
+
+1.17.5
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
+1.17.4
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``polly``: Update polly client to latest version
+
+
+1.17.3
+======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.17.2
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
+1.17.1
+======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``iot-data``: Update iot-data client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.17.0
+======
+
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``codeartifact``: Update codeartifact client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* feature:SSO: Added support for the SSO credential provider. This allows the SDK to retrieve temporary AWS credentials from a profile configured to use SSO credentials.
+* api-change:``dlm``: Update dlm client to latest version
+
+
+1.16.26
+=======
+
+* api-change:``transfer``: Update transfer client to latest version
+
+
+1.16.25
+=======
+
+* api-change:``shield``: Update shield client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
+1.16.24
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
+1.16.23
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.22
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.16.21
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
+1.16.20
+=======
+
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.16.19
+=======
+
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+
+
+1.16.18
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.16.17
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``macie``: Update macie client to latest version
+
+
+1.16.16
+=======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+
+
+1.16.15
+=======
+
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.14
+=======
+
+* api-change:``backup``: Update backup client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+
+
+1.16.13
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``health``: Update health client to latest version
+* api-change:``chime``: Update chime client to latest version
+
+
+1.16.12
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``qldb``: Update qldb client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
+1.16.11
+=======
+
+* api-change:``sts``: Update sts client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
+1.16.10
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+
+
+1.16.9
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
+1.16.8
+======
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* enchancement:Endpoints: Improved endpoint resolution for clients with unknown regions
+
+
+1.16.7
+======
+
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+
+
+1.16.6
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
+1.16.5
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
+1.16.4
+======
+
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+
+
+1.16.3
+======
+
+* api-change:``support``: Update support client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.16.2
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+
+
+1.16.1
+======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.16.0
+======
+
+* api-change:``schemas``: Update schemas client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* feature:Exceptions: Added support for parsing modeled exception fields.
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.15.49
+=======
+
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
+1.15.48
+=======
+
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.15.47
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.15.46
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+
+
+1.15.45
+=======
+
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ram``: Update ram client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
+1.15.44
+=======
+
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``fms``: Update fms client to latest version
+
+
+1.15.43
+=======
+
+* api-change:``route53domains``: Update route53domains client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.15.42
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+
+
+1.15.41
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``frauddetector``: Update frauddetector client to latest version
+
+
+1.15.40
+=======
+
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
+1.15.39
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``migrationhub-config``: Update migrationhub-config client to latest version
+
+
+1.15.38
+=======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
+1.15.37
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
+1.15.36
+=======
+
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.15.35
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.15.34
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
+1.15.33
+=======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``elastic-inference``: Update elastic-inference client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
+1.15.32
+=======
+
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+
+
+1.15.31
+=======
+
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.15.30
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.15.29
+=======
+
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
+1.15.28
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.15.27
+=======
+
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
+1.15.26
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.15.25
+=======
+
+* api-change:``outposts``: Update outposts client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.15.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
+1.15.23
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.15.22
+=======
+
+* api-change:``s3control``: Update s3control client to latest version
+* bugfix:Stubber: fixes `#1884 <https://github.com/boto/botocore/issues/1884>`__
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.15.21
+=======
+
+* api-change:``appconfig``: Update appconfig client to latest version
+
+
+1.15.20
+=======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.15.19
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.15.18
+=======
+
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:timezones: Improved timezone parsing for Windows with new fallback method (#1939)
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.15.17
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.15.16
+=======
+
+* api-change:``signer``: Update signer client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.15.15
+=======
+
+* api-change:``eks``: Update eks client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
+1.15.14
+=======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.15.13
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.15.12
+=======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+
+
+1.15.11
+=======
+
+* api-change:``config``: Update config client to latest version
+
+
+1.15.10
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sagemaker-a2i-runtime``: Update sagemaker-a2i-runtime client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+
+
+1.15.9
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+
+
+1.15.8
+======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.15.7
+======
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+
+
+1.15.6
+======
+
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``events``: Update events client to latest version
+
+
 1.15.5
 ======
 

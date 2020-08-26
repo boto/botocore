@@ -20,6 +20,7 @@ import copy
 import logging
 import os
 import platform
+import re
 import socket
 import warnings
 
@@ -32,8 +33,10 @@ from botocore.configprovider import ConfigValueStore
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.configprovider import BOTOCORE_DEFAUT_SESSION_VARIABLES
-from botocore.exceptions import ConfigNotFound, ProfileNotFound
-from botocore.exceptions import UnknownServiceError, PartialCredentialsError
+from botocore.exceptions import (
+    ConfigNotFound, ProfileNotFound, UnknownServiceError,
+    PartialCredentialsError,
+)
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
@@ -47,7 +50,7 @@ from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
 from botocore import utils
-from botocore.utils import EVENT_ALIASES
+from botocore.utils import EVENT_ALIASES, validate_region_name
 from botocore.compat import MutableMapping
 
 
@@ -438,7 +441,7 @@ class Session(object):
         Where:
 
          - agent_name is the value of the `user_agent_name` attribute
-           of the session object (`Boto` by default).
+           of the session object (`Botocore` by default).
          - agent_version is the value of the `user_agent_version`
            attribute of the session object (the botocore version by default).
            by default.
@@ -846,6 +849,8 @@ class Session(object):
                 region_name = config.region_name
             else:
                 region_name = self.get_config_variable('region')
+
+        validate_region_name(region_name)
         # For any client that we create in retrieving credentials
         # we want to create it using the same region as specified in
         # creating this client. It is important to note though that the

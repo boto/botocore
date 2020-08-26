@@ -29,6 +29,44 @@
       ],
       "documentation":"<p>Cancels an ongoing ingestion of data into SPICE.</p>"
     },
+    "CreateAccountCustomization":{
+      "name":"CreateAccountCustomization",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/customizations"
+      },
+      "input":{"shape":"CreateAccountCustomizationRequest"},
+      "output":{"shape":"CreateAccountCustomizationResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Creates Amazon QuickSight customizations the current AWS Region. Currently, you can add a custom default theme by using the <code>CreateAccountCustomization</code> or <code>UpdateAccountCustomization</code> API operation. To further customize QuickSight by removing QuickSight sample assets and videos for all new users, see <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/customizing-quicksight.html\">Customizing QuickSight</a> in the Amazon QuickSight User Guide.</p> <p>You can create customizations for your AWS account or, if you specify a namespace, for a QuickSight namespace instead. Customizations that apply to a namespace always override customizations that apply to an AWS account. To find out which customizations apply, use the <code>DescribeAccountCustomization</code> API operation.</p> <p>Before you add a theme as the namespace default, make sure that you first share the theme with the namespace. If you don't share it with the namespace, the theme won't be visible to your users even if you use this API operation to make it the default theme. </p>"
+    },
+    "CreateAnalysis":{
+      "name":"CreateAnalysis",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}"
+      },
+      "input":{"shape":"CreateAnalysisRequest"},
+      "output":{"shape":"CreateAnalysisResponse"},
+      "errors":[
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ConflictException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Creates an analysis in Amazon QuickSight.</p>"
+    },
     "CreateDashboard":{
       "name":"CreateDashboard",
       "http":{
@@ -46,7 +84,7 @@
         {"shape":"UnsupportedUserEditionException"},
         {"shape":"InternalFailureException"}
       ],
-      "documentation":"<p>Creates a dashboard from a template. To first create a template, see the CreateTemplate API operation.</p> <p>A dashboard is an entity in QuickSight that identifies QuickSight reports, created from analyses. You can share QuickSight dashboards. With the right permissions, you can create scheduled email reports from them. The <code>CreateDashboard</code>, <code>DescribeDashboard</code>, and <code>ListDashboardsByUser</code> API operations act on the dashboard entity. If you have the correct permissions, you can create a dashboard from a template that exists in a different AWS account.</p>"
+      "documentation":"<p>Creates a dashboard from a template. To first create a template, see the <code> <a>CreateTemplate</a> </code> API operation.</p> <p>A dashboard is an entity in QuickSight that identifies QuickSight reports, created from analyses. You can share QuickSight dashboards. With the right permissions, you can create scheduled email reports from them. If you have the correct permissions, you can create a dashboard from a template that exists in a different AWS account.</p>"
     },
     "CreateDataSet":{
       "name":"CreateDataSet",
@@ -165,7 +203,29 @@
         {"shape":"ResourceExistsException"},
         {"shape":"InternalFailureException"}
       ],
-      "documentation":"<p>Creates and starts a new SPICE ingestion on a dataset</p> <p>Any ingestions operating on tagged datasets inherit the same tags automatically for use in access control. For an example, see <a href=\"https://aws.example.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/\">How do I create an IAM policy to control access to Amazon EC2 resources using tags?</a> in the AWS Knowledge Center. Tags are visible on the tagged dataset, but not on the ingestion resource.</p>"
+      "documentation":"<p>Creates and starts a new SPICE ingestion on a dataset</p> <p>Any ingestions operating on tagged datasets inherit the same tags automatically for use in access control. For an example, see <a href=\"https://aws.amazon.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/\">How do I create an IAM policy to control access to Amazon EC2 resources using tags?</a> in the AWS Knowledge Center. Tags are visible on the tagged dataset, but not on the ingestion resource.</p>"
+    },
+    "CreateNamespace":{
+      "name":"CreateNamespace",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}"
+      },
+      "input":{"shape":"CreateNamespaceRequest"},
+      "output":{"shape":"CreateNamespaceResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"PreconditionNotMetException"},
+        {"shape":"ConflictException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>(Enterprise edition only) Creates a new namespace for you to use with Amazon QuickSight.</p> <p>A namespace allows you to isolate the QuickSight users and groups that are registered for that namespace. Users that access the namespace can share assets only with other users or groups in the same namespace. They can't see users and groups in other namespaces. You can create a namespace after your AWS account is subscribed to QuickSight. The namespace must be unique within the AWS account. By default, there is a limit of 100 namespaces per AWS account. To increase your limit, create a ticket with AWS Support. </p>"
     },
     "CreateTemplate":{
       "name":"CreateTemplate",
@@ -183,6 +243,7 @@
         {"shape":"ThrottlingException"},
         {"shape":"LimitExceededException"},
         {"shape":"UnsupportedUserEditionException"},
+        {"shape":"ConflictException"},
         {"shape":"InternalFailureException"}
       ],
       "documentation":"<p>Creates a template from an existing QuickSight analysis or template. You can use the resulting template to create a dashboard.</p> <p>A <i>template</i> is an entity in QuickSight that encapsulates the metadata required to create an analysis and that you can use to create s dashboard. A template adds a layer of abstraction by using placeholders to replace the dataset associated with the analysis. You can use templates to create dashboards by replacing dataset placeholders with datasets that follow the same schema that was used to create the source analysis and template.</p>"
@@ -202,9 +263,86 @@
         {"shape":"ResourceExistsException"},
         {"shape":"LimitExceededException"},
         {"shape":"UnsupportedUserEditionException"},
+        {"shape":"ConflictException"},
         {"shape":"InternalFailureException"}
       ],
       "documentation":"<p>Creates a template alias for a template.</p>"
+    },
+    "CreateTheme":{
+      "name":"CreateTheme",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}"
+      },
+      "input":{"shape":"CreateThemeRequest"},
+      "output":{"shape":"CreateThemeResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Creates a theme.</p> <p>A <i>theme</i> is set of configuration options for color and layout. Themes apply to analyses and dashboards. For more information, see <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/themes-in-quicksight.html\">Using Themes in Amazon QuickSight</a> in the <i>Amazon QuickSight User Guide</i>.</p>"
+    },
+    "CreateThemeAlias":{
+      "name":"CreateThemeAlias",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}"
+      },
+      "input":{"shape":"CreateThemeAliasRequest"},
+      "output":{"shape":"CreateThemeAliasResponse"},
+      "errors":[
+        {"shape":"ConflictException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Creates a theme alias for a theme.</p>"
+    },
+    "DeleteAccountCustomization":{
+      "name":"DeleteAccountCustomization",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/accounts/{AwsAccountId}/customizations"
+      },
+      "input":{"shape":"DeleteAccountCustomizationRequest"},
+      "output":{"shape":"DeleteAccountCustomizationResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Deletes all Amazon QuickSight customizations in this AWS Region for the specified AWS Account and QuickSight namespace.</p>"
+    },
+    "DeleteAnalysis":{
+      "name":"DeleteAnalysis",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}"
+      },
+      "input":{"shape":"DeleteAnalysisRequest"},
+      "output":{"shape":"DeleteAnalysisResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ConflictException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Deletes an analysis from Amazon QuickSight. You can optionally include a recovery window during which you can restore the analysis. If you don't specify a recovery window value, the operation defaults to 30 days. QuickSight attaches a <code>DeletionTime</code> stamp to the response that specifies the end of the recovery window. At the end of the recovery window, QuickSight deletes the analysis permanently.</p> <p>At any time before recovery window ends, you can use the <code>RestoreAnalysis</code> API operation to remove the <code>DeletionTime</code> stamp and cancel the deletion of the analysis. The analysis remains visible in the API until it's deleted, so you can describe it but you can't make a template from it.</p> <p>An analysis that's scheduled for deletion isn't accessible in the QuickSight console. To access it in the console, restore it. Deleting an analysis doesn't delete the dashboards that you publish from it.</p>"
     },
     "DeleteDashboard":{
       "name":"DeleteDashboard",
@@ -256,7 +394,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"InternalFailureException"}
       ],
-      "documentation":"<p>Deletes the data source permanently. This action breaks all the datasets that reference the deleted data source.</p>"
+      "documentation":"<p>Deletes the data source permanently. This operation breaks all the datasets that reference the deleted data source.</p>"
     },
     "DeleteGroup":{
       "name":"DeleteGroup",
@@ -315,6 +453,25 @@
       ],
       "documentation":"<p>Deletes an existing IAM policy assignment.</p>"
     },
+    "DeleteNamespace":{
+      "name":"DeleteNamespace",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/accounts/{AwsAccountId}/namespaces/{Namespace}"
+      },
+      "input":{"shape":"DeleteNamespaceRequest"},
+      "output":{"shape":"DeleteNamespaceResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Deletes a namespace and the users and groups that are associated with the namespace. This is an asynchronous process. Assets including dashboards, analyses, datasets and data sources are not deleted. To delete these assets, you use the API operations for the relevant asset. </p>"
+    },
     "DeleteTemplate":{
       "name":"DeleteTemplate",
       "http":{
@@ -346,9 +503,47 @@
         {"shape":"ThrottlingException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"UnsupportedUserEditionException"},
+        {"shape":"ConflictException"},
         {"shape":"InternalFailureException"}
       ],
       "documentation":"<p>Deletes the item that the specified template alias points to. If you provide a specific alias, you delete the version of the template that the alias points to.</p>"
+    },
+    "DeleteTheme":{
+      "name":"DeleteTheme",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}"
+      },
+      "input":{"shape":"DeleteThemeRequest"},
+      "output":{"shape":"DeleteThemeResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"ConflictException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Deletes a theme.</p>"
+    },
+    "DeleteThemeAlias":{
+      "name":"DeleteThemeAlias",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}"
+      },
+      "input":{"shape":"DeleteThemeAliasRequest"},
+      "output":{"shape":"DeleteThemeAliasResponse"},
+      "errors":[
+        {"shape":"ConflictException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Deletes the version of the theme that the specified theme alias points to. If you provide a specific alias, you delete the version of the theme that the alias points to.</p>"
     },
     "DeleteUser":{
       "name":"DeleteUser",
@@ -363,6 +558,7 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
@@ -381,10 +577,82 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
       "documentation":"<p>Deletes a user identified by its principal ID. </p>"
+    },
+    "DescribeAccountCustomization":{
+      "name":"DescribeAccountCustomization",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/customizations"
+      },
+      "input":{"shape":"DescribeAccountCustomizationRequest"},
+      "output":{"shape":"DescribeAccountCustomizationResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Describes the customizations associated with the provided AWS account and Amazon QuickSight namespace in an AWS Region. The QuickSight console evaluates which customizations to apply by running this API operation with the <code>Resolved</code> flag included. </p> <p>To determine what customizations display when you run this command, it can help to visualize the relationship of the entities involved. </p> <ul> <li> <p> <code>AWS Account</code> - The AWS account exists at the top of the hierarchy. It has the potential to use all of the AWS Regions and AWS Services. When you subscribe to QuickSight, you choose one AWS Region to use as your home region. That's where your free SPICE capacity is located. You can use QuickSight in any supported AWS Region. </p> </li> <li> <p> <code>AWS Region</code> - In each AWS Region where you sign in to QuickSight at least once, QuickSight acts as a separate instance of the same service. If you have a user directory, it resides in us-east-1, which is the US East (N. Virginia). Generally speaking, these users have access to QuickSight in any AWS Region, unless they are constrained to a namespace. </p> <p>To run the command in a different AWS Region, you change your region settings. If you're using the AWS CLI, you can use one of the following options:</p> <ul> <li> <p>Use <a href=\"https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-options.html\">command line options</a>. </p> </li> <li> <p>Use <a href=\"https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html\">named profiles</a>. </p> </li> <li> <p>Run <code>aws configure</code> to change your default AWS Region. Use Enter to key the same settings for your keys. For more information, see <a href=\"https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html\">Configuring the AWS CLI</a>.</p> </li> </ul> </li> <li> <p> <code>Namespace</code> - A QuickSight namespace is a partition that contains users and assets (data sources, datasets, dashboards, and so on). To access assets that are in a specific namespace, users and groups must also be part of the same namespace. People who share a namespace are completely isolated from users and assets in other namespaces, even if they are in the same AWS account and AWS Region.</p> </li> <li> <p> <code>Applied customizations</code> - Within an AWS Region, a set of QuickSight customizations can apply to an AWS account or to a namespace. Settings that you apply to a namespace override settings that you apply to an AWS Account. All settings are isolated to a single AWS Region. To apply them in other AWS Regions, run the <code>CreateAccountCustomization</code> command in each AWS Region where you want to apply the same customizations. </p> </li> </ul>"
+    },
+    "DescribeAccountSettings":{
+      "name":"DescribeAccountSettings",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/settings"
+      },
+      "input":{"shape":"DescribeAccountSettingsRequest"},
+      "output":{"shape":"DescribeAccountSettingsResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Describes the settings that were used when your QuickSight subscription was first created in this AWS Account.</p>"
+    },
+    "DescribeAnalysis":{
+      "name":"DescribeAnalysis",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}"
+      },
+      "input":{"shape":"DescribeAnalysisRequest"},
+      "output":{"shape":"DescribeAnalysisResponse"},
+      "errors":[
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"AccessDeniedException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Provides a summary of the metadata for an analysis.</p>"
+    },
+    "DescribeAnalysisPermissions":{
+      "name":"DescribeAnalysisPermissions",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}/permissions"
+      },
+      "input":{"shape":"DescribeAnalysisPermissionsRequest"},
+      "output":{"shape":"DescribeAnalysisPermissionsResponse"},
+      "errors":[
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Provides the read and write permissions for an analysis.</p>"
     },
     "DescribeDashboard":{
       "name":"DescribeDashboard",
@@ -544,6 +812,24 @@
       ],
       "documentation":"<p>Describes a SPICE ingestion.</p>"
     },
+    "DescribeNamespace":{
+      "name":"DescribeNamespace",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/namespaces/{Namespace}"
+      },
+      "input":{"shape":"DescribeNamespaceRequest"},
+      "output":{"shape":"DescribeNamespaceResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Describes the current namespace.</p>"
+    },
     "DescribeTemplate":{
       "name":"DescribeTemplate",
       "http":{
@@ -598,6 +884,61 @@
       ],
       "documentation":"<p>Describes read and write permissions on a template.</p>"
     },
+    "DescribeTheme":{
+      "name":"DescribeTheme",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}"
+      },
+      "input":{"shape":"DescribeThemeRequest"},
+      "output":{"shape":"DescribeThemeResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Describes a theme.</p>"
+    },
+    "DescribeThemeAlias":{
+      "name":"DescribeThemeAlias",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}"
+      },
+      "input":{"shape":"DescribeThemeAliasRequest"},
+      "output":{"shape":"DescribeThemeAliasResponse"},
+      "errors":[
+        {"shape":"ConflictException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Describes the alias for a theme.</p>"
+    },
+    "DescribeThemePermissions":{
+      "name":"DescribeThemePermissions",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/permissions"
+      },
+      "input":{"shape":"DescribeThemePermissionsRequest"},
+      "output":{"shape":"DescribeThemePermissionsResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Describes the read and write permissions for a theme.</p>"
+    },
     "DescribeUser":{
       "name":"DescribeUser",
       "http":{
@@ -611,6 +952,7 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
@@ -637,7 +979,44 @@
         {"shape":"UnsupportedUserEditionException"},
         {"shape":"InternalFailureException"}
       ],
-      "documentation":"<p>Generates a server-side embeddable URL and authorization code. For this process to work properly, first configure the dashboards and user permissions. For more information, see <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html\">Embedding Amazon QuickSight Dashboards</a> in the <i>Amazon QuickSight User Guide</i> or <a href=\"https://docs.aws.amazon.com/quicksight/latest/APIReference/qs-dev-embedded-dashboards.html\">Embedding Amazon QuickSight Dashboards</a> in the <i>Amazon QuickSight API Reference</i>.</p> <p>Currently, you can use <code>GetDashboardEmbedURL</code> only from the server, not from the user’s browser.</p>"
+      "documentation":"<p>Generates a session URL and authorization code that you can use to embed an Amazon QuickSight read-only dashboard in your web server code. Before you use this command, make sure that you have configured the dashboards and permissions. </p> <p>Currently, you can use <code>GetDashboardEmbedURL</code> only from the server, not from the user's browser. The following rules apply to the combination of URL and authorization code:</p> <ul> <li> <p>They must be used together.</p> </li> <li> <p>They can be used one time only.</p> </li> <li> <p>They are valid for 5 minutes after you run this command.</p> </li> <li> <p>The resulting user session is valid for 10 hours.</p> </li> </ul> <p>For more information, see <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html\">Embedding Amazon QuickSight</a> in the <i>Amazon QuickSight User Guide</i> .</p>"
+    },
+    "GetSessionEmbedUrl":{
+      "name":"GetSessionEmbedUrl",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/session-embed-url"
+      },
+      "input":{"shape":"GetSessionEmbedUrlRequest"},
+      "output":{"shape":"GetSessionEmbedUrlResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"QuickSightUserNotFoundException"},
+        {"shape":"SessionLifetimeInMinutesInvalidException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Generates a session URL and authorization code that you can use to embed the Amazon QuickSight console in your web server code. Use <code>GetSessionEmbedUrl</code> where you want to provide an authoring portal that allows users to create data sources, datasets, analyses, and dashboards. The users who access an embedded QuickSight console need belong to the author or admin security cohort. If you want to restrict permissions to some of these features, add a custom permissions profile to the user with the <code> <a>UpdateUser</a> </code> API operation. Use <code> <a>RegisterUser</a> </code> API operation to add a new user with a custom permission profile attached. For more information, see the following sections in the <i>Amazon QuickSight User Guide</i>:</p> <ul> <li> <p> <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/embedding-the-quicksight-console.html\">Embedding the Amazon QuickSight Console</a> </p> </li> <li> <p> <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/customizing-permissions-to-the-quicksight-console.html\">Customizing Access to the Amazon QuickSight Console</a> </p> </li> </ul>"
+    },
+    "ListAnalyses":{
+      "name":"ListAnalyses",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/analyses"
+      },
+      "input":{"shape":"ListAnalysesRequest"},
+      "output":{"shape":"ListAnalysesResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Lists Amazon QuickSight analyses that exist in the specified AWS account.</p>"
     },
     "ListDashboardVersions":{
       "name":"ListDashboardVersions",
@@ -803,6 +1182,26 @@
       ],
       "documentation":"<p>Lists the history of SPICE ingestions for a dataset.</p>"
     },
+    "ListNamespaces":{
+      "name":"ListNamespaces",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/namespaces"
+      },
+      "input":{"shape":"ListNamespacesRequest"},
+      "output":{"shape":"ListNamespacesResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"PreconditionNotMetException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Lists the namespaces for the specified AWS account.</p>"
+    },
     "ListTagsForResource":{
       "name":"ListTagsForResource",
       "http":{
@@ -829,6 +1228,7 @@
       "input":{"shape":"ListTemplateAliasesRequest"},
       "output":{"shape":"ListTemplateAliasesResponse"},
       "errors":[
+        {"shape":"InvalidNextTokenException"},
         {"shape":"ThrottlingException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"UnsupportedUserEditionException"},
@@ -872,6 +1272,63 @@
       ],
       "documentation":"<p>Lists all the templates in the current Amazon QuickSight account.</p>"
     },
+    "ListThemeAliases":{
+      "name":"ListThemeAliases",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/aliases"
+      },
+      "input":{"shape":"ListThemeAliasesRequest"},
+      "output":{"shape":"ListThemeAliasesResponse"},
+      "errors":[
+        {"shape":"ConflictException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Lists all the aliases of a theme.</p>"
+    },
+    "ListThemeVersions":{
+      "name":"ListThemeVersions",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/versions"
+      },
+      "input":{"shape":"ListThemeVersionsRequest"},
+      "output":{"shape":"ListThemeVersionsResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Lists all the versions of the themes in the current AWS account.</p>"
+    },
+    "ListThemes":{
+      "name":"ListThemes",
+      "http":{
+        "method":"GET",
+        "requestUri":"/accounts/{AwsAccountId}/themes"
+      },
+      "input":{"shape":"ListThemesRequest"},
+      "output":{"shape":"ListThemesResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Lists all the themes in the current AWS account.</p>"
+    },
     "ListUserGroups":{
       "name":"ListUserGroups",
       "http":{
@@ -885,6 +1342,7 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
@@ -904,6 +1362,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
         {"shape":"InvalidNextTokenException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
@@ -929,6 +1388,60 @@
         {"shape":"ResourceUnavailableException"}
       ],
       "documentation":"<p>Creates an Amazon QuickSight user, whose identity is associated with the AWS Identity and Access Management (IAM) identity or role specified in the request. </p>"
+    },
+    "RestoreAnalysis":{
+      "name":"RestoreAnalysis",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/restore/analyses/{AnalysisId}"
+      },
+      "input":{"shape":"RestoreAnalysisRequest"},
+      "output":{"shape":"RestoreAnalysisResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ConflictException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Restores an analysis.</p>"
+    },
+    "SearchAnalyses":{
+      "name":"SearchAnalyses",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/search/analyses"
+      },
+      "input":{"shape":"SearchAnalysesRequest"},
+      "output":{"shape":"SearchAnalysesResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Searches for analyses that belong to the user specified in the filter.</p>"
+    },
+    "SearchDashboards":{
+      "name":"SearchDashboards",
+      "http":{
+        "method":"POST",
+        "requestUri":"/accounts/{AwsAccountId}/search/dashboards"
+      },
+      "input":{"shape":"SearchDashboardsRequest"},
+      "output":{"shape":"SearchDashboardsResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InvalidNextTokenException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Searches for dashboards that belong to a user. </p>"
     },
     "TagResource":{
       "name":"TagResource",
@@ -964,6 +1477,79 @@
         {"shape":"InternalFailureException"}
       ],
       "documentation":"<p>Removes a tag or tags from a resource.</p>"
+    },
+    "UpdateAccountCustomization":{
+      "name":"UpdateAccountCustomization",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/customizations"
+      },
+      "input":{"shape":"UpdateAccountCustomizationRequest"},
+      "output":{"shape":"UpdateAccountCustomizationResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Updates Amazon QuickSight customizations the current AWS Region. Currently, the only customization you can use is a theme.</p> <p>You can use customizations for your AWS account or, if you specify a namespace, for a QuickSight namespace instead. Customizations that apply to a namespace override customizations that apply to an AWS account. To find out which customizations apply, use the <code>DescribeAccountCustomization</code> API operation. </p>"
+    },
+    "UpdateAccountSettings":{
+      "name":"UpdateAccountSettings",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/settings"
+      },
+      "input":{"shape":"UpdateAccountSettingsRequest"},
+      "output":{"shape":"UpdateAccountSettingsResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"ResourceUnavailableException"}
+      ],
+      "documentation":"<p>Updates the Amazon QuickSight settings in your AWS Account.</p>"
+    },
+    "UpdateAnalysis":{
+      "name":"UpdateAnalysis",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}"
+      },
+      "input":{"shape":"UpdateAnalysisRequest"},
+      "output":{"shape":"UpdateAnalysisResponse"},
+      "errors":[
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ConflictException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Updates an analysis in Amazon QuickSight</p>"
+    },
+    "UpdateAnalysisPermissions":{
+      "name":"UpdateAnalysisPermissions",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/analyses/{AnalysisId}/permissions"
+      },
+      "input":{"shape":"UpdateAnalysisPermissionsRequest"},
+      "output":{"shape":"UpdateAnalysisPermissionsResponse"},
+      "errors":[
+        {"shape":"ThrottlingException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"ConflictException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Updates the read and write permissions for an analysis.</p>"
     },
     "UpdateDashboard":{
       "name":"UpdateDashboard",
@@ -1165,6 +1751,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"ConflictException"},
         {"shape":"UnsupportedUserEditionException"},
+        {"shape":"ConflictException"},
         {"shape":"InternalFailureException"}
       ],
       "documentation":"<p>Updates the template alias of a template.</p>"
@@ -1187,6 +1774,63 @@
       ],
       "documentation":"<p>Updates the resource permissions for a template.</p>"
     },
+    "UpdateTheme":{
+      "name":"UpdateTheme",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}"
+      },
+      "input":{"shape":"UpdateThemeRequest"},
+      "output":{"shape":"UpdateThemeResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Updates a theme.</p>"
+    },
+    "UpdateThemeAlias":{
+      "name":"UpdateThemeAlias",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}"
+      },
+      "input":{"shape":"UpdateThemeAliasRequest"},
+      "output":{"shape":"UpdateThemeAliasResponse"},
+      "errors":[
+        {"shape":"ConflictException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceExistsException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Updates an alias of a theme.</p>"
+    },
+    "UpdateThemePermissions":{
+      "name":"UpdateThemePermissions",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/accounts/{AwsAccountId}/themes/{ThemeId}/permissions"
+      },
+      "input":{"shape":"UpdateThemePermissionsRequest"},
+      "output":{"shape":"UpdateThemePermissionsResponse"},
+      "errors":[
+        {"shape":"AccessDeniedException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ThrottlingException"},
+        {"shape":"UnsupportedUserEditionException"},
+        {"shape":"InternalFailureException"}
+      ],
+      "documentation":"<p>Updates the resource permissions for a theme. Permissions apply to the action to grant or revoke permissions on, for example <code>\"quicksight:DescribeTheme\"</code>.</p> <p>Theme permissions apply in groupings. Valid groupings include the following for the three levels of permissions, which are user, owner, or no permissions: </p> <ul> <li> <p>User</p> <ul> <li> <p> <code>\"quicksight:DescribeTheme\"</code> </p> </li> <li> <p> <code>\"quicksight:DescribeThemeAlias\"</code> </p> </li> <li> <p> <code>\"quicksight:ListThemeAliases\"</code> </p> </li> <li> <p> <code>\"quicksight:ListThemeVersions\"</code> </p> </li> </ul> </li> <li> <p>Owner</p> <ul> <li> <p> <code>\"quicksight:DescribeTheme\"</code> </p> </li> <li> <p> <code>\"quicksight:DescribeThemeAlias\"</code> </p> </li> <li> <p> <code>\"quicksight:ListThemeAliases\"</code> </p> </li> <li> <p> <code>\"quicksight:ListThemeVersions\"</code> </p> </li> <li> <p> <code>\"quicksight:DeleteTheme\"</code> </p> </li> <li> <p> <code>\"quicksight:UpdateTheme\"</code> </p> </li> <li> <p> <code>\"quicksight:CreateThemeAlias\"</code> </p> </li> <li> <p> <code>\"quicksight:DeleteThemeAlias\"</code> </p> </li> <li> <p> <code>\"quicksight:UpdateThemeAlias\"</code> </p> </li> <li> <p> <code>\"quicksight:UpdateThemePermissions\"</code> </p> </li> <li> <p> <code>\"quicksight:DescribeThemePermissions\"</code> </p> </li> </ul> </li> <li> <p>To specify no permissions, omit the permissions list.</p> </li> </ul>"
+    },
     "UpdateUser":{
       "name":"UpdateUser",
       "http":{
@@ -1200,6 +1844,7 @@
         {"shape":"InvalidParameterValueException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ThrottlingException"},
+        {"shape":"PreconditionNotMetException"},
         {"shape":"InternalFailureException"},
         {"shape":"ResourceUnavailableException"}
       ],
@@ -1219,6 +1864,38 @@
       "documentation":"<p>You don't have access to this item. The provided credentials couldn't be validated. You might not be authorized to carry out the request. Make sure that your account is authorized to use the Amazon QuickSight service, that your policies have the correct permissions, and that you are using the correct access keys.</p>",
       "error":{"httpStatusCode":401},
       "exception":true
+    },
+    "AccountCustomization":{
+      "type":"structure",
+      "members":{
+        "DefaultTheme":{
+          "shape":"Arn",
+          "documentation":"<p>The default theme for this QuickSight subscription.</p>"
+        }
+      },
+      "documentation":"<p>The Amazon QuickSight customizations associated with your AWS account or a QuickSight namespace in a specific AWS Region.</p>"
+    },
+    "AccountSettings":{
+      "type":"structure",
+      "members":{
+        "AccountName":{
+          "shape":"String",
+          "documentation":"<p>The \"account name\" you provided for the QuickSight subscription in your AWS account. You create this name when you sign up for QuickSight. It is unique in all of AWS and it appears only in the console when users sign in.</p>"
+        },
+        "Edition":{
+          "shape":"Edition",
+          "documentation":"<p>The edition of QuickSight that you're currently subscribed to: Enterprise edition or Standard edition.</p>"
+        },
+        "DefaultNamespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The default QuickSight namespace for your AWS account. </p>"
+        },
+        "NotificationEmail":{
+          "shape":"String",
+          "documentation":"<p>The main notification email for your QuickSight subscription.</p>"
+        }
+      },
+      "documentation":"<p>The QuickSight settings associated with your AWS account.</p>"
     },
     "ActionList":{
       "type":"list",
@@ -1270,6 +1947,178 @@
         }
       },
       "documentation":"<p>Amazon Elasticsearch Service parameters.</p>"
+    },
+    "Analysis":{
+      "type":"structure",
+      "members":{
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the analysis.</p>"
+        },
+        "Name":{
+          "shape":"AnalysisName",
+          "documentation":"<p>The descriptive name of the analysis.</p>"
+        },
+        "Status":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>Status associated with the analysis.</p>"
+        },
+        "Errors":{
+          "shape":"AnalysisErrorList",
+          "documentation":"<p>Errors associated with the analysis.</p>"
+        },
+        "DataSetArns":{
+          "shape":"DataSetArnsList",
+          "documentation":"<p>The ARNs of the datasets of the analysis.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the theme of the analysis.</p>"
+        },
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The time that the analysis was created.</p>"
+        },
+        "LastUpdatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The time that the analysis was last updated.</p>"
+        }
+      },
+      "documentation":"<p>Metadata structure for an analysis in Amazon QuickSight</p>"
+    },
+    "AnalysisError":{
+      "type":"structure",
+      "members":{
+        "Type":{
+          "shape":"AnalysisErrorType",
+          "documentation":"<p>The type of the analysis error.</p>"
+        },
+        "Message":{
+          "shape":"NonEmptyString",
+          "documentation":"<p>The message associated with the analysis error.</p>"
+        }
+      },
+      "documentation":"<p>A metadata error structure for an analysis.</p>"
+    },
+    "AnalysisErrorList":{
+      "type":"list",
+      "member":{"shape":"AnalysisError"},
+      "min":1
+    },
+    "AnalysisErrorType":{
+      "type":"string",
+      "enum":[
+        "ACCESS_DENIED",
+        "SOURCE_NOT_FOUND",
+        "DATA_SET_NOT_FOUND",
+        "INTERNAL_FAILURE",
+        "PARAMETER_VALUE_INCOMPATIBLE",
+        "PARAMETER_TYPE_INVALID",
+        "PARAMETER_NOT_FOUND",
+        "COLUMN_TYPE_MISMATCH",
+        "COLUMN_GEOGRAPHIC_ROLE_MISMATCH",
+        "COLUMN_REPLACEMENT_MISSING"
+      ]
+    },
+    "AnalysisFilterAttribute":{
+      "type":"string",
+      "enum":["QUICKSIGHT_USER"]
+    },
+    "AnalysisName":{
+      "type":"string",
+      "max":2048,
+      "min":1,
+      "pattern":"[\\u0020-\\u00FF]+"
+    },
+    "AnalysisSearchFilter":{
+      "type":"structure",
+      "members":{
+        "Operator":{
+          "shape":"FilterOperator",
+          "documentation":"<p>The comparison operator that you want to use as a filter, for example <code>\"Operator\": \"StringEquals\"</code>.</p>"
+        },
+        "Name":{
+          "shape":"AnalysisFilterAttribute",
+          "documentation":"<p>The name of the value that you want to use as a filter, for example <code>\"Name\": \"QUICKSIGHT_USER\"</code>.</p>"
+        },
+        "Value":{
+          "shape":"String",
+          "documentation":"<p>The value of the named item, in this case <code>QUICKSIGHT_USER</code>, that you want to use as a filter, for example <code>\"Value\"</code>. An example is <code>\"arn:aws:quicksight:us-east-1:1:user/default/UserName1\"</code>.</p>"
+        }
+      },
+      "documentation":"<p>A filter that you apply when searching for one or more analyses.</p>"
+    },
+    "AnalysisSearchFilterList":{
+      "type":"list",
+      "member":{"shape":"AnalysisSearchFilter"},
+      "max":1
+    },
+    "AnalysisSourceEntity":{
+      "type":"structure",
+      "members":{
+        "SourceTemplate":{
+          "shape":"AnalysisSourceTemplate",
+          "documentation":"<p>The source template for the source entity of the analysis.</p>"
+        }
+      },
+      "documentation":"<p>The source entity of an analysis.</p>"
+    },
+    "AnalysisSourceTemplate":{
+      "type":"structure",
+      "required":[
+        "DataSetReferences",
+        "Arn"
+      ],
+      "members":{
+        "DataSetReferences":{
+          "shape":"DataSetReferenceList",
+          "documentation":"<p>The dataset references of the source template of an analysis.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the source template of an analysis.</p>"
+        }
+      },
+      "documentation":"<p>The source template of an analysis.</p>"
+    },
+    "AnalysisSummary":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the analysis.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis. This ID displays in the URL.</p>"
+        },
+        "Name":{
+          "shape":"AnalysisName",
+          "documentation":"<p>The name of the analysis. This name is displayed in the QuickSight console. </p>"
+        },
+        "Status":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The last known status for the analysis.</p>"
+        },
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The time that the analysis was created.</p>"
+        },
+        "LastUpdatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The time that the analysis was last updated.</p>"
+        }
+      },
+      "documentation":"<p>The summary metadata that describes an analysis.</p>"
+    },
+    "AnalysisSummaryList":{
+      "type":"list",
+      "member":{"shape":"AnalysisSummary"},
+      "max":100
     },
     "Arn":{"type":"string"},
     "AssignmentStatus":{
@@ -1342,6 +2191,10 @@
       "min":12,
       "pattern":"^[0-9]{12}$"
     },
+    "AwsAndAccountId":{
+      "type":"string",
+      "pattern":"^(aws|[0-9]{12})$"
+    },
     "AwsIotAnalyticsParameters":{
       "type":"structure",
       "required":["DataSetName"],
@@ -1354,6 +2207,17 @@
       "documentation":"<p>AWS IoT Analytics parameters.</p>"
     },
     "Boolean":{"type":"boolean"},
+    "BorderStyle":{
+      "type":"structure",
+      "members":{
+        "Show":{
+          "shape":"boolean",
+          "documentation":"<p>The option to enable display of borders for visuals.</p>",
+          "box":true
+        }
+      },
+      "documentation":"<p>The display options for tile borders for visuals.</p>"
+    },
     "CalculatedColumn":{
       "type":"structure",
       "required":[
@@ -1463,6 +2327,11 @@
       "type":"string",
       "max":64,
       "min":1
+    },
+    "ColorList":{
+      "type":"list",
+      "member":{"shape":"HexColor"},
+      "max":100
     },
     "ColumnDataType":{
       "type":"string",
@@ -1575,7 +2444,7 @@
           "documentation":"<p>A geospatial role for a column.</p>"
         }
       },
-      "documentation":"<p>A tag for a column in a <code>TagColumnOperation</code> structure. This is a variant type structure. For this structure to be valid, only one of the attributes can be non-null.</p>"
+      "documentation":"<p>A tag for a column in a <a>TagColumnOperation</a> structure. This is a variant type structure. For this structure to be valid, only one of the attributes can be non-null.</p>"
     },
     "ColumnTagList":{
       "type":"list",
@@ -1589,7 +2458,7 @@
         "Message":{"shape":"String"},
         "RequestId":{"shape":"String"}
       },
-      "documentation":"<p>A resource is already in a state that indicates an action is happening that must complete before a new update can be applied.</p>",
+      "documentation":"<p>A resource is already in a state that indicates an operation is happening that must complete before a new update can be applied.</p>",
       "error":{"httpStatusCode":500},
       "exception":true
     },
@@ -1605,6 +2474,134 @@
       "documentation":"<p>Updating or deleting a resource can cause an inconsistent state.</p>",
       "error":{"httpStatusCode":409},
       "exception":true
+    },
+    "CopySourceArn":{
+      "type":"string",
+      "pattern":"^arn:[-a-z0-9]*:quicksight:[-a-z0-9]*:[0-9]{12}:datasource/.+"
+    },
+    "CreateAccountCustomizationRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AccountCustomization"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to customize QuickSight for.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The QuickSight namespace that you want to add customizations to.</p>",
+          "location":"querystring",
+          "locationName":"namespace"
+        },
+        "AccountCustomization":{
+          "shape":"AccountCustomization",
+          "documentation":"<p>The QuickSight customizations you're adding in the current AWS Region. You can add these to an AWS account and a QuickSight namespace. </p> <p>For example, you could add a default theme by setting <code>AccountCustomization</code> to the midnight theme: <code>\"AccountCustomization\": { \"DefaultTheme\": \"arn:aws:quicksight::aws:theme/MIDNIGHT\" }. </code>. Or, you could add a custom theme by specifying <code>\"AccountCustomization\": { \"DefaultTheme\": \"arn:aws:quicksight:us-west-2:111122223333:theme/bdb844d0-0fe9-4d9d-b520-0fe602d93639\" }</code>. </p>"
+        }
+      }
+    },
+    "CreateAccountCustomizationResponse":{
+      "type":"structure",
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to customize QuickSight for.</p>"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace associated with the customization you're creating. </p>"
+        },
+        "AccountCustomization":{
+          "shape":"AccountCustomization",
+          "documentation":"<p>The QuickSight customizations you're adding in the current AWS Region. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "CreateAnalysisRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId",
+        "Name",
+        "SourceEntity"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account where you are creating an analysis.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the analysis that you're creating. This ID displays in the URL of the analysis.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        },
+        "Name":{
+          "shape":"AnalysisName",
+          "documentation":"<p>A descriptive name for the analysis that you're creating. This name displays for the analysis in the QuickSight console. </p>"
+        },
+        "Parameters":{
+          "shape":"Parameters",
+          "documentation":"<p>The parameter names and override values that you want to use. An analysis can have any parameter type, and some parameters might accept multiple values. </p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>A structure that describes the principals and the resource-level permissions on an analysis. You can use the <code>Permissions</code> structure to grant permissions by providing a list of AWS Identity and Access Management (IAM) action information for each principal listed by Amazon Resource Name (ARN). </p> <p>To specify no permissions, omit <code>Permissions</code>.</p>"
+        },
+        "SourceEntity":{
+          "shape":"AnalysisSourceEntity",
+          "documentation":"<p>A source entity to use for the analysis that you're creating. This metadata structure contains details that describe a source template and one or more datasets.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN for the theme to apply to the analysis that you're creating. To see the theme in the QuickSight console, make sure that you have access to it.</p>"
+        },
+        "Tags":{
+          "shape":"TagList",
+          "documentation":"<p>Contains a map of the key-value pairs for the resource tag or tags assigned to the analysis.</p>"
+        }
+      }
+    },
+    "CreateAnalysisResponse":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN for the analysis.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis.</p>"
+        },
+        "CreationStatus":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The status of the creation of the analysis. </p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
     },
     "CreateColumnsOperation":{
       "type":"structure",
@@ -1644,15 +2641,15 @@
         },
         "Parameters":{
           "shape":"Parameters",
-          "documentation":"<p>A structure that contains the parameters of the dashboard. These are parameter overrides for a dashboard. A dashboard can have any type of parameters, and some parameters might accept multiple values. You can use the dashboard permissions structure described following to override two string parameters that accept multiple values. </p>"
+          "documentation":"<p>The parameters for the creation of the dashboard, which you want to use to override the default settings. A dashboard can have any type of parameters, and some parameters might accept multiple values. </p>"
         },
         "Permissions":{
           "shape":"ResourcePermissionList",
-          "documentation":"<p>A structure that contains the permissions of the dashboard. You can use this structure for granting permissions with principal and action information.</p>"
+          "documentation":"<p>A structure that contains the permissions of the dashboard. You can use this structure for granting permissions by providing a list of IAM action information for each principal ARN. </p> <p>To specify no permissions, omit the permissions list.</p>"
         },
         "SourceEntity":{
           "shape":"DashboardSourceEntity",
-          "documentation":"<p>The source entity from which the dashboard is created. The source entity accepts the Amazon Resource Name (ARN) of the source template or analysis and also references the replacement datasets for the placeholders set when creating the template. The replacement datasets need to follow the same schema as the datasets for which placeholders were created when creating the template. </p> <p>If you are creating a dashboard from a source entity in a different AWS account, use the ARN of the source template.</p>"
+          "documentation":"<p>The entity that you are using as a source when you create the dashboard. In <code>SourceEntity</code>, you specify the type of object you're using as source. You can only create a dashboard from a template, so you use a <code>SourceTemplate</code> entity. If you need to create a dashboard from an analysis, first convert the analysis to a template by using the <a>CreateTemplate</a> API operation. For <code>SourceTemplate</code>, specify the Amazon Resource Name (ARN) of the source template. The <code>SourceTemplate</code>ARN can contain any AWS Account and any QuickSight-supported AWS Region. </p> <p>Use the <code>DataSetReferences</code> entity within <code>SourceTemplate</code> to list the replacement datasets for the placeholders listed in the original. The schema in each dataset must match its placeholder. </p>"
         },
         "Tags":{
           "shape":"TagList",
@@ -1664,7 +2661,11 @@
         },
         "DashboardPublishOptions":{
           "shape":"DashboardPublishOptions",
-          "documentation":"<p>Options for publishing the dashboard when you create it:</p> <ul> <li> <p> <code>AvailabilityStatus</code> for <code>AdHocFilteringOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. When this is set to <code>DISABLED</code>, QuickSight disables the left filter pane on the published dashboard, which can be used for ad hoc (one-time) filtering. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>AvailabilityStatus</code> for <code>ExportToCSVOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. The visual option to export data to .csv format isn't enabled when this is set to <code>DISABLED</code>. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>VisibilityState</code> for <code>SheetControlsOption</code> - This visibility state can be either <code>COLLAPSED</code> or <code>EXPANDED</code>. The sheet controls pane is collapsed by default when set to true. This option is <code>COLLAPSED</code> by default. </p> </li> </ul>"
+          "documentation":"<p>Options for publishing the dashboard when you create it:</p> <ul> <li> <p> <code>AvailabilityStatus</code> for <code>AdHocFilteringOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. When this is set to <code>DISABLED</code>, QuickSight disables the left filter pane on the published dashboard, which can be used for ad hoc (one-time) filtering. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>AvailabilityStatus</code> for <code>ExportToCSVOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. The visual option to export data to .CSV format isn't enabled when this is set to <code>DISABLED</code>. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>VisibilityState</code> for <code>SheetControlsOption</code> - This visibility state can be either <code>COLLAPSED</code> or <code>EXPANDED</code>. This option is <code>COLLAPSED</code> by default. </p> </li> </ul>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme that is being used for this dashboard. If you add a value for this field, it overrides the value that is used in the source entity. The theme ARN must exist in the same AWS account where you create the dashboard.</p>"
         }
       }
     },
@@ -1673,7 +2674,7 @@
       "members":{
         "Arn":{
           "shape":"Arn",
-          "documentation":"<p>The Amazon Resource Name (ARN) of the dashboard.</p>"
+          "documentation":"<p>The ARN of the dashboard.</p>"
         },
         "VersionArn":{
           "shape":"Arn",
@@ -2091,6 +3092,68 @@
         }
       }
     },
+    "CreateNamespaceRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "Namespace",
+        "IdentityStore"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to create the QuickSight namespace in.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The name that you want to use to describe the new namespace.</p>"
+        },
+        "IdentityStore":{
+          "shape":"IdentityStore",
+          "documentation":"<p>Specifies the type of your user identity directory. Currently, this supports users with an identity type of <code>QUICKSIGHT</code>.</p>"
+        },
+        "Tags":{
+          "shape":"TagList",
+          "documentation":"<p>The tags that you want to associate with the namespace that you're creating.</p>"
+        }
+      }
+    },
+    "CreateNamespaceResponse":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the QuickSight namespace you created. </p>"
+        },
+        "Name":{
+          "shape":"Namespace",
+          "documentation":"<p>The name of the new namespace that you created.</p>"
+        },
+        "CapacityRegion":{
+          "shape":"String",
+          "documentation":"<p>The AWS Region that you want to use for the free SPICE capacity for the new namespace. This is set to the region that you run CreateNamespace in. </p>"
+        },
+        "CreationStatus":{
+          "shape":"NamespaceStatus",
+          "documentation":"<p>The status of the creation of the namespace. This is an asynchronous process. A status of <code>CREATED</code> means that your namespace is ready to use. If an error occurs, it indicates if the process is <code>retryable</code> or <code>non-retryable</code>. In the case of a non-retryable error, refer to the error message for follow-up tasks.</p>"
+        },
+        "IdentityStore":{
+          "shape":"IdentityStore",
+          "documentation":"<p>Specifies the type of your user identity directory. Currently, this supports users with an identity type of <code>QUICKSIGHT</code>.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
     "CreateTemplateAliasRequest":{
       "type":"structure",
       "required":[
@@ -2172,7 +3235,7 @@
         },
         "SourceEntity":{
           "shape":"TemplateSourceEntity",
-          "documentation":"<p>The Amazon Resource Name (ARN) of the source entity from which this template is being created. Currently, you can create a template from an analysis or another template. If the ARN is for an analysis, include its dataset references. </p>"
+          "documentation":"<p>The entity that you are using as a source when you create the template. In <code>SourceEntity</code>, you specify the type of object you're using as source: <code>SourceTemplate</code> for a template or <code>SourceAnalysis</code> for an analysis. Both of these require an Amazon Resource Name (ARN). For <code>SourceTemplate</code>, specify the ARN of the source template. For <code>SourceAnalysis</code>, specify the ARN of the source analysis. The <code>SourceTemplate</code> ARN can contain any AWS Account and any QuickSight-supported AWS Region. </p> <p>Use the <code>DataSetReferences</code> entity within <code>SourceTemplate</code> or <code>SourceAnalysis</code> to list the replacement datasets for the placeholders listed in the original. The schema in each dataset must match its placeholder. </p>"
         },
         "Tags":{
           "shape":"TagList",
@@ -2214,6 +3277,135 @@
         }
       }
     },
+    "CreateThemeAliasRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "AliasName",
+        "ThemeVersionNumber"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme for the new theme alias.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>An ID for the theme alias.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The name that you want to give to the theme alias that you are creating. The alias name can't begin with a <code>$</code>. Alias names that start with <code>$</code> are reserved by Amazon QuickSight. </p>",
+          "location":"uri",
+          "locationName":"AliasName"
+        },
+        "ThemeVersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number of the theme.</p>"
+        }
+      }
+    },
+    "CreateThemeAliasResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeAlias":{
+          "shape":"ThemeAlias",
+          "documentation":"<p>Information about the theme alias.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "CreateThemeRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "Name",
+        "BaseThemeId",
+        "Configuration"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account where you want to store the new theme. </p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>An ID for the theme that you want to create. The theme ID is unique per AWS Region in each AWS account.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "Name":{
+          "shape":"ThemeName",
+          "documentation":"<p>A display name for the theme.</p>"
+        },
+        "BaseThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight. For a list of the starting themes, use <code>ListThemes</code> or choose <b>Themes</b> from within a QuickSight analysis. </p>"
+        },
+        "VersionDescription":{
+          "shape":"VersionDescription",
+          "documentation":"<p>A description of the first version of the theme that you're creating. Every time <code>UpdateTheme</code> is called, a new version is created. Each version of the theme has a description of the version in the <code>VersionDescription</code> field.</p>"
+        },
+        "Configuration":{
+          "shape":"ThemeConfiguration",
+          "documentation":"<p>The theme configuration, which contains the theme display properties.</p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>A valid grouping of resource permissions to apply to the new theme. </p>"
+        },
+        "Tags":{
+          "shape":"TagList",
+          "documentation":"<p>A map of the key-value pairs for the resource tag or tags that you want to add to the resource.</p>"
+        }
+      }
+    },
+    "CreateThemeResponse":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the theme.</p>"
+        },
+        "VersionArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the new theme.</p>"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the theme.</p>"
+        },
+        "CreationStatus":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The theme creation status.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
     "CredentialPair":{
       "type":"structure",
       "required":[
@@ -2228,6 +3420,10 @@
         "Password":{
           "shape":"Password",
           "documentation":"<p>Password.</p>"
+        },
+        "AlternateDataSourceParameters":{
+          "shape":"DataSourceParametersList",
+          "documentation":"<p>A set of alternate data source parameters that you want to share for these credentials. The credentials are applied in tandem with the data source parameters when you copy a data source by using a create or update request. The API operation compares the <code>DataSourceParameters</code> structure that's in the request with the structures in the <code>AlternateDataSourceParameters</code> allowlist. If the structures are an exact match, the request is allowed to use the new data source with the existing credentials. If the <code>AlternateDataSourceParameters</code> list is null, the <code>DataSourceParameters</code> originally used with these <code>Credentials</code> is automatically allowed.</p>"
         }
       },
       "documentation":"<p>The combination of user name and password that are used as credentials.</p>"
@@ -2277,7 +3473,7 @@
         },
         "Name":{
           "shape":"DashboardName",
-          "documentation":"<p>A display name for the dataset.</p>"
+          "documentation":"<p>A display name for the dashboard.</p>"
         },
         "Version":{
           "shape":"DashboardVersion",
@@ -2327,6 +3523,8 @@
     "DashboardErrorType":{
       "type":"string",
       "enum":[
+        "ACCESS_DENIED",
+        "SOURCE_NOT_FOUND",
         "DATA_SET_NOT_FOUND",
         "INTERNAL_FAILURE",
         "PARAMETER_VALUE_INCOMPATIBLE",
@@ -2336,6 +3534,10 @@
         "COLUMN_GEOGRAPHIC_ROLE_MISMATCH",
         "COLUMN_REPLACEMENT_MISSING"
       ]
+    },
+    "DashboardFilterAttribute":{
+      "type":"string",
+      "enum":["QUICKSIGHT_USER"]
     },
     "DashboardName":{
       "type":"string",
@@ -2360,6 +3562,30 @@
         }
       },
       "documentation":"<p>Dashboard publish options.</p>"
+    },
+    "DashboardSearchFilter":{
+      "type":"structure",
+      "required":["Operator"],
+      "members":{
+        "Operator":{
+          "shape":"FilterOperator",
+          "documentation":"<p>The comparison operator that you want to use as a filter, for example, <code>\"Operator\": \"StringEquals\"</code>.</p>"
+        },
+        "Name":{
+          "shape":"DashboardFilterAttribute",
+          "documentation":"<p>The name of the value that you want to use as a filter, for example, <code>\"Name\": \"QUICKSIGHT_USER\"</code>. </p>"
+        },
+        "Value":{
+          "shape":"String",
+          "documentation":"<p>The value of the named item, in this case <code>QUICKSIGHT_USER</code>, that you want to use as a filter, for example, <code>\"Value\": \"arn:aws:quicksight:us-east-1:1:user/default/UserName1\"</code>. </p>"
+        }
+      },
+      "documentation":"<p>A filter that you apply when searching for dashboards. </p>"
+    },
+    "DashboardSearchFilterList":{
+      "type":"list",
+      "member":{"shape":"DashboardSearchFilter"},
+      "max":1
     },
     "DashboardSourceEntity":{
       "type":"structure",
@@ -2444,11 +3670,11 @@
         },
         "Errors":{
           "shape":"DashboardErrorList",
-          "documentation":"<p>Errors.</p>"
+          "documentation":"<p>Errors associated with this dashboard version.</p>"
         },
         "VersionNumber":{
           "shape":"VersionNumber",
-          "documentation":"<p>Version number.</p>"
+          "documentation":"<p>Version number for this version of the dashboard.</p>"
         },
         "Status":{
           "shape":"ResourceStatus",
@@ -2462,9 +3688,17 @@
           "shape":"Arn",
           "documentation":"<p>Source entity ARN.</p>"
         },
+        "DataSetArns":{
+          "shape":"DataSetArnsList",
+          "documentation":"<p>The Amazon Resource Numbers (ARNs) for the datasets that are associated with this version of the dashboard.</p>"
+        },
         "Description":{
           "shape":"VersionDescription",
           "documentation":"<p>Description.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the theme associated with a version of the dashboard.</p>"
         }
       },
       "documentation":"<p>Dashboard version.</p>"
@@ -2503,6 +3737,24 @@
       "type":"list",
       "member":{"shape":"DashboardVersionSummary"},
       "max":100
+    },
+    "DataColorPalette":{
+      "type":"structure",
+      "members":{
+        "Colors":{
+          "shape":"ColorList",
+          "documentation":"<p>The hexadecimal codes for the colors.</p>"
+        },
+        "MinMaxGradient":{
+          "shape":"ColorList",
+          "documentation":"<p>The minimum and maximum hexadecimal codes that describe a color gradient. </p>"
+        },
+        "EmptyFillColor":{
+          "shape":"HexColor",
+          "documentation":"<p>The hexadecimal code of a color that applies to charts where a lack of data is highlighted.</p>"
+        }
+      },
+      "documentation":"<p>The theme colors that are used for data colors in charts. The colors description is a hexidecimal color code that consists of six alphanumerical characters, prefixed with <code>#</code>, for example #37BFF5. </p>"
     },
     "DataSet":{
       "type":"structure",
@@ -2557,6 +3809,11 @@
         }
       },
       "documentation":"<p>Dataset.</p>"
+    },
+    "DataSetArnsList":{
+      "type":"list",
+      "member":{"shape":"Arn"},
+      "max":100
     },
     "DataSetConfiguration":{
       "type":"structure",
@@ -2699,6 +3956,10 @@
           "shape":"DataSourceParameters",
           "documentation":"<p>The parameters that Amazon QuickSight uses to connect to your underlying source. This is a variant type structure. For this structure to be valid, only one of the attributes can be non-null.</p>"
         },
+        "AlternateDataSourceParameters":{
+          "shape":"DataSourceParametersList",
+          "documentation":"<p>A set of alternate data source parameters that you want to share for the credentials stored with this data source. The credentials are applied in tandem with the data source parameters when you copy a data source by using a create or update request. The API operation compares the <code>DataSourceParameters</code> structure that's in the request with the structures in the <code>AlternateDataSourceParameters</code> allowlist. If the structures are an exact match, the request is allowed to use the credentials from this existing data source. If the <code>AlternateDataSourceParameters</code> list is null, the <code>Credentials</code> originally used with this <code>DataSourceParameters</code> are automatically allowed.</p>"
+        },
         "VpcConnectionProperties":{
           "shape":"VpcConnectionProperties",
           "documentation":"<p>The VPC connection information. You need to use this parameter only when you want QuickSight to use a VPC connection when connecting to your underlying source.</p>"
@@ -2719,10 +3980,14 @@
       "members":{
         "CredentialPair":{
           "shape":"CredentialPair",
-          "documentation":"<p>Credential pair.</p>"
+          "documentation":"<p>Credential pair. For more information, see <a>CredentialPair</a>.</p>"
+        },
+        "CopySourceArn":{
+          "shape":"CopySourceArn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use. When <code>CopySourceArn</code> is not null, the credential pair from the data source in the ARN is used as the credentials for the <code>DataSourceCredentials</code> structure.</p>"
         }
       },
-      "documentation":"<p>Data source credentials.</p>",
+      "documentation":"<p>Data source credentials. This is a variant type structure. For this structure to be valid, only one of the attributes can be non-null.</p>",
       "sensitive":true
     },
     "DataSourceErrorInfo":{
@@ -2742,6 +4007,8 @@
     "DataSourceErrorInfoType":{
       "type":"string",
       "enum":[
+        "ACCESS_DENIED",
+        "COPY_SOURCE_NOT_FOUND",
         "TIMEOUT",
         "ENGINE_VERSION_NOT_SUPPORTED",
         "UNKNOWN_HOST",
@@ -2836,6 +4103,12 @@
       },
       "documentation":"<p>The parameters that Amazon QuickSight uses to connect to your underlying data source. This is a variant type structure. For this structure to be valid, only one of the attributes can be non-null.</p>"
     },
+    "DataSourceParametersList":{
+      "type":"list",
+      "member":{"shape":"DataSourceParameters"},
+      "max":50,
+      "min":1
+    },
     "DataSourceType":{
       "type":"string",
       "enum":[
@@ -2876,14 +4149,14 @@
       "members":{
         "Name":{
           "shape":"NonEmptyString",
-          "documentation":"<p>A display name for the dataset.</p>"
+          "documentation":"<p>A display name for the date-time parameter.</p>"
         },
         "Values":{
           "shape":"TimestampList",
-          "documentation":"<p>Values.</p>"
+          "documentation":"<p>The values for the date-time parameter.</p>"
         }
       },
-      "documentation":"<p>Date time parameter.</p>"
+      "documentation":"<p>A date-time parameter.</p>"
     },
     "DateTimeParameterList":{
       "type":"list",
@@ -2899,19 +4172,110 @@
       "members":{
         "Name":{
           "shape":"NonEmptyString",
-          "documentation":"<p>A display name for the dataset.</p>"
+          "documentation":"<p>A display name for the decimal parameter.</p>"
         },
         "Values":{
           "shape":"DoubleList",
-          "documentation":"<p>Values.</p>"
+          "documentation":"<p>The values for the decimal parameter.</p>"
         }
       },
-      "documentation":"<p>Decimal parameter.</p>"
+      "documentation":"<p>A decimal parameter.</p>"
     },
     "DecimalParameterList":{
       "type":"list",
       "member":{"shape":"DecimalParameter"},
       "max":100
+    },
+    "DeleteAccountCustomizationRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to delete QuickSight customizations from in this AWS Region.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The QuickSight namespace that you're deleting the customizations from.</p>",
+          "location":"querystring",
+          "locationName":"namespace"
+        }
+      }
+    },
+    "DeleteAccountCustomizationResponse":{
+      "type":"structure",
+      "members":{
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "DeleteAnalysisRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account where you want to delete an analysis.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis that you're deleting.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        },
+        "RecoveryWindowInDays":{
+          "shape":"RecoveryWindowInDays",
+          "documentation":"<p>A value that specifies the number of days that QuickSight waits before it deletes the analysis. You can't use this parameter with the <code>ForceDeleteWithoutRecovery</code> option in the same API call. The default value is 30.</p>",
+          "location":"querystring",
+          "locationName":"recovery-window-in-days"
+        },
+        "ForceDeleteWithoutRecovery":{
+          "shape":"boolean",
+          "documentation":"<p>This option defaults to the value <code>NoForceDeleteWithoutRecovery</code>. To immediately delete the analysis, add the <code>ForceDeleteWithoutRecovery</code> option. You can't restore an analysis after it's deleted. </p>",
+          "location":"querystring",
+          "locationName":"force-delete-without-recovery"
+        }
+      }
+    },
+    "DeleteAnalysisResponse":{
+      "type":"structure",
+      "members":{
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the deleted analysis.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the deleted analysis.</p>"
+        },
+        "DeletionTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that the analysis is scheduled to be deleted.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
     },
     "DeleteDashboardRequest":{
       "type":"structure",
@@ -3185,6 +4549,41 @@
         }
       }
     },
+    "DeleteNamespaceRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "Namespace"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to delete the QuickSight namespace from.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace that you want to delete.</p>",
+          "location":"uri",
+          "locationName":"Namespace"
+        }
+      }
+    },
+    "DeleteNamespaceResponse":{
+      "type":"structure",
+      "members":{
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
     "DeleteTemplateAliasRequest":{
       "type":"structure",
       "required":[
@@ -3207,7 +4606,7 @@
         },
         "AliasName":{
           "shape":"AliasName",
-          "documentation":"<p>The name for the template alias. If you name a specific alias, you delete the version that the alias points to. You can specify the latest version of the template by providing the keyword <code>$LATEST</code> in the <code>AliasName</code> parameter. </p>",
+          "documentation":"<p>The name for the template alias. To delete a specific alias, you delete the version that the alias points to. You can specify the alias name, or specify the latest version of the template by providing the keyword <code>$LATEST</code> in the <code>AliasName</code> parameter. </p>",
           "location":"uri",
           "locationName":"AliasName"
         }
@@ -3231,7 +4630,7 @@
         },
         "Arn":{
           "shape":"Arn",
-          "documentation":"<p>The Amazon Resource Name (ARN) of the resource.</p>"
+          "documentation":"<p>The Amazon Resource Name (ARN) of the template you want to delete.</p>"
         },
         "RequestId":{
           "shape":"String",
@@ -3285,6 +4684,109 @@
           "shape":"StatusCode",
           "documentation":"<p>The HTTP status of the request.</p>",
           "location":"statusCode"
+        }
+      }
+    },
+    "DeleteThemeAliasRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "AliasName"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme alias to delete.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme that the specified alias is for.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The unique name for the theme alias to delete.</p>",
+          "location":"uri",
+          "locationName":"AliasName"
+        }
+      }
+    },
+    "DeleteThemeAliasResponse":{
+      "type":"structure",
+      "members":{
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The name for the theme alias.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme resource using the deleted alias.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>An ID for the theme associated with the deletion.</p>"
+        }
+      }
+    },
+    "DeleteThemeRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme that you're deleting.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>An ID for the theme that you want to delete.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "VersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version of the theme that you want to delete. </p> <p> <b>Note:</b> If you don't provide a version number, you're using this call to <code>DeleteTheme</code> to delete all versions of the theme.</p>",
+          "location":"querystring",
+          "locationName":"version-number"
+        }
+      }
+    },
+    "DeleteThemeResponse":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the resource.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>An ID for the theme.</p>"
         }
       }
     },
@@ -3377,6 +4879,172 @@
       "type":"string",
       "max":1,
       "min":1
+    },
+    "DescribeAccountCustomizationRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to describe QuickSight customizations for.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The QuickSight namespace that you want to describe QuickSight customizations for.</p>",
+          "location":"querystring",
+          "locationName":"namespace"
+        },
+        "Resolved":{
+          "shape":"boolean",
+          "documentation":"<p>The <code>Resolved</code> flag works with the other parameters to determine which view of QuickSight customizations is returned. You can add this flag to your command to use the same view that QuickSight uses to identify which customizations to apply to the console. Omit this flag, or set it to <code>no-resolved</code>, to reveal customizations that are configured at different levels. </p>",
+          "location":"querystring",
+          "locationName":"resolved"
+        }
+      }
+    },
+    "DescribeAccountCustomizationResponse":{
+      "type":"structure",
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you're describing.</p>"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The QuickSight namespace that you're describing. </p>"
+        },
+        "AccountCustomization":{
+          "shape":"AccountCustomization",
+          "documentation":"<p>The QuickSight customizations that exist in the current AWS Region. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "DescribeAccountSettingsRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that contains the settings that you want to list.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        }
+      }
+    },
+    "DescribeAccountSettingsResponse":{
+      "type":"structure",
+      "members":{
+        "AccountSettings":{
+          "shape":"AccountSettings",
+          "documentation":"<p>The QuickSight settings for this AWS account. This information includes the edition of Amazon QuickSight that you subscribed to (Standard or Enterprise) and the notification email for the QuickSight subscription. The QuickSight console, the QuickSight subscription is sometimes referred to as a QuickSight \"account\" even though it's technically not an account by itself. Instead, it's a subscription to the QuickSight service for your AWS account. The edition that you subscribe to applies to QuickSight in every AWS Region where you use it. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "DescribeAnalysisPermissionsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analysis whose permissions you're describing. You must be using the AWS account that the analysis is in.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis whose permissions you're describing. The ID is part of the analysis URL.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        }
+      }
+    },
+    "DescribeAnalysisPermissionsResponse":{
+      "type":"structure",
+      "members":{
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis whose permissions you're describing.</p>"
+        },
+        "AnalysisArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the analysis whose permissions you're describing.</p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>A structure that describes the principals and the resource-level permissions on an analysis.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "DescribeAnalysisRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analysis. You must be using the AWS account that the analysis is in.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis that you're describing. The ID is part of the URL of the analysis.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        }
+      }
+    },
+    "DescribeAnalysisResponse":{
+      "type":"structure",
+      "members":{
+        "Analysis":{
+          "shape":"Analysis",
+          "documentation":"<p>A metadata structure that contains summary information for the analysis that you're describing.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
     },
     "DescribeDashboardPermissionsRequest":{
       "type":"structure",
@@ -3786,6 +5454,45 @@
         }
       }
     },
+    "DescribeNamespaceRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "Namespace"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that contains the QuickSight namespace that you want to describe.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace that you want to describe.</p>",
+          "location":"uri",
+          "locationName":"Namespace"
+        }
+      }
+    },
+    "DescribeNamespaceResponse":{
+      "type":"structure",
+      "members":{
+        "Namespace":{
+          "shape":"NamespaceInfoV2",
+          "documentation":"<p>The information about the namespace that you're describing. The response includes the namespace ARN, name, AWS Region, creation status, and identity store. <code>DescribeNamespace</code> also works for namespaces that are in the process of being created. For incomplete namespaces, this API operation lists the namespace error types and messages associated with the creation process.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
     "DescribeTemplateAliasRequest":{
       "type":"structure",
       "required":[
@@ -3923,6 +5630,154 @@
           "shape":"StatusCode",
           "documentation":"<p>The HTTP status of the request.</p>",
           "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "DescribeThemeAliasRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "AliasName"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme alias that you're describing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The name of the theme alias that you want to describe.</p>",
+          "location":"uri",
+          "locationName":"AliasName"
+        }
+      }
+    },
+    "DescribeThemeAliasResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeAlias":{
+          "shape":"ThemeAlias",
+          "documentation":"<p>Information about the theme alias.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "DescribeThemePermissionsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme that you're describing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme that you want to describe permissions for.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        }
+      }
+    },
+    "DescribeThemePermissionsResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme.</p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>A list of resource permissions set on the theme. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "DescribeThemeRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAndAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme that you're describing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "VersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number for the version to describe. If a <code>VersionNumber</code> parameter value isn't provided, the latest version of the theme is described.</p>",
+          "location":"querystring",
+          "locationName":"version-number"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The alias of the theme that you want to describe. If you name a specific alias, you describe the version that the alias points to. You can specify the latest version of the theme by providing the keyword <code>$LATEST</code> in the <code>AliasName</code> parameter. The keyword <code>$PUBLISHED</code> doesn't apply to themes.</p>",
+          "location":"querystring",
+          "locationName":"alias-name"
+        }
+      }
+    },
+    "DescribeThemeResponse":{
+      "type":"structure",
+      "members":{
+        "Theme":{
+          "shape":"Theme",
+          "documentation":"<p>The information about the theme that you are describing.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
         }
       }
     },
@@ -3995,9 +5850,21 @@
       "type":"list",
       "member":{"shape":"Double"}
     },
+    "Edition":{
+      "type":"string",
+      "enum":[
+        "STANDARD",
+        "ENTERPRISE"
+      ]
+    },
     "EmbeddingUrl":{
       "type":"string",
       "sensitive":true
+    },
+    "EntryPoint":{
+      "type":"string",
+      "max":1000,
+      "min":1
     },
     "ErrorInfo":{
       "type":"structure",
@@ -4063,6 +5930,10 @@
         }
       },
       "documentation":"<p>A transform operation that filters rows based on a condition.</p>"
+    },
+    "FilterOperator":{
+      "type":"string",
+      "enum":["StringEquals"]
     },
     "GeoSpatialColumnGroup":{
       "type":"structure",
@@ -4149,7 +6020,7 @@
         },
         "UserArn":{
           "shape":"Arn",
-          "documentation":"<p>The Amazon QuickSight user's Amazon Resource Name (ARN), for use with <code>QUICKSIGHT</code> identity type. You can use this for any Amazon QuickSight users in your account (readers, authors, or admins) authenticated as one of the following:</p> <ul> <li> <p>Active Directory (AD) users or group members</p> </li> <li> <p>Invited nonfederated users</p> </li> <li> <p>IAM users and IAM role-based sessions authenticated through Federated Single Sign-On using SAML, OpenID Connect, or IAM federation.</p> </li> </ul>",
+          "documentation":"<p>The Amazon QuickSight user's Amazon Resource Name (ARN), for use with <code>QUICKSIGHT</code> identity type. You can use this for any Amazon QuickSight users in your account (readers, authors, or admins) authenticated as one of the following:</p> <ul> <li> <p>Active Directory (AD) users or group members</p> </li> <li> <p>Invited nonfederated users</p> </li> <li> <p>IAM users and IAM role-based sessions authenticated through Federated Single Sign-On using SAML, OpenID Connect, or IAM federation.</p> </li> </ul> <p>Omit this parameter for users in the third group – IAM users and IAM role-based sessions.</p>",
           "location":"querystring",
           "locationName":"user-arn"
         }
@@ -4160,7 +6031,55 @@
       "members":{
         "EmbedUrl":{
           "shape":"EmbeddingUrl",
-          "documentation":"<p>An URL that you can put into your server-side webpage to embed your dashboard. This URL is valid for 5 minutes, and the resulting session is valid for 10 hours. The API provides the URL with an <code>auth_code</code> value that enables a single sign-on session. </p>"
+          "documentation":"<p>A single-use URL that you can put into your server-side webpage to embed your dashboard. This URL is valid for 5 minutes. The API operation provides the URL with an <code>auth_code</code> value that enables one (and only one) sign-on to a user session that is valid for 10 hours. </p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "GetSessionEmbedUrlRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account associated with your QuickSight subscription.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "EntryPoint":{
+          "shape":"EntryPoint",
+          "documentation":"<p>The URL you use to access the embedded session. The entry point URL is constrained to the following paths:</p> <ul> <li> <p> <code>/start</code> </p> </li> <li> <p> <code>/start/analyses</code> </p> </li> <li> <p> <code>/start/dashboards</code> </p> </li> <li> <p> <code>/start/favorites</code> </p> </li> <li> <p> <code>/dashboards/<i>DashboardId</i> </code> - where <code>DashboardId</code> is the actual ID key from the QuickSight console URL of the dashboard</p> </li> <li> <p> <code>/analyses/<i>AnalysisId</i> </code> - where <code>AnalysisId</code> is the actual ID key from the QuickSight console URL of the analysis</p> </li> </ul>",
+          "location":"querystring",
+          "locationName":"entry-point"
+        },
+        "SessionLifetimeInMinutes":{
+          "shape":"SessionLifetimeInMinutes",
+          "documentation":"<p>How many minutes the session is valid. The session lifetime must be 15-600 minutes.</p>",
+          "location":"querystring",
+          "locationName":"session-lifetime"
+        },
+        "UserArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon QuickSight user's Amazon Resource Name (ARN), for use with <code>QUICKSIGHT</code> identity type. You can use this for any type of Amazon QuickSight users in your account (readers, authors, or admins). They need to be authenticated as one of the following:</p> <ol> <li> <p>Active Directory (AD) users or group members</p> </li> <li> <p>Invited nonfederated users</p> </li> <li> <p>IAM users and IAM role-based sessions authenticated through Federated Single Sign-On using SAML, OpenID Connect, or IAM federation</p> </li> </ol> <p>Omit this parameter for users in the third group – IAM users and IAM role-based sessions.</p>",
+          "location":"querystring",
+          "locationName":"user-arn"
+        }
+      }
+    },
+    "GetSessionEmbedUrlResponse":{
+      "type":"structure",
+      "members":{
+        "EmbedUrl":{
+          "shape":"EmbeddingUrl",
+          "documentation":"<p>A single-use URL that you can put into your server-side web page to embed your QuickSight session. This URL is valid for 5 minutes. The API operation provides the URL with an <code>auth_code</code> value that enables one (and only one) sign-on to a user session that is valid for 10 hours. </p>"
         },
         "Status":{
           "shape":"StatusCode",
@@ -4193,7 +6112,7 @@
           "documentation":"<p>The principal ID of the group.</p>"
         }
       },
-      "documentation":"<p>A <i>group</i> in Amazon QuickSight consists of a set of users. You can use groups to make it easier to manage access and security. Currently, an Amazon QuickSight subscription can't contain more than 500 Amazon QuickSight groups.</p>"
+      "documentation":"<p>A <i>group</i> in Amazon QuickSight consists of a set of users. You can use groups to make it easier to manage access and security. </p>"
     },
     "GroupDescription":{
       "type":"string",
@@ -4233,6 +6152,21 @@
       "min":1,
       "pattern":"[\\u0020-\\u00FF]+"
     },
+    "GutterStyle":{
+      "type":"structure",
+      "members":{
+        "Show":{
+          "shape":"boolean",
+          "documentation":"<p>This Boolean value controls whether to display a gutter space between sheet tiles. </p>",
+          "box":true
+        }
+      },
+      "documentation":"<p>The display options for gutter spacing between tiles on a sheet.</p>"
+    },
+    "HexColor":{
+      "type":"string",
+      "pattern":"^#[A-F0-9]{6}$"
+    },
     "Host":{
       "type":"string",
       "max":256,
@@ -4266,7 +6200,7 @@
           "documentation":"<p>Assignment status.</p>"
         }
       },
-      "documentation":"<p>An IAM policy assignment.</p>"
+      "documentation":"<p>An AWS Identity and Access Management (IAM) policy assignment.</p>"
     },
     "IAMPolicyAssignmentName":{
       "type":"string",
@@ -4304,6 +6238,10 @@
     "IdentityNameList":{
       "type":"list",
       "member":{"shape":"IdentityName"}
+    },
+    "IdentityStore":{
+      "type":"string",
+      "enum":["QUICKSIGHT"]
     },
     "IdentityType":{
       "type":"string",
@@ -4513,14 +6451,14 @@
       "members":{
         "Name":{
           "shape":"NonEmptyString",
-          "documentation":"<p>A display name for the dataset.</p>"
+          "documentation":"<p>The name of the integer parameter.</p>"
         },
         "Values":{
           "shape":"LongList",
-          "documentation":"<p>Values.</p>"
+          "documentation":"<p>The values for the integer parameter.</p>"
         }
       },
-      "documentation":"<p>Integer parameter.</p>"
+      "documentation":"<p>An integer parameter.</p>"
     },
     "IntegerParameterList":{
       "type":"list",
@@ -4632,6 +6570,53 @@
       "error":{"httpStatusCode":409},
       "exception":true
     },
+    "ListAnalysesRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analyses.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request.</p>",
+          "location":"querystring",
+          "locationName":"next-token"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to return.</p>",
+          "box":true,
+          "location":"querystring",
+          "locationName":"max-results"
+        }
+      }
+    },
+    "ListAnalysesResponse":{
+      "type":"structure",
+      "members":{
+        "AnalysisSummaryList":{
+          "shape":"AnalysisSummaryList",
+          "documentation":"<p>Metadata describing each of the analyses that are listed.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
     "ListDashboardVersionsRequest":{
       "type":"structure",
       "required":[
@@ -4718,7 +6703,7 @@
       "members":{
         "DashboardSummaryList":{
           "shape":"DashboardSummaryList",
-          "documentation":"<p>A structure that contains all of the dashboards shared with the user. This structure provides basic information about the dashboards.</p>"
+          "documentation":"<p>A structure that contains all of the dashboards in your AWS account. This structure provides basic information about the dashboards.</p>"
         },
         "NextToken":{
           "shape":"String",
@@ -5127,6 +7112,53 @@
         }
       }
     },
+    "ListNamespacesRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that contains the QuickSight namespaces that you want to list.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request.</p>",
+          "location":"querystring",
+          "locationName":"next-token"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to return.</p>",
+          "box":true,
+          "location":"querystring",
+          "locationName":"max-results"
+        }
+      }
+    },
+    "ListNamespacesResponse":{
+      "type":"structure",
+      "members":{
+        "Namespaces":{
+          "shape":"Namespaces",
+          "documentation":"<p>The information about the namespaces in this AWS account. The response includes the namespace ARN, name, AWS Region, notification email address, creation status, and identity store.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
     "ListTagsForResourceRequest":{
       "type":"structure",
       "required":["ResourceArn"],
@@ -5300,6 +7332,171 @@
         "TemplateSummaryList":{
           "shape":"TemplateSummaryList",
           "documentation":"<p>A structure containing information about the templates in the list.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "ListThemeAliasesRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme aliases that you're listing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>",
+          "location":"querystring",
+          "locationName":"next-token"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to be returned per request.</p>",
+          "box":true,
+          "location":"querystring",
+          "locationName":"max-result"
+        }
+      }
+    },
+    "ListThemeAliasesResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeAliasList":{
+          "shape":"ThemeAliasList",
+          "documentation":"<p>A structure containing the list of the theme's aliases.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>"
+        }
+      }
+    },
+    "ListThemeVersionsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the themes that you're listing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>",
+          "location":"querystring",
+          "locationName":"next-token"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to be returned per request.</p>",
+          "box":true,
+          "location":"querystring",
+          "locationName":"max-results"
+        }
+      }
+    },
+    "ListThemeVersionsResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeVersionSummaryList":{
+          "shape":"ThemeVersionSummaryList",
+          "documentation":"<p>A structure containing a list of all the versions of the specified theme.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "ListThemesRequest":{
+      "type":"structure",
+      "required":["AwsAccountId"],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the themes that you're listing.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>",
+          "location":"querystring",
+          "locationName":"next-token"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to be returned per request.</p>",
+          "box":true,
+          "location":"querystring",
+          "locationName":"max-results"
+        },
+        "Type":{
+          "shape":"ThemeType",
+          "documentation":"<p>The type of themes that you want to list. Valid options include the following:</p> <ul> <li> <p> <code>ALL (default)</code>- Display all existing themes.</p> </li> <li> <p> <code>CUSTOM</code> - Display only the themes created by people using Amazon QuickSight.</p> </li> <li> <p> <code>QUICKSIGHT</code> - Display only the starting themes defined by QuickSight.</p> </li> </ul>",
+          "location":"querystring",
+          "locationName":"type"
+        }
+      }
+    },
+    "ListThemesResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeSummaryList":{
+          "shape":"ThemeSummaryList",
+          "documentation":"<p>Information about the themes in the list.</p>"
         },
         "NextToken":{
           "shape":"String",
@@ -5512,6 +7709,17 @@
       },
       "documentation":"<p>Amazon S3 manifest file location.</p>"
     },
+    "MarginStyle":{
+      "type":"structure",
+      "members":{
+        "Show":{
+          "shape":"boolean",
+          "documentation":"<p>This Boolean value controls whether to display sheet margins.</p>",
+          "box":true
+        }
+      },
+      "documentation":"<p>The display options for margins around the outside edge of sheets.</p>"
+    },
     "MariaDbParameters":{
       "type":"structure",
       "required":[
@@ -5568,6 +7776,71 @@
       "max":64,
       "pattern":"^[a-zA-Z0-9._-]*$"
     },
+    "NamespaceError":{
+      "type":"structure",
+      "members":{
+        "Type":{
+          "shape":"NamespaceErrorType",
+          "documentation":"<p>The error type.</p>"
+        },
+        "Message":{
+          "shape":"String",
+          "documentation":"<p>The message for the error.</p>"
+        }
+      },
+      "documentation":"<p>Errors that occur during namespace creation.</p>"
+    },
+    "NamespaceErrorType":{
+      "type":"string",
+      "enum":[
+        "PERMISSION_DENIED",
+        "INTERNAL_SERVICE_ERROR"
+      ]
+    },
+    "NamespaceInfoV2":{
+      "type":"structure",
+      "members":{
+        "Name":{
+          "shape":"Namespace",
+          "documentation":"<p>The name of the error.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The namespace ARN.</p>"
+        },
+        "CapacityRegion":{
+          "shape":"String",
+          "documentation":"<p>The namespace AWS Region.</p>"
+        },
+        "CreationStatus":{
+          "shape":"NamespaceStatus",
+          "documentation":"<p>The creation status of a namespace that is not yet completely created.</p>"
+        },
+        "IdentityStore":{
+          "shape":"IdentityStore",
+          "documentation":"<p>The identity store used for the namespace.</p>"
+        },
+        "NamespaceError":{
+          "shape":"NamespaceError",
+          "documentation":"<p>An error that occurred when the namespace was created.</p>"
+        }
+      },
+      "documentation":"<p>The error type.</p>"
+    },
+    "NamespaceStatus":{
+      "type":"string",
+      "enum":[
+        "CREATED",
+        "CREATING",
+        "DELETING",
+        "RETRYABLE_FAILURE",
+        "NON_RETRYABLE_FAILURE"
+      ]
+    },
+    "Namespaces":{
+      "type":"list",
+      "member":{"shape":"NamespaceInfoV2"}
+    },
     "NonEmptyString":{
       "type":"string",
       "pattern":".*\\S.*"
@@ -5617,10 +7890,10 @@
         },
         "DateTimeParameters":{
           "shape":"DateTimeParameterList",
-          "documentation":"<p>DateTime parameters.</p>"
+          "documentation":"<p>Date-time parameters.</p>"
         }
       },
-      "documentation":"<p>Parameters.</p>"
+      "documentation":"<p>A list of QuickSight parameters and the list's override values.</p>"
     },
     "Password":{
       "type":"string",
@@ -5802,6 +8075,11 @@
       },
       "documentation":"<p>Amazon RDS parameters.</p>"
     },
+    "RecoveryWindowInDays":{
+      "type":"long",
+      "max":30,
+      "min":7
+    },
     "RedshiftParameters":{
       "type":"structure",
       "required":["Database"],
@@ -5853,7 +8131,7 @@
         },
         "SessionName":{
           "shape":"RoleSessionName",
-          "documentation":"<p>You need to use this parameter only when you register one or more users using an assumed IAM role. You don't need to provide the session name for other scenarios, for example when you are registering an IAM user or an Amazon QuickSight user. You can register multiple users using the same IAM role if each user has a different session name. For more information on assuming IAM roles, see <a href=\"https://docs.aws.example.com/cli/latest/reference/sts/assume-role.html\"> <code>assume-role</code> </a> in the <i>AWS CLI Reference.</i> </p>"
+          "documentation":"<p>You need to use this parameter only when you register one or more users using an assumed IAM role. You don't need to provide the session name for other scenarios, for example when you are registering an IAM user or an Amazon QuickSight user. You can register multiple users using the same IAM role if each user has a different session name. For more information on assuming IAM roles, see <a href=\"https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html\"> <code>assume-role</code> </a> in the <i>AWS CLI Reference.</i> </p>"
         },
         "AwsAccountId":{
           "shape":"AwsAccountId",
@@ -5870,6 +8148,10 @@
         "UserName":{
           "shape":"UserName",
           "documentation":"<p>The Amazon QuickSight user name that you want to create for the user you are registering.</p>"
+        },
+        "CustomPermissionsName":{
+          "shape":"RoleName",
+          "documentation":"<p>(Enterprise edition only) The name of the custom permissions profile that you want to assign to this user. Customized permissions allows you to control a user's access by restricting access the following operations:</p> <ul> <li> <p>Create and update data sources</p> </li> <li> <p>Create and update datasets</p> </li> <li> <p>Create and update email reports</p> </li> <li> <p>Subscribe to email reports</p> </li> </ul> <p>To add custom permissions to an existing user, use <code> <a>UpdateUser</a> </code> instead.</p> <p>A set of custom permissions includes any combination of these restrictions. Currently, you need to create the profile names for custom permission sets by using the QuickSight console. Then, you use the <code>RegisterUser</code> API operation to assign the named set of permissions to a QuickSight user. </p> <p>QuickSight custom permissions are applied through IAM policies. Therefore, they override the permissions typically granted by assigning QuickSight users to one of the default security cohorts in QuickSight (admin, author, reader).</p> <p>This feature is available only to QuickSight Enterprise edition subscriptions that use SAML 2.0-Based Federation for Single Sign-On (SSO).</p>"
         }
       }
     },
@@ -5878,7 +8160,7 @@
       "members":{
         "User":{
           "shape":"User",
-          "documentation":"<p>The user name.</p>"
+          "documentation":"<p>The user's user name.</p>"
         },
         "UserInvitationUrl":{
           "shape":"String",
@@ -5955,7 +8237,7 @@
         "Message":{"shape":"String"},
         "ResourceType":{
           "shape":"ExceptionResourceType",
-          "documentation":"<p>The AWS request ID for this request.</p>"
+          "documentation":"<p>The resource type for this request.</p>"
         },
         "RequestId":{
           "shape":"String",
@@ -5978,7 +8260,7 @@
         "Message":{"shape":"String"},
         "ResourceType":{
           "shape":"ExceptionResourceType",
-          "documentation":"<p>The AWS request ID for this request.</p>"
+          "documentation":"<p>The resource type for this request.</p>"
         },
         "RequestId":{
           "shape":"String",
@@ -5998,11 +8280,11 @@
       "members":{
         "Principal":{
           "shape":"Principal",
-          "documentation":"<p>The Amazon Resource Name (ARN) of an Amazon QuickSight user or group, or an IAM ARN. If you are using cross-account resource sharing, this is the IAM ARN of an account root. Otherwise, it is the ARN of a QuickSight user or group. .</p>"
+          "documentation":"<p>The Amazon Resource Name (ARN) of the principal. This can be one of the following:</p> <ul> <li> <p>The ARN of an Amazon QuickSight user, group, or namespace. (This is most common.)</p> </li> <li> <p>The ARN of an AWS account root: This is an IAM ARN rather than a QuickSight ARN. Use this option only to share resources (templates) across AWS accounts. (This is less common.) </p> </li> </ul>"
         },
         "Actions":{
           "shape":"ActionList",
-          "documentation":"<p>The action to grant or revoke permissions on, for example <code>\"quicksight:DescribeDashboard\"</code>.</p>"
+          "documentation":"<p>The IAM action to grant or revoke permissions on, for example <code>\"quicksight:DescribeDashboard\"</code>.</p>"
         }
       },
       "documentation":"<p>Permission for the resource.</p>"
@@ -6021,7 +8303,8 @@
         "CREATION_FAILED",
         "UPDATE_IN_PROGRESS",
         "UPDATE_SUCCESSFUL",
-        "UPDATE_FAILED"
+        "UPDATE_FAILED",
+        "DELETED"
       ]
     },
     "ResourceUnavailableException":{
@@ -6041,11 +8324,60 @@
       "error":{"httpStatusCode":503},
       "exception":true
     },
+    "RestoreAnalysisRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analysis.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis that you're restoring.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        }
+      }
+    },
+    "RestoreAnalysisResponse":{
+      "type":"structure",
+      "members":{
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the analysis that you're restoring.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis that you're restoring. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
     "RestrictiveResourceId":{
       "type":"string",
       "max":2048,
       "min":1,
       "pattern":"[\\w\\-]+"
+    },
+    "RoleName":{
+      "type":"string",
+      "max":64,
+      "min":1,
+      "pattern":"^[a-zA-Z0-9+=,.@_-]+$"
     },
     "RoleSessionName":{
       "type":"string",
@@ -6076,6 +8408,10 @@
         "PermissionPolicy"
       ],
       "members":{
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace associated with the row-level permissions dataset.</p>"
+        },
         "Arn":{
           "shape":"Arn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the permission dataset.</p>"
@@ -6137,6 +8473,106 @@
       },
       "documentation":"<p>A physical table type for as S3 data source.</p>"
     },
+    "SearchAnalysesRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "Filters"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analyses that you're searching for.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Filters":{
+          "shape":"AnalysisSearchFilterList",
+          "documentation":"<p>The structure for the search filters that you want to apply to your search. </p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request.</p>"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to return.</p>",
+          "box":true
+        }
+      }
+    },
+    "SearchAnalysesResponse":{
+      "type":"structure",
+      "members":{
+        "AnalysisSummaryList":{
+          "shape":"AnalysisSummaryList",
+          "documentation":"<p>Metadata describing the analyses that you searched for.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>A pagination token that can be used in a subsequent request. </p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "SearchDashboardsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "Filters"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the user whose dashboards you're searching for. </p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Filters":{
+          "shape":"DashboardSearchFilterList",
+          "documentation":"<p>The filters to apply to the search. Currently, you can search only by user name, for example, <code>\"Filters\": [ { \"Name\": \"QUICKSIGHT_USER\", \"Operator\": \"StringEquals\", \"Value\": \"arn:aws:quicksight:us-east-1:1:user/default/UserName1\" } ]</code> </p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p>The maximum number of results to be returned per request.</p>",
+          "box":true
+        }
+      }
+    },
+    "SearchDashboardsResponse":{
+      "type":"structure",
+      "members":{
+        "DashboardSummaryList":{
+          "shape":"DashboardSummaryList",
+          "documentation":"<p>The list of dashboards owned by the user specified in <code>Filters</code> in your request.</p>"
+        },
+        "NextToken":{
+          "shape":"String",
+          "documentation":"<p>The token for the next set of results, or null if there are no more results.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
     "ServiceNowParameters":{
       "type":"structure",
       "required":["SiteBaseUrl"],
@@ -6175,6 +8611,20 @@
         }
       },
       "documentation":"<p>Sheet controls option.</p>"
+    },
+    "SheetStyle":{
+      "type":"structure",
+      "members":{
+        "Tile":{
+          "shape":"TileStyle",
+          "documentation":"<p>The display options for tiles.</p>"
+        },
+        "TileLayout":{
+          "shape":"TileLayoutStyle",
+          "documentation":"<p>The layout options for tiles.</p>"
+        }
+      },
+      "documentation":"<p>The theme display options for sheets. </p>"
     },
     "SiteBaseUrl":{
       "type":"string",
@@ -6275,14 +8725,14 @@
       "members":{
         "Name":{
           "shape":"NonEmptyString",
-          "documentation":"<p>A display name for the dataset.</p>"
+          "documentation":"<p>A display name for a string parameter.</p>"
         },
         "Values":{
           "shape":"StringList",
-          "documentation":"<p>Values.</p>"
+          "documentation":"<p>The values of a string parameter.</p>"
         }
       },
-      "documentation":"<p>String parameter.</p>"
+      "documentation":"<p>A string parameter.</p>"
     },
     "StringParameterList":{
       "type":"list",
@@ -6408,7 +8858,7 @@
           "documentation":"<p>Time when this was created.</p>"
         }
       },
-      "documentation":"<p>A template object. A <i>template</i> is an entity in QuickSight that encapsulates the metadata required to create an analysis and that you can use to create a dashboard. A template adds a layer of abstraction by using placeholders to replace the dataset associated with the analysis. You can use templates to create dashboards by replacing dataset placeholders with datasets that follow the same schema that was used to create the source analysis and template.</p> <p>You can share templates across AWS accounts by allowing users in other AWS accounts to create a template or a dashboard from an existing template.</p>"
+      "documentation":"<p>A template object. A <i>template</i> is an entity in QuickSight that encapsulates the metadata required to create an analysis and that you can use to create a dashboard. A template adds a layer of abstraction by using placeholders to replace the dataset associated with an analysis. You can use templates to create dashboards by replacing dataset placeholders with datasets that follow the same schema that was used to create the source analysis and template.</p> <p>You can share templates across AWS accounts by allowing users in other AWS accounts to create a template or a dashboard from an existing template.</p>"
     },
     "TemplateAlias":{
       "type":"structure",
@@ -6455,8 +8905,10 @@
     "TemplateErrorType":{
       "type":"string",
       "enum":[
+        "SOURCE_NOT_FOUND",
         "DATA_SET_NOT_FOUND",
-        "INTERNAL_FAILURE"
+        "INTERNAL_FAILURE",
+        "ACCESS_DENIED"
       ]
     },
     "TemplateName":{
@@ -6552,11 +9004,11 @@
         },
         "Errors":{
           "shape":"TemplateErrorList",
-          "documentation":"<p>Errors associated with the template.</p>"
+          "documentation":"<p>Errors associated with this template version.</p>"
         },
         "VersionNumber":{
           "shape":"VersionNumber",
-          "documentation":"<p>The version number of the template.</p>"
+          "documentation":"<p>The version number of the template version.</p>"
         },
         "Status":{
           "shape":"ResourceStatus",
@@ -6564,7 +9016,7 @@
         },
         "DataSetConfigurations":{
           "shape":"DataSetConfigurationList",
-          "documentation":"<p>Schema of the dataset identified by the placeholder. The idea is that any dashboard created from the template should be bound to new datasets matching the same schema described through this API. .</p>"
+          "documentation":"<p>Schema of the dataset identified by the placeholder. Any dashboard created from this template should be bound to new datasets matching the same schema described through this API operation.</p>"
         },
         "Description":{
           "shape":"VersionDescription",
@@ -6572,7 +9024,11 @@
         },
         "SourceEntityArn":{
           "shape":"Arn",
-          "documentation":"<p>The Amazon Resource Name (ARN) of the analysis or template which was used to create this template.</p>"
+          "documentation":"<p>The Amazon Resource Name (ARN) of an analysis or template that was used to create this template.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the theme associated with this version of the template.</p>"
         }
       },
       "documentation":"<p>A version of a template.</p>"
@@ -6582,7 +9038,7 @@
       "members":{
         "Arn":{
           "shape":"Arn",
-          "documentation":"<p>The ARN of the template version.</p>"
+          "documentation":"<p>The Amazon Resource Name (ARN) of the template version.</p>"
         },
         "VersionNumber":{
           "shape":"VersionNumber",
@@ -6638,6 +9094,218 @@
         "SINGLE_QUOTE"
       ]
     },
+    "Theme":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme.</p>"
+        },
+        "Name":{
+          "shape":"ThemeName",
+          "documentation":"<p>The name that the user gives to the theme.</p>"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The identifier that the user gives to the theme.</p>"
+        },
+        "Version":{"shape":"ThemeVersion"},
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that the theme was created.</p>"
+        },
+        "LastUpdatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that the theme was last updated.</p>"
+        },
+        "Type":{
+          "shape":"ThemeType",
+          "documentation":"<p>The type of theme, based on how it was created. Valid values include: <code>QUICKSIGHT</code> and <code>CUSTOM</code>.</p>"
+        }
+      },
+      "documentation":"<p>Summary information about a theme.</p>"
+    },
+    "ThemeAlias":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme alias.</p>"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The display name of the theme alias.</p>"
+        },
+        "ThemeVersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number of the theme alias.</p>"
+        }
+      },
+      "documentation":"<p>An alias for a theme.</p>"
+    },
+    "ThemeAliasList":{
+      "type":"list",
+      "member":{"shape":"ThemeAlias"},
+      "max":100
+    },
+    "ThemeConfiguration":{
+      "type":"structure",
+      "members":{
+        "DataColorPalette":{
+          "shape":"DataColorPalette",
+          "documentation":"<p>Color properties that apply to chart data colors.</p>"
+        },
+        "UIColorPalette":{
+          "shape":"UIColorPalette",
+          "documentation":"<p>Color properties that apply to the UI and to charts, excluding the colors that apply to data. </p>"
+        },
+        "Sheet":{
+          "shape":"SheetStyle",
+          "documentation":"<p>Display options related to sheets.</p>"
+        }
+      },
+      "documentation":"<p>The theme configuration. This configuration contains all of the display properties for a theme.</p>"
+    },
+    "ThemeError":{
+      "type":"structure",
+      "members":{
+        "Type":{
+          "shape":"ThemeErrorType",
+          "documentation":"<p>The type of error.</p>"
+        },
+        "Message":{
+          "shape":"NonEmptyString",
+          "documentation":"<p>The error message.</p>"
+        }
+      },
+      "documentation":"<p>Theme error.</p>"
+    },
+    "ThemeErrorList":{
+      "type":"list",
+      "member":{"shape":"ThemeError"},
+      "min":1
+    },
+    "ThemeErrorType":{
+      "type":"string",
+      "enum":["INTERNAL_FAILURE"]
+    },
+    "ThemeName":{
+      "type":"string",
+      "max":2048,
+      "min":1
+    },
+    "ThemeSummary":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the resource.</p>"
+        },
+        "Name":{
+          "shape":"ThemeName",
+          "documentation":"<p>the display name for the theme.</p>"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the theme. This ID is unique per AWS Region for each AWS account.</p>"
+        },
+        "LatestVersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The latest version number for the theme. </p>"
+        },
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that this theme was created.</p>"
+        },
+        "LastUpdatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The last date and time that this theme was updated.</p>"
+        }
+      },
+      "documentation":"<p>The theme summary.</p>"
+    },
+    "ThemeSummaryList":{
+      "type":"list",
+      "member":{"shape":"ThemeSummary"},
+      "max":100
+    },
+    "ThemeType":{
+      "type":"string",
+      "enum":[
+        "QUICKSIGHT",
+        "CUSTOM",
+        "ALL"
+      ]
+    },
+    "ThemeVersion":{
+      "type":"structure",
+      "members":{
+        "VersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number of the theme.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the resource.</p>"
+        },
+        "Description":{
+          "shape":"VersionDescription",
+          "documentation":"<p>The description of the theme.</p>"
+        },
+        "BaseThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The Amazon QuickSight-defined ID of the theme that a custom theme inherits from. All themes initially inherit from a default QuickSight theme.</p>"
+        },
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that this theme version was created.</p>"
+        },
+        "Configuration":{
+          "shape":"ThemeConfiguration",
+          "documentation":"<p>The theme configuration, which contains all the theme display properties.</p>"
+        },
+        "Errors":{
+          "shape":"ThemeErrorList",
+          "documentation":"<p>Errors associated with the theme.</p>"
+        },
+        "Status":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The status of the theme version.</p>"
+        }
+      },
+      "documentation":"<p>A version of a theme.</p>"
+    },
+    "ThemeVersionSummary":{
+      "type":"structure",
+      "members":{
+        "VersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number of the theme version.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme version.</p>"
+        },
+        "Description":{
+          "shape":"VersionDescription",
+          "documentation":"<p>The description of the theme version.</p>"
+        },
+        "CreatedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time that this theme version was created.</p>"
+        },
+        "Status":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The status of the theme version.</p>"
+        }
+      },
+      "documentation":"<p>The theme version.</p>"
+    },
+    "ThemeVersionSummaryList":{
+      "type":"list",
+      "member":{"shape":"ThemeVersionSummary"},
+      "max":100
+    },
     "ThrottlingException":{
       "type":"structure",
       "members":{
@@ -6650,6 +9318,30 @@
       "documentation":"<p>Access is throttled.</p>",
       "error":{"httpStatusCode":429},
       "exception":true
+    },
+    "TileLayoutStyle":{
+      "type":"structure",
+      "members":{
+        "Gutter":{
+          "shape":"GutterStyle",
+          "documentation":"<p>The gutter settings that apply between tiles. </p>"
+        },
+        "Margin":{
+          "shape":"MarginStyle",
+          "documentation":"<p>The margin settings that apply around the outside edge of sheets.</p>"
+        }
+      },
+      "documentation":"<p>The display options for the layout of tiles on a sheet.</p>"
+    },
+    "TileStyle":{
+      "type":"structure",
+      "members":{
+        "Border":{
+          "shape":"BorderStyle",
+          "documentation":"<p>The border around a tile.</p>"
+        }
+      },
+      "documentation":"<p>Display options related to tiles on a sheet.</p>"
     },
     "Timestamp":{"type":"timestamp"},
     "TimestampList":{
@@ -6714,6 +9406,76 @@
       "type":"string",
       "max":32
     },
+    "UIColorPalette":{
+      "type":"structure",
+      "members":{
+        "PrimaryForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The color of text and other foreground elements that appear over the primary background regions, such as grid lines, borders, table banding, icons, and so on.</p>"
+        },
+        "PrimaryBackground":{
+          "shape":"HexColor",
+          "documentation":"<p>The background color that applies to visuals and other high emphasis UI.</p>"
+        },
+        "SecondaryForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any sheet title, sheet control text, or UI that appears over the secondary background.</p>"
+        },
+        "SecondaryBackground":{
+          "shape":"HexColor",
+          "documentation":"<p>The background color that applies to the sheet background and sheet controls.</p>"
+        },
+        "Accent":{
+          "shape":"HexColor",
+          "documentation":"<p>This color is that applies to selected states and buttons.</p>"
+        },
+        "AccentForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the accent color.</p>"
+        },
+        "Danger":{
+          "shape":"HexColor",
+          "documentation":"<p>The color that applies to error messages.</p>"
+        },
+        "DangerForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the error color.</p>"
+        },
+        "Warning":{
+          "shape":"HexColor",
+          "documentation":"<p>This color that applies to warning and informational messages.</p>"
+        },
+        "WarningForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the warning color.</p>"
+        },
+        "Success":{
+          "shape":"HexColor",
+          "documentation":"<p>The color that applies to success messages, for example the check mark for a successful download.</p>"
+        },
+        "SuccessForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the success color.</p>"
+        },
+        "Dimension":{
+          "shape":"HexColor",
+          "documentation":"<p>The color that applies to the names of fields that are identified as dimensions.</p>"
+        },
+        "DimensionForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the dimension color.</p>"
+        },
+        "Measure":{
+          "shape":"HexColor",
+          "documentation":"<p>The color that applies to the names of fields that are identified as measures.</p>"
+        },
+        "MeasureForeground":{
+          "shape":"HexColor",
+          "documentation":"<p>The foreground color that applies to any text or other elements that appear over the measure color.</p>"
+        }
+      },
+      "documentation":"<p>The theme colors that apply to UI and to charts, excluding data colors. The colors description is a hexidecimal color code that consists of six alphanumerical characters, prefixed with <code>#</code>, for example #37BFF5. For more information, see <a href=\"https://docs.aws.amazon.com/quicksight/latest/user/themes-in-quicksight.html\">Using Themes in Amazon QuickSight</a> in the <i>Amazon QuickSight User Guide.</i> </p>"
+    },
     "UnsupportedUserEditionException":{
       "type":"structure",
       "members":{
@@ -6759,6 +9521,214 @@
           "shape":"StatusCode",
           "documentation":"<p>The HTTP status of the request.</p>",
           "location":"statusCode"
+        }
+      }
+    },
+    "UpdateAccountCustomizationRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AccountCustomization"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to update QuickSight customizations for.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace that you want to update QuickSight customizations for.</p>",
+          "location":"querystring",
+          "locationName":"namespace"
+        },
+        "AccountCustomization":{
+          "shape":"AccountCustomization",
+          "documentation":"<p>The QuickSight customizations you're updating in the current AWS Region. </p>"
+        }
+      }
+    },
+    "UpdateAccountCustomizationResponse":{
+      "type":"structure",
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that you want to update QuickSight customizations for.</p>"
+        },
+        "Namespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The namespace associated with the customization that you're updating.</p>"
+        },
+        "AccountCustomization":{
+          "shape":"AccountCustomization",
+          "documentation":"<p>The QuickSight customizations you're updating in the current AWS Region. </p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "UpdateAccountSettingsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "DefaultNamespace"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID for the AWS account that contains the QuickSight settings that you want to list.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "DefaultNamespace":{
+          "shape":"Namespace",
+          "documentation":"<p>The default namespace for this AWS Account. Currently, the default is <code>default</code>. IAM users who register for the first time with QuickSight provide an email that becomes associated with the default namespace.</p>"
+        },
+        "NotificationEmail":{
+          "shape":"String",
+          "documentation":"<p>The email address that you want QuickSight to send notifications to regarding your AWS account or QuickSight subscription.</p>"
+        }
+      }
+    },
+    "UpdateAccountSettingsResponse":{
+      "type":"structure",
+      "members":{
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "UpdateAnalysisPermissionsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analysis whose permissions you're updating. You must be using the AWS account that the analysis is in.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis whose permissions you're updating. The ID is part of the analysis URL.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        },
+        "GrantPermissions":{
+          "shape":"UpdateResourcePermissionList",
+          "documentation":"<p>A structure that describes the permissions to add and the principal to add them to.</p>"
+        },
+        "RevokePermissions":{
+          "shape":"UpdateResourcePermissionList",
+          "documentation":"<p>A structure that describes the permissions to remove and the principal to remove them from.</p>"
+        }
+      }
+    },
+    "UpdateAnalysisPermissionsResponse":{
+      "type":"structure",
+      "members":{
+        "AnalysisArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the analysis that you updated.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis that you updated permissions for.</p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>A structure that describes the principals and the resource-level permissions on an analysis.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "UpdateAnalysisRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "AnalysisId",
+        "Name",
+        "SourceEntity"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the analysis that you're updating.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the analysis that you're updating. This ID displays in the URL of the analysis.</p>",
+          "location":"uri",
+          "locationName":"AnalysisId"
+        },
+        "Name":{
+          "shape":"AnalysisName",
+          "documentation":"<p>A descriptive name for the analysis that you're updating. This name displays for the analysis in the QuickSight console.</p>"
+        },
+        "Parameters":{
+          "shape":"Parameters",
+          "documentation":"<p>The parameter names and override values that you want to use. An analysis can have any parameter type, and some parameters might accept multiple values. </p>"
+        },
+        "SourceEntity":{
+          "shape":"AnalysisSourceEntity",
+          "documentation":"<p>A source entity to use for the analysis that you're updating. This metadata structure contains details that describe a source template and one or more datasets.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the theme to apply to the analysis that you're creating. To see the theme in the QuickSight console, make sure that you have access to it.</p>"
+        }
+      }
+    },
+    "UpdateAnalysisResponse":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The ARN of the analysis that you're updating.</p>"
+        },
+        "AnalysisId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID of the analysis.</p>"
+        },
+        "UpdateStatus":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The update status of the last update that was made to the analysis.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
         }
       }
     },
@@ -6894,11 +9864,11 @@
         },
         "SourceEntity":{
           "shape":"DashboardSourceEntity",
-          "documentation":"<p>The template or analysis from which the dashboard is created. The <code>SouceTemplate</code> entity accepts the Amazon Resource Name (ARN) of the template and also references to replacement datasets for the placeholders set when creating the template. The replacement datasets need to follow the same schema as the datasets for which placeholders were created when creating the template.</p>"
+          "documentation":"<p>The entity that you are using as a source when you update the dashboard. In <code>SourceEntity</code>, you specify the type of object you're using as source. You can only update a dashboard from a template, so you use a <code>SourceTemplate</code> entity. If you need to update a dashboard from an analysis, first convert the analysis to a template by using the <a>CreateTemplate</a> API operation. For <code>SourceTemplate</code>, specify the Amazon Resource Name (ARN) of the source template. The <code>SourceTemplate</code> ARN can contain any AWS Account and any QuickSight-supported AWS Region. </p> <p>Use the <code>DataSetReferences</code> entity within <code>SourceTemplate</code> to list the replacement datasets for the placeholders listed in the original. The schema in each dataset must match its placeholder. </p>"
         },
         "Parameters":{
           "shape":"Parameters",
-          "documentation":"<p>A structure that contains the parameters of the dashboard.</p>"
+          "documentation":"<p>A structure that contains the parameters of the dashboard. These are parameter overrides for a dashboard. A dashboard can have any type of parameters, and some parameters might accept multiple values.</p>"
         },
         "VersionDescription":{
           "shape":"VersionDescription",
@@ -6906,7 +9876,11 @@
         },
         "DashboardPublishOptions":{
           "shape":"DashboardPublishOptions",
-          "documentation":"<p>Options for publishing the dashboard when you create it:</p> <ul> <li> <p> <code>AvailabilityStatus</code> for <code>AdHocFilteringOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. When this is set to <code>DISABLED</code>, QuickSight disables the left filter pane on the published dashboard, which can be used for ad hoc (one-time) filtering. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>AvailabilityStatus</code> for <code>ExportToCSVOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. The visual option to export data to .csv format isn't enabled when this is set to <code>DISABLED</code>. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>VisibilityState</code> for <code>SheetControlsOption</code> - This visibility state can be either <code>COLLAPSED</code> or <code>EXPANDED</code>. The sheet controls pane is collapsed by default when set to true. This option is <code>COLLAPSED</code> by default. </p> </li> </ul>"
+          "documentation":"<p>Options for publishing the dashboard when you create it:</p> <ul> <li> <p> <code>AvailabilityStatus</code> for <code>AdHocFilteringOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. When this is set to <code>DISABLED</code>, QuickSight disables the left filter pane on the published dashboard, which can be used for ad hoc (one-time) filtering. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>AvailabilityStatus</code> for <code>ExportToCSVOption</code> - This status can be either <code>ENABLED</code> or <code>DISABLED</code>. The visual option to export data to .CSV format isn't enabled when this is set to <code>DISABLED</code>. This option is <code>ENABLED</code> by default. </p> </li> <li> <p> <code>VisibilityState</code> for <code>SheetControlsOption</code> - This visibility state can be either <code>COLLAPSED</code> or <code>EXPANDED</code>. This option is <code>COLLAPSED</code> by default. </p> </li> </ul>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme that is being used for this dashboard. If you add a value for this field, it overrides the value that was originally associated with the entity. The theme ARN must exist in the same AWS account where you create the dashboard.</p>"
         }
       }
     },
@@ -7314,8 +10288,7 @@
     "UpdateResourcePermissionList":{
       "type":"list",
       "member":{"shape":"ResourcePermission"},
-      "max":100,
-      "min":1
+      "max":100
     },
     "UpdateTemplateAliasRequest":{
       "type":"structure",
@@ -7445,7 +10418,7 @@
         },
         "SourceEntity":{
           "shape":"TemplateSourceEntity",
-          "documentation":"<p>The source QuickSight entity from which this template is being updated. You can currently update templates from an Analysis or another template.</p>"
+          "documentation":"<p>The entity that you are using as a source when you update the template. In <code>SourceEntity</code>, you specify the type of object you're using as source: <code>SourceTemplate</code> for a template or <code>SourceAnalysis</code> for an analysis. Both of these require an Amazon Resource Name (ARN). For <code>SourceTemplate</code>, specify the ARN of the source template. For <code>SourceAnalysis</code>, specify the ARN of the source analysis. The <code>SourceTemplate</code> ARN can contain any AWS Account and any QuickSight-supported AWS Region. </p> <p>Use the <code>DataSetReferences</code> entity within <code>SourceTemplate</code> or <code>SourceAnalysis</code> to list the replacement datasets for the placeholders listed in the original. The schema in each dataset must match its placeholder. </p>"
         },
         "VersionDescription":{
           "shape":"VersionDescription",
@@ -7475,6 +10448,180 @@
         "CreationStatus":{
           "shape":"ResourceStatus",
           "documentation":"<p>The creation status of the template.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "UpdateThemeAliasRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "AliasName",
+        "ThemeVersionNumber"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme alias that you're updating.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "AliasName":{
+          "shape":"AliasName",
+          "documentation":"<p>The name of the theme alias that you want to update.</p>",
+          "location":"uri",
+          "locationName":"AliasName"
+        },
+        "ThemeVersionNumber":{
+          "shape":"VersionNumber",
+          "documentation":"<p>The version number of the theme that the alias should reference.</p>"
+        }
+      }
+    },
+    "UpdateThemeAliasResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeAlias":{
+          "shape":"ThemeAlias",
+          "documentation":"<p>Information about the theme alias.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        }
+      }
+    },
+    "UpdateThemePermissionsRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "GrantPermissions":{
+          "shape":"UpdateResourcePermissionList",
+          "documentation":"<p>A list of resource permissions to be granted for the theme.</p>"
+        },
+        "RevokePermissions":{
+          "shape":"UpdateResourcePermissionList",
+          "documentation":"<p>A list of resource permissions to be revoked from the theme.</p>"
+        }
+      }
+    },
+    "UpdateThemePermissionsResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>"
+        },
+        "ThemeArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the theme.</p>"
+        },
+        "Permissions":{
+          "shape":"ResourcePermissionList",
+          "documentation":"<p>The resulting list of resource permissions for the theme.</p>"
+        },
+        "RequestId":{
+          "shape":"String",
+          "documentation":"<p>The AWS request ID for this operation.</p>"
+        },
+        "Status":{
+          "shape":"StatusCode",
+          "documentation":"<p>The HTTP status of the request.</p>",
+          "location":"statusCode"
+        }
+      }
+    },
+    "UpdateThemeRequest":{
+      "type":"structure",
+      "required":[
+        "AwsAccountId",
+        "ThemeId",
+        "BaseThemeId"
+      ],
+      "members":{
+        "AwsAccountId":{
+          "shape":"AwsAccountId",
+          "documentation":"<p>The ID of the AWS account that contains the theme that you're updating.</p>",
+          "location":"uri",
+          "locationName":"AwsAccountId"
+        },
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>",
+          "location":"uri",
+          "locationName":"ThemeId"
+        },
+        "Name":{
+          "shape":"ThemeName",
+          "documentation":"<p>The name for the theme.</p>"
+        },
+        "BaseThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The theme ID, defined by Amazon QuickSight, that a custom theme inherits from. All themes initially inherit from a default QuickSight theme.</p>"
+        },
+        "VersionDescription":{
+          "shape":"VersionDescription",
+          "documentation":"<p>A description of the theme version that you're updating Every time that you call <code>UpdateTheme</code>, you create a new version of the theme. Each version of the theme maintains a description of the version in <code>VersionDescription</code>.</p>"
+        },
+        "Configuration":{
+          "shape":"ThemeConfiguration",
+          "documentation":"<p>The theme configuration, which contains the theme display properties.</p>"
+        }
+      }
+    },
+    "UpdateThemeResponse":{
+      "type":"structure",
+      "members":{
+        "ThemeId":{
+          "shape":"RestrictiveResourceId",
+          "documentation":"<p>The ID for the theme.</p>"
+        },
+        "Arn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the theme.</p>"
+        },
+        "VersionArn":{
+          "shape":"Arn",
+          "documentation":"<p>The Amazon Resource Name (ARN) for the new version of the theme.</p>"
+        },
+        "CreationStatus":{
+          "shape":"ResourceStatus",
+          "documentation":"<p>The creation status of the theme.</p>"
         },
         "Status":{
           "shape":"StatusCode",
@@ -7521,7 +10668,15 @@
         },
         "Role":{
           "shape":"UserRole",
-          "documentation":"<p>The Amazon QuickSight role of the user. The user role can be one of the following:</p> <ul> <li> <p> <code>READER</code>: A user who has read-only access to dashboards.</p> </li> <li> <p> <code>AUTHOR</code>: A user who can create data sources, datasets, analyses, and dashboards.</p> </li> <li> <p> <code>ADMIN</code>: A user who is an author, who can also manage Amazon QuickSight settings.</p> </li> </ul>"
+          "documentation":"<p>The Amazon QuickSight role of the user. The role can be one of the following default security cohorts:</p> <ul> <li> <p> <code>READER</code>: A user who has read-only access to dashboards.</p> </li> <li> <p> <code>AUTHOR</code>: A user who can create data sources, datasets, analyses, and dashboards.</p> </li> <li> <p> <code>ADMIN</code>: A user who is an author, who can also manage Amazon QuickSight settings.</p> </li> </ul> <p>The name of the QuickSight role is invisible to the user except for the console screens dealing with permissions.</p>"
+        },
+        "CustomPermissionsName":{
+          "shape":"RoleName",
+          "documentation":"<p>(Enterprise edition only) The name of the custom permissions profile that you want to assign to this user. Customized permissions allows you to control a user's access by restricting access the following operations:</p> <ul> <li> <p>Create and update data sources</p> </li> <li> <p>Create and update datasets</p> </li> <li> <p>Create and update email reports</p> </li> <li> <p>Subscribe to email reports</p> </li> </ul> <p>A set of custom permissions includes any combination of these restrictions. Currently, you need to create the profile names for custom permission sets by using the QuickSight console. Then, you use the <code>RegisterUser</code> API operation to assign the named set of permissions to a QuickSight user. </p> <p>QuickSight custom permissions are applied through IAM policies. Therefore, they override the permissions typically granted by assigning QuickSight users to one of the default security cohorts in QuickSight (admin, author, reader).</p> <p>This feature is available only to QuickSight Enterprise edition subscriptions that use SAML 2.0-Based Federation for Single Sign-On (SSO).</p>"
+        },
+        "UnapplyCustomPermissions":{
+          "shape":"Boolean",
+          "documentation":"<p>A flag that you use to indicate that you want to remove all custom permissions from this user. Using this parameter resets the user to the state it was in before a custom permissions profile was applied. This parameter defaults to NULL and it doesn't accept any other value.</p>"
         }
       }
     },
@@ -7601,9 +10756,13 @@
         "PrincipalId":{
           "shape":"String",
           "documentation":"<p>The principal ID of the user.</p>"
+        },
+        "CustomPermissionsName":{
+          "shape":"RoleName",
+          "documentation":"<p>The custom permissions profile associated with this user.</p>"
         }
       },
-      "documentation":"<p>A registered user of Amazon QuickSight. Currently, an Amazon QuickSight subscription can't contain more than 20 million users.</p>"
+      "documentation":"<p>A registered user of Amazon QuickSight. </p>"
     },
     "UserList":{
       "type":"list",

@@ -18,6 +18,8 @@ from nose.tools import assert_equal, assert_raises
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
 
+from tests import BaseSessionTest, ClientHTTPStubber
+
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
 # a bug in python2.6 prevents subjectAltNames from being parsed
@@ -500,3 +502,58 @@ def test_non_partition_endpoint_requires_region():
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
     assert_raises(NoRegionError, resolver.construct_endpoint, 'ec2')
+
+
+class TestEndpointResolution(BaseSessionTest):
+
+    def setUp(self):
+        super(TestEndpointResolution, self).setUp()
+        self.xml_response = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n\n'
+            b'<ListRolesResponse '
+            b'xmlns="https://iam.amazonaws.com/doc/2010-05-08/">\n'
+            b'<ListRolesResult>\n</ListRolesResult>'
+            b'</ListRolesResponse>'
+        )
+
+    def create_stubbed_client(self, service_name, region_name, **kwargs):
+        client = self.session.create_client(service_name, region_name, **kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        return client, http_stubber
+
+    def test_regionalized_client_endpoint_resolution(self):
+        client, stubber = self.create_stubbed_client('s3', 'us-east-2')
+        stubber.add_response()
+        client.list_buckets()
+        self.assertEquals(
+            stubber.requests[0].url,
+            'https://s3.us-east-2.amazonaws.com/'
+        )
+
+    def test_regionalized_client_with_unknown_region(self):
+        client, stubber = self.create_stubbed_client('s3', 'not-real')
+        stubber.add_response()
+        client.list_buckets()
+        # Validate we don't fall back to partition endpoint for
+        # regionalized services.
+        self.assertEquals(
+            stubber.requests[0].url,
+            'https://s3.not-real.amazonaws.com/'
+        )
+
+    def test_unregionalized_client_endpoint_resolution(self):
+        client, stubber = self.create_stubbed_client('iam', 'us-west-2')
+        stubber.add_response(body=self.xml_response)
+        client.list_roles()
+        self.assertTrue(
+            stubber.requests[0].url.startswith('https://iam.amazonaws.com/')
+        )
+
+    def test_unregionalized_client_with_unknown_region(self):
+        client, stubber = self.create_stubbed_client('iam', 'not-real')
+        stubber.add_response(body=self.xml_response)
+        client.list_roles()
+        self.assertTrue(
+            stubber.requests[0].url.startswith('https://iam.amazonaws.com/')
+        )

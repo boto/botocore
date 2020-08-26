@@ -26,6 +26,7 @@ from botocore.exceptions import CredentialRetrievalError
 
 from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
 from tests import temporary_file, StubbedSession, SessionHTTPStubber
+from botocore import UNSIGNED
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
@@ -33,10 +34,13 @@ from botocore.credentials import AssumeRoleProvider, ProfileProviderBuilder
 from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
 from botocore.credentials import create_credential_resolver
+from botocore.credentials import JSONFileCache
+from botocore.credentials import SSOProvider
+from botocore.config import Config
 from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
 from botocore.stub import Stubber
-from botocore.awsrequest import AWSResponse
+from botocore.utils import datetime2timestamp
 
 
 class TestCredentialRefreshRaces(unittest.TestCase):
@@ -245,7 +249,10 @@ class TestAssumeRole(BaseAssumeRoleTest):
                 self.env_provider, self.container_provider,
                 self.metadata_provider
             ]),
-            profile_provider_builder=ProfileProviderBuilder(session),
+            profile_provider_builder=ProfileProviderBuilder(
+                session,
+                sso_token_cache=JSONFileCache(self.tempdir),
+            ),
         )
         stubber = session.stub('sts')
         stubber.activate()
@@ -539,6 +546,65 @@ class TestAssumeRole(BaseAssumeRoleTest):
         # a configuration error.
         with self.assertRaises(InvalidConfigError):
             session.get_credentials()
+
+    def test_sso_source_profile(self):
+        token_cache_key = 'f395038c92f1828cbb3991d2d6152d326b895606'
+        cached_token = {
+            'accessToken': 'a.token',
+            'expiresAt': self.some_future_time(),
+        }
+        temp_cache = JSONFileCache(self.tempdir)
+        temp_cache[token_cache_key] = cached_token
+
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n'
+            '[profile B]\n'
+            'sso_region = us-east-1\n'
+            'sso_start_url = https://test.url/start\n'
+            'sso_role_name = SSORole\n'
+            'sso_account_id = 1234567890\n'
+        )
+        self.write_config(config)
+
+        session, sts_stubber = self.create_session(profile='A')
+        client_config = Config(
+            region_name='us-east-1',
+            signature_version=UNSIGNED,
+        )
+        sso_stubber = session.stub('sso', config=client_config)
+        sso_stubber.activate()
+        # The expiration needs to be in milliseconds
+        expiration = datetime2timestamp(self.some_future_time()) * 1000
+        sso_role_creds = self.create_random_credentials()
+        sso_role_response = {
+            'roleCredentials': {
+                'accessKeyId': sso_role_creds.access_key,
+                'secretAccessKey': sso_role_creds.secret_key,
+                'sessionToken': sso_role_creds.token,
+                'expiration': int(expiration),
+            }
+        }
+        sso_stubber.add_response('get_role_credentials', sso_role_response)
+
+        expected_creds = self.create_random_credentials()
+        assume_role_response = self.create_assume_role_response(expected_creds)
+        sts_stubber.add_response('assume_role', assume_role_response)
+
+        actual_creds = session.get_credentials()
+        self.assert_creds_equal(actual_creds, expected_creds)
+        sts_stubber.assert_no_pending_responses()
+        # Assert that the client was created with the credentials from the
+        # SSO get role credentials response
+        self.assertEqual(self.mock_client_creator.call_count, 1)
+        _, kwargs = self.mock_client_creator.call_args_list[0]
+        expected_kwargs = {
+            'aws_access_key_id': sso_role_creds.access_key,
+            'aws_secret_access_key': sso_role_creds.secret_key,
+            'aws_session_token': sso_role_creds.token,
+        }
+        self.assertEqual(kwargs, expected_kwargs)
 
     def test_web_identity_credential_source_ignores_env_vars(self):
         token_path = os.path.join(self.tempdir, 'token')

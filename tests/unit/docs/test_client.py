@@ -12,12 +12,24 @@
 # language governing permissions and limitations under the License.
 from tests.unit.docs import BaseDocsTest
 from botocore.docs.client import ClientDocumenter
+from botocore.docs.client import ClientExceptionsDocumenter
 
 
 class TestClientDocumenter(BaseDocsTest):
     def setUp(self):
         super(TestClientDocumenter, self).setUp()
+        exception_shape = {
+            'SomeException': {
+                'exception': True,
+                'type': 'structure',
+                'members': {
+                    'Message': {'shape': 'String'}
+                },
+            }
+        }
+        self.add_shape(exception_shape)
         self.add_shape_to_params('Biz', 'String')
+        self.add_shape_to_errors('SomeException')
         self.setup_client()
         self.client_documenter = ClientDocumenter(self.client)
 
@@ -55,5 +67,64 @@ class TestClientDocumenter(BaseDocsTest):
             '        }',
             '      **Response Structure**',
             '      - *(dict) --*',
-            '        - **Biz** *(string) --*'
+            '        - **Biz** *(string) --*',
+            '**Exceptions**',
+            '*     :py:class:`MyService.Client.exceptions.SomeException`',
+        ])
+
+
+class TestClientExceptionsDocumenter(BaseDocsTest):
+    def setup_documenter(self):
+        self.setup_client()
+        self.exceptions_documenter = ClientExceptionsDocumenter(self.client)
+
+    def test_no_modeled_exceptions(self):
+        self.setup_documenter()
+        self.exceptions_documenter.document_exceptions(self.doc_structure)
+        self.assert_contains_lines_in_order([
+            '=================',
+            'Client Exceptions',
+            '=================',
+            'Client exceptions are available',
+            'This client has no modeled exception classes.',
+        ])
+
+    def test_modeled_exceptions(self):
+        exception_shape = {
+            'SomeException': {
+                'exception': True,
+                'type': 'structure',
+                'members': {
+                    'Message': {'shape': 'String'}
+                },
+            }
+        }
+        self.add_shape(exception_shape)
+        self.setup_documenter()
+        self.exceptions_documenter.document_exceptions(self.doc_structure)
+        self.assert_contains_lines_in_order([
+            '=================',
+            'Client Exceptions',
+            '=================',
+            'Client exceptions are available',
+            'The available client exceptions are:',
+            '* :py:class:`MyService.Client.exceptions.SomeException`',
+            '.. py:class:: MyService.Client.exceptions.SomeException',
+            '**Example** ::',
+            'except client.exceptions.SomeException as e:',
+            '.. py:attribute:: response',
+            '**Syntax**',
+            '{',
+            "'Message': 'string',",
+            "'Error': {",
+            "'Code': 'string',",
+            "'Message': 'string'",
+            '}',
+            '}',
+            '**Structure**',
+            '- *(dict) --*',
+            '- **Message** *(string) --* ',
+            '- **Error** *(dict) --* ',
+            '- **Code** *(string) --* ',
+            '- **Message** *(string) --* ',
         ])

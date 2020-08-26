@@ -191,6 +191,12 @@ class BaseDocsTest(unittest.TestCase):
             required_list.append(param_name)
             params_shape['required'] = required_list
 
+    def add_shape_to_errors(self, shape_name):
+        operation = self.json_model['operations']['SampleOperation']
+        errors = operation.get('errors', [])
+        errors.append({'shape': shape_name})
+        operation['errors'] = errors
+
     def assert_contains_line(self, line):
         contents = self.doc_structure.flush_structure().decode('utf-8')
         self.assertIn(line, contents)

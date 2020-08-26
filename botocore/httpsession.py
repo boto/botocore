@@ -97,12 +97,13 @@ class ProxyConfiguration(object):
         self._proxies = proxies
 
     def proxy_url_for(self, url):
-        """Retrirves the corresponding proxy url for a given url. """
+        """Retrieves the corresponding proxy url for a given url. """
         parsed_url = urlparse(url)
         proxy = self._proxies.get(parsed_url.scheme)
         if proxy:
             proxy = self._fix_proxy_url(proxy)
         return proxy
+
 
     def proxy_headers_for(self, url, proxy_url):
         """Retrirves the corresponding proxy headers for a given proxy url. """
