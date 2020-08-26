@@ -16,5 +16,4 @@ def run(command):
     return check_call(command, shell=True)
 
 
-run('nosetests --with-xunit --cover-erase --with-coverage '
-    '--cover-package botocore --cover-xml -v integration')
+run('pytest -v --junit-xml=test_results.xml --cov=botocore --cov-report=xml:coverage.xml -v integration/')

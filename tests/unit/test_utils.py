@@ -15,7 +15,7 @@ from tests import RawResponse
 from dateutil.tz import tzutc, tzoffset
 import datetime
 import copy
-import mock
+from tests import mock
 
 import botocore
 from botocore import xform_name

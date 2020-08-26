@@ -1,6 +1,6 @@
 from tests import unittest
 
-import mock
+from tests import mock
 
 from botocore.retries import standard
 from botocore.retries import quota

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 
-import mock
+from tests import mock
 
 from tests import ClientHTTPStubber
 from botocore.session import Session

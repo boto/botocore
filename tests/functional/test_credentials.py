@@ -15,7 +15,7 @@ import threading
 import os
 import math
 import time
-import mock
+from tests import mock
 import tempfile
 import shutil
 from datetime import datetime, timedelta

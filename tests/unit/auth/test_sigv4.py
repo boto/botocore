@@ -27,7 +27,7 @@ import io
 import datetime
 from botocore.compat import six
 
-import mock
+from tests import mock
 
 import botocore.auth
 from botocore.awsrequest import AWSRequest

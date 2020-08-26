@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
-import mock
+from tests import mock
 
 import botocore
 import botocore.session as session

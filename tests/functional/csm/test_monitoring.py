@@ -18,7 +18,7 @@ import os
 import socket
 import threading
 
-import mock
+from tests import mock
 
 from tests import temporary_file
 from tests import ClientHTTPStubber

@@ -15,6 +15,4 @@ os.chdir(os.path.join(REPO_ROOT, 'tests'))
 def run(command):
     return check_call(command, shell=True)
 
-
-run('nosetests --with-coverage --cover-erase --cover-package botocore '
-    '--with-xunit --cover-xml unit/ functional/')
+run('pytest -v --junit-xml=test_results.xml --cov=botocore --cov-report=xml:coverage.xml unit/ functional/')

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import create_session, unittest
 
-import mock
+from tests import mock
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError

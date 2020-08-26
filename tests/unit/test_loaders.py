@@ -22,7 +22,7 @@
 import os
 import contextlib
 import copy
-import mock
+from tests import mock
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import JSONFileLoader

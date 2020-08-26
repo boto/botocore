@@ -13,7 +13,10 @@
 
 import os
 import sys
-import mock
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 import time
 import random
 import shutil

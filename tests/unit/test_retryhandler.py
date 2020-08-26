@@ -15,7 +15,7 @@
 
 from tests import unittest
 
-import mock
+from tests import mock
 
 from botocore import retryhandler
 from botocore.exceptions import (

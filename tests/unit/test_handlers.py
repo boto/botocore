@@ -14,7 +14,7 @@
 from tests import unittest, BaseSessionTest
 
 import base64
-import mock
+from tests import mock
 import copy
 import os
 import json
