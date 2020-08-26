@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 
+from botocore.compat import six
 from botocore.exceptions import ClientError
 from botocore.errorfactory import BaseClientExceptions
 from botocore.errorfactory import ClientExceptionsFactory
@@ -39,7 +40,7 @@ class TestBaseClientExceptions(unittest.TestCase):
     def test_gettattr_message(self):
         exception_cls = type('MyException', (ClientError,), {})
         self.code_to_exception['MyExceptionCode'] = exception_cls
-        with self.assertRaisesRegexp(
+        with six.assertRaisesRegex(self,
                 AttributeError, 'Valid exceptions are: MyException'):
             self.exceptions.SomeUnmodeledError
 

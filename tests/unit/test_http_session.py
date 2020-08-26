@@ -1,8 +1,10 @@
 import socket
 
-from mock import patch, Mock, ANY
+try:
+    from mock import patch, Mock, ANY
+except ImportError:
+    from unittest.mock import patch, Mock, ANY
 from tests import unittest
-from nose.tools import raises
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
@@ -250,15 +252,15 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         session.send(self.request.prepare())
 
-    @raises(EndpointConnectionError)
     def test_catches_new_connection_error(self):
-        error = NewConnectionError(None, None)
-        self.make_request_with_error(error)
+        with self.assertRaises(EndpointConnectionError):
+            error = NewConnectionError(None, None)
+            self.make_request_with_error(error)
 
-    @raises(ConnectionClosedError)
     def test_catches_bad_status_line(self):
-        error = ProtocolError(None)
-        self.make_request_with_error(error)
+        with self.assertRaises(ConnectionClosedError):
+            error = ProtocolError(None)
+            self.make_request_with_error(error)
 
     def test_aws_connection_classes_are_used(self):
         session = URLLib3Session()

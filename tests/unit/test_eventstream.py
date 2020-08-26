@@ -12,8 +12,10 @@
 # language governing permissions and limitations under the License.
 """Unit tests for the binary event stream decoder. """
 
-from mock import Mock
-from nose.tools import assert_equal, raises
+try:
+    from mock import Mock
+except ImportError:
+    from unittest.mock import Mock
 
 from botocore.parsers import EventStreamXMLParser
 from botocore.eventstream import (
@@ -240,18 +242,12 @@ NEGATIVE_CASES = [
 
 def assert_message_equal(message_a, message_b):
     """Asserts all fields for two messages are equal. """
-    assert_equal(
-        message_a.prelude.total_length,
-        message_b.prelude.total_length
-    )
-    assert_equal(
-        message_a.prelude.headers_length,
-        message_b.prelude.headers_length
-    )
-    assert_equal(message_a.prelude.crc, message_b.prelude.crc)
-    assert_equal(message_a.headers, message_b.headers)
-    assert_equal(message_a.payload, message_b.payload)
-    assert_equal(message_a.crc, message_b.crc)
+    assert message_a.prelude.total_length == message_b.prelude.total_length
+    assert message_a.prelude.headers_length == message_b.prelude.headers_length
+    assert message_a.prelude.crc == message_b.prelude.crc
+    assert message_a.headers == message_b.headers
+    assert message_a.payload == message_b.payload
+    assert message_a.crc == message_b.crc
 
 
 def test_partial_message():
@@ -262,7 +258,7 @@ def test_partial_message():
     mid_point = 15
     event_buffer.add_data(data[:mid_point])
     messages = list(event_buffer)
-    assert_equal(messages, [])
+    assert messages == []
     event_buffer.add_data(data[mid_point:len(data)])
     for message in event_buffer:
         assert_message_equal(message, EMPTY_MESSAGE[1])
@@ -280,7 +276,7 @@ def check_message_decodes(encoded, decoded):
 def test_positive_cases():
     """Test that all positive cases decode how we expect. """
     for (encoded, decoded) in POSITIVE_CASES:
-        yield check_message_decodes, encoded, decoded
+        check_message_decodes(encoded, decoded)
 
 
 def test_all_positive_cases():
@@ -301,8 +297,13 @@ def test_all_positive_cases():
 def test_negative_cases():
     """Test that all negative cases raise the expected exception. """
     for (encoded, exception) in NEGATIVE_CASES:
-        test_function = raises(exception)(check_message_decodes)
-        yield test_function, encoded, None
+        try:
+            check_message_decodes(encoded, None)
+        except exception:
+            pass
+        else:
+            raise AssertionError(
+                'Expected exception {!s} has not been raised.'.format(exception))
 
 
 def test_header_parser():
@@ -329,87 +330,87 @@ def test_header_parser():
 
     parser = EventStreamHeaderParser()
     headers = parser.parse(headers_data)
-    assert_equal(headers, expected_headers)
+    assert headers == expected_headers
 
 
 def test_message_prelude_properties():
     """Test that calculated properties from the payload are correct. """
     # Total length: 40, Headers Length: 15, random crc
     prelude = MessagePrelude(40, 15, 0x00000000)
-    assert_equal(prelude.payload_length, 9)
-    assert_equal(prelude.headers_end, 27)
-    assert_equal(prelude.payload_end, 36)
+    assert prelude.payload_length == 9
+    assert prelude.headers_end == 27
+    assert prelude.payload_end == 36
 
 
 def test_message_to_response_dict():
     response_dict = PAYLOAD_ONE_STR_HEADER[1].to_response_dict()
-    assert_equal(response_dict['status_code'], 200)
+    assert response_dict['status_code'] == 200
     expected_headers = {'content-type': 'application/json'}
-    assert_equal(response_dict['headers'], expected_headers)
-    assert_equal(response_dict['body'], b"{'foo':'bar'}")
+    assert response_dict['headers'] == expected_headers
+    assert response_dict['body'] == b"{'foo':'bar'}"
 
 
 def test_message_to_response_dict_error():
     response_dict = ERROR_EVENT_MESSAGE[1].to_response_dict()
-    assert_equal(response_dict['status_code'], 400)
+    assert response_dict['status_code'] == 400
     headers = {
         ':message-type': 'error',
         ':error-code': 'code',
         ':error-message': 'message',
     }
-    assert_equal(response_dict['headers'], headers)
-    assert_equal(response_dict['body'], b'')
+    assert response_dict['headers'] == headers
+    assert response_dict['body'] == b''
 
 
 def test_unpack_uint8():
     (value, bytes_consumed) = DecodeUtils.unpack_uint8(b'\xDE')
-    assert_equal(bytes_consumed, 1)
-    assert_equal(value, 0xDE)
+    assert bytes_consumed == 1
+    assert value == 0xDE
 
 
 def test_unpack_uint32():
     (value, bytes_consumed) = DecodeUtils.unpack_uint32(b'\xDE\xAD\xBE\xEF')
-    assert_equal(bytes_consumed, 4)
-    assert_equal(value, 0xDEADBEEF)
+    assert bytes_consumed == 4
+    assert value == 0xDEADBEEF
 
 
 def test_unpack_int8():
     (value, bytes_consumed) = DecodeUtils.unpack_int8(b'\xFE')
-    assert_equal(bytes_consumed, 1)
-    assert_equal(value, -2)
+    assert bytes_consumed == 1
+    assert value == -2
 
 
 def test_unpack_int16():
     (value, bytes_consumed) = DecodeUtils.unpack_int16(b'\xFF\xFE')
-    assert_equal(bytes_consumed, 2)
-    assert_equal(value, -2)
+    assert bytes_consumed == 2
+    assert value == -2
 
 
 def test_unpack_int32():
     (value, bytes_consumed) = DecodeUtils.unpack_int32(b'\xFF\xFF\xFF\xFE')
-    assert_equal(bytes_consumed, 4)
-    assert_equal(value, -2)
+    assert bytes_consumed == 4
+    assert value == -2
 
 
 def test_unpack_int64():
     test_bytes = b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE'
     (value, bytes_consumed) = DecodeUtils.unpack_int64(test_bytes)
-    assert_equal(bytes_consumed, 8)
-    assert_equal(value, -2)
+    assert bytes_consumed == 8
+    assert value == -2
 
 
 def test_unpack_array_short():
     test_bytes = b'\x00\x10application/json'
     (value, bytes_consumed) = DecodeUtils.unpack_byte_array(test_bytes)
-    assert_equal(bytes_consumed, 18)
-    assert_equal(value, b'application/json')
+    assert bytes_consumed == 18
+    assert value == b'application/json'
 
 
 def test_unpack_byte_array_int():
     (value, array_bytes_consumed) = DecodeUtils.unpack_byte_array(
         b'\x00\x00\x00\x10application/json', length_byte_size=4)
-    assert_equal(array_bytes_consumed, 20)
-    assert_equal(value, b'application/json')
+    assert array_bytes_consumed == 20
+    assert value == b'application/json'
 
 
 def test_unpack_utf8_string():
@@ -417,18 +418,19 @@ def test_unpack_utf8_string():
     utf8_string = b'\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
     encoded = length + utf8_string
     (value, bytes_consumed) = DecodeUtils.unpack_utf8_string(encoded)
-    assert_equal(bytes_consumed, 11)
-    assert_equal(value, utf8_string.decode('utf-8'))
+    assert bytes_consumed == 11
+    assert value == utf8_string.decode('utf-8')
 
 
 def test_unpack_prelude():
     data = b'\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03'
     prelude = DecodeUtils.unpack_prelude(data)
-    assert_equal(prelude, ((1, 2, 3), 12))
+    assert prelude == ((1, 2, 3), 12)
 
 
 def create_mock_raw_stream(*data):
     raw_stream = Mock()
+
     def generator():
         for chunk in data:
             yield chunk
@@ -445,7 +447,7 @@ def test_event_stream_wrapper_iteration():
     output_shape = Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     events = list(event_stream)
-    assert_equal(len(events), 1)
+    assert len(events) == 1
 
     response_dict = {
         'headers': {'event-id': 0x0000a00c},
@@ -455,14 +457,19 @@ def test_event_stream_wrapper_iteration():
     parser.parse.assert_called_with(response_dict, output_shape)
 
 
-@raises(EventStreamError)
 def test_eventstream_wrapper_iteration_error():
-    raw_stream = create_mock_raw_stream(ERROR_EVENT_MESSAGE[0])
-    parser = Mock(spec=EventStreamXMLParser)
-    parser.parse.return_value = {}
-    output_shape = Mock()
-    event_stream = EventStream(raw_stream, output_shape, parser, '')
-    list(event_stream)
+    try:
+        raw_stream = create_mock_raw_stream(ERROR_EVENT_MESSAGE[0])
+        parser = Mock(spec=EventStreamXMLParser)
+        parser.parse.return_value = {}
+        output_shape = Mock()
+        event_stream = EventStream(raw_stream, output_shape, parser, '')
+        list(event_stream)
+    except EventStreamError:
+        pass
+    else:
+        raise AssertionError(
+            'Expected exception EventStreamError has not been raised.')
 
 
 def test_event_stream_wrapper_close():
@@ -492,22 +499,32 @@ def test_event_stream_initial_response():
     assert event.payload == payload
 
 
-@raises(NoInitialResponseError)
 def test_event_stream_initial_response_wrong_type():
-    raw_stream = create_mock_raw_stream(
-        b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00",
-        b"\x00\xa0\x0c{'foo':'bar'}\xd3\x89\x02\x85",
-    )
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
-    event_stream = EventStream(raw_stream, output_shape, parser, '')
-    event_stream.get_initial_response()
+    try:
+        raw_stream = create_mock_raw_stream(
+            b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00",
+            b"\x00\xa0\x0c{'foo':'bar'}\xd3\x89\x02\x85",
+        )
+        parser = Mock(spec=EventStreamXMLParser)
+        output_shape = Mock()
+        event_stream = EventStream(raw_stream, output_shape, parser, '')
+        event_stream.get_initial_response()
+    except NoInitialResponseError:
+        pass
+    else:
+        raise AssertionError(
+            'Expected exception NoInitialResponseError has not been raised.')
 
 
-@raises(NoInitialResponseError)
 def test_event_stream_initial_response_no_event():
-    raw_stream = create_mock_raw_stream(b'')
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
-    event_stream = EventStream(raw_stream, output_shape, parser, '')
-    event_stream.get_initial_response()
+    try:
+        raw_stream = create_mock_raw_stream(b'')
+        parser = Mock(spec=EventStreamXMLParser)
+        output_shape = Mock()
+        event_stream = EventStream(raw_stream, output_shape, parser, '')
+        event_stream.get_initial_response()
+    except NoInitialResponseError:
+        pass
+    else:
+        raise AssertionError(
+            'Expected exception NoInitialResponseError has not been raised.')

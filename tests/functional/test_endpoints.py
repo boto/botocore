@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equal
 from botocore.session import get_session
 
 
@@ -134,9 +133,7 @@ def test_endpoint_matches_service():
         # prefix.
         endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(endpoint_prefix,
                                                        endpoint_prefix)
-        yield (_assert_known_endpoint_prefix,
-               endpoint_prefix,
-               known_endpoint_prefixes)
+        _assert_known_endpoint_prefix(endpoint_prefix, known_endpoint_prefixes)
 
 
 def _assert_known_endpoint_prefix(endpoint_prefix, known_endpoint_prefixes):
@@ -156,7 +153,7 @@ def test_service_name_matches_endpoint_prefix():
     services = loader.list_available_services('service-2')
 
     for service in services:
-        yield _assert_service_name_matches_endpoint_prefix, session, service
+        _assert_service_name_matches_endpoint_prefix(session, service)
 
 
 def _assert_service_name_matches_endpoint_prefix(session, service_name):
@@ -166,8 +163,6 @@ def _assert_service_name_matches_endpoint_prefix(session, service_name):
     # Handle known exceptions where we have renamed the service directory
     # for one reason or another.
     actual_service_name = SERVICE_RENAMES.get(service_name, service_name)
-    assert_equal(
-        computed_name, actual_service_name,
-        "Actual service name `%s` does not match expected service name "
-        "we computed: `%s`" % (
-            actual_service_name, computed_name))
+    assert computed_name == actual_service_name, \
+        ("Actual service name `%s` does not match expected service name " +
+         "we computed: `%s`") % (actual_service_name, computed_name)

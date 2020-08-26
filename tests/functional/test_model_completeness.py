@@ -38,5 +38,6 @@ def test_paginators_and_waiters_are_not_lost_in_new_version():
         versions = Loader().list_api_versions(service_name, 'service-2')
         if len(versions) > 1:
             for type_name in ['paginators-1', 'waiters-2']:
-                yield (_test_model_is_not_lost, service_name,
-                       type_name, versions[-2], versions[-1])
+                _test_model_is_not_lost(service_name,
+                                        type_name,
+                                        versions[-2], versions[-1])

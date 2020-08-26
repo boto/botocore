@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 import mock
-from nose.tools import assert_equal
 
 import botocore
 import botocore.session as session
@@ -308,7 +307,7 @@ class TestConfigValueStore(unittest.TestCase):
         provider = ConfigValueStore()
         provider.set_config_variable('fake_variable', 'foo')
         value = provider.get_config_variable('fake_variable')
-        self.assertEquals(value, 'foo')
+        self.assertEqual(value, 'foo')
 
     def test_can_set_config_provider(self):
         foo_value_provider = mock.Mock(spec=BaseProvider)
@@ -448,7 +447,7 @@ def assert_chain_does_provide(providers, expected_value):
         providers=providers,
     )
     value = provider.provide()
-    assert_equal(value, expected_value)
+    assert value == expected_value
 
 
 def test_chain_provider():
@@ -468,9 +467,9 @@ def test_chain_provider():
         ('foo', ['foo', 'bar', 'baz']),
     ]
     for case in cases:
-        yield assert_chain_does_provide, \
-            _make_providers_that_return(case[1]), \
-            case[0]
+        assert_chain_does_provide(
+            _make_providers_that_return(case[1]),
+            case[0])
 
 
 class TestChainProvider(unittest.TestCase):

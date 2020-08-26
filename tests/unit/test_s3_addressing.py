@@ -16,9 +16,13 @@
 import os
 
 from tests import BaseSessionTest, ClientHTTPStubber
-from mock import patch, Mock
+try:
+    from mock import patch, Mock
+except ImportError:
+    from unittest.mock import patch, Mock
 
 from botocore.compat import OrderedDict
+from botocore.compat import six
 from botocore.handlers import set_list_objects_encoding_type_url
 
 
@@ -198,7 +202,7 @@ class TestS3Addressing(BaseSessionTest):
             'https://s3.us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
     def test_invalid_endpoint_raises_exception(self):
-        with self.assertRaisesRegexp(ValueError, 'Invalid region'):
+        with six.assertRaisesRegex(self, ValueError, 'Invalid region'):
             self.session.create_client('s3', 'Invalid region')
 
     def test_non_existent_region(self):

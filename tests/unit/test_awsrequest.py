@@ -20,7 +20,10 @@ import io
 import socket
 import sys
 
-from mock import Mock, patch
+try:
+    from mock import Mock, patch
+except ImportError:
+    from unittest.mock import Mock, patch
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
 from botocore.exceptions import UnseekableStreamError
@@ -271,11 +274,11 @@ class TestAWSResponse(unittest.TestCase):
     def test_text_property(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
         self.response.headers['content-type'] = 'text/plain; charset=utf-8'
-        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
+        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
 
     def test_text_property_defaults_utf8(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
-        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
+        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
 
 
 class TestAWSHTTPConnection(unittest.TestCase):

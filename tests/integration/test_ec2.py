@@ -13,8 +13,6 @@
 from tests import unittest
 import itertools
 
-from nose.plugins.attrib import attr
-
 import botocore.session
 from botocore.exceptions import ClientError
 

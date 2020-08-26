@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import re
 
-from nose.tools import assert_true
 from botocore.session import get_session
 
 BLACKLIST = [
@@ -41,18 +40,18 @@ MAX_SERVICE_NAME_LENGTH = 50
 def _assert_name_length(service_name):
     if service_name not in BLACKLIST:
         service_name_length = len(service_name)
-        assert_true(service_name_length >= MIN_SERVICE_NAME_LENGTH,
-                    'Service name must be greater than or equal to 2 '
-                    'characters in length.')
-        assert_true(service_name_length <= MAX_SERVICE_NAME_LENGTH,
-                    'Service name must be less than or equal to 50 '
-                    'characters in length.')
+        assert service_name_length >= MIN_SERVICE_NAME_LENGTH, \
+            ('Service name must be greater than or equal to {:d} ' +
+             'characters in length.').format(MIN_SERVICE_NAME_LENGTH)
+        assert service_name_length <= MAX_SERVICE_NAME_LENGTH, \
+            ('Service name must be less than or equal to {:d} ' +
+             'characters in length.').format(MAX_SERVICE_NAME_LENGTH)
 
 
 def _assert_name_pattern(service_name):
     if service_name not in BLACKLIST:
-        valid = VALID_NAME_REGEX.match(service_name) is not None
-        assert_true(valid, VALID_NAME_EXPLANATION)
+        assert VALID_NAME_REGEX.match(service_name) is not None, \
+            VALID_NAME_EXPLANATION
 
 
 def test_service_names_are_valid():
@@ -60,5 +59,5 @@ def test_service_names_are_valid():
     loader = session.get_component('data_loader')
     service_names = loader.list_available_services('service-2')
     for service_name in service_names:
-        yield _assert_name_length, service_name
-        yield _assert_name_pattern, service_name
+        _assert_name_length(service_name)
+        _assert_name_pattern(service_name)

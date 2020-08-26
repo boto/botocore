@@ -41,7 +41,7 @@ from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
 from botocore.stub import Stubber
 from botocore.utils import datetime2timestamp
-
+from botocore.compat import six
 
 class TestCredentialRefreshRaces(unittest.TestCase):
     def assert_consistent_credentials_seen(self, creds, func):
@@ -826,7 +826,7 @@ class TestProcessProvider(unittest.TestCase):
             # Finally `(?s)` at the beginning makes dots match newlines so
             # we can handle a multi-line string.
             reg = r"(?s)^((?!b').)*$"
-            with self.assertRaisesRegexp(CredentialRetrievalError, reg):
+            with six.assertRaisesRegex(self, CredentialRetrievalError, reg):
                 session.get_credentials()
 
 

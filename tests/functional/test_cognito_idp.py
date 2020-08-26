@@ -12,8 +12,6 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from nose.tools import assert_false
-
 from tests import create_session, ClientHTTPStubber
 
 
@@ -95,8 +93,7 @@ def test_unsigned_operations():
         client = session.create_client('cognito-idp', 'us-west-2')
 
         for operation, params in operation_params.items():
-            test_case = UnsignedOperationTestCase(client, operation, params)
-            yield test_case.run
+            UnsignedOperationTestCase(client, operation, params).run()
 
 
 class UnsignedOperationTestCase(object):
@@ -114,7 +111,5 @@ class UnsignedOperationTestCase(object):
             operation(**self._parameters)
             request = self._http_stubber.requests[0]
 
-        assert_false(
-            'authorization' in request.headers,
+        assert 'authorization' not in request.headers, \
             'authorization header found in unsigned operation'
-        )

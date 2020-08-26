@@ -126,7 +126,7 @@ class TestHandlers(BaseSessionTest):
                          'foo/keyname%2B?versionId=asdf+')
 
     def test_copy_source_has_validation_failure(self):
-        with self.assertRaisesRegexp(ParamValidationError, 'Key'):
+        with six.assertRaisesRegex(self, ParamValidationError, 'Key'):
             handlers.handle_copy_source_param(
                 {'CopySource': {'Bucket': 'foo'}})
 

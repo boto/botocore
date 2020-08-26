@@ -29,8 +29,6 @@ from subprocess import Popen, PIPE
 from dateutil.tz import tzlocal
 import unittest
 
-from nose.tools import assert_equal
-
 import botocore.loaders
 import botocore.session
 from botocore.awsrequest import AWSResponse
@@ -346,16 +344,16 @@ def assert_url_equal(url1, url2):
 
     # Because the query string ordering isn't relevant, we have to parse
     # every single part manually and then handle the query string.
-    assert_equal(parts1.scheme, parts2.scheme)
-    assert_equal(parts1.netloc, parts2.netloc)
-    assert_equal(parts1.path, parts2.path)
-    assert_equal(parts1.params, parts2.params)
-    assert_equal(parts1.fragment, parts2.fragment)
-    assert_equal(parts1.username, parts2.username)
-    assert_equal(parts1.password, parts2.password)
-    assert_equal(parts1.hostname, parts2.hostname)
-    assert_equal(parts1.port, parts2.port)
-    assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))
+    assert parts1.scheme == parts2.scheme
+    assert parts1.netloc == parts2.netloc
+    assert parts1.path == parts2.path
+    assert parts1.params == parts2.params
+    assert parts1.fragment == parts2.fragment
+    assert parts1.username == parts2.username
+    assert parts1.password == parts2.password
+    assert parts1.hostname == parts2.hostname
+    assert parts1.port == parts2.port
+    assert parse_qs(parts1.query) == parse_qs(parts2.query)
 
 
 class HTTPStubberException(Exception):

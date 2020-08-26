@@ -27,7 +27,7 @@ def test_lint_shared_example_configs():
         examples = example_config.get("examples", {})
         for operation, operation_examples in examples.items():
             for example in operation_examples:
-                yield _lint_single_example, operation, example, service_model
+                _lint_single_example(operation, example, service_model)
 
 
 def _lint_single_example(operation_name, example_config, service_model):

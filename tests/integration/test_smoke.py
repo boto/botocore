@@ -11,17 +11,14 @@ to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
 
 """
 import os
-import mock
 from pprint import pformat
 import warnings
 import logging
-from nose.tools import assert_equal, assert_true
 
 from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
 
 
@@ -262,10 +259,9 @@ def _make_client_call(client, operation_name, kwargs):
     method = getattr(client, operation_name)
     with warnings.catch_warnings(record=True) as caught_warnings:
         response = method(**kwargs)
-        assert_equal(len(caught_warnings), 0,
-                     "Warnings were emitted during smoke test: %s"
-                     % caught_warnings)
-        assert_true('Errors' not in response)
+        assert len(caught_warnings) == 0, \
+            "Warnings were emitted during smoke test: %s" % caught_warnings
+        assert 'Errors' not in response
 
 
 def test_can_make_request_and_understand_errors_with_client():
@@ -275,7 +271,7 @@ def test_can_make_request_and_understand_errors_with_client():
         for operation_name in ERROR_TESTS[service_name]:
             kwargs = ERROR_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
-            yield _make_error_client_call, client, method_name, kwargs
+            _make_error_client_call(client, method_name, kwargs)
 
 
 def _make_error_client_call(client, operation_name, kwargs):

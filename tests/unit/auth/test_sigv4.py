@@ -18,8 +18,7 @@ AWS provides a test suite for signature version 4:
     http://docs.aws.amazon.com/general/latest/gr/signature-v4-test-suite.html
 
 This module contains logic to run these tests.  The test files were
-placed in ./aws4_testsuite, and we're using nose's test generators to
-dynamically generate testcases based on these files.
+placed in ./aws4_testsuite.
 
 """
 import os
@@ -106,7 +105,7 @@ def test_generator():
         if test_case in TESTS_TO_IGNORE:
             log.debug("Skipping test: %s", test_case)
             continue
-        yield (_test_signature_version_4, test_case)
+        _test_signature_version_4(test_case)
     datetime_patcher.stop()
     formatdate_patcher.stop()
 
@@ -147,21 +146,22 @@ def _test_signature_version_4(test_case):
     auth = botocore.auth.SigV4Auth(test_case.credentials, 'host', 'us-east-1')
 
     actual_canonical_request = auth.canonical_request(request)
-    assert_equal(actual_canonical_request, test_case.canonical_request,
-                 test_case.raw_request, 'canonical_request')
+    assert_requests_equal(actual_canonical_request,
+                          test_case.canonical_request,
+                          test_case.raw_request, 'canonical_request')
 
     actual_string_to_sign = auth.string_to_sign(request,
                                                 actual_canonical_request)
-    assert_equal(actual_string_to_sign, test_case.string_to_sign,
-                 test_case.raw_request, 'string_to_sign')
+    assert_requests_equal(actual_string_to_sign, test_case.string_to_sign,
+                          test_case.raw_request, 'string_to_sign')
 
     auth.add_auth(request)
     actual_auth_header = request.headers['Authorization']
-    assert_equal(actual_auth_header, test_case.authorization_header,
-                 test_case.raw_request, 'authheader')
+    assert_requests_equal(actual_auth_header, test_case.authorization_header,
+                          test_case.raw_request, 'authheader')
 
 
-def assert_equal(actual, expected, raw_request, part):
+def assert_requests_equal(actual, expected, raw_request, part):
     if actual != expected:
         message = "The %s did not match" % part
         message += "\nACTUAL:%r !=\nEXPECT:%r" % (actual, expected)

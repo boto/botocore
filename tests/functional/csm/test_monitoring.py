@@ -19,7 +19,6 @@ import socket
 import threading
 
 import mock
-from nose.tools import assert_equal
 
 from tests import temporary_file
 from tests import ClientHTTPStubber
@@ -50,7 +49,7 @@ EXPECTED_EXCEPTIONS_THROWN = (
 def test_client_monitoring():
     test_cases = _load_test_cases()
     for case in test_cases:
-        yield _run_test_case, case
+        _run_test_case(case)
 
 
 def _load_test_cases():
@@ -121,8 +120,7 @@ def _run_test_case(case):
                 case['configuration'], listener.port) as session:
             for api_call in case['apiCalls']:
                 _make_api_call(session, api_call)
-    assert_equal(
-        listener.received_events, case['expectedMonitoringEvents'])
+    assert listener.received_events == case['expectedMonitoringEvents']
 
 
 def _make_api_call(session, api_call):

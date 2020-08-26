@@ -29,12 +29,12 @@ def test_all_uses_of_h2_are_known():
         service_model = session.get_service_model(service)
         h2_config = service_model.metadata.get('protocolSettings', {}).get('h2')
         if h2_config == 'required':
-            yield _assert_h2_service_is_known, service
+            _assert_h2_service_is_known(service)
         elif h2_config == 'eventstream':
             for operation in service_model.operation_names:
                 operation_model = service_model.operation_model(operation)
                 if operation_model.has_event_stream_output:
-                    yield _assert_h2_operation_is_known, service, operation
+                    _assert_h2_operation_is_known(service, operation)
 
 
 def _assert_h2_service_is_known(service):

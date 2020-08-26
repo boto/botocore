@@ -2003,7 +2003,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         response_body = {'foo': 'bar'}
         self.set_http_responses_to(response_body)
         fetcher = self.create_fetcher()
-        with self.assertRaisesRegexp(ValueError, 'Unsupported host'):
+        with six.assertRaisesRegex(self, ValueError, 'Unsupported host'):
             fetcher.retrieve_full_uri(full_uri)
         self.assertFalse(self.http.send.called)
 

@@ -28,6 +28,7 @@ from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import JSONFileLoader
 from botocore.loaders import Loader, create_loader
 from botocore.loaders import ExtrasProcessor
+from botocore.compat import six
 
 from tests import BaseEnvVar
 
@@ -156,8 +157,8 @@ class TestLoader(BaseEnvVar):
 
         # Should have a) the unknown service name and b) list of valid
         # service names.
-        with self.assertRaisesRegexp(UnknownServiceError,
-                                     'Unknown service.*BAZ.*baz'):
+        with six.assertRaisesRegex(self, UnknownServiceError,
+                                   'Unknown service.*BAZ.*baz'):
             loader.load_service_model('BAZ', type_name='service-2')
 
     def test_load_service_model_uses_provided_type_name(self):
@@ -169,8 +170,8 @@ class TestLoader(BaseEnvVar):
         # Should have a) the unknown service name and b) list of valid
         # service names.
         provided_type_name = 'not-service-2'
-        with self.assertRaisesRegexp(UnknownServiceError,
-                                     'Unknown service.*BAZ.*baz'):
+        with six.assertRaisesRegex(self, UnknownServiceError,
+                                   'Unknown service.*BAZ.*baz'):
             loader.load_service_model(
                 'BAZ', type_name=provided_type_name)
 

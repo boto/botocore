@@ -140,12 +140,7 @@ def test_lint_pagination_configs():
                                                 'paginators-1',
                                                 service_model.api_version)
         for op_name, single_config in page_config['pagination'].items():
-            yield (
-                _lint_single_paginator,
-                op_name,
-                single_config,
-                service_model
-            )
+            _lint_single_paginator(op_name, single_config, service_model)
 
 
 def _lint_single_paginator(operation_name, page_config,

@@ -13,7 +13,10 @@
 import socket
 from tests import unittest
 
-from mock import Mock, patch, sentinel
+try:
+    from mock import Mock, patch, sentinel
+except ImportError:
+    from unittest.mock import Mock, patch, sentinel
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest

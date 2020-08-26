@@ -16,6 +16,7 @@ from tests import BaseSessionTest, mock, ClientHTTPStubber
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
+from botocore.compat import six
 
 
 class BaseRetryTest(BaseSessionTest):
@@ -38,7 +39,7 @@ class BaseRetryTest(BaseSessionTest):
         with ClientHTTPStubber(client) as http_stubber:
             for _ in range(num_responses):
                 http_stubber.add_response(status=status, body=body)
-            with self.assertRaisesRegexp(
+            with six.assertRaisesRegex(self,
                     ClientError, 'reached max retries: %s' % num_retries):
                 yield
             self.assertEqual(len(http_stubber.requests), num_responses)

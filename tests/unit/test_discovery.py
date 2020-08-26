@@ -1,5 +1,8 @@
 import time
-from mock import Mock, call
+try:
+    from mock import Mock, call
+except ImportError:
+    from unittest.mock import Mock, call
 from tests import unittest
 
 from botocore.awsrequest import AWSRequest

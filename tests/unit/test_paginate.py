@@ -823,7 +823,7 @@ class TestKeyIterators(unittest.TestCase):
             {"Users": ["User3"]},
         ]
         self.method.side_effect = responses
-        with self.assertRaisesRegexp(ValueError, 'Bad starting token'):
+        with six.assertRaisesRegex(self, ValueError, 'Bad starting token'):
             pagination_config = {'StartingToken': 'does___not___work'}
             self.paginator.paginate(
                 PaginationConfig=pagination_config).build_full_result()

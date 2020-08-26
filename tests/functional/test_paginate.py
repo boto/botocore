@@ -14,9 +14,7 @@ from __future__ import division
 from math import ceil
 from datetime import datetime
 
-from nose.tools import assert_equal
-
-from tests import random_chars
+from tests import random_chars, unittest
 from tests import BaseSessionTest
 from botocore.stub import Stubber, StubAssertionError
 from botocore.paginate import TokenDecoder, TokenEncoder
@@ -79,7 +77,7 @@ class TestAutoscalingPagination(BaseSessionTest):
         self.stubber.activate()
 
     def _setup_scaling_pagination(self, page_size=200, max_items=100,
-                                 total_items=600):
+                                  total_items=600):
         """
         Add to the stubber to test paginating describe_scaling_activities.
 
@@ -217,22 +215,22 @@ class TestCloudwatchLogsPagination(BaseSessionTest):
         self.assertEqual(len(result['events']), 1)
 
 
-def test_token_encoding():
-    cases = [
-        {'foo': 'bar'},
-        {'foo': b'bar'},
-        {'foo': {'bar': b'baz'}},
-        {'foo': ['bar', b'baz']},
-        {'foo': b'\xff'},
-        {'foo': {'bar': b'baz', 'bin': [b'bam']}},
-    ]
+class TestTokenEncoding(unittest.TestCase):
+    def test_token_encoding(self):
+        cases = [
+            {'foo': 'bar'},
+            {'foo': b'bar'},
+            {'foo': {'bar': b'baz'}},
+            {'foo': ['bar', b'baz']},
+            {'foo': b'\xff'},
+            {'foo': {'bar': b'baz', 'bin': [b'bam']}},
+        ]
 
-    for token_dict in cases:
-        yield assert_token_encodes_and_decodes, token_dict
+        for token_dict in cases:
+            self.assert_token_encodes_and_decodes(token_dict)
 
-
-def assert_token_encodes_and_decodes(token_dict):
-    encoded = TokenEncoder().encode(token_dict)
-    assert isinstance(encoded, six.string_types)
-    decoded = TokenDecoder().decode(encoded)
-    assert_equal(decoded, token_dict)
+    def assert_token_encodes_and_decodes(self, token_dict):
+        encoded = TokenEncoder().encode(token_dict)
+        assert isinstance(encoded, six.string_types)
+        decoded = TokenDecoder().decode(encoded)
+        self.assertEqual(decoded, token_dict)

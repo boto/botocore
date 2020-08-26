@@ -12,8 +12,6 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 
-from nose.tools import assert_true
-
 import botocore.session
 from botocore.paginate import PageIterator
 from botocore.exceptions import OperationNotPageableError
@@ -34,7 +32,7 @@ def test_emr_endpoints_work_with_py26():
 def _test_can_list_clusters_in_region(session, region):
     client = session.create_client('emr', region_name=region)
     response = client.list_clusters()
-    assert_true('Clusters' in response)
+    assert 'Clusters' in response
 
 
 # I consider these integration tests because they're
