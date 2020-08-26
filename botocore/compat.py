@@ -146,8 +146,12 @@ else:
 from collections import OrderedDict
 
 
-import xml.etree.cElementTree
-XMLParseError = xml.etree.cElementTree.ParseError
+try:
+    import xml.etree.cElementTree as ETree
+except ImportError:
+    # cElementTree does not exist from Python3.9+
+    import xml.etree.ElementTree as ETree
+XMLParseError = ETree.ParseError
 import json
 
 
