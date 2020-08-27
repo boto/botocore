@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.17.50
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.17.49
+=======
+
+* api-change:``appflow``: Update appflow client to latest version
+* api-change:``route53resolver``: Update route53resolver client to latest version
+
+
 1.17.48
 =======
 
