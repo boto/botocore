@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.51
+=======
+
+* api-change:``cur``: Update cur client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.17.50
 =======
 
