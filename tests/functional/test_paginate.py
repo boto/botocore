@@ -233,4 +233,4 @@ class TestTokenEncoding(unittest.TestCase):
         encoded = TokenEncoder().encode(token_dict)
         assert isinstance(encoded, six.string_types)
         decoded = TokenDecoder().decode(encoded)
-        self.assertEqual(decoded, token_dict)
+        assert decoded == token_dict
