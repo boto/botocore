@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.17.52
+=======
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``backup``: Update backup client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.17.51
 =======
 
