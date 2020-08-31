@@ -16,4 +16,4 @@ def run(command):
     return check_call(command, shell=True)
 
 
-run('pytest -v --junit-xml=test_results.xml --cov=botocore --cov-report=xml:coverage.xml -v integration/')
+run('pytest -v --junit-xml=test_results.xml --cov=botocore --cov-report=xml:coverage.xml integration/')
