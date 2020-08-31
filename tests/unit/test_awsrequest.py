@@ -18,17 +18,14 @@ import tempfile
 import shutil
 import io
 import socket
-import sys
 
-try:
-    from mock import Mock, patch
-except ImportError:
-    from unittest.mock import Mock, patch
+from tests import mock
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
 from botocore.exceptions import UnseekableStreamError
-from botocore.awsrequest import AWSRequest, AWSPreparedRequest, AWSResponse
-from botocore.awsrequest import AWSHTTPConnection, AWSHTTPSConnection, HeadersDict
+from botocore.awsrequest import AWSRequest, AWSResponse
+from botocore.awsrequest import (AWSHTTPConnection, AWSHTTPSConnection,
+                                 HeadersDict)
 from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
 
@@ -256,7 +253,7 @@ class TestAWSRequest(unittest.TestCase):
 class TestAWSResponse(unittest.TestCase):
     def setUp(self):
         self.response = AWSResponse('http://url.com', 200, HeadersDict(), None)
-        self.response.raw = Mock()
+        self.response.raw = mock.Mock()
 
     def set_raw_stream(self, blobs):
         def stream(*args, **kwargs):
@@ -291,8 +288,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn._tunnel_headers = {'key': 'value'}
 
         # Create a mock response.
-        self.mock_response = Mock()
-        self.mock_response.fp = Mock()
+        self.mock_response = mock.Mock()
+        self.mock_response.fp = mock.Mock()
 
         # Imitate readline function by creating a list to be sent as
         # a side effect of the mocked readline to be able to track how the
@@ -315,12 +312,12 @@ class TestAWSHTTPConnection(unittest.TestCase):
             response_components[0], int(response_components[1]),
             response_components[2]
         )
-        conn.response_class = Mock()
+        conn.response_class = mock.Mock()
         conn.response_class.return_value = self.mock_response
         return conn
 
     def test_expect_100_continue_returned(self):
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\n')
@@ -336,7 +333,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             self.assertEqual(response.status, 200)
 
     def test_handles_expect_100_with_different_reason_phrase(self):
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
@@ -358,7 +355,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # When using squid as an HTTP proxy, it will also send
         # a Connection: keep-alive header back with the 100 continue
         # response.  We need to ensure we handle this case.
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 500 response.  We're picking 500 to confirm we
             # actually parse the response instead of getting the
@@ -381,7 +378,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_expect_100_continue_sends_307(self):
         # This is the case where we send a 100 continue and the server
         # immediately sends a 307
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -399,7 +396,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             self.assertEqual(response.status, 307)
 
     def test_expect_100_continue_no_response_from_server(self):
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -480,7 +477,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
+        with mock.patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
 
@@ -498,7 +495,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_state_reset_on_connection_close(self):
         # This simulates what urllib3 does with connections
         # in its connection pool logic.
-        with patch('urllib3.util.wait_for_read') as wait_mock:
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
 
             # First fast fail with a 500 response when we first
             # send the expect header.

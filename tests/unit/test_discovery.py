@@ -1,8 +1,5 @@
 import time
-try:
-    from mock import Mock, call
-except ImportError:
-    from unittest.mock import Mock, call
+from tests import mock
 from tests import unittest
 
 from botocore.awsrequest import AWSRequest
@@ -151,9 +148,9 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
 
     def construct_manager(self, cache=None, time=None, side_effect=None):
         self.service_model = ServiceModel(self.service_description)
-        self.meta = Mock(spec=ClientMeta)
+        self.meta = mock.Mock(spec=ClientMeta)
         self.meta.service_model = self.service_model
-        self.client = Mock()
+        self.client = mock.Mock()
         if side_effect is None:
             side_effect = [{
                 'Endpoints': [{
@@ -314,7 +311,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # This second call should be blocked as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertIsNone(endpoint)
-        self.client.describe_endpoints.call_args_list == [call()]
+        self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_optional_fails_stale_cache(self):
         key = ()
@@ -329,7 +326,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # This second call shouldn't go through as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'old.com')
-        self.client.describe_endpoints.call_args_list == [call()]
+        self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_required_fails_no_cache(self):
         side_effect = [ConnectionError(error=None)] * 2
@@ -356,7 +353,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # We have a stale endpoint, so this shouldn't fail or force a refresh
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'old.com')
-        self.client.describe_endpoints.call_args_list == [call()]
+        self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_required_force_refresh_success(self):
         side_effect = [
@@ -371,13 +368,13 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # First call will fail
         with self.assertRaises(EndpointDiscoveryRefreshFailed):
             self.manager.describe_endpoint(**kwargs)
-        self.client.describe_endpoints.call_args_list == [call()]
+        self.client.describe_endpoints.call_args_list == [mock.call()]
         # Force a refresh if the cache is empty but discovery is required
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'new.com')
 
     def test_describe_endpoint_retries_after_failing(self):
-        fake_time = Mock()
+        fake_time = mock.Mock()
         fake_time.side_effect = [0, 100, 200]
         side_effect = [
             ConnectionError(error=None),
@@ -390,7 +387,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         kwargs = {'Operation': 'TestDiscoveryOptional'}
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertIsNone(endpoint)
-        self.client.describe_endpoints.call_args_list == [call()]
+        self.client.describe_endpoints.call_args_list == [mock.call()]
         # Second time should try again as enough time has elapsed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'new.com')
@@ -399,12 +396,12 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
 class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
     def setUp(self):
         super(TestEndpointDiscoveryHandler, self).setUp()
-        self.manager = Mock(spec=EndpointDiscoveryManager)
+        self.manager = mock.Mock(spec=EndpointDiscoveryManager)
         self.handler = EndpointDiscoveryHandler(self.manager)
         self.service_model = ServiceModel(self.service_description)
 
     def test_register_handler(self):
-        events = Mock(spec=HierarchicalEmitter)
+        events = mock.Mock(spec=HierarchicalEmitter)
         self.handler.register(events, 'foo-bar')
         events.register.assert_any_call(
             'before-parameter-build.foo-bar', self.handler.gather_identifiers

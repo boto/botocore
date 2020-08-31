@@ -35,7 +35,6 @@ from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
 from botocore.credentials import create_credential_resolver
 from botocore.credentials import JSONFileCache
-from botocore.credentials import SSOProvider
 from botocore.config import Config
 from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError

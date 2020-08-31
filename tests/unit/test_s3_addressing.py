@@ -16,10 +16,6 @@
 import os
 
 from tests import BaseSessionTest, ClientHTTPStubber
-try:
-    from mock import patch, Mock
-except ImportError:
-    from unittest.mock import patch, Mock
 
 from botocore.compat import OrderedDict
 from botocore.compat import six

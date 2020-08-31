@@ -13,11 +13,12 @@
 import re
 
 from tests import temporary_file
-from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
+from tests import (unittest, mock, BaseSessionTest, create_session,
+                   ClientHTTPStubber)
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import datetime, urlsplit, parse_qs
+from botocore.compat import urlsplit, parse_qs
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.exceptions import InvalidS3UsEast1RegionalEndpointConfigError
 from botocore.parsers import ResponseParserError
