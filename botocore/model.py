@@ -369,6 +369,15 @@ class ServiceModel(object):
             if model.is_endpoint_discovery_operation:
                 return model
 
+    @CachedProperty
+    def endpoint_discovery_required(self):
+        for operation in self.operation_names:
+            model = self.operation_model(operation)
+            if (model.endpoint_discovery is not None and
+                    model.endpoint_discovery.get('required')):
+                return True
+        return False
+
     def _get_metadata_property(self, name):
         try:
             return self.metadata[name]

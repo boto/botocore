@@ -82,7 +82,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     # Endpoint discovery configuration
     'endpoint_discovery_enabled': (
         'endpoint_discovery_enabled', 'AWS_ENDPOINT_DISCOVERY_ENABLED',
-        False, utils.ensure_boolean),
+        'auto', None),
     'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'standard', None),
     'max_attempts': ('max_attempts', 'AWS_MAX_ATTEMPTS', 3, int),
 }
