@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.17.53
+=======
+
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
 1.17.52
 =======
 
