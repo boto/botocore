@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.17.53
+=======
+
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+
+
+1.17.52
+=======
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``backup``: Update backup client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.17.51
+=======
+
+* api-change:``cur``: Update cur client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.17.50
 =======
 

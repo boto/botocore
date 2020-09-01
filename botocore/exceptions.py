@@ -478,6 +478,12 @@ class UnsupportedS3AccesspointConfigurationError(BotoCoreError):
         'Unsupported configuration when using S3 access-points: {msg}'
     )
 
+class InvalidEndpointDiscoveryConfigurationError(BotoCoreError):
+    """Error when invalid value supplied for endpoint_discovery_enabled"""
+    fmt = (
+        'Unsupported configuration value for endpoint_discovery_enabled. '
+        'Expected one of ("true", "false", "auto") but got {config_value}.'
+    )
 
 class InvalidRetryConfigurationError(BotoCoreError):
     """Error when invalid retry configuration is specified"""

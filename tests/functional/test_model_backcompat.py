@@ -15,11 +15,7 @@ import os
 from nose.tools import assert_equal
 from botocore.session import Session
 from tests import ClientHTTPStubber
-
-
-FIXED_MODELS_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'models',
-)
+from tests.functional import TEST_MODELS_DIR
 
 
 def test_old_model_continues_to_work():
@@ -34,15 +30,15 @@ def test_old_model_continues_to_work():
     session = Session()
     loader = session.get_component('data_loader')
     # We're adding our path to the existing search paths so we don't have to
-    # copy additional data files such as _retry.json to our FIXED_MODELS_DIR.
+    # copy additional data files such as _retry.json to our TEST_MODELS_DIR.
     # We only care about the service model and endpoints file not changing.
     # This also prevents us from having to make any changes to this models dir
     # if we end up adding a new data file that's needed to create clients.
-    # We're adding our FIXED_MODELS_DIR as the first element in the list to
-    # ensure we load the endpoints.json file from FIXED_MODELS_DIR.  For the
+    # We're adding our TEST_MODELS_DIR as the first element in the list to
+    # ensure we load the endpoints.json file from TEST_MODELS_DIR.  For the
     # service model we have an extra safety net where we can choose a custom
     # client name.
-    loader.search_paths.insert(0, FIXED_MODELS_DIR)
+    loader.search_paths.insert(0, TEST_MODELS_DIR)
 
     # The model dir we copied was renamed to 'custom-lambda'
     # to ensure we're loading our version of the model and not
