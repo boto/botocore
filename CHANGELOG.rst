@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.17.54
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.17.53
 =======
 
