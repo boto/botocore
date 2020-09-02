@@ -472,6 +472,21 @@ class UnsupportedS3ArnError(BotoCoreError):
     )
 
 
+class UnsupportedS3ControlArnError(BotoCoreError):
+    """Error when S3 ARN provided to S3 control parameter is not supported"""
+    fmt = (
+        'S3 ARN "{arn}" provided is invalid for this operation. {msg}'
+    )
+
+
+class InvalidHostLabelError(BotoCoreError):
+    """Error when an invalid host label would be bound to an endpoint"""
+    fmt = (
+        'Invalid host label to be bound to the hostname of the endpoint: '
+        '"{label}".'
+    )
+
+
 class UnsupportedOutpostResourceError(BotoCoreError):
     """Error when S3 Outpost ARN provided to Bucket parameter is incomplete"""
     fmt = (
@@ -493,6 +508,13 @@ class InvalidEndpointDiscoveryConfigurationError(BotoCoreError):
         'Unsupported configuration value for endpoint_discovery_enabled. '
         'Expected one of ("true", "false", "auto") but got {config_value}.'
     )
+
+class UnsupportedS3ControlConfigurationError(BotoCoreError):
+    """Error when an unsupported configuration is used with S3 Control"""
+    fmt = (
+        'Unsupported configuration when using S3 Control: {msg}'
+    )
+
 
 class InvalidRetryConfigurationError(BotoCoreError):
     """Error when invalid retry configuration is specified"""
