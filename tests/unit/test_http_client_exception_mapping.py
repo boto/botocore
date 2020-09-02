@@ -1,4 +1,4 @@
-from nose.tools import assert_raises
+import unittest
 
 from botocore import exceptions as botocore_exceptions
 from botocore.vendored.requests import exceptions as requests_exceptions
@@ -13,15 +13,9 @@ EXCEPTION_MAPPING = [
 ]
 
 
-def _raise_exception(exception):
-    raise exception(endpoint_url=None, proxy_url=None, error=None)
-
-
-def _test_exception_mapping(new_exception, old_exception):
-    # assert that the new exception can still be caught by the old vendored one
-    assert_raises(old_exception, _raise_exception, new_exception)
-
-
-def test_http_client_exception_mapping():
-    for new_exception, old_exception in EXCEPTION_MAPPING:
-        yield _test_exception_mapping, new_exception, old_exception
+class TestHttpClientExceptionMapping(unittest.TestCase):
+    def test_http_client_exception_mapping(self):
+        for new_exception, old_exception in EXCEPTION_MAPPING:
+            with self.assertRaises(old_exception):
+                raise new_exception(endpoint_url=None, proxy_url=None,
+                                    error=None)

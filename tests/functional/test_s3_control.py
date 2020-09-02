@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, mock, BaseSessionTest, create_session
+from tests import mock, BaseSessionTest
 
 from botocore.config import Config
 from botocore.awsrequest import AWSResponse

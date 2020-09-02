@@ -13,7 +13,7 @@
 # language governing permissions and limitations under the License.
 from datetime import datetime, timedelta
 import subprocess
-import mock
+from tests import mock
 import os
 import tempfile
 import shutil
@@ -1083,7 +1083,7 @@ class TestEnvVar(BaseEnvVar):
             "Credentials were refreshed, but the refreshed credentials are "
             "still expired."
         )
-        with self.assertRaisesRegexp(RuntimeError, error_message):
+        with six.assertRaisesRegex(self, RuntimeError, error_message):
             creds.get_frozen_credentials()
 
     def test_partial_creds_is_an_error(self):
@@ -1149,7 +1149,7 @@ class TestEnvVar(BaseEnvVar):
             "Credentials were refreshed, but the refreshed credentials are "
             "still expired."
         )
-        with self.assertRaisesRegexp(RuntimeError, error_message):
+        with six.assertRaisesRegex(self, RuntimeError, error_message):
             creds.get_frozen_credentials()
 
         # Now we update the environment with non-expired credentials,
@@ -2745,7 +2745,7 @@ class TestRefreshLogic(unittest.TestCase):
             mandatory_refresh=7,
             refresh_function=fail_refresh
         )
-        with self.assertRaisesRegexp(Exception, 'refresh failed'):
+        with six.assertRaisesRegex(self, Exception, 'refresh failed'):
             creds.get_frozen_credentials()
 
     def test_exception_propogated_on_expired_credentials(self):
@@ -2758,7 +2758,7 @@ class TestRefreshLogic(unittest.TestCase):
             mandatory_refresh=7,
             refresh_function=fail_refresh
         )
-        with self.assertRaisesRegexp(Exception, 'refresh failed'):
+        with six.assertRaisesRegex(self, Exception, 'refresh failed'):
             # Because credentials are actually expired, any
             # failure to refresh should be propagated.
             creds.get_frozen_credentials()
@@ -2779,7 +2779,7 @@ class TestRefreshLogic(unittest.TestCase):
             creds_last_for=-2,
         )
         err_msg = 'refreshed credentials are still expired'
-        with self.assertRaisesRegexp(RuntimeError, err_msg):
+        with six.assertRaisesRegex(self, RuntimeError, err_msg):
             # Because credentials are actually expired, any
             # failure to refresh should be propagated.
             creds.get_frozen_credentials()
@@ -3067,7 +3067,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Error Message'):
+        with six.assertRaisesRegex(self, exception, 'Error Message'):
             provider.load()
 
     def test_unsupported_version_raises_mismatch(self):
@@ -3085,7 +3085,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Unsupported version'):
+        with six.assertRaisesRegex(self, exception, 'Unsupported version'):
             provider.load()
 
     def test_missing_version_in_payload_returned_raises_exception(self):
@@ -3102,7 +3102,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Unsupported version'):
+        with six.assertRaisesRegex(self, exception, 'Unsupported version'):
             provider.load()
 
     def test_missing_access_key_raises_exception(self):
@@ -3119,7 +3119,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Missing required key'):
+        with six.assertRaisesRegex(self, exception, 'Missing required key'):
             provider.load()
 
     def test_missing_secret_key_raises_exception(self):
@@ -3136,7 +3136,7 @@ class TestProcessProvider(BaseEnvVar):
 
         provider = self.create_process_provider()
         exception = botocore.exceptions.CredentialRetrievalError
-        with self.assertRaisesRegexp(exception, 'Missing required key'):
+        with six.assertRaisesRegex(self, exception, 'Missing required key'):
             provider.load()
 
     def test_missing_session_token(self):

@@ -19,7 +19,7 @@ import logging
 import tempfile
 import shutil
 
-import mock
+from tests import mock
 
 import botocore.session
 import botocore.exceptions

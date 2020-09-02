@@ -15,7 +15,7 @@ import socket
 
 import botocore.config
 from tests import unittest
-import mock
+from tests import mock
 
 from botocore import args
 from botocore import exceptions

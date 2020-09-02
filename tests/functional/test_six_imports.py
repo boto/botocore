@@ -15,7 +15,7 @@ def test_no_bare_six_imports():
             if not filename.endswith('.py'):
                 continue
             fullname = os.path.join(rootdir, filename)
-            yield _assert_no_bare_six_imports, fullname
+            _assert_no_bare_six_imports(fullname)
 
 
 def _assert_no_bare_six_imports(filename):

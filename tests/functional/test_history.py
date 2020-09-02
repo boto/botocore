@@ -1,7 +1,3 @@
-from contextlib import contextmanager
-
-import mock
-
 from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.history import BaseHistoryHandler
 from botocore.history import get_global_history_recorder
@@ -87,10 +83,10 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertIsNone(body)
 
         streaming = payload['streaming']
-        self.assertEquals(streaming, False)
+        self.assertEqual(streaming, False)
 
         url = payload['url']
-        self.assertEquals(url, 'https://s3.us-west-2.amazonaws.com/')
+        self.assertEqual(url, 'https://s3.us-west-2.amazonaws.com/')
 
         self.assertEqual(source, 'BOTOCORE')
 

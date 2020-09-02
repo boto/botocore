@@ -16,6 +16,7 @@ from tests import unittest
 import botocore
 import botocore.session
 import botocore.stub as stub
+from botocore.compat import six
 from botocore.stub import Stubber
 from botocore.exceptions import StubResponseError, ClientError, \
     StubAssertionError, UnStubbedResponseError
@@ -54,8 +55,8 @@ class TestStubber(unittest.TestCase):
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
         # Params one per line for readability.
-        with self.assertRaisesRegexp(UnStubbedResponseError,
-                                     "Unexpected API Call"):
+        with six.assertRaisesRegex(self, UnStubbedResponseError,
+                                   "Unexpected API Call"):
             self.client.list_objects(
                 Bucket='asdfasdfasdfasdf',
                 Delimiter='asdfasdfasdfasdf',
@@ -119,8 +120,8 @@ class TestStubber(unittest.TestCase):
             'list_objects', service_response, expected_params)
         self.stubber.activate()
         # This should call should raise an for mismatching expected params.
-        with self.assertRaisesRegexp(StubResponseError,
-                                     "{'Bucket': 'bar'},\n"):
+        with six.assertRaisesRegex(self, StubResponseError,
+                                   "{'Bucket': 'bar'},\n"):
             self.client.list_objects(Bucket='foo')
 
     def test_expected_params_mixed_with_errors_responses(self):
@@ -143,7 +144,8 @@ class TestStubber(unittest.TestCase):
             self.client.list_objects(Bucket='foo')
 
         # The second call should throw an error for unexpected parameters
-        with self.assertRaisesRegexp(StubResponseError, 'Expected parameters'):
+        with six.assertRaisesRegex(self, StubResponseError,
+                                   'Expected parameters'):
             self.client.list_objects(Bucket='foo')
 
     def test_can_continue_to_call_after_expected_params_fail(self):

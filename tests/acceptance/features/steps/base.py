@@ -4,7 +4,6 @@ from botocore import xform_name
 from botocore.exceptions import ClientError
 
 from behave import when, then
-from nose.tools import assert_equal
 
 
 def _params_from_table(table):
@@ -72,7 +71,7 @@ def api_call_with_json_and_error(context, operation):
 
 @then(u'I expect the response error code to be "{}"')
 def then_expected_error(context, code):
-    assert_equal(context.error_response.response['Error']['Code'], code)
+    assert context.error_response.response['Error']['Code'] == code
 
 
 @then(u'the value at "{}" should be a list')

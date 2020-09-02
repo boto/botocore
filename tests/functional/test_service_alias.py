@@ -17,7 +17,7 @@ from botocore.handlers import SERVICE_NAME_ALIASES
 def test_can_use_service_alias():
     session = botocore.session.get_session()
     for (alias, name) in SERVICE_NAME_ALIASES.items():
-        yield _instantiates_the_same_client, session, name, alias
+        _instantiates_the_same_client(session, name, alias)
 
 
 def _instantiates_the_same_client(session, service_name, service_alias):

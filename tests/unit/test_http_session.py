@@ -1,11 +1,9 @@
 import socket
 
-from mock import patch, Mock, ANY
+from tests import mock
 from tests import unittest
-from nose.tools import raises
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
-from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
 from botocore.httpsession import get_cert_path
@@ -57,7 +55,7 @@ class TestHttpSessionUtils(unittest.TestCase):
         self.assertEqual(path, cert_path)
 
     def test_get_cert_path_certifi_or_default(self):
-        with patch('botocore.httpsession.where') as where:
+        with mock.patch('botocore.httpsession.where') as where:
             path = '/bundle/path'
             where.return_value = path
             cert_path = get_cert_path(True)
@@ -73,17 +71,17 @@ class TestURLLib3Session(unittest.TestCase):
             data=b'',
         )
 
-        self.response = Mock()
+        self.response = mock.Mock()
         self.response.headers = {}
         self.response.stream.return_value = b''
 
-        self.pool_manager = Mock()
-        self.connection = Mock()
+        self.pool_manager = mock.Mock()
+        self.connection = mock.Mock()
         self.connection.urlopen.return_value = self.response
         self.pool_manager.connection_from_url.return_value = self.connection
 
-        self.pool_patch = patch('botocore.httpsession.PoolManager')
-        self.proxy_patch = patch('botocore.httpsession.proxy_from_url')
+        self.pool_patch = mock.patch('botocore.httpsession.PoolManager')
+        self.proxy_patch = mock.patch('botocore.httpsession.proxy_from_url')
         self.pool_manager_cls = self.pool_patch.start()
         self.proxy_manager_fun = self.proxy_patch.start()
         self.pool_manager_cls.return_value = self.pool_manager
@@ -102,7 +100,7 @@ class TestURLLib3Session(unittest.TestCase):
             url=url,
             body=body,
             headers=headers,
-            retries=ANY,
+            retries=mock.ANY,
             assert_same_host=False,
             preload_content=False,
             decode_content=False,
@@ -112,9 +110,9 @@ class TestURLLib3Session(unittest.TestCase):
     def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
         call_kwargs = {
             'strict': True,
-            'maxsize': ANY,
-            'timeout': ANY,
-            'ssl_context': ANY,
+            'maxsize': mock.ANY,
+            'timeout': mock.ANY,
+            'ssl_context': mock.ANY,
             'socket_options': [],
             'cert_file': None,
             'key_file': None,
@@ -250,15 +248,15 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         session.send(self.request.prepare())
 
-    @raises(EndpointConnectionError)
     def test_catches_new_connection_error(self):
-        error = NewConnectionError(None, None)
-        self.make_request_with_error(error)
+        with self.assertRaises(EndpointConnectionError):
+            error = NewConnectionError(None, None)
+            self.make_request_with_error(error)
 
-    @raises(ConnectionClosedError)
     def test_catches_bad_status_line(self):
-        error = ProtocolError(None)
-        self.make_request_with_error(error)
+        with self.assertRaises(ConnectionClosedError):
+            error = ProtocolError(None)
+            self.make_request_with_error(error)
 
     def test_aws_connection_classes_are_used(self):
         session = URLLib3Session()

@@ -14,11 +14,11 @@ from tests import unittest, RawResponse
 import datetime
 
 from dateutil.tz import tzutc
-from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
 from botocore.compat import json, MutableMapping
+from botocore.compat import six
 
 
 # HTTP responses will typically return a custom HTTP
@@ -597,8 +597,8 @@ class TestHandlesInvalidXMLResponses(unittest.TestCase):
         parser = parsers.QueryParser()
         output_shape = None
         # The XML body should be in the error message.
-        with self.assertRaisesRegexp(parsers.ResponseParserError,
-                                     '<DeleteTagsResponse'):
+        with six.assertRaisesRegex(self, parsers.ResponseParserError,
+                                   '<DeleteTagsResponse'):
             parser.parse(
                 {'body': invalid_xml, 'headers': {}, 'status_code': 200},
                 output_shape)
@@ -1310,9 +1310,9 @@ def test_can_handle_generic_error_message():
         ).encode('utf-8')
         empty_body = b''
         none_body = None
-        yield _assert_parses_generic_error, parser_cls(), generic_html_body
-        yield _assert_parses_generic_error, parser_cls(), empty_body
-        yield _assert_parses_generic_error, parser_cls(), none_body
+        _assert_parses_generic_error, parser_cls(), generic_html_body
+        _assert_parses_generic_error, parser_cls(), empty_body
+        _assert_parses_generic_error, parser_cls(), none_body
 
 
 def _assert_parses_generic_error(parser, body):
@@ -1320,7 +1320,6 @@ def _assert_parses_generic_error(parser, body):
     # html error page.  We should be able to handle this case.
     parsed = parser.parse({
         'body': body, 'headers': {}, 'status_code': 503}, None)
-    assert_equal(
-        parsed['Error'],
-        {'Code': '503', 'Message': 'Service Unavailable'})
-    assert_equal(parsed['ResponseMetadata']['HTTPStatusCode'], 503)
+    assert parsed['Error'] == \
+        {'Code': '503', 'Message': 'Service Unavailable'}
+    assert parsed['ResponseMetadata']['HTTPStatusCode'] == 503

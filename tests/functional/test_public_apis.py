@@ -12,11 +12,10 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 
-import mock
+from tests import mock
 
 from tests import ClientHTTPStubber
 from botocore.session import Session
-from botocore.exceptions import NoCredentialsError
 from botocore import xform_name
 
 
@@ -73,4 +72,4 @@ def test_public_apis_will_not_be_signed():
         for operation_name in PUBLIC_API_TESTS[service_name]:
             kwargs = PUBLIC_API_TESTS[service_name][operation_name]
             method = getattr(client, xform_name(operation_name))
-            yield _test_public_apis_will_not_be_signed, client, method, kwargs
+            _test_public_apis_will_not_be_signed(client, method, kwargs)

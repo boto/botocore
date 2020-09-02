@@ -16,7 +16,7 @@
 This is a test runner for all the JSON tests defined in
 ``tests/unit/protocols/``, including both the input/output tests.
 
-You can use the normal ``nosetests tests/unit/test_protocols.py`` to run
+You can use the normal ``pytest tests/unit/test_protocols.py`` to run
 this test.  In addition, there are several env vars you can use during
 development.
 
@@ -37,17 +37,17 @@ failed test.
 To run tests from only a single file, you can set the
 BOTOCORE_TEST env var::
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json nosetests tests/unit/test_protocols.py
+    BOTOCORE_TEST=tests/unit/compliance/input/json.json pytest tests/unit/test_protocols.py
 
 To run a single test suite you can set the BOTOCORE_TEST_ID env var:
 
     BOTOCORE_TEST=tests/unit/compliance/input/json.json BOTOCORE_TEST_ID=5 \
-        nosetests tests/unit/test_protocols.py
+        pytest tests/unit/test_protocols.py
 
 To run a single test case in a suite (useful when debugging a single test), you
 can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
-    BOTOCORE_TEST_ID=5:1 nosetests test/unit/test_protocols.py
+    BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
 
 """
 import os
@@ -68,8 +68,6 @@ from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
 from botocore.model import NoShapeFoundError
-
-from nose.tools import assert_equal as _assert_equal
 
 TEST_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -101,9 +99,9 @@ def test_compliance():
                 if model.get('description') in PROTOCOL_TEST_BLACKLIST:
                     continue
                 if 'params' in case:
-                    yield _test_input, model, case, basename
+                    _test_input(model, case, basename)
                 elif 'response' in case:
-                    yield _test_output, model, case, basename
+                    _test_output(model, case, basename)
 
 
 def _test_input(json_description, case, basename):
@@ -142,7 +140,7 @@ def _assert_endpoints_equal(actual, expected, endpoint):
         return
     prepare_request_dict(actual, endpoint)
     actual_host = urlsplit(actual['url']).netloc
-    assert_equal(actual_host, expected['host'], 'Host')
+    rich_assert_equal(actual_host, expected['host'], 'Host')
 
 
 class MockRawResponse(object):
@@ -208,7 +206,7 @@ def _test_output(json_description, case, basename):
             expected_result.update(case['error'])
         else:
             expected_result = case['result']
-        assert_equal(parsed, expected_result, "Body")
+        rich_assert_equal(parsed, expected_result, "Body")
     except Exception as e:
         _output_failure_message(model.metadata['protocol'],
                                 case, parsed, expected_result, e)
@@ -318,11 +316,11 @@ def _try_json_dump(obj):
         return str(obj)
 
 
-def assert_equal(first, second, prefix):
+def rich_assert_equal(first, second, prefix):
     # A better assert equals.  It allows you to just provide
     # prefix instead of the entire message.
     try:
-        _assert_equal(first, second)
+        assert first == second
     except Exception:
         try:
             better = "%s (actual != expected)\n%s !=\n%s" % (
@@ -353,14 +351,14 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected):
-    assert_equal(actual['body'], expected.get('body', '').encode('utf-8'),
+    rich_assert_equal(actual['body'], expected.get('body', '').encode('utf-8'),
                  'Body value')
     actual_headers = dict(actual['headers'])
     expected_headers = expected.get('headers', {})
-    assert_equal(actual_headers, expected_headers, "Header values")
-    assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
+    rich_assert_equal(actual_headers, expected_headers, "Header values")
+    rich_assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
     if 'method' in expected:
-        assert_equal(actual['method'], expected['method'], "Method")
+        rich_assert_equal(actual['method'], expected['method'], "Method")
 
 
 def _walk_files():

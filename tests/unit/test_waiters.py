@@ -13,7 +13,7 @@
 import os
 from tests import unittest, BaseEnvVar
 
-import mock
+from tests import mock
 
 import botocore
 from botocore.compat import six
@@ -389,7 +389,7 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
 
-        with self.assertRaisesRegexp(WaiterError, error_message):
+        with six.assertRaisesRegex(self, WaiterError, error_message):
             waiter.wait()
 
     def test_waiter_transitions_to_failure_state(self):

@@ -22,11 +22,10 @@ import tempfile
 import shutil
 import threading
 import logging
-import mock
 from tarfile import TarFile
 from contextlib import closing
 
-from nose.plugins.attrib import attr
+import pytest
 import urllib3
 
 from botocore.endpoint import Endpoint
@@ -324,7 +323,7 @@ class TestS3Objects(TestS3BaseWithBucket):
             Bucket=self.bucket_name, Key=key_name)
         self.assert_status_code(response, 204)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_can_paginate(self):
         for i in range(5):
             key_name = 'key%s' % i
@@ -340,7 +339,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in responses]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_can_paginate_with_page_size(self):
         for i in range(5):
             key_name = 'key%s' % i
@@ -357,7 +356,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_result_key_iters(self):
         for i in range(5):
             key_name = 'key/%s/%s' % (i, i)
@@ -380,7 +379,7 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertIn('Contents', response)
         self.assertIn('CommonPrefixes', response)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_can_get_and_put_object(self):
         self.create_object('foobarbaz', body='body contents')
         time.sleep(3)
@@ -930,7 +929,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
                                               Key='foo.txt', Body=body)
             self.assert_status_code(response, 200)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_paginate_list_objects_unicode(self):
         key_names = [
             u'non-ascii-key-\xe4\xf6\xfc-01.txt',
@@ -953,7 +952,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
 
         self.assertEqual(key_names, key_refs)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_paginate_list_objects_safe_chars(self):
         key_names = [
             u'-._~safe-chars-key-01.txt',
@@ -1247,7 +1246,7 @@ class TestRegionRedirect(BaseS3ClientTest):
 
         eu_bucket = self.create_bucket(self.bucket_region)
         msg = 'The authorization mechanism you have provided is not supported.'
-        with self.assertRaisesRegexp(ClientError, msg):
+        with six.assertRaisesRegex(self, ClientError, msg):
             sigv2_client.list_objects(Bucket=eu_bucket)
 
     def test_region_redirects_multiple_requests(self):

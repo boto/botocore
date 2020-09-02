@@ -10,10 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equal
-
+from tests import unittest
 import botocore.session
-
 
 REGION = 'us-east-1'
 
@@ -69,13 +67,10 @@ SERVICE_TO_CLASS_NAME = {
 }
 
 
-def test_client_has_correct_class_name():
-    session = botocore.session.get_session()
-    for service_name in SERVICE_TO_CLASS_NAME:
-        client = session.create_client(service_name, REGION)
-        yield (_assert_class_name_matches_ref_class_name, client,
-               SERVICE_TO_CLASS_NAME[service_name])
-
-
-def _assert_class_name_matches_ref_class_name(client, ref_class_name):
-    assert_equal(client.__class__.__name__, ref_class_name)
+class TestClientClassNames(unittest.TestCase):
+    def test_client_has_correct_class_name(self):
+        session = botocore.session.get_session()
+        for service_name in SERVICE_TO_CLASS_NAME:
+            client = session.create_client(service_name, REGION)
+            self.assertEqual(client.__class__.__name__,
+                             SERVICE_TO_CLASS_NAME[service_name])

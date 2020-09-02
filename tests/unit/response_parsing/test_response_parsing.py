@@ -119,8 +119,8 @@ def test_xml_parsing():
                 expected = _get_expected_parsed_result(xmlfile)
                 operation_model = _get_operation_model(service_model, xmlfile)
                 raw_response_body = _get_raw_response_body(xmlfile)
-                yield _test_parsed_response, xmlfile, raw_response_body, \
-                    operation_model, expected
+                _test_parsed_response(xmlfile, raw_response_body,
+                                      operation_model, expected)
 
 
 def _get_raw_response_body(xmlfile):
@@ -179,8 +179,8 @@ def test_json_errors_parsing():
                 operation_model = service_model.operation_model(op_name)
         with open(raw_response_file, 'rb') as f:
             raw_response_body = f.read()
-        yield _test_parsed_response, raw_response_file, \
-            raw_response_body, operation_model, expected
+        _test_parsed_response(raw_response_file,
+                              raw_response_body, operation_model, expected)
 
 
 def _uhg_test_json_parsing():

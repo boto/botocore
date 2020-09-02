@@ -13,6 +13,8 @@
 from tests import unittest
 
 import botocore.session
+
+from botocore.compat import six
 from botocore.exceptions import ClientError
 
 class TestSTS(unittest.TestCase):
@@ -38,5 +40,5 @@ class TestSTS(unittest.TestCase):
         self.assertEqual(sts.meta.endpoint_url,
                          'https://sts.us-west-2.amazonaws.com')
         # Signing error will be thrown with the incorrect region name included.
-        with self.assertRaisesRegexp(ClientError, 'ap-southeast-1') as e:
+        with six.assertRaisesRegex(self, ClientError, 'ap-southeast-1'):
             sts.get_session_token()

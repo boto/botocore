@@ -49,13 +49,13 @@ ALIAS_CASES = [
 def test_can_use_alias():
     session = botocore.session.get_session()
     for case in ALIAS_CASES:
-        yield _can_use_parameter_in_client_call, session, case
+        _can_use_parameter_in_client_call(session, case)
 
 
 def test_can_use_original_name():
     session = botocore.session.get_session()
     for case in ALIAS_CASES:
-        yield _can_use_parameter_in_client_call, session, case, False
+        _can_use_parameter_in_client_call(session, case, False)
 
 
 def _can_use_parameter_in_client_call(session, case, use_alias=True):

@@ -79,8 +79,8 @@ class TestClientErrors(unittest.TestCase):
     def test_region_mentioned_in_invalid_region(self):
         client = self.session.create_client(
             'cloudformation', region_name='us-east-999')
-        with self.assertRaisesRegexp(EndpointConnectionError,
-                                     'Could not connect to the endpoint URL'):
+        with six.assertRaisesRegex(self, EndpointConnectionError,
+                                   'Could not connect to the endpoint URL'):
             client.list_stacks()
 
     def test_client_modeled_exception(self):

@@ -2,11 +2,11 @@ from tests import unittest
 
 from botocore import model
 from botocore.compat import OrderedDict
-from botocore.exceptions import MissingServiceIdError
+from botocore.compat import six
 
 
 def test_missing_model_attribute_raises_exception():
-    # We're using a nose test generator here to cut down
+    # We're using a test generator here to cut down
     # on the duplication.  The property names below
     # all have the same test logic.
     service_model = model.ServiceModel({'metadata': {'endpointPrefix': 'foo'}})
@@ -28,7 +28,7 @@ def test_missing_model_attribute_raises_exception():
                 "be raised, but no exception was raised for: %s" % attr_name)
 
     for name in property_names:
-        yield _test_attribute_raise_exception, name
+        _test_attribute_raise_exception(name)
 
 
 class TestServiceId(unittest.TestCase):
@@ -105,9 +105,9 @@ class TestServiceModel(unittest.TestCase):
         }
         service_name = 'myservice'
         service_model = model.ServiceModel(service_model, service_name)
-        with self.assertRaisesRegexp(model.UndefinedModelAttributeError,
-                                     service_name):
-            service_model.service_id
+        with six.assertRaisesRegex(self, model.UndefinedModelAttributeError,
+                                   service_name):
+            service_model.service_id()
 
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):

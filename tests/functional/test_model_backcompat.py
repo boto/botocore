@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import os
 
-from nose.tools import assert_equal
 from botocore.session import Session
 from tests import ClientHTTPStubber
 from tests.functional import TEST_MODELS_DIR
@@ -56,8 +55,7 @@ def test_old_model_continues_to_work():
                      'Content-Type': 'application/x-amz-json-1.1'},
             body=b'{"CertificateSummaryList":[]}')
         response = client.list_certificates()
-        assert_equal(
-            response,
+        assert response == \
             {'CertificateSummaryList': [],
              'ResponseMetadata': {
                  'HTTPHeaders': {
@@ -69,8 +67,7 @@ def test_old_model_continues_to_work():
                  'RequestId': 'abcd',
                  'RetryAttempts': 0}
              }
-        )
 
     # Also verify we can use the paginators as well.
-    assert_equal(client.can_paginate('list_certificates'), True)
-    assert_equal(client.waiter_names, ['certificate_validated'])
+    assert client.can_paginate('list_certificates')
+    assert client.waiter_names == ['certificate_validated']
