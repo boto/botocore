@@ -194,9 +194,13 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the example section.
     example_section = section.add_new_section('example')
     example_section.style.new_paragraph()
-    example_section.write('Please note it is not guaranteed that this request syntax would work')
+    example_section.write('Please Note that parameters in the Request Synatx '
+                          'does not contain actual value. You would need to '
+                          'go through each parameter description in order to '
+                          'find the actual value.')
+    example_section.writeln('')
+    example_section.style.new_paragraph()
     example_section.style.bold('Request Syntax')
-    example_section.write('test')
 
     context = {
         'special_shape_types': {
