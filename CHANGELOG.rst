@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.17.56
+=======
+
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.17.55
 =======
 
