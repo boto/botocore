@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.57
+=======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.17.56
 =======
 
