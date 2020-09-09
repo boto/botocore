@@ -83,6 +83,11 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "SecurityConfigurations"
+    },
+    "GetPartitionIndexes": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "PartitionIndexDescriptorList"
     }
   }
 }
