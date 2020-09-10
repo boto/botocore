@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.17.59
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``ebs``: Update ebs client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
+1.17.58
+=======
+
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``redshift-data``: Update redshift-data client to latest version
+
+
 1.17.57
 =======
 

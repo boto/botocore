@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``kinesisanalyticsv2``", 
+    "description": "Update kinesisanalyticsv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift-data``", 
+    "description": "Update redshift-data client to latest version", 
+    "type": "api-change"
+  }
+]
