@@ -14,6 +14,7 @@
 
 import sys
 import logging
+from io import IOBase
 
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
@@ -26,7 +27,7 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 
 
-class StreamingBody(object):
+class StreamingBody(IOBase):
     """Wrapper class for an http response body.
 
     This provides a few additional conveniences that do not exist
@@ -68,6 +69,12 @@ class StreamingBody(object):
                          "the interface has changed.", exc_info=True)
             raise
 
+    def readable(self):
+        try:
+            return self._raw_stream.readable()
+        except AttributeError:
+            return False
+
     def read(self, amt=None):
         """Read at most amt bytes from the stream.
 
@@ -85,6 +92,9 @@ class StreamingBody(object):
             # we need to verify the content length.
             self._verify_content_length()
         return chunk
+    
+    def readlines(self):
+        return self._raw_stream.readlines()
 
     def __iter__(self):
         """Return an iterator to yield 1k chunks from the raw stream.
@@ -135,6 +145,9 @@ class StreamingBody(object):
             raise IncompleteReadError(
                 actual_bytes=self._amount_read,
                 expected_bytes=int(self._content_length))
+
+    def tell(self):
+        return self._raw_stream.tell()
 
     def close(self):
         """Close the underlying http response stream."""
