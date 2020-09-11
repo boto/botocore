@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.17.60
+=======
+
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
 1.17.59
 =======
 
