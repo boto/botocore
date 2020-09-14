@@ -93,7 +93,7 @@ class TestS3Addressing(BaseSessionTest):
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
             prepared_request.url,
-            'https://safename.s3-fips-us-gov-west-1.amazonaws.com/')
+            'https://safename.s3-fips.us-gov-west-1.amazonaws.com/')
 
     def test_list_objects_non_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
