@@ -1109,6 +1109,10 @@
           "shape":"String",
           "documentation":"<p>The AWS KMS key identifier for an encrypted cluster.</p> <p>The AWS KMS key identifier is the Amazon Resource Name (ARN) for the AWS KMS encryption key. If you are creating a cluster using the same AWS account that owns the AWS KMS encryption key that is used to encrypt the new cluster, you can use the AWS KMS key alias instead of the ARN for the AWS KMS encryption key.</p> <p>If an encryption key is not specified in <code>KmsKeyId</code>: </p> <ul> <li> <p>If <code>ReplicationSourceIdentifier</code> identifies an encrypted source, then Amazon DocumentDB uses the encryption key that is used to encrypt the source. Otherwise, Amazon DocumentDB uses your default encryption key. </p> </li> <li> <p>If the <code>StorageEncrypted</code> parameter is <code>true</code> and <code>ReplicationSourceIdentifier</code> is not specified, Amazon DocumentDB uses your default encryption key. </p> </li> </ul> <p>AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS Region.</p> <p>If you create a replica of an encrypted cluster in another AWS Region, you must set <code>KmsKeyId</code> to a KMS key ID that is valid in the destination AWS Region. This key is used to encrypt the replica in that AWS Region.</p>"
         },
+        "PreSignedUrl":{
+          "shape":"String",
+          "documentation":"<p>Not currently supported. </p>"
+        },
         "EnableCloudwatchLogsExports":{
           "shape":"LogTypeList",
           "documentation":"<p>A list of log types that need to be enabled for exporting to Amazon CloudWatch Logs. You can enable audit logs or profiler logs. For more information, see <a href=\"https://docs.aws.amazon.com/documentdb/latest/developerguide/event-auditing.html\"> Auditing Amazon DocumentDB Events</a> and <a href=\"https://docs.aws.amazon.com/documentdb/latest/developerguide/profiling.html\"> Profiling Amazon DocumentDB Operations</a>. </p>"
@@ -2418,7 +2422,7 @@
         },
         "EngineVersion":{
           "shape":"String",
-          "documentation":"<p>The database engine version to return.</p> <p>Example: <code>5.1.49</code> </p>"
+          "documentation":"<p>The database engine version to return.</p> <p>Example: <code>3.6.0</code> </p>"
         },
         "DBParameterGroupFamily":{
           "shape":"String",

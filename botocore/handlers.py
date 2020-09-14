@@ -1070,9 +1070,13 @@ BUILTIN_HANDLERS = [
     #############
     ('before-call.docdb.CopyDBClusterSnapshot',
      inject_presigned_url_rds),
+    ('before-call.docdb.CreateDBCluster',
+     inject_presigned_url_rds),
 
     # DocDB PresignedUrl documentation customizations
     ('docs.*.docdb.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.docdb.CreateDBCluster.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 
     #############

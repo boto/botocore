@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``managedblockchain``", 
+    "description": "Update managedblockchain client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``stepfunctions``", 
+    "description": "Update stepfunctions client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``docdb``", 
+    "description": "Update docdb client to latest version", 
+    "type": "api-change"
+  }
+]
