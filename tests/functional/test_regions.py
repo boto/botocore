@@ -238,7 +238,7 @@ KNOWN_REGIONS = {
         'workspaces': 'workspaces.eu-west-1.amazonaws.com'
     },
     'fips-us-gov-west-1': {
-        's3': 's3-fips-us-gov-west-1.amazonaws.com'
+        's3': 's3-fips.us-gov-west-1.amazonaws.com'
     },
     'local': {
         'dynamodb': 'http://localhost:8000'
