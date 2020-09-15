@@ -17,6 +17,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Subscribers"
+    },
+    "DescribeBudgetPerformanceHistory": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "BudgetPerformanceHistory"
     }
   }
 }
