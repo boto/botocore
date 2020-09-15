@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.17.62
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.17.61
 =======
 
