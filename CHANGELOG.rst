@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.17.63
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.17.62
 =======
 
