@@ -53,6 +53,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "QueueSummaryList"
+    },
+    "ListPrompts": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "PromptSummaryList"
+    },
+    "ListRoutingProfileQueues": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "RoutingProfileQueueConfigSummaryList"
     }
   }
 }
