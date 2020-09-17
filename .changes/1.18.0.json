@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``kendra``", 
+    "description": "Update kendra client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudfront``", 
+    "description": "Update cloudfront client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigatewayv2``", 
+    "description": "Update apigatewayv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "dependency", 
+    "description": "botocore has removed docutils as a required dependency", 
+    "type": "feature"
+  }
+]
