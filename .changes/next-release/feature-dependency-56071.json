@@ -1,5 +1,0 @@
-{
-  "type": "feature",
-  "category": "dependency",
-  "description": "botocore has removed docutils as a required dependency"
-}
