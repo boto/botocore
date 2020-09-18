@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.18.1
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+
+
 1.18.0
 ======
 
