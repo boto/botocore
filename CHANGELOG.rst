@@ -2,6 +2,34 @@
 CHANGELOG
 =========
 
+1.18.3
+======
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
+1.18.2
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.18.1
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+
+
 1.18.0
 ======
 

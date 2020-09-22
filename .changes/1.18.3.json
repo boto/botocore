@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodbstreams``", 
+    "description": "Update dynamodbstreams client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workmail``", 
+    "description": "Update workmail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-models``", 
+    "description": "Update lex-models client to latest version", 
+    "type": "api-change"
+  }
+]
