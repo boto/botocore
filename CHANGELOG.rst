@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.18.3
+======
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
 1.18.2
 ======
 
