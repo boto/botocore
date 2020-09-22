@@ -324,8 +324,8 @@ class PageIterator(object):
             if isinstance(results, list):
                 for element in results:
                     yield element
-            else:
-                # Yield result directly if it is not a list.
+            elif results:
+                # Yield result directly if it is not a list and there are results.
                 yield results
 
     def _make_request(self, current_kwargs):
