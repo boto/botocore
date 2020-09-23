@@ -47,9 +47,7 @@ class StreamingBody(IOBase):
         self._amount_read = 0
 
     def __del__(self):
-        #Extending destructor in order to preserve the underlying raw_stream.
-        #The ability to add custom cleanup logic introduced in Python3.4+.
-        #https://www.python.org/dev/peps/pep-0442/
+        # Stubbing destructor in order to preserve the underlying raw_stream.
         pass
 
     def set_socket_timeout(self, timeout):
