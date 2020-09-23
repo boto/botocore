@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.18.4
+======
+
+* api-change:``translate``: Update translate client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``backup``: Update backup client to latest version
+
+
 1.18.3
 ======
 
