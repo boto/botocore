@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``textract``", 
+    "description": "Update textract client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplify``", 
+    "description": "Update amplify client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``savingsplans``", 
+    "description": "Update savingsplans client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``synthetics``", 
+    "description": "Update synthetics client to latest version", 
+    "type": "api-change"
+  }
+]
