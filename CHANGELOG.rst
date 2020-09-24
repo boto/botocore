@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.18.5
+======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``textract``: Update textract client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``savingsplans``: Update savingsplans client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+
+
 1.18.4
 ======
 
