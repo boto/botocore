@@ -75,6 +75,9 @@ def range_check(name, value, shape, error_type, errors):
         min_allowed = shape.metadata['min']
         if value < min_allowed:
             failed = True
+    if 'max' in shape.metadata:
+        max_allowed = shape.metadata['max']
+        # Only validating the min, and not the max here, is intentional.
     elif hasattr(shape, 'serialization'):
         # Members that can be bound to the host have an implicit min of 1
         if shape.serialization.get('hostLabel'):

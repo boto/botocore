@@ -278,8 +278,8 @@ class TestValidateRanges(BaseTestValidate):
                 'Long': -10,
             },
             errors=[
-                'Invalid range for parameter Int',
-                'Invalid range for parameter Long',
+                'Invalid range for parameter Int, value: -10, valid range: 0-1000',
+                'Invalid range for parameter Long, value: -10, valid range: 0-1000',
             ]
         )
 
@@ -308,7 +308,7 @@ class TestValidateRanges(BaseTestValidate):
                 'String': '',
             },
             errors=[
-                'Invalid length for parameter String',
+                'Invalid length for parameter String, value: 0, valid range: 1-10',
             ]
         )
 
@@ -329,7 +329,7 @@ class TestValidateRanges(BaseTestValidate):
                 'List': [],
             },
             errors=[
-                'Invalid length for parameter List',
+                'Invalid length for parameter List, value: 0, valid range: 1-5',
             ]
         )
 
