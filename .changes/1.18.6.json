@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``frauddetector``", 
+    "description": "Update frauddetector client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``docdb``", 
+    "description": "Update docdb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sts``", 
+    "description": "Update sts client to latest version", 
+    "type": "api-change"
+  }
+]
