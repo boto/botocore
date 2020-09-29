@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.18.8
+======
+
+* api-change:``timestream-write``: Update timestream-write client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``schemas``: Update schemas client to latest version
+* api-change:``timestream-query``: Update timestream-query client to latest version
+
+
+1.18.7
+======
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.18.6
+======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
 1.18.5
 ======
 
