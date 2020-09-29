@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``timestream-write``", 
+    "description": "Update timestream-write client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``connect``", 
+    "description": "Update connect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``schemas``", 
+    "description": "Update schemas client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``timestream-query``", 
+    "description": "Update timestream-query client to latest version", 
+    "type": "api-change"
+  }
+]

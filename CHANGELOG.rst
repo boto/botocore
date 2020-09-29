@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.18.8
+======
+
+* api-change:``timestream-write``: Update timestream-write client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``schemas``: Update schemas client to latest version
+* api-change:``timestream-query``: Update timestream-query client to latest version
+
+
 1.18.7
 ======
 
