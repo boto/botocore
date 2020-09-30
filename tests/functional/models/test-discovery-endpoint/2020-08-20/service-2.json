@@ -100,7 +100,8 @@
                             "shape": "String",
                             "endpointdiscoveryid": true
                         },
-                        "Baz": {"shape": "String"}
+                        "Baz": {"shape": "String"},
+                        "Empty": {"shape": "EmptyStruct"}
                     }
                 },
                 "EmptyStruct": {
