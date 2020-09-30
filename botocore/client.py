@@ -28,8 +28,10 @@ from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.utils import (
     CachedProperty, get_service_module_name, S3RegionRedirector,
-    S3ArnParamHandler, S3EndpointSetter, ensure_boolean
+    S3ArnParamHandler, S3EndpointSetter, ensure_boolean,
+    S3ControlArnParamHandler, S3ControlEndpointSetter,
 )
+from botocore.args import ClientArgsCreator
 from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
@@ -86,6 +88,9 @@ class ClientCreator(object):
         service_client = cls(**client_args)
         self._register_retries(service_client)
         self._register_s3_events(
+            service_client, endpoint_bridge, endpoint_url, client_config,
+            scoped_config)
+        self._register_s3_control_events(
             service_client, endpoint_bridge, endpoint_url, client_config,
             scoped_config)
         self._register_endpoint_discovery(
@@ -241,6 +246,21 @@ class ClientCreator(object):
         ).register(client.meta.events)
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
+
+    def _register_s3_control_events(
+        self, client, endpoint_bridge,
+        endpoint_url, client_config, scoped_config
+    ):
+        if client.meta.service_model.service_name != 's3control':
+            return
+        S3ControlArnParamHandler().register(client.meta.events)
+        S3ControlEndpointSetter(
+            endpoint_resolver=self._endpoint_resolver,
+            region=client.meta.region_name,
+            s3_config=client.meta.config.s3,
+            endpoint_url=endpoint_url,
+            partition=client.meta.partition
+        ).register(client.meta.events)
 
     def _set_s3_presign_signature_version(self, client_meta,
                                           client_config, scoped_config):

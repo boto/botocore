@@ -40,7 +40,9 @@ from botocore.exceptions import (
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
-    InvalidRegionError,
+    InvalidRegionError, UnsupportedOutpostResourceError,
+    UnsupportedS3ControlConfigurationError, UnsupportedS3ControlArnError,
+    InvalidHostLabelError,
 )
 
 logger = logging.getLogger(__name__)
@@ -1332,8 +1334,12 @@ class ArnParser(object):
 
 
 class S3ArnParamHandler(object):
-    _ACCESSPOINT_RESOURCE_REGEX = re.compile(
-        r'^accesspoint[/:](?P<resource_name>.+)$'
+    _RESOURCE_REGEX = re.compile(
+        r'^(?P<resource_type>accesspoint|outpost)[/:](?P<resource_name>.+)$'
+    )
+    _OUTPOST_RESOURCE_REGEX = re.compile(
+        r'^(?P<outpost_name>[a-zA-Z0-9\-]{1,63})[/:]accesspoint[/:]'
+        r'(?P<accesspoint_name>[a-zA-Z0-9\-]{1,63}$)'
     )
     _BLACKLISTED_OPERATIONS = [
         'CreateBucket'
@@ -1355,6 +1361,8 @@ class S3ArnParamHandler(object):
             return
         if arn_details['resource_type'] == 'accesspoint':
             self._store_accesspoint(params, context, arn_details)
+        elif arn_details['resource_type'] == 'outpost':
+            self._store_outpost(params, context, arn_details)
 
     def _get_arn_details_from_bucket_param(self, params):
         if 'Bucket' in params:
@@ -1368,9 +1376,9 @@ class S3ArnParamHandler(object):
         return None
 
     def _add_resource_type_and_name(self, arn, arn_details):
-        match = self._ACCESSPOINT_RESOURCE_REGEX.match(arn_details['resource'])
+        match = self._RESOURCE_REGEX.match(arn_details['resource'])
         if match:
-            arn_details['resource_type'] = 'accesspoint'
+            arn_details['resource_type'] = match.group('resource_type')
             arn_details['resource_name'] = match.group('resource_name')
         else:
             raise UnsupportedS3ArnError(arn=arn)
@@ -1389,6 +1397,26 @@ class S3ArnParamHandler(object):
             'account': arn_details['account'],
             'partition': arn_details['partition'],
             'region': arn_details['region'],
+            'service': arn_details['service'],
+        }
+
+    def _store_outpost(self, params, context, arn_details):
+        resource_name = arn_details['resource_name']
+        match = self._OUTPOST_RESOURCE_REGEX.match(resource_name)
+        if not match:
+            raise UnsupportedOutpostResourceError(resource_name=resource_name)
+        # Because we need to set the bucket name to something to pass
+        # validation we're going to use the access point name to be consistent
+        # with normal access point arns.
+        accesspoint_name = match.group('accesspoint_name')
+        params['Bucket'] = accesspoint_name
+        context['s3_accesspoint'] = {
+            'outpost_name': match.group('outpost_name'),
+            'name': accesspoint_name,
+            'account': arn_details['account'],
+            'partition': arn_details['partition'],
+            'region': arn_details['region'],
+            'service': arn_details['service'],
         }
 
 
@@ -1416,6 +1444,8 @@ class S3EndpointSetter(object):
             self._validate_accesspoint_supported(request)
             region_name = self._resolve_region_for_accesspoint_endpoint(
                 request)
+            self._resolve_signing_name_for_accesspoint_endpoint(
+                request)
             self._switch_to_accesspoint_endpoint(request, region_name)
             return
         if self._use_accelerate_endpoint:
@@ -1438,7 +1468,7 @@ class S3EndpointSetter(object):
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client does not support s3 accelerate configuration '
-                    'when and access-point ARN is specified.'
+                    'when an access-point ARN is specified.'
                 )
             )
         request_partion = request.context['s3_accesspoint']['partition']
@@ -1451,6 +1481,14 @@ class S3EndpointSetter(object):
                         self._partition, request_partion)
                 )
             )
+        outpost_name = request.context['s3_accesspoint'].get('outpost_name')
+        if outpost_name and self._s3_config.get('use_dualstack_endpoint'):
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client does not support s3 dualstack configuration '
+                    'when an outpost ARN is specified.'
+                )
+            )
 
     def _resolve_region_for_accesspoint_endpoint(self, request):
         if self._s3_config.get('use_arn_region', True):
@@ -1461,6 +1499,10 @@ class S3EndpointSetter(object):
             self._override_signing_region(request, accesspoint_region)
             return accesspoint_region
         return self._region
+
+    def _resolve_signing_name_for_accesspoint_endpoint(self, request):
+        accesspoint_service = request.context['s3_accesspoint']['service']
+        self._override_signing_name(request, accesspoint_service)
 
     def _switch_to_accesspoint_endpoint(self, request, region_name):
         original_components = urlsplit(request.url)
@@ -1480,8 +1522,12 @@ class S3EndpointSetter(object):
         s3_accesspoint = request_context['s3_accesspoint']
         accesspoint_netloc_components = [
             '%s-%s' % (s3_accesspoint['name'], s3_accesspoint['account']),
-            's3-accesspoint'
         ]
+        if 'outpost_name' in s3_accesspoint:
+            outpost_host = [s3_accesspoint['outpost_name'], 's3-outposts']
+            accesspoint_netloc_components.extend(outpost_host)
+        else:
+            accesspoint_netloc_components.append('s3-accesspoint')
         if self._s3_config.get('use_dualstack_endpoint'):
             accesspoint_netloc_components.append('dualstack')
         accesspoint_netloc_components.extend(
@@ -1510,15 +1556,22 @@ class S3EndpointSetter(object):
         return dns_suffix
 
     def _override_signing_region(self, request, region_name):
-        signing_context = {
-            'region': region_name,
-        }
+        signing_context = request.context.get('signing', {})
         # S3SigV4Auth will use the context['signing']['region'] value to
         # sign with if present. This is used by the Bucket redirector
         # as well but we should be fine because the redirector is never
         # used in combination with the accesspoint setting logic.
+        signing_context['region'] = region_name
         request.context['signing'] = signing_context
 
+    def _override_signing_name(self, request, signing_name):
+        signing_context = request.context.get('signing', {})
+        # S3SigV4Auth will use the context['signing']['signing_name'] value to
+        # sign with if present. This is used by the Bucket redirector
+        # as well but we should be fine because the redirector is never
+        # used in combination with the accesspoint setting logic.
+        signing_context['signing_name'] = signing_name
+        request.context['signing'] = signing_context
 
     @CachedProperty
     def _use_accelerate_endpoint(self):
@@ -1588,6 +1641,326 @@ class S3EndpointSetter(object):
 
         # By default, try to use virtual style with path fallback.
         return fix_s3_host
+
+
+class S3ControlEndpointSetter(object):
+    _DEFAULT_PARTITION = 'aws'
+    _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
+    _HOST_LABEL_REGEX = re.compile(r'^[a-zA-Z0-9\-]{1,63}$')
+
+    def __init__(self, endpoint_resolver, region=None,
+                 s3_config=None, endpoint_url=None, partition=None):
+        self._endpoint_resolver = endpoint_resolver
+        self._region = region
+        self._s3_config = s3_config
+        if s3_config is None:
+            self._s3_config = {}
+        self._endpoint_url = endpoint_url
+        self._partition = partition
+        if partition is None:
+            self._partition = self._DEFAULT_PARTITION
+
+    def register(self, event_emitter):
+        event_emitter.register('before-sign.s3-control', self.set_endpoint)
+
+    def set_endpoint(self, request, **kwargs):
+        if self._use_endpoint_from_arn_details(request):
+            self._validate_endpoint_from_arn_details_supported(request)
+            region_name = self._resolve_region_from_arn_details(request)
+            self._resolve_signing_name_from_arn_details(request)
+            self._resolve_endpoint_from_arn_details(request, region_name)
+            self._add_headers_from_arn_details(request)
+        elif self._use_endpoint_from_outpost_id(request):
+            self._validate_outpost_redirection_valid(request)
+            outpost_id = request.context['outpost_id']
+            self._override_signing_name(request, 's3-outposts')
+            new_netloc = self._construct_outpost_endpoint(self._region)
+            self._update_request_netloc(request, new_netloc)
+
+    def _use_endpoint_from_arn_details(self, request):
+        return 'arn_details' in request.context
+
+    def _use_endpoint_from_outpost_id(self, request):
+        return 'outpost_id' in request.context
+
+    def _validate_endpoint_from_arn_details_supported(self, request):
+        self._validate_no_custom_endpoint()
+        if not self._s3_config.get('use_arn_region', False):
+            arn_region = request.context['arn_details']['region']
+            if arn_region != self._region:
+                error_msg = (
+                    'The use_arn_region configuration is disabled but '
+                    'received arn for "%s" when the client is configured '
+                    'to use "%s"'
+                ) % (arn_region, self._region)
+                raise UnsupportedS3ControlConfigurationError(msg=error_msg)
+        request_partion = request.context['arn_details']['partition']
+        if request_partion != self._partition:
+            raise UnsupportedS3ControlConfigurationError(
+                msg=(
+                    'Client is configured for "%s" partition, but arn '
+                    'provided is for "%s" partition. The client and '
+                    'arn partition must be the same.' % (
+                        self._partition, request_partion)
+                )
+            )
+        if self._s3_config.get('use_accelerate_endpoint'):
+            raise UnsupportedS3ControlConfigurationError(
+                msg='S3 control client does not support accelerate endpoints',
+            )
+        if 'outpost_name' in request.context['arn_details']:
+            self._validate_outpost_redirection_valid(request)
+
+    def _validate_no_custom_endpoint(self):
+        if self._endpoint_url:
+            raise UnsupportedS3ControlConfigurationError(
+                msg=(
+                    'Client cannot use a custom "endpoint_url" when '
+                    'specifying a resource ARN.'
+                )
+            )
+
+    def _validate_outpost_redirection_valid(self, request):
+        self._validate_no_custom_endpoint()
+        if self._s3_config.get('use_dualstack_endpoint'):
+            raise UnsupportedS3ControlConfigurationError(
+                msg=(
+                    'Client does not support s3 dualstack configuration '
+                    'when an outpost is specified.'
+                )
+            )
+
+    def _resolve_region_from_arn_details(self, request):
+        if self._s3_config.get('use_arn_region', False):
+            arn_region = request.context['arn_details']['region']
+            # If we are using the region from the expanded arn, we will also
+            # want to make sure that we set it as the signing region as well
+            self._override_signing_region(request, arn_region)
+            return arn_region
+        return self._region
+
+    def _resolve_signing_name_from_arn_details(self, request):
+        arn_service = request.context['arn_details']['service']
+        self._override_signing_name(request, arn_service)
+        return arn_service
+
+    def _resolve_endpoint_from_arn_details(self, request, region_name):
+        new_netloc = self._resolve_netloc_from_arn_details(request, region_name)
+        self._update_request_netloc(request, new_netloc)
+
+    def _update_request_netloc(self, request, new_netloc):
+        original_components = urlsplit(request.url)
+        arn_details_endpoint = urlunsplit((
+            original_components.scheme,
+            new_netloc,
+            original_components.path,
+            original_components.query,
+            ''
+        ))
+        logger.debug(
+            'Updating URI from %s to %s' % (request.url, arn_details_endpoint)
+        )
+        request.url = arn_details_endpoint
+
+    def _resolve_netloc_from_arn_details(self, request, region_name):
+        arn_details = request.context['arn_details']
+        if 'outpost_name' in arn_details:
+            return self._construct_outpost_endpoint(region_name)
+        account = arn_details['account']
+        return self._construct_s3_control_endpoint(region_name, account)
+
+    def _is_valid_host_label(self, label):
+        return self._HOST_LABEL_REGEX.match(label)
+
+    def _validate_host_labels(self, *labels):
+        for label in labels:
+            if not self._is_valid_host_label(label):
+                raise InvalidHostLabelError(label=label)
+
+    def _construct_s3_control_endpoint(self, region_name, account):
+        self._validate_host_labels(region_name, account)
+        netloc = [
+            account,
+            's3-control',
+        ]
+        self._add_dualstack(netloc)
+        dns_suffix = self._get_dns_suffix(region_name)
+        netloc.extend([region_name, dns_suffix])
+        return self._construct_netloc(netloc)
+
+    def _construct_outpost_endpoint(self, region_name):
+        self._validate_host_labels(region_name)
+        netloc = [
+            's3-outposts',
+            region_name,
+            self._get_dns_suffix(region_name),
+        ]
+        return self._construct_netloc(netloc)
+
+    def _construct_netloc(self, netloc):
+        return '.'.join(netloc)
+
+    def _add_dualstack(self, netloc):
+        if self._s3_config.get('use_dualstack_endpoint'):
+            netloc.append('dualstack')
+
+    def _get_dns_suffix(self, region_name):
+        resolved = self._endpoint_resolver.construct_endpoint(
+            's3', region_name)
+        dns_suffix = self._DEFAULT_DNS_SUFFIX
+        if resolved and 'dnsSuffix' in resolved:
+            dns_suffix = resolved['dnsSuffix']
+        return dns_suffix
+
+    def _override_signing_region(self, request, region_name):
+        signing_context = request.context.get('signing', {})
+        # S3SigV4Auth will use the context['signing']['region'] value to
+        # sign with if present. This is used by the Bucket redirector
+        # as well but we should be fine because the redirector is never
+        # used in combination with the accesspoint setting logic.
+        signing_context['region'] = region_name
+        request.context['signing'] = signing_context
+
+    def _override_signing_name(self, request, signing_name):
+        signing_context = request.context.get('signing', {})
+        # S3SigV4Auth will use the context['signing']['signing_name'] value to
+        # sign with if present. This is used by the Bucket redirector
+        # as well but we should be fine because the redirector is never
+        # used in combination with the accesspoint setting logic.
+        signing_context['signing_name'] = signing_name
+        request.context['signing'] = signing_context
+
+    def _add_headers_from_arn_details(self, request):
+        arn_details = request.context['arn_details']
+        outpost_name = arn_details.get('outpost_name')
+        if outpost_name:
+            self._add_outpost_id_header(request, outpost_name)
+
+    def _add_outpost_id_header(self, request, outpost_name):
+        request.headers['x-amz-outpost-id'] = outpost_name
+
+
+class S3ControlArnParamHandler(object):
+    _RESOURCE_SPLIT_REGEX = re.compile(r'[/:]')
+
+    def __init__(self, arn_parser=None):
+        self._arn_parser = arn_parser
+        if arn_parser is None:
+            self._arn_parser = ArnParser()
+
+    def register(self, event_emitter):
+        event_emitter.register(
+            'before-parameter-build.s3-control',
+            self.handle_arn,
+        )
+
+    def handle_arn(self, params, model, context, **kwargs):
+        if model.name in ('CreateBucket', 'ListRegionalBuckets'):
+            # CreateBucket and ListRegionalBuckets are special cases that do
+            # not obey ARN based redirection but will redirect based off of the
+            # presence of the OutpostId parameter
+            self._handle_outpost_id_param(params, model, context)
+        else:
+            self._handle_name_param(params, model, context)
+            self._handle_bucket_param(params, model, context)
+
+    def _get_arn_details_from_param(self, params, param_name):
+        if param_name not in params:
+            return None
+        try:
+            arn = params[param_name]
+            arn_details = self._arn_parser.parse_arn(arn)
+            arn_details['original'] = arn
+            arn_details['resources'] = self._split_resource(arn_details)
+            return arn_details
+        except InvalidArnException:
+            return None
+
+    def _split_resource(self, arn_details):
+        return self._RESOURCE_SPLIT_REGEX.split(arn_details['resource'])
+
+    def _override_account_id_param(self, params, arn_details):
+        account_id = arn_details['account']
+        if 'AccountId' in params and params['AccountId'] != account_id:
+            error_msg = (
+                'Account ID in arn does not match the AccountId parameter '
+                'provided: "%s"'
+            ) % params['AccountId']
+            raise UnsupportedS3ControlArnError(
+                arn=arn_details['original'],
+                msg=error_msg,
+            )
+        params['AccountId'] = account_id
+
+    def _handle_outpost_id_param(self, params, model, context):
+        if 'OutpostId' not in params:
+            return
+        context['outpost_id'] = params['OutpostId']
+
+    def _handle_name_param(self, params, model, context):
+        # CreateAccessPoint is a special case that does not expand Name
+        if model.name == 'CreateAccessPoint':
+            return
+        arn_details = self._get_arn_details_from_param(params, 'Name')
+        if arn_details is None:
+            return
+        if self._is_outpost_accesspoint(arn_details):
+            self._store_outpost_accesspoint(params, context, arn_details)
+        else:
+            error_msg = 'The Name parameter does not support the provided ARN'
+            raise UnsupportedS3ControlArnError(
+                arn=arn_details['original'],
+                msg=error_msg,
+            )
+
+    def _is_outpost_accesspoint(self, arn_details):
+        if arn_details['service'] != 's3-outposts':
+            return False
+        resources = arn_details['resources']
+        if len(resources) != 4:
+            return False
+        # Resource must be of the form outpost/op-123/accesspoint/name
+        return resources[0] == 'outpost' and resources[2] == 'accesspoint'
+
+    def _store_outpost_accesspoint(self, params, context, arn_details):
+        self._override_account_id_param(params, arn_details)
+        accesspoint_name = arn_details['resources'][3]
+        params['Name'] = accesspoint_name
+        arn_details['accesspoint_name'] = accesspoint_name
+        arn_details['outpost_name'] = arn_details['resources'][1]
+        context['arn_details'] = arn_details
+
+    def _handle_bucket_param(self, params, model, context):
+        arn_details = self._get_arn_details_from_param(params, 'Bucket')
+        if arn_details is None:
+            return
+        if self._is_outpost_bucket(arn_details):
+            self._store_outpost_bucket(params, context, arn_details)
+        else:
+            error_msg = (
+                'The Bucket parameter does not support the provided ARN'
+            )
+            raise UnsupportedS3ControlArnError(
+                arn=arn_details['original'],
+                msg=error_msg,
+            )
+
+    def _is_outpost_bucket(self, arn_details):
+        if arn_details['service'] != 's3-outposts':
+            return False
+        resources = arn_details['resources']
+        if len(resources) != 4:
+            return False
+        # Resource must be of the form outpost/op-123/bucket/name
+        return resources[0] == 'outpost' and resources[2] == 'bucket'
+
+    def _store_outpost_bucket(self, params, context, arn_details):
+        self._override_account_id_param(params, arn_details)
+        bucket_name = arn_details['resources'][3]
+        params['Bucket'] = bucket_name
+        arn_details['bucket_name'] = bucket_name
+        arn_details['outpost_name'] = arn_details['resources'][1]
+        context['arn_details'] = arn_details
 
 
 class ContainerMetadataFetcher(object):
