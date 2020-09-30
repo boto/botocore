@@ -762,6 +762,16 @@ class TestHandlers(BaseSessionTest):
         except ParamValidationError:
             self.fail('The s3 arn: %s should pass validation' % arn)
 
+    def test_validation_is_s3_outpost_arn(self):
+        try:
+            arn = (
+                'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+                'op-01234567890123456:accesspoint:myaccesspoint'
+            )
+            handlers.validate_bucket_name({'Bucket': arn})
+        except ParamValidationError:
+            self.fail('The s3 arn: %s should pass validation' % arn)
+
     def test_validation_is_global_s3_bucket_arn(self):
         with self.assertRaises(ParamValidationError):
             arn = 'arn:aws:s3:::mybucket'

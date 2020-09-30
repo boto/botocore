@@ -85,7 +85,7 @@ class EndpointDiscoveryModel(object):
         for member_name, member_shape in shape.members.items():
             if member_shape.metadata.get('endpointdiscoveryid'):
                 ids[member_name] = params[member_name]
-            elif member_shape.type_name == 'structure':
+            elif member_shape.type_name == 'structure' and member_name in params:
                 self._gather_ids(member_shape, params[member_name], ids)
         return ids
 
