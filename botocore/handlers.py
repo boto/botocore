@@ -60,10 +60,15 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
-VALID_S3_ARN = re.compile(
+_ACCESSPOINT_ARN = (
     r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
     r'[a-zA-Z0-9\-]{1,63}$'
 )
+_OUTPOST_ARN = (
+    r'^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
+    r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$'
+)
+VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {
@@ -844,6 +849,7 @@ class ClientMethodAlias(object):
         return getattr(client, self._actual)
 
 
+# TODO: Remove this class as it is no longer used
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
@@ -1078,12 +1084,6 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
     ('docs.*.docdb.CreateDBCluster.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-
-    #############
-    # S3 Control
-    #############
-    ('before-call.s3-control.*',
-     HeaderToHostHoister('x-amz-account-id').hoist),
 
     ###########
     # SMS Voice
