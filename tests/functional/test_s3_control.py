@@ -43,7 +43,7 @@ class S3ControlOperationTest(BaseSessionTest):
         self.assertTrue(request.url.startswith(
             'https://123.s3-control.us-west-2.amazonaws.com'))
 
-    def test_does_remove_account_id_from_headers(self):
+    def test_does_not_remove_account_id_from_headers(self):
         self.client.get_public_access_block(AccountId='123')
         self.assertEqual(self.http_session_send_mock.call_count, 1)
         request = self.http_session_send_mock.call_args_list[0][0][0]
