@@ -1,0 +1,62 @@
+[
+  {
+    "category": "``datasync``", 
+    "description": "Update datasync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3control``", 
+    "description": "Update s3control client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``imagebuilder``", 
+    "description": "Update imagebuilder client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``securityhub``", 
+    "description": "Update securityhub client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3outposts``", 
+    "description": "Update s3outposts client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconnect``", 
+    "description": "Update mediaconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }
+]
