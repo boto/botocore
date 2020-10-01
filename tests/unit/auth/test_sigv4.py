@@ -63,9 +63,6 @@ TESTS_TO_IGNORE = [
     'get-vanilla-query-order-value',
     # Test seems wrong: multiline header value should not get commas inserted.
     'get-header-value-multiline',
-    # Test seems wrong: String-to-sign's hash of the canonical request is off.
-    'post-x-www-form-urlencoded',
-    'post-x-www-form-urlencoded-parameters',
 ]
 if not six.PY3:
     TESTS_TO_IGNORE += [
