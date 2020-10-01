@@ -138,7 +138,7 @@ class SigV2Auth(BaseSigner):
         # from the request body so we can update them with
         # the sigv2 auth params.
         if self.credentials is None:
-            raise NoCredentialsError
+            raise NoCredentialsError()
         if request.data:
             # POST
             params = request.data
@@ -162,7 +162,7 @@ class SigV3Auth(BaseSigner):
 
     def add_auth(self, request):
         if self.credentials is None:
-            raise NoCredentialsError
+            raise NoCredentialsError()
         if 'Date' in request.headers:
             del request.headers['Date']
         request.headers['Date'] = formatdate(usegmt=True)
@@ -379,7 +379,7 @@ class SigV4Auth(BaseSigner):
 
     def add_auth(self, request):
         if self.credentials is None:
-            raise NoCredentialsError
+            raise NoCredentialsError()
         datetime_now = datetime.datetime.utcnow()
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
         # This could be a retry.  Make sure the previous
@@ -646,89 +646,9 @@ class CrtSigV4Auth(BaseSigner):
         self._region_name = region_name
         self._expiration_in_seconds = None
 
-    def _crt_request_from_aws_request(self, aws_request):
-        url_parts = urlsplit(aws_request.url)
-        crt_path = url_parts.path if url_parts.path else '/'
-        if aws_request.params:
-            array = []
-            for (param, value) in aws_request.params.items():
-                value = str(value)
-                array.append('%s=%s' % (param, value))
-            crt_path = crt_path + '?' + '&'.join(array)
-        elif url_parts.query:
-            crt_path = '%s?%s' % (crt_path, url_parts.query)
-
-        crt_headers = awscrt.http.HttpHeaders(aws_request.headers.items())
-
-        # CRT requires body (if it exists) to be an I/O stream.
-        crt_body_stream = None
-        if aws_request.body:
-            if hasattr(aws_request.body, 'seek'):
-                crt_body_stream = aws_request.body
-            else:
-                crt_body_stream = BytesIO(aws_request.body)
-
-        crt_request = awscrt.http.HttpRequest(
-            method=aws_request.method,
-            path=crt_path,
-            headers=crt_headers,
-            body_stream=crt_body_stream)
-        return crt_request
-
-    def _apply_signing_changes(self, aws_request, signed_crt_request):
-        # Apply changes from signed CRT request to the AWSRequest
-        aws_request.headers = HTTPHeaders.from_pairs(
-            list(signed_crt_request.headers))
-
-        if self._SIGNATURE_TYPE == \
-                awscrt.auth.AwsSignatureType.HTTP_REQUEST_QUERY_PARAMS:
-
-            new_query_string = urlsplit(signed_crt_request.path).query
-            p = urlsplit(aws_request.url)
-            # urlsplit() returns a tuple (and therefore immutable) so we
-            # need to create new url with the new query string.
-            # <part>   - <index>
-            # scheme   - 0
-            # netloc   - 1
-            # path     - 2
-            # query    - 3  <-- we're replacing this.
-            # fragment - 4
-            aws_request.url = urlunsplit(
-                (p[0], p[1], p[2], new_query_string, p[4]))
-
-    def _should_sign_header(self, name, **kwargs):
-        return name.lower() not in SIGNED_HEADERS_BLACKLIST
-
-    def _modify_request_before_signing(self, request):
-        # This could be a retry. Make sure the previous
-        # authorization headers are removed first.
-        for h in self._PRESIGNED_HEADERS_BLACKLIST:
-            if h in request.headers:
-                del request.headers[h]
-        # If necessary, add the host header
-        if 'host' not in request.headers:
-            request.headers['host'] = _host_from_url(request.url)
-
-    def _get_existing_sha256(self, request):
-        return request.headers.get('X-Amz-Content-SHA256')
-
-    def _should_sha256_sign_payload(self, request):
-        # Payloads will always be signed over insecure connections.
-        if not request.url.startswith('https'):
-            return True
-
-        # Certain operations may have payload signing disabled by default.
-        # Since we don't have access to the operation model, we pass in this
-        # bit of metadata through the request context.
-        return request.context.get('payload_signing_enabled', True)
-
-    def _should_add_content_sha256_header(self, explicit_payload):
-        # only add X-Amz-Content-SHA256 header if payload is explicitly set
-        return explicit_payload is not None
-
     def add_auth(self, request):
         if self.credentials is None:
-            raise NoCredentialsError
+            raise NoCredentialsError()
 
         # Use utcnow() because that's what gets mocked by tests, but set
         # timezone because CRT assumes naive datetime is local time.
@@ -777,6 +697,70 @@ class CrtSigV4Auth(BaseSigner):
         future = awscrt.auth.aws_sign_request(crt_request, signing_config)
         future.result()
         self._apply_signing_changes(request, crt_request)
+
+    def _crt_request_from_aws_request(self, aws_request):
+        url_parts = urlsplit(aws_request.url)
+        crt_path = url_parts.path if url_parts.path else '/'
+        if aws_request.params:
+            array = []
+            for (param, value) in aws_request.params.items():
+                value = str(value)
+                array.append('%s=%s' % (param, value))
+            crt_path = crt_path + '?' + '&'.join(array)
+        elif url_parts.query:
+            crt_path = '%s?%s' % (crt_path, url_parts.query)
+
+        crt_headers = awscrt.http.HttpHeaders(aws_request.headers.items())
+
+        # CRT requires body (if it exists) to be an I/O stream.
+        crt_body_stream = None
+        if aws_request.body:
+            if hasattr(aws_request.body, 'seek'):
+                crt_body_stream = aws_request.body
+            else:
+                crt_body_stream = BytesIO(aws_request.body)
+
+        crt_request = awscrt.http.HttpRequest(
+            method=aws_request.method,
+            path=crt_path,
+            headers=crt_headers,
+            body_stream=crt_body_stream)
+        return crt_request
+
+    def _apply_signing_changes(self, aws_request, signed_crt_request):
+        # Apply changes from signed CRT request to the AWSRequest
+        aws_request.headers = HTTPHeaders.from_pairs(
+            list(signed_crt_request.headers))
+
+    def _should_sign_header(self, name, **kwargs):
+        return name.lower() not in SIGNED_HEADERS_BLACKLIST
+
+    def _modify_request_before_signing(self, request):
+        # This could be a retry. Make sure the previous
+        # authorization headers are removed first.
+        for h in self._PRESIGNED_HEADERS_BLACKLIST:
+            if h in request.headers:
+                del request.headers[h]
+        # If necessary, add the host header
+        if 'host' not in request.headers:
+            request.headers['host'] = _host_from_url(request.url)
+
+    def _get_existing_sha256(self, request):
+        return request.headers.get('X-Amz-Content-SHA256')
+
+    def _should_sha256_sign_payload(self, request):
+        # Payloads will always be signed over insecure connections.
+        if not request.url.startswith('https'):
+            return True
+
+        # Certain operations may have payload signing disabled by default.
+        # Since we don't have access to the operation model, we pass in this
+        # bit of metadata through the request context.
+        return request.context.get('payload_signing_enabled', True)
+
+    def _should_add_content_sha256_header(self, explicit_payload):
+        # only add X-Amz-Content-SHA256 header if payload is explicitly set
+        return explicit_payload is not None
 
 
 class CrtS3SigV4Auth(CrtSigV4Auth):
@@ -877,6 +861,22 @@ class CrtSigV4QueryAuth(CrtSigV4Auth):
         p = url_parts
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
+
+    def _apply_signing_changes(self, aws_request, signed_crt_request):
+        # Apply changes from signed CRT request to the AWSRequest
+        super()._apply_signing_changes(aws_request, signed_crt_request)
+
+        signed_query = urlsplit(signed_crt_request.path).query
+        p = urlsplit(aws_request.url)
+        # urlsplit() returns a tuple (and therefore immutable) so we
+        # need to create new url with the new query string.
+        # <part>   - <index>
+        # scheme   - 0
+        # netloc   - 1
+        # path     - 2
+        # query    - 3  <-- we're replacing this.
+        # fragment - 4
+        aws_request.url = urlunsplit((p[0], p[1], p[2], signed_query, p[4]))
 
 
 class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
