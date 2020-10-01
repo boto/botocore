@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.18.10
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.18.9
 ======
 
