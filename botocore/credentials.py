@@ -1084,7 +1084,7 @@ class EnvProvider(CredentialProvider):
         access_key = self.environ.get(self._mapping['access_key'], '')
 
         if access_key:
-            logger.info('Found credentials in environment variables.')
+            logger.debug('Found credentials in environment variables.')
             fetcher = self._create_credentials_fetcher()
             credentials = fetcher(require_expiry=False)
 
@@ -1169,7 +1169,7 @@ class OriginalEC2Provider(CredentialProvider):
                 self._environ['AWS_CREDENTIAL_FILE'])
             creds = self._parser(full_path)
             if self.ACCESS_KEY in creds:
-                logger.info('Found credentials in AWS_CREDENTIAL_FILE.')
+                logger.debug('Found credentials in AWS_CREDENTIAL_FILE.')
                 access_key = creds[self.ACCESS_KEY]
                 secret_key = creds[self.SECRET_KEY]
                 # EC2 creds file doesn't support session tokens.
@@ -1206,7 +1206,7 @@ class SharedCredentialProvider(CredentialProvider):
         if self._profile_name in available_creds:
             config = available_creds[self._profile_name]
             if self.ACCESS_KEY in config:
-                logger.info("Found credentials in shared credentials file: %s",
+                logger.debug("Found credentials in shared credentials file: %s",
                             self._creds_filename)
                 access_key, secret_key = self._extract_creds_from_mapping(
                     config, self.ACCESS_KEY, self.SECRET_KEY)
@@ -1259,7 +1259,7 @@ class ConfigProvider(CredentialProvider):
         if self._profile_name in full_config['profiles']:
             profile_config = full_config['profiles'][self._profile_name]
             if self.ACCESS_KEY in profile_config:
-                logger.info("Credentials found in config file: %s",
+                logger.debug("Found credentials in config file: %s",
                             self._config_filename)
                 access_key, secret_key = self._extract_creds_from_mapping(
                     profile_config, self.ACCESS_KEY, self.SECRET_KEY)
@@ -1309,7 +1309,7 @@ class BotoProvider(CredentialProvider):
             if 'Credentials' in config:
                 credentials = config['Credentials']
                 if self.ACCESS_KEY in credentials:
-                    logger.info("Found credentials in boto config file: %s",
+                    logger.debug("Found credentials in boto config file: %s",
                                 filename)
                     access_key, secret_key = self._extract_creds_from_mapping(
                         credentials, self.ACCESS_KEY, self.SECRET_KEY)
