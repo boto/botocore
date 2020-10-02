@@ -24,7 +24,7 @@ def find_version(*file_paths):
 
 
 requires = [
-    'awscrt==0.9.0',
+    'awscrt==0.9.1',
     'jmespath>=0.7.1,<1.0.0',
     'python-dateutil>=2.1,<3.0.0',
     'urllib3>=1.20,<1.26',

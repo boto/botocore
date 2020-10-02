@@ -61,8 +61,6 @@ TESTS_TO_IGNORE = [
     'get-vanilla-query-order-key-case',
     'get-vanilla-query-order-key',
     'get-vanilla-query-order-value',
-    # Test seems wrong: multiline header value should not get commas inserted.
-    'get-header-value-multiline',
 ]
 if not six.PY3:
     TESTS_TO_IGNORE += [
