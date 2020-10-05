@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.18.12
+=======
+
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.18.11
 =======
 
