@@ -911,16 +911,16 @@ class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
-    'v4': SigV4Auth,
-    'v4-query': SigV4QueryAuth,
+    'v4-old': SigV4Auth,
+    'v4-query-old': SigV4QueryAuth,
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
-    's3v4': S3SigV4Auth,
-    's3v4-query': S3SigV4QueryAuth,
+    's3v4-old': S3SigV4Auth,
+    's3v4-query-old': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,
-    'crt-v4': CrtSigV4Auth,
-    'crt-v4-query': CrtSigV4QueryAuth,
-    'crt-s3v4': CrtS3SigV4Auth,
-    'crt-s3v4-query': CrtS3SigV4QueryAuth,
+    'v4': CrtSigV4Auth,
+    'v4-query': CrtSigV4QueryAuth,
+    's3v4': CrtS3SigV4Auth,
+    's3v4-query': CrtS3SigV4QueryAuth,
 
 }
