@@ -2,6 +2,47 @@
 CHANGELOG
 =========
 
+1.18.13
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.18.12
+=======
+
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
+1.18.11
+=======
+
+* api-change:``batch``: Update batch client to latest version
+* api-change:``personalize-events``: Update personalize-events client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
+1.18.10
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.18.9
 ======
 
