@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.18.13
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``marketplace-catalog``: Update marketplace-catalog client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.18.12
 =======
 
