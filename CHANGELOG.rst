@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.18.14
+=======
+
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.18.13
 =======
 
