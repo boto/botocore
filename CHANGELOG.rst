@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.18.15
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.18.14
 =======
 
