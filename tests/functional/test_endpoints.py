@@ -68,6 +68,7 @@ SERVICE_RENAMES = {
     'secretsmanager': 'secrets-manager',
     'serverlessrepo': 'serverlessapplicationrepository',
     'servicecatalog': 'service-catalog',
+    'servicecatalog-appregistry': 'service-catalog-appregistry',
     'stepfunctions': 'sfn',
     'storagegateway': 'storage-gateway',
 }
