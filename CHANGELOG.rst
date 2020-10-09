@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.18.16
+=======
+
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.18.15
 =======
 
