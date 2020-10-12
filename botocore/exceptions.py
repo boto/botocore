@@ -12,7 +12,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import unicode_literals
-from botocore.vendored import requests
 from botocore.vendored.requests.packages import urllib3
 
 
@@ -100,7 +99,7 @@ class EndpointConnectionError(ConnectionError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
 
-class SSLError(ConnectionError, requests.exceptions.SSLError):
+class SSLError(ConnectionError):
     fmt = 'SSL validation failed for {endpoint_url} {error}'
 
 
@@ -110,16 +109,15 @@ class ConnectionClosedError(HTTPClientError):
         'from endpoint URL: "{endpoint_url}".')
 
 
-class ReadTimeoutError(HTTPClientError, requests.exceptions.ReadTimeout,
-                       urllib3.exceptions.ReadTimeoutError):
+class ReadTimeoutError(HTTPClientError, urllib3.exceptions.ReadTimeoutError):
     fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
 
 
-class ConnectTimeoutError(ConnectionError, requests.exceptions.ConnectTimeout):
+class ConnectTimeoutError(ConnectionError):
     fmt = 'Connect timeout on endpoint URL: "{endpoint_url}"'
 
 
-class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
+class ProxyConnectionError(ConnectionError):
     fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
