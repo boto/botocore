@@ -2,6 +2,26 @@
 CHANGELOG
 =========
 
+1.18.17
+=======
+
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``groundstation``: Update groundstation client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.18.16
 =======
 
