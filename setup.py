@@ -42,6 +42,7 @@ setup(
     package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
+    python_requires='>=3.7',
     install_requires=requires,
     extras_require={},
     license="Apache License 2.0",
