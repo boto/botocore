@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.18.18
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.18.17
 =======
 
