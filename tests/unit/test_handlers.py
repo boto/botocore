@@ -1223,7 +1223,7 @@ class TestAddMD5(BaseMD5Test):
             'headers': {}
         }
         self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
-        handlers.calculate_md5(request_dict)
+        conditionally_calculate_md5(request_dict)
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
