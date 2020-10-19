@@ -27,16 +27,16 @@ class TestRDSPagination(unittest.TestCase):
             'describe_reserved_db_instances_offerings')
         generator = paginator.paginate()
         results = list(itertools.islice(generator, 0, 3))
-        self.assertEqual(len(results), 3)
-        self.assertTrue(results[0]['Marker'] != results[1]['Marker'])
+        assert len(results) == 3
+        assert results[0]['Marker'] != results[1]['Marker']
 
     def test_can_paginate_orderable_db(self):
         paginator = self.client.get_paginator(
             'describe_orderable_db_instance_options')
         generator = paginator.paginate(Engine='mysql')
         results = list(itertools.islice(generator, 0, 2))
-        self.assertEqual(len(results), 2)
-        self.assertTrue(results[0].get('Marker') != results[1].get('Marker'))
+        assert len(results) == 2
+        assert results[0].get('Marker') != results[1].get('Marker')
 
 
 if __name__ == '__main__':

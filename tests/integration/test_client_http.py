@@ -2,6 +2,7 @@ import select
 import socket
 import contextlib
 import threading
+import pytest
 from tests import unittest
 from contextlib import contextmanager
 
@@ -76,11 +77,11 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self.fail('Fake EC2 service was not called.')
 
     def test_read_timeout_exception(self):
-        with self.assertRaises(ReadTimeoutError):
+        with pytest.raises(ReadTimeoutError):
             self._read_timeout_server()
 
     def test_old_read_timeout_exception(self):
-        with self.assertRaises(requests_exceptions.ReadTimeout):
+        with pytest.raises(requests_exceptions.ReadTimeout):
             self._read_timeout_server()
 
     @unittest.skip('The current implementation will fail to timeout on linux')
@@ -105,7 +106,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
 
         with background(no_accept_server):
             server_bound_event.wait(timeout=60)
-            with self.assertRaises(ConnectTimeoutError):
+            with pytest.raises(ConnectTimeoutError):
                 client.describe_regions()
             client_call_ended_event.set()
 
@@ -114,7 +115,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
         endpoint = 'https://ec2.us-weast-1.amazonaws.com/'
         client = self.session.create_client('ec2', endpoint_url=endpoint,
                                             config=config)
-        with self.assertRaises(EndpointConnectionError):
+        with pytest.raises(EndpointConnectionError):
             client.describe_regions()
 
     def test_bad_status_line(self):
@@ -129,7 +130,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
                 self.wfile.write(b'garbage')
 
         with background(run_server, args=(BadStatusHandler, self.port)):
-            with self.assertRaises(ConnectionClosedError):
+            with pytest.raises(ConnectionClosedError):
                 BadStatusHandler.event.wait(timeout=60)
                 client.describe_regions()
 

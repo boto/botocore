@@ -36,32 +36,31 @@ class TestLoaderBasicFunctionality(unittest.TestCase):
         self.patched.stop()
 
     def test_search_path_has_at_least_one_entry(self):
-        self.assertTrue(len(self.loader.search_paths) > 0)
+        assert len(self.loader.search_paths) > 0
 
     def test_can_list_available_services(self):
         # We don't want an exact check, as this list changes over time.
         # We just need a basic sanity check.
         available_services = self.loader.list_available_services(
             type_name='service-2')
-        self.assertIn('ec2', available_services)
-        self.assertIn('s3', available_services)
+        assert 'ec2' in available_services
+        assert 's3' in available_services
 
     def test_can_determine_latest_version(self):
         api_versions = self.loader.list_api_versions(
             service_name='ec2', type_name='service-2')
-        self.assertEqual(
-            self.loader.determine_latest_version(
-                service_name='ec2', type_name='service-2'),
-            max(api_versions))
+        assert self.loader.determine_latest_version(
+                service_name='ec2', 
+                type_name='service-2') == max(api_versions)
 
     def test_can_load_service_model(self):
         waiters = self.loader.load_service_model(
             service_name='ec2', type_name='waiters-2')
-        self.assertIn('waiters', waiters)
+        assert 'waiters' in waiters
 
     def test_can_load_data(self):
         api_version = self.loader.determine_latest_version(
             service_name='ec2', type_name='service-2')
         data = self.loader.load_data(
             os.path.join('ec2', api_version, 'service-2'))
-        self.assertIn('metadata', data)
+        assert 'metadata' in data

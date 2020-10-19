@@ -60,8 +60,8 @@ class TestCredentialPrecedence(BaseEnvVar):
         s = self.create_session()
         credentials = s.get_credentials()
 
-        self.assertEqual(credentials.access_key, 'env')
-        self.assertEqual(credentials.secret_key, 'env-secret')
+        assert credentials.access_key == 'env'
+        assert credentials.secret_key == 'env-secret'
 
     @mock.patch('botocore.credentials.Credentials')
     def test_access_secret_vs_profile_code(self, credentials_cls):
@@ -83,8 +83,8 @@ class TestCredentialPrecedence(BaseEnvVar):
 
         credentials = s.get_credentials()
 
-        self.assertEqual(credentials.access_key, 'default')
-        self.assertEqual(credentials.secret_key, 'default-secret')
+        assert credentials.access_key == 'default'
+        assert credentials.secret_key == 'default-secret'
 
     @mock.patch('botocore.credentials.Credentials')
     def test_access_secret_env_vs_code(self, credentials_cls):
@@ -114,8 +114,8 @@ class TestCredentialPrecedence(BaseEnvVar):
 
         credentials = s.get_credentials()
 
-        self.assertEqual(credentials.access_key, 'test')
-        self.assertEqual(credentials.secret_key, 'test-secret')
+        assert credentials.access_key == 'test'
+        assert credentials.secret_key == 'test-secret'
 
     def test_honors_aws_shared_credentials_file_env_var(self):
         with temporary_file('w') as f:
@@ -127,8 +127,8 @@ class TestCredentialPrecedence(BaseEnvVar):
             s = Session()
             credentials = s.get_credentials()
 
-            self.assertEqual(credentials.access_key, 'custom1')
-            self.assertEqual(credentials.secret_key, 'custom2')
+            assert credentials.access_key == 'custom1'
+            assert credentials.secret_key == 'custom2'
 
 
 class TestAssumeRoleCredentials(BaseEnvVar):

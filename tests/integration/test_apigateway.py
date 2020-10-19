@@ -76,4 +76,4 @@ class TestApigateway(unittest.TestCase):
             uri='https://api.endpoint.com'
         )
         # Assert the response was successful by checking the integration type
-        self.assertEqual(response['type'], 'HTTP')
+        assert response['type'] == 'HTTP'

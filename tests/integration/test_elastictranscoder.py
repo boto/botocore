@@ -57,11 +57,11 @@ class TestElasticTranscoder(unittest.TestCase):
 
     def test_list_streams(self):
         parsed = self.client.list_pipelines()
-        self.assertIn('Pipelines', parsed)
+        assert 'Pipelines' in parsed
 
     def test_list_presets(self):
         parsed = self.client.list_presets(Ascending='true')
-        self.assertIn('Presets', parsed)
+        assert 'Presets' in parsed
 
     def test_create_pipeline(self):
         # In order to create a pipeline, we need to create 2 s3 buckets
@@ -78,7 +78,7 @@ class TestElasticTranscoder(unittest.TestCase):
                            'Warning': '', 'Error': ''})
         pipeline_id = parsed['Pipeline']['Id']
         self.addCleanup(self.client.delete_pipeline, Id=pipeline_id)
-        self.assertIn('Pipeline', parsed)
+        assert 'Pipeline' in parsed
 
 
 if __name__ == '__main__':

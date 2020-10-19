@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import logging
 import datetime
+import pytest
 from tests import unittest, random_chars
 
 import botocore.session
@@ -38,8 +39,8 @@ class TestResponseLog(unittest.TestCase):
         session.set_stream_logger('', logging.DEBUG, debug_log)
         client.list_buckets()
         debug_log_contents = debug_log.getvalue()
-        self.assertIn('Response headers', debug_log_contents)
-        self.assertIn('Response body', debug_log_contents)
+        assert 'Response headers' in debug_log_contents
+        assert 'Response body' in debug_log_contents
 
 
 class TestAcceptedDateTimeFormats(unittest.TestCase):
@@ -50,26 +51,26 @@ class TestAcceptedDateTimeFormats(unittest.TestCase):
     def test_accepts_datetime_object(self):
         response = self.client.list_clusters(
             CreatedAfter=datetime.datetime.now())
-        self.assertIn('Clusters', response)
+        assert 'Clusters' in response
 
     def test_accepts_epoch_format(self):
         response = self.client.list_clusters(CreatedAfter=0)
-        self.assertIn('Clusters', response)
+        assert 'Clusters' in response
 
     def test_accepts_iso_8601_unaware(self):
         response = self.client.list_clusters(
             CreatedAfter='2014-01-01T00:00:00')
-        self.assertIn('Clusters', response)
+        assert 'Clusters' in response
 
     def test_accepts_iso_8601_utc(self):
         response = self.client.list_clusters(
             CreatedAfter='2014-01-01T00:00:00Z')
-        self.assertIn('Clusters', response)
+        assert 'Clusters' in response
 
     def test_accepts_iso_8701_local(self):
         response = self.client.list_clusters(
             CreatedAfter='2014-01-01T00:00:00-08:00')
-        self.assertIn('Clusters', response)
+        assert 'Clusters' in response
 
 
 class TestClientErrors(unittest.TestCase):
@@ -79,21 +80,20 @@ class TestClientErrors(unittest.TestCase):
     def test_region_mentioned_in_invalid_region(self):
         client = self.session.create_client(
             'cloudformation', region_name='us-east-999')
-        with six.assertRaisesRegex(self, EndpointConnectionError,
-                                   'Could not connect to the endpoint URL'):
+        with pytest.raises(EndpointConnectionError, match=r'Could not connect to the endpoint URL'):
             client.list_stacks()
 
     def test_client_modeled_exception(self):
         client = self.session.create_client(
             'dynamodb', region_name='us-west-2')
-        with self.assertRaises(client.exceptions.ResourceNotFoundException):
+        with pytest.raises(client.exceptions.ResourceNotFoundException):
             client.describe_table(TableName="NonexistentTable")
 
     def test_client_modeleded_exception_with_differing_code(self):
         client = self.session.create_client('iam', region_name='us-west-2')
         # The NoSuchEntityException should be raised on NoSuchEntity error
         # code.
-        with self.assertRaises(client.exceptions.NoSuchEntityException):
+        with pytest.raises(client.exceptions.NoSuchEntityException):
             client.get_role(RoleName="NonexistentIAMRole")
 
     def test_raises_general_client_error_for_non_modeled_exception(self):
@@ -101,14 +101,14 @@ class TestClientErrors(unittest.TestCase):
         try:
             client.describe_regions(DryRun=True)
         except client.exceptions.ClientError as e:
-            self.assertIs(e.__class__, ClientError)
+            assert isinstance(e, ClientError)
 
     def test_can_catch_client_exceptions_across_two_different_clients(self):
         client = self.session.create_client(
             'dynamodb', region_name='us-west-2')
         client2 = self.session.create_client(
             'dynamodb', region_name='us-west-2')
-        with self.assertRaises(client2.exceptions.ResourceNotFoundException):
+        with pytest.raises(client2.exceptions.ResourceNotFoundException):
             client.describe_table(TableName="NonexistentTable")
 
 
@@ -118,12 +118,12 @@ class TestClientMeta(unittest.TestCase):
 
     def test_region_name_on_meta(self):
         client = self.session.create_client('s3', 'us-west-2')
-        self.assertEqual(client.meta.region_name, 'us-west-2')
+        assert client.meta.region_name == 'us-west-2'
 
     def test_endpoint_url_on_meta(self):
         client = self.session.create_client('s3', 'us-west-2',
                                             endpoint_url='https://foo')
-        self.assertEqual(client.meta.endpoint_url, 'https://foo')
+        assert client.meta.endpoint_url == 'https://foo'
 
 
 class TestClientInjection(unittest.TestCase):
@@ -144,7 +144,7 @@ class TestClientInjection(unittest.TestCase):
         client = self.session.create_client('s3', 'us-west-2')
 
         # We should now have access to the extra_client_method above.
-        self.assertEqual(client.extra_client_method('foo'), 'foo')
+        assert client.extra_client_method('foo') == 'foo'
 
 
 class TestMixedEndpointCasing(unittest.TestCase):
@@ -157,4 +157,4 @@ class TestMixedEndpointCasing(unittest.TestCase):
     def test_sigv4_is_correct_when_mixed_endpoint_casing(self):
         res = self.client.describe_regions()
         status_code = res['ResponseMetadata']['HTTPStatusCode']
-        self.assertEqual(status_code, 200)
+        assert status_code == 200

@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest, random_chars
+import pytest
 
 import botocore.session
 from botocore.exceptions import ClientError
@@ -24,7 +25,7 @@ class TestCloudformation(unittest.TestCase):
     def test_handles_errors_with_template_body(self):
         # GetTemplate has a customization in handlers.py, so we're ensuring
         # it handles the case when a stack does not exist.
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.get_template(
                 StackName='does-not-exist-%s' % random_chars(10))
 

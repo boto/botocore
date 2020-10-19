@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import botocore.session
 from botocore.utils import ArgumentGenerator
+import pytest
 
 
 class ArgumentGeneratorError(AssertionError):
@@ -23,7 +24,7 @@ class ArgumentGeneratorError(AssertionError):
         super(AssertionError, self).__init__(full_msg)
 
 
-def test_can_generate_all_inputs():
+def _generate_all_inputs():
     session = botocore.session.get_session()
     generator = ArgumentGenerator()
     for service_name in session.get_available_services():
@@ -31,9 +32,7 @@ def test_can_generate_all_inputs():
         for operation_name in service_model.operation_names:
             operation_model = service_model.operation_model(operation_name)
             input_shape = operation_model.input_shape
-            if input_shape is not None and input_shape.members:
-                yield (_test_can_generate_skeleton, generator,
-                       input_shape, service_name, operation_name)
+            yield (generator,input_shape,service_name, operation_name)
 
 
 def _test_can_generate_skeleton(generator, shape, service_name,
@@ -52,3 +51,10 @@ def _test_can_generate_skeleton(generator, shape, service_name,
         raise ArgumentGeneratorError(
             service_name, operation_name,
             generated, "generated arguments were empty")
+
+
+@pytest.mark.parametrize("generator,input_shape,service_name,operation_name", _generate_all_inputs())
+def test_can_generate_all_inputs(generator, input_shape, service_name, operation_name):
+    if input_shape is not None and input_shape.members:
+        _test_can_generate_skeleton(generator,
+            input_shape, service_name, operation_name)

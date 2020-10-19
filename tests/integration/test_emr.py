@@ -11,22 +11,24 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+import pytest
 
 import botocore.session
 from botocore.paginate import PageIterator
 from botocore.exceptions import OperationNotPageableError
 
+EMR_REGIONS = ['us-east-1', 'us-west-2', 'ap-northeast-1',
+'ap-southeast-1', 'ap-southeast-2', 'sa-east-1', 'eu-west-1',
+'eu-central-1']
 
-def test_emr_endpoints_work_with_py26():
+@pytest.mark.parametrize('region', EMR_REGIONS)
+def test_emr_endpoints_work_with_py26(region):
     # Verify that we can talk to all currently supported EMR endpoints.
     # Python2.6 has an SSL cert bug where it can't read the SAN of
     # certain SSL certs.  We therefore need to always use the CN
     # as the hostname.
     session = botocore.session.get_session()
-    for region in ['us-east-1', 'us-west-2', 'us-west-2', 'ap-northeast-1',
-                   'ap-southeast-1', 'ap-southeast-2', 'sa-east-1', 'eu-west-1',
-                   'eu-central-1']:
-        yield _test_can_list_clusters_in_region, session, region
+    _test_can_list_clusters_in_region(session, region)
 
 
 def _test_can_list_clusters_in_region(session, region):
@@ -47,18 +49,18 @@ class TestEMRGetExtraResources(unittest.TestCase):
         # Using an operation that we know will paginate.
         paginator = self.client.get_paginator('list_clusters')
         page_iterator = paginator.paginate()
-        self.assertIsInstance(page_iterator, PageIterator)
+        assert isinstance(page_iterator, PageIterator)
 
     def test_operation_cant_be_paginated(self):
-        with self.assertRaises(OperationNotPageableError):
+        with pytest.raises(OperationNotPageableError):
             self.client.get_paginator('add_instance_groups')
 
     def test_can_get_waiters(self):
         waiter = self.client.get_waiter('cluster_running')
-        self.assertTrue(hasattr(waiter, 'wait'))
+        assert hasattr(waiter, 'wait')
 
     def test_waiter_does_not_exist(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.client.get_waiter('does_not_exist')
 
 

@@ -38,7 +38,7 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         waiter = self.client.get_waiter('table_exists')
         waiter.wait(TableName=table_name)
         parsed = self.client.describe_table(TableName=table_name)
-        self.assertEqual(parsed['Table']['TableStatus'], 'ACTIVE')
+        assert parsed['Table']['TableStatus'] == 'ACTIVE'
 
 
 class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
@@ -50,7 +50,7 @@ class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
         client = session.create_client('ses', 'us-east-1')
         # If we have at least one waiter in the list, we know that we have
         # actually loaded the waiters and this test has passed.
-        self.assertTrue(len(client.waiter_names) > 0)
+        assert len(client.waiter_names) > 0
 
 
 class TestMatchersWithErrors(unittest.TestCase):
@@ -63,5 +63,5 @@ class TestMatchersWithErrors(unittest.TestCase):
         """Test that InstanceExists can handle a nonexistent instance."""
         waiter = self.client.get_waiter('instance_exists')
         waiter.config.max_attempts = 1
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait(InstanceIds=['i-12345'])

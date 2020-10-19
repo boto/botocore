@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+import pytest
 
 from botocore.exceptions import ClientError
 from botocore.vendored import six
@@ -38,10 +39,10 @@ class TestGlacier(unittest.TestCase):
 
     def test_can_list_vaults_without_account_id(self):
         response = self.client.list_vaults()
-        self.assertIn('VaultList', response)
+        assert 'VaultList' in response
 
     def test_can_handle_error_responses(self):
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.list_vaults(accountId='asdf')
 
     def test_can_upload_archive(self):
@@ -49,21 +50,21 @@ class TestGlacier(unittest.TestCase):
         response = self.client.upload_archive(vaultName=self.VAULT_NAME,
                                               archiveDescription='test upload',
                                               body=body)
-        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 201
         archive_id = response['archiveId']
         response = self.client.delete_archive(vaultName=self.VAULT_NAME,
                                               archiveId=archive_id)
-        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 204
 
     def test_can_upload_archive_from_bytes(self):
         response = self.client.upload_archive(vaultName=self.VAULT_NAME,
                                               archiveDescription='test upload',
                                               body=b'bytes body')
-        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 201
         archive_id = response['archiveId']
         response = self.client.delete_archive(vaultName=self.VAULT_NAME,
                                               archiveId=archive_id)
-        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 204
 
 
 if __name__ == '__main__':
