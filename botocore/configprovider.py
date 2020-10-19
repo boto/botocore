@@ -71,6 +71,14 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     'metadata_service_num_attempts': (
         'metadata_service_num_attempts',
         'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+    'ec2_metadata_service_endpoint': (
+        'ec2_metadata_service_endpoint',
+        'AWS_EC2_METADATA_SERVICE_ENDPOINT',
+        None, None),
+    'imds_use_ipv6': (
+        'imds_use_ipv6',
+        'AWS_IMDS_USE_IPV6',
+        False, None),
     'parameter_validation': ('parameter_validation', None, True, None),
     # Client side monitoring configurations.
     # Note: These configurations are considered internal to botocore.

@@ -65,6 +65,12 @@ def create_credential_resolver(session, cache=None, region_name=None):
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
     disable_env_vars = session.instance_variables().get('profile') is not None
 
+    imds_config = {
+        'ec2_metadata_service_endpoint': session.get_config_variable(
+            'ec2_metadata_service_endpoint'),
+        'imds_use_ipv6': session.get_config_variable('imds_use_ipv6')
+    }
+
     if cache is None:
         cache = {}
 
@@ -74,7 +80,8 @@ def create_credential_resolver(session, cache=None, region_name=None):
         iam_role_fetcher=InstanceMetadataFetcher(
             timeout=metadata_timeout,
             num_attempts=num_attempts,
-            user_agent=session.user_agent())
+            user_agent=session.user_agent(),
+            config=imds_config)
     )
 
     profile_provider_builder = ProfileProviderBuilder(
