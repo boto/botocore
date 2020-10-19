@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.0
+======
+
+* api-change:``backup``: Update backup client to latest version
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* feature:imds: Updated InstanceMetadataFetcher to use custom ipv6 uri as endpoint if envvar or config set
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.18.18
 =======
 
