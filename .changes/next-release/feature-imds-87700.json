@@ -1,5 +1,0 @@
-{
-  "type": "feature",
-  "category": "imds",
-  "description": "Updated InstanceMetadataFetcher to use custom ipv6 uri as endpoint if envvar or config set"
-}
