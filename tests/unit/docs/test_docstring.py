@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
 from tests import unittest, mock
 from botocore.docs.docstring import LazyLoadedDocstring
 from botocore.docs.docstring import ClientMethodDocstring
@@ -28,26 +29,26 @@ class MockedLazyLoadedDocstring(LazyLoadedDocstring):
 
 class TestLazyLoadedDocstring(unittest.TestCase):
     def test_raises_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             str(LazyLoadedDocstring())
 
     def test_expandtabs(self):
         docstring = MockedLazyLoadedDocstring()
         docstring.mocked_writer_method.side_effect = (
             lambda section: section.write('foo\t'))
-        self.assertEqual('foo ', docstring.expandtabs(1))
+        assert 'foo ' == docstring.expandtabs(1)
 
     def test_str(self):
         docstring = MockedLazyLoadedDocstring()
         docstring.mocked_writer_method.side_effect = (
             lambda section: section.write('foo'))
-        self.assertEqual('foo', str(docstring))
+        assert 'foo' == str(docstring)
 
     def test_repr(self):
         docstring = MockedLazyLoadedDocstring()
         docstring.mocked_writer_method.side_effect = (
             lambda section: section.write('foo'))
-        self.assertEqual('foo', repr(docstring))
+        assert 'foo' == repr(docstring)
 
     def test_is_lazy_loaded(self):
         docstring = MockedLazyLoadedDocstring()
@@ -73,7 +74,7 @@ class TestClientMethodDocstring(unittest.TestCase):
                 '.document_model_driven_method') as mock_writer:
             docstring = ClientMethodDocstring()
             str(docstring)
-            self.assertTrue(mock_writer.called)
+            assert mock_writer.called
 
 
 class TestWaiterDocstring(unittest.TestCase):
@@ -83,7 +84,7 @@ class TestWaiterDocstring(unittest.TestCase):
                 '.document_wait_method') as mock_writer:
             docstring = WaiterDocstring()
             str(docstring)
-            self.assertTrue(mock_writer.called)
+            assert mock_writer.called
 
 
 class TestPaginatorDocstring(unittest.TestCase):
@@ -93,4 +94,4 @@ class TestPaginatorDocstring(unittest.TestCase):
                 '.document_paginate_method') as mock_writer:
             docstring = PaginatorDocstring()
             str(docstring)
-            self.assertTrue(mock_writer.called)
+            assert mock_writer.called

@@ -69,9 +69,9 @@ class TestHMACV1(unittest.TestCase):
             "Thu, 17 Nov 2005 18:49:58 GMT\nx-amz-magic:abracadabra\n"
             "x-amz-meta-author:foo@bar.com\n/quotes/nelson")
         expected_signature = 'jZNOcbfWmD/A/f3hSvVzXZjM2HU='
-        self.assertEqual(cs, expected_canonical)
+        assert cs == expected_canonical
         sig = self.hmacv1.get_signature('PUT', split, http_headers)
-        self.assertEqual(sig, expected_signature)
+        assert sig == expected_signature
 
     def test_duplicate_headers(self):
         pairs = [('Date', 'Thu, 17 Nov 2005 18:49:58 GMT'),
@@ -91,7 +91,7 @@ class TestHMACV1(unittest.TestCase):
         pairs = [('Date', 'Thu, 17 Nov 2005 18:49:58 GMT')]
         sig = self.hmacv1.get_signature('PUT', split,
                                         HTTPHeaders.from_pairs(pairs))
-        self.assertEqual(sig, 'P7pBz3Z4p3GxysRSJ/gR8nk7D4o=')
+        assert sig == 'P7pBz3Z4p3GxysRSJ/gR8nk7D4o='
 
     def test_bucket_operations(self):
         # Check that the standard operations on buckets that are
@@ -103,7 +103,7 @@ class TestHMACV1(unittest.TestCase):
             url = '/quotes?%s' % operation
             split = urlsplit(url)
             cr = self.hmacv1.canonical_resource(split)
-            self.assertEqual(cr, '/quotes?%s' % operation)
+            assert cr == '/quotes?%s' % operation
 
     def test_sign_with_token(self):
         credentials = botocore.credentials.Credentials(
@@ -115,10 +115,10 @@ class TestHMACV1(unittest.TestCase):
         request.method = 'PUT'
         request.url = 'https://s3.amazonaws.com/bucket/key'
         auth.add_auth(request)
-        self.assertIn('Authorization', request.headers)
+        assert 'Authorization' in request.headers
         # We're not actually checking the signature here, we're
         # just making sure the auth header has the right format.
-        self.assertTrue(request.headers['Authorization'].startswith('AWS '))
+        assert request.headers['Authorization'].startswith('AWS ')
 
     def test_resign_with_token(self):
         credentials = botocore.credentials.Credentials(
@@ -138,8 +138,7 @@ class TestHMACV1(unittest.TestCase):
         # another unit test that verifies we use the latest time
         # when we sign the request.
         auth.add_auth(request)
-        self.assertEqual(request.headers.get_all('Authorization'),
-                         [original_auth])
+        assert request.headers.get_all('Authorization') == [original_auth]
 
     def test_resign_uses_most_recent_date(self):
         dates = [
@@ -161,8 +160,8 @@ class TestHMACV1(unittest.TestCase):
 
         # Each time we sign a request, we make another call to formatdate()
         # so we should have a different date header each time.
-        self.assertEqual(original_date, dates[0])
-        self.assertEqual(modified_date, dates[1])
+        assert original_date == dates[0]
+        assert modified_date == dates[1]
 
 
 class TestSigV2(unittest.TestCase):
@@ -192,9 +191,8 @@ class TestSigV2(unittest.TestCase):
         request.method = 'POST'
         params = {'Foo': u'\u2713'}
         result = self.signer.calc_signature(request, params)
-        self.assertEqual(
-            result, ('Foo=%E2%9C%93',
-                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+        assert result == ('Foo=%E2%9C%93',
+                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q=')
 
     def test_fields(self):
         request = AWSRequest()
@@ -202,13 +200,12 @@ class TestSigV2(unittest.TestCase):
         request.method = 'POST'
         request.data = {'Foo': u'\u2713'}
         self.signer.add_auth(request)
-        self.assertEqual(request.data['AWSAccessKeyId'], 'foo')
-        self.assertEqual(request.data['Foo'], u'\u2713')
-        self.assertEqual(request.data['Timestamp'], '2014-06-20T08:40:23Z')
-        self.assertEqual(request.data['Signature'],
-                         u'Tiecw+t51tok4dTT8B4bg47zxHEM/KcD55f2/x6K22o=')
-        self.assertEqual(request.data['SignatureMethod'], 'HmacSHA256')
-        self.assertEqual(request.data['SignatureVersion'], '2')
+        assert request.data['AWSAccessKeyId'] == 'foo'
+        assert request.data['Foo'] == u'\u2713'
+        assert request.data['Timestamp'] == '2014-06-20T08:40:23Z'
+        assert request.data['Signature'] == u'Tiecw+t51tok4dTT8B4bg47zxHEM/KcD55f2/x6K22o='
+        assert request.data['SignatureMethod'] == 'HmacSHA256'
+        assert request.data['SignatureVersion'] == '2'
 
     def test_resign(self):
         # Make sure that resigning after e.g. retries works
@@ -220,9 +217,8 @@ class TestSigV2(unittest.TestCase):
             'Signature': u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='
         }
         result = self.signer.calc_signature(request, params)
-        self.assertEqual(
-            result, ('Foo=%E2%9C%93',
-                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+        assert result == ('Foo=%E2%9C%93',
+                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q=')
 
     def test_get(self):
         request = AWSRequest()
@@ -230,13 +226,13 @@ class TestSigV2(unittest.TestCase):
         request.method = 'GET'
         request.params = {'Foo': u'\u2713'}
         self.signer.add_auth(request)
-        self.assertEqual(request.params['AWSAccessKeyId'], 'foo')
-        self.assertEqual(request.params['Foo'], u'\u2713')
-        self.assertEqual(request.params['Timestamp'], '2014-06-20T08:40:23Z')
-        self.assertEqual(request.params['Signature'],
-                         u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
-        self.assertEqual(request.params['SignatureMethod'], 'HmacSHA256')
-        self.assertEqual(request.params['SignatureVersion'], '2')
+        assert request.params['AWSAccessKeyId'] == 'foo'
+        assert request.params['Foo'] == u'\u2713'
+        assert request.params['Timestamp'] == '2014-06-20T08:40:23Z'
+        signature = u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw='
+        assert request.params['Signature'] == signature
+        assert request.params['SignatureMethod'] == 'HmacSHA256'
+        assert request.params['SignatureVersion'] == '2'
 
 
 class TestSigV3(unittest.TestCase):
@@ -261,10 +257,9 @@ class TestSigV3(unittest.TestCase):
         request.headers = {'Date': 'Thu, 17 Nov 2005 18:49:58 GMT'}
         request.url = 'https://route53.amazonaws.com'
         self.auth.add_auth(request)
-        self.assertEqual(
-            request.headers['X-Amzn-Authorization'],
-            ('AWS3-HTTPS AWSAccessKeyId=access_key,Algorithm=HmacSHA256,'
-             'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
+        assert request.headers['X-Amzn-Authorization'] == (
+            'AWS3-HTTPS AWSAccessKeyId=access_key,Algorithm=HmacSHA256,'
+             'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs=')
 
     def test_resign_with_token(self):
         credentials = botocore.credentials.Credentials(
@@ -279,8 +274,8 @@ class TestSigV3(unittest.TestCase):
         # Resigning the request shouldn't change the authorization
         # header.
         auth.add_auth(request)
-        self.assertEqual(request.headers.get_all('X-Amzn-Authorization'),
-                         [original_auth])
+        assert request.headers.get_all(
+            'X-Amzn-Authorization') == [original_auth]
 
 
 class TestS3SigV4Auth(BaseTestWithFixedDate):
@@ -310,8 +305,8 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         original_auth = self.request.headers['Authorization']
 
         self.auth.add_auth(self.request)
-        self.assertEqual(self.request.headers.get_all('Authorization'),
-                         [original_auth])
+        assert self.request.headers.get_all(
+            'Authorization') == [original_auth]
 
     def test_signature_is_not_normalized(self):
         request = AWSRequest()
@@ -321,8 +316,8 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
                                                        'secret_key')
         auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
         auth.add_auth(request)
-        self.assertTrue(
-            request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
+        assert request.headers['Authorization'].startswith('AWS4-HMAC-SHA256')
+        
 
     def test_query_string_params_in_urls(self):
         request = AWSRequest()
@@ -337,7 +332,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         # by ensuring that query string paramters that are added to the
         # canonical query string are correctly formatted.
         cqs = self.auth.canonical_query_string(request)
-        self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
+        assert cqs == 'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix='
 
     def _test_blacklist_header(self, header, value):
         request = AWSRequest()
@@ -348,7 +343,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
                                                        'secret_key')
         auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
         auth.add_auth(request)
-        self.assertNotIn(header, request.headers['Authorization'])
+        assert header not in request.headers['Authorization']
 
     def test_blacklist_expect_headers(self):
         self._test_blacklist_header('expect', '100-continue')
@@ -364,19 +359,19 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.client_config.s3['payload_signing_enabled'] = True
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
     def test_does_not_use_sha256_if_config_value_is_false(self):
         self.client_config.s3['payload_signing_enabled'] = False
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header == 'UNSIGNED-PAYLOAD'
 
     def test_uses_sha256_if_md5_unset(self):
         self.request.context['has_streaming_input'] = True
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
     def test_uses_sha256_if_not_https(self):
         self.request.context['has_streaming_input'] = True
@@ -384,7 +379,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.request.url = 'http://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
     def test_uses_sha256_if_not_streaming_upload(self):
         self.request.context['has_streaming_input'] = False
@@ -392,21 +387,21 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.request.url = 'https://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
     def test_does_not_use_sha256_if_md5_set(self):
         self.request.context['has_streaming_input'] = True
         self.request.headers.add_header('Content-MD5', 'foo')
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header == 'UNSIGNED-PAYLOAD'
 
     def test_does_not_use_sha256_if_context_config_set(self):
         self.request.context['payload_signing_enabled'] = False
         self.request.headers.add_header('Content-MD5', 'foo')
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header == 'UNSIGNED-PAYLOAD'
 
     def test_sha256_if_context_set_on_http(self):
         self.request.context['payload_signing_enabled'] = False
@@ -414,14 +409,14 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.request.url = 'http://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
     def test_sha256_if_context_set_without_md5(self):
         self.request.context['payload_signing_enabled'] = False
         self.request.url = 'https://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
-        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header != 'UNSIGNED-PAYLOAD'
 
 
 class TestSigV4(unittest.TestCase):
@@ -450,7 +445,7 @@ class TestSigV4(unittest.TestCase):
         expected = ("format=sdk&pretty=true&q=George%20Lucas&q.options=%7B%22"
                     "defaultOperator%22%3A%20%22and%22%2C%20%22fields%22%3A%5B"
                     "%22directors%5E10%22%5D%7D")
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_thread_safe_timestamp(self):
         request = AWSRequest()
@@ -472,9 +467,9 @@ class TestSigV4(unittest.TestCase):
             # Go through the add_auth process once. This will attach
             # a timestamp to the request at the beginning of auth.
             auth.add_auth(request)
-            self.assertEqual(request.context['timestamp'], '20140101T000000Z')
+            assert request.context['timestamp'] == '20140101T000000Z'
             # Ensure the date is in the Authorization header
-            self.assertIn('20140101', request.headers['Authorization'])
+            assert '20140101' in request.headers['Authorization']
             # Now suppose the utc time becomes the next day all of a sudden
             mock_datetime.utcnow.return_value = datetime.datetime(
                 2014, 1, 2, 0, 0)
@@ -483,12 +478,12 @@ class TestSigV4(unittest.TestCase):
             # body and not what the time is now mocked as. This is to ensure
             # there is no mismatching in timestamps when signing.
             cr = auth.canonical_request(request)
-            self.assertIn('x-amz-date:20140101T000000Z', cr)
-            self.assertNotIn('x-amz-date:20140102T000000Z', cr)
+            assert 'x-amz-date:20140101T000000Z' in cr
+            assert 'x-amz-date:20140102T000000Z' not in cr
 
             sts = auth.string_to_sign(request, cr)
-            self.assertIn('20140101T000000Z', sts)
-            self.assertNotIn('20140102T000000Z', sts)
+            assert '20140101T000000Z' in sts
+            assert '20140102T000000Z' not in sts
 
     def test_payload_is_binary_file(self):
         request = AWSRequest()
@@ -496,9 +491,9 @@ class TestSigV4(unittest.TestCase):
         request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
-        self.assertEqual(
-            payload,
-            '1dabba21cdad44541f6b15796f8d22978fc7ea10c46aeceeeeb66c23b3ac7604')
+        expected_payload = ('1dabba21cdad44541f6b15796f8d2297'
+                            '8fc7ea10c46aeceeeeb66c23b3ac7604')
+        assert payload == expected_payload
 
     def test_payload_is_bytes_type(self):
         request = AWSRequest()
@@ -506,9 +501,9 @@ class TestSigV4(unittest.TestCase):
         request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
-        self.assertEqual(
-            payload,
-            '1dabba21cdad44541f6b15796f8d22978fc7ea10c46aeceeeeb66c23b3ac7604')
+        expected_payload = ('1dabba21cdad44541f6b15796f8d2297'
+                            '8fc7ea10c46aeceeeeb66c23b3ac7604')
+        assert payload == expected_payload
 
     def test_payload_not_signed_if_disabled_in_context(self):
         request = AWSRequest()
@@ -517,7 +512,7 @@ class TestSigV4(unittest.TestCase):
         request.context['payload_signing_enabled'] = False
         auth = self.create_signer()
         payload = auth.payload(request)
-        self.assertEqual(payload, 'UNSIGNED-PAYLOAD')
+        assert payload == 'UNSIGNED-PAYLOAD'
 
     def test_content_sha256_set_if_payload_signing_disabled(self):
         request = AWSRequest()
@@ -528,21 +523,21 @@ class TestSigV4(unittest.TestCase):
         auth = self.create_signer()
         auth.add_auth(request)
         sha_header = request.headers['X-Amz-Content-SHA256']
-        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+        assert sha_header == 'UNSIGNED-PAYLOAD'
 
     def test_collapse_multiple_spaces(self):
         auth = self.create_signer()
         original = HTTPHeaders()
         original['foo'] = 'double  space'
         headers = auth.canonical_headers(original)
-        self.assertEqual(headers, 'foo:double space')
+        assert headers == 'foo:double space'
 
     def test_trims_leading_trailing_spaces(self):
         auth = self.create_signer()
         original = HTTPHeaders()
         original['foo'] = '  leading  and  trailing  '
         headers = auth.canonical_headers(original)
-        self.assertEqual(headers, 'foo:leading and trailing')
+        assert headers == 'foo:leading and trailing'
 
     def test_strips_http_default_port(self):
         request = AWSRequest()
@@ -551,7 +546,7 @@ class TestSigV4(unittest.TestCase):
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
         expected = 's3.us-west-2.amazonaws.com'
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_strips_https_default_port(self):
         request = AWSRequest()
@@ -560,7 +555,7 @@ class TestSigV4(unittest.TestCase):
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
         expected = 's3.us-west-2.amazonaws.com'
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_strips_http_auth(self):
         request = AWSRequest()
@@ -569,7 +564,7 @@ class TestSigV4(unittest.TestCase):
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
         expected = 's3.us-west-2.amazonaws.com'
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_strips_default_port_and_http_auth(self):
         request = AWSRequest()
@@ -578,7 +573,7 @@ class TestSigV4(unittest.TestCase):
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
         expected = 's3.us-west-2.amazonaws.com'
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
 
 class TestSigV4Resign(BaseTestWithFixedDate):
@@ -601,16 +596,16 @@ class TestSigV4Resign(BaseTestWithFixedDate):
         original_auth = self.request.headers['Authorization']
 
         self.auth.add_auth(self.request)
-        self.assertEqual(self.request.headers.get_all('Authorization'),
-                         [original_auth])
+        assert self.request.headers.get_all(
+            'Authorization') == [original_auth]
 
     def test_sigv4_without_date(self):
         self.auth.add_auth(self.request)
         original_auth = self.request.headers['Authorization']
 
         self.auth.add_auth(self.request)
-        self.assertEqual(self.request.headers.get_all('Authorization'),
-                         [original_auth])
+        assert self.request.headers.get_all(
+            'Authorization') == [original_auth]
 
 
 class BasePresignTest(unittest.TestCase):
@@ -660,49 +655,45 @@ class TestS3SigV2Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(self.request)
         # We should have still kept the response-content-disposition
         # in the query string.
-        self.assertIn('response-content-disposition', query_string)
-        self.assertEqual(query_string['response-content-disposition'],
-                         'attachment; filename="download.jpg"')
+        assert 'response-content-disposition' in query_string
+        assert query_string[
+            'response-content-disposition'] == 'attachment; filename="download.jpg"'
         # But we should have also added the parts from the signer.
-        self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
+        assert query_string['AWSAccessKeyId'] == self.access_key
 
     def test_presign_no_headers(self):
         self.auth.add_auth(self.request)
-        self.assertTrue(self.request.url.startswith(self.path + '?'))
+        assert self.request.url.startswith(self.path + '?')
         query_string = self.get_parsed_query_string(self.request)
-        self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
-        self.assertEqual(query_string['Expires'],
-                         str(int(self.current_epoch_time) + self.expires))
-        self.assertEqual(query_string['Signature'],
-                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        assert query_string['AWSAccessKeyId'] == self.access_key
+        expected_expiry = str(int(self.current_epoch_time) + self.expires)
+        assert query_string['Expires'] == expected_expiry
+        assert query_string['Signature'] == 'ZRSgywstwIruKLTLt/Bcrf9H1K4='
 
     def test_presign_with_x_amz_headers(self):
         self.request.headers['x-amz-security-token'] = 'foo'
         self.request.headers['x-amz-acl'] = 'read-only'
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
-        self.assertEqual(query_string['x-amz-security-token'], 'foo')
-        self.assertEqual(query_string['x-amz-acl'], 'read-only')
-        self.assertEqual(query_string['Signature'],
-                         '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
+        assert query_string['x-amz-security-token'] == 'foo'
+        assert query_string['x-amz-acl'] == 'read-only'
+        assert query_string['Signature'] == '5oyMAGiUk1E5Ry2BnFr6cIS3Gus='
 
     def test_presign_with_content_headers(self):
         self.request.headers['content-type'] = 'txt'
         self.request.headers['content-md5'] = 'foo'
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
-        self.assertEqual(query_string['content-type'], 'txt')
-        self.assertEqual(query_string['content-md5'], 'foo')
-        self.assertEqual(query_string['Signature'],
-                         '/YQRFdQGywXP74WrOx2ET/RUqz8=')
+        assert query_string['content-type'] == 'txt'
+        assert query_string['content-md5'] == 'foo'
+        assert query_string['Signature'] == '/YQRFdQGywXP74WrOx2ET/RUqz8='
 
     def test_presign_with_unused_headers(self):
         self.request.headers['user-agent'] = 'botocore'
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
-        self.assertNotIn('user-agent', query_string)
-        self.assertEqual(query_string['Signature'],
-                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        assert 'user-agent' not in query_string
+        assert query_string['Signature'] == 'ZRSgywstwIruKLTLt/Bcrf9H1K4='
 
 
 class TestSigV4Presign(BasePresignTest):
@@ -735,16 +726,14 @@ class TestSigV4Presign(BasePresignTest):
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         self.auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
-        self.assertEqual(
-            query_string,
-            {'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+        assert query_string == {'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
              'X-Amz-Credential': ('access_key/20140101/myregion/'
                                   'myservice/aws4_request'),
              'X-Amz-Date': '20140101T000000Z',
              'X-Amz-Expires': '60',
              'X-Amz-Signature': ('c70e0bcdb4cd3ee324f71c78195445b878'
                                  '8315af0800bbbdbbb6d05a616fb84c'),
-             'X-Amz-SignedHeaders': 'host'})
+             'X-Amz-SignedHeaders': 'host'}
 
     def test_operation_params_before_auth_params(self):
         # The spec is picky about this.
@@ -753,8 +742,7 @@ class TestSigV4Presign(BasePresignTest):
         request.url = 'https://ec2.us-east-1.amazonaws.com/?Action=MyOperation'
         self.auth.add_auth(request)
         # Verify auth params come after the existing params.
-        self.assertIn(
-            '?Action=MyOperation&X-Amz', request.url)
+        assert '?Action=MyOperation&X-Amz' in request.url
 
     def test_operation_params_before_auth_params_in_body(self):
         request = AWSRequest()
@@ -764,8 +752,7 @@ class TestSigV4Presign(BasePresignTest):
         self.auth.add_auth(request)
         # Same situation, the params from request.data come before the auth
         # params in the query string.
-        self.assertIn(
-            '?Action=MyOperation&X-Amz', request.url)
+        assert '?Action=MyOperation&X-Amz' in request.url
 
     def test_presign_with_spaces_in_param(self):
         request = AWSRequest()
@@ -774,7 +761,7 @@ class TestSigV4Presign(BasePresignTest):
         request.data = {'Action': 'MyOperation', 'Description': 'With Spaces'}
         self.auth.add_auth(request)
         # Verify we encode spaces as '%20, and we don't use '+'.
-        self.assertIn('Description=With%20Spaces', request.url)
+        assert 'Description=With%20Spaces' in request.url
 
     def test_presign_with_empty_param_value(self):
         request = AWSRequest()
@@ -783,7 +770,7 @@ class TestSigV4Presign(BasePresignTest):
         request.url = 'https://s3.amazonaws.com/mybucket/mykey?uploads'
         self.auth.add_auth(request)
         # verify that uploads param is still in URL
-        self.assertIn('uploads', request.url)
+        assert 'uploads' in request.url
 
     def test_s3_sigv4_presign(self):
         auth = botocore.auth.S3SigV4QueryAuth(
@@ -795,18 +782,17 @@ class TestSigV4Presign(BasePresignTest):
         auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
         # We use a different payload:
-        self.assertEqual(auth.payload(request), 'UNSIGNED-PAYLOAD')
+        assert auth.payload(request) == 'UNSIGNED-PAYLOAD'
         # which will result in a different X-Amz-Signature:
-        self.assertEqual(
-            query_string,
-            {'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
-             'X-Amz-Credential': ('access_key/20140101/myregion/'
-                                  'myservice/aws4_request'),
-             'X-Amz-Date': '20140101T000000Z',
-             'X-Amz-Expires': '60',
-             'X-Amz-Signature': ('ac1b8b9e47e8685c5c963d75e35e8741d55251'
-                                 'cd955239cc1efad4dc7201db66'),
-             'X-Amz-SignedHeaders': 'host'})
+        assert query_string == {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': ('access_key/20140101/myregion/'
+                                 'myservice/aws4_request'),
+            'X-Amz-Date': '20140101T000000Z',
+            'X-Amz-Expires': '60',
+            'X-Amz-Signature': ('ac1b8b9e47e8685c5c963d75e35e8741d55251'
+                                'cd955239cc1efad4dc7201db66'),
+            'X-Amz-SignedHeaders': 'host'}
 
     def test_presign_with_security_token(self):
         self.credentials.token = 'security-token'
@@ -817,8 +803,7 @@ class TestSigV4Presign(BasePresignTest):
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
-        self.assertEqual(
-            query_string['X-Amz-Security-Token'], 'security-token')
+        assert query_string['X-Amz-Security-Token'] == 'security-token'
 
     def test_presign_where_body_is_json_bytes(self):
         request = AWSRequest()
@@ -839,7 +824,7 @@ class TestSigV4Presign(BasePresignTest):
             'X-Amz-SignedHeaders': 'host',
             'Param': 'value'
         }
-        self.assertEqual(query_string, expected_query_string)
+        assert query_string == expected_query_string
 
     def test_presign_where_body_is_json_string(self):
         request = AWSRequest()
@@ -860,7 +845,7 @@ class TestSigV4Presign(BasePresignTest):
             'X-Amz-SignedHeaders': 'host',
             'Param': 'value'
         }
-        self.assertEqual(query_string, expected_query_string)
+        assert query_string == expected_query_string
 
     def test_presign_content_type_form_encoded_not_signed(self):
         request = AWSRequest()
@@ -872,7 +857,7 @@ class TestSigV4Presign(BasePresignTest):
         self.auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
         signed_headers = query_string.get('X-Amz-SignedHeaders')
-        self.assertNotIn('content-type', signed_headers)
+        assert 'content-type' not in signed_headers
 
 
 class BaseS3PresignPostTest(unittest.TestCase):
@@ -924,26 +909,23 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
     def test_presign_post(self):
         self.auth.add_auth(self.request)
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(
-            result_fields['AWSAccessKeyId'], self.credentials.access_key)
+        assert result_fields['AWSAccessKeyId'] == self.credentials.access_key
 
         result_policy = json.loads(base64.b64decode(
             result_fields['policy']).decode('utf-8'))
-        self.assertEqual(result_policy['expiration'],
-                         '2007-12-01T12:00:00.000Z')
-        self.assertEqual(
-            result_policy['conditions'],
-            [{"acl": "public-read"},
+        assert result_policy['expiration'] == '2007-12-01T12:00:00.000Z'
+        assert result_policy['conditions'] == [
+             {"acl": "public-read"},
              {"bucket": "mybucket"},
-             ["starts-with", "$key", "mykey"]])
-        self.assertIn('signature', result_fields)
+             ["starts-with", "$key", "mykey"]]
+        assert 'signature' in result_fields
 
     def test_presign_post_with_security_token(self):
         self.credentials.token = 'my-token'
         self.auth = botocore.auth.HmacV1PostAuth(self.credentials)
         self.auth.add_auth(self.request)
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
+        assert result_fields['x-amz-security-token'] == 'my-token'
 
     def test_empty_fields_and_policy(self):
         self.request = AWSRequest()
@@ -952,12 +934,11 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
         self.auth.add_auth(self.request)
 
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(
-            result_fields['AWSAccessKeyId'], self.credentials.access_key)
+        assert result_fields['AWSAccessKeyId'] == self.credentials.access_key
         result_policy = json.loads(base64.b64decode(
             result_fields['policy']).decode('utf-8'))
-        self.assertEqual(result_policy['conditions'], [])
-        self.assertIn('signature', result_fields)
+        assert result_policy['conditions'] == []
+        assert 'signature' in result_fields
 
 
 class TestS3SigV4Post(BaseS3PresignPostTest):
@@ -979,27 +960,22 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
     def test_presign_post(self):
         self.auth.add_auth(self.request)
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(result_fields['x-amz-algorithm'], 'AWS4-HMAC-SHA256')
-        self.assertEqual(
-            result_fields['x-amz-credential'],
-            'access_key/20140101/myregion/myservice/aws4_request')
-        self.assertEqual(
-            result_fields['x-amz-date'],
-            '20140101T000000Z')
+        assert result_fields['x-amz-algorithm'] == 'AWS4-HMAC-SHA256'
+        expected_credential = 'access_key/20140101/myregion/myservice/aws4_request'
+        assert result_fields['x-amz-credential'] == expected_credential
+        assert result_fields['x-amz-date'] == '20140101T000000Z'
 
         result_policy = json.loads(base64.b64decode(
             result_fields['policy']).decode('utf-8'))
-        self.assertEqual(result_policy['expiration'],
-                         '2007-12-01T12:00:00.000Z')
-        self.assertEqual(
-            result_policy['conditions'],
-            [{"acl": "public-read"}, {"bucket": "mybucket"},
+        assert result_policy['expiration'] == '2007-12-01T12:00:00.000Z'
+        assert result_policy['conditions'] == [
+             {"acl": "public-read"}, {"bucket": "mybucket"},
              ["starts-with", "$key", "mykey"],
              {"x-amz-algorithm": "AWS4-HMAC-SHA256"},
              {"x-amz-credential":
               "access_key/20140101/myregion/myservice/aws4_request"},
-             {"x-amz-date": "20140101T000000Z"}])
-        self.assertIn('x-amz-signature', result_fields)
+             {"x-amz-date": "20140101T000000Z"}]
+        assert 'x-amz-signature' in result_fields
 
     def test_presign_post_with_security_token(self):
         self.credentials.token = 'my-token'
@@ -1007,7 +983,7 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
             self.credentials, self.service_name, self.region_name)
         self.auth.add_auth(self.request)
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
+        assert result_fields['x-amz-security-token'] == 'my-token'
 
     def test_empty_fields_and_policy(self):
         self.request = AWSRequest()
@@ -1016,20 +992,16 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
         self.auth.add_auth(self.request)
 
         result_fields = self.request.context['s3-presign-post-fields']
-        self.assertEqual(result_fields['x-amz-algorithm'], 'AWS4-HMAC-SHA256')
-        self.assertEqual(
-            result_fields['x-amz-credential'],
-            'access_key/20140101/myregion/myservice/aws4_request')
-        self.assertEqual(
-            result_fields['x-amz-date'],
-            '20140101T000000Z')
+        assert result_fields['x-amz-algorithm'] == 'AWS4-HMAC-SHA256'
+        expected_credential = 'access_key/20140101/myregion/myservice/aws4_request'
+        assert result_fields['x-amz-credential'] == expected_credential
+        assert result_fields['x-amz-date'] == '20140101T000000Z'
 
         result_policy = json.loads(base64.b64decode(
             result_fields['policy']).decode('utf-8'))
-        self.assertEqual(
-            result_policy['conditions'],
-            [{"x-amz-algorithm": "AWS4-HMAC-SHA256"},
+        assert result_policy['conditions'] == [
+             {"x-amz-algorithm": "AWS4-HMAC-SHA256"},
              {"x-amz-credential":
               "access_key/20140101/myregion/myservice/aws4_request"},
-             {"x-amz-date": "20140101T000000Z"}])
-        self.assertIn('x-amz-signature', result_fields)
+             {"x-amz-date": "20140101T000000Z"}]
+        assert 'x-amz-signature' in result_fields

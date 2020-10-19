@@ -70,26 +70,22 @@ class TestTraverseAndDocumentShape(BaseParamsDocumenterTest):
             section=self.doc_structure,
             shape=self.operation_model.input_shape, history=[]
         )
-        self.assertEqual(
-            self.event_emitter.emit.call_args_list,
-            [mock.call('docs.response-params.myservice.SampleOperation.Foo',
+        assert self.event_emitter.emit.call_args_list == [
+            mock.call('docs.response-params.myservice.SampleOperation.Foo',
                        section=self.doc_structure.get_section('Foo')),
              mock.call(('docs.response-params.myservice.SampleOperation'
                         '.complete-section'), section=self.doc_structure)]
-        )
 
     def test_events_emitted_request_params(self):
         self.request_params.traverse_and_document_shape(
             section=self.doc_structure,
             shape=self.operation_model.input_shape, history=[]
         )
-        self.assertEqual(
-            self.event_emitter.emit.call_args_list,
-            [mock.call('docs.request-params.myservice.SampleOperation.Foo',
+        assert self.event_emitter.emit.call_args_list == [
+            mock.call('docs.request-params.myservice.SampleOperation.Foo',
                        section=self.doc_structure.get_section('Foo')),
              mock.call(('docs.request-params.myservice.SampleOperation'
                         '.complete-section'), section=self.doc_structure)]
-        )
 
 
 class TestDocumentMultipleDefaultValues(BaseParamsDocumenterTest):

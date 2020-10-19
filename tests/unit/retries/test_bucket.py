@@ -1,4 +1,5 @@
 from tests import unittest
+import pytest
 
 from botocore.retries import bucket
 from botocore.exceptions import CapacityNotAvailableError
@@ -37,7 +38,7 @@ class TestTokenBucket(unittest.TestCase):
         ])
         token_bucket = self.create_token_bucket(max_rate=10)
         for _ in range(5):
-            self.assertTrue(token_bucket.acquire(1, block=False))
+            assert token_bucket.acquire(1, block=False)
 
     def test_can_change_max_capacity_lower(self):
         # Requests at 1 TPS.
@@ -45,21 +46,21 @@ class TestTokenBucket(unittest.TestCase):
         token_bucket = self.create_token_bucket(max_rate=10)
         # Request the first 5 tokens with max_rate=10
         for _ in range(5):
-            self.assertTrue(token_bucket.acquire(1, block=False))
+            assert token_bucket.acquire(1, block=False)
         # Now scale the max_rate down to 1 on the 5th second.
         self.timestamp_sequences.append(5)
         token_bucket.max_rate = 1
         # And then from seconds 6-10 we request at one per second.
         self.timestamp_sequences.extend([6, 7, 8, 9, 10])
         for _ in range(5):
-            self.assertTrue(token_bucket.acquire(1, block=False))
+            assert token_bucket.acquire(1, block=False)
 
     def test_max_capacity_is_at_least_one(self):
         token_bucket = self.create_token_bucket()
         self.timestamp_sequences.append(1)
         token_bucket.max_rate = 0.5
-        self.assertEqual(token_bucket.max_rate, 0.5)
-        self.assertEqual(token_bucket.max_capacity, 1)
+        assert token_bucket.max_rate == 0.5
+        assert token_bucket.max_capacity == 1
 
     def test_acquire_fails_on_non_block_mode_returns_false(self):
         self.timestamp_sequences.extend([
@@ -69,7 +70,7 @@ class TestTokenBucket(unittest.TestCase):
             1
         ])
         token_bucket = self.create_token_bucket(max_rate=10)
-        with self.assertRaises(CapacityNotAvailableError):
+        with pytest.raises(CapacityNotAvailableError):
             token_bucket.acquire(100, block=False)
 
     def test_can_retrieve_at_max_send_rate(self):
@@ -79,7 +80,7 @@ class TestTokenBucket(unittest.TestCase):
         ])
         token_bucket = self.create_token_bucket(max_rate=10)
         for _ in range(20):
-            self.assertTrue(token_bucket.acquire(1, block=False))
+            assert token_bucket.acquire(1, block=False)
 
     def test_acquiring_blocks_when_capacity_reached(self):
         # This is 1 token every 0.1 seconds.
@@ -98,15 +99,15 @@ class TestTokenBucket(unittest.TestCase):
             # test run time), we have to go slightly over 0.3 seconds here.
             0.300001,
         ])
-        self.assertTrue(token_bucket.acquire(1, block=False))
-        self.assertEqual(token_bucket.available_capacity, 0)
-        self.assertTrue(token_bucket.acquire(1, block=True))
-        self.assertEqual(token_bucket.available_capacity, 0)
-        self.assertTrue(token_bucket.acquire(1, block=False))
+        assert token_bucket.acquire(1, block=False)
+        assert token_bucket.available_capacity == 0
+        assert token_bucket.acquire(1, block=True)
+        assert token_bucket.available_capacity == 0
+        assert token_bucket.acquire(1, block=False)
 
     def test_rate_cant_go_below_min(self):
         token_bucket = self.create_token_bucket(max_rate=1, min_rate=0.2)
         self.timestamp_sequences.append(1)
         token_bucket.max_rate = 0.1
-        self.assertEqual(token_bucket.max_rate, 0.2)
-        self.assertEqual(token_bucket.max_capacity, 1)
+        assert token_bucket.max_rate == 0.2
+        assert token_bucket.max_capacity == 1

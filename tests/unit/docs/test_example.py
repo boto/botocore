@@ -103,14 +103,12 @@ class TestTraverseAndDocumentShape(BaseExampleDocumenterTest):
         )
         structure_section = self.doc_structure.get_section('structure-value')
         print(self.event_emitter.emit.call_args_list[0][1]['section'].name)
-        self.assertEqual(
-            self.event_emitter.emit.call_args_list,
-            [mock.call('docs.response-example.myservice.SampleOperation.Foo',
+        assert self.event_emitter.emit.call_args_list == [
+            mock.call('docs.response-example.myservice.SampleOperation.Foo',
                        section=structure_section.get_section(
                            'Foo').get_section('member-value')),
              mock.call(('docs.response-example.myservice.SampleOperation'
                         '.complete-section'), section=self.doc_structure)]
-        )
 
     def test_events_emitted_request_example(self):
         self.request_example.traverse_and_document_shape(
@@ -118,14 +116,12 @@ class TestTraverseAndDocumentShape(BaseExampleDocumenterTest):
             shape=self.operation_model.input_shape, history=[]
         )
         structure_section = self.doc_structure.get_section('structure-value')
-        self.assertEqual(
-            self.event_emitter.emit.call_args_list,
-            [mock.call('docs.request-example.myservice.SampleOperation.Foo',
+        assert self.event_emitter.emit.call_args_list == [
+            mock.call('docs.request-example.myservice.SampleOperation.Foo',
                        section=structure_section.get_section(
                            'Foo').get_section('member-value')),
              mock.call(('docs.request-example.myservice.SampleOperation'
                         '.complete-section'), section=self.doc_structure)]
-        )
 
 
 class TestDocumentEnumValue(BaseExampleDocumenterTest):

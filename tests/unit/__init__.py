@@ -30,12 +30,12 @@ class BaseResponseTest(unittest.TestCase):
         actual_metadata = actual.pop('ResponseMetadata', {})
         expected_metadata = expected.pop('ResponseMetadata', {})
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
         self.assert_dict_is_proper_subset(actual_metadata, expected_metadata)
 
     def assert_dict_is_proper_subset(self, superset, subset):
         """
         Asserts that a dictionary is a proper subset of another.
         """
-        self.assertTrue(all((k in superset and superset[k] == v)
-                            for k, v in subset.items()))
+        assert all((k in superset and superset[k] == v)
+                            for k, v in subset.items())

@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import os
 
+import pytest
 from tests import mock
 
 from tests.unit.docs import BaseDocsTest
@@ -69,14 +70,14 @@ class TestServiceDocumenter(BaseDocsTest):
             '  .. py:method:: wait(**kwargs)'
         ]
         for line in lines:
-            self.assertIn(line, contents)
+            assert line in contents
 
     def test_document_service_no_paginator(self):
         os.remove(self.paginator_model_file)
         contents = self.service_documenter.document_service().decode('utf-8')
-        self.assertNotIn('Paginators', contents)
+        assert 'Paginators' not in contents
 
     def test_document_service_no_waiter(self):
         os.remove(self.waiter_model_file)
         contents = self.service_documenter.document_service().decode('utf-8')
-        self.assertNotIn('Waiters', contents)
+        assert 'Waiters' not in contents

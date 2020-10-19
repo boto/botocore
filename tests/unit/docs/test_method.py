@@ -32,10 +32,9 @@ class TestGetInstanceMethods(unittest.TestCase):
     def test_get_instance_methods(self):
         instance = self.MySampleClass()
         instance_methods = get_instance_public_methods(instance)
-        self.assertEqual(len(instance_methods), 1)
-        self.assertIn('public_method', instance_methods)
-        self.assertEqual(
-            instance.public_method, instance_methods['public_method'])
+        assert len(instance_methods) == 1
+        assert 'public_method' in instance_methods
+        assert instance.public_method == instance_methods['public_method']
 
 
 class TestDocumentModelDrivenSignature(BaseDocsTest):

@@ -23,66 +23,66 @@ from botocore.docs.utils import escape_controls
 
 class TestPythonTypeName(unittest.TestCase):
     def test_structure(self):
-        self.assertEqual('dict', py_type_name('structure'))
+        assert 'dict' == py_type_name('structure')
 
     def test_list(self):
-        self.assertEqual('list', py_type_name('list'))
+        assert 'list' == py_type_name('list')
 
     def test_map(self):
-        self.assertEqual('dict', py_type_name('map'))
+        assert 'dict' == py_type_name('map')
 
     def test_string(self):
-        self.assertEqual('string', py_type_name('string'))
+        assert 'string' == py_type_name('string')
 
     def test_character(self):
-        self.assertEqual('string', py_type_name('character'))
+        assert 'string' == py_type_name('character')
 
     def test_blob(self):
-        self.assertEqual('bytes', py_type_name('blob'))
+        assert 'bytes' == py_type_name('blob')
 
     def test_timestamp(self):
-        self.assertEqual('datetime', py_type_name('timestamp'))
+        assert 'datetime' == py_type_name('timestamp')
 
     def test_integer(self):
-        self.assertEqual('integer', py_type_name('integer'))
+        assert 'integer' == py_type_name('integer')
 
     def test_long(self):
-        self.assertEqual('integer', py_type_name('long'))
+        assert 'integer' == py_type_name('long')
 
     def test_float(self):
-        self.assertEqual('float', py_type_name('float'))
+        assert 'float' == py_type_name('float')
 
     def test_double(self):
-        self.assertEqual('float', py_type_name('double'))
+        assert 'float' == py_type_name('double')
 
 
 class TestPythonDefault(unittest.TestCase):
     def test_structure(self):
-        self.assertEqual('{...}', py_default('structure'))
+        assert '{...}' == py_default('structure')
 
     def test_list(self):
-        self.assertEqual('[...]', py_default('list'))
+        assert '[...]' == py_default('list')
 
     def test_map(self):
-        self.assertEqual('{...}', py_default('map'))
+        assert '{...}' == py_default('map')
 
     def test_string(self):
-        self.assertEqual('\'string\'', py_default('string'))
+        assert '\'string\'' == py_default('string')
 
     def test_blob(self):
-        self.assertEqual('b\'bytes\'', py_default('blob'))
+        assert 'b\'bytes\'' == py_default('blob')
 
     def test_timestamp(self):
-        self.assertEqual('datetime(2015, 1, 1)', py_default('timestamp'))
+        assert 'datetime(2015, 1, 1)' == py_default('timestamp')
 
     def test_integer(self):
-        self.assertEqual('123', py_default('integer'))
+        assert '123' == py_default('integer')
 
     def test_long(self):
-        self.assertEqual('123', py_default('long'))
+        assert '123' == py_default('long')
 
     def test_double(self):
-        self.assertEqual('123.0', py_default('double'))
+        assert '123.0' == py_default('double')
 
 
 class TestGetOfficialServiceName(BaseDocsTest):
@@ -93,24 +93,20 @@ class TestGetOfficialServiceName(BaseDocsTest):
         }
 
     def test_no_short_name(self):
-        self.assertEqual('Official Name',
-                         get_official_service_name(self.service_model))
+        assert 'Official Name' == get_official_service_name(self.service_model)
 
     def test_aws_short_name(self):
         self.service_model.metadata['serviceAbbreviation'] = 'AWS Foo'
-        self.assertEqual('Official Name (Foo)',
-                         get_official_service_name(self.service_model))
+        assert 'Official Name (Foo)' == get_official_service_name(self.service_model)
 
     def test_amazon_short_name(self):
         self.service_model.metadata['serviceAbbreviation'] = 'Amazon Foo'
-        self.assertEqual('Official Name (Foo)',
-                         get_official_service_name(self.service_model))
+        assert 'Official Name (Foo)' == get_official_service_name(self.service_model)
 
     def test_short_name_in_official_name(self):
         self.service_model.metadata['serviceFullName'] = 'The Foo Service'
         self.service_model.metadata['serviceAbbreviation'] = 'Amazon Foo'
-        self.assertEqual('The Foo Service',
-                         get_official_service_name(self.service_model))
+        assert 'The Foo Service' == get_official_service_name(self.service_model)
 
 
 class TestAutopopulatedParam(BaseDocsTest):
@@ -223,5 +219,5 @@ class TestAppendParamDocumentation(BaseDocsTest):
 class TestEscapeControls(unittest.TestCase):
     def test_escapes_controls(self):
         escaped = escape_controls('\na\rb\tc\fd\be')
-        self.assertEqual(escaped, '\\na\\rb\\tc\\fd\\be')
+        assert escaped == '\\na\\rb\\tc\\fd\\be'
 

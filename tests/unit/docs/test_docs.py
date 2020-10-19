@@ -48,12 +48,12 @@ class TestGenerateDocs(BaseDocsTest):
             self.docs_root, 'reference', 'services')
         reference_service_path = os.path.join(
             reference_services_path, 'myservice.rst')
-        self.assertTrue(os.path.exists(reference_service_path))
+        assert os.path.exists(reference_service_path)
 
         # Make sure the rst file has some the expected contents.
         with open(reference_service_path, 'r') as f:
             contents = f.read()
-            self.assertIn('AWS MyService', contents)
-            self.assertIn('Client', contents)
-            self.assertIn('Paginators', contents)
-            self.assertIn('Waiters', contents)
+            assert 'AWS MyService' in contents
+            assert 'Client' in contents
+            assert 'Paginators' in contents
+            assert 'Waiters' in contents
