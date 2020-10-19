@@ -52,9 +52,8 @@ class TestBuildRetryConfig(unittest.TestCase):
     def test_inject_retry_config(self):
         retry = translate.build_retry_config('sts', self.retry['retry'],
                                              self.retry['definitions'])
-        self.assertIn('__default__', retry)
-        self.assertEqual(
-            retry['__default__'], {
+        assert '__default__' in retry
+        assert retry['__default__'] == {
                 "max_attempts": 5,
                 "delay": "service_specific_delay",
                 "policies": {
@@ -63,25 +62,23 @@ class TestBuildRetryConfig(unittest.TestCase):
                     "service_one": "service",
                 }
             }
-        )
         # Policies should be merged.
         operation_config = retry['AssumeRole']
-        self.assertEqual(operation_config['policies']['name'], 'policy')
+        assert operation_config['policies']['name'] == 'policy'
 
     def test_resolve_reference(self):
         retry = translate.build_retry_config('sts', self.retry['retry'],
                                              self.retry['definitions'])
         operation_config = retry['AssumeRole']
         # And we should resolve references.
-        self.assertEqual(operation_config['policies']['other'],
-                         {"from": {"definition": "file"}})
+        assert operation_config['policies']['other'] == {
+                         "from": {"definition": "file"}}
 
     def test_service_specific_defaults_no_mutate_default_retry(self):
         retry = translate.build_retry_config('sts', self.retry['retry'],
                                              self.retry['definitions'])
         # sts has a specific policy
-        self.assertEqual(
-            retry['__default__'], {
+        assert retry['__default__'] == {
                 "max_attempts": 5,
                 "delay": "service_specific_delay",
                 "policies": {
@@ -90,13 +87,10 @@ class TestBuildRetryConfig(unittest.TestCase):
                     "service_one": "service",
                 }
             }
-        )
 
         # The general defaults for the upstream model should not have been
         # mutated from building the retry config
-        self.assertEqual(
-            self.retry['retry']['__default__'],
-            {
+        assert self.retry['retry']['__default__'] == {
                 "max_attempts": 5,
                 "delay": "global_delay",
                 "policies": {
@@ -104,14 +98,12 @@ class TestBuildRetryConfig(unittest.TestCase):
                     "override_me": "global",
                 }
             }
-        )
 
     def test_client_override_max_attempts(self):
         retry = translate.build_retry_config(
             'sts', self.retry['retry'], self.retry['definitions'],
             client_retry_config={'max_attempts': 9}
         )
-        self.assertEqual(retry['__default__']['max_attempts'], 10)
+        assert retry['__default__']['max_attempts'] == 10
         # But it should not mutate the original retry model
-        self.assertEqual(
-            self.retry['retry']['__default__']['max_attempts'], 5)
+        assert self.retry['retry']['__default__']['max_attempts'] == 5

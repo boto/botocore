@@ -15,6 +15,7 @@ import json
 import re
 import socket
 import time
+import pytest
 
 from botocore.awsrequest import AWSRequest
 from botocore.compat import six
@@ -44,16 +45,13 @@ class TestMonitor(unittest.TestCase):
     def test_register(self):
         event_emitter = mock.Mock(HierarchicalEmitter)
         self.handler.register(event_emitter)
-        self.assertEqual(
-            event_emitter.register_last.call_args_list,
-            [
+        assert event_emitter.register_last.call_args_list == [
                 mock.call('before-parameter-build', self.handler.capture),
                 mock.call('request-created', self.handler.capture),
                 mock.call('response-received', self.handler.capture),
                 mock.call('after-call', self.handler.capture),
                 mock.call('after-call-error', self.handler.capture),
             ]
-        )
 
     def test_handle(self):
         event = object()
@@ -116,23 +114,19 @@ class TestMonitorEventAdapter(unittest.TestCase):
         })
 
     def test_feed_before_parameter_build_returns_no_event(self):
-        self.assertIsNone(
-            self.adapter.feed('before-parameter-build', {
+        assert self.adapter.feed('before-parameter-build', {
                 'model': self.operation_model,
                 'context': self.context
-            })
-        )
+            }) is None
 
     def test_feed_request_created_returns_no_event(self):
         self.adapter.feed('before-parameter-build', {
             'model': self.operation_model,
             'context': self.context
         })
-        self.assertIsNone(
-            self.adapter.feed('request-created', {
+        assert self.adapter.feed('request-created', {
                 'request': self.request,
-            })
-        )
+            }) is None
 
     def test_feed_with_successful_response(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -149,9 +143,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             'context': self.context,
             'exception': None
         })
-        self.assertEqual(
-            attempt_event,
-            APICallAttemptEvent(
+        assert attempt_event == APICallAttemptEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=2000,
@@ -161,7 +153,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 http_status_code=self.http_status_code,
                 response_headers=self.response_headers,
             )
-        )
 
         self.mock_time.return_value = 4
         call_event = self.adapter.feed('after-call', {
@@ -173,16 +164,13 @@ class TestMonitorEventAdapter(unittest.TestCase):
             },
             'context': self.context
         })
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
                 latency=3000,
                 attempts=[attempt_event]
             )
-        )
 
     def test_feed_with_retries(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -199,9 +187,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             'context': self.context,
             'exception': None
         })
-        self.assertEqual(
-            first_attempt_event,
-            APICallAttemptEvent(
+        assert first_attempt_event == APICallAttemptEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=2000,
@@ -211,7 +197,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 http_status_code=500,
                 response_headers=self.response_headers,
             )
-        )
 
         self.feed_request_created_event(current_time=5)
         self.mock_time.return_value = 6
@@ -225,9 +210,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             'context': self.context,
             'exception': None
         })
-        self.assertEqual(
-            second_attempt_event,
-            APICallAttemptEvent(
+        assert second_attempt_event == APICallAttemptEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=5000,
@@ -237,7 +220,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 http_status_code=200,
                 response_headers=self.response_headers,
             )
-        )
 
         self.mock_time.return_value = 7
         call_event = self.adapter.feed('after-call', {
@@ -249,16 +231,13 @@ class TestMonitorEventAdapter(unittest.TestCase):
             },
             'context': self.context
         })
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
                 latency=6000,
                 attempts=[first_attempt_event, second_attempt_event]
             )
-        )
 
     def test_feed_with_retries_exceeded(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -299,9 +278,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             },
             'context': self.context
         })
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
@@ -309,7 +286,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 attempts=[first_attempt_event, second_attempt_event],
                 retries_exceeded=True
             )
-        )
 
     def test_feed_with_parsed_error(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -329,9 +305,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             'context': self.context,
             'exception': None
         })
-        self.assertEqual(
-            attempt_event,
-            APICallAttemptEvent(
+        assert attempt_event == APICallAttemptEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=2000,
@@ -342,23 +316,19 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 response_headers=self.response_headers,
                 parsed_error=parsed_error
             )
-        )
 
         self.mock_time.return_value = 4
         call_event = self.adapter.feed('after-call', {
             'parsed': parsed_response,
             'context': self.context
         })
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
                 latency=3000,
                 attempts=[attempt_event]
             )
-        )
 
     def test_feed_with_wire_exception(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -371,9 +341,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
             'context': self.context,
             'exception': wire_exception
         })
-        self.assertEqual(
-            attempt_event,
-            APICallAttemptEvent(
+        assert attempt_event == APICallAttemptEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=2000,
@@ -382,7 +350,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 request_headers=self.request_headers,
                 wire_exception=wire_exception,
             )
-        )
 
         self.mock_time.return_value = 4
         call_event = self.adapter.feed(
@@ -391,16 +358,13 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 'context': self.context
             }
         )
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
                 latency=3000,
                 attempts=[attempt_event]
             )
-        )
 
     def test_feed_with_wire_exception_retries_exceeded(self):
         self.feed_before_parameter_build_event(current_time=1)
@@ -421,9 +385,7 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 'context': self.context
             }
         )
-        self.assertEqual(
-            call_event,
-            APICallEvent(
+        assert call_event == APICallEvent(
                 service=self.service_id,
                 operation=self.wire_name,
                 timestamp=1000,
@@ -431,7 +393,6 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 attempts=[attempt_event],
                 retries_exceeded=True
             )
-        )
 
 
 class TestBaseMonitorEvent(unittest.TestCase):
@@ -439,37 +400,29 @@ class TestBaseMonitorEvent(unittest.TestCase):
         event = BaseMonitorEvent(
             service='MyService', operation='MyOperation', timestamp=1000
         )
-        self.assertEqual(event.service, 'MyService')
-        self.assertEqual(event.operation, 'MyOperation')
-        self.assertEqual(event.timestamp, 1000)
+        assert event.service == 'MyService'
+        assert event.operation == 'MyOperation'
+        assert event.timestamp == 1000
 
     def test_eq(self):
-        self.assertEqual(
-            BaseMonitorEvent(
+        assert BaseMonitorEvent(
                 service='MyService', operation='MyOperation', timestamp=1000
-            ),
-            BaseMonitorEvent(
+            ) == BaseMonitorEvent(
                 service='MyService', operation='MyOperation', timestamp=1000
             )
-        )
 
     def test_not_eq_different_classes(self):
-        self.assertNotEqual(
-            BaseMonitorEvent(
+        assert BaseMonitorEvent(
                 service='MyService', operation='MyOperation', timestamp=1000
-            ), object()
-        )
+            ) !=  object()
 
     def test_not_eq_different_attrs(self):
-        self.assertNotEqual(
-            BaseMonitorEvent(
+        assert BaseMonitorEvent(
                 service='MyService', operation='MyOperation', timestamp=1000
-            ),
-            BaseMonitorEvent(
+            ) != BaseMonitorEvent(
                 service='DifferentService', operation='DifferentOperation',
                 timestamp=0
             )
-        )
 
 
 class TestAPICallEvent(unittest.TestCase):
@@ -478,11 +431,11 @@ class TestAPICallEvent(unittest.TestCase):
             service='MyService', operation='MyOperation', timestamp=1000,
             latency=2000, attempts=[]
         )
-        self.assertEqual(event.service, 'MyService')
-        self.assertEqual(event.operation, 'MyOperation')
-        self.assertEqual(event.timestamp, 1000)
-        self.assertEqual(event.latency, 2000)
-        self.assertEqual(event.attempts, [])
+        assert event.service == 'MyService'
+        assert event.operation == 'MyOperation'
+        assert event.timestamp == 1000
+        assert event.latency == 2000
+        assert event.attempts == []
 
     def test_new_api_call_attempt_event(self):
         event = APICallEvent(
@@ -490,13 +443,10 @@ class TestAPICallEvent(unittest.TestCase):
             latency=2000, attempts=[]
         )
         attempt_event = event.new_api_call_attempt(timestamp=2000)
-        self.assertEqual(
-            attempt_event,
-            APICallAttemptEvent(
+        assert attempt_event == APICallAttemptEvent(
                 service='MyService', operation='MyOperation', timestamp=2000
             )
-        )
-        self.assertEqual(event.attempts, [attempt_event])
+        assert event.attempts == [attempt_event]
 
 
 class TestAPICallAttemptEvent(unittest.TestCase):
@@ -510,16 +460,16 @@ class TestAPICallAttemptEvent(unittest.TestCase):
             response_headers={}, parsed_error=parsed_error,
             wire_exception=wire_exception
         )
-        self.assertEqual(event.service, 'MyService')
-        self.assertEqual(event.operation, 'MyOperation')
-        self.assertEqual(event.timestamp, 1000)
-        self.assertEqual(event.latency, 2000)
-        self.assertEqual(event.url, url)
-        self.assertEqual(event.http_status_code, 200)
-        self.assertEqual(event.request_headers, {})
-        self.assertEqual(event.response_headers, {})
-        self.assertEqual(event.parsed_error, parsed_error)
-        self.assertEqual(event.wire_exception, wire_exception)
+        assert event.service == 'MyService'
+        assert event.operation == 'MyOperation'
+        assert event.timestamp == 1000
+        assert event.latency == 2000
+        assert event.url == url
+        assert event.http_status_code == 200
+        assert event.request_headers == {}
+        assert event.response_headers == {}
+        assert event.parsed_error == parsed_error
+        assert event.wire_exception == wire_exception
 
 
 class TestCSMSerializer(unittest.TestCase):
@@ -543,27 +493,26 @@ class TestCSMSerializer(unittest.TestCase):
 
     def test_validates_csm_client_id(self):
         max_client_id_len = 255
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             CSMSerializer('a' * (max_client_id_len + 1))
 
     def test_serialize_produces_bytes(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000)
         serialized_event = self.serializer.serialize(event)
-        self.assertIsInstance(serialized_event, six.binary_type)
+        assert isinstance(serialized_event, six.binary_type)
 
     def test_serialize_does_not_add_whitespace(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000)
         serialized_event = self.serializer.serialize(event)
-        self.assertIsNone(re.match(r'\s', serialized_event.decode('utf-8')))
+        assert re.match(r'\s', serialized_event.decode('utf-8')) is None
 
     def test_serialize_api_call_event(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict, {
+        assert serialized_event_dict == {
                 'Version': 1,
                 'Type': 'ApiCall',
                 'Service': self.service,
@@ -573,21 +522,20 @@ class TestCSMSerializer(unittest.TestCase):
                 'Timestamp': 1000,
                 'AttemptCount': 0,
             }
-        )
 
     def test_serialize_api_call_event_with_latency(self):
         event = APICallEvent(
             service=self.service, operation=self.operation,
             timestamp=1000, latency=2000)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['Latency'], self.latency)
+        assert serialized_event_dict['Latency'] == self.latency
 
     def test_serialize_api_call_event_with_attempts(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000)
         event.new_api_call_attempt(2000)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['AttemptCount'], 1)
+        assert serialized_event_dict['AttemptCount'] == 1
 
     def test_serialize_api_call_event_region(self):
         event = APICallEvent(
@@ -603,7 +551,7 @@ class TestCSMSerializer(unittest.TestCase):
         self.request_headers['Authorization'] = auth_value
         attempt.request_headers = self.request_headers
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['Region'], 'my-region-1')
+        assert serialized_event_dict['Region'] == 'my-region-1'
 
     def test_serialize_api_call_event_user_agent(self):
         event = APICallEvent(
@@ -611,7 +559,7 @@ class TestCSMSerializer(unittest.TestCase):
         attempt = event.new_api_call_attempt(2000)
         attempt.request_headers = {'User-Agent': self.user_agent}
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['UserAgent'], self.user_agent)
+        assert serialized_event_dict['UserAgent'] == self.user_agent
 
     def test_serialize_api_call_event_http_status_code(self):
         event = APICallEvent(
@@ -619,7 +567,7 @@ class TestCSMSerializer(unittest.TestCase):
         attempt = event.new_api_call_attempt(2000)
         attempt.http_status_code = 200
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['FinalHttpStatusCode'], 200)
+        assert serialized_event_dict['FinalHttpStatusCode'] == 200
 
     def test_serialize_api_call_event_parsed_error(self):
         event = APICallEvent(
@@ -630,12 +578,8 @@ class TestCSMSerializer(unittest.TestCase):
             'Message': 'My error message'
         }
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict['FinalAwsException'], 'MyErrorCode')
-        self.assertEqual(
-            serialized_event_dict['FinalAwsExceptionMessage'],
-            'My error message'
-        )
+        assert serialized_event_dict['FinalAwsException'] == 'MyErrorCode'
+        assert serialized_event_dict['FinalAwsExceptionMessage'] == 'My error message'
 
     def test_serialize_api_call_event_wire_exception(self):
         event = APICallEvent(
@@ -643,27 +587,22 @@ class TestCSMSerializer(unittest.TestCase):
         attempt = event.new_api_call_attempt(2000)
         attempt.wire_exception = Exception('Error on the wire')
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict['FinalSdkException'], 'Exception')
-        self.assertEqual(
-            serialized_event_dict['FinalSdkExceptionMessage'],
-            'Error on the wire'
-        )
+        assert serialized_event_dict['FinalSdkException'] == 'Exception'
+        assert serialized_event_dict['FinalSdkExceptionMessage'] == 'Error on the wire'
 
     def test_serialize_api_call_event_with_retries_exceeded(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000,
             retries_exceeded=True)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['MaxRetriesExceeded'], 1)
+        assert serialized_event_dict['MaxRetriesExceeded'] == 1
 
     def test_serialize_api_call_attempt_event(self):
         event = APICallAttemptEvent(
             service=self.service, operation=self.operation,
             timestamp=self.timestamp)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict, {
+        assert serialized_event_dict == {
                 'Version': 1,
                 'Type': 'ApiCallAttempt',
                 'Service': self.service,
@@ -671,14 +610,13 @@ class TestCSMSerializer(unittest.TestCase):
                 'ClientId': self.csm_client_id,
                 'Timestamp': self.timestamp,
             }
-        )
 
     def test_serialize_api_call_attempt_event_with_latency(self):
         event = APICallAttemptEvent(
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, latency=self.latency)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['AttemptLatency'], self.latency)
+        assert serialized_event_dict['AttemptLatency'] == self.latency
 
     def test_serialize_with_user_agent(self):
         event = APICallAttemptEvent(
@@ -687,14 +625,14 @@ class TestCSMSerializer(unittest.TestCase):
             request_headers={'User-Agent': self.user_agent}
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['UserAgent'], self.user_agent)
+        assert serialized_event_dict['UserAgent'] == self.user_agent
 
     def test_serialize_with_url(self):
         event = APICallAttemptEvent(
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, url=self.url)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['Fqdn'], self.fqdn)
+        assert serialized_event_dict['Fqdn'] == self.fqdn
 
     def test_serialize_with_s3_signing(self):
         auth_value = 'AWS myaccesskey:somesignature'
@@ -703,7 +641,7 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, request_headers=self.request_headers)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['AccessKey'], 'myaccesskey')
+        assert serialized_event_dict['AccessKey'] == 'myaccesskey'
 
     def test_serialize_with_sigv4_sigining(self):
         auth_value = (
@@ -718,7 +656,7 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, request_headers=self.request_headers)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['AccessKey'], 'myaccesskey')
+        assert serialized_event_dict['AccessKey'] == 'myaccesskey'
 
     def test_serialize_with_session_token(self):
         self.request_headers['X-Amz-Security-Token'] = 'my-security-token'
@@ -726,8 +664,7 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, request_headers=self.request_headers)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict['SessionToken'], 'my-security-token')
+        assert serialized_event_dict['SessionToken'] == 'my-security-token'
 
     def test_serialize_with_path_parameters_in_url(self):
         self.url = 'https://' + self.fqdn + '/resource'
@@ -735,7 +672,7 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, url=self.url)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['Fqdn'], self.fqdn)
+        assert serialized_event_dict['Fqdn'] == self.fqdn
 
     def test_serialize_with_request_id_headers(self):
         response_headers = {
@@ -747,9 +684,9 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, response_headers=response_headers)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['XAmznRequestId'], 'id1')
-        self.assertEqual(serialized_event_dict['XAmzRequestId'], 'id2')
-        self.assertEqual(serialized_event_dict['XAmzId2'], 'id3')
+        assert serialized_event_dict['XAmznRequestId'] == 'id1'
+        assert serialized_event_dict['XAmzRequestId'] == 'id2'
+        assert serialized_event_dict['XAmzId2'] == 'id3'
 
     def test_serialize_filters_unwanted_response_headers(self):
         response_headers = {'filter-out': 'do-not-include-this'}
@@ -757,8 +694,7 @@ class TestCSMSerializer(unittest.TestCase):
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, response_headers=response_headers)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict, {
+        assert serialized_event_dict == {
                 'Version': 1,
                 'Type': 'ApiCallAttempt',
                 'Service': self.service,
@@ -766,14 +702,13 @@ class TestCSMSerializer(unittest.TestCase):
                 'ClientId': self.csm_client_id,
                 'Timestamp': self.timestamp,
             }
-        )
 
     def test_serialize_with_status_code(self):
         event = APICallAttemptEvent(
             service=self.service, operation=self.operation,
             timestamp=self.timestamp, http_status_code=200)
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['HttpStatusCode'], 200)
+        assert serialized_event_dict['HttpStatusCode'] == 200
 
     def test_serialize_with_service_error(self):
         event = APICallAttemptEvent(
@@ -784,9 +719,8 @@ class TestCSMSerializer(unittest.TestCase):
             }
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['AwsException'], 'MyErrorCode')
-        self.assertEqual(
-            serialized_event_dict['AwsExceptionMessage'], 'My error message')
+        assert serialized_event_dict['AwsException'] == 'MyErrorCode'
+        assert serialized_event_dict['AwsExceptionMessage'] == 'My error message'
 
     def test_serialize_with_wire_exception(self):
         event = APICallAttemptEvent(
@@ -795,9 +729,8 @@ class TestCSMSerializer(unittest.TestCase):
             wire_exception=Exception('Error on the wire')
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(serialized_event_dict['SdkException'], 'Exception')
-        self.assertEqual(
-            serialized_event_dict['SdkExceptionMessage'], 'Error on the wire')
+        assert serialized_event_dict['SdkException'] == 'Exception'
+        assert serialized_event_dict['SdkExceptionMessage'] == 'Error on the wire'
 
     def test_serialize_truncates_long_user_agent(self):
         max_user_agent_length = 256
@@ -808,10 +741,7 @@ class TestCSMSerializer(unittest.TestCase):
             request_headers={'User-Agent': user_agent}
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict['UserAgent'],
-            user_agent[:max_user_agent_length]
-        )
+        assert serialized_event_dict['UserAgent'] == user_agent[:max_user_agent_length]
 
     def test_serialize_truncates_long_service_error(self):
         max_error_code_length = 128
@@ -826,14 +756,10 @@ class TestCSMSerializer(unittest.TestCase):
             }
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
-        self.assertEqual(
-            serialized_event_dict['AwsException'],
-            long_error_code[:max_error_code_length]
-        )
-        self.assertEqual(
-            serialized_event_dict['AwsExceptionMessage'],
-            long_error_message[:max_error_message_length]
-        )
+        assert serialized_event_dict['AwsException'] == long_error_code[
+            :max_error_code_length]
+        assert serialized_event_dict['AwsExceptionMessage'] == long_error_message[
+            :max_error_message_length]
 
     def test_serialize_truncates_long_wire_exception(self):
         max_class_name_length = 128
@@ -848,14 +774,10 @@ class TestCSMSerializer(unittest.TestCase):
         )
         serialized_event_dict = self.get_serialized_event_dict(event)
 
-        self.assertEqual(
-            serialized_event_dict['SdkException'],
-            long_class_name[:max_class_name_length]
-        )
-        self.assertEqual(
-            serialized_event_dict['SdkExceptionMessage'],
-            long_error_message[:max_error_message_length]
-        )
+        assert serialized_event_dict['SdkException'] == long_class_name[
+            :max_class_name_length]
+        assert serialized_event_dict['SdkExceptionMessage'] == long_error_message[
+            :max_error_message_length]
 
 
 class TestSocketPublisher(unittest.TestCase):

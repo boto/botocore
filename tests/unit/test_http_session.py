@@ -1,4 +1,5 @@
 import socket
+import pytest
 
 from tests import mock
 from tests import unittest
@@ -27,39 +28,39 @@ class TestProxyConfiguration(unittest.TestCase):
     def test_construct_proxy_headers_with_auth(self):
         headers = self.proxy_config.proxy_headers_for(self.auth_url)
         proxy_auth = headers.get('Proxy-Authorization')
-        self.assertEqual('Basic dXNlcjpwYXNz', proxy_auth)
+        assert proxy_auth == 'Basic dXNlcjpwYXNz'
 
     def test_construct_proxy_headers_without_auth(self):
         headers = self.proxy_config.proxy_headers_for(self.url)
-        self.assertEqual({}, headers)
+        assert headers == {}
 
     def test_proxy_for_url_no_slashes(self):
         self.update_http_proxy('localhost:8081/')
         proxy_url = self.proxy_config.proxy_url_for(self.url)
-        self.assertEqual('http://localhost:8081/', proxy_url)
+        assert proxy_url == 'http://localhost:8081/' 
 
     def test_proxy_for_url_no_protocol(self):
         self.update_http_proxy('//localhost:8081/')
         proxy_url = self.proxy_config.proxy_url_for(self.url)
-        self.assertEqual('http://localhost:8081/', proxy_url)
+        assert proxy_url == 'http://localhost:8081/'
 
     def test_fix_proxy_url_has_protocol_http(self):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
-        self.assertEqual('http://localhost:8081/', proxy_url)
+        assert proxy_url == 'http://localhost:8081/'
 
 
 class TestHttpSessionUtils(unittest.TestCase):
     def test_get_cert_path_path(self):
         path = '/some/path'
         cert_path = get_cert_path(path)
-        self.assertEqual(path, cert_path)
+        assert path == cert_path
 
     def test_get_cert_path_certifi_or_default(self):
         with mock.patch('botocore.httpsession.where') as where:
             path = '/bundle/path'
             where.return_value = path
             cert_path = get_cert_path(True)
-            self.assertEqual(path, cert_path)
+            assert path == cert_path
 
 
 class TestURLLib3Session(unittest.TestCase):
@@ -202,7 +203,7 @@ class TestURLLib3Session(unittest.TestCase):
         self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
         session.send(self.request.prepare())
         # assert that we did not create another proxy manager
-        self.assertEqual(self.proxy_manager_fun.call_count, 1)
+        assert self.proxy_manager_fun.call_count == 1
 
     def test_basic_http_proxy_request(self):
         proxies = {'http': 'http://proxy.com'}
@@ -215,14 +216,14 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         session.send(self.request.prepare())
         _, manager_kwargs = self.pool_manager_cls.call_args
-        self.assertIsNotNone(manager_kwargs.get('ssl_context'))
+        assert manager_kwargs.get('ssl_context') is not None
 
     def test_proxy_request_ssl_context_is_explicit(self):
         proxies = {'http': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
         session.send(self.request.prepare())
         _, proxy_kwargs = self.proxy_manager_fun.call_args
-        self.assertIsNotNone(proxy_kwargs.get('ssl_context'))
+        assert proxy_kwargs.get('ssl_context') is not None
 
     def test_session_forwards_socket_options_to_pool_manager(self):
         socket_options = [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
@@ -249,12 +250,12 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
 
     def test_catches_new_connection_error(self):
-        with self.assertRaises(EndpointConnectionError):
+        with pytest.raises(EndpointConnectionError):
             error = NewConnectionError(None, None)
             self.make_request_with_error(error)
 
     def test_catches_bad_status_line(self):
-        with self.assertRaises(ConnectionClosedError):
+        with pytest.raises(ConnectionClosedError):
             error = ProtocolError(None)
             self.make_request_with_error(error)
 
@@ -262,9 +263,9 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         # ensure the pool manager is using the correct classes
         http_class = self.pool_manager.pool_classes_by_scheme.get('http')
-        self.assertIs(http_class, AWSHTTPConnectionPool)
+        assert http_class is AWSHTTPConnectionPool
         https_class = self.pool_manager.pool_classes_by_scheme.get('https')
-        self.assertIs(https_class, AWSHTTPSConnectionPool)
+        assert https_class is AWSHTTPSConnectionPool
 
     def test_chunked_encoding_is_set_with_header(self):
         session = URLLib3Session()

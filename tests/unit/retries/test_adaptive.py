@@ -1,5 +1,6 @@
 from tests import unittest
 
+import pytest
 from tests import mock
 
 from botocore.retries import adaptive
@@ -52,7 +53,7 @@ class TestClientRateLimiter(unittest.TestCase):
     def test_bucket_bucket_acquisition_only_if_enabled(self):
         rate_limiter = self.create_client_limiter()
         rate_limiter.on_sending_request(request=mock.sentinel.request)
-        self.assertFalse(self.token_bucket.acquire.called)
+        assert not self.token_bucket.acquire.called
 
     def test_token_bucket_enabled_on_throttling_error(self):
         rate_limiter = self.create_client_limiter()
@@ -64,7 +65,7 @@ class TestClientRateLimiter(unittest.TestCase):
         # token.
         self.timestamp_sequences.append(1)
         rate_limiter.on_sending_request(request=mock.sentinel.request)
-        self.assertTrue(self.token_bucket.acquire.called)
+        assert self.token_bucket.acquire.called
 
     def test_max_rate_updated_on_success_response(self):
         rate_limiter = self.create_client_limiter()
@@ -72,7 +73,7 @@ class TestClientRateLimiter(unittest.TestCase):
         self.rate_adjustor.success_received.return_value = 20
         self.rate_clocker.record.return_value = 21
         rate_limiter.on_receiving_response()
-        self.assertEqual(self.token_bucket.max_rate, 20)
+        assert self.token_bucket.max_rate == 20
 
     def test_max_rate_cant_exceed_20_percent_max(self):
         rate_limiter = self.create_client_limiter()
@@ -84,7 +85,7 @@ class TestClientRateLimiter(unittest.TestCase):
 
         # The most we should go up is 2.0 * 20
         rate_limiter.on_receiving_response()
-        self.assertEqual(self.token_bucket.max_rate, 2.0 * 20)
+        assert self.token_bucket.max_rate == 2.0 * 20
 
 class TestRateClocker(unittest.TestCase):
 
@@ -95,19 +96,19 @@ class TestRateClocker(unittest.TestCase):
         self.smoothing = 0.8
 
     def test_initial_rate_is_0(self):
-        self.assertEqual(self.rate_measure.measured_rate, 0)
+        assert self.rate_measure.measured_rate == 0
 
     def test_time_updates_if_after_bucket_range(self):
         self.timestamp_sequences.append(1)
         # This should be 1 * 0.8 + 0 * 0.2, or just 0.8
-        self.assertEqual(self.rate_measure.record(), 0.8)
+        assert self.rate_measure.record() == 0.8
 
     def test_can_measure_constant_rate(self):
         # Timestamps of 1 every second indicate a rate of 1 TPS.
         self.timestamp_sequences.extend(range(1, 21))
         for _ in range(20):
             self.rate_measure.record()
-        self.assertAlmostEqual(self.rate_measure.measured_rate, 1)
+        assert pytest.approx(self.rate_measure.measured_rate) == 1
 
     def test_uses_smoothing_to_favor_recent_weights(self):
         self.timestamp_sequences.extend([
@@ -125,13 +126,13 @@ class TestRateClocker(unittest.TestCase):
         for _ in range(7):
             self.rate_measure.record()
         # We should almost be at 2.0 but not quite.
-        self.assertGreaterEqual(self.rate_measure.measured_rate, 1.99)
-        self.assertLessEqual(self.rate_measure.measured_rate, 2.0)
+        assert self.rate_measure.measured_rate >= 1.99
+        assert self.rate_measure.measured_rate <= 2.0
         # With our last recording we now drop down between 0.1 and 2
         # depending on our smoothing factor.
         self.rate_measure.record()
-        self.assertGreaterEqual(self.rate_measure.measured_rate, 0.1)
-        self.assertLessEqual(self.rate_measure.measured_rate, 2.0)
+        assert self.rate_measure.measured_rate >= 0.1
+        assert self.rate_measure.measured_rate <= 2.0
 
     def test_noop_when_delta_t_is_0(self):
         self.timestamp_sequences.extend([
@@ -143,7 +144,7 @@ class TestRateClocker(unittest.TestCase):
         ])
         for _ in range(5):
             self.rate_measure.record()
-        self.assertGreaterEqual(self.rate_measure.measured_rate, 1.0)
+        assert self.rate_measure.measured_rate >= 1.0
 
     def test_times_are_grouped_per_time_bucket(self):
         # Using our default of 0.5 time buckets, we have:
@@ -159,7 +160,7 @@ class TestRateClocker(unittest.TestCase):
         # This is showing the tradeoff we're making with measuring rates.
         # we're currently in the window from 0 <= x < 0.5, which means
         # we use the rate from the previous bucket, which is 0:
-        self.assertEqual(self.rate_measure.measured_rate, 0)
+        assert self.rate_measure.measured_rate == 0
         # However if we now add a new measurement that's in the next
         # time bucket  0.5 <= x < 1.0
         # we'll use the range from the previous bucket:
@@ -167,4 +168,4 @@ class TestRateClocker(unittest.TestCase):
         self.rate_measure.record()
         # And our previous bucket will be:
         # 12 * 0.8 + 0.2 * 0
-        self.assertEqual(self.rate_measure.measured_rate, 12 * 0.8)
+        assert self.rate_measure.measured_rate == 12 * 0.8

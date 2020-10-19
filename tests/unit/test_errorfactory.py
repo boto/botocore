@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+import pytest
 
 from botocore.compat import six
 from botocore.exceptions import ClientError
@@ -25,23 +26,20 @@ class TestBaseClientExceptions(unittest.TestCase):
         self.exceptions = BaseClientExceptions(self.code_to_exception)
 
     def test_has_client_error(self):
-        self.assertIs(self.exceptions.ClientError, ClientError)
+        assert self.exceptions.ClientError is ClientError
 
     def test_from_code(self):
         exception_cls = type('MyException', (ClientError,), {})
         self.code_to_exception['MyExceptionCode'] = exception_cls
-        self.assertIs(
-            self.exceptions.from_code('MyExceptionCode'), exception_cls)
+        assert self.exceptions.from_code('MyExceptionCode') is exception_cls
 
     def test_from_code_nonmatch_defaults_to_client_error(self):
-        self.assertIs(
-            self.exceptions.from_code('SomeUnknownErrorCode'), ClientError)
+        assert self.exceptions.from_code('SomeUnknownErrorCode') is ClientError
 
     def test_gettattr_message(self):
         exception_cls = type('MyException', (ClientError,), {})
         self.code_to_exception['MyExceptionCode'] = exception_cls
-        with six.assertRaisesRegex(self,
-                AttributeError, 'Valid exceptions are: MyException'):
+        with pytest.raises(AttributeError, match='Valid exceptions are: MyException'):
             self.exceptions.SomeUnmodeledError
 
 
@@ -100,29 +98,27 @@ class TestClientExceptionsFactory(unittest.TestCase):
     def test_creates_modeled_exception(self):
         exceptions = self.exceptions_factory.create_client_exceptions(
             self.service_model)
-        self.assertTrue(hasattr(exceptions, 'ExceptionWithModeledCode'))
+        assert hasattr(exceptions, 'ExceptionWithModeledCode')
         modeled_exception = exceptions.ExceptionWithModeledCode
-        self.assertEqual(
-            modeled_exception.__name__, 'ExceptionWithModeledCode')
-        self.assertTrue(issubclass(modeled_exception, ClientError))
+        assert modeled_exception.__name__ == 'ExceptionWithModeledCode'
+        assert issubclass(modeled_exception, ClientError)
 
     def test_collects_modeled_exceptions_for_all_operations(self):
         exceptions = self.exceptions_factory.create_client_exceptions(
             self.service_model)
         # Make sure exceptions were added for all operations by checking
         # an exception only found on an a different operation.
-        self.assertTrue(hasattr(exceptions, 'ExceptionForAnotherOperation'))
+        assert hasattr(exceptions, 'ExceptionForAnotherOperation')
         modeled_exception = exceptions.ExceptionForAnotherOperation
-        self.assertEqual(
-            modeled_exception.__name__, 'ExceptionForAnotherOperation')
-        self.assertTrue(issubclass(modeled_exception, ClientError))
+        assert modeled_exception.__name__ == 'ExceptionForAnotherOperation'
+        assert issubclass(modeled_exception, ClientError)
 
     def test_creates_modeled_exception_mapping_that_has_code(self):
         exceptions = self.exceptions_factory.create_client_exceptions(
             self.service_model)
         exception = exceptions.from_code('ModeledCode')
-        self.assertEqual(exception.__name__, 'ExceptionWithModeledCode')
-        self.assertTrue(issubclass(exception, ClientError))
+        assert exception.__name__ == 'ExceptionWithModeledCode'
+        assert issubclass(exception, ClientError)
 
     def test_creates_modeled_exception_mapping_that_has_no_code(self):
         exceptions = self.exceptions_factory.create_client_exceptions(
@@ -130,5 +126,5 @@ class TestClientExceptionsFactory(unittest.TestCase):
         # For exceptions that do not have an explicit code associated to them,
         # the code is the name of the exception.
         exception = exceptions.from_code('ExceptionMissingCode')
-        self.assertEqual(exception.__name__, 'ExceptionMissingCode')
-        self.assertTrue(issubclass(exception, ClientError))
+        assert exception.__name__ == 'ExceptionMissingCode'
+        assert issubclass(exception, ClientError)

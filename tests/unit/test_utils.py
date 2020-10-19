@@ -16,6 +16,7 @@ from dateutil.tz import tzutc, tzoffset
 import datetime
 import copy
 from tests import mock
+import pytest
 
 import botocore
 from botocore import xform_name
@@ -77,26 +78,26 @@ from botocore.config import Config
 
 class TestEnsureBoolean(unittest.TestCase):
     def test_boolean_true(self):
-        self.assertEqual(ensure_boolean(True), True)
+        assert ensure_boolean(True) == True
 
     def test_boolean_false(self):
-        self.assertEqual(ensure_boolean(False), False)
+        assert ensure_boolean(False) == False
 
     def test_string_true(self):
-        self.assertEqual(ensure_boolean('True'), True)
+        assert ensure_boolean('True') == True
 
     def test_string_false(self):
-        self.assertEqual(ensure_boolean('False'), False)
+        assert ensure_boolean('False') == False
 
     def test_string_lowercase_true(self):
-        self.assertEqual(ensure_boolean('true'), True)
+        assert ensure_boolean('true') == True
 
 
 class TestIsJSONValueHeader(unittest.TestCase):
     def test_no_serialization_section(self):
         shape = mock.Mock()
         shape.type_name = 'string'
-        self.assertFalse(is_json_value_header(shape))
+        assert not is_json_value_header(shape)
 
     def test_non_jsonvalue_shape(self):
         shape = mock.Mock()
@@ -104,7 +105,7 @@ class TestIsJSONValueHeader(unittest.TestCase):
             'location': 'header'
         }
         shape.type_name = 'string'
-        self.assertFalse(is_json_value_header(shape))
+        assert not is_json_value_header(shape)
 
     def test_non_header_jsonvalue_shape(self):
         shape = mock.Mock()
@@ -112,7 +113,7 @@ class TestIsJSONValueHeader(unittest.TestCase):
             'jsonvalue': True
         }
         shape.type_name = 'string'
-        self.assertFalse(is_json_value_header(shape))
+        assert not is_json_value_header(shape)
 
     def test_non_string_jsonvalue_shape(self):
         shape = mock.Mock()
@@ -121,7 +122,7 @@ class TestIsJSONValueHeader(unittest.TestCase):
             'jsonvalue': True
         }
         shape.type_name = 'integer'
-        self.assertFalse(is_json_value_header(shape))
+        assert not is_json_value_header(shape)
 
     def test_json_value_header(self):
         shape = mock.Mock()
@@ -130,91 +131,83 @@ class TestIsJSONValueHeader(unittest.TestCase):
             'location': 'header'
         }
         shape.type_name = 'string'
-        self.assertTrue(is_json_value_header(shape))
+        assert is_json_value_header(shape) is True
 
 
 
 class TestURINormalization(unittest.TestCase):
     def test_remove_dot_segments(self):
-        self.assertEqual(remove_dot_segments('../foo'), 'foo')
-        self.assertEqual(remove_dot_segments('../../foo'), 'foo')
-        self.assertEqual(remove_dot_segments('./foo'), 'foo')
-        self.assertEqual(remove_dot_segments('/./'), '/')
-        self.assertEqual(remove_dot_segments('/../'), '/')
-        self.assertEqual(remove_dot_segments('/foo/bar/baz/../qux'),
-                         '/foo/bar/qux')
-        self.assertEqual(remove_dot_segments('/foo/..'), '/')
-        self.assertEqual(remove_dot_segments('foo/bar/baz'), 'foo/bar/baz')
-        self.assertEqual(remove_dot_segments('..'), '')
-        self.assertEqual(remove_dot_segments('.'), '')
-        self.assertEqual(remove_dot_segments('/.'), '/')
-        self.assertEqual(remove_dot_segments('/.foo'), '/.foo')
-        self.assertEqual(remove_dot_segments('/..foo'), '/..foo')
-        self.assertEqual(remove_dot_segments(''), '')
-        self.assertEqual(remove_dot_segments('/a/b/c/./../../g'), '/a/g')
-        self.assertEqual(remove_dot_segments('mid/content=5/../6'), 'mid/6')
+        assert remove_dot_segments('../foo') == 'foo'
+        assert remove_dot_segments('../../foo') == 'foo'
+        assert remove_dot_segments('./foo') == 'foo'
+        assert remove_dot_segments('/./') == '/'
+        assert remove_dot_segments('/../') == '/'
+        assert remove_dot_segments('/foo/bar/baz/../qux') == '/foo/bar/qux'
+        assert remove_dot_segments('/foo/..') == '/'
+        assert remove_dot_segments('foo/bar/baz') == 'foo/bar/baz'
+        assert remove_dot_segments('..') == ''
+        assert remove_dot_segments('.') == ''
+        assert remove_dot_segments('/.') == '/'
+        assert remove_dot_segments('/.foo') == '/.foo'
+        assert remove_dot_segments('/..foo') == '/..foo'
+        assert remove_dot_segments('') == ''
+        assert remove_dot_segments('/a/b/c/./../../g') == '/a/g'
+        assert remove_dot_segments('mid/content=5/../6') == 'mid/6'
         # I don't think this is RFC compliant...
-        self.assertEqual(remove_dot_segments('//foo//'), '/foo/')
+        assert remove_dot_segments('//foo//') == '/foo/'
 
     def test_empty_url_normalization(self):
-        self.assertEqual(normalize_url_path(''), '/')
+        assert normalize_url_path('') == '/'
 
 
 class TestTransformName(unittest.TestCase):
     def test_upper_camel_case(self):
-        self.assertEqual(xform_name('UpperCamelCase'), 'upper_camel_case')
-        self.assertEqual(xform_name('UpperCamelCase', '-'), 'upper-camel-case')
+        assert xform_name('UpperCamelCase') == 'upper_camel_case'
+        assert xform_name('UpperCamelCase', '-') == 'upper-camel-case'
 
     def test_lower_camel_case(self):
-        self.assertEqual(xform_name('lowerCamelCase'), 'lower_camel_case')
-        self.assertEqual(xform_name('lowerCamelCase', '-'), 'lower-camel-case')
+        assert xform_name('lowerCamelCase') == 'lower_camel_case'
+        assert xform_name('lowerCamelCase', '-') == 'lower-camel-case'
 
     def test_consecutive_upper_case(self):
-        self.assertEqual(xform_name('HTTPHeaders'), 'http_headers')
-        self.assertEqual(xform_name('HTTPHeaders', '-'), 'http-headers')
+        assert xform_name('HTTPHeaders') == 'http_headers'
+        assert xform_name('HTTPHeaders', '-') == 'http-headers'
 
     def test_consecutive_upper_case_middle_string(self):
-        self.assertEqual(xform_name('MainHTTPHeaders'), 'main_http_headers')
-        self.assertEqual(xform_name('MainHTTPHeaders', '-'),
-                         'main-http-headers')
+        assert xform_name('MainHTTPHeaders') == 'main_http_headers'
+        assert xform_name('MainHTTPHeaders', '-') == 'main-http-headers'
 
     def test_s3_prefix(self):
-        self.assertEqual(xform_name('S3BucketName'), 's3_bucket_name')
+        assert xform_name('S3BucketName') == 's3_bucket_name'
 
     def test_already_snake_cased(self):
-        self.assertEqual(xform_name('leave_alone'), 'leave_alone')
-        self.assertEqual(xform_name('s3_bucket_name'), 's3_bucket_name')
-        self.assertEqual(xform_name('bucket_s3_name'), 'bucket_s3_name')
+        assert xform_name('leave_alone') == 'leave_alone'
+        assert xform_name('s3_bucket_name') == 's3_bucket_name'
+        assert xform_name('bucket_s3_name') == 'bucket_s3_name'
 
     def test_special_cases(self):
         # Some patterns don't actually match the rules we expect.
-        self.assertEqual(xform_name('SwapEnvironmentCNAMEs'),
-                         'swap_environment_cnames')
-        self.assertEqual(xform_name('SwapEnvironmentCNAMEs', '-'),
-                         'swap-environment-cnames')
-        self.assertEqual(xform_name('CreateCachediSCSIVolume', '-'),
-                         'create-cached-iscsi-volume')
-        self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'),
-                         'describe-cached-iscsi-volumes')
-        self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'),
-                         'describe-stored-iscsi-volumes')
-        self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'),
-                         'create-stored-iscsi-volume')
+        assert xform_name('SwapEnvironmentCNAMEs') == 'swap_environment_cnames'
+        assert xform_name('SwapEnvironmentCNAMEs', '-') == 'swap-environment-cnames'
+        assert xform_name('CreateCachediSCSIVolume', '-') == 'create-cached-iscsi-volume'
+        assert xform_name('DescribeCachediSCSIVolumes', '-') == 'describe-cached-iscsi-volumes'
+        assert xform_name('DescribeStorediSCSIVolumes', '-') == 'describe-stored-iscsi-volumes'
+        assert xform_name('CreateStorediSCSIVolume', '-') == 'create-stored-iscsi-volume'
 
     def test_special_case_ends_with_s(self):
-        self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
+        assert xform_name('GatewayARNs', '-') == 'gateway-arns'
 
     def test_partial_rename(self):
         transformed = xform_name('IPV6', '-')
-        self.assertEqual(transformed, 'ipv6')
+        assert transformed == 'ipv6'
         transformed = xform_name('IPV6', '_')
-        self.assertEqual(transformed, 'ipv6')
+        assert transformed == 'ipv6'
 
     def test_s3_partial_rename(self):
         transformed = xform_name('s3Resources', '-')
-        self.assertEqual(transformed, 's3-resources')
+        assert transformed == 's3-resources'
         transformed = xform_name('s3Resources', '_')
-        self.assertEqual(transformed, 's3_resources')
+        assert transformed == 's3_resources'
 
 
 class TestValidateJMESPathForSet(unittest.TestCase):
@@ -231,16 +224,16 @@ class TestValidateJMESPathForSet(unittest.TestCase):
         }
 
     def test_invalid_exp(self):
-        with self.assertRaises(InvalidExpressionError):
+        with pytest.raises(InvalidExpressionError):
             validate_jmespath_for_set('Response.*.Name')
 
-        with self.assertRaises(InvalidExpressionError):
+        with pytest.raises(InvalidExpressionError):
             validate_jmespath_for_set('Response.Things[0]')
 
-        with self.assertRaises(InvalidExpressionError):
+        with pytest.raises(InvalidExpressionError):
             validate_jmespath_for_set('')
 
-        with self.assertRaises(InvalidExpressionError):
+        with pytest.raises(InvalidExpressionError):
             validate_jmespath_for_set('.')
 
 
@@ -259,86 +252,81 @@ class TestSetValueFromJMESPath(unittest.TestCase):
 
     def test_single_depth_existing(self):
         set_value_from_jmespath(self.data, 'Marker', 'new-token')
-        self.assertEqual(self.data['Marker'], 'new-token')
+        assert self.data['Marker'] == 'new-token'
 
     def test_single_depth_new(self):
-        self.assertFalse('Limit' in self.data)
+        assert 'Limit' not in self.data
         set_value_from_jmespath(self.data, 'Limit', 100)
-        self.assertEqual(self.data['Limit'], 100)
+        assert self.data['Limit'] == 100
 
     def test_multiple_depth_existing(self):
         set_value_from_jmespath(self.data, 'Response.Thing.Name', 'New Name')
-        self.assertEqual(self.data['Response']['Thing']['Name'], 'New Name')
+        assert self.data['Response']['Thing']['Name'] == 'New Name'
 
     def test_multiple_depth_new(self):
-        self.assertFalse('Brand' in self.data)
+        assert 'Brand' not in self.data
         set_value_from_jmespath(self.data, 'Brand.New', {'abc': 123})
-        self.assertEqual(self.data['Brand']['New']['abc'], 123)
+        assert self.data['Brand']['New']['abc'] == 123
 
 
 class TestParseEC2CredentialsFile(unittest.TestCase):
     def test_parse_ec2_content(self):
         contents = "AWSAccessKeyId=a\nAWSSecretKey=b\n"
-        self.assertEqual(parse_key_val_file_contents(contents),
-                         {'AWSAccessKeyId': 'a',
-                          'AWSSecretKey': 'b'})
+        assert parse_key_val_file_contents(contents) == {
+                         'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'}
 
     def test_parse_ec2_content_empty(self):
         contents = ""
-        self.assertEqual(parse_key_val_file_contents(contents), {})
+        assert parse_key_val_file_contents(contents) == {}
 
     def test_key_val_pair_with_blank_lines(self):
         # The \n\n has an extra blank between the access/secret keys.
         contents = "AWSAccessKeyId=a\n\nAWSSecretKey=b\n"
-        self.assertEqual(parse_key_val_file_contents(contents),
-                         {'AWSAccessKeyId': 'a',
-                          'AWSSecretKey': 'b'})
+        assert parse_key_val_file_contents(contents) == {
+                         'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'}
 
     def test_key_val_parser_lenient(self):
         # Ignore any line that does not have a '=' char in it.
         contents = "AWSAccessKeyId=a\nNOTKEYVALLINE\nAWSSecretKey=b\n"
-        self.assertEqual(parse_key_val_file_contents(contents),
-                         {'AWSAccessKeyId': 'a',
-                          'AWSSecretKey': 'b'})
+        assert parse_key_val_file_contents(contents) == {
+                         'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'}
 
     def test_multiple_equals_on_line(self):
         contents = "AWSAccessKeyId=a\nAWSSecretKey=secret_key_with_equals=b\n"
-        self.assertEqual(parse_key_val_file_contents(contents),
-                         {'AWSAccessKeyId': 'a',
-                          'AWSSecretKey': 'secret_key_with_equals=b'})
+        assert parse_key_val_file_contents(contents) == {
+                         'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'secret_key_with_equals=b'}
 
     def test_os_error_raises_config_not_found(self):
         mock_open = mock.Mock()
         mock_open.side_effect = OSError()
-        with self.assertRaises(ConfigNotFound):
+        with pytest.raises(ConfigNotFound):
             parse_key_val_file('badfile', _open=mock_open)
 
 
 class TestParseTimestamps(unittest.TestCase):
     def test_parse_iso8601(self):
-        self.assertEqual(
-            parse_timestamp('1970-01-01T00:10:00.000Z'),
-            datetime.datetime(1970, 1, 1, 0, 10, tzinfo=tzutc()))
+        assert parse_timestamp('1970-01-01T00:10:00.000Z') == datetime.datetime(
+            1970, 1, 1, 0, 10, tzinfo=tzutc())
 
     def test_parse_epoch(self):
-        self.assertEqual(
-            parse_timestamp(1222172800),
-            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()))
+        assert parse_timestamp(1222172800) == datetime.datetime(
+            2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
 
     def test_parse_epoch_zero_time(self):
-        self.assertEqual(
-            parse_timestamp(0),
-            datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc()))
+        assert parse_timestamp(0) == datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
 
     def test_parse_epoch_as_string(self):
-        self.assertEqual(
-            parse_timestamp('1222172800'),
-            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()))
+        assert parse_timestamp('1222172800') == datetime.datetime(
+            2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
 
     def test_parse_rfc822(self):
-        self.assertEqual(
-            parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
-            datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+        assert parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT') == datetime.datetime(
+            2002, 10, 2, 13, 0, tzinfo=tzutc())
 
     def test_parse_gmt_in_uk_time(self):
         # In the UK the time switches from GMT to BST and back as part of
@@ -348,12 +336,11 @@ class TestParseTimestamps(unittest.TestCase):
         # instead of GMT. To remedy this issue we can provide a time zone
         # context which will enforce GMT == UTC.
         with mock.patch('time.tzname', ('GMT', 'BST')):
-            self.assertEqual(
-                parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
-                datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+            assert parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT') == datetime.datetime(
+                2002, 10, 2, 13, 0, tzinfo=tzutc())
 
     def test_parse_invalid_timestamp(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             parse_timestamp('invalid date')
 
     def test_parse_timestamp_fails_with_bad_tzinfo(self):
@@ -363,54 +350,49 @@ class TestParseTimestamps(unittest.TestCase):
         mock_get_tzinfo_options = mock.MagicMock(return_value=(mock_tzinfo,))
 
         with mock.patch('botocore.utils.get_tzinfo_options', mock_get_tzinfo_options):
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 parse_timestamp(0)
 
 
 class TestDatetime2Timestamp(unittest.TestCase):
     def test_datetime2timestamp_naive(self):
-        self.assertEqual(
-            datetime2timestamp(datetime.datetime(1970, 1, 2)), 86400)
+        assert datetime2timestamp(datetime.datetime(1970, 1, 2)) == 86400
 
     def test_datetime2timestamp_aware(self):
         tzinfo = tzoffset("BRST", -10800)
-        self.assertEqual(
-            datetime2timestamp(datetime.datetime(1970, 1, 2, tzinfo=tzinfo)),
-            97200)
+        assert datetime2timestamp(datetime.datetime(1970, 1, 2, tzinfo=tzinfo)) == 97200
 
 
 class TestParseToUTCDatetime(unittest.TestCase):
     def test_handles_utc_time(self):
         original = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(parse_to_aware_datetime(original), original)
+        assert parse_to_aware_datetime(original) == original
 
     def test_handles_other_timezone(self):
         tzinfo = tzoffset("BRST", -10800)
         original = datetime.datetime(2014, 1, 1, 0, 0, 0, tzinfo=tzinfo)
-        self.assertEqual(parse_to_aware_datetime(original), original)
+        assert parse_to_aware_datetime(original) == original
 
     def test_handles_naive_datetime(self):
         original = datetime.datetime(1970, 1, 1, 0, 0, 0)
         expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(parse_to_aware_datetime(original), expected)
+        assert parse_to_aware_datetime(original) == expected
 
     def test_handles_string_epoch(self):
         expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(parse_to_aware_datetime('0'), expected)
+        assert parse_to_aware_datetime('0') == expected
 
     def test_handles_int_epoch(self):
         expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(parse_to_aware_datetime(0), expected)
+        assert parse_to_aware_datetime(0) == expected
 
     def test_handles_full_iso_8601(self):
         expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(
-            parse_to_aware_datetime('1970-01-01T00:00:00Z'),
-            expected)
+        assert parse_to_aware_datetime('1970-01-01T00:00:00Z') == expected
 
     def test_year_only_iso_8601(self):
         expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-        self.assertEqual(parse_to_aware_datetime('1970-01-01'), expected)
+        assert parse_to_aware_datetime('1970-01-01') == expected
 
 
 class TestCachedProperty(unittest.TestCase):
@@ -421,8 +403,8 @@ class TestCachedProperty(unittest.TestCase):
                 return 'foo'
 
         c = CacheMe()
-        self.assertEqual(c.foo, 'foo')
-        self.assertEqual(c.foo, 'foo')
+        assert c.foo == 'foo'
+        assert c.foo == 'foo'
 
     def test_cached_property_only_called_once(self):
         # Note: you would normally never want to cache
@@ -439,10 +421,10 @@ class TestCachedProperty(unittest.TestCase):
                 return self.counter
 
         c = NoIncrement()
-        self.assertEqual(c.current_value, 1)
+        assert c.current_value == 1
         # If the property wasn't cached, the next value should be
         # be 2, but because it's cached, we know the value will be 1.
-        self.assertEqual(c.current_value, 1)
+        assert c.current_value == 1
 
 
 class TestArgumentGenerator(unittest.TestCase):
@@ -453,7 +435,7 @@ class TestArgumentGenerator(unittest.TestCase):
         shape = DenormalizedStructureBuilder().with_members(
             model).build_model()
         actual = self.arg_generator.generate_skeleton(shape)
-        self.assertEqual(actual, generated_skeleton)
+        assert actual == generated_skeleton
 
     def test_generate_string(self):
         self.assert_skeleton_from_model_is(
@@ -474,7 +456,7 @@ class TestArgumentGenerator(unittest.TestCase):
             model).build_model()
         actual = self.arg_generator.generate_skeleton(shape)
 
-        self.assertIn(actual['A'], enum_values)
+        assert actual['A'] in enum_values
 
     def test_generate_scalars(self):
         self.assert_skeleton_from_model_is(
@@ -536,7 +518,7 @@ class TestArgumentGenerator(unittest.TestCase):
         actual = self.arg_generator.generate_skeleton(shape)
 
         expected = {'StringList': ['StringType']}
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_generate_nested_structure(self):
         self.assert_skeleton_from_model_is(
@@ -620,25 +602,22 @@ class TestArgumentGenerator(unittest.TestCase):
             },
             'B': ''
         }
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
 
 class TestChecksums(unittest.TestCase):
     def test_empty_hash(self):
-        self.assertEqual(
-            calculate_sha256(six.BytesIO(b''), as_hex=True),
+        assert calculate_sha256(six.BytesIO(b''), as_hex=True) == (
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
     def test_as_hex(self):
-        self.assertEqual(
-            calculate_sha256(six.BytesIO(b'hello world'), as_hex=True),
+        assert calculate_sha256(six.BytesIO(b'hello world'), as_hex=True) == (
             'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
 
     def test_as_binary(self):
-        self.assertEqual(
-            calculate_sha256(six.BytesIO(b'hello world'), as_hex=False),
-            (b"\xb9M'\xb9\x93M>\x08\xa5.R\xd7\xda}\xab\xfa\xc4\x84\xef"
-             b"\xe3zS\x80\xee\x90\x88\xf7\xac\xe2\xef\xcd\xe9"))
+        assert calculate_sha256(six.BytesIO(b'hello world'), as_hex=False) == (
+            b"\xb9M'\xb9\x93M>\x08\xa5.R\xd7\xda}\xab\xfa\xc4\x84\xef"
+             b"\xe3zS\x80\xee\x90\x88\xf7\xac\xe2\xef\xcd\xe9")
 
 
 class TestTreeHash(unittest.TestCase):
@@ -647,71 +626,65 @@ class TestTreeHash(unittest.TestCase):
     # SDK implementations.
 
     def test_empty_tree_hash(self):
-        self.assertEqual(
-            calculate_tree_hash(six.BytesIO(b'')),
+        assert calculate_tree_hash(six.BytesIO(b'')) == (
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
     def test_tree_hash_less_than_one_mb(self):
         one_k = six.BytesIO(b'a' * 1024)
-        self.assertEqual(
-            calculate_tree_hash(one_k),
+        assert calculate_tree_hash(one_k) == (
             '2edc986847e209b4016e141a6dc8716d3207350f416969382d431539bf292e4a')
 
     def test_tree_hash_exactly_one_mb(self):
         one_meg_bytestring = b'a' * (1 * 1024 * 1024)
         one_meg = six.BytesIO(one_meg_bytestring)
-        self.assertEqual(
-            calculate_tree_hash(one_meg),
+        assert calculate_tree_hash(one_meg) == (
             '9bc1b2a288b26af7257a36277ae3816a7d4f16e89c1e7e77d0a5c48bad62b360')
 
     def test_tree_hash_multiple_of_one_mb(self):
         four_mb = six.BytesIO(b'a' * (4 * 1024 * 1024))
-        self.assertEqual(
-            calculate_tree_hash(four_mb),
+        assert calculate_tree_hash(four_mb) == (
             '9491cb2ed1d4e7cd53215f4017c23ec4ad21d7050a1e6bb636c4f67e8cddb844')
 
     def test_tree_hash_offset_of_one_mb_multiple(self):
         offset_four_mb = six.BytesIO(b'a' * (4 * 1024 * 1024) + b'a' * 20)
-        self.assertEqual(
-            calculate_tree_hash(offset_four_mb),
+        assert calculate_tree_hash(offset_four_mb) == (
             '12f3cbd6101b981cde074039f6f728071da8879d6f632de8afc7cdf00661b08f')
 
 
 class TestIsValidEndpointURL(unittest.TestCase):
     def test_dns_name_is_valid(self):
-        self.assertTrue(is_valid_endpoint_url('https://s3.amazonaws.com/'))
+        assert is_valid_endpoint_url('https://s3.amazonaws.com/') 
 
     def test_ip_address_is_allowed(self):
-        self.assertTrue(is_valid_endpoint_url('https://10.10.10.10/'))
+        assert is_valid_endpoint_url('https://10.10.10.10/') 
 
     def test_path_component_ignored(self):
-        self.assertTrue(
-            is_valid_endpoint_url('https://foo.bar.com/other/path/'))
+        assert is_valid_endpoint_url('https://foo.bar.com/other/path/') 
 
     def test_can_have_port(self):
-        self.assertTrue(is_valid_endpoint_url('https://foo.bar.com:12345/'))
+        assert is_valid_endpoint_url('https://foo.bar.com:12345/') 
 
     def test_ip_can_have_port(self):
-        self.assertTrue(is_valid_endpoint_url('https://10.10.10.10:12345/'))
+        assert is_valid_endpoint_url('https://10.10.10.10:12345/') 
 
     def test_cannot_have_spaces(self):
-        self.assertFalse(is_valid_endpoint_url('https://my invalid name/'))
+        assert not is_valid_endpoint_url('https://my invalid name/')
 
     def test_missing_scheme(self):
-        self.assertFalse(is_valid_endpoint_url('foo.bar.com'))
+        assert not is_valid_endpoint_url('foo.bar.com')
 
     def test_no_new_lines(self):
-        self.assertFalse(is_valid_endpoint_url('https://foo.bar.com\nbar/'))
+        assert not is_valid_endpoint_url('https://foo.bar.com\nbar/')
 
     def test_long_hostname(self):
         long_hostname = 'htps://%s.com' % ('a' * 256)
-        self.assertFalse(is_valid_endpoint_url(long_hostname))
+        assert not is_valid_endpoint_url(long_hostname)
 
     def test_hostname_can_end_with_dot(self):
-        self.assertTrue(is_valid_endpoint_url('https://foo.bar.com./'))
+        assert is_valid_endpoint_url('https://foo.bar.com./') 
 
     def test_hostname_no_dots(self):
-        self.assertTrue(is_valid_endpoint_url('https://foo/'))
+        assert is_valid_endpoint_url('https://foo/') 
 
 
 class TestFixS3Host(unittest.TestCase):
@@ -725,9 +698,9 @@ class TestFixS3Host(unittest.TestCase):
         fix_s3_host(
             request=request, signature_version=signature_version,
             region_name=region_name)
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.s3-us-west-2.amazonaws.com/key.txt')
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
+        assert request.auth_path == '/bucket/key.txt'
 
     def test_fix_s3_host_only_applied_once(self):
         request = AWSRequest(
@@ -743,12 +716,12 @@ class TestFixS3Host(unittest.TestCase):
         fix_s3_host(
             request=request, signature_version=signature_version,
             region_name=region_name)
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.s3.us-west-2.amazonaws.com/key.txt')
         # This was a bug previously.  We want to make sure that
         # calling fix_s3_host() again does not alter the auth_path.
         # Otherwise we'll get signature errors.
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
+        assert request.auth_path == '/bucket/key.txt'
 
     def test_dns_style_not_used_for_get_bucket_location(self):
         original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
@@ -763,7 +736,7 @@ class TestFixS3Host(unittest.TestCase):
             region_name=region_name)
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
-        self.assertEqual(request.url, original_url)
+        assert request.url == original_url
 
     def test_can_provide_default_endpoint_url(self):
         request = AWSRequest(
@@ -776,7 +749,7 @@ class TestFixS3Host(unittest.TestCase):
             request=request, signature_version=signature_version,
             region_name=region_name,
             default_endpoint_url='foo.s3.amazonaws.com')
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.foo.s3.amazonaws.com/key.txt')
 
     def test_no_endpoint_url_uses_request_url(self):
@@ -792,7 +765,7 @@ class TestFixS3Host(unittest.TestCase):
             # A value of None means use the url in the current request.
             default_endpoint_url=None,
         )
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.s3-us-west-2.amazonaws.com/key.txt')
 
 
@@ -807,9 +780,9 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         switch_to_virtual_host_style(
             request=request, signature_version=signature_version,
             region_name=region_name)
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.foo.amazonaws.com/key.txt')
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
+        assert request.auth_path == '/bucket/key.txt'
 
     def test_uses_default_endpoint(self):
         request = AWSRequest(
@@ -821,9 +794,9 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         switch_to_virtual_host_style(
             request=request, signature_version=signature_version,
             region_name=region_name, default_endpoint_url='s3.amazonaws.com')
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.s3.amazonaws.com/key.txt')
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
+        assert request.auth_path == '/bucket/key.txt'
 
     def test_throws_invalid_dns_name_error(self):
         request = AWSRequest(
@@ -832,7 +805,7 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         )
         region_name = 'us-west-2'
         signature_version = 's3'
-        with self.assertRaises(InvalidDNSNameError):
+        with pytest.raises(InvalidDNSNameError):
             switch_to_virtual_host_style(
                 request=request, signature_version=signature_version,
                 region_name=region_name)
@@ -851,12 +824,12 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         switch_to_virtual_host_style(
             request=request, signature_version=signature_version,
             region_name=region_name)
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.foo.amazonaws.com/key.txt')
         # This was a bug previously.  We want to make sure that
         # calling fix_s3_host() again does not alter the auth_path.
         # Otherwise we'll get signature errors.
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
+        assert request.auth_path == '/bucket/key.txt'
 
     def test_virtual_host_style_for_make_bucket(self):
         request = AWSRequest(
@@ -868,7 +841,7 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         switch_to_virtual_host_style(
             request=request, signature_version=signature_version,
             region_name=region_name)
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.foo.amazonaws.com/')
 
     def test_virtual_host_style_not_used_for_get_bucket_location(self):
@@ -884,7 +857,7 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
             region_name=region_name)
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
-        self.assertEqual(request.url, original_url)
+        assert request.url == original_url
 
     def test_virtual_host_style_not_used_for_list_buckets(self):
         original_url = 'https://foo.amazonaws.com/'
@@ -899,7 +872,7 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
             region_name=region_name)
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
-        self.assertEqual(request.url, original_url)
+        assert request.url == original_url
 
     def test_is_unaffected_by_sigv4(self):
         request = AWSRequest(
@@ -911,7 +884,7 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
         switch_to_virtual_host_style(
             request=request, signature_version=signature_version,
             region_name=region_name, default_endpoint_url='s3.amazonaws.com')
-        self.assertEqual(request.url,
+        assert request.url == (
                          'https://bucket.s3.amazonaws.com/key.txt')
 
 
@@ -933,13 +906,13 @@ class TestInstanceCache(unittest.TestCase):
 
     def test_cache_single_method_call(self):
         adder = self.DummyClass(self.cache)
-        self.assertEqual(adder.add(2, 1), 3)
+        assert adder.add(2, 1) == 3
         # This should result in one entry in the cache.
-        self.assertEqual(len(self.cache), 1)
+        assert len(self.cache) == 1
         # When we call the method with the same args,
         # we should reuse the same entry in the cache.
-        self.assertEqual(adder.add(2, 1), 3)
-        self.assertEqual(len(self.cache), 1)
+        assert adder.add(2, 1) == 3
+        assert len(self.cache) == 1
 
     def test_can_cache_multiple_methods(self):
         adder = self.DummyClass(self.cache)
@@ -947,15 +920,15 @@ class TestInstanceCache(unittest.TestCase):
 
         # A different method results in a new cache entry,
         # so now there should be two elements in the cache.
-        self.assertEqual(adder.sub(2, 1), 1)
-        self.assertEqual(len(self.cache), 2)
-        self.assertEqual(adder.sub(2, 1), 1)
+        assert adder.sub(2, 1) == 1
+        assert len(self.cache) == 2
+        assert adder.sub(2, 1) == 1
 
     def test_can_cache_kwargs(self):
         adder = self.DummyClass(self.cache)
         adder.add(x=2, y=1)
-        self.assertEqual(adder.add(x=2, y=1), 3)
-        self.assertEqual(len(self.cache), 1)
+        assert adder.add(x=2, y=1) == 3
+        assert len(self.cache) == 1
 
 
 class TestMergeDicts(unittest.TestCase):
@@ -966,9 +939,9 @@ class TestMergeDicts(unittest.TestCase):
 
         merge_dicts(first, second)
         # The value from the second dict wins.
-        self.assertEqual(first['foo']['bar']['baz']['one'], 'UPDATE')
+        assert first['foo']['bar']['baz']['one'] == 'UPDATE'
         # And we still preserve the other attributes.
-        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
+        assert first['foo']['bar']['baz']['two'] == 'ORIGINAL'
 
     def test_merge_dicts_new_keys(self):
         first = {
@@ -976,14 +949,14 @@ class TestMergeDicts(unittest.TestCase):
         second = {'foo': {'bar': {'baz': {'three': 'UPDATE'}}}}
 
         merge_dicts(first, second)
-        self.assertEqual(first['foo']['bar']['baz']['one'], 'ORIGINAL')
-        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
-        self.assertEqual(first['foo']['bar']['baz']['three'], 'UPDATE')
+        assert first['foo']['bar']['baz']['one'] == 'ORIGINAL'
+        assert first['foo']['bar']['baz']['two'] == 'ORIGINAL'
+        assert first['foo']['bar']['baz']['three'] == 'UPDATE'
 
     def test_merge_empty_dict_does_nothing(self):
         first = {'foo': {'bar': 'baz'}}
         merge_dicts(first, {})
-        self.assertEqual(first, {'foo': {'bar': 'baz'}})
+        assert first == {'foo': {'bar': 'baz'}}
 
     def test_more_than_one_sub_dict(self):
         first = {'one': {'inner': 'ORIGINAL', 'inner2': 'ORIGINAL'},
@@ -991,11 +964,11 @@ class TestMergeDicts(unittest.TestCase):
         second = {'one': {'inner': 'UPDATE'}, 'two': {'inner': 'UPDATE'}}
 
         merge_dicts(first, second)
-        self.assertEqual(first['one']['inner'], 'UPDATE')
-        self.assertEqual(first['one']['inner2'], 'ORIGINAL')
+        assert first['one']['inner'] == 'UPDATE'
+        assert first['one']['inner2'] == 'ORIGINAL'
 
-        self.assertEqual(first['two']['inner'], 'UPDATE')
-        self.assertEqual(first['two']['inner2'], 'ORIGINAL')
+        assert first['two']['inner'] == 'UPDATE'
+        assert first['two']['inner2'] == 'ORIGINAL'
 
     def test_new_keys(self):
         first = {'one': {'inner': 'ORIGINAL'}, 'two': {'inner': 'ORIGINAL'}}
@@ -1003,42 +976,38 @@ class TestMergeDicts(unittest.TestCase):
         # In this case, second has no keys in common, but we'd still expect
         # this to get merged.
         merge_dicts(first, second)
-        self.assertEqual(first['three']['foo']['bar'], 'baz')
+        assert first['three']['foo']['bar'] == 'baz'
 
     def test_list_values_no_append(self):
         dict1 = {'Foo': ['old_foo_value']}
         dict2 = {'Foo': ['new_foo_value']}
         merge_dicts(dict1, dict2)
-        self.assertEqual(
-            dict1, {'Foo': ['new_foo_value']})
+        assert dict1 == {'Foo': ['new_foo_value']}
 
     def test_list_values_append(self):
         dict1 = {'Foo': ['old_foo_value']}
         dict2 = {'Foo': ['new_foo_value']}
         merge_dicts(dict1, dict2, append_lists=True)
-        self.assertEqual(
-            dict1, {'Foo': ['old_foo_value', 'new_foo_value']})
+        assert dict1 == {'Foo': ['old_foo_value', 'new_foo_value']}
 
     def test_list_values_mismatching_types(self):
         dict1 = {'Foo': 'old_foo_value'}
         dict2 = {'Foo': ['new_foo_value']}
         merge_dicts(dict1, dict2, append_lists=True)
-        self.assertEqual(
-            dict1, {'Foo': ['new_foo_value']})
+        assert dict1 == {'Foo': ['new_foo_value']}
 
     def test_list_values_missing_key(self):
         dict1 = {}
         dict2 = {'Foo': ['foo_value']}
         merge_dicts(dict1, dict2, append_lists=True)
-        self.assertEqual(
-            dict1, {'Foo': ['foo_value']})
+        assert dict1 == {'Foo': ['foo_value']}
 
 
 class TestLowercaseDict(unittest.TestCase):
     def test_lowercase_dict_empty(self):
         original = {}
         copy = lowercase_dict(original)
-        self.assertEqual(original, copy)
+        assert original == copy
 
     def test_lowercase_dict_original_keys_lower(self):
         original = {
@@ -1046,7 +1015,7 @@ class TestLowercaseDict(unittest.TestCase):
             'lower_key2': 2,
         }
         copy = lowercase_dict(original)
-        self.assertEqual(original, copy)
+        assert original == copy
 
     def test_lowercase_dict_original_keys_mixed(self):
         original = {
@@ -1058,7 +1027,7 @@ class TestLowercaseDict(unittest.TestCase):
             'some_key': 'value',
             'another_one': 'anothervalue',
         }
-        self.assertEqual(expected, copy)
+        assert expected == copy
 
 
 class TestGetServiceModuleName(unittest.TestCase):
@@ -1078,96 +1047,73 @@ class TestGetServiceModuleName(unittest.TestCase):
             self.service_description, 'myservice')
 
     def test_default(self):
-        self.assertEqual(
-            get_service_module_name(self.service_model),
-            'MyService'
-        )
+        assert get_service_module_name(self.service_model) == 'MyService'
 
     def test_client_name_with_amazon(self):
         self.service_description['metadata']['serviceFullName'] = (
             'Amazon MyService')
-        self.assertEqual(
-            get_service_module_name(self.service_model),
-            'MyService'
-        )
+        assert get_service_module_name(self.service_model) == 'MyService'
 
     def test_client_name_using_abreviation(self):
         self.service_description['metadata']['serviceAbbreviation'] = (
             'Abbreviation')
-        self.assertEqual(
-            get_service_module_name(self.service_model),
-            'Abbreviation'
-        )
+        assert get_service_module_name(self.service_model) == 'Abbreviation'
 
     def test_client_name_with_non_alphabet_characters(self):
         self.service_description['metadata']['serviceFullName'] = (
             'Amazon My-Service')
-        self.assertEqual(
-            get_service_module_name(self.service_model),
-            'MyService'
-        )
+        assert get_service_module_name(self.service_model) == 'MyService'
 
     def test_client_name_with_no_full_name_or_abbreviation(self):
         del self.service_description['metadata']['serviceFullName']
-        self.assertEqual(
-            get_service_module_name(self.service_model),
-            'myservice'
-        )
+        assert get_service_module_name(self.service_model) == 'myservice'
 
 
 class TestPercentEncodeSequence(unittest.TestCase):
     def test_percent_encode_empty(self):
-        self.assertEqual(percent_encode_sequence({}), '')
+        assert percent_encode_sequence({}) == ''
 
     def test_percent_encode_special_chars(self):
-        self.assertEqual(
-            percent_encode_sequence({'k1': 'with spaces++/'}),
-            'k1=with%20spaces%2B%2B%2F')
+        assert percent_encode_sequence({'k1': 'with spaces++/'}) == 'k1=with%20spaces%2B%2B%2F'
 
     def test_percent_encode_string_string_tuples(self):
-        self.assertEqual(percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]),
-                         'k1=v1&k2=v2')
+        assert percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]) == 'k1=v1&k2=v2'
 
     def test_percent_encode_dict_single_pair(self):
-        self.assertEqual(percent_encode_sequence({'k1': 'v1'}), 'k1=v1')
+        assert percent_encode_sequence({'k1': 'v1'}) == 'k1=v1'
 
     def test_percent_encode_dict_string_string(self):
-        self.assertEqual(
-            percent_encode_sequence(OrderedDict([('k1', 'v1'), ('k2', 'v2')])),
-                                    'k1=v1&k2=v2')
+        assert percent_encode_sequence(OrderedDict([('k1', 'v1'), ('k2', 'v2')])) == 'k1=v1&k2=v2'
 
     def test_percent_encode_single_list_of_values(self):
-        self.assertEqual(percent_encode_sequence({'k1': ['a', 'b', 'c']}),
-                         'k1=a&k1=b&k1=c')
+        assert percent_encode_sequence({'k1': ['a', 'b', 'c']}) == 'k1=a&k1=b&k1=c'
 
     def test_percent_encode_list_values_of_string(self):
-        self.assertEqual(
-            percent_encode_sequence(
+        assert percent_encode_sequence(
                 OrderedDict([('k1', ['a', 'list']),
-                             ('k2', ['another', 'list'])])),
-            'k1=a&k1=list&k2=another&k2=list')
+                             ('k2', ['another', 'list'])])) == 'k1=a&k1=list&k2=another&k2=list'
 
 class TestPercentEncode(unittest.TestCase):
     def test_percent_encode_obj(self):
-        self.assertEqual(percent_encode(1), '1')
+        assert percent_encode(1) == '1'
 
     def test_percent_encode_text(self):
-        self.assertEqual(percent_encode(u''), '')
-        self.assertEqual(percent_encode(u'a'), 'a')
-        self.assertEqual(percent_encode(u'\u0000'), '%00')
+        assert percent_encode(u'') == ''
+        assert percent_encode(u'a') == 'a'
+        assert percent_encode(u'\u0000') == '%00'
         # Codepoint > 0x7f
-        self.assertEqual(percent_encode(u'\u2603'), '%E2%98%83')
+        assert percent_encode(u'\u2603') == '%E2%98%83'
         # Codepoint > 0xffff
-        self.assertEqual(percent_encode(u'\U0001f32e'), '%F0%9F%8C%AE')
+        assert percent_encode(u'\U0001f32e') == '%F0%9F%8C%AE'
 
     def test_percent_encode_bytes(self):
-        self.assertEqual(percent_encode(b''), '')
-        self.assertEqual(percent_encode(b'a'), u'a')
-        self.assertEqual(percent_encode(b'\x00'), u'%00')
+        assert percent_encode(b'') == ''
+        assert percent_encode(b'a') == u'a'
+        assert percent_encode(b'\x00') == u'%00'
         # UTF-8 Snowman
-        self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
+        assert percent_encode(b'\xe2\x98\x83') == '%E2%98%83'
         # Arbitrary bytes (not valid UTF-8).
-        self.assertEqual(percent_encode(b'\x80\x00'), '%80%00')
+        assert percent_encode(b'\x80\x00') == '%80%00'
 
 class TestSwitchHostS3Accelerate(unittest.TestCase):
     def setUp(self):
@@ -1181,8 +1127,7 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
 
     def test_switch_host(self):
         switch_host_s3_accelerate(self.request, 'PutObject')
-        self.assertEqual(
-            self.request.url,
+        assert self.request.url == (
             'https://s3-accelerate.amazonaws.com/foo/key.txt')
 
     def test_do_not_switch_black_listed_operations(self):
@@ -1195,14 +1140,12 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
         ]
         for op_name in blacklist_ops:
             switch_host_s3_accelerate(self.request, op_name)
-            self.assertEqual(self.request.url, self.original_url)
+            assert self.request.url == self.original_url
 
     def test_uses_original_endpoint_scheme(self):
         self.request.url = 'http://s3.amazonaws.com/foo/key.txt'
         switch_host_s3_accelerate(self.request, 'PutObject')
-        self.assertEqual(
-            self.request.url,
-            'http://s3-accelerate.amazonaws.com/foo/key.txt')
+        assert self.request.url == 'http://s3-accelerate.amazonaws.com/foo/key.txt'
 
     def test_uses_dualstack(self):
         self.client_config.s3 = {'use_dualstack_endpoint': True}
@@ -1213,9 +1156,7 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
         )
         self.request.context['client_config'] = self.client_config
         switch_host_s3_accelerate(self.request, 'PutObject')
-        self.assertEqual(
-            self.request.url,
-            'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
+        assert self.request.url == 'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt'
 
 
 class TestDeepMerge(unittest.TestCase):
@@ -1225,7 +1166,7 @@ class TestDeepMerge(unittest.TestCase):
         deep_merge(a, b)
 
         expected = {'key': 'value', 'otherkey': 'othervalue'}
-        self.assertEqual(a, expected)
+        assert a == expected
 
     def test_merge_list(self):
         # Lists are treated as opaque data and so no effort should be made to
@@ -1233,49 +1174,49 @@ class TestDeepMerge(unittest.TestCase):
         a = {'key': ['original']}
         b = {'key': ['new']}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': ['new']})
+        assert a == {'key': ['new']}
 
     def test_merge_number(self):
         # The value from b is always taken
         a = {'key': 10}
         b = {'key': 45}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': 45})
+        assert a == {'key': 45}
 
         a = {'key': 45}
         b = {'key': 10}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': 10})
+        assert a == {'key': 10}
 
     def test_merge_boolean(self):
         # The value from b is always taken
         a = {'key': False}
         b = {'key': True}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': True})
+        assert a == {'key': True}
 
         a = {'key': True}
         b = {'key': False}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': False})
+        assert a == {'key': False}
 
     def test_merge_string(self):
         a = {'key': 'value'}
         b = {'key': 'othervalue'}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': 'othervalue'})
+        assert a == {'key': 'othervalue'}
 
     def test_merge_overrides_value(self):
         # The value from b is always taken, even when it's a different type
         a = {'key': 'original'}
         b = {'key': {'newkey': 'newvalue'}}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': {'newkey': 'newvalue'}})
+        assert a == {'key': {'newkey': 'newvalue'}}
 
         a = {'key': {'anotherkey': 'value'}}
         b = {'key': 'newvalue'}
         deep_merge(a, b)
-        self.assertEqual(a, {'key': 'newvalue'})
+        assert a == {'key': 'newvalue'}
 
     def test_deep_merge(self):
         a = {
@@ -1307,7 +1248,7 @@ class TestDeepMerge(unittest.TestCase):
                 'key': 'value'
             }
         }
-        self.assertEqual(a, expected)
+        assert a == expected
 
 
 class TestS3RegionRedirector(unittest.TestCase):
@@ -1347,15 +1288,13 @@ class TestS3RegionRedirector(unittest.TestCase):
             'endpoint': 'https://eu-central-1.amazonaws.com'
         }}
         self.redirector.set_request_url(params, context)
-        self.assertEqual(
-            params['url'], 'https://eu-central-1.amazonaws.com/foo')
+        assert params['url'] == 'https://eu-central-1.amazonaws.com/foo'
 
     def test_only_changes_request_url_if_endpoint_present(self):
         params = {'url': 'https://us-west-2.amazonaws.com/foo'}
         context = {}
         self.redirector.set_request_url(params, context)
-        self.assertEqual(
-            params['url'], 'https://us-west-2.amazonaws.com/foo')
+        assert params['url'] == 'https://us-west-2.amazonaws.com/foo'
 
     def test_set_request_url_keeps_old_scheme(self):
         params = {'url': 'http://us-west-2.amazonaws.com/foo'}
@@ -1363,8 +1302,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             'endpoint': 'https://eu-central-1.amazonaws.com'
         }}
         self.redirector.set_request_url(params, context)
-        self.assertEqual(
-            params['url'], 'http://eu-central-1.amazonaws.com/foo')
+        assert params['url'] == 'http://eu-central-1.amazonaws.com/foo'
 
     def test_sets_signing_context_from_cache(self):
         signing_context = {'endpoint': 'bar'}
@@ -1374,7 +1312,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         params = {'Bucket': 'foo'}
         context = {}
         self.redirector.redirect_from_cache(params, context)
-        self.assertEqual(context.get('signing'), signing_context)
+        assert context.get('signing') == signing_context
 
     def test_only_changes_context_if_bucket_in_cache(self):
         signing_context = {'endpoint': 'bar'}
@@ -1384,7 +1322,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         params = {'Bucket': 'foo'}
         context = {}
         self.redirector.redirect_from_cache(params, context)
-        self.assertNotEqual(context.get('signing'), signing_context)
+        assert context.get('signing') != signing_context
 
     def test_redirect_from_error(self):
         request_dict = {
@@ -1406,10 +1344,9 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation)
 
         # The response needs to be 0 so that there is no retry delay
-        self.assertEqual(redirect_response, 0)
+        assert redirect_response == 0
 
-        self.assertEqual(
-            request_dict['url'], 'https://eu-central-1.amazonaws.com/foo')
+        assert request_dict['url'] == 'https://eu-central-1.amazonaws.com/foo'
 
         expected_signing_context = {
             'endpoint': 'https://eu-central-1.amazonaws.com',
@@ -1417,8 +1354,8 @@ class TestS3RegionRedirector(unittest.TestCase):
             'region': 'eu-central-1'
         }
         signing_context = request_dict['context'].get('signing')
-        self.assertEqual(signing_context, expected_signing_context)
-        self.assertTrue(request_dict['context'].get('s3_redirected'))
+        assert signing_context == expected_signing_context
+        assert request_dict['context'].get('s3_redirected')
 
     def test_does_not_redirect_if_previously_redirected(self):
         request_dict = {
@@ -1439,15 +1376,15 @@ class TestS3RegionRedirector(unittest.TestCase):
         })
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
 
     def test_does_not_redirect_unless_permanentredirect_recieved(self):
         request_dict = {}
         response = (None, {})
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
-        self.assertEqual(request_dict, {})
+        assert redirect_response is None
+        assert request_dict == {}
 
     def test_does_not_redirect_if_region_cannot_be_found(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
@@ -1466,7 +1403,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
 
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
 
     def test_redirects_301(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
@@ -1484,12 +1421,12 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.operation.name = 'HeadObject'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertEqual(redirect_response, 0)
+        assert redirect_response == 0
 
         self.operation.name = 'ListObjects'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
 
     def test_redirects_400_head_bucket(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
@@ -1504,12 +1441,12 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.operation.name = 'HeadObject'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertEqual(redirect_response, 0)
+        assert redirect_response == 0
 
         self.operation.name = 'ListObjects'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
 
     def test_does_not_redirect_400_head_bucket_no_region_header(self):
         # We should not redirect a 400 Head* if the region header is not
@@ -1527,9 +1464,9 @@ class TestS3RegionRedirector(unittest.TestCase):
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
         head_bucket_calls = self.client.head_bucket.call_count
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
         # We should not have made an additional head bucket call
-        self.assertEqual(head_bucket_calls, 0)
+        assert head_bucket_calls == 0
 
     def test_does_not_redirect_if_None_response(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
@@ -1537,7 +1474,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         response = None
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
+        assert redirect_response is None
 
     def test_get_region_from_response(self):
         response = (None, {
@@ -1551,7 +1488,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             }
         })
         region = self.redirector.get_bucket_region('foo', response)
-        self.assertEqual(region, 'eu-central-1')
+        assert region == 'eu-central-1'
 
     def test_get_region_from_response_error_body(self):
         response = (None, {
@@ -1566,7 +1503,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             }
         })
         region = self.redirector.get_bucket_region('foo', response)
-        self.assertEqual(region, 'eu-central-1')
+        assert region == 'eu-central-1'
 
     def test_get_region_from_head_bucket_error(self):
         self.set_client_response_headers(
@@ -1582,7 +1519,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             }
         })
         region = self.redirector.get_bucket_region('foo', response)
-        self.assertEqual(region, 'eu-central-1')
+        assert region == 'eu-central-1'
 
     def test_get_region_from_head_bucket_success(self):
         success_response = {
@@ -1603,7 +1540,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             }
         })
         region = self.redirector.get_bucket_region('foo', response)
-        self.assertEqual(region, 'eu-central-1')
+        assert region == 'eu-central-1'
 
     def test_no_redirect_from_error_for_accesspoint(self):
         request_dict = {
@@ -1625,7 +1562,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.operation.name = 'HeadObject'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
-        self.assertEqual(redirect_response, None)
+        assert redirect_response is None
 
     def test_no_redirect_from_cache_for_accesspoint(self):
         self.cache['foo'] = {'endpoint': 'foo-endpoint'}
@@ -1634,7 +1571,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         params = {'Bucket': 'foo'}
         context = {'s3_accesspoint': {}}
         self.redirector.redirect_from_cache(params, context)
-        self.assertNotIn('signing', context)
+        assert 'signing' not in context
 
 
 class TestArnParser(unittest.TestCase):
@@ -1643,46 +1580,37 @@ class TestArnParser(unittest.TestCase):
 
     def test_parse(self):
         arn = 'arn:aws:s3:us-west-2:1023456789012:myresource'
-        self.assertEqual(
-            self.parser.parse_arn(arn),
-            {
+        assert self.parser.parse_arn(arn) == {
                 'partition': 'aws',
                 'service': 's3',
                 'region': 'us-west-2',
                 'account': '1023456789012',
                 'resource': 'myresource',
             }
-        )
 
     def test_parse_invalid_arn(self):
-        with self.assertRaises(InvalidArnException):
+        with pytest.raises(InvalidArnException):
             self.parser.parse_arn('arn:aws:s3')
 
     def test_parse_arn_with_resource_type(self):
         arn = 'arn:aws:s3:us-west-2:1023456789012:bucket_name:mybucket'
-        self.assertEqual(
-            self.parser.parse_arn(arn),
-            {
+        assert self.parser.parse_arn(arn) == {
                 'partition': 'aws',
                 'service': 's3',
                 'region': 'us-west-2',
                 'account': '1023456789012',
                 'resource': 'bucket_name:mybucket',
             }
-        )
 
     def test_parse_arn_with_empty_elements(self):
         arn = 'arn:aws:s3:::mybucket'
-        self.assertEqual(
-            self.parser.parse_arn(arn),
-            {
+        assert self.parser.parse_arn(arn) == {
                 'partition': 'aws',
                 'service': 's3',
                 'region': '',
                 'account': '',
                 'resource': 'mybucket',
             }
-        )
 
 
 class TestS3ArnParamHandler(unittest.TestCase):
@@ -1703,10 +1631,8 @@ class TestS3ArnParamHandler(unittest.TestCase):
         }
         context = {}
         self.arn_handler.handle_arn(params, self.model, context)
-        self.assertEqual(params, {'Bucket': 'endpoint'})
-        self.assertEqual(
-            context,
-            {
+        assert params == {'Bucket': 'endpoint'}
+        assert context == {
                 's3_accesspoint': {
                     'name': 'endpoint',
                     'account': '123456789012',
@@ -1714,7 +1640,6 @@ class TestS3ArnParamHandler(unittest.TestCase):
                     'partition': 'aws',
                 }
             }
-        )
 
     def test_accesspoint_arn_with_colon(self):
         params = {
@@ -1722,10 +1647,8 @@ class TestS3ArnParamHandler(unittest.TestCase):
         }
         context = {}
         self.arn_handler.handle_arn(params, self.model, context)
-        self.assertEqual(params, {'Bucket': 'endpoint'})
-        self.assertEqual(
-            context,
-            {
+        assert params == {'Bucket': 'endpoint'}
+        assert context == {
                 's3_accesspoint': {
                     'name': 'endpoint',
                     'account': '123456789012',
@@ -1733,22 +1656,21 @@ class TestS3ArnParamHandler(unittest.TestCase):
                     'partition': 'aws',
                 }
             }
-        )
 
     def test_errors_for_non_accesspoint_arn(self):
         params = {
             'Bucket': 'arn:aws:s3:us-west-2:123456789012:unsupported:resource'
         }
         context = {}
-        with self.assertRaises(UnsupportedS3ArnError):
+        with pytest.raises(UnsupportedS3ArnError):
             self.arn_handler.handle_arn(params, self.model, context)
 
     def test_ignores_bucket_names(self):
         params = {'Bucket': 'mybucket'}
         context = {}
         self.arn_handler.handle_arn(params, self.model, context)
-        self.assertEqual(params, {'Bucket': 'mybucket'})
-        self.assertEqual(context, {})
+        assert params == {'Bucket': 'mybucket'}
+        assert context == {}
 
     def test_ignores_create_bucket(self):
         arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint/endpoint'
@@ -1756,8 +1678,8 @@ class TestS3ArnParamHandler(unittest.TestCase):
         context = {}
         self.model.name = 'CreateBucket'
         self.arn_handler.handle_arn(params, self.model, context)
-        self.assertEqual(params, {'Bucket': arn})
-        self.assertEqual(context, {})
+        assert params == {'Bucket': arn}
+        assert context == {}
 
 
 class TestS3EndpointSetter(unittest.TestCase):
@@ -1840,7 +1762,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
             self.accesspoint_name, self.account, self.region_name
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_accesspoint_preserves_key_in_path(self):
         request = self.get_s3_accesspoint_request(key=self.key)
@@ -1849,7 +1771,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             self.accesspoint_name, self.account, self.region_name,
             self.key
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_accesspoint_preserves_scheme(self):
         request = self.get_s3_accesspoint_request(scheme='http://')
@@ -1857,7 +1779,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'http://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
             self.accesspoint_name, self.account, self.region_name,
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_accesspoint_preserves_query_string(self):
         request = self.get_s3_accesspoint_request(querystring='acl')
@@ -1865,7 +1787,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/?acl' % (
             self.accesspoint_name, self.account, self.region_name,
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_uses_resolved_dns_suffix(self):
         self.endpoint_resolver.construct_endpoint.return_value = {
@@ -1876,7 +1798,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s-%s.s3-accesspoint.%s.mysuffix.com/' % (
             self.accesspoint_name, self.account, self.region_name,
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_uses_region_of_client_if_use_arn_disabled(self):
         client_region = 'client-region'
@@ -1887,13 +1809,13 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
             self.accesspoint_name, self.account, client_region,
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_accesspoint_errors_for_custom_endpoint(self):
         endpoint_setter = self.get_endpoint_setter(
             endpoint_url='https://custom.com')
         request = self.get_s3_accesspoint_request()
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+        with pytest.raises(UnsupportedS3AccesspointConfigurationError):
             self.call_set_endpoint(endpoint_setter, request=request)
 
     def test_errors_for_mismatching_partition(self):
@@ -1901,7 +1823,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
         request = self.get_s3_accesspoint_request(
             accesspoint_context=accesspoint_context)
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+        with pytest.raises(UnsupportedS3AccesspointConfigurationError):
             self.call_set_endpoint(endpoint_setter, request=request)
 
     def test_errors_for_mismatching_partition_when_using_client_region(self):
@@ -1911,7 +1833,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         accesspoint_context = self.get_s3_accesspoint_context(partition='aws')
         request = self.get_s3_accesspoint_request(
             accesspoint_context=accesspoint_context)
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+        with pytest.raises(UnsupportedS3AccesspointConfigurationError):
             self.call_set_endpoint(endpoint_setter, request=request)
 
     def test_set_endpoint_for_auto(self):
@@ -1922,7 +1844,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
             self.bucket, self.key
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_set_endpoint_for_virtual(self):
         endpoint_setter = self.get_endpoint_setter(
@@ -1932,7 +1854,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
             self.bucket, self.key
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_set_endpoint_for_path(self):
         endpoint_setter = self.get_endpoint_setter(
@@ -1942,7 +1864,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://s3.us-west-2.amazonaws.com/%s/%s' % (
             self.bucket, self.key
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
     def test_set_endpoint_for_accelerate(self):
         endpoint_setter = self.get_endpoint_setter(
@@ -1952,7 +1874,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         expected_url = 'https://%s.s3-accelerate.amazonaws.com/%s' % (
             self.bucket, self.key
         )
-        self.assertEqual(request.url, expected_url)
+        assert request.url == expected_url
 
 
 class TestContainerMetadataFetcher(unittest.TestCase):
@@ -1987,25 +1909,25 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def assert_request(self, method, url, headers):
         request = self.http.send.call_args[0][0]
-        self.assertEqual(request.method, method)
-        self.assertEqual(request.url, url)
-        self.assertEqual(request.headers, headers)
+        assert request.method == method
+        assert request.url == url
+        assert request.headers == headers
 
     def assert_can_retrieve_metadata_from(self, full_uri):
         response_body = {'foo': 'bar'}
         self.set_http_responses_to(response_body)
         fetcher = self.create_fetcher()
         response = fetcher.retrieve_full_uri(full_uri)
-        self.assertEqual(response, response_body)
+        assert response == response_body
         self.assert_request('GET', full_uri, {'Accept': 'application/json'})
 
     def assert_host_is_not_allowed(self, full_uri):
         response_body = {'foo': 'bar'}
         self.set_http_responses_to(response_body)
         fetcher = self.create_fetcher()
-        with six.assertRaisesRegex(self, ValueError, 'Unsupported host'):
+        with pytest.raises(ValueError, match='Unsupported host'):
             fetcher.retrieve_full_uri(full_uri)
-        self.assertFalse(self.http.send.called)
+        assert not self.http.send.called
 
     def test_can_specify_extra_headers_are_merged(self):
         headers = {
@@ -2032,7 +1954,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         fetcher = self.create_fetcher()
         response = fetcher.retrieve_uri('/foo?id=1')
 
-        self.assertEqual(response, json_body)
+        assert response == json_body
         # Ensure we made calls to the right endpoint.
         headers = {'Accept': 'application/json'}
         self.assert_request('GET', 'http://169.254.170.2/foo?id=1', headers)
@@ -2054,7 +1976,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         )
         fetcher = self.create_fetcher()
         response = fetcher.retrieve_uri('/foo?id=1')
-        self.assertEqual(response, success_response)
+        assert response == success_response
 
     def test_propagates_credential_error_on_http_errors(self):
         self.set_http_responses_to(
@@ -2067,9 +1989,9 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         )
         # As a result, we expect an appropriate error to be raised.
         fetcher = self.create_fetcher()
-        with self.assertRaises(MetadataRetrievalError):
+        with pytest.raises(MetadataRetrievalError):
             fetcher.retrieve_uri('/foo?id=1')
-        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
+        assert self.http.send.call_count == fetcher.RETRY_ATTEMPTS
 
     def test_error_raised_on_non_200_response(self):
         self.set_http_responses_to(
@@ -2078,10 +2000,10 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             self.fake_response(status_code=404, body=b'Error not found'),
         )
         fetcher = self.create_fetcher()
-        with self.assertRaises(MetadataRetrievalError):
+        with pytest.raises(MetadataRetrievalError):
             fetcher.retrieve_uri('/foo?id=1')
         # Should have tried up to RETRY_ATTEMPTS.
-        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
+        assert self.http.send.call_count == fetcher.RETRY_ATTEMPTS
 
     def test_error_raised_on_no_json_response(self):
         # If the service returns a sucess response but with a body that
@@ -2093,11 +2015,11 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             self.fake_response(status_code=200, body=b'Not JSON'),
         )
         fetcher = self.create_fetcher()
-        with self.assertRaises(MetadataRetrievalError) as e:
+        with pytest.raises(MetadataRetrievalError) as e:
             fetcher.retrieve_uri('/foo?id=1')
-        self.assertNotIn('Not JSON', str(e.exception))
+            assert 'Not JSON' not in str(e.value.exception)
         # Should have tried up to RETRY_ATTEMPTS.
-        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
+        assert self.http.send.call_count == fetcher.RETRY_ATTEMPTS
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
         self.assert_can_retrieve_metadata_from(
@@ -2136,10 +2058,10 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
 class TestUnsigned(unittest.TestCase):
     def test_copy_returns_same_object(self):
-        self.assertIs(botocore.UNSIGNED, copy.copy(botocore.UNSIGNED))
+        assert botocore.UNSIGNED is copy.copy(botocore.UNSIGNED)
 
     def test_deepcopy_returns_same_object(self):
-        self.assertIs(botocore.UNSIGNED, copy.deepcopy(botocore.UNSIGNED))
+        assert botocore.UNSIGNED is copy.deepcopy(botocore.UNSIGNED)
 
 
 class TestInstanceMetadataFetcher(unittest.TestCase):
@@ -2206,14 +2128,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         env = {'AWS_EC2_METADATA_DISABLED': 'true'}
         fetcher = InstanceMetadataFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
         self._send.assert_not_called()
 
     def test_disabled_by_environment_mixed_case(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
         fetcher = InstanceMetadataFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
         self._send.assert_not_called()
 
     def test_disabling_env_var_not_true(self):
@@ -2227,7 +2149,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         fetcher = InstanceMetadataFetcher(base_url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
 
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_includes_user_agent_header(self):
         user_agent = 'my-user-agent'
@@ -2238,9 +2160,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
 
-        self.assertEqual(self._send.call_count, 3)
+        assert self._send.call_count == 3
         for call in self._send.calls:
-            self.assertTrue(call[0][0].headers['User-Agent'], user_agent)
+            assert call[0][0].headers['User-Agent'] == user_agent
 
     def test_non_200_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
@@ -2252,7 +2174,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_http_connection_error_for_role_name_is_retried(self):
         # Connection related errors should be retried
@@ -2262,7 +2184,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_empty_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
@@ -2273,7 +2195,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_non_200_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2285,7 +2207,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_http_connection_errors_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2295,7 +2217,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_empty_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2306,7 +2228,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_invalid_json_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2317,14 +2239,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_exhaust_retries_on_role_name_request(self):
         self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
 
     def test_exhaust_retries_on_credentials_request(self):
         self.add_get_token_imds_response(token='token')
@@ -2332,7 +2254,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
 
     def test_missing_fields_in_credentials_response(self):
         self.add_get_token_imds_response(token='token')
@@ -2342,7 +2264,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(
             body=b'{"Code":"AssumeRoleUnauthorizedAccess","Message":"error"}')
         result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
 
     def test_token_is_included(self):
         user_agent = 'my-user-agent'
@@ -2354,10 +2276,10 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         # Check that subsequent calls after getting the token include the token.
-        self.assertEqual(self._send.call_count, 3)
+        assert self._send.call_count == 3
         for call in self._send.call_args_list[1:]:
-            self.assertEqual(call[0][0].headers['x-aws-ec2-metadata-token'], 'token')
-        self.assertEqual(result, self._expected_creds)
+            assert call[0][0].headers['x-aws-ec2-metadata-token'] == 'token'
+        assert result == self._expected_creds
 
     def test_metadata_token_not_supported_404(self):
         user_agent = 'my-user-agent'
@@ -2370,7 +2292,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        assert result == self._expected_creds
 
     def test_metadata_token_not_supported_403(self):
         user_agent = 'my-user-agent'
@@ -2382,8 +2304,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         for call in self._send.call_args_list[1:]:
-            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+            assert 'x-aws-ec2-metadata-token' not in call[0][0].headers
+        assert result == self._expected_creds
 
     def test_metadata_token_not_supported_405(self):
         user_agent = 'my-user-agent'
@@ -2395,8 +2317,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         for call in self._send.call_args_list[1:]:
-            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+            assert 'x-aws-ec2-metadata-token' not in call[0][0].headers
+        assert result == self._expected_creds
 
     def test_metadata_token_not_supported_timeout(self):
         user_agent = 'my-user-agent'
@@ -2408,8 +2330,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         for call in self._send.call_args_list[1:]:
-            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+            assert 'x-aws-ec2-metadata-token' not in call[0][0].headers
+        assert result == self._expected_creds
 
     def test_token_not_supported_exhaust_retries(self):
         user_agent = 'my-user-agent'
@@ -2421,15 +2343,15 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         for call in self._send.call_args_list[1:]:
-            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+            assert 'x-aws-ec2-metadata-token' not in call[0][0].headers
+        assert result == self._expected_creds
 
     def test_metadata_token_bad_request_yields_no_credentials(self):
         user_agent = 'my-user-agent'
         self.add_imds_response(b'', status_code=400)
         result = InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
+        assert result == {}
 
 
 class TestSSOTokenLoader(unittest.TestCase):
@@ -2448,13 +2370,13 @@ class TestSSOTokenLoader(unittest.TestCase):
     def test_can_load_token_exists(self):
         self.cache[self.cache_key] = self.cached_token
         access_token = self.loader(self.start_url)
-        self.assertEqual(self.access_token, access_token)
+        assert self.access_token == access_token
 
     def test_can_handle_does_not_exist(self):
-        with self.assertRaises(SSOTokenLoadError):
+        with pytest.raises(SSOTokenLoadError):
             access_token = self.loader(self.start_url)
 
     def test_can_handle_invalid_cache(self):
         self.cache[self.cache_key] = {}
-        with self.assertRaises(SSOTokenLoadError):
+        with pytest.raises(SSOTokenLoadError):
             access_token = self.loader(self.start_url)

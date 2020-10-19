@@ -13,6 +13,7 @@
 
 from tests import unittest
 from tests import mock
+import pytest
 
 from botocore.stub import Stubber
 from botocore.exceptions import ParamValidationError, StubResponseError, UnStubbedResponseError
@@ -89,17 +90,17 @@ class TestStubber(unittest.TestCase):
         response = {'foo': 'bar'}
         self.stubber.add_response('foo', response)
 
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             self.stubber.assert_no_pending_responses()
 
     def test_add_response_fails_when_missing_client_method(self):
         del self.client.foo
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.stubber.add_response('foo', {})
 
     def test_validates_service_response(self):
         self.stubber.add_response('foo', {})
-        self.assertTrue(self.validate_parameters_mock.called)
+        assert self.validate_parameters_mock.called
 
     def test_validate_ignores_response_metadata(self):
         service_response = {'ResponseMetadata': {'foo': 'bar'}}
@@ -125,8 +126,7 @@ class TestStubber(unittest.TestCase):
             {}, output_shape)
 
         # Make sure service response hasn't been mutated
-        self.assertEqual(
-            service_response, {'ResponseMetadata': {'foo': 'bar'}})
+        assert service_response == {'ResponseMetadata': {'foo': 'bar'}}
 
     def test_validates_on_empty_output_shape(self):
         service_model = ServiceModel({
@@ -139,7 +139,7 @@ class TestStubber(unittest.TestCase):
         })
         self.client.meta.service_model = service_model
 
-        with self.assertRaises(ParamValidationError):
+        with pytest.raises(ParamValidationError):
             self.stubber.add_response('TestOperation', {'foo': 'bar'})
 
     def test_get_response(self):
@@ -147,8 +147,8 @@ class TestStubber(unittest.TestCase):
         self.stubber.add_response('foo', service_response)
         self.stubber.activate()
         response = self.emit_get_response_event()
-        self.assertEqual(response[1], service_response)
-        self.assertEqual(response[0].status_code, 200)
+        assert response[1] == service_response
+        assert response[0].status_code == 200
 
     def test_get_client_error_response(self):
         error_code = "foo"
@@ -156,8 +156,8 @@ class TestStubber(unittest.TestCase):
         self.stubber.add_client_error('foo', error_code, service_message)
         self.stubber.activate()
         response = self.emit_get_response_event()
-        self.assertEqual(response[1]['Error']['Message'], service_message)
-        self.assertEqual(response[1]['Error']['Code'], error_code)
+        assert response[1]['Error']['Message'] == service_message
+        assert response[1]['Error']['Code'] == error_code
 
     def test_get_client_error_with_extra_error_meta(self):
         error_code = "foo"
@@ -172,8 +172,8 @@ class TestStubber(unittest.TestCase):
         with self.stubber:
             response = self.emit_get_response_event()
         error = response[1]['Error']
-        self.assertIn('Endpoint', error)
-        self.assertEqual(error['Endpoint'], "https://foo.bar.baz")
+        assert 'Endpoint' in error
+        assert error['Endpoint'] in "https://foo.bar.baz"
 
     def test_get_client_error_with_extra_response_meta(self):
         error_code = "foo"
@@ -188,16 +188,16 @@ class TestStubber(unittest.TestCase):
         with self.stubber:
             response = self.emit_get_response_event()
         actual_response_meta = response[1]['ResponseMetadata']
-        self.assertIn('RequestId', actual_response_meta)
-        self.assertEqual(actual_response_meta['RequestId'], "79104EXAMPLEB723")
+        assert 'RequestId' in actual_response_meta
+        assert actual_response_meta['RequestId'] in "79104EXAMPLEB723"
 
 
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()
-        with self.assertRaises(UnStubbedResponseError):
+        with pytest.raises(UnStubbedResponseError):
             self.emit_get_response_event()
 
     def test_assert_no_responses_remaining(self):
         self.stubber.add_response('foo', {})
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             self.stubber.assert_no_pending_responses()

@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 from tests import mock
+import pytest
 
 import botocore
 import botocore.session as session
@@ -38,7 +39,7 @@ class TestConfigChainFactory(unittest.TestCase):
             **create_config_chain_args
         )
         value = chain.provide()
-        self.assertEqual(value, expected_value)
+        assert value == expected_value
 
     def test_chain_builder_can_provide_instance(self):
         self.assert_chain_does_provide(
@@ -292,7 +293,7 @@ class TestConfigValueStore(unittest.TestCase):
     def test_does_provide_none_if_no_variable_exists(self):
         provider = ConfigValueStore()
         value = provider.get_config_variable('fake_variable')
-        self.assertIsNone(value)
+        assert value is None
 
     def test_does_provide_value_if_variable_exists(self):
         mock_value_provider = mock.Mock(spec=BaseProvider)
@@ -301,13 +302,13 @@ class TestConfigValueStore(unittest.TestCase):
             'fake_variable': mock_value_provider,
         })
         value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'foo')
+        assert value == 'foo'
 
     def test_can_set_variable(self):
         provider = ConfigValueStore()
         provider.set_config_variable('fake_variable', 'foo')
         value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'foo')
+        assert value == 'foo'
 
     def test_can_set_config_provider(self):
         foo_value_provider = mock.Mock(spec=BaseProvider)
@@ -317,14 +318,14 @@ class TestConfigValueStore(unittest.TestCase):
         })
 
         value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'foo')
+        assert value == 'foo'
 
         bar_value_provider = mock.Mock(spec=BaseProvider)
         bar_value_provider.provide.return_value = 'bar'
         provider.set_config_provider('fake_variable', bar_value_provider)
 
         value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'bar')
+        assert value == 'bar'
 
 
 class TestInstanceVarProvider(unittest.TestCase):
@@ -337,7 +338,7 @@ class TestInstanceVarProvider(unittest.TestCase):
             session=fake_session,
         )
         value = provider.provide()
-        self.assertEqual(value, expected_value)
+        assert value == expected_value
 
     def test_can_provide_value(self):
         self.assert_provides_value(
@@ -358,7 +359,7 @@ class TestEnvironmentProvider(unittest.TestCase):
     def assert_does_provide(self, env, name, expected_value):
         provider = EnvironmentProvider(name=name, env=env)
         value = provider.provide()
-        self.assertEqual(value, expected_value)
+        assert value == expected_value
 
     def test_does_provide_none_if_no_variable_exists(self):
         self.assert_does_provide(
@@ -387,7 +388,7 @@ class TestScopedConfigProvider(unittest.TestCase):
             session=fake_session,
         )
         value = property_provider.provide()
-        self.assertEqual(value, expected_value)
+        assert value == expected_value
 
     def test_can_provide_value(self):
         self.assert_provides_value(
@@ -450,26 +451,26 @@ def assert_chain_does_provide(providers, expected_value):
     assert value == expected_value
 
 
-def test_chain_provider():
+@pytest.mark.parametrize("expected,return_values", [
+    (None, []),
+    (None, [None]),
+    ('foo', ['foo']),
+    ('foo', ['foo', 'bar']),
+    ('bar', [None, 'bar']),
+    ('foo', ['foo', None]),
+    ('baz', [None, None, 'baz']),
+    ('bar', [None, 'bar', None]),
+    ('foo', ['foo', 'bar', None]),
+    ('foo', ['foo', 'bar', 'baz']),
+])
+def test_chain_provider(expected, return_values):
     # Each case is a tuple with the first element being the expected return
     # value form the ChainProvider. The second value being a list of return
     # values from the individual providers that are in the chain.
-    cases = [
-        (None, []),
-        (None, [None]),
-        ('foo', ['foo']),
-        ('foo', ['foo', 'bar']),
-        ('bar', [None, 'bar']),
-        ('foo', ['foo', None]),
-        ('baz', [None, None, 'baz']),
-        ('bar', [None, 'bar', None]),
-        ('foo', ['foo', 'bar', None]),
-        ('foo', ['foo', 'bar', 'baz']),
-    ]
-    for case in cases:
-        assert_chain_does_provide(
-            _make_providers_that_return(case[1]),
-            case[0])
+
+    assert_chain_does_provide(
+        _make_providers_that_return(return_values),
+        expected)
 
 
 class TestChainProvider(unittest.TestCase):
@@ -479,15 +480,15 @@ class TestChainProvider(unittest.TestCase):
             conversion_func=int,
         )
         value = chain_provider.provide()
-        self.assertIsInstance(value, int)
-        self.assertEqual(value, 1)
+        assert isinstance(value, int)
+        assert value == 1
 
 
 class TestConstantProvider(unittest.TestCase):
     def test_can_provide_value(self):
         provider = ConstantProvider(value='foo')
         value = provider.provide()
-        self.assertEqual(value, 'foo')
+        assert value == 'foo'
 
 
 class TestSectionConfigProvider(unittest.TestCase):
@@ -501,7 +502,7 @@ class TestSectionConfigProvider(unittest.TestCase):
             override_providers=override_providers
         )
         value = provider.provide()
-        self.assertEqual(value, expected_value)
+        assert value == expected_value
 
     def test_provide_section_config(self):
         self.assert_provides_value(

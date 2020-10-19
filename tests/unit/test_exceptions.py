@@ -88,20 +88,18 @@ class TestPickleExceptions(unittest.TestCase):
         exception = botocore.exceptions.DataNotFoundError(
             data_path='mypath')
         unpickled_exception = pickle.loads(pickle.dumps(exception))
-        self.assertIsInstance(
-            unpickled_exception, botocore.exceptions.DataNotFoundError)
-        self.assertEqual(str(unpickled_exception), str(exception))
-        self.assertEqual(unpickled_exception.kwargs, exception.kwargs)
+        assert isinstance(unpickled_exception, botocore.exceptions.DataNotFoundError)
+        assert str(unpickled_exception) == str(exception)
+        assert unpickled_exception.kwargs == exception.kwargs
 
     def test_multiple_kwarg_botocore_error(self):
         exception = botocore.exceptions.UnknownServiceError(
             service_name='myservice', known_service_names=['s3']
         )
         unpickled_exception = pickle.loads(pickle.dumps(exception))
-        self.assertIsInstance(
-            unpickled_exception, botocore.exceptions.UnknownServiceError)
-        self.assertEqual(str(unpickled_exception), str(exception))
-        self.assertEqual(unpickled_exception.kwargs, exception.kwargs)
+        assert isinstance(unpickled_exception, botocore.exceptions.UnknownServiceError)
+        assert str(unpickled_exception) == str(exception)
+        assert unpickled_exception.kwargs == exception.kwargs
 
     def test_client_error(self):
         exception = botocore.exceptions.ClientError(
@@ -110,12 +108,10 @@ class TestPickleExceptions(unittest.TestCase):
             operation_name='myoperation'
         )
         unpickled_exception = pickle.loads(pickle.dumps(exception))
-        self.assertIsInstance(
-            unpickled_exception, botocore.exceptions.ClientError)
-        self.assertEqual(str(unpickled_exception), str(exception))
-        self.assertEqual(
-            unpickled_exception.operation_name, exception.operation_name)
-        self.assertEqual(unpickled_exception.response, exception.response)
+        assert isinstance(unpickled_exception, botocore.exceptions.ClientError)
+        assert str(unpickled_exception) == str(exception)
+        assert unpickled_exception.operation_name == exception.operation_name
+        assert unpickled_exception.response == exception.response
 
     def test_dynamic_client_error(self):
         session = botocore.session.Session()
@@ -126,12 +122,10 @@ class TestPickleExceptions(unittest.TestCase):
             operation_name='myoperation'
         )
         unpickled_exception = pickle.loads(pickle.dumps(exception))
-        self.assertIsInstance(
-            unpickled_exception, botocore.exceptions.ClientError)
-        self.assertEqual(str(unpickled_exception), str(exception))
-        self.assertEqual(
-            unpickled_exception.operation_name, exception.operation_name)
-        self.assertEqual(unpickled_exception.response, exception.response)
+        assert isinstance(unpickled_exception, botocore.exceptions.ClientError)
+        assert str(unpickled_exception) == str(exception)
+        assert unpickled_exception.operation_name == exception.operation_name
+        assert unpickled_exception.response == exception.response
 
     def test_http_client_error(self):
         exception = botocore.exceptions.HTTPClientError(
@@ -145,16 +139,11 @@ class TestPickleExceptions(unittest.TestCase):
             error='error'
         )
         unpickled_exception = pickle.loads(pickle.dumps(exception))
-        self.assertIsInstance(
-            unpickled_exception,
-            botocore.exceptions.HTTPClientError
-        )
-        self.assertEqual(str(unpickled_exception), str(exception))
-        self.assertEqual(unpickled_exception.kwargs, exception.kwargs)
+        assert isinstance(unpickled_exception, botocore.exceptions.HTTPClientError)
+        assert str(unpickled_exception) == str(exception)
+        assert unpickled_exception.kwargs == exception.kwargs
         # The request/response properties on the HTTPClientError do not have
         # __eq__ defined so we want to make sure properties are at least
         # of the expected type
-        self.assertIsInstance(
-            unpickled_exception.request, botocore.awsrequest.AWSRequest)
-        self.assertIsInstance(
-            unpickled_exception.response, botocore.awsrequest.AWSResponse)
+        assert isinstance(unpickled_exception.request, botocore.awsrequest.AWSRequest)
+        assert isinstance(unpickled_exception.response, botocore.awsrequest.AWSResponse)

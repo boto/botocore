@@ -15,6 +15,7 @@ import base64
 import json
 import datetime
 import dateutil.tz
+import pytest
 from tests import unittest
 
 from botocore.model import ServiceModel
@@ -67,7 +68,7 @@ class BaseModelWithBlob(unittest.TestCase):
         # as str types so we need to decode back.  We know that this is
         # ascii so it's safe to use the ascii encoding.
         expected = encoded.decode('ascii')
-        self.assertEqual(request['body']['Blob'], expected)
+        assert request['body']['Blob'] == expected
 
 
 class TestBinaryTypes(BaseModelWithBlob):
@@ -106,9 +107,7 @@ class TestBinaryTypesJSON(BaseModelWithBlob):
         body = b'bytes body'
         request = self.serialize_to_request(input_params={'Blob': body})
         serialized_blob = json.loads(request['body'].decode('utf-8'))['Blob']
-        self.assertEqual(
-            base64.b64encode(body).decode('ascii'),
-            serialized_blob)
+        assert base64.b64encode(body).decode('ascii') == serialized_blob
 
 
 class TestBinaryTypesWithRestXML(BaseModelWithBlob):
@@ -128,19 +127,19 @@ class TestBinaryTypesWithRestXML(BaseModelWithBlob):
     def test_blob_serialization_with_file_like_object(self):
         body = six.BytesIO(b'foobar')
         request = self.serialize_to_request(input_params={'Blob': body})
-        self.assertEqual(request['body'], body)
+        assert request['body'] == body
 
     def test_blob_serialization_when_payload_is_unicode(self):
         # When the body is a text type, we should encode the
         # text to bytes.
         body = u'\u2713'
         request = self.serialize_to_request(input_params={'Blob': body})
-        self.assertEqual(request['body'], body.encode('utf-8'))
+        assert request['body'] == body.encode('utf-8')
 
     def test_blob_serialization_when_payload_is_bytes(self):
         body = b'bytes body'
         request = self.serialize_to_request(input_params={'Blob': body})
-        self.assertEqual(request['body'], body)
+        assert request['body'] == body
 
 
 class TestTimestampHeadersWithRestXML(unittest.TestCase):
@@ -187,32 +186,27 @@ class TestTimestampHeadersWithRestXML(unittest.TestCase):
         request = self.serialize_to_request(
             {'TimestampHeader': datetime.datetime(2014, 1, 1, 12, 12, 12,
                                                   tzinfo=dateutil.tz.tzutc())})
-        self.assertEqual(request['headers']['x-timestamp'],
-                         'Wed, 01 Jan 2014 12:12:12 GMT')
+        assert request['headers']['x-timestamp'] == 'Wed, 01 Jan 2014 12:12:12 GMT'
 
     def test_accepts_iso_8601_format(self):
         request = self.serialize_to_request(
             {'TimestampHeader': '2014-01-01T12:12:12+00:00'})
-        self.assertEqual(request['headers']['x-timestamp'],
-                         'Wed, 01 Jan 2014 12:12:12 GMT')
+        assert request['headers']['x-timestamp'] == 'Wed, 01 Jan 2014 12:12:12 GMT'
 
     def test_accepts_iso_8601_format_non_utc(self):
         request = self.serialize_to_request(
             {'TimestampHeader': '2014-01-01T07:12:12-05:00'})
-        self.assertEqual(request['headers']['x-timestamp'],
-                         'Wed, 01 Jan 2014 12:12:12 GMT')
+        assert request['headers']['x-timestamp'] == 'Wed, 01 Jan 2014 12:12:12 GMT'
 
     def test_accepts_rfc_822_format(self):
         request = self.serialize_to_request(
             {'TimestampHeader': 'Wed, 01 Jan 2014 12:12:12 GMT'})
-        self.assertEqual(request['headers']['x-timestamp'],
-                         'Wed, 01 Jan 2014 12:12:12 GMT')
+        assert request['headers']['x-timestamp'] == 'Wed, 01 Jan 2014 12:12:12 GMT'
 
     def test_accepts_unix_timestamp_integer(self):
         request = self.serialize_to_request(
             {'TimestampHeader': 1388578332})
-        self.assertEqual(request['headers']['x-timestamp'],
-                         'Wed, 01 Jan 2014 12:12:12 GMT')
+        assert request['headers']['x-timestamp'] == 'Wed, 01 Jan 2014 12:12:12 GMT'
 
 
 class TestTimestamps(unittest.TestCase):
@@ -255,17 +249,17 @@ class TestTimestamps(unittest.TestCase):
         request = self.serialize_to_request(
             {'Timestamp': datetime.datetime(2014, 1, 1, 12, 12, 12,
                                             tzinfo=dateutil.tz.tzutc())})
-        self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
+        assert request['body']['Timestamp'] == '2014-01-01T12:12:12Z'
 
     def test_accepts_naive_datetime_object(self):
         request = self.serialize_to_request(
             {'Timestamp': datetime.datetime(2014, 1, 1, 12, 12, 12)})
-        self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
+        assert request['body']['Timestamp'] == '2014-01-01T12:12:12Z'
 
     def test_accepts_iso_8601_format(self):
         request = self.serialize_to_request(
             {'Timestamp': '2014-01-01T12:12:12Z'})
-        self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
+        assert request['body']['Timestamp'] == '2014-01-01T12:12:12Z'
 
     def test_accepts_timestamp_without_tz_info(self):
         # If a timezone/utc is not specified, assume they meant
@@ -273,13 +267,12 @@ class TestTimestamps(unittest.TestCase):
         # of botocore so we want to make sure we preserve this behavior.
         request = self.serialize_to_request(
             {'Timestamp': '2014-01-01T12:12:12'})
-        self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
+        assert request['body']['Timestamp'] == '2014-01-01T12:12:12Z'
 
     def test_microsecond_timestamp_without_tz_info(self):
         request = self.serialize_to_request(
             {'Timestamp': '2014-01-01T12:12:12.123456'})
-        self.assertEqual(request['body']['Timestamp'],
-                         '2014-01-01T12:12:12.123456Z')
+        assert request['body']['Timestamp'] == '2014-01-01T12:12:12.123456Z'
 
 
 class TestJSONTimestampSerialization(unittest.TestCase):
@@ -322,21 +315,21 @@ class TestJSONTimestampSerialization(unittest.TestCase):
     def test_accepts_iso_8601_format(self):
         body = json.loads(self.serialize_to_request(
             {'Timestamp': '1970-01-01T00:00:00'})['body'].decode('utf-8'))
-        self.assertEqual(body['Timestamp'], 0)
+        assert body['Timestamp'] == 0
 
     def test_accepts_epoch(self):
         body = json.loads(self.serialize_to_request(
             {'Timestamp': '0'})['body'].decode('utf-8'))
-        self.assertEqual(body['Timestamp'], 0)
+        assert body['Timestamp'] == 0
         # Can also be an integer 0.
         body = json.loads(self.serialize_to_request(
             {'Timestamp': 0})['body'].decode('utf-8'))
-        self.assertEqual(body['Timestamp'], 0)
+        assert body['Timestamp'] == 0
 
     def test_accepts_partial_iso_format(self):
         body = json.loads(self.serialize_to_request(
             {'Timestamp': '1970-01-01'})['body'].decode('utf-8'))
-        self.assertEqual(body['Timestamp'], 0)
+        assert body['Timestamp'] == 0
 
 
 class TestInstanceCreation(unittest.TestCase):
@@ -376,7 +369,7 @@ class TestInstanceCreation(unittest.TestCase):
             {'Timestamp': valid_string},
             self.service_model.operation_model('TestOperation'))
 
-        self.assertEqual(request['body']['Timestamp'], valid_string)
+        assert request['body']['Timestamp'] == valid_string
 
     def assert_serialize_invalid_parameter(self, request_serializer):
         invalid_string = 'short string'
@@ -384,7 +377,7 @@ class TestInstanceCreation(unittest.TestCase):
             {'Timestamp': invalid_string},
             self.service_model.operation_model('TestOperation'))
 
-        self.assertEqual(request['body']['Timestamp'], invalid_string)
+        assert request['body']['Timestamp'] == invalid_string
 
     def test_instantiate_without_validation(self):
         request_serializer = serialize.create_serializer(
@@ -411,7 +404,7 @@ class TestInstanceCreation(unittest.TestCase):
             self.fail(
                 "Shouldn't fail serializing valid parameter with validation".format(e))
 
-        with self.assertRaises(ParamValidationError):
+        with pytest.raises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)
 
 
@@ -451,7 +444,7 @@ class TestHeaderSerialization(BaseModelWithBlob):
 
     def test_always_serialized_as_str(self):
         request = self.serialize_to_request({'ContentLength': 100})
-        self.assertEqual(request['headers']['Content-Length'], '100')
+        assert request['headers']['Content-Length'] == '100'
 
 
 class TestRestXMLUnicodeSerialization(unittest.TestCase):

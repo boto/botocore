@@ -17,6 +17,7 @@ import os
 from tests import mock
 import tempfile
 import shutil
+import pytest
 
 import botocore.exceptions
 from botocore.configloader import raw_config_parse, load_config, \
@@ -59,12 +60,12 @@ class TestConfigLoader(BaseEnvVar):
         return full_path
 
     def test_config_not_found(self):
-        with self.assertRaises(botocore.exceptions.ConfigNotFound):
+        with pytest.raises(botocore.exceptions.ConfigNotFound):
             loaded_config = raw_config_parse(path('aws_config_notfound'))
 
     def test_config_parse_error(self):
         filename = path('aws_config_bad')
-        with self.assertRaises(botocore.exceptions.ConfigParseError):
+        with pytest.raises(botocore.exceptions.ConfigParseError):
             raw_config_parse(filename)
 
     def test_config_parse_error_bad_unicode(self):

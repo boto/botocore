@@ -18,6 +18,7 @@ import tempfile
 import shutil
 import io
 import socket
+import pytest
 
 from tests import mock
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
@@ -114,43 +115,43 @@ class TestAWSRequest(unittest.TestCase):
             'url=http://example.com, headers={}>'
         )
         request_repr = repr(self.prepared_request)
-        self.assertEqual(request_repr, expected_repr)
+        assert request_repr == expected_repr
 
     def test_can_prepare_url_params(self):
         request = AWSRequest(url='http://example.com/', params={'foo': 'bar'})
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.url, 'http://example.com/?foo=bar')
+        assert prepared_request.url == 'http://example.com/?foo=bar'
 
     def test_can_prepare_dict_body(self):
         body = {'dead': 'beef'}
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.body, 'dead=beef')
+        assert prepared_request.body == 'dead=beef'
 
     def test_can_prepare_dict_body_unicode_values(self):
         body = {'Text': u'\u30c6\u30b9\u30c8 string'}
         expected_body = 'Text=%E3%83%86%E3%82%B9%E3%83%88+string'
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.body, expected_body)
+        assert prepared_request.body == expected_body
 
     def test_can_prepare_dict_body_unicode_keys(self):
         body = {u'\u30c6\u30b9\u30c8': 'string'}
         expected_body = '%E3%83%86%E3%82%B9%E3%83%88=string'
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.body, expected_body)
+        assert prepared_request.body == expected_body
 
     def test_can_prepare_empty_body(self):
         request = AWSRequest(url='http://example.com/', data=b'')
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.body, None)
+        assert prepared_request.body is None
         content_length = prepared_request.headers.get('content-length')
-        self.assertEqual(content_length, '0')
+        assert content_length == '0'
 
     def test_request_body_is_prepared(self):
         request = AWSRequest(url='http://example.com/', data='body')
-        self.assertEqual(request.body, b'body')
+        assert request.body == b'body'
 
     def test_prepare_body_content_adds_content_length(self):
         content = b'foobarbaz'
@@ -163,46 +164,46 @@ class TestAWSRequest(unittest.TestCase):
             self.request.method = 'POST'
             prepared_request = self.request.prepare()
             calculated_len = prepared_request.headers['Content-Length']
-            self.assertEqual(calculated_len, expected_len)
+            assert calculated_len == expected_len
 
     def test_prepare_body_doesnt_override_content_length(self):
         self.request.method = 'PUT'
         self.request.headers['Content-Length'] = '20'
         self.request.data = b'asdf'
         prepared_request = self.request.prepare()
-        self.assertEqual(prepared_request.headers['Content-Length'], '20')
+        assert prepared_request.headers['Content-Length'] == '20'
 
     def test_prepare_body_doesnt_set_content_length_head(self):
         self.request.method = 'HEAD'
         self.request.data = b'thisshouldntbehere'
         prepared_request = self.request.prepare()
-        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
+        assert prepared_request.headers.get('Content-Length') is None
 
     def test_prepare_body_doesnt_set_content_length_get(self):
         self.request.method = 'GET'
         self.request.data = b'thisshouldntbehere'
         prepared_request = self.request.prepare()
-        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
+        assert prepared_request.headers.get('Content-Length') is None
 
     def test_prepare_body_doesnt_set_content_length_options(self):
         self.request.method = 'OPTIONS'
         self.request.data = b'thisshouldntbehere'
         prepared_request = self.request.prepare()
-        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
+        assert prepared_request.headers.get('Content-Length') is None
 
     def test_can_reset_stream_handles_binary(self):
         contents = b'notastream'
         self.prepared_request.body = contents
         self.prepared_request.reset_stream()
         # assert the request body doesn't change after reset_stream is called
-        self.assertEqual(self.prepared_request.body, contents)
+        assert self.prepared_request.body == contents
 
     def test_can_reset_stream_handles_bytearray(self):
         contents = bytearray(b'notastream')
         self.prepared_request.body = contents
         self.prepared_request.reset_stream()
         # assert the request body doesn't change after reset_stream is called
-        self.assertEqual(self.prepared_request.body, contents)
+        assert self.prepared_request.body == contents
 
     def test_can_reset_stream(self):
         contents = b'foobarbaz'
@@ -212,11 +213,11 @@ class TestAWSRequest(unittest.TestCase):
             self.prepared_request.body = body
             # pretend the request body was partially sent
             body.read()
-            self.assertNotEqual(body.tell(), 0)
+            assert body.tell() != 0
             # have the prepared request reset its stream
             self.prepared_request.reset_stream()
             # the stream should be reset
-            self.assertEqual(body.tell(), 0)
+            assert body.tell() == 0
 
     def test_cannot_reset_stream_raises_error(self):
         contents = b'foobarbaz'
@@ -226,9 +227,9 @@ class TestAWSRequest(unittest.TestCase):
             self.prepared_request.body = Unseekable(body)
             # pretend the request body was partially sent
             body.read()
-            self.assertNotEqual(body.tell(), 0)
+            assert body.tell() != 0
             # reset stream should fail
-            with self.assertRaises(UnseekableStreamError):
+            with pytest.raises(UnseekableStreamError):
                 self.prepared_request.reset_stream()
 
     def test_duck_type_for_file_check(self):
@@ -247,7 +248,7 @@ class TestAWSRequest(unittest.TestCase):
         self.prepared_request.body = looks_like_file
         self.prepared_request.reset_stream()
         # The stream should now be reset.
-        self.assertTrue(looks_like_file.seek_called)
+        assert looks_like_file.seek_called
 
 
 class TestAWSResponse(unittest.TestCase):
@@ -263,19 +264,19 @@ class TestAWSResponse(unittest.TestCase):
 
     def test_content_property(self):
         self.set_raw_stream([b'some', b'data'])
-        self.assertEqual(self.response.content, b'somedata')
-        self.assertEqual(self.response.content, b'somedata')
+        assert self.response.content == b'somedata'
+        assert self.response.content == b'somedata'
         # assert that stream was not called more than once
-        self.assertEqual(self.response.raw.stream.call_count, 1)
+        assert self.response.raw.stream.call_count == 1
 
     def test_text_property(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
         self.response.headers['content-type'] = 'text/plain; charset=utf-8'
-        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
+        assert self.response.text == u'\u30b8\u30e7\u30b0'
 
     def test_text_property_defaults_utf8(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
-        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
+        assert self.response.text == u'\u30b8\u30e7\u30b0'
 
 
 class TestAWSHTTPConnection(unittest.TestCase):
@@ -328,9 +329,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
                          {'Expect': b'100-continue'})
             response = conn.getresponse()
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             # Now we should verify that our final response is the 200 OK
-            self.assertEqual(response.status, 200)
+            assert response.status == 200
 
     def test_handles_expect_100_with_different_reason_phrase(self):
         with mock.patch('urllib3.util.wait_for_read') as wait_mock:
@@ -344,12 +345,12 @@ class TestAWSHTTPConnection(unittest.TestCase):
                          {'Expect': b'100-continue', 'Content-Length': b'4'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK.
-            self.assertEqual(response.status, 200)
+            assert response.status == 200
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             # Verify that we went the request body because we got a 100
             # continue.
-            self.assertIn(b'body', s.sent_data)
+            assert b'body' in s.sent_data
 
     def test_expect_100_sends_connection_header(self):
         # When using squid as an HTTP proxy, it will also send
@@ -371,9 +372,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': b'100-continue'})
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             response = conn.getresponse()
-            self.assertEqual(response.status, 500)
+            assert response.status == 500
 
     def test_expect_100_continue_sends_307(self):
         # This is the case where we send a 100 continue and the server
@@ -390,10 +391,10 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': b'100-continue'})
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
-            self.assertEqual(response.status, 307)
+            assert response.status == 307
 
     def test_expect_100_continue_no_response_from_server(self):
         with mock.patch('urllib3.util.wait_for_read') as wait_mock:
@@ -411,9 +412,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': b'100-continue'})
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             response = conn.getresponse()
-            self.assertEqual(response.status, 307)
+            assert response.status == 307
 
     def test_message_body_is_file_like_object(self):
         # Shows the server first sending a 100 continue response
@@ -424,7 +425,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         conn.request('GET', '/bucket/foo', body)
         response = conn.getresponse()
-        self.assertEqual(response.status, 200)
+        assert response.status == 200
 
     def test_no_expect_header_set(self):
         # Shows the server first sending a 100 continue response
@@ -434,7 +435,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         conn.request('GET', '/bucket/foo', b'body')
         response = conn.getresponse()
-        self.assertEqual(response.status, 200)
+        assert response.status == 200
 
     def test_tunnel_readline_none_bugfix(self):
         # Tests whether ``_tunnel`` function is able to work around the
@@ -446,7 +447,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         )
         conn._tunnel()
         # Ensure proper amount of readline calls were made.
-        self.assertEqual(self.mock_response.fp.readline.call_count, 2)
+        assert self.mock_response.fp.readline.call_count == 2
 
     def test_tunnel_readline_normal(self):
         # Tests that ``_tunnel`` function behaves normally when it comes
@@ -458,7 +459,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         )
         conn._tunnel()
         # Ensure proper amount of readline calls were made.
-        self.assertEqual(self.mock_response.fp.readline.call_count, 2)
+        assert self.mock_response.fp.readline.call_count == 2
 
     def test_tunnel_raises_socket_error(self):
         # Tests that ``_tunnel`` function throws appropriate error when
@@ -468,7 +469,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             port=443,
             response=b'HTTP/1.1 404 Not Found\r\n\r\n',
         )
-        with self.assertRaises(socket.error):
+        with pytest.raises(socket.error):
             conn._tunnel()
 
     def test_tunnel_uses_std_lib(self):
@@ -479,7 +480,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # the ``_tunnel`` method and seeing if the std lib method was called.
         with mock.patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
-            self.assertTrue(mock_tunnel.called)
+            assert mock_tunnel.called
 
     def test_encodes_unicode_method_line(self):
         s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
@@ -490,7 +491,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.request(u'GET', '/bucket/foo', b'body',
                      headers={"Utf8-Header": b"\xe5\xb0\x8f"})
         response = conn.getresponse()
-        self.assertEqual(response.status, 200)
+        assert response.status == 200
 
     def test_state_reset_on_connection_close(self):
         # This simulates what urllib3 does with connections
@@ -506,9 +507,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
 
             conn.request('GET', '/bucket/foo', b'body',
                         {'Expect': b'100-continue'})
-            self.assertEqual(wait_mock.call_count, 1)
+            assert wait_mock.call_count == 1
             response = conn.getresponse()
-            self.assertEqual(response.status, 500)
+            assert response.status == 500
 
             # Now what happens in urllib3 is that when the next
             # request comes along and this conection gets checked
@@ -528,20 +529,20 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request('GET', '/bucket/foo', b'body',
                         {'Expect': b'100-continue'})
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 2)
+            assert wait_mock.call_count == 2
             response = conn.getresponse()
             # This should be 200.  If it's a 500 then
             # the prior response was leaking into our
             # current response.,
-            self.assertEqual(response.status, 200)
+            assert response.status == 200
 
 
 class TestAWSHTTPConnectionPool(unittest.TestCase):
     def test_global_urllib3_pool_is_unchanged(self):
         http_connection_class = HTTPConnectionPool.ConnectionCls
-        self.assertIsNot(http_connection_class, AWSHTTPConnection)
+        assert http_connection_class is not AWSHTTPConnection
         https_connection_class = HTTPSConnectionPool.ConnectionCls
-        self.assertIsNot(https_connection_class, AWSHTTPSConnection)
+        assert https_connection_class is not AWSHTTPSConnection
 
 
 class TestPrepareRequestDict(unittest.TestCase):
@@ -575,11 +576,10 @@ class TestPrepareRequestDict(unittest.TestCase):
         }
         self.prepare_base_request_dict(
             request_dict, endpoint_url='https://s3.amazonaws.com')
-        self.assertEqual(self.base_request_dict['method'], 'GET')
-        self.assertEqual(self.base_request_dict['url'],
-                         'https://s3.amazonaws.com/')
-        self.assertEqual(self.base_request_dict['headers']['User-Agent'],
-                         self.user_agent)
+        assert self.base_request_dict['method'] == 'GET'
+        assert self.base_request_dict['url'] == 'https://s3.amazonaws.com/'
+        assert self.base_request_dict[
+            'headers']['User-Agent'] == self.user_agent
 
     def test_prepare_request_dict_for_get_no_user_agent(self):
         self.user_agent = None
@@ -589,12 +589,12 @@ class TestPrepareRequestDict(unittest.TestCase):
         }
         self.prepare_base_request_dict(
             request_dict, endpoint_url='https://s3.amazonaws.com')
-        self.assertNotIn('User-Agent', self.base_request_dict['headers'])
+        assert 'User-Agent' not in self.base_request_dict['headers']
 
     def test_prepare_request_dict_with_context(self):
         context = {'foo': 'bar'}
         self.prepare_base_request_dict({}, context=context)
-        self.assertEqual(self.base_request_dict['context'], context)
+        assert self.base_request_dict['context'] == context
 
     def test_query_string_serialized_to_url(self):
         request_dict = {
@@ -603,9 +603,8 @@ class TestPrepareRequestDict(unittest.TestCase):
             'url_path': u'/mybucket'
         }
         self.prepare_base_request_dict(request_dict)
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://s3.amazonaws.com/mybucket?prefix=foo')
+        expect_url = 'https://s3.amazonaws.com/mybucket?prefix=foo' 
+        assert self.base_request_dict['url'] == expect_url
 
     def test_url_path_combined_with_endpoint_url(self):
         # This checks the case where a user specifies and
@@ -618,45 +617,40 @@ class TestPrepareRequestDict(unittest.TestCase):
         }
         endpoint_url = 'https://custom.endpoint/foo/bar'
         self.prepare_base_request_dict(request_dict, endpoint_url)
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/mybucket?prefix=foo')
+        expected_url = 'https://custom.endpoint/foo/bar/mybucket?prefix=foo'
+        assert self.base_request_dict['url'] == expected_url
 
     def test_url_path_with_trailing_slash(self):
         self.prepare_base_request_dict(
             {'url_path': u'/mybucket'},
             endpoint_url='https://custom.endpoint/foo/bar/')
 
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/mybucket')
+        expected_url = 'https://custom.endpoint/foo/bar/mybucket'
+        assert self.base_request_dict['url'] == expected_url
 
     def test_url_path_is_slash(self):
         self.prepare_base_request_dict(
             {'url_path': u'/'},
             endpoint_url='https://custom.endpoint/foo/bar/')
 
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/')
+        expected_url = 'https://custom.endpoint/foo/bar/'
+        assert self.base_request_dict['url'] == expected_url
 
     def test_url_path_is_slash_with_endpoint_url_no_slash(self):
         self.prepare_base_request_dict(
             {'url_path': u'/'},
             endpoint_url='https://custom.endpoint/foo/bar')
 
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar')
+        expected_url = 'https://custom.endpoint/foo/bar'
+        assert self.base_request_dict['url'] == expected_url
 
     def test_custom_endpoint_with_query_string(self):
         self.prepare_base_request_dict(
             {'url_path': u'/baz', 'query_string': {'x': 'y'}},
             endpoint_url='https://custom.endpoint/foo/bar?foo=bar')
 
-        self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')
+        expected_url = 'https://custom.endpoint/foo/bar/baz?foo=bar&x=y'
+        assert self.base_request_dict['url'] == expected_url
 
 
 class TestCreateRequestObject(unittest.TestCase):
@@ -673,11 +667,11 @@ class TestCreateRequestObject(unittest.TestCase):
 
     def test_create_request_object(self):
         request = create_request_object(self.request_dict)
-        self.assertEqual(request.method, self.request_dict['method'])
-        self.assertEqual(request.url, self.request_dict['url'])
-        self.assertEqual(request.data, self.request_dict['body'])
-        self.assertEqual(request.context, self.request_dict['context'])
-        self.assertIn('User-Agent', request.headers)
+        assert request.method == self.request_dict['method']
+        assert request.url == self.request_dict['url']
+        assert request.data == self.request_dict['body']
+        assert request.context == self.request_dict['context']
+        assert 'User-Agent' in request.headers
 
 
 class TestHeadersDict(unittest.TestCase):
@@ -686,7 +680,7 @@ class TestHeadersDict(unittest.TestCase):
 
     def test_get_insensitive(self):
         self.headers['foo'] = 'bar'
-        self.assertEqual(self.headers['FOO'], 'bar')
+        assert self.headers['FOO'] == 'bar'
 
     def test_set_insensitive(self):
         self.headers['foo'] = 'bar'
@@ -695,19 +689,19 @@ class TestHeadersDict(unittest.TestCase):
 
     def test_del_insensitive(self):
         self.headers['foo'] = 'bar'
-        self.assertEqual(self.headers['FOO'], 'bar')
+        assert self.headers['FOO'] == 'bar'
         del self.headers['FoO']
-        with self.assertRaises(KeyError):
+        with pytest.raises(KeyError):
             self.headers['foo']
 
     def test_iteration(self):
         self.headers['FOO'] = 'bar'
         self.headers['dead'] = 'beef'
-        self.assertIn('FOO', list(self.headers))
-        self.assertIn('dead', list(self.headers))
+        assert 'FOO' in list(self.headers)
+        assert 'dead' in list(self.headers)
         headers_items = list(self.headers.items())
-        self.assertIn(('FOO', 'bar'), headers_items)
-        self.assertIn(('dead', 'beef'), headers_items)
+        assert ('FOO', 'bar') in headers_items
+        assert ('dead', 'beef') in headers_items
 
 
 if __name__ == "__main__":

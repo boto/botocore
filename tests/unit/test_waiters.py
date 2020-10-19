@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import os
 from tests import unittest, BaseEnvVar
+import pytest
 
 from tests import mock
 
@@ -43,7 +44,7 @@ class TestWaiterModel(unittest.TestCase):
         return config.acceptors[0].matcher_func
 
     def test_waiter_version(self):
-        self.assertEqual(WaiterModel({'version': 2, 'waiters': {}}).version, 2)
+        assert WaiterModel({'version': 2, 'waiters': {}}).version == 2
 
     def test_wont_load_missing_version_in_config(self):
         # We only load waiter configs if we know for sure that we're
@@ -52,7 +53,7 @@ class TestWaiterModel(unittest.TestCase):
             # Missing the 'version' key.
             'waiters': {}
         }
-        with self.assertRaises(WaiterConfigError):
+        with pytest.raises(WaiterConfigError):
             WaiterModel(waiters)
 
     def test_unsupported_waiter_version(self):
@@ -60,7 +61,7 @@ class TestWaiterModel(unittest.TestCase):
             'version': 1,
             'waiters': {}
         }
-        with self.assertRaises(WaiterConfigError):
+        with pytest.raises(WaiterConfigError):
             WaiterModel(waiters)
 
     def test_waiter_names(self):
@@ -71,8 +72,8 @@ class TestWaiterModel(unittest.TestCase):
                 'FooWaiter': {},
             }
         }
-        self.assertEqual(WaiterModel(waiters).waiter_names, ['BarWaiter',
-                                                             'FooWaiter'])
+        assert WaiterModel(waiters).waiter_names == ['BarWaiter',
+                                                             'FooWaiter']
 
     def test_get_single_waiter_config(self):
         single_waiter = {
@@ -93,7 +94,7 @@ class TestWaiterModel(unittest.TestCase):
         }
         model = WaiterModel(waiters)
         config = model.get_waiter('BucketExists')
-        self.assertEqual(config.operation, 'HeadBucket')
+        assert config.operation == 'HeadBucket'
 
     def test_get_waiter_does_not_exist(self):
         waiters = {
@@ -101,7 +102,7 @@ class TestWaiterModel(unittest.TestCase):
             'waiters': {}
         }
         model = WaiterModel(waiters)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             model.get_waiter('UnknownWaiter')
 
     def test_single_waiter_config_attributes(self):
@@ -114,10 +115,10 @@ class TestWaiterModel(unittest.TestCase):
             ],
         }
         config = SingleWaiterConfig(single_waiter)
-        self.assertEqual(config.description, 'Waiter description')
-        self.assertEqual(config.operation, 'HeadBucket')
-        self.assertEqual(config.delay, 5)
-        self.assertEqual(config.max_attempts, 20)
+        assert config.description == 'Waiter description'
+        assert config.operation == 'HeadBucket'
+        assert config.delay == 5
+        assert config.max_attempts == 20
 
     def test_single_waiter_acceptors_built_with_matcher_func(self):
         # When the list of acceptors are requested, we actually will transform
@@ -131,10 +132,10 @@ class TestWaiterModel(unittest.TestCase):
         config = SingleWaiterConfig(single_waiter)
         success_acceptor = config.acceptors[0]
 
-        self.assertEqual(success_acceptor.state, 'success')
-        self.assertEqual(success_acceptor.matcher, 'status')
-        self.assertEqual(success_acceptor.expected, 200)
-        self.assertTrue(callable(success_acceptor.matcher_func))
+        assert success_acceptor.state == 'success'
+        assert success_acceptor.matcher == 'status'
+        assert success_acceptor.expected == 200
+        assert callable(success_acceptor.matcher_func)
 
     def test_single_waiter_acceptor_matches_jmespath(self):
         single_waiter = {
@@ -148,10 +149,8 @@ class TestWaiterModel(unittest.TestCase):
         success_acceptor = config.acceptors[0].matcher_func
         # success_acceptor is a callable that takes a response dict and returns
         # True or False.
-        self.assertTrue(
-            success_acceptor({'Table': {'TableStatus': 'ACCEPTED'}}))
-        self.assertFalse(
-            success_acceptor({'Table': {'TableStatus': 'CREATING'}}))
+        assert success_acceptor({'Table': {'TableStatus': 'ACCEPTED'}}) is True
+        assert not success_acceptor({'Table': {'TableStatus': 'CREATING'}})
 
     def test_single_waiter_supports_status_code(self):
         single_waiter = {
@@ -163,10 +162,8 @@ class TestWaiterModel(unittest.TestCase):
         single_waiter.update(self.boiler_plate_config)
         config = SingleWaiterConfig(single_waiter)
         success_acceptor = config.acceptors[0].matcher_func
-        self.assertTrue(
-            success_acceptor({'ResponseMetadata': {'HTTPStatusCode': 200}}))
-        self.assertFalse(
-            success_acceptor({'ResponseMetadata': {'HTTPStatusCode': 404}}))
+        assert success_acceptor({'ResponseMetadata': {'HTTPStatusCode': 200}}) is True
+        assert not success_acceptor({'ResponseMetadata': {'HTTPStatusCode': 404}})
 
     def test_single_waiter_supports_error(self):
         single_waiter = {
@@ -178,10 +175,8 @@ class TestWaiterModel(unittest.TestCase):
         single_waiter.update(self.boiler_plate_config)
         config = SingleWaiterConfig(single_waiter)
         success_acceptor = config.acceptors[0].matcher_func
-        self.assertTrue(
-            success_acceptor({'Error': {'Code': 'DoesNotExistError'}}))
-        self.assertFalse(
-            success_acceptor({'Error': {'Code': 'DoesNotExistErorr'}}))
+        assert success_acceptor({'Error': {'Code': 'DoesNotExistError'}}) is True
+        assert not success_acceptor({'Error': {'Code': 'DoesNotExistErorr'}})
 
     def test_unknown_matcher(self):
         unknown_type = 'arbitrary_type'
@@ -193,26 +188,22 @@ class TestWaiterModel(unittest.TestCase):
         }
         single_waiter.update(self.boiler_plate_config)
         config = SingleWaiterConfig(single_waiter)
-        with self.assertRaises(WaiterConfigError):
+        with pytest.raises(WaiterConfigError):
             config.acceptors
 
     def test_single_waiter_supports_path_all(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
-        self.assertTrue(
-            matches({'Tables': [{"State": "GOOD"}]}))
-        self.assertTrue(
-            matches({'Tables': [{"State": "GOOD"}, {"State": "GOOD"}]}))
+        assert matches({'Tables': [{"State": "GOOD"}]}) is True
+        assert matches({'Tables': [{"State": "GOOD"}, {"State": "GOOD"}]}) is True
 
     def test_single_waiter_supports_path_any(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'failure', 'matcher': 'pathAny',
                         'argument': 'Tables[].State', 'expected': 'FAIL'})
-        self.assertTrue(
-            matches({'Tables': [{"State": "FAIL"}]}))
-        self.assertTrue(
-            matches({'Tables': [{"State": "GOOD"}, {"State": "FAIL"}]}))
+        assert matches({'Tables': [{"State": "FAIL"}]}) is True
+        assert matches({'Tables': [{"State": "GOOD"}, {"State": "FAIL"}]}) is True
 
     def test_waiter_handles_error_responses_with_path_matchers(self):
         path_any = self.create_acceptor_function(
@@ -227,41 +218,34 @@ class TestWaiterModel(unittest.TestCase):
             for_config={'state': 'success', 'matcher': 'path',
                         'argument': 'length(Tables) > `0`',
                         'expected': True})
-        self.assertFalse(path_any({'Error': {'Code': 'DoesNotExist'}}))
-        self.assertFalse(path_all({'Error': {'Code': 'DoesNotExist'}}))
-        self.assertFalse(path({'Error': {'Code': 'DoesNotExist'}}))
+        assert not path_any({'Error': {'Code': 'DoesNotExist'}})
+        assert not path_all({'Error': {'Code': 'DoesNotExist'}})
+        assert not path({'Error': {'Code': 'DoesNotExist'}})
 
     def test_single_waiter_does_not_match_path_all(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
-        self.assertFalse(
-            matches({'Tables': [{"State": "GOOD"}, {"State": "BAD"}]}))
-        self.assertFalse(
-            matches({'Tables': [{"State": "BAD"}, {"State": "GOOD"}]}))
-        self.assertFalse(
-            matches({'Tables': [{"State": "BAD"}, {"State": "BAD"}]}))
-        self.assertFalse(
-            matches({'Tables': []}))
-        self.assertFalse(
-            matches({'Tables': [{"State": "BAD"},
+        assert not matches({'Tables': [{"State": "GOOD"}, {"State": "BAD"}]})
+        assert not matches({'Tables': [{"State": "BAD"}, {"State": "GOOD"}]})
+        assert not matches({'Tables': [{"State": "BAD"}, {"State": "BAD"}]})
+        assert not matches({'Tables': []})
+        assert not matches({'Tables': [{"State": "BAD"},
                                 {"State": "BAD"},
                                 {"State": "BAD"},
-                                {"State": "BAD"}]}))
+                                {"State": "BAD"}]})
 
     def test_path_all_missing_field(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
-        self.assertFalse(
-            matches({'Tables': [{"NotState": "GOOD"}, {"NotState": "BAD"}]}))
+        assert not matches({'Tables': [{"NotState": "GOOD"}, {"NotState": "BAD"}]})
 
     def test_path_all_matcher_does_not_receive_list(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
-        self.assertFalse(
-            matches({"NotTables": []}))
+        assert not matches({"NotTables": []})
 
     def test_single_waiter_supports_all_three_states(self):
         single_waiter = {
@@ -280,9 +264,9 @@ class TestWaiterModel(unittest.TestCase):
         # Each acceptors should be able to handle not matching
         # any type of response.
         matches_nothing = {}
-        self.assertFalse(acceptors[0].matcher_func(matches_nothing))
-        self.assertFalse(acceptors[1].matcher_func(matches_nothing))
-        self.assertFalse(acceptors[2].matcher_func(matches_nothing))
+        assert not acceptors[0].matcher_func(matches_nothing)
+        assert not acceptors[1].matcher_func(matches_nothing)
+        assert not acceptors[2].matcher_func(matches_nothing)
 
 
 class TestWaitersObjects(unittest.TestCase):
@@ -327,7 +311,7 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter.wait()
-        self.assertEqual(operation_method.call_count, 3)
+        assert operation_method.call_count == 3
 
     def test_waiter_never_matches(self):
         # Verify that a matcher will fail after max_attempts
@@ -341,7 +325,7 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait()
 
     def test_unspecified_errors_stops_waiter(self):
@@ -358,7 +342,7 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait()
 
     def test_last_response_available_on_waiter_error(self):
@@ -368,9 +352,9 @@ class TestWaitersObjects(unittest.TestCase):
         self.client_responses_are(last_response,
                                   for_operation=operation_method)
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError) as e:
+        with pytest.raises(WaiterError) as e:
             waiter.wait()
-        self.assertEqual(e.exception.last_response, last_response)
+            assert e.value.exception.last_response == last_response
 
     def test_unspecified_errors_propagate_error_code(self):
         # If a waiter receives an error response, then the
@@ -389,7 +373,7 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
 
-        with six.assertRaisesRegex(self, WaiterError, error_message):
+        with pytest.raises(WaiterError, match=error_message):
             waiter.wait()
 
     def test_waiter_transitions_to_failure_state(self):
@@ -409,12 +393,12 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait()
         # Not only should we raise an exception, but we should have
         # only called the operation_method twice because the second
         # response triggered a fast fail.
-        self.assertEqual(operation_method.call_count, 2)
+        assert operation_method.call_count == 2
 
     def test_waiter_handles_retry_state(self):
         acceptor_with_retry_state = [
@@ -434,7 +418,7 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
         waiter.wait()
-        self.assertEqual(operation_method.call_count, 3)
+        assert operation_method.call_count == 3
 
     def test_waiter_transitions_to_retry_but_max_attempts_exceeded(self):
         acceptors = [
@@ -451,7 +435,7 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait()
 
     def test_kwargs_are_passed_through(self):
@@ -485,12 +469,12 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait()
 
         # We attempt three times, which means we need to sleep
         # twice, once before each subsequent request.
-        self.assertEqual(sleep_mock.call_count, 2)
+        assert sleep_mock.call_count == 2
         sleep_mock.assert_called_with(delay_time)
 
     @mock.patch('time.sleep')
@@ -505,12 +489,12 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
         custom_delay = 3
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait(WaiterConfig={'Delay': custom_delay})
 
         # We attempt three times, which means we need to sleep
         # twice, once before each subsequent request.
-        self.assertEqual(sleep_mock.call_count, 2)
+        assert sleep_mock.call_count == 2
         sleep_mock.assert_called_with(custom_delay)
 
     def test_waiter_invocation_config_honors_max_attempts(self):
@@ -523,10 +507,10 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
         custom_max = 2
-        with self.assertRaises(WaiterError):
+        with pytest.raises(WaiterError):
             waiter.wait(WaiterConfig={'MaxAttempts': custom_max})
 
-        self.assertEqual(operation_method.call_count, 2)
+        assert operation_method.call_count == 2
 
 
 class TestCreateWaiter(unittest.TestCase):
@@ -577,16 +561,13 @@ class TestCreateWaiter(unittest.TestCase):
         waiter_name = 'WaiterName'
         waiter = create_waiter_with_client(
             waiter_name, self.waiter_model, self.client)
-        self.assertIsInstance(waiter, Waiter)
+        assert isinstance(waiter, Waiter)
 
     def test_waiter_class_name(self):
         waiter_name = 'WaiterName'
         waiter = create_waiter_with_client(
             waiter_name, self.waiter_model, self.client)
-        self.assertEqual(
-            waiter.__class__.__name__,
-            'MyService.Waiter.WaiterName'
-        )
+        assert waiter.__class__.__name__ == 'MyService.Waiter.WaiterName'
 
     def test_waiter_help_documentation(self):
         waiter_name = 'WaiterName'
@@ -609,7 +590,7 @@ class TestCreateWaiter(unittest.TestCase):
             '    :returns: None',
         ]
         for line in lines:
-            self.assertIn(line, content)
+            assert line in content
 
 
 class TestOperationMethods(unittest.TestCase):
@@ -631,7 +612,7 @@ class TestOperationMethods(unittest.TestCase):
         exception = ClientError(parsed_response, 'OperationName')
         client_method.side_effect = exception
         actual_response = op(Foo='a', Bar='b')
-        self.assertEqual(actual_response, parsed_response)
+        assert actual_response == parsed_response
 
 
 class ServiceWaiterFunctionalTest(BaseEnvVar):
@@ -682,7 +663,7 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
         waiter = create_waiter_with_client(waiter_name, waiter_model,
                                            self.client)
         waiter.wait()
-        self.assertEqual(self.client.get_distribution.call_count, 1)
+        assert self.client.get_distribution.call_count == 1
 
     def assert_invalidation_completed_call_count(self, api_version=None):
         waiter_name = 'InvalidationCompleted'
@@ -695,7 +676,7 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
         waiter = create_waiter_with_client(waiter_name, waiter_model,
                                            self.client)
         waiter.wait()
-        self.assertEqual(self.client.get_invalidation.call_count, 1)
+        assert self.client.get_invalidation.call_count == 1
 
     def assert_streaming_distribution_deployed_call_count(
             self, api_version=None):
@@ -709,7 +690,7 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
         waiter = create_waiter_with_client(waiter_name, waiter_model,
                                            self.client)
         waiter.wait()
-        self.assertEqual(self.client.get_streaming_distribution.call_count, 1)
+        assert self.client.get_streaming_distribution.call_count == 1
 
     def test_distribution_deployed(self):
         # Test the latest version.

@@ -29,11 +29,11 @@ class TestIdempotencyInjection(unittest.TestCase):
         # No parameters are provided, RequiredKey should be autofilled
         params = {}
         generate_idempotent_uuid(params, self.mock_model)
-        self.assertIn('RequiredKey', params)
-        self.assertIsNotNone(self.uuid_pattern.match(params['RequiredKey']))
+        assert 'RequiredKey' in params
+        assert self.uuid_pattern.match(params['RequiredKey']) is not None
 
     def test_provided(self):
         # RequiredKey is provided, should not be replaced
         params = {'RequiredKey': 'already populated'}
         generate_idempotent_uuid(params, self.mock_model)
-        self.assertEqual(params['RequiredKey'], 'already populated')
+        assert params['RequiredKey'] == 'already populated'

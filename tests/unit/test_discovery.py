@@ -1,4 +1,5 @@
 import time
+import pytest
 from tests import mock
 from tests import unittest
 
@@ -168,14 +169,13 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         model = self.service_model.operation_model('DescribeEndpoints')
         params = {'headers': {}}
         inject_api_version_header_if_needed(model, params)
-        self.assertEqual(params['headers'].get('x-amz-api-version'),
-                         '2018-08-31')
+        assert params['headers'].get('x-amz-api-version') == '2018-08-31'
 
     def test_no_inject_api_version_if_not_endpoint_operation(self):
         model = self.service_model.operation_model('TestDiscoveryRequired')
         params = {'headers': {}}
         inject_api_version_header_if_needed(model, params)
-        self.assertNotIn('x-amz-api-version', params['headers'])
+        assert 'x-amz-api-version' not in params['headers']
 
     def test_gather_identifiers(self):
         params = {
@@ -184,12 +184,12 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         }
         operation = self.service_model.operation_model('TestDiscoveryRequired')
         ids = self.manager.gather_identifiers(operation, params)
-        self.assertEqual(ids, {'Foo': 'value1', 'Bar': 'value2'})
+        assert ids == {'Foo': 'value1', 'Bar': 'value2'}
 
     def test_gather_identifiers_none(self):
         operation = self.service_model.operation_model('TestDiscovery')
         ids = self.manager.gather_identifiers(operation, {})
-        self.assertEqual(ids, {})
+        assert ids == {}
 
     def test_describe_endpoint(self):
         kwargs = {
@@ -224,11 +224,11 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.manager.describe_endpoint(**kwargs)
         self.client.describe_endpoints.assert_called_with(**kwargs)
         key = ((('Bar', 'value2'), ('Foo', 'value1')), 'TestDiscoveryRequired')
-        self.assertIn(key, cache)
-        self.assertEqual(cache[key][0]['Address'], 'new.com')
+        assert key in cache
+        assert cache[key][0]['Address'] == 'new.com'
         self.manager.describe_endpoint(**kwargs)
         call_count = self.client.describe_endpoints.call_count
-        self.assertEqual(call_count, 1)
+        assert call_count == 1
 
     def test_describe_endpoint_no_ids_or_operation(self):
         cache = {}
@@ -240,13 +240,13 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         )
         self.client.describe_endpoints.assert_called_with()
         key = ()
-        self.assertIn(key, cache)
-        self.assertEqual(cache[key][0]['Address'], 'new.com')
+        assert key in cache
+        assert cache[key][0]['Address'] == 'new.com'
         self.manager.describe_endpoint(
             Operation='TestDiscoveryRequired', Identifiers={}
         )
         call_count = self.client.describe_endpoints.call_count
-        self.assertEqual(call_count, 1)
+        assert call_count == 1
 
     def test_describe_endpoint_expired_entry(self):
         current_time = time.time()
@@ -261,11 +261,11 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         }
         self.manager.describe_endpoint(**kwargs)
         self.client.describe_endpoints.assert_called_with()
-        self.assertIn(key, cache)
-        self.assertEqual(cache[key][0]['Address'], 'new.com')
+        assert key in cache
+        assert cache[key][0]['Address'] == 'new.com'
         self.manager.describe_endpoint(**kwargs)
         call_count = self.client.describe_endpoints.call_count
-        self.assertEqual(call_count, 1)
+        assert call_count == 1
 
     def test_describe_endpoint_cache_expiration(self):
         def _time():
@@ -276,8 +276,8 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
             Operation='TestDiscoveryRequired', Identifiers={}
         )
         key = ()
-        self.assertIn(key, cache)
-        self.assertEqual(cache[key][0]['Expiration'], float(120))
+        assert key in cache
+        assert cache[key][0]['Expiration'] == float(120)
 
     def test_delete_endpoints_present(self):
         key = ()
@@ -290,7 +290,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
             'Operation': 'TestDiscoveryRequired',
         }
         self.manager.delete_endpoints(**kwargs)
-        self.assertEqual(cache, {})
+        assert cache == {}
 
     def test_delete_endpoints_absent(self):
         cache = {}
@@ -300,17 +300,17 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
             'Operation': 'TestDiscoveryRequired',
         }
         self.manager.delete_endpoints(**kwargs)
-        self.assertEqual(cache, {})
+        assert cache == {}
 
     def test_describe_endpoint_optional_fails_no_cache(self):
         side_effect = [ConnectionError(error=None)]
         self.construct_manager(side_effect=side_effect)
         kwargs = {'Operation': 'TestDiscoveryOptional'}
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertIsNone(endpoint)
+        assert endpoint is None
         # This second call should be blocked as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertIsNone(endpoint)
+        assert endpoint is None
         self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_optional_fails_stale_cache(self):
@@ -322,23 +322,23 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.construct_manager(cache=cache, side_effect=side_effect)
         kwargs = {'Operation': 'TestDiscoveryOptional'}
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'old.com')
+        assert endpoint == 'old.com'
         # This second call shouldn't go through as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'old.com')
+        assert endpoint == 'old.com'
         self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_required_fails_no_cache(self):
         side_effect = [ConnectionError(error=None)] * 2
         self.construct_manager(side_effect=side_effect)
         kwargs = {'Operation': 'TestDiscoveryRequired'}
-        with self.assertRaises(EndpointDiscoveryRefreshFailed):
+        with pytest.raises(EndpointDiscoveryRefreshFailed):
             self.manager.describe_endpoint(**kwargs)
         # This second call should go through, as we have no cache
-        with self.assertRaises(EndpointDiscoveryRefreshFailed):
+        with pytest.raises(EndpointDiscoveryRefreshFailed):
             self.manager.describe_endpoint(**kwargs)
         describe_count = self.client.describe_endpoints.call_count
-        self.assertEqual(describe_count, 2)
+        assert describe_count == 2
 
     def test_describe_endpoint_required_fails_stale_cache(self):
         key = ()
@@ -349,10 +349,10 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.construct_manager(cache=cache, side_effect=side_effect)
         kwargs = {'Operation': 'TestDiscoveryRequired'}
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'old.com')
+        assert endpoint == 'old.com'
         # We have a stale endpoint, so this shouldn't fail or force a refresh
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'old.com')
+        assert endpoint == 'old.com'
         self.client.describe_endpoints.call_args_list == [mock.call()]
 
     def test_describe_endpoint_required_force_refresh_success(self):
@@ -366,12 +366,12 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.construct_manager(side_effect=side_effect)
         kwargs = {'Operation': 'TestDiscoveryRequired'}
         # First call will fail
-        with self.assertRaises(EndpointDiscoveryRefreshFailed):
+        with pytest.raises(EndpointDiscoveryRefreshFailed):
             self.manager.describe_endpoint(**kwargs)
         self.client.describe_endpoints.call_args_list == [mock.call()]
         # Force a refresh if the cache is empty but discovery is required
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'new.com')
+        assert endpoint == 'new.com'
 
     def test_describe_endpoint_retries_after_failing(self):
         fake_time = mock.Mock()
@@ -386,11 +386,11 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.construct_manager(side_effect=side_effect, time=fake_time)
         kwargs = {'Operation': 'TestDiscoveryOptional'}
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertIsNone(endpoint)
+        assert endpoint is None
         self.client.describe_endpoints.call_args_list == [mock.call()]
         # Second time should try again as enough time has elapsed
         endpoint = self.manager.describe_endpoint(**kwargs)
-        self.assertEqual(endpoint, 'new.com')
+        assert endpoint == 'new.com'
 
 
 class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
@@ -420,7 +420,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         }
         self.manager.describe_endpoint.return_value = 'https://new.foo'
         self.handler.discover_endpoint(request, 'TestOperation')
-        self.assertEqual(request.url, 'https://new.foo')
+        assert request.url == 'https://new.foo'
         self.manager.describe_endpoint.assert_called_with(
             Operation='TestOperation', Identifiers={}
         )
@@ -433,7 +433,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         request.url = 'old.com'
         self.manager.describe_endpoint.return_value = None
         self.handler.discover_endpoint(request, 'TestOperation')
-        self.assertEqual(request.url, 'old.com')
+        assert request.url == 'old.com'
         self.manager.describe_endpoint.assert_called_with(
             Operation='TestOperation', Identifiers={}
         )
@@ -445,7 +445,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         }
         self.manager.describe_endpoint.return_value = 'new.foo'
         self.handler.discover_endpoint(request, 'TestOperation')
-        self.assertEqual(request.url, 'https://new.foo')
+        assert request.url == 'https://new.foo'
         self.manager.describe_endpoint.assert_called_with(
             Operation='TestOperation', Identifiers={}
         )
@@ -453,7 +453,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
     def test_inject_no_context(self):
         request = AWSRequest(url='https://original.foo')
         self.handler.discover_endpoint(request, 'TestOperation')
-        self.assertEqual(request.url, 'https://original.foo')
+        assert request.url == 'https://original.foo'
         self.manager.describe_endpoint.assert_not_called()
 
     def test_gather_identifiers(self):
@@ -469,28 +469,28 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         model = self.service_model.operation_model('TestDiscoveryRequired')
         self.manager.gather_identifiers.return_value = ids
         self.handler.gather_identifiers(params, model, context)
-        self.assertEqual(context['discovery']['identifiers'], ids)
+        assert context['discovery']['identifiers'] == ids
 
     def test_gather_identifiers_not_discoverable(self):
         context = {}
         model = self.service_model.operation_model('DescribeEndpoints')
         self.handler.gather_identifiers({}, model, context)
-        self.assertEqual(context, {})
+        assert context == {}
 
     def test_discovery_disabled_but_required(self):
         model = self.service_model.operation_model('TestDiscoveryRequired')
-        with self.assertRaises(EndpointDiscoveryRequired):
+        with pytest.raises(EndpointDiscoveryRequired):
             block_endpoint_discovery_required_operations(model)
 
     def test_discovery_disabled_but_optional(self):
         context = {}
         model = self.service_model.operation_model('TestDiscoveryOptional')
         block_endpoint_discovery_required_operations(model, context=context)
-        self.assertEqual(context, {})
+        assert context == {}
 
     def test_does_not_retry_no_response(self):
         retry = self.handler.handle_retries(None, None, None)
-        self.assertIsNone(retry)
+        assert retry is None
 
     def test_does_not_retry_other_errors(self):
         parsed_response = {
@@ -498,7 +498,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         }
         response = (None, parsed_response)
         retry = self.handler.handle_retries(None, response, None)
-        self.assertIsNone(retry)
+        assert retry is None
 
     def test_does_not_retry_if_no_context(self):
         request_dict = {'context': {}}
@@ -507,7 +507,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         }
         response = (None, parsed_response)
         retry = self.handler.handle_retries(request_dict, response, None)
-        self.assertIsNone(retry)
+        assert retry is None
 
     def _assert_retries(self, parsed_response):
         request_dict = {
@@ -518,7 +518,7 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
         response = (None, parsed_response)
         model = self.service_model.operation_model('TestDiscoveryOptional')
         retry = self.handler.handle_retries(request_dict, response, model)
-        self.assertEqual(retry, 0)
+        assert retry == 0
         self.manager.delete_endpoints.assert_called_with(
             Operation='TestDiscoveryOptional', Identifiers={}
         )

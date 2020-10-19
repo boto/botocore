@@ -22,6 +22,7 @@
 import os
 import contextlib
 import copy
+import pytest
 from tests import mock
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
@@ -42,25 +43,25 @@ class TestJSONFileLoader(BaseEnvVar):
 
     def test_load_file(self):
         data = self.file_loader.load_file(self.valid_file_path)
-        self.assertEqual(len(data), 3)
-        self.assertTrue('test_key_1' in data)
+        assert len(data) == 3
+        assert 'test_key_1' in data
 
     def test_load_json_file_does_not_exist_returns_none(self):
         # None is used to indicate that the loader could not find a
         # file to load.
-        self.assertIsNone(self.file_loader.load_file('fooasdfasdfasdf'))
+        assert self.file_loader.load_file('fooasdfasdfasdf') is None
 
     def test_file_exists_check(self):
-        self.assertTrue(self.file_loader.exists(self.valid_file_path))
+        assert self.file_loader.exists(self.valid_file_path)
 
     def test_file_does_not_exist_returns_false(self):
-        self.assertFalse(self.file_loader.exists(
-            os.path.join(self.data_path, 'does', 'not', 'exist')))
+        assert not self.file_loader.exists(
+            os.path.join(self.data_path, 'does', 'not', 'exist'))
 
     def test_file_with_non_ascii(self):
         try:
             filename = os.path.join(self.data_path, 'non_ascii')
-            self.assertTrue(self.file_loader.load_file(filename) is not None)
+            assert self.file_loader.load_file(filename) is not None
         except UnicodeDecodeError:
             self.fail('Fail to handle data file with non-ascii characters')
 
@@ -69,29 +70,26 @@ class TestLoader(BaseEnvVar):
 
     def test_default_search_paths(self):
         loader = Loader()
-        self.assertEqual(len(loader.search_paths), 2)
+        assert len(loader.search_paths) == 2
         # We should also have ~/.aws/models added to
         # the search path.  To deal with cross platform
         # issues we'll just check for a path that ends
         # with .aws/models.
         home_dir_path = os.path.join('.aws', 'models')
-        self.assertTrue(
-            any(p.endswith(home_dir_path) for p in
-                loader.search_paths))
+        assert any(p.endswith(home_dir_path) for p in
+                loader.search_paths)
 
     def test_can_add_to_search_path(self):
         loader = Loader()
         loader.search_paths.append('mypath')
-        self.assertIn('mypath', loader.search_paths)
+        assert 'mypath' in loader.search_paths
 
     def test_can_initialize_with_search_paths(self):
         loader = Loader(extra_search_paths=['foo', 'bar'])
         # Note that the extra search paths are before
         # the customer/builtin data paths.
-        self.assertEqual(
-            loader.search_paths,
-            ['foo', 'bar', loader.CUSTOMER_DATA_PATH,
-             loader.BUILTIN_DATA_PATH])
+        assert loader.search_paths == ['foo', 'bar',
+               loader.CUSTOMER_DATA_PATH, loader.BUILTIN_DATA_PATH]
 
     # The file loader isn't consulted unless the current
     # search path exists, so we're patching isdir to always
@@ -109,7 +107,7 @@ class TestLoader(BaseEnvVar):
         loader = Loader(extra_search_paths=search_paths,
                         file_loader=FakeLoader())
         loaded = loader.load_data('baz')
-        self.assertEqual(loaded, ['loaded data'])
+        assert loaded == ['loaded data']
 
     def test_data_not_found_raises_exception(self):
         class FakeLoader(object):
@@ -118,14 +116,14 @@ class TestLoader(BaseEnvVar):
                 # loader couldn't find anything.
                 return None
         loader = Loader(file_loader=FakeLoader())
-        with self.assertRaises(DataNotFoundError):
+        with pytest.raises(DataNotFoundError):
             loader.load_data('baz')
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_error_raised_if_service_does_not_exist(self):
         loader = Loader(extra_search_paths=[],
                         include_default_search_paths=False)
-        with self.assertRaises(DataNotFoundError):
+        with pytest.raises(DataNotFoundError):
             loader.determine_latest_version('unknownservice', 'service-2')
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
@@ -141,7 +139,7 @@ class TestLoader(BaseEnvVar):
         loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
         loader.list_available_services = mock.Mock(return_value=['baz'])
         loaded = loader.load_service_model('baz', type_name='service-2')
-        self.assertEqual(loaded, ['loaded data'])
+        assert loaded == ['loaded data']
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_service_model_enforces_case(self):
@@ -157,8 +155,7 @@ class TestLoader(BaseEnvVar):
 
         # Should have a) the unknown service name and b) list of valid
         # service names.
-        with six.assertRaisesRegex(self, UnknownServiceError,
-                                   'Unknown service.*BAZ.*baz'):
+        with pytest.raises(UnknownServiceError, match='Unknown service.*BAZ.*baz'):
             loader.load_service_model('BAZ', type_name='service-2')
 
     def test_load_service_model_uses_provided_type_name(self):
@@ -170,8 +167,7 @@ class TestLoader(BaseEnvVar):
         # Should have a) the unknown service name and b) list of valid
         # service names.
         provided_type_name = 'not-service-2'
-        with six.assertRaisesRegex(self, UnknownServiceError,
-                                   'Unknown service.*BAZ.*baz'):
+        with pytest.raises(UnknownServiceError, match='Unknown service.*BAZ.*baz'):
             loader.load_service_model(
                 'BAZ', type_name=provided_type_name)
 
@@ -180,9 +176,9 @@ class TestLoader(BaseEnvVar):
     def test_create_loader_parses_data_path(self):
         search_path = os.pathsep.join(['foo', 'bar', 'baz'])
         loader = create_loader(search_path)
-        self.assertIn('foo', loader.search_paths)
-        self.assertIn('bar', loader.search_paths)
-        self.assertIn('baz', loader.search_paths)
+        assert 'foo' in loader.search_paths
+        assert 'bar' in loader.search_paths
+        assert 'baz' in loader.search_paths
 
 
 class TestMergeExtras(BaseEnvVar):
@@ -212,7 +208,7 @@ class TestMergeExtras(BaseEnvVar):
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
         expected = {'foo': 'sdk', 'bar': 'service'}
-        self.assertEqual(loaded, expected)
+        assert loaded == expected
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
@@ -221,7 +217,7 @@ class TestMergeExtras(BaseEnvVar):
             os.path.join(base_path, 'service-2'),
             os.path.join(base_path, 'service-2.sdk-extras')
         ]
-        self.assertEqual(call_args, expected_call_args)
+        assert call_args == expected_call_args
 
     def test_extras_not_found(self):
         service_data = {'foo': 'service', 'bar': 'service'}
@@ -229,7 +225,7 @@ class TestMergeExtras(BaseEnvVar):
         self.file_loader.load_file.side_effect = [service_data, None]
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
-        self.assertEqual(loaded, service_data_copy)
+        assert loaded == service_data_copy
 
     def test_no_merge_in_extras(self):
         service_data = {'foo': 'service', 'bar': 'service'}
@@ -237,7 +233,7 @@ class TestMergeExtras(BaseEnvVar):
         self.file_loader.load_file.side_effect = [service_data, {}]
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
-        self.assertEqual(loaded, service_data_copy)
+        assert loaded == service_data_copy
 
     def test_include_default_extras(self):
         self.data_loader = Loader(
@@ -255,7 +251,7 @@ class TestMergeExtras(BaseEnvVar):
         self.file_loader.load_file.side_effect = [service_data, sdk_extras]
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
-        self.assertEqual(loaded, service_data_copy)
+        assert loaded == service_data_copy
 
     def test_append_extra_type(self):
         service_data = {'foo': 'service', 'bar': 'service'}
@@ -268,7 +264,7 @@ class TestMergeExtras(BaseEnvVar):
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
         expected = {'foo': 'sdk', 'bar': 'service', 'cli': True}
-        self.assertEqual(loaded, expected)
+        assert loaded == expected
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
@@ -278,7 +274,7 @@ class TestMergeExtras(BaseEnvVar):
             os.path.join(base_path, 'service-2.sdk-extras'),
             os.path.join(base_path, 'service-2.cli-extras')
         ]
-        self.assertEqual(call_args, expected_call_args)
+        assert call_args == expected_call_args
 
     def test_sdk_empty_extras_skipped(self):
         service_data = {'foo': 'service', 'bar': 'service'}
@@ -290,7 +286,7 @@ class TestMergeExtras(BaseEnvVar):
 
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
         expected = {'foo': 'cli', 'bar': 'service'}
-        self.assertEqual(loaded, expected)
+        assert loaded == expected
 
 
 class TestExtrasProcessor(BaseEnvVar):
@@ -306,19 +302,19 @@ class TestExtrasProcessor(BaseEnvVar):
 
     def test_process_empty_list(self):
         self.processor.process(self.service_data, [])
-        self.assertEqual(self.service_data, self.service_data_copy)
+        assert self.service_data == self.service_data_copy
 
     def test_process_empty_extras(self):
         self.processor.process(self.service_data, [{}])
-        self.assertEqual(self.service_data, self.service_data_copy)
+        assert self.service_data == self.service_data_copy
 
     def test_process_merge_key(self):
         extras = {'merge': {'shapes': {'BooleanShape': {'type': 'boolean'}}}}
         self.processor.process(self.service_data, [extras])
-        self.assertNotEqual(self.service_data, self.service_data_copy)
+        assert self.service_data != self.service_data_copy
 
         boolean_shape = self.service_data['shapes'].get('BooleanShape')
-        self.assertEqual(boolean_shape, {'type': 'boolean'})
+        assert boolean_shape == {'type': 'boolean'}
 
     def test_process_in_order(self):
         extras = [
@@ -326,10 +322,10 @@ class TestExtrasProcessor(BaseEnvVar):
             {'merge': {'shapes': {'BooleanShape': {'type': 'string'}}}}
         ]
         self.processor.process(self.service_data, extras)
-        self.assertNotEqual(self.service_data, self.service_data_copy)
+        assert self.service_data != self.service_data_copy
 
         boolean_shape = self.service_data['shapes'].get('BooleanShape')
-        self.assertEqual(boolean_shape, {'type': 'string'})
+        assert boolean_shape == {'type': 'string'}
 
 
 class TestLoadersWithDirectorySearching(BaseEnvVar):
@@ -394,12 +390,9 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
             },
         }
         with self.loader_with_fake_dirs() as loader:
-            self.assertEqual(
-                loader.list_available_services(type_name='service-2'),
-                ['dynamodb', 'ec2'])
-            self.assertEqual(
-                loader.list_available_services(type_name='resource-1'),
-                ['rds'])
+            assert loader.list_available_services(type_name='service-2') == [
+                    'dynamodb', 'ec2']
+            assert loader.list_available_services(type_name='resource-1') == ['rds']
 
     def test_determine_latest(self):
         # Fake mapping of directories to subdirectories.
@@ -428,7 +421,5 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
         }
         with self.loader_with_fake_dirs() as loader:
             latest = loader.determine_latest_version('ec2', 'service-2')
-            self.assertEqual(loader.determine_latest_version('ec2', 'service-2'),
-                             '2014-10-01')
-            self.assertEqual(loader.determine_latest_version('ec2', 'service-1'),
-                             '2015-03-01')
+            assert loader.determine_latest_version('ec2', 'service-2') == '2014-10-01'
+            assert loader.determine_latest_version('ec2', 'service-1') == '2015-03-01'

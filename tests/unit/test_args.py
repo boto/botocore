@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import socket
+import pytest
 
 import botocore.config
 from tests import unittest
@@ -100,34 +101,27 @@ class TestCreateClientArgs(unittest.TestCase):
         )
 
     def test_compute_s3_configuration(self):
-        self.assertIsNone(self.args_create.compute_s3_config(None))
+        assert self.args_create.compute_s3_config(None) is None
 
     def test_compute_s3_config_only_config_store(self):
         self.config_store.set_config_variable(
             's3', {'use_accelerate_endpoint': True})
-        self.assertEqual(
-            self.args_create.compute_s3_config(None),
-            {'use_accelerate_endpoint': True}
-        )
+        assert self.args_create.compute_s3_config(None) == {
+            'use_accelerate_endpoint': True}
 
     def test_client_s3_accelerate_from_client_config(self):
-        self.assertEqual(
-            self.args_create.compute_s3_config(
+        assert self.args_create.compute_s3_config(
                 client_config=Config(s3={'use_accelerate_endpoint': True})
-            ),
-            {'use_accelerate_endpoint': True}
-        )
+            ) == {
+            'use_accelerate_endpoint': True}
 
     def test_client_s3_accelerate_client_config_overrides_config_store(self):
         self.config_store.set_config_variable(
             's3', {'use_accelerate_endpoint': False})
-        self.assertEqual(
-            self.args_create.compute_s3_config(
+        # client_config beats scoped_config
+        assert self.args_create.compute_s3_config(
                 client_config=Config(s3={'use_accelerate_endpoint': True})
-            ),
-            # client_config beats scoped_config
-            {'use_accelerate_endpoint': True}
-        )
+            ) == {'use_accelerate_endpoint': True}
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
         config = botocore.config.Config(max_pool_connections=20)
@@ -161,8 +155,7 @@ class TestCreateClientArgs(unittest.TestCase):
         ]
         client_args = self.call_get_client_args(
             endpoint_url='http://other.com/')
-        self.assertEqual(
-            client_args['client_config'].region_name, 'us-west-2')
+        assert client_args['client_config'].region_name == 'us-west-2'
 
     def test_region_does_not_resolve_if_not_s3_and_endpoint_url_provided(self):
         self.service_model.endpoint_prefix = 'ec2'
@@ -174,7 +167,7 @@ class TestCreateClientArgs(unittest.TestCase):
         }]
         client_args = self.call_get_client_args(
             endpoint_url='http://other.com/')
-        self.assertEqual(client_args['client_config'].region_name, None)
+        assert client_args['client_config'].region_name is None
 
     def test_tcp_keepalive_enabled(self):
         scoped_config = {'tcp_keepalive': 'true'}
@@ -217,10 +210,8 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=None
         )
-        self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
-        self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
+        assert client_args['endpoint'].host == 'https://sts.amazonaws.com'
+        assert client_args['request_signer'].region_name == 'us-east-1'
 
     def test_sts_use_resolved_endpoint_for_nonlegacy_region(self):
         resolved_endpoint = 'https://resolved-endpoint'
@@ -235,9 +226,8 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model=self._get_service_model('sts'),
             region_name='ap-east-1', endpoint_url=None
         )
-        self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
-        self.assertEqual(
-            client_args['request_signer'].region_name, resolved_region)
+        assert client_args['endpoint'].host == resolved_endpoint
+        assert client_args['request_signer'].region_name == resolved_region
 
     def test_sts_use_resolved_endpoint_for_regional_configuration(self):
         resolved_endpoint = 'https://resolved-endpoint'
@@ -252,9 +242,8 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=None
         )
-        self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
-        self.assertEqual(
-            client_args['request_signer'].region_name, resolved_region)
+        assert client_args['endpoint'].host == resolved_endpoint
+        assert client_args['request_signer'].region_name == resolved_region
 
     def test_sts_with_endpoint_override_and_legacy_configured(self):
         override_endpoint = 'https://override-endpoint'
@@ -265,7 +254,7 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=override_endpoint
         )
-        self.assertEqual(client_args['endpoint'].host, override_endpoint)
+        assert client_args['endpoint'].host == override_endpoint
 
     def test_sts_http_scheme_for_override_endpoint(self):
         self.config_store.set_config_variable(
@@ -275,8 +264,7 @@ class TestCreateClientArgs(unittest.TestCase):
             region_name='us-west-2', endpoint_url=None, is_secure=False,
 
         )
-        self.assertEqual(
-            client_args['endpoint'].host, 'http://sts.amazonaws.com')
+        assert client_args['endpoint'].host == 'http://sts.amazonaws.com'
 
     def test_sts_regional_endpoints_defaults_to_legacy_if_not_set(self):
         self.config_store.set_config_variable(
@@ -285,15 +273,13 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model=self._get_service_model('sts'),
             region_name='us-west-2', endpoint_url=None
         )
-        self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
-        self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
+        assert client_args['endpoint'].host == 'https://sts.amazonaws.com'
+        assert client_args['request_signer'].region_name == 'us-east-1'
 
     def test_invalid_sts_regional_endpoints(self):
         self.config_store.set_config_variable(
             'sts_regional_endpoints', 'invalid')
-        with self.assertRaises(
+        with pytest.raises(
                 exceptions.InvalidSTSRegionalEndpointsConfigError):
             self.call_get_client_args(
                 service_model=self._get_service_model('sts'),
@@ -303,54 +289,51 @@ class TestCreateClientArgs(unittest.TestCase):
     def test_provides_total_max_attempts(self):
         config = botocore.config.Config(retries={'total_max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
-        self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 10)
+        assert client_args['client_config'].retries['total_max_attempts'] == 10
 
     def test_provides_total_max_attempts_has_precedence(self):
         config = botocore.config.Config(retries={'total_max_attempts': 10,
                                                  'max_attempts': 5})
         client_args = self.call_get_client_args(client_config=config)
-        self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 10)
-        self.assertNotIn('max_attempts', client_args['client_config'].retries)
+        assert client_args['client_config'].retries['total_max_attempts'] == 10
+        assert 'max_attempts' not in client_args['client_config'].retries
 
     def test_provide_retry_config_maps_total_max_attempts(self):
         config = botocore.config.Config(retries={'max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
-        self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 11)
-        self.assertNotIn('max_attempts', client_args['client_config'].retries)
+        assert client_args['client_config'].retries['total_max_attempts'], 11
+        assert 'max_attempts' not in client_args['client_config'].retries
 
     def test_can_merge_max_attempts(self):
         self.config_store.set_config_variable('max_attempts', 4)
         config = self.call_get_client_args()['client_config']
-        self.assertEqual(config.retries['total_max_attempts'], 4)
+        assert config.retries['total_max_attempts'] == 4
 
     def test_uses_config_value_if_present_for_max_attempts(self):
         config = self.call_get_client_args(
                 client_config=Config(retries={'max_attempts': 2})
         )['client_config']
-        self.assertEqual(config.retries['total_max_attempts'], 3)
+        assert config.retries['total_max_attempts'] == 3
 
     def test_uses_client_config_over_config_store_max_attempts(self):
         self.config_store.set_config_variable('max_attempts', 4)
         config = self.call_get_client_args(
                 client_config=Config(retries={'max_attempts': 2})
         )['client_config']
-        self.assertEqual(config.retries['total_max_attempts'], 3)
+        assert config.retries['total_max_attempts'] == 3
 
     def test_uses_client_config_total_over_config_store_max_attempts(self):
         self.config_store.set_config_variable('max_attempts', 4)
         config = self.call_get_client_args(
                 client_config=Config(retries={'total_max_attempts': 2})
         )['client_config']
-        self.assertEqual(config.retries['total_max_attempts'], 2)
+        assert config.retries['total_max_attempts'] == 2
 
     def test_max_attempts_unset_if_retries_is_none(self):
         config = self.call_get_client_args(
                 client_config=Config(retries=None)
         )['client_config']
-        self.assertEqual(config.retries, {'mode': 'legacy'})
+        assert config.retries == {'mode': 'legacy'}
 
     def test_retry_mode_set_on_config_store(self):
         self.config_store.set_config_variable('retry_mode', 'standard')
@@ -361,11 +344,11 @@ class TestCreateClientArgs(unittest.TestCase):
         config = self.call_get_client_args(
                 client_config=Config(retries={'mode': 'standard'})
         )['client_config']
-        self.assertEqual(config.retries['mode'], 'standard')
+        assert config.retries['mode'] == 'standard'
 
     def test_client_config_beats_config_store(self):
         self.config_store.set_config_variable('retry_mode', 'adaptive')
         config = self.call_get_client_args(
                 client_config=Config(retries={'mode': 'standard'})
         )['client_config']
-        self.assertEqual(config.retries['mode'], 'standard')
+        assert config.retries['mode'] == 'standard'

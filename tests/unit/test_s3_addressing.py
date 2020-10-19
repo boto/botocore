@@ -14,6 +14,7 @@
 # language governing permissions and limitations under the License.
 
 import os
+import pytest
 
 from tests import BaseSessionTest, ClientHTTPStubber
 
@@ -49,58 +50,48 @@ class TestS3Addressing(BaseSessionTest):
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
-        self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com/')
+        assert prepared_request.url == 'https://safename.s3.amazonaws.com/'
 
     def test_list_objects_non_dns_name(self):
         params = {'Bucket': 'un_safe_name'}
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
-        self.assertEqual(prepared_request.url,
-                         'https://s3.amazonaws.com/un_safe_name')
+        assert prepared_request.url == 'https://s3.amazonaws.com/un_safe_name'
 
     def test_list_objects_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
-        self.assertEqual(prepared_request.url,
-                         'https://safename.s3.us-west-2.amazonaws.com/')
+        assert prepared_request.url == 'https://safename.s3.us-west-2.amazonaws.com/'
 
     def test_list_objects_unicode_query_string_eu_central_1(self):
         self.region_name = 'eu-central-1'
         params = OrderedDict([('Bucket', 'safename'),
                              ('Marker', u'\xe4\xf6\xfc-01.txt')])
         prepared_request = self.get_prepared_request('list_objects', params)
-        self.assertEqual(
-            prepared_request.url,
-            ('https://safename.s3.eu-central-1.amazonaws.com/'
-             '?marker=%C3%A4%C3%B6%C3%BC-01.txt')
-        )
+        assert prepared_request.url == ('https://safename.s3.eu-central-1.amazonaws.com/'
+                                        '?marker=%C3%A4%C3%B6%C3%BC-01.txt')
 
     def test_list_objects_in_restricted_regions(self):
         self.region_name = 'us-gov-west-1'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request('list_objects', params)
         # Note how we keep the region specific endpoint here.
-        self.assertEqual(prepared_request.url,
-                         'https://safename.s3.us-gov-west-1.amazonaws.com/')
+        assert prepared_request.url == 'https://safename.s3.us-gov-west-1.amazonaws.com/'
 
     def test_list_objects_in_fips(self):
         self.region_name = 'fips-us-gov-west-1'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request('list_objects', params)
         # Note how we keep the region specific endpoint here.
-        self.assertEqual(
-            prepared_request.url,
-            'https://safename.s3-fips-us-gov-west-1.amazonaws.com/')
+        assert prepared_request.url == 'https://safename.s3-fips-us-gov-west-1.amazonaws.com/'
 
     def test_list_objects_non_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
         params = {'Bucket': 'un_safe_name'}
         prepared_request = self.get_prepared_request('list_objects', params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3.us-west-2.amazonaws.com/un_safe_name')
+        assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/un_safe_name'
 
     def test_put_object_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -116,9 +107,7 @@ class TestS3Addressing(BaseSessionTest):
                 'ContentType': 'text/plain'
             }
             prepared_request = self.get_prepared_request('put_object', params)
-            self.assertEqual(
-                prepared_request.url,
-                'https://s3.us-west-2.amazonaws.com/my.valid.name/mykeyname')
+            assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/my.valid.name/mykeyname'
 
     def test_put_object_dns_name_classic(self):
         self.region_name = 'us-east-1'
@@ -134,9 +123,7 @@ class TestS3Addressing(BaseSessionTest):
                 'ContentType': 'text/plain'
             }
             prepared_request = self.get_prepared_request('put_object', params)
-            self.assertEqual(
-                prepared_request.url,
-                'https://s3.amazonaws.com/my.valid.name/mykeyname')
+            assert prepared_request.url == 'https://s3.amazonaws.com/my.valid.name/mykeyname'
 
     def test_put_object_dns_name_single_letter_non_classic(self):
         self.region_name = 'us-west-2'
@@ -152,9 +139,7 @@ class TestS3Addressing(BaseSessionTest):
                 'ContentType': 'text/plain'
             }
             prepared_request = self.get_prepared_request('put_object', params)
-            self.assertEqual(
-                prepared_request.url,
-                'https://s3.us-west-2.amazonaws.com/a.valid.name/mykeyname')
+            assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/a.valid.name/mykeyname'
 
     def test_get_object_non_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -163,9 +148,7 @@ class TestS3Addressing(BaseSessionTest):
             'Key': 'mykeyname'
         }
         prepared_request = self.get_prepared_request('get_object', params)
-        self.assertEqual(
-            prepared_request.url,
-            'https://s3.us-west-2.amazonaws.com/AnInvalidName/mykeyname')
+        assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/AnInvalidName/mykeyname'
 
     def test_get_object_non_dns_name_classic(self):
         self.region_name = 'us-east-1'
@@ -174,8 +157,7 @@ class TestS3Addressing(BaseSessionTest):
             'Key': 'mykeyname'
         }
         prepared_request = self.get_prepared_request('get_object', params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3.amazonaws.com/AnInvalidName/mykeyname')
+        assert prepared_request.url == 'https://s3.amazonaws.com/AnInvalidName/mykeyname'
 
     def test_get_object_ip_address_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -183,9 +165,7 @@ class TestS3Addressing(BaseSessionTest):
             'Bucket': '192.168.5.4',
             'Key': 'mykeyname'}
         prepared_request = self.get_prepared_request('get_object', params)
-        self.assertEqual(
-            prepared_request.url,
-            'https://s3.us-west-2.amazonaws.com/192.168.5.4/mykeyname')
+        assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/192.168.5.4/mykeyname'
 
     def test_get_object_almost_an_ip_address_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -193,12 +173,10 @@ class TestS3Addressing(BaseSessionTest):
             'Bucket': '192.168.5.256',
             'Key': 'mykeyname'}
         prepared_request = self.get_prepared_request('get_object', params)
-        self.assertEqual(
-            prepared_request.url,
-            'https://s3.us-west-2.amazonaws.com/192.168.5.256/mykeyname')
+        assert prepared_request.url == 'https://s3.us-west-2.amazonaws.com/192.168.5.256/mykeyname'
 
     def test_invalid_endpoint_raises_exception(self):
-        with six.assertRaisesRegex(self, ValueError, 'Invalid region'):
+        with pytest.raises(ValueError, match='Invalid region'):
             self.session.create_client('s3', 'Invalid region')
 
     def test_non_existent_region(self):
@@ -207,7 +185,7 @@ class TestS3Addressing(BaseSessionTest):
         client = self.session.create_client('s3', 'us-west-111')
         # Then the default endpoint heuristic will apply and we'll
         # get the region name as specified.
-        self.assertEqual(client.meta.region_name, 'us-west-111')
+        assert client.meta.region_name == 'us-west-111'
         # Why not fixed this?  Well backwards compatibility for one thing.
         # The other reason is because it was intended to accommodate this
         # use case.  Let's say I have us-west-2 set as my default region,
@@ -216,8 +194,8 @@ class TestS3Addressing(BaseSessionTest):
         client = self.session.create_client('iam', 'us-west-2')
         # Instead of giving the user an error, we should instead give
         # them the partition-global endpoint.
-        self.assertEqual(client.meta.region_name, 'aws-global')
+        assert client.meta.region_name == 'aws-global'
         # But if they request an endpoint that we *do* know about, we use
         # that specific endpoint.
         client = self.session.create_client('iam', 'aws-us-gov-global')
-        self.assertEqual(client.meta.region_name, 'aws-us-gov-global')
+        assert client.meta.region_name == 'aws-us-gov-global'

@@ -1,4 +1,5 @@
 import unittest
+import pytest
 
 from botocore import exceptions as botocore_exceptions
 from botocore.vendored.requests import exceptions as requests_exceptions
@@ -13,9 +14,9 @@ EXCEPTION_MAPPING = [
 ]
 
 
-class TestHttpClientExceptionMapping(unittest.TestCase):
-    def test_http_client_exception_mapping(self):
-        for new_exception, old_exception in EXCEPTION_MAPPING:
-            with self.assertRaises(old_exception):
-                raise new_exception(endpoint_url=None, proxy_url=None,
-                                    error=None)
+class TestHttpClientExceptionMapping(object):
+    @pytest.mark.parametrize("new_exception, old_exception", EXCEPTION_MAPPING)
+    def test_http_client_exception_mapping(self, new_exception, old_exception):
+        with pytest.raises(old_exception):
+            raise new_exception(endpoint_url=None, proxy_url=None,
+                                error=None)

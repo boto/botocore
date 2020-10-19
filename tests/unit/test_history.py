@@ -82,9 +82,9 @@ class TestHistoryRecorder(unittest.TestCase):
 class TestGetHistoryRecorder(unittest.TestCase):
     def test_can_get_history_recorder(self):
         recorder = get_global_history_recorder()
-        self.assertTrue(isinstance(recorder, HistoryRecorder))
+        assert isinstance(recorder, HistoryRecorder)
 
     def test_does_reuse_history_recorder(self):
         recorder_1 = get_global_history_recorder()
         recorder_2 = get_global_history_recorder()
-        self.assertIs(recorder_1, recorder_2)
+        assert recorder_1 is recorder_2

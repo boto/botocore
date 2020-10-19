@@ -13,6 +13,7 @@
 from tests import mock
 import datetime
 import json
+import pytest
 
 from dateutil.tz import tzutc
 
@@ -50,13 +51,13 @@ class BaseSignerTest(unittest.TestCase):
 class TestSigner(BaseSignerTest):
 
     def test_region_name(self):
-        self.assertEqual(self.signer.region_name, 'region_name')
+        assert self.signer.region_name == 'region_name'
 
     def test_signature_version(self):
-        self.assertEqual(self.signer.signature_version, 'v4')
+        assert self.signer.signature_version == 'v4'
 
     def test_signing_name(self):
-        self.assertEqual(self.signer.signing_name, 'signing_name')
+        assert self.signer.signing_name == 'signing_name'
 
     def test_region_required_for_sigv4(self):
         self.signer = RequestSigner(
@@ -64,7 +65,7 @@ class TestSigner(BaseSignerTest):
             self.credentials, self.emitter
         )
 
-        with self.assertRaises(NoRegionError):
+        with pytest.raises(NoRegionError):
             self.signer.sign('operation_name', self.request)
 
     def test_get_auth(self):
@@ -73,7 +74,7 @@ class TestSigner(BaseSignerTest):
                              {'v4': auth_cls}):
             auth = self.signer.get_auth('service_name', 'region_name')
 
-            self.assertEqual(auth, auth_cls.return_value)
+            assert auth == auth_cls.return_value
             auth_cls.assert_called_with(
                 credentials=self.fixed_credentials,
                 service_name='service_name',
@@ -86,14 +87,14 @@ class TestSigner(BaseSignerTest):
             auth = self.signer.get_auth(
                 'service_name', 'region_name', signature_version='v4-custom')
 
-            self.assertEqual(auth, auth_cls.return_value)
+            assert auth == auth_cls.return_value
             auth_cls.assert_called_with(
                 credentials=self.fixed_credentials,
                 service_name='service_name',
                 region_name='region_name')
 
     def test_get_auth_bad_override(self):
-        with self.assertRaises(UnknownSignatureVersionError):
+        with pytest.raises(UnknownSignatureVersionError):
             self.signer.get_auth('service_name', 'region_name',
                                  signature_version='bad')
 
@@ -208,7 +209,7 @@ class TestSigner(BaseSignerTest):
         url = self.signer.generate_presigned_url(
             request_dict, 'operation_name')
 
-        self.assertEqual(url, 'https://foo.com')
+        assert url == 'https://foo.com'
 
     def test_generate_presigned_url(self):
         auth = mock.Mock()
@@ -229,7 +230,7 @@ class TestSigner(BaseSignerTest):
         auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name', expires=3600)
-        self.assertEqual(presigned_url, 'https://foo.com')
+        assert presigned_url == 'https://foo.com'
 
     def test_generate_presigned_url_with_region_override(self):
         auth = mock.Mock()
@@ -251,7 +252,7 @@ class TestSigner(BaseSignerTest):
         auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='us-west-2',
             service_name='signing_name', expires=3600)
-        self.assertEqual(presigned_url, 'https://foo.com')
+        assert presigned_url == 'https://foo.com'
 
     def test_generate_presigned_url_with_exipres_in(self):
         auth = mock.Mock()
@@ -273,7 +274,7 @@ class TestSigner(BaseSignerTest):
             credentials=self.fixed_credentials,
             region_name='region_name',
             expires=900, service_name='signing_name')
-        self.assertEqual(presigned_url, 'https://foo.com')
+        assert presigned_url == 'https://foo.com'
 
     def test_presigned_url_throws_unsupported_signature_error(self):
         request_dict = {
@@ -287,7 +288,7 @@ class TestSigner(BaseSignerTest):
         self.signer = RequestSigner(
             ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
-        with self.assertRaises(UnsupportedSignatureVersionError):
+        with pytest.raises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_url(
                 request_dict, operation_name='foo')
 
@@ -305,7 +306,7 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth_cls}):
             auth = self.signer.get_auth('service_name', 'region_name')
-            self.assertEqual(auth, auth_cls.return_value)
+            assert auth == auth_cls.return_value
             # Note we're called with 'foo', 'bar', 'baz', and *not*
             # 'a', 'b', 'c'.
             auth_cls.assert_called_with(
@@ -344,8 +345,8 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
             self.signer.sign('operation_name', self.request,
                              signing_type='standard')
-        self.assertFalse(post_auth.called)
-        self.assertFalse(query_auth.called)
+        assert not post_auth.called
+        assert not query_auth.called
         auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='signing_name',
@@ -364,8 +365,8 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
             self.signer.sign('operation_name', self.request,
                              signing_type='presign-url')
-        self.assertFalse(post_auth.called)
-        self.assertFalse(auth.called)
+        assert not post_auth.called
+        assert not auth.called
         query_auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='signing_name',
@@ -384,8 +385,8 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
             self.signer.sign('operation_name', self.request,
                              signing_type='presign-post')
-        self.assertFalse(auth.called)
-        self.assertFalse(query_auth.called)
+        assert not auth.called
+        assert not query_auth.called
         post_auth.assert_called_with(
             credentials=ReadOnlyCredentials('key', 'secret', None),
             service_name='signing_name',
@@ -483,7 +484,7 @@ class TestSigner(BaseSignerTest):
             credentials=self.fixed_credentials,
             region_name='region_name',
             expires=3600, service_name='foo')
-        self.assertEqual(presigned_url, 'https://foo.com')
+        assert presigned_url == 'https://foo.com'
 
     def test_unknown_signer_raises_unknown_on_standard(self):
         auth = mock.Mock()
@@ -492,7 +493,7 @@ class TestSigner(BaseSignerTest):
         }
         self.emitter.emit_until_response.return_value = (None, 'custom')
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            with self.assertRaises(UnknownSignatureVersionError):
+            with pytest.raises(UnknownSignatureVersionError):
                 self.signer.sign('operation_name', self.request,
                                  signing_type='standard')
 
@@ -503,11 +504,11 @@ class TestSigner(BaseSignerTest):
         }
         self.emitter.emit_until_response.return_value = (None, 'custom')
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            with self.assertRaises(UnsupportedSignatureVersionError):
+            with pytest.raises(UnsupportedSignatureVersionError):
                 self.signer.sign('operation_name', self.request,
                                  signing_type='presign-url')
 
-            with self.assertRaises(UnsupportedSignatureVersionError):
+            with pytest.raises(UnsupportedSignatureVersionError):
                 self.signer.sign('operation_name', self.request,
                                  signing_type='presign-post')
 
@@ -525,8 +526,8 @@ class TestCloudfrontSigner(BaseSignerTest):
         expected = (
             '{"Statement":[{"Resource":"foo",'
             '"Condition":{"DateLessThan":{"AWS:EpochTime":1451606400}}}]}')
-        self.assertEqual(json.loads(policy), json.loads(expected))
-        self.assertEqual(policy, expected)  # This is to ensure the right order
+        assert json.loads(policy) == json.loads(expected)
+        assert policy == expected  # This is to ensure the right order
 
     def test_build_custom_policy(self):
         policy = self.signer.build_policy(
@@ -543,7 +544,7 @@ class TestCloudfrontSigner(BaseSignerTest):
                 },
             }]
         }
-        self.assertEqual(json.loads(policy), expected)
+        assert json.loads(policy) == expected
 
     def test_generate_presign_url_with_expire_time(self):
         signed_url = self.signer.generate_presigned_url(
@@ -612,15 +613,14 @@ class TestS3PostPresigner(BaseSignerTest):
         self.auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name')
-        self.assertEqual(self.add_auth.call_count, 1)
+        assert self.add_auth.call_count == 1
         ref_request = self.add_auth.call_args[0][0]
         ref_policy = ref_request.context['s3-presign-post-policy']
-        self.assertEqual(ref_policy['expiration'], '2014-03-10T18:02:55Z')
-        self.assertEqual(ref_policy['conditions'], [])
+        assert ref_policy['expiration'] == '2014-03-10T18:02:55Z'
+        assert ref_policy['conditions'] == []
 
-        self.assertEqual(post_form_args['url'],
-                         'https://s3.amazonaws.com/mybucket')
-        self.assertEqual(post_form_args['fields'], {})
+        assert post_form_args['url'] == 'https://s3.amazonaws.com/mybucket'
+        assert post_form_args['fields'] == {}
 
     def test_generate_presigned_post_emits_choose_signer(self):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
@@ -666,7 +666,7 @@ class TestS3PostPresigner(BaseSignerTest):
             's3-query': auth
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
-            with self.assertRaises(UnsupportedSignatureVersionError):
+            with pytest.raises(UnsupportedSignatureVersionError):
                 self.signer.generate_presigned_post(self.request_dict)
 
     def test_generate_unsigned_post(self):
@@ -677,7 +677,7 @@ class TestS3PostPresigner(BaseSignerTest):
             post_form_args = self.signer.generate_presigned_post(
                 self.request_dict)
         expected = {'fields': {}, 'url': 'https://s3.amazonaws.com/mybucket'}
-        self.assertEqual(post_form_args, expected)
+        assert post_form_args == expected
 
     def test_generate_presigned_post_with_conditions(self):
         conditions = [
@@ -691,10 +691,10 @@ class TestS3PostPresigner(BaseSignerTest):
         self.auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name')
-        self.assertEqual(self.add_auth.call_count, 1)
+        assert self.add_auth.call_count == 1
         ref_request = self.add_auth.call_args[0][0]
         ref_policy = ref_request.context['s3-presign-post-policy']
-        self.assertEqual(ref_policy['conditions'], conditions)
+        assert ref_policy['conditions'] == conditions
 
     def test_generate_presigned_post_with_region_override(self):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
@@ -718,7 +718,7 @@ class TestS3PostPresigner(BaseSignerTest):
             ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
-        with self.assertRaises(UnsupportedSignatureVersionError):
+        with pytest.raises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_post(request_dict)
 
 
@@ -778,11 +778,11 @@ class TestGenerateUrl(unittest.TestCase):
             operation_name='GetObject')
 
     def test_generate_presigned_url_unknown_method_name(self):
-        with self.assertRaises(UnknownClientMethodError):
+        with pytest.raises(UnknownClientMethodError):
             self.client.generate_presigned_url('getobject')
 
     def test_generate_presigned_url_missing_required_params(self):
-        with self.assertRaises(ParamValidationError):
+        with pytest.raises(ParamValidationError):
             self.client.generate_presigned_url('get_object')
 
     def test_generate_presigned_url_expires(self):
@@ -826,13 +826,10 @@ class TestGenerateUrl(unittest.TestCase):
         events_emitted = [
             emit_call[0][0] for emit_call in emitter.emit.call_args_list
         ]
-        self.assertEqual(
-            events_emitted,
-            [
+        assert events_emitted == [
                 'provide-client-params.s3.GetObject',
                 'before-parameter-build.s3.GetObject'
             ]
-        )
 
     def test_generate_presign_url_emits_is_presign_in_context(self):
         emitter = mock.Mock(HierarchicalEmitter)
@@ -844,11 +841,9 @@ class TestGenerateUrl(unittest.TestCase):
             emit_call[1] for emit_call in emitter.emit.call_args_list
         ]
         for kwargs in kwargs_emitted:
-            self.assertTrue(
-                kwargs.get('context', {}).get('is_presign_request'),
+            assert kwargs.get('context', {}).get('is_presign_request'), (
                 'The context did not have is_presign_request set to True for '
-                'the following kwargs emitted: %s' % kwargs
-            )
+                'the following kwargs emitted: %s' % kwargs)
 
 
 class TestGeneratePresignedPost(unittest.TestCase):
@@ -871,15 +866,11 @@ class TestGeneratePresignedPost(unittest.TestCase):
         request_dict = post_kwargs['request_dict']
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
-        self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
-        self.assertEqual(post_kwargs['expires_in'], 3600)
-        self.assertEqual(
-            conditions,
-            [{'bucket': 'mybucket'}, {'key': 'mykey'}])
-        self.assertEqual(
-            fields,
-            {'key': 'mykey'})
+        assert request_dict['url'] == 'https://s3.amazonaws.com/mybucket'
+        assert post_kwargs['expires_in'] == 3600
+        assert conditions == [
+            {'bucket': 'mybucket'}, {'key': 'mykey'}]
+        assert fields == {'key': 'mykey'}
 
     def test_generate_presigned_post_with_filename(self):
         self.key = 'myprefix/${filename}'
@@ -889,15 +880,11 @@ class TestGeneratePresignedPost(unittest.TestCase):
         request_dict = post_kwargs['request_dict']
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
-        self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
-        self.assertEqual(post_kwargs['expires_in'], 3600)
-        self.assertEqual(
-            conditions,
-            [{'bucket': 'mybucket'}, ['starts-with', '$key', 'myprefix/']])
-        self.assertEqual(
-            fields,
-            {'key': 'myprefix/${filename}'})
+        assert request_dict['url'] == 'https://s3.amazonaws.com/mybucket'
+        assert post_kwargs['expires_in'] == 3600
+        assert conditions == [
+            {'bucket': 'mybucket'}, ['starts-with', '$key', 'myprefix/']]
+        assert fields == {'key': 'myprefix/${filename}'}
 
     def test_generate_presigned_post_expires(self):
         self.client.generate_presigned_post(
@@ -906,15 +893,11 @@ class TestGeneratePresignedPost(unittest.TestCase):
         request_dict = post_kwargs['request_dict']
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
-        self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
-        self.assertEqual(post_kwargs['expires_in'], 50)
-        self.assertEqual(
-            conditions,
-            [{'bucket': 'mybucket'}, {'key': 'mykey'}])
-        self.assertEqual(
-            fields,
-            {'key': 'mykey'})
+        assert request_dict['url'] == 'https://s3.amazonaws.com/mybucket'
+        assert post_kwargs['expires_in'] == 50 
+        assert conditions == [
+            {'bucket': 'mybucket'}, {'key': 'mykey'}]
+        assert fields == {'key': 'mykey'}
 
     def test_generate_presigned_post_with_prefilled(self):
         conditions = [{'acl': 'public-read'}]
@@ -923,24 +906,22 @@ class TestGeneratePresignedPost(unittest.TestCase):
         self.client.generate_presigned_post(
             self.bucket, self.key, Fields=fields, Conditions=conditions)
 
-        self.assertEqual(fields, {'acl': 'public-read'})
+        assert fields == {'acl': 'public-read'}
 
         _, post_kwargs = self.presign_post_mock.call_args
         request_dict = post_kwargs['request_dict']
         fields = post_kwargs['fields']
         conditions = post_kwargs['conditions']
-        self.assertEqual(
-            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
-        self.assertEqual(
-            conditions,
-            [{'acl': 'public-read'}, {'bucket': 'mybucket'}, {'key': 'mykey'}])
-        self.assertEqual(fields['acl'], 'public-read')
-        self.assertEqual(
-            fields, {'key': 'mykey', 'acl': 'public-read'})
+        assert request_dict['url'] == 'https://s3.amazonaws.com/mybucket'
+        assert conditions == [
+                {'acl': 'public-read'}, {'bucket': 'mybucket'}, {'key': 'mykey'}]
+            
+        assert fields['acl'] == 'public-read'
+        assert fields == {'key': 'mykey', 'acl': 'public-read'}
 
     def test_generate_presigned_post_non_s3_client(self):
         self.client = self.session.create_client('ec2', 'us-west-2')
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             self.client.generate_presigned_post()
 
 
@@ -987,7 +968,7 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         result = generate_db_auth_token(
             self.client, hostname, port, username, Region=region)
 
-        self.assertIn(region, result)
+        assert region in result
         # The hostname won't be changed even if a different region is specified
-        self.assertIn(hostname, result)
+        assert hostname in result
 

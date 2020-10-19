@@ -26,7 +26,7 @@ class TestRetryIDPCommunicationError(unittest.TestCase):
                 status_code=400, raw=None, headers={},
                 url='https://foo'),
             caught_exception=None, )
-        self.assertFalse(self.checker.is_retryable(context))
+        assert not self.checker.is_retryable(context)
 
     def test_can_retry_idp_communication_error(self):
         context = standard.RetryContext(
@@ -38,7 +38,7 @@ class TestRetryIDPCommunicationError(unittest.TestCase):
                 status_code=400, raw=None, headers={},
                 url='https://foo'),
             caught_exception=None, )
-        self.assertTrue(self.checker.is_retryable(context))
+        assert self.checker.is_retryable(context) is True
 
     def test_not_idp_communication_error(self):
         context = standard.RetryContext(
@@ -50,7 +50,7 @@ class TestRetryIDPCommunicationError(unittest.TestCase):
                 status_code=400, raw=None, headers={},
                 url='https://foo'),
             caught_exception=None, )
-        self.assertFalse(self.checker.is_retryable(context))
+        assert not self.checker.is_retryable(context)
 
 
 class TestRetryDDBChecksumError(unittest.TestCase):
@@ -74,7 +74,7 @@ class TestRetryDDBChecksumError(unittest.TestCase):
                 url='https://foo'),
             caught_exception=None,
         )
-        self.assertFalse(self.checker.is_retryable(context))
+        assert not self.checker.is_retryable(context)
 
     def test_checksum_matches(self):
         context = standard.RetryContext(
@@ -88,7 +88,7 @@ class TestRetryDDBChecksumError(unittest.TestCase):
                 url='https://foo'),
             caught_exception=None
         )
-        self.assertFalse(self.checker.is_retryable(context))
+        assert not self.checker.is_retryable(context)
 
     def test_checksum_not_matches(self):
         context = standard.RetryContext(
@@ -102,7 +102,7 @@ class TestRetryDDBChecksumError(unittest.TestCase):
                 url='https://foo'),
             caught_exception=None
         )
-        self.assertTrue(self.checker.is_retryable(context))
+        assert self.checker.is_retryable(context) is True
 
     def test_checksum_check_only_for_dynamodb(self):
         context = standard.RetryContext(
@@ -116,4 +116,4 @@ class TestRetryDDBChecksumError(unittest.TestCase):
                 url='https://foo'),
             caught_exception=None
         )
-        self.assertFalse(self.checker.is_retryable(context))
+        assert not self.checker.is_retryable(context)

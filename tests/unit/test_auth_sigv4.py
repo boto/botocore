@@ -30,4 +30,4 @@ class TestSigV4Auth(unittest.TestCase):
         expected_host = 's5.us-weast-2.amazonaws.com'
         request = AWSRequest(method='GET', url=endpoint)
         headers_to_sign = self.sigv4.headers_to_sign(request)
-        self.assertEqual(expected_host, headers_to_sign.get('host'))
+        assert expected_host == headers_to_sign.get('host')

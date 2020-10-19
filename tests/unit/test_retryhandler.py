@@ -14,6 +14,7 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
+import pytest
 
 from tests import mock
 
@@ -36,15 +37,15 @@ HTTP_200_RESPONSE.status_code = 200
 class TestRetryCheckers(unittest.TestCase):
     def assert_should_be_retried(self, response, attempt_number=1,
                                  caught_exception=None):
-        self.assertTrue(self.checker(
+        assert self.checker(
             response=response, attempt_number=attempt_number,
-            caught_exception=caught_exception))
+            caught_exception=caught_exception)
 
     def assert_should_not_be_retried(self, response, attempt_number=1,
                                      caught_exception=None):
-        self.assertFalse(self.checker(
+        assert not self.checker(
             response=response, attempt_number=attempt_number,
-            caught_exception=caught_exception))
+            caught_exception=caught_exception)
 
     def test_status_code_checker(self):
         self.checker = retryhandler.HTTPStatusCodeChecker(500)
@@ -64,7 +65,7 @@ class TestRetryCheckers(unittest.TestCase):
         # max attempts so we should return False.
         self.assert_should_not_be_retried(
             (HTTP_500_RESPONSE, response), attempt_number=3)
-        self.assertTrue(response['ResponseMetadata']['MaxAttemptsReached'])
+        assert response['ResponseMetadata']['MaxAttemptsReached']
 
     def test_max_attempts_successful(self):
         self.checker = retryhandler.MaxAttemptsDecorator(
@@ -122,7 +123,7 @@ class TestRetryCheckers(unittest.TestCase):
 
     def test_value_error_raised_when_missing_response_and_exception(self):
         self.checker = retryhandler.ExceptionRaiser()
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.checker(1, response=None, caught_exception=None)
 
 
@@ -172,47 +173,47 @@ class TestCreateRetryConfiguration(unittest.TestCase):
     def test_create_retry_single_checker_service_level(self):
         checker = retryhandler.create_checker_from_retry_config(
             self.retry_config, operation_name=None)
-        self.assertIsInstance(checker, retryhandler.MaxAttemptsDecorator)
+        assert isinstance(checker, retryhandler.MaxAttemptsDecorator)
         # We're reaching into internal fields here, but only to check
         # that the object is created properly.
-        self.assertEqual(checker._max_attempts, 5)
-        self.assertIsInstance(checker._checker,
+        assert checker._max_attempts == 5
+        assert isinstance(checker._checker,
                               retryhandler.ServiceErrorCodeChecker)
-        self.assertEqual(checker._checker._error_code, 'Throttling')
-        self.assertEqual(checker._checker._status_code, 400)
+        assert checker._checker._error_code == 'Throttling'
+        assert checker._checker._status_code == 400
 
     def test_create_retry_for_operation(self):
         checker = retryhandler.create_checker_from_retry_config(
             self.retry_config, operation_name='OperationFoo')
-        self.assertIsInstance(checker, retryhandler.MaxAttemptsDecorator)
-        self.assertEqual(checker._max_attempts, 5)
-        self.assertIsInstance(checker._checker,
+        assert isinstance(checker, retryhandler.MaxAttemptsDecorator)
+        assert checker._max_attempts == 5
+        assert isinstance(checker._checker,
                               retryhandler.MultiChecker)
 
     def test_retry_with_socket_errors(self):
         checker = retryhandler.create_checker_from_retry_config(
             self.retry_config, operation_name='OperationBar')
-        self.assertIsInstance(checker, retryhandler.BaseChecker)
+        assert isinstance(checker, retryhandler.BaseChecker)
         all_checkers = checker._checker._checkers
-        self.assertIsInstance(all_checkers[0],
+        assert isinstance(all_checkers[0],
                               retryhandler.ServiceErrorCodeChecker)
-        self.assertIsInstance(all_checkers[1],
+        assert isinstance(all_checkers[1],
                               retryhandler.ExceptionRaiser)
 
     def test_create_retry_handler_with_socket_errors(self):
         handler = retryhandler.create_retry_handler(
             self.retry_config, operation_name='OperationBar')
         exception = EndpointConnectionError(endpoint_url='')
-        with self.assertRaises(EndpointConnectionError):
+        with pytest.raises(EndpointConnectionError):
             handler(response=None, attempts=10,
                     caught_exception=exception)
         # No connection error raised because attempts < max_attempts.
         sleep_time = handler(response=None, attempts=1,
                              caught_exception=exception)
-        self.assertEqual(sleep_time, 1)
+        assert sleep_time == 1
         # But any other exception should be raised even if
         # attempts < max_attempts.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             sleep_time = handler(response=None, attempts=1,
                                 caught_exception=ValueError())
 
@@ -223,16 +224,16 @@ class TestCreateRetryConfiguration(unittest.TestCase):
             self.retry_config, operation_name='OperationBar')
         sleep_time = handler(response=None, attempts=1,
                              caught_exception=ReadTimeoutError(endpoint_url=''))
-        self.assertEqual(sleep_time, 1)
+        assert sleep_time == 1
 
     def test_create_retry_handler_with_no_operation(self):
         handler = retryhandler.create_retry_handler(
             self.retry_config, operation_name=None)
-        self.assertIsInstance(handler, retryhandler.RetryHandler)
+        assert isinstance(handler, retryhandler.RetryHandler)
         # No good way to test for the delay function as the action
         # other than to just invoke it.
-        self.assertEqual(handler._action(attempts=2), 2)
-        self.assertEqual(handler._action(attempts=3), 4)
+        assert handler._action(attempts=2) == 2
+        assert handler._action(attempts=3) == 4
 
     def test_crc32_check_propogates_error(self):
         handler = retryhandler.create_retry_handler(
@@ -244,9 +245,9 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         http_response.headers = {'x-amz-crc32': 2356372768}
         http_response.content = b'foo'
         # The first 10 attempts we get a retry.
-        self.assertEqual(handler(response=(http_response, {}), attempts=1,
-                                 caught_exception=None), 1)
-        with self.assertRaises(ChecksumError):
+        assert handler(response=(http_response, {}), attempts=1,
+                                 caught_exception=None) == 1
+        with pytest.raises(ChecksumError):
             handler(response=(http_response, {}), attempts=10,
                     caught_exception=None)
 
@@ -260,14 +261,10 @@ class TestRetryHandler(unittest.TestCase):
         handler = retryhandler.RetryHandler(checker, delay_function)
         response = (HTTP_500_RESPONSE, {})
 
-        self.assertEqual(
-            handler(response=response, attempts=1, caught_exception=None), 1)
-        self.assertEqual(
-            handler(response=response, attempts=2, caught_exception=None), 2)
-        self.assertEqual(
-            handler(response=response, attempts=3, caught_exception=None), 4)
-        self.assertEqual(
-            handler(response=response, attempts=4, caught_exception=None), 8)
+        assert handler(response=response, attempts=1, caught_exception=None) == 1
+        assert handler(response=response, attempts=2, caught_exception=None) == 2
+        assert handler(response=response, attempts=3, caught_exception=None) == 4
+        assert handler(response=response, attempts=4, caught_exception=None) == 8
 
     def test_none_response_when_no_matches(self):
         delay_function = retryhandler.create_exponential_delay_function( 1, 2)
@@ -275,8 +272,7 @@ class TestRetryHandler(unittest.TestCase):
         handler = retryhandler.RetryHandler(checker, delay_function)
         response = (HTTP_200_RESPONSE, {})
 
-        self.assertIsNone(handler(response=response, attempts=1,
-                                  caught_exception=None))
+        assert handler(response=response, attempts=1, caught_exception=None) is None
 
 
 class TestCRC32Checker(unittest.TestCase):
@@ -290,18 +286,18 @@ class TestCRC32Checker(unittest.TestCase):
         # pass the crc32 check.
         http_response.headers = {'x-amz-crc32': 2356372769}
         http_response.content = b'foo'
-        self.assertIsNone(self.checker(
+        assert self.checker(
             response=(http_response, {}), attempt_number=1,
-            caught_exception=None))
+            caught_exception=None) is None
 
     def test_crc32_missing(self):
         # It's not an error is the crc32 header is missing.
         http_response = mock.Mock()
         http_response.status_code = 200
         http_response.headers = {}
-        self.assertIsNone(self.checker(
+        assert self.checker(
             response=(http_response, {}), attempt_number=1,
-            caught_exception=None))
+            caught_exception=None) is None
 
     def test_crc32_check_fails(self):
         http_response = mock.Mock()
@@ -310,26 +306,26 @@ class TestCRC32Checker(unittest.TestCase):
         # fail the crc32 check.
         http_response.headers = {'x-amz-crc32': 2356372768}
         http_response.content = b'foo'
-        with self.assertRaises(ChecksumError):
+        with pytest.raises(ChecksumError):
             self.checker(response=(http_response, {}), attempt_number=1,
                          caught_exception=None)
 
 
 class TestDelayExponential(unittest.TestCase):
     def test_delay_with_numeric_base(self):
-        self.assertEqual(retryhandler.delay_exponential(base=3,
+        assert retryhandler.delay_exponential(base=3,
                                                         growth_factor=2,
-                                                        attempts=3), 12)
+                                                        attempts=3) == 12
 
     def test_delay_with_rand_string(self):
         delay = retryhandler.delay_exponential(base='rand',
                                                growth_factor=2,
                                                attempts=3)
         # 2 ** (3 - 1) == 4, so the retry is between 0, 4.
-        self.assertTrue(0 <= delay <= 4)
+        assert 0 <= delay <= 4
 
     def test_value_error_raised_with_non_positive_number(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             retryhandler.delay_exponential(
                 base=-1, growth_factor=2, attempts=3)
 

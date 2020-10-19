@@ -22,10 +22,10 @@ class BaseTestValidate(unittest.TestCase):
         # Also, this assumes the input shape name is "Input".
         errors_found = self.get_validation_error_message(
             given_shapes, input_params)
-        self.assertTrue(errors_found.has_errors())
+        assert errors_found.has_errors()
         error_message = errors_found.generate_report()
         for error in errors:
-            self.assertIn(error, error_message)
+            assert error in error_message
 
     def get_validation_error_message(self, given_shapes, input_params):
         s = ShapeResolver(given_shapes)
@@ -115,7 +115,7 @@ class TestValidateJSONValueTrait(BaseTestValidate):
                 'json': {'data': [1, 2.3, '3'], 'unicode': u'\u2713'}
             })
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_validate_jsonvalue_string(self):
         self.shapes = {
@@ -203,14 +203,14 @@ class TestValidateTypes(BaseTestValidate):
             given_shapes=self.shapes,
             input_params={'Timestamp': datetime.now(),})
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_datetime_accepts_string_timestamp(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={'Timestamp': '2014-01-01 12:00:00'})
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_can_handle_none_datetimes(self):
         # This is specifically to test a workaround a bug in dateutil
@@ -220,7 +220,7 @@ class TestValidateTypes(BaseTestValidate):
             given_shapes=self.shapes,
             input_params={'Timestamp': None})
         error_msg = errors.generate_report()
-        self.assertIn('Invalid type for parameter Timestamp', error_msg)
+        assert 'Invalid type for parameter Timestamp' in error_msg
 
 
 class TestValidateRanges(BaseTestValidate):
@@ -292,14 +292,14 @@ class TestValidateRanges(BaseTestValidate):
             },
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_within_range(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={'Int': 10})
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_string_min_length_contraint(self):
         self.assert_has_validation_errors(
@@ -320,7 +320,7 @@ class TestValidateRanges(BaseTestValidate):
             },
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_list_min_length_constraint(self):
         self.assert_has_validation_errors(
@@ -341,7 +341,7 @@ class TestValidateRanges(BaseTestValidate):
             },
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_only_min_value_specified(self):
         # min anx max don't have to both be provided.
@@ -365,7 +365,7 @@ class TestValidateRanges(BaseTestValidate):
             },
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
 
 class TestValidateMapType(BaseTestValidate):
@@ -432,7 +432,7 @@ class TestValidationFloatType(BaseTestValidate):
             given_shapes=self.shapes,
             input_params={'Float': decimal.Decimal('2.12345')})
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_decimal_still_validates_range(self):
         self.assert_has_validation_errors(
@@ -468,7 +468,7 @@ class TestValidateTypeBlob(BaseTestValidate):
             input_params={'Blob': b'12345'}
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_validates_bytearray(self):
         errors = self.get_validation_error_message(
@@ -476,7 +476,7 @@ class TestValidateTypeBlob(BaseTestValidate):
             input_params={'Blob': bytearray(b'12345')},
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_validates_file_like_object(self):
         value = six.BytesIO(b'foo')
@@ -486,7 +486,7 @@ class TestValidateTypeBlob(BaseTestValidate):
             input_params={'Blob': value},
         )
         error_msg = errors.generate_report()
-        self.assertEqual(error_msg, '')
+        assert error_msg == ''
 
     def test_validate_type(self):
         self.assert_has_validation_errors(
