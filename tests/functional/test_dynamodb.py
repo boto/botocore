@@ -42,9 +42,9 @@ class TestDynamoDBEndpointDiscovery(BaseSessionTest):
             stubber.add_response(status=200, body=response_body)
             stubber.add_response(status=200, body=b'{}')
             self.client.describe_table(TableName='sometable')
-            self.assertEqual(len(self.http_stubber.requests), 2)
+            assert len(self.http_stubber.requests) == 2
             discover_request = self.http_stubber.requests[1]
-            self.assertEqual(discover_request.url, discovered_endpoint)
+            assert discover_request.url == discovered_endpoint
 
     def test_dynamodb_endpoint_discovery_disabled(self):
         self.config = Config(endpoint_discovery_enabled=False)
@@ -52,7 +52,7 @@ class TestDynamoDBEndpointDiscovery(BaseSessionTest):
         with self.http_stubber as stubber:
             stubber.add_response(status=200, body=b'{}')
             self.client.describe_table(TableName='sometable')
-            self.assertEqual(len(self.http_stubber.requests), 1)
+            assert len(self.http_stubber.requests) == 1
 
     def test_dynamodb_endpoint_discovery_no_config_default(self):
         self.config = None
@@ -60,4 +60,4 @@ class TestDynamoDBEndpointDiscovery(BaseSessionTest):
         with self.http_stubber as stubber:
             stubber.add_response(status=200, body=b'{}')
             self.client.describe_table(TableName='sometable')
-            self.assertEqual(len(self.http_stubber.requests), 1)
+            assert len(self.http_stubber.requests) == 1

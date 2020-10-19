@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
+import pytest
 
 from tests import ClientHTTPStubber, temporary_file
 from tests.functional import FunctionalSessionTest
@@ -63,19 +64,16 @@ class TestEndpointDiscovery(FunctionalSessionTest):
         self.environ['AWS_CONFIG_FILE'] = fileobj.name
 
     def assert_endpoint_discovery_used(self, stubber, discovered_endpoint):
-        self.assertEqual(len(stubber.requests), 2)
+        assert len(stubber.requests) == 2
         discover_request = stubber.requests[1]
-        self.assertEqual(discover_request.url, discovered_endpoint)
+        assert discover_request.url == discovered_endpoint
 
     def assert_discovery_skipped(self, stubber, operation):
-        self.assertEqual(len(stubber.requests), 1)
-        self.assertEqual(
-            stubber.requests[0].headers.get('X-Amz-Target'),
-            operation
-        )
+        assert len(stubber.requests) == 1
+        assert stubber.requests[0].headers.get('X-Amz-Target') == operation
 
     def assert_endpoint_used(self, actual_url, expected_url):
-        self.assertEqual(actual_url, expected_url)
+        assert actual_url == expected_url
 
     def test_endpoint_discovery_enabled(self):
         discovered_endpoint = 'https://discovered.domain'
@@ -100,7 +98,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
         client, http_stubber = self.create_client(config=config)
         with http_stubber as stubber:
             stubber.add_response(status=421, body=response_body)
-            with self.assertRaises(ClientError):
+            with pytest.raises(ClientError):
                 client.describe_table(TableName='sometable')
 
     def test_endpoint_discovery_disabled(self):
@@ -109,14 +107,14 @@ class TestEndpointDiscovery(FunctionalSessionTest):
         with http_stubber as stubber:
             stubber.add_response(status=200, body=b'{}')
             client.describe_table(TableName='sometable')
-            self.assertEqual(len(stubber.requests), 1)
+            assert len(stubber.requests) == 1
 
     def test_endpoint_discovery_no_config_default(self):
         client, http_stubber = self.create_client()
         with http_stubber as stubber:
             stubber.add_response(status=200, body=b'{}')
             client.describe_table(TableName='sometable')
-            self.assertEqual(len(stubber.requests), 1)
+            assert len(stubber.requests) == 1
 
     def test_endpoint_discovery_default_required_endpoint(self):
         discovered_endpoint = "https://discovered.domain"
@@ -144,7 +142,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
             service_name="test-discovery-endpoint", config=config
         )
         self.add_describe_endpoints_response(http_stubber, discovered_endpoint)
-        with self.assertRaises(EndpointDiscoveryRequired):
+        with pytest.raises(EndpointDiscoveryRequired):
             client.test_discovery_required(Foo="bar")
 
     def test_endpoint_discovery_required_with_custom_endpoint(self):
@@ -231,7 +229,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
         with http_stubber as stubber:
             stubber.add_response(status=200, body=b'{}')
             client.test_discovery_optional(Foo="bar")
-            self.assertEqual(len(stubber.requests), 1)
+            assert len(stubber.requests) == 1
 
     def test_endpoint_discovery_enabled_optional_endpoint(self):
         discovered_endpoint = 'https://discovered.domain'
@@ -257,7 +255,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
 
     def test_endpoint_discovery_enabled_with_random_string(self):
         config = Config(endpoint_discovery_enabled="bad value")
-        with self.assertRaises(InvalidEndpointDiscoveryConfigurationError):
+        with pytest.raises(InvalidEndpointDiscoveryConfigurationError):
             client, http_stubber = self.create_client(
                 service_name="test-discovery-endpoint", config=config
             )
@@ -304,7 +302,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
             service_name="test-discovery-endpoint"
         )
         self.add_describe_endpoints_response(http_stubber, discovered_endpoint)
-        with self.assertRaises(EndpointDiscoveryRequired):
+        with pytest.raises(EndpointDiscoveryRequired):
             client.test_discovery_required(Foo="bar")
 
     def test_endpoint_discovery_with_config_file_enabled(self):
@@ -339,7 +337,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
                 service_name="test-discovery-endpoint"
             )
             self.add_describe_endpoints_response(http_stubber, discovered_endpoint)
-            with self.assertRaises(EndpointDiscoveryRequired):
+            with pytest.raises(EndpointDiscoveryRequired):
                 client.test_discovery_required(Foo="bar")
 
     def test_endpoint_discovery_with_config_file_auto(self):

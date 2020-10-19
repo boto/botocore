@@ -34,7 +34,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_clients')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES
 
     def test_create_memory_clients_in_loop(self):
         # We need to first create clients and free then before
@@ -62,7 +62,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_clients')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES
 
     def test_create_single_waiter_memory_constant(self):
         self.cmd('create_waiter', 's3', 'bucket_exists')
@@ -73,7 +73,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_waiters')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES
 
     def test_create_memory_waiters_in_loop(self):
         # See ``test_create_memory_clients_in_loop`` to understand why
@@ -88,7 +88,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_waiters')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES
 
     def test_create_single_paginator_memory_constant(self):
         self.cmd('create_paginator', 's3', 'list_objects')
@@ -99,7 +99,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_paginators')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES
 
     def test_create_memory_paginators_in_loop(self):
         # See ``test_create_memory_clients_in_loop`` to understand why
@@ -114,4 +114,4 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('free_paginators')
         self.record_memory()
         start, end = self.memory_samples
-        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+        assert (end - start) < self.MAX_GROWTH_BYTES

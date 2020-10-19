@@ -31,4 +31,4 @@ class TestMachineLearning(BaseSessionTest):
                 PredictEndpoint=custom_endpoint
             )
             sent_request = self.http_stubber.requests[0]
-            self.assertEqual(sent_request.url, custom_endpoint)
+            assert sent_request.url == custom_endpoint

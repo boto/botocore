@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import contextlib
 import json
+import pytest
 from tests import BaseSessionTest, mock, ClientHTTPStubber
 
 from botocore.exceptions import ClientError
@@ -39,10 +40,9 @@ class BaseRetryTest(BaseSessionTest):
         with ClientHTTPStubber(client) as http_stubber:
             for _ in range(num_responses):
                 http_stubber.add_response(status=status, body=body)
-            with six.assertRaisesRegex(self,
-                    ClientError, 'reached max retries: %s' % num_retries):
+            with pytest.raises(ClientError, match='reached max retries: %s' % num_retries):
                 yield
-            self.assertEqual(len(http_stubber.requests), num_responses)
+            assert len(http_stubber.requests) == num_responses
 
 
 class TestLegacyRetry(BaseRetryTest):
@@ -183,8 +183,6 @@ class TestRetriesV2(BaseRetryTest):
         # verify by looking at the request metadata.
         with ClientHTTPStubber(client) as http_stubber:
             http_stubber.add_response(status=502, body=b'{}')
-            with self.assertRaises(ClientError) as e:
+            with pytest.raises(ClientError) as e:
                 client.list_tables()
-        self.assertTrue(
-            e.exception.response['ResponseMetadata'].get('RetryQuotaReached')
-        )
+                assert e.response['ResponseMetadata'].get('RetryQuotaReached')

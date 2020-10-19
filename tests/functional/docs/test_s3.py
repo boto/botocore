@@ -40,8 +40,7 @@ class TestS3Docs(BaseDocsFunctionalTest):
         for method_name in modified_methods:
             method_contents = self.get_method_document_block(
                 method_name, service_contents)
-            self.assertNotIn('ContentMD5=\'string\'',
-                             method_contents.decode('utf-8'))
+            assert 'ContentMD5=\'string\'' not in method_contents.decode('utf-8')
 
     def test_copy_source_documented_as_union_type(self):
         content  = self.get_docstring_for_method('s3', 'copy_object')

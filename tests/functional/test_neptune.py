@@ -21,9 +21,8 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
-        self.assertIn('PreSignedUrl', body)
-        self.assertNotIn('SourceRegion', body)
-
+        assert 'PreSignedUrl' in body
+        assert 'SourceRegion' not in body
     def test_create_db_cluster(self):
         params = {
             'DBClusterIdentifier': 'my-cluster',

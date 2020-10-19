@@ -49,15 +49,15 @@ class TestRecordStatementsInjections(BaseSessionTest):
             self.client.list_buckets()
 
         api_call_events = self._get_all_events_of_type('API_CALL')
-        self.assertEqual(len(api_call_events), 1)
+        assert len(api_call_events) == 1
         event = api_call_events[0]
         event_type, payload, source = event
-        self.assertEqual(payload, {
+        assert payload == {
                 'operation': u'ListBuckets',
                 'params': {},
                 'service': 's3'
-        })
-        self.assertEqual(source, 'BOTOCORE')
+        }
+        assert source == 'BOTOCORE'
 
     def test_does_record_http_request(self):
         self.http_stubber.add_response(body=self.s3_response_body)
@@ -65,30 +65,30 @@ class TestRecordStatementsInjections(BaseSessionTest):
             self.client.list_buckets()
 
         http_request_events = self._get_all_events_of_type('HTTP_REQUEST')
-        self.assertEqual(len(http_request_events), 1)
+        assert len(http_request_events) == 1
         event = http_request_events[0]
         event_type, payload, source = event
 
         method = payload['method']
-        self.assertEqual(method, u'GET')
+        assert method == u'GET'
 
         # The header values vary too much per request to verify them here.
         # Instead just check the presense of each expected header.
         headers = payload['headers']
         for expected_header in ['Authorization', 'User-Agent', 'X-Amz-Date',
                                 'X-Amz-Content-SHA256']:
-            self.assertIn(expected_header, headers)
+            assert expected_header in headers
 
         body = payload['body']
-        self.assertIsNone(body)
+        assert body is None
 
         streaming = payload['streaming']
-        self.assertEqual(streaming, False)
+        assert streaming == False
 
         url = payload['url']
-        self.assertEqual(url, 'https://s3.us-west-2.amazonaws.com/')
+        assert url == 'https://s3.us-west-2.amazonaws.com/'
 
-        self.assertEqual(source, 'BOTOCORE')
+        assert source == 'BOTOCORE'
 
     def test_does_record_http_response(self):
         self.http_stubber.add_response(body=self.s3_response_body)
@@ -96,19 +96,18 @@ class TestRecordStatementsInjections(BaseSessionTest):
             self.client.list_buckets()
 
         http_response_events = self._get_all_events_of_type('HTTP_RESPONSE')
-        self.assertEqual(len(http_response_events), 1)
+        assert len(http_response_events) == 1
         event = http_response_events[0]
         event_type, payload, source = event
 
-        self.assertEqual(payload, {
+        assert payload == {
                 'status_code': 200,
                 'headers': {},
                 'streaming': False,
                 'body': self.s3_response_body,
                 'context': {'operation_name': 'ListBuckets'}
             }
-        )
-        self.assertEqual(source, 'BOTOCORE')
+        assert source == 'BOTOCORE'
 
     def test_does_record_parsed_response(self):
         self.http_stubber.add_response(body=self.s3_response_body)
@@ -117,7 +116,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
 
         parsed_response_events = self._get_all_events_of_type(
             'PARSED_RESPONSE')
-        self.assertEqual(len(parsed_response_events), 1)
+        assert len(parsed_response_events) == 1
         event = parsed_response_events[0]
         event_type, payload, source = event
 
@@ -126,19 +125,19 @@ class TestRecordStatementsInjections(BaseSessionTest):
         # assert the interesting bits since mock can only assert if the args
         # all match exactly.
         owner = payload['Owner']
-        self.assertEqual(owner, {
+        assert owner == {
             'DisplayName': 'foo',
             'ID': 'd41d8cd98f00b204e9800998ecf8427e'
-        })
+        }
 
         buckets = payload['Buckets']
-        self.assertEqual(len(buckets), 1)
+        assert len(buckets) == 1
         bucket = buckets[0]
-        self.assertEqual(bucket['Name'], 'bar')
+        assert bucket['Name'] == 'bar'
 
         metadata = payload['ResponseMetadata']
-        self.assertEqual(metadata, {
+        assert metadata == {
             'HTTPHeaders': {},
             'HTTPStatusCode': 200,
             'RetryAttempts': 0
-        })
+        }

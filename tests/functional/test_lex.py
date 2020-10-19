@@ -54,7 +54,7 @@ class TestLex(BaseSessionTest):
             b' Signature='
             b'7f93fde5c36163dce6ee116fcfebab13474ab903782fea04c00bb1dedc3fc4cc'
         )
-        self.assertEqual(authorization, expected_authorization)
+        assert authorization == expected_authorization
 
         content_header = request.headers.get('x-amz-content-sha256')
-        self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')
+        assert content_header == b'UNSIGNED-PAYLOAD'

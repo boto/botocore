@@ -37,18 +37,17 @@ class S3ControlOperationTest(BaseSessionTest):
 
     def test_does_add_account_id_to_host(self):
         self.client.get_public_access_block(AccountId='123')
-        self.assertEqual(self.http_session_send_mock.call_count, 1)
+        assert self.http_session_send_mock.call_count == 1
         request = self.http_session_send_mock.call_args_list[0][0][0]
 
-        self.assertTrue(request.url.startswith(
-            'https://123.s3-control.us-west-2.amazonaws.com'))
+        assert request.url.startswith('https://123.s3-control.us-west-2.amazonaws.com')
 
     def test_does_remove_account_id_from_headers(self):
         self.client.get_public_access_block(AccountId='123')
-        self.assertEqual(self.http_session_send_mock.call_count, 1)
+        assert self.http_session_send_mock.call_count == 1
         request = self.http_session_send_mock.call_args_list[0][0][0]
 
-        self.assertIn('x-amz-account-id', request.headers)
+        assert 'x-amz-account-id' in request.headers
 
     def test_does_support_dualstack_endpoint(self):
         # Re-create the client with the use_dualstack_endpoint configuration
@@ -60,7 +59,6 @@ class S3ControlOperationTest(BaseSessionTest):
         )
         self.client.get_public_access_block(AccountId='123')
 
-        self.assertEqual(self.http_session_send_mock.call_count, 1)
+        assert self.http_session_send_mock.call_count == 1
         request = self.http_session_send_mock.call_args_list[0][0][0]
-        self.assertTrue(request.url.startswith(
-            'https://123.s3-control.dualstack.us-west-2.amazonaws.com'))
+        assert request.url.startswith('https://123.s3-control.dualstack.us-west-2.amazonaws.com')

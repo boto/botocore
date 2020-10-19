@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import re
+import pytest
 
 from botocore.session import get_session
 
@@ -54,10 +55,13 @@ def _assert_name_pattern(service_name):
             VALID_NAME_EXPLANATION
 
 
-def test_service_names_are_valid():
+def _all_service_names():
     session = get_session()
     loader = session.get_component('data_loader')
-    service_names = loader.list_available_services('service-2')
-    for service_name in service_names:
-        _assert_name_length(service_name)
-        _assert_name_pattern(service_name)
+    return loader.list_available_services('service-2')
+
+
+@pytest.mark.parametrize("service_name", _all_service_names())
+def test_service_names_are_valid(service_name):
+    _assert_name_length(service_name)
+    _assert_name_pattern(service_name)

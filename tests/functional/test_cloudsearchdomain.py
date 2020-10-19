@@ -26,7 +26,7 @@ class TestCloudsearchdomain(BaseSessionTest):
         with self.http_stubber:
             self.client.search(query='foo')
             request = self.http_stubber.requests[0]
-            self.assertIn('q=foo', request.body)
-            self.assertEqual(request.method, 'POST')
+            assert 'q=foo' in request.body
+            assert request.method == 'POST'
             content_type = b'application/x-www-form-urlencoded'
-            self.assertEqual(request.headers.get('Content-Type'), content_type)
+            assert request.headers.get('Content-Type') == content_type

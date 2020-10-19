@@ -17,7 +17,7 @@ class TestEc2Docs(BaseDocsFunctionalTest):
     def test_documents_encoding_of_user_data(self):
         docs = self.get_parameter_documentation_from_service(
             'ec2', 'run_instances', 'UserData')
-        self.assertIn('base64 encoded automatically', docs.decode('utf-8'))
+        assert 'base64 encoded automatically' in docs.decode('utf-8')
 
     def test_copy_snapshot_presigned_url_is_autopopulated(self):
         self.assert_is_documented_as_autopopulated_param(

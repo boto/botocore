@@ -37,4 +37,4 @@ class TestLoaderAllowsDataPathOverride(unittest.TestCase):
 
             new_content = loader.load_data('_retry')
             # This should contain the content we just created.
-            self.assertEqual(new_content, {"foo": "bar"})
+            assert new_content == {"foo": "bar"}

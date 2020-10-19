@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import botocore.config
 from tests import unittest
+import pytest
 
 import botocore
 import botocore.session
@@ -42,7 +43,7 @@ class TestStubber(unittest.TestCase):
         self.stubber.add_response('list_objects', service_response)
         self.stubber.activate()
         response = self.client.list_objects(Bucket='foo')
-        self.assertEqual(response, service_response)
+        assert response == service_response
 
     def test_context_manager_returns_response(self):
         service_response = {'ResponseMetadata': {'foo': 'bar'}}
@@ -50,13 +51,12 @@ class TestStubber(unittest.TestCase):
 
         with self.stubber:
             response = self.client.list_objects(Bucket='foo')
-        self.assertEqual(response, service_response)
+        assert response == service_response
 
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
         # Params one per line for readability.
-        with six.assertRaisesRegex(self, UnStubbedResponseError,
-                                   "Unexpected API Call"):
+        with pytest.raises(UnStubbedResponseError, match=r"Unexpected API Call"):
             self.client.list_objects(
                 Bucket='asdfasdfasdfasdf',
                 Delimiter='asdfasdfasdfasdf',
@@ -68,7 +68,7 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
         self.client.list_objects(Bucket='foo')
 
-        with self.assertRaises(UnStubbedResponseError):
+        with pytest.raises(UnStubbedResponseError):
             self.client.list_objects(Bucket='foo')
 
     def test_client_error_response(self):
@@ -78,7 +78,7 @@ class TestStubber(unittest.TestCase):
             'list_objects', error_code, error_message)
         self.stubber.activate()
 
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.list_objects(Bucket='foo')
 
     def test_can_add_expected_params_to_client_error(self):
@@ -87,7 +87,7 @@ class TestStubber(unittest.TestCase):
             expected_params={'Bucket': 'foo'}
         )
         self.stubber.activate()
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.list_objects(Bucket='foo')
 
     def test_can_expected_param_fails_in_client_error(self):
@@ -99,7 +99,7 @@ class TestStubber(unittest.TestCase):
         # We expect an AssertionError instead of a ClientError
         # because we're calling the operation with the wrong
         # param value.
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             self.client.list_objects(Bucket='wrong-argument-value')
 
     def test_expected_params_success(self):
@@ -111,7 +111,7 @@ class TestStubber(unittest.TestCase):
         # This should be called successfully with no errors being thrown
         # for mismatching expected params.
         response = self.client.list_objects(Bucket='foo')
-        self.assertEqual(response, service_response)
+        assert response == service_response
 
     def test_expected_params_fail(self):
         service_response = {}
@@ -120,8 +120,7 @@ class TestStubber(unittest.TestCase):
             'list_objects', service_response, expected_params)
         self.stubber.activate()
         # This should call should raise an for mismatching expected params.
-        with six.assertRaisesRegex(self, StubResponseError,
-                                   "{'Bucket': 'bar'},\n"):
+        with pytest.raises(StubResponseError, match=r"{'Bucket': 'bar'},\n"):
             self.client.list_objects(Bucket='foo')
 
     def test_expected_params_mixed_with_errors_responses(self):
@@ -140,12 +139,11 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
 
         # The first call should throw and error as expected.
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.list_objects(Bucket='foo')
 
         # The second call should throw an error for unexpected parameters
-        with six.assertRaisesRegex(self, StubResponseError,
-                                   'Expected parameters'):
+        with pytest.raises(StubResponseError, match=r'Expected parameters'):
             self.client.list_objects(Bucket='foo')
 
     def test_can_continue_to_call_after_expected_params_fail(self):
@@ -157,7 +155,7 @@ class TestStubber(unittest.TestCase):
 
         self.stubber.activate()
         # Throw an error for unexpected parameters
-        with self.assertRaises(StubResponseError):
+        with pytest.raises(StubResponseError):
             self.client.list_objects(Bucket='foo')
 
         # The stubber should still have the responses queued up
@@ -174,7 +172,7 @@ class TestStubber(unittest.TestCase):
 
         self.stubber.activate()
         # Throw an error for invalid parameters
-        with self.assertRaises(ParamValidationError):
+        with pytest.raises(ParamValidationError):
             self.client.list_objects(Buck='bar')
 
     def test_any_ignores_param_for_validation(self):
@@ -245,7 +243,7 @@ class TestStubber(unittest.TestCase):
                 "stub.ANY failed to ignore nested parameter for validation.")
 
     def test_ANY_repr(self):
-        self.assertEqual(repr(stub.ANY), '<ANY>')
+        assert repr(stub.ANY) == '<ANY>'
 
     def test_none_param(self):
         service_response = {}
@@ -256,7 +254,7 @@ class TestStubber(unittest.TestCase):
 
         self.stubber.activate()
         # Throw an error for invalid parameters
-        with self.assertRaises(StubAssertionError):
+        with pytest.raises(StubAssertionError):
             self.client.list_objects(Buck='bar')
 
     def test_many_expected_params(self):
@@ -286,8 +284,7 @@ class TestStubber(unittest.TestCase):
                         'Key': 'mykey'
                     }
                 )
-                self.assertEqual(
-                    url, 'https://s3.amazonaws.com/mybucket/mykey')
+                assert url == 'https://s3.amazonaws.com/mybucket/mykey'
         except StubResponseError:
             self.fail(
                 'Stubbed responses should not be required for generating '
@@ -310,10 +307,9 @@ class TestStubber(unittest.TestCase):
                     'Key': 'myotherkey'
                 }
             )
-            self.assertEqual(
-                    url, 'https://s3.amazonaws.com/myotherbucket/myotherkey')
+            assert url == 'https://s3.amazonaws.com/myotherbucket/myotherkey'
             actual_response = self.client.list_objects(**expected_params)
-            self.assertEqual(desired_response, actual_response)
+            assert desired_response == actual_response
         self.stubber.assert_no_pending_responses()
 
     def test_parse_get_bucket_location(self):
@@ -323,7 +319,7 @@ class TestStubber(unittest.TestCase):
             'get_bucket_location', error_code, error_message)
         self.stubber.activate()
 
-        with self.assertRaises(ClientError):
+        with pytest.raises(ClientError):
             self.client.get_bucket_location(Bucket='foo')
 
     def test_parse_get_bucket_location_returns_response(self):
@@ -331,5 +327,5 @@ class TestStubber(unittest.TestCase):
         self.stubber.add_response('get_bucket_location',service_response)
         self.stubber.activate()
         response = self.client.get_bucket_location(Bucket='foo')
-        self.assertEqual(response, service_response)
+        assert response == service_response
 

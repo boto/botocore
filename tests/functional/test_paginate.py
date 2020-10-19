@@ -13,6 +13,7 @@
 from __future__ import division
 from math import ceil
 from datetime import datetime
+import pytest
 
 from tests import random_chars, unittest
 from tests import BaseSessionTest
@@ -59,8 +60,8 @@ class TestRDSPagination(BaseSessionTest):
                     'StartingToken': '0',
                     'MaxItems': 3
                 }).build_full_result()
-            self.assertEqual(result['LogFileData'], 'foo')
-            self.assertIn('NextToken', result)
+            assert result['LogFileData'] == 'foo'
+            assert 'NextToken' in result
         except StubAssertionError as e:
             self.fail(str(e))
 
@@ -160,7 +161,7 @@ class TestAutoscalingPagination(BaseSessionTest):
         while 'NextToken' in result:
             starting_token = result['NextToken']
             # We should never get a duplicate pagination token.
-            self.assertNotIn(starting_token, pagination_tokens)
+            assert starting_token not in pagination_tokens
             pagination_tokens.append(starting_token)
 
             conf['StartingToken'] = starting_token
@@ -168,7 +169,7 @@ class TestAutoscalingPagination(BaseSessionTest):
             result = pages.build_full_result()
             all_results.extend(result['Activities'])
 
-        self.assertEqual(len(all_results), total_items)
+        assert len(all_results) == total_items
 
 
 class TestCloudwatchLogsPagination(BaseSessionTest):
@@ -212,24 +213,20 @@ class TestCloudwatchLogsPagination(BaseSessionTest):
             logGroupName=group_name,
         )
         result = pages.build_full_result()
-        self.assertEqual(len(result['events']), 1)
+        assert len(result['events']) == 1
 
 
-class TestTokenEncoding(unittest.TestCase):
-    def test_token_encoding(self):
-        cases = [
+class TestTokenEncoding():
+
+    @pytest.mark.parametrize("token_dict", [
             {'foo': 'bar'},
             {'foo': b'bar'},
             {'foo': {'bar': b'baz'}},
             {'foo': ['bar', b'baz']},
             {'foo': b'\xff'},
             {'foo': {'bar': b'baz', 'bin': [b'bam']}},
-        ]
-
-        for token_dict in cases:
-            self.assert_token_encodes_and_decodes(token_dict)
-
-    def assert_token_encodes_and_decodes(self, token_dict):
+        ])
+    def test_token_encoding(self, token_dict):
         encoded = TokenEncoder().encode(token_dict)
         assert isinstance(encoded, six.string_types)
         decoded = TokenDecoder().decode(encoded)

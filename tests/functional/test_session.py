@@ -31,7 +31,7 @@ class TestSession(unittest.TestCase):
     def test_profile_precedence(self):
         self.environ['AWS_PROFILE'] = 'from_env_var'
         self.session.set_config_variable('profile', 'from_session_instance')
-        self.assertEqual(self.session.profile, 'from_session_instance')
+        assert self.session.profile == 'from_session_instance'
 
     def test_credentials_with_profile_precedence(self):
         self.environ['AWS_PROFILE'] = 'from_env_var'
@@ -39,8 +39,8 @@ class TestSession(unittest.TestCase):
         try:
             creds = self.session.get_credentials()
         except ProfileNotFound as e:
-            self.assertNotIn('from_env_var', str(e))
-            self.assertIn('from_session_instance', str(e))
+            assert 'from_env_var' not in str(e)
+            assert 'from_session_instance' in str(e)
 
     def test_session_profile_overrides_env_vars(self):
         # If the ".profile" attribute is set then the associated
@@ -63,8 +63,8 @@ class TestSession(unittest.TestCase):
             self.session.set_config_variable('profile',
                                              'from_session_instance')
             creds = self.session.get_credentials()
-            self.assertEqual(creds.access_key, 'shared_creds_akid')
-            self.assertEqual(creds.secret_key, 'shared_creds_sak')
+            assert creds.access_key == 'shared_creds_akid'
+            assert creds.secret_key == 'shared_creds_sak'
 
     def test_profile_does_not_win_if_all_from_env_vars(self):
         # Creds should be pulled from the env vars because
@@ -88,19 +88,19 @@ class TestSession(unittest.TestCase):
 
             creds = self.session.get_credentials()
 
-            self.assertEqual(creds.access_key, 'env_var_akid')
-            self.assertEqual(creds.secret_key, 'env_var_sak')
+            assert creds.access_key == 'env_var_akid'
+            assert creds.secret_key == 'env_var_sak'
 
     def test_provides_available_regions_for_same_endpoint_prefix(self):
         regions = self.session.get_available_regions('s3')
-        self.assertTrue(regions)
+        assert regions
 
     def test_provides_available_regions_for_different_endpoint_prefix(self):
         regions = self.session.get_available_regions('elb')
-        self.assertTrue(regions)
+        assert regions
 
     def test_does_not_provide_regions_for_mismatch_service_name(self):
         # elb's endpoint prefix is elasticloadbalancing, but users should
         # still be using the service name when getting regions
         regions = self.session.get_available_regions('elasticloadbalancing')
-        self.assertEqual(regions, [])
+        assert regions == []

@@ -20,6 +20,7 @@ import tempfile
 import shutil
 from datetime import datetime, timedelta
 import sys
+import pytest
 
 from dateutil.tz import tzlocal
 from botocore.exceptions import CredentialRetrievalError
@@ -68,13 +69,13 @@ class TestCredentialRefreshRaces(unittest.TestCase):
             # from the first refresh ('1'), the secret key from
             # the second refresh ('2'), and the token from the
             # first refresh ('1').
-            self.assertTrue(creds[0] == creds[1] == creds[2], creds)
+            assert creds[0] == creds[1] == creds[2], creds
 
     def assert_non_none_retrieved_credentials(self, func):
         collected = []
         self._run_threads(50, func, collected)
         for cred in collected:
-            self.assertIsNotNone(cred)
+            assert cred is not None
 
     def _run_threads(self, num_threads, func, collected):
         threads = []
@@ -104,11 +105,9 @@ class TestCredentialRefreshRaces(unittest.TestCase):
         # So, for example, if execution time took 6.1 seconds, then
         # we should see a maximum number of refreshes being (6 / 2.0) + 1 = 4
         max_calls_allowed = math.ceil((end - start) / 2.0) + 1
-        self.assertTrue(creds.refresh_counter <= max_calls_allowed,
-                        "Too many cred refreshes, max: %s, actual: %s, "
-                        "time_delta: %.4f" % (max_calls_allowed,
-                                              creds.refresh_counter,
-                                              (end - start)))
+        msg = "Too many cred refreshes, max: %s, actual: %s, time_delta: %.4f"
+        assert creds.refresh_counter <= max_calls_allowed, msg % (
+            max_calls_allowed, creds.refresh_counter, (end - start))
 
     def test_no_race_for_immediate_advisory_expiration(self):
         creds = IntegerRefresher(
@@ -194,7 +193,7 @@ class BaseAssumeRoleTest(BaseEnvVar):
         c2_frozen = c2
         if not isinstance(c2_frozen, ReadOnlyCredentials):
             c2_frozen = c2.get_frozen_credentials()
-        self.assertEqual(c1_frozen, c2_frozen)
+        assert c1_frozen == c2_frozen
 
     def write_config(self, config):
         with open(self.config_file, 'w') as f:
@@ -319,7 +318,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         self.assert_creds_equal(actual_creds, expected_creds)
 
         stubber.assert_no_pending_responses()
-        self.assertEqual(self.env_provider.load.call_count, 1)
+        assert self.env_provider.load.call_count == 1
 
     def test_instance_metadata_credential_source(self):
         config = (
@@ -341,7 +340,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         self.assert_creds_equal(actual_creds, expected_creds)
 
         stubber.assert_no_pending_responses()
-        self.assertEqual(self.metadata_provider.load.call_count, 1)
+        assert self.metadata_provider.load.call_count == 1
 
     def test_container_credential_source(self):
         config = (
@@ -363,7 +362,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         self.assert_creds_equal(actual_creds, expected_creds)
 
         stubber.assert_no_pending_responses()
-        self.assertEqual(self.container_provider.load.call_count, 1)
+        assert self.container_provider.load.call_count == 1
 
     def test_invalid_credential_source(self):
         config = (
@@ -373,7 +372,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         )
         self.write_config(config)
 
-        with self.assertRaises(InvalidConfigError):
+        with pytest.raises(InvalidConfigError):
             session, _ = self.create_session(profile='A')
             session.get_credentials()
 
@@ -387,7 +386,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         )
         self.write_config(config)
 
-        with self.assertRaises(InvalidConfigError):
+        with pytest.raises(InvalidConfigError):
             session, _ = self.create_session(profile='A')
             session.get_credentials().get_frozen_credentials()
 
@@ -451,7 +450,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         )
         self.write_config(config)
 
-        with self.assertRaises(InfiniteLoopConfigError):
+        with pytest.raises(InfiniteLoopConfigError):
             session, _ = self.create_session(profile='A')
             session.get_credentials()
 
@@ -475,14 +474,14 @@ class TestAssumeRole(BaseAssumeRoleTest):
         stubber.assert_no_pending_responses()
         # Assert that the client was created with the credentials from the
         # credential process.
-        self.assertEqual(self.mock_client_creator.call_count, 1)
+        assert self.mock_client_creator.call_count == 1
         _, kwargs = self.mock_client_creator.call_args_list[0]
         expected_kwargs = {
             'aws_access_key_id': 'spam',
             'aws_secret_access_key': 'eggs',
             'aws_session_token': None,
         }
-        self.assertEqual(kwargs, expected_kwargs)
+        assert kwargs == expected_kwargs
 
     def test_web_identity_source_profile(self):
         token_path = os.path.join(self.tempdir, 'token')
@@ -516,14 +515,14 @@ class TestAssumeRole(BaseAssumeRoleTest):
         stubber.assert_no_pending_responses()
         # Assert that the client was created with the credentials from the
         # assume role with web identity call.
-        self.assertEqual(self.mock_client_creator.call_count, 1)
+        assert self.mock_client_creator.call_count == 1
         _, kwargs = self.mock_client_creator.call_args_list[0]
         expected_kwargs = {
             'aws_access_key_id': identity_creds.access_key,
             'aws_secret_access_key': identity_creds.secret_key,
             'aws_session_token': identity_creds.token,
         }
-        self.assertEqual(kwargs, expected_kwargs)
+        assert kwargs == expected_kwargs
 
     def test_web_identity_source_profile_ignores_env_vars(self):
         token_path = os.path.join(self.tempdir, 'token')
@@ -543,7 +542,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         # The config is split between the profile and the env, we
         # should only be looking at the profile so this should raise
         # a configuration error.
-        with self.assertRaises(InvalidConfigError):
+        with pytest.raises(InvalidConfigError):
             session.get_credentials()
 
     def test_sso_source_profile(self):
@@ -596,14 +595,14 @@ class TestAssumeRole(BaseAssumeRoleTest):
         sts_stubber.assert_no_pending_responses()
         # Assert that the client was created with the credentials from the
         # SSO get role credentials response
-        self.assertEqual(self.mock_client_creator.call_count, 1)
+        assert self.mock_client_creator.call_count == 1
         _, kwargs = self.mock_client_creator.call_args_list[0]
         expected_kwargs = {
             'aws_access_key_id': sso_role_creds.access_key,
             'aws_secret_access_key': sso_role_creds.secret_key,
             'aws_session_token': sso_role_creds.token,
         }
-        self.assertEqual(kwargs, expected_kwargs)
+        assert kwargs == expected_kwargs
 
     def test_web_identity_credential_source_ignores_env_vars(self):
         token_path = os.path.join(self.tempdir, 'token')
@@ -623,7 +622,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         # environment when the Environment credential_source is set.
         # There are no Environment credentials, so this should raise a
         # retrieval error.
-        with self.assertRaises(CredentialRetrievalError):
+        with pytest.raises(CredentialRetrievalError):
             session.get_credentials()
 
     def test_self_referential_profile(self):
@@ -682,7 +681,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         provider = resolver.get_provider('assume-role')
         creds = provider.load()
         self.assert_creds_equal(creds, expected_creds)
-        self.assertEqual(self.actual_client_region, 'cn-north-1')
+        assert self.actual_client_region == 'cn-north-1'
 
 
 class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
@@ -795,8 +794,8 @@ class TestProcessProvider(unittest.TestCase):
             self.environ['AWS_CONFIG_FILE'] = f.name
 
             credentials = Session(profile='processcreds').get_credentials()
-            self.assertEqual(credentials.access_key, 'spam')
-            self.assertEqual(credentials.secret_key, 'eggs')
+            assert credentials.access_key == 'spam'
+            assert credentials.secret_key == 'eggs'
 
     def test_credential_process_returns_error(self):
         config = (
@@ -825,7 +824,7 @@ class TestProcessProvider(unittest.TestCase):
             # Finally `(?s)` at the beginning makes dots match newlines so
             # we can handle a multi-line string.
             reg = r"(?s)^((?!b').)*$"
-            with six.assertRaisesRegex(self, CredentialRetrievalError, reg):
+            with pytest.raises(CredentialRetrievalError, match=reg):
                 session.get_credentials()
 
 
@@ -883,10 +882,7 @@ class TestSTSRegional(BaseAssumeRoleTest):
             # endpoint.
             self.make_stubbed_client_call_to_region(
                 session, stubber, 'us-west-2')
-            self.assertEqual(
-                stubber.requests[0].url,
-                'https://sts.us-west-2.amazonaws.com/'
-            )
+            assert stubber.requests[0].url == 'https://sts.us-west-2.amazonaws.com/'
 
     def test_assume_role_web_identity_uses_same_region_as_client(self):
         token_file = os.path.join(self.tempdir, 'token.jwt')
@@ -914,7 +910,4 @@ class TestSTSRegional(BaseAssumeRoleTest):
             # endpoint.
             self.make_stubbed_client_call_to_region(
                 session, stubber, 'us-west-2')
-            self.assertEqual(
-                stubber.requests[0].url,
-                'https://sts.us-west-2.amazonaws.com/'
-            )
+            assert stubber.requests[0].url == 'https://sts.us-west-2.amazonaws.com/'

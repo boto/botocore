@@ -17,4 +17,4 @@ class TestAutoscalingDocs(BaseDocsFunctionalTest):
     def test_documents_encoding_of_user_data(self):
         docs = self.get_parameter_documentation_from_service(
             'autoscaling', 'create_launch_configuration', 'UserData')
-        self.assertIn('base64 encoded automatically', docs.decode('utf-8'))
+        assert 'base64 encoded automatically' in docs.decode('utf-8')

@@ -87,12 +87,9 @@ class TestSTSEndpoints(BaseSessionTest):
             http_stubber.add_response(body=body)
             sts.get_caller_identity()
             captured_request = http_stubber.requests[0]
-            self.assertEqual(captured_request.url, expected_url)
+            assert captured_request.url == expected_url
             if expected_signing_region:
-                self.assertEqual(
-                    self._get_signing_region(captured_request),
-                    expected_signing_region
-                )
+                assert self._get_signing_region(captured_request) == expected_signing_region
 
     def _get_signing_region(self, request):
         authorization_val = request.headers['Authorization'].decode('utf-8')

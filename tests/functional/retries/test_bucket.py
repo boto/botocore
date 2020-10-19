@@ -55,12 +55,12 @@ class TestTokenBucketThreading(unittest.TestCase):
         token_bucket.max_rate = 100
         thread.join()
         end_time = time.time()
-        self.assertLessEqual(end_time - start_time, 1.0 / min_rate)
+        assert end_time - start_time <= 1.0 / min_rate
 
     def acquire_in_loop(self, token_bucket):
         while not self.shutdown_threads:
             try:
-                self.assertTrue(token_bucket.acquire())
+                assert token_bucket.acquire()
                 thread_name = threading.current_thread().name
                 self.acquisitions_by_thread[thread_name] += 1
             except Exception as e:
@@ -98,7 +98,7 @@ class TestTokenBucketThreading(unittest.TestCase):
             self.shutdown_threads = True
             for thread in all_threads:
                 thread.join()
-        self.assertEqual(self.caught_exceptions, [])
+        assert self.caught_exceptions == []
         distribution = self.acquisitions_by_thread.values()
         mean = sum(distribution) / float(len(distribution))
         # We can't really rely on any guarantees about evenly distributing
@@ -106,4 +106,4 @@ class TestTokenBucketThreading(unittest.TestCase):
         # can sanity check that our implementation isn't drastically
         # starving a thread.  So we'll arbitrarily say that a thread
         # can't have less than 20% of the mean allocations per thread.
-        self.assertTrue(not any(x < (0.2 * mean) for x in distribution))
+        assert not any(x < (0.2 * mean) for x in distribution)

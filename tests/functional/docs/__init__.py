@@ -21,23 +21,23 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
     def assert_contains_line(self, line, contents):
         contents = contents.decode('utf-8')
-        self.assertIn(line, contents)
+        assert line in contents
 
     def assert_contains_lines_in_order(self, lines, contents):
         contents = contents.decode('utf-8')
         for line in lines:
-            self.assertIn(line, contents)
+            assert line in contents
             beginning = contents.find(line)
             contents = contents[(beginning + len(line)):]
 
     def assert_not_contains_line(self, line, contents):
         contents = contents.decode('utf-8')
-        self.assertNotIn(line, contents)
+        assert line not in contents
 
     def assert_not_contains_lines(self, lines, contents):
         contents = contents.decode('utf-8')
         for line in lines:
-            self.assertNotIn(line, contents)
+            assert line not in contents
 
     def get_title_section_for(self, service_name):
         contents = ServiceDocumenter(
@@ -52,7 +52,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         contents = contents.decode('utf-8')
         start_method_document = '  .. py:method:: %s(' % operation_name
         start_index = contents.find(start_method_document)
-        self.assertNotEqual(start_index, -1, 'Method is not found in contents')
+        assert start_index != -1, 'Method is not found in contents'
         contents = contents[start_index:]
         end_index = contents.find(
             '  .. py:method::', len(start_method_document))
@@ -63,7 +63,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         contents = contents.decode('utf-8')
         start_param_document = '    :type %s:' % param_name
         start_index = contents.find(start_param_document)
-        self.assertNotEqual(start_index, -1, 'Param is not found in contents')
+        assert start_index != -1, 'Param is not found in contents'
         contents = contents[start_index:]
         end_index = contents.find('    :type', len(start_param_document))
         contents = contents[:end_index]

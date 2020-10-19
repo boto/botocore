@@ -25,9 +25,9 @@ class TestSagemaker(BaseSessionTest):
         )
         self.stubber.add_response('list_endpoints', {'Endpoints': []})
         self.client.list_endpoints()
-        self.assertEqual(self.hook_calls, [
+        assert self.hook_calls == [
             'provide-client-params.sagemaker.ListEndpoints'
-        ])
+        ]
 
     def test_event_with_new_prefix(self):
         self.client.meta.events.register(
@@ -36,6 +36,6 @@ class TestSagemaker(BaseSessionTest):
         )
         self.stubber.add_response('list_endpoints', {'Endpoints': []})
         self.client.list_endpoints()
-        self.assertEqual(self.hook_calls, [
+        assert self.hook_calls == [
             'provide-client-params.sagemaker.ListEndpoints'
-        ])
+        ]

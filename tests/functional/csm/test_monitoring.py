@@ -17,6 +17,7 @@ import logging
 import os
 import socket
 import threading
+import pytest
 
 from tests import mock
 
@@ -45,20 +46,12 @@ class NonRetryableException(Exception):
 EXPECTED_EXCEPTIONS_THROWN = (
     botocore.exceptions.ClientError, NonRetryableException, RetryableException)
 
-
-def test_client_monitoring():
-    test_cases = _load_test_cases()
-    for case in test_cases:
-        _run_test_case(case)
-
-
 def _load_test_cases():
     with open(CASES_FILE) as f:
         loaded_tests = json.loads(f.read())
     test_cases = _get_cases_with_defaults(loaded_tests)
     _replace_expected_anys(test_cases)
     return test_cases
-
 
 def _get_cases_with_defaults(loaded_tests):
     cases = []
@@ -174,6 +167,9 @@ def _add_stubbed_response(stubber, attempt_response):
         content = b'{}'
     stubber.add_response(status=status_code, headers=headers, body=content)
 
+@pytest.mark.parametrize("test_case", _load_test_cases())
+def test_client_monitoring(test_case):
+    _run_test_case(test_case)
 
 class MonitoringListener(threading.Thread):
     _PACKET_SIZE = 1024 * 8

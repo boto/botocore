@@ -38,7 +38,7 @@ class TestRoute53Pagination(unittest.TestCase):
         with self.stubber:
             config={'PageSize': 1}
             results = list(paginator.paginate(PaginationConfig=config))
-            self.assertTrue(len(results) >= 0)
+            assert len(results) >= 0
 
     def test_paginate_with_max_items_str(self):
         # Route53 has a string type for MaxItems.  We need to ensure that this
@@ -48,7 +48,7 @@ class TestRoute53Pagination(unittest.TestCase):
         with self.stubber:
             config={'PageSize': '1'}
             results = list(paginator.paginate(PaginationConfig=config))
-            self.assertTrue(len(results) >= 0)
+            assert len(results) >= 0
 
 class TestRoute53EndpointResolution(BaseSessionTest):
 
@@ -63,10 +63,10 @@ class TestRoute53EndpointResolution(BaseSessionTest):
         client, stubber = self.create_stubbed_client('route53', 'us-west-2')
         client.list_geo_locations()
         expected_url = 'https://route53.amazonaws.com/'
-        self.assertTrue(stubber.requests[0].url.startswith(expected_url))
+        assert stubber.requests[0].url.startswith(expected_url)
 
     def test_unregionalized_client_with_unknown_region(self):
         client, stubber = self.create_stubbed_client('route53', 'not-real')
         client.list_geo_locations()
         expected_url = 'https://route53.amazonaws.com/'
-        self.assertTrue(stubber.requests[0].url.startswith(expected_url))
+        assert stubber.requests[0].url.startswith(expected_url)

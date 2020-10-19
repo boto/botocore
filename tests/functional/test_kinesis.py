@@ -32,7 +32,7 @@ class TestKinesisListStreams(BaseSessionTest):
             decoded_str = b64decode(encoded_str).decode("utf-8")
         except UnicodeDecodeError:
             self.fail("Base64 encoded record is not a valid utf-8 string")
-        self.assertEqual(decoded_str, expected_value)
+        assert decoded_str == expected_value
 
     def test_can_put_stream_blob(self):
         unique_data = str(uuid4())
@@ -40,10 +40,10 @@ class TestKinesisListStreams(BaseSessionTest):
             self.client.put_record(
                 StreamName=self.stream_name, PartitionKey="foo", Data=unique_data
             )
-            self.assertEqual(len(stub.requests), 1)
+            assert len(stub.requests) == 1
             request = json.loads(stub.requests[0].body.decode("utf-8"))
-            self.assertEqual(request["StreamName"], self.stream_name)
-            self.assertEqual(request["PartitionKey"], "foo")
+            assert request["StreamName"] == self.stream_name
+            assert request["PartitionKey"] == "foo"
             self.assert_base64encoded_str_equals(
                 request["Data"], unique_data
             )
@@ -55,13 +55,13 @@ class TestKinesisListStreams(BaseSessionTest):
                 StreamName=self.stream_name,
                 Records=[{"Data": unique_data, "PartitionKey": "foo"}],
             )
-            self.assertEqual(len(stub.requests), 1)
+            assert len(stub.requests) == 1
             request = json.loads(stub.requests[0].body.decode("utf-8"))
-            self.assertEqual(len(request["Records"]), 1)
-            self.assertEqual(request["StreamName"], self.stream_name)
+            assert len(request["Records"]) == 1
+            assert request["StreamName"] == self.stream_name
 
             record = request["Records"][0]
-            self.assertEqual(record["PartitionKey"], "foo")
+            assert record["PartitionKey"] == "foo"
             self.assert_base64encoded_str_equals(
                 record["Data"], unique_data
             )
@@ -75,9 +75,9 @@ class TestKinesisListStreams(BaseSessionTest):
                     {"Data": "barfoo", "PartitionKey": "foo"},
                 ],
             )
-            self.assertEqual(len(stub.requests), 1)
+            assert len(stub.requests) == 1
             request = json.loads(stub.requests[0].body.decode("utf-8"))
-            self.assertEqual(len(request["Records"]), 2)
+            assert len(request["Records"]) == 2
 
             record_foobar = request["Records"][0]
             record_barfoo = request["Records"][1]

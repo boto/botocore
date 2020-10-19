@@ -24,11 +24,11 @@ class TestOpensslVersion(BaseSessionTest):
                 warning_message = call_args[0]
                 warning_type = call_args[1]
                 # We should say something specific about the service.
-                self.assertIn('iot-data', warning_message)
-                self.assertEqual(warning_type, UnsupportedTLSVersionWarning)
+                assert 'iot-data' in warning_message
+                assert warning_type == UnsupportedTLSVersionWarning
 
     def test_compatible_openssl_version(self):
         with mock.patch('ssl.OPENSSL_VERSION_INFO', new=(1, 0, 1, 1, 1)):
             with mock.patch('warnings.warn') as mock_warn:
                 self.session.create_client('iot-data', 'us-east-1')
-                self.assertFalse(mock_warn.called)
+                assert mock_warn.called is False

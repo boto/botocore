@@ -10,14 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
 import botocore.session
 from botocore.handlers import SERVICE_NAME_ALIASES
 
 
-def test_can_use_service_alias():
+@pytest.mark.parametrize("alias,name", SERVICE_NAME_ALIASES.items())
+def test_can_use_service_alias(alias, name):
     session = botocore.session.get_session()
-    for (alias, name) in SERVICE_NAME_ALIASES.items():
-        _instantiates_the_same_client(session, name, alias)
+    _instantiates_the_same_client(session, name, alias)
 
 
 def _instantiates_the_same_client(session, service_name, service_alias):

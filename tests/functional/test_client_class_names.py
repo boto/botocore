@@ -72,5 +72,4 @@ class TestClientClassNames(unittest.TestCase):
         session = botocore.session.get_session()
         for service_name in SERVICE_TO_CLASS_NAME:
             client = session.create_client(service_name, REGION)
-            self.assertEqual(client.__class__.__name__,
-                             SERVICE_TO_CLASS_NAME[service_name])
+            assert client.__class__.__name__ == SERVICE_TO_CLASS_NAME[service_name]

@@ -54,7 +54,7 @@ class TestIdempotencyToken(unittest.TestCase):
                 PurchaseRequests=[{'PurchaseToken': 'foo',
                                    'InstanceCount': 123}],
                 ClientToken='foobar')
-            self.assertIn('ClientToken', self.params_seen)
+            assert 'ClientToken' in self.params_seen
 
     def test_insert_idempotency_token(self):
         expected_params = {
@@ -70,7 +70,7 @@ class TestIdempotencyToken(unittest.TestCase):
             self.client.purchase_scheduled_instances(
                 PurchaseRequests=[{'PurchaseToken': 'foo',
                                    'InstanceCount': 123}])
-            self.assertIn('ClientToken', self.params_seen)
+            assert 'ClientToken' in self.params_seen
 
 
 class TestCopySnapshotCustomization(BaseSessionTest):
@@ -109,27 +109,27 @@ class TestCopySnapshotCustomization(BaseSessionTest):
                 SourceRegion='us-west-2',
                 SourceSnapshotId=self.snapshot_id,
             )
-        self.assertEqual(result['SnapshotId'], self.snapshot_id)
-        self.assertEqual(len(self.http_stubber.requests), 1)
+        assert result['SnapshotId'] == self.snapshot_id
+        assert len(self.http_stubber.requests) == 1
         snapshot_request = self.http_stubber.requests[0]
         body = parse_qs(snapshot_request.body)
-        self.assertIn('PresignedUrl', body)
+        assert 'PresignedUrl' in body
         presigned_url = urlparse(body['PresignedUrl'][0])
-        self.assertEqual(presigned_url.scheme, 'https')
-        self.assertEqual(presigned_url.netloc, 'ec2.us-west-2.amazonaws.com')
+        assert presigned_url.scheme == 'https'
+        assert presigned_url.netloc == 'ec2.us-west-2.amazonaws.com'
         query_args = parse_qs(presigned_url.query)
-        self.assertEqual(query_args['Action'], ['CopySnapshot'])
-        self.assertEqual(query_args['Version'], ['2016-11-15'])
-        self.assertEqual(query_args['SourceRegion'], ['us-west-2'])
-        self.assertEqual(query_args['DestinationRegion'], ['us-east-1'])
-        self.assertEqual(query_args['SourceSnapshotId'], [self.snapshot_id])
-        self.assertEqual(query_args['X-Amz-Algorithm'], ['AWS4-HMAC-SHA256'])
+        assert query_args['Action'] == ['CopySnapshot']
+        assert query_args['Version'] == ['2016-11-15']
+        assert query_args['SourceRegion'] == ['us-west-2']
+        assert query_args['DestinationRegion'] == ['us-east-1']
+        assert query_args['SourceSnapshotId'] == [self.snapshot_id]
+        assert query_args['X-Amz-Algorithm'] == ['AWS4-HMAC-SHA256']
         expected_credential = 'access_key/20110909/us-west-2/ec2/aws4_request'
-        self.assertEqual(query_args['X-Amz-Credential'], [expected_credential])
-        self.assertEqual(query_args['X-Amz-Date'], ['20110909T233600Z'])
-        self.assertEqual(query_args['X-Amz-Expires'], ['3600'])
-        self.assertEqual(query_args['X-Amz-SignedHeaders'], ['host'])
+        assert query_args['X-Amz-Credential'] == [expected_credential]
+        assert query_args['X-Amz-Date'] == ['20110909T233600Z']
+        assert query_args['X-Amz-Expires'] == ['3600']
+        assert query_args['X-Amz-SignedHeaders'] == ['host']
         expected_signature = (
             'a94a6b52afdf3daa34c2e2a38a62b72c8dac129c9904c61aa1a5d86e38628537'
         )
-        self.assertEqual(query_args['X-Amz-Signature'], [expected_signature])
+        assert query_args['X-Amz-Signature'] == [expected_signature]

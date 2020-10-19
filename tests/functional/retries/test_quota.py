@@ -38,5 +38,5 @@ class TestRetryQuota(unittest.TestCase):
         for thread in threads:
             thread.join()
         for seen_capacity in self.seen_capacities:
-            self.assertGreaterEqual(seen_capacity, 0)
-            self.assertLessEqual(seen_capacity, self.max_capacity)
+            assert seen_capacity >= 0
+            assert seen_capacity <= self.max_capacity

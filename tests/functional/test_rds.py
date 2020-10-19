@@ -24,8 +24,8 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
-        self.assertIn('PreSignedUrl', body)
-        self.assertNotIn('SourceRegion', body)
+        assert 'PreSignedUrl' in body
+        assert 'SourceRegion' not in body
 
     def test_copy_snapshot(self):
         params = {
@@ -78,8 +78,8 @@ class TestRDS(unittest.TestCase):
             DBHostname=hostname, Port=port, DBUsername=username)
 
         endpoint_url = 'host.us-east-1.rds.amazonaws.com:3306'
-        self.assertIn(endpoint_url, auth_token)
-        self.assertIn('Action=connect', auth_token)
+        assert endpoint_url in auth_token
+        assert 'Action=connect' in auth_token
 
         # Asserts that there is no scheme in the url
-        self.assertTrue(auth_token.startswith(hostname))
+        assert auth_token.startswith(hostname)

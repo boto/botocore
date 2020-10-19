@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
 from tests import mock, BaseSessionTest
 
 
@@ -42,24 +43,22 @@ class TestClientEvents(BaseSessionTest):
             mock_send.return_value = mock.Mock(
                 status_code=200, headers={}, content=response_body)
             self.client.describe_regions()
-        self.assertEqual(
-            recording_handler.recorded_events,
-            [
-                ('response-received.ec2.DescribeRegions',
-                 {
-                     'exception': None,
-                     'response_dict': {
-                         'body': response_body,
-                         'headers': {},
-                         'context': mock.ANY,
-                         'status_code': 200
-                     },
-                     'parsed_response': {
-                         'ResponseMetadata': mock.ANY},
-                     'context': mock.ANY
-                 })
-            ]
-        )
+        expected_events = [
+            ('response-received.ec2.DescribeRegions',
+             {
+                 'exception': None,
+                 'response_dict': {
+                     'body': response_body,
+                     'headers': {},
+                     'context': mock.ANY,
+                     'status_code': 200
+                 },
+                 'parsed_response': {
+                     'ResponseMetadata': mock.ANY},
+                 'context': mock.ANY
+             })
+        ]
+        assert recording_handler.recorded_events == expected_events
 
     def test_emit_response_received_for_exception(self):
         recording_handler = RecordingHandler()
@@ -69,11 +68,9 @@ class TestClientEvents(BaseSessionTest):
                 'botocore.httpsession.URLLib3Session.send') as mock_send:
             raised_exception = RuntimeError('Unexpected exception')
             mock_send.side_effect = raised_exception
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 self.client.describe_regions()
-        self.assertEqual(
-            recording_handler.recorded_events,
-            [
+        expected_events = [
                 ('response-received.ec2.DescribeRegions',
                  {
                      'exception': raised_exception,
@@ -81,5 +78,5 @@ class TestClientEvents(BaseSessionTest):
                      'parsed_response': None,
                      'context': mock.ANY
                  })
-            ]
-        )
+        ]
+        assert recording_handler.recorded_events == expected_events

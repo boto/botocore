@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore.session import Session
+import pytest
 
 
 def _all_services():
@@ -18,6 +19,12 @@ def _all_services():
     service_names = session.get_available_services()
     for service_name in service_names:
         yield session.get_service_model(service_name)
+
+
+def _all_error_shapes():
+    for service_model in _all_services():
+        for shape in service_model.error_shapes:
+            yield shape
 
 
 def _all_operations():
@@ -35,14 +42,14 @@ def _assert_not_shadowed(key, shape):
     assert key not in shape.members, msg % (shape.name, key)
 
 
-def test_response_metadata_is_not_shadowed():
-    for operation_model in _all_operations():
-        shape = operation_model.output_shape
-        _assert_not_shadowed('ResponseMetadata', shape)
+
+@pytest.mark.parametrize('operation_model', _all_operations())
+def test_response_metadata_is_not_shadowed(operation_model):
+    shape = operation_model.output_shape
+    _assert_not_shadowed('ResponseMetadata', shape)
 
 
-def test_exceptions_do_not_shadow():
-    for service_model in _all_services():
-        for shape in service_model.error_shapes:
-            _assert_not_shadowed('ResponseMetadata', shape)
-            _assert_not_shadowed('Error', shape)
+@pytest.mark.parametrize('shape', _all_error_shapes())
+def test_exceptions_do_not_shadow(shape):
+    _assert_not_shadowed('ResponseMetadata', shape)
+    _assert_not_shadowed('Error', shape)

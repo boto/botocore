@@ -39,4 +39,4 @@ class TestFileWebIdentityTokenLoader(unittest.TestCase):
     def test_can_load_token(self):
         loader = FileWebIdentityTokenLoader(self.token_file)
         token = loader()
-        self.assertEqual(self.token, token)
+        assert self.token == token

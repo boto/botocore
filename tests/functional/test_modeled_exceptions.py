@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
 from contextlib import contextmanager
 
 from tests import unittest, BaseSessionTest, ClientHTTPStubber
@@ -55,14 +56,14 @@ class TestModeledExceptions(BaseSessionTest):
         exception_cls = ses.exceptions.AlreadyExistsException
         with http_stubber as stubber:
             stubber.add_response(status=400, headers={}, body=body)
-            with self.assertRaises(exception_cls) as assertion_context:
+            with pytest.raises(exception_cls) as assertion_context:
                 template = {
                     'TemplateName': 'foobar',
                     'SubjectPart': 'foo',
                     'TextPart': 'bar'
                 }
                 ses.create_template(Template=template)
-            self.assertEqual(assertion_context.exception.response, response)
+            assert assertion_context.value.response == response
 
     def test_rest_xml_service(self):
         body = (
@@ -93,9 +94,9 @@ class TestModeledExceptions(BaseSessionTest):
         exception_cls = cloudfront.exceptions.NoSuchDistribution
         with http_stubber as stubber:
             stubber.add_response(status=404, headers={}, body=body)
-            with self.assertRaises(exception_cls) as assertion_context:
+            with pytest.raises(exception_cls) as assertion_context:
                 cloudfront.get_distribution(Id='foobar')
-            self.assertEqual(assertion_context.exception.response, response)
+            assert assertion_context.value.response == response
 
     def test_rest_json_service(self):
         headers = {
@@ -130,9 +131,9 @@ class TestModeledExceptions(BaseSessionTest):
         exception_cls = efs.exceptions.FileSystemAlreadyExists
         with http_stubber as stubber:
             stubber.add_response(status=409, headers=headers, body=body)
-            with self.assertRaises(exception_cls) as assertion_context:
+            with pytest.raises(exception_cls) as assertion_context:
                 efs.create_file_system()
-            self.assertEqual(assertion_context.exception.response, response)
+            assert assertion_context.value.response == response
 
     def test_json_service(self):
         headers = {
@@ -164,6 +165,6 @@ class TestModeledExceptions(BaseSessionTest):
         exception_cls = kinesis.exceptions.ResourceNotFoundException
         with http_stubber as stubber:
             stubber.add_response(status=400, headers=headers, body=body)
-            with self.assertRaises(exception_cls) as assertion_context:
+            with pytest.raises(exception_cls) as assertion_context:
                 kinesis.describe_stream(StreamName='foobar')
-            self.assertEqual(assertion_context.exception.response, response)
+            assert assertion_context.value.response == response

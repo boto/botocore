@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import jmespath
 from jsonschema import Draft4Validator
+import pytest
 
 import botocore.session
 from botocore.exceptions import UnknownServiceError
@@ -82,25 +83,25 @@ WAITER_SCHEMA = {
 }
 
 
-def test_lint_waiter_configs():
+@pytest.mark.parametrize("service_name", botocore.session.get_session().get_available_services())
+def test_lint_waiter_configs(service_name):
     session = botocore.session.get_session()
     validator = Draft4Validator(WAITER_SCHEMA)
-    for service_name in session.get_available_services():
-        client = session.create_client(service_name, 'us-east-1')
-        service_model = client.meta.service_model
-        try:
-            # We use the loader directly here because we need the entire
-            # json document, not just the portions exposed (either
-            # internally or externally) by the WaiterModel class.
-            loader = session.get_component('data_loader')
-            waiter_model = loader.load_service_model(
-                service_name, 'waiters-2')
-        except UnknownServiceError:
-            # The service doesn't have waiters
-            continue
-        _validate_schema(validator, waiter_model)
-        for waiter_name in client.waiter_names:
-            _lint_single_waiter(client, waiter_name, service_model)
+    client = session.create_client(service_name, 'us-east-1')
+    service_model = client.meta.service_model
+    try:
+        # We use the loader directly here because we need the entire
+        # json document, not just the portions exposed (either
+        # internally or externally) by the WaiterModel class.
+        loader = session.get_component('data_loader')
+        waiter_model = loader.load_service_model(
+            service_name, 'waiters-2')
+    except UnknownServiceError:
+        # The service doesn't have waiters
+        return
+    _validate_schema(validator, waiter_model)
+    for waiter_name in client.waiter_names:
+        _lint_single_waiter(client, waiter_name, service_model)
 
 
 def _lint_single_waiter(client, waiter_name, service_model):

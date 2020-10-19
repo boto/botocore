@@ -27,10 +27,10 @@ class TestAliasesDocumented(BaseDocsFunctionalTest):
 
             # Make sure the new parameters are in the documentation
             # but the old names are not.
-            self.assertIn(param_name_template % new_name, content)
-            self.assertIn(param_type_template % new_name, content)
-            self.assertIn(param_example_template % new_name, content)
+            assert param_name_template % new_name in content
+            assert param_type_template % new_name in content
+            assert param_example_template % new_name in content
 
-            self.assertNotIn(param_name_template % original_name, content)
-            self.assertNotIn(param_type_template % original_name, content)
-            self.assertNotIn(param_example_template % original_name, content)
+            assert param_name_template % original_name not in content
+            assert param_type_template % original_name not in content
+            assert param_example_template % original_name not in content

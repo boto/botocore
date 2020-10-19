@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import create_session, unittest
 
+import pytest
 from tests import mock
 
 from botocore.client import ClientEndpointBridge
@@ -446,60 +447,43 @@ def _get_patched_session():
         session = create_session()
     return session
 
+def _test_single_service_region(service_name, region_name,
+                                expected_endpoint, resolver):
+    bridge = ClientEndpointBridge(resolver, None, None)
+    result = bridge.resolve(service_name, region_name)
+    expected = 'https://%s' % expected_endpoint
+    assert result['endpoint_url'] == expected
 
-class TestRegions(unittest.TestCase):
-    def test_known_endpoints(self):
-        # Verify the actual values from the partition files.  While
-        # TestEndpointHeuristics verified the generic functionality given
-        # any endpoints file, this test actually verifies the partition
-        # data against a fixed list of known endpoints.  This list doesn't
-        # need to be kept 100% up to date, but serves as a basis for
-        # regressions as the endpoint data logic evolves.
-        resolver = _get_patched_session()._get_internal_component(
-            'endpoint_resolver')
-        for region_name, service_dict in KNOWN_REGIONS.items():
-            for service_name, endpoint in service_dict.items():
-                self._test_single_service_region(service_name,
-                                                 region_name, endpoint,
-                                                 resolver)
+# Ensure that all S3 regions use s3v4 instead of v4
+def test_all_s3_endpoints_have_s3v4():
+    session = _get_patched_session()
+    partitions = session.get_available_partitions()
+    resolver = session._get_internal_component('endpoint_resolver')
+    for partition_name in partitions:
+        for endpoint in session.get_available_regions('s3', partition_name):
+            resolved = resolver.construct_endpoint('s3', endpoint)
+            assert 's3v4' in resolved['signatureVersions']
+            assert 'v4' not in resolved['signatureVersions']
 
-    def _test_single_service_region(self, service_name, region_name,
-                                    expected_endpoint, resolver):
-        bridge = ClientEndpointBridge(resolver, None, None)
-        result = bridge.resolve(service_name, region_name)
-        expected = 'https://%s' % expected_endpoint
-        self.assertEqual(result['endpoint_url'], expected)
+def _test_single_service_partition_endpoint(service_name,
+                                            expected_endpoint,
+                                            resolver):
+    bridge = ClientEndpointBridge(resolver)
+    result = bridge.resolve(service_name)
+    assert result['endpoint_url'] == expected_endpoint
 
-    # Ensure that all S3 regions use s3v4 instead of v4
-    def test_all_s3_endpoints_have_s3v4(self):
-        session = _get_patched_session()
-        partitions = session.get_available_partitions()
-        resolver = session._get_internal_component('endpoint_resolver')
-        for partition_name in partitions:
-            for endpoint in session.get_available_regions('s3', partition_name):
-                resolved = resolver.construct_endpoint('s3', endpoint)
-                assert 's3v4' in resolved['signatureVersions']
-                assert 'v4' not in resolved['signatureVersions']
+def test_known_endpoints_other():
+    resolver = _get_patched_session()._get_internal_component(
+        'endpoint_resolver')
+    for service_name, endpoint in KNOWN_AWS_PARTITION_WIDE.items():
+        _test_single_service_partition_endpoint(service_name,
+                                                     endpoint, resolver)
 
-    def _test_single_service_partition_endpoint(self, service_name,
-                                                expected_endpoint,
-                                                resolver):
-        bridge = ClientEndpointBridge(resolver)
-        result = bridge.resolve(service_name)
-        assert result['endpoint_url'] == expected_endpoint
-
-    def test_known_endpoints_other(self):
-        resolver = _get_patched_session()._get_internal_component(
-            'endpoint_resolver')
-        for service_name, endpoint in KNOWN_AWS_PARTITION_WIDE.items():
-            self._test_single_service_partition_endpoint(service_name,
-                                                         endpoint, resolver)
-
-    def test_non_partition_endpoint_requires_region(self):
-        resolver = _get_patched_session()._get_internal_component(
-            'endpoint_resolver')
-        with self.assertRaises(NoRegionError):
-            resolver.construct_endpoint('ec2')
+def test_non_partition_endpoint_requires_region():
+    resolver = _get_patched_session()._get_internal_component(
+        'endpoint_resolver')
+    with pytest.raises(NoRegionError):
+        resolver.construct_endpoint('ec2')
 
 
 class TestEndpointResolution(BaseSessionTest):
@@ -523,10 +507,7 @@ class TestEndpointResolution(BaseSessionTest):
         client, stubber = self.create_stubbed_client('s3', 'us-east-2')
         stubber.add_response()
         client.list_buckets()
-        self.assertEqual(
-            stubber.requests[0].url,
-            'https://s3.us-east-2.amazonaws.com/'
-        )
+        assert stubber.requests[0].url == 'https://s3.us-east-2.amazonaws.com/'
 
     def test_regionalized_client_with_unknown_region(self):
         client, stubber = self.create_stubbed_client('s3', 'not-real')
@@ -534,23 +515,16 @@ class TestEndpointResolution(BaseSessionTest):
         client.list_buckets()
         # Validate we don't fall back to partition endpoint for
         # regionalized services.
-        self.assertEqual(
-            stubber.requests[0].url,
-            'https://s3.not-real.amazonaws.com/'
-        )
+        assert stubber.requests[0].url == 'https://s3.not-real.amazonaws.com/'
 
     def test_unregionalized_client_endpoint_resolution(self):
         client, stubber = self.create_stubbed_client('iam', 'us-west-2')
         stubber.add_response(body=self.xml_response)
         client.list_roles()
-        self.assertTrue(
-            stubber.requests[0].url.startswith('https://iam.amazonaws.com/')
-        )
+        assert stubber.requests[0].url.startswith('https://iam.amazonaws.com/')
 
     def test_unregionalized_client_with_unknown_region(self):
         client, stubber = self.create_stubbed_client('iam', 'not-real')
         stubber.add_response(body=self.xml_response)
         client.list_roles()
-        self.assertTrue(
-            stubber.requests[0].url.startswith('https://iam.amazonaws.com/')
-        )
+        assert stubber.requests[0].url.startswith('https://iam.amazonaws.com/')

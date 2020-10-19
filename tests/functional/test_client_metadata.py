@@ -20,25 +20,25 @@ class TestClientMeta(unittest.TestCase):
 
     def test_region_name_on_meta(self):
         client = self.session.create_client('s3', 'us-west-2')
-        self.assertEqual(client.meta.region_name, 'us-west-2')
+        assert client.meta.region_name == 'us-west-2'
 
     def test_endpoint_url_on_meta(self):
         client = self.session.create_client('s3', 'us-west-2',
                                             endpoint_url='https://foo')
-        self.assertEqual(client.meta.endpoint_url, 'https://foo')
+        assert client.meta.endpoint_url == 'https://foo'
 
     def test_client_has_standard_partition_on_meta(self):
         client = self.session.create_client('s3', 'us-west-2')
-        self.assertEqual(client.meta.partition, 'aws')
+        assert client.meta.partition == 'aws'
 
     def test_client_has_china_partition_on_meta(self):
         client = self.session.create_client('s3', 'cn-north-1')
-        self.assertEqual(client.meta.partition, 'aws-cn')
+        assert client.meta.partition == 'aws-cn'
 
     def test_client_has_gov_partition_on_meta(self):
         client = self.session.create_client('s3', 'us-gov-west-1')
-        self.assertEqual(client.meta.partition, 'aws-us-gov')
+        assert client.meta.partition == 'aws-us-gov'
 
     def test_client_has_no_partition_on_meta_if_custom_region(self):
         client = self.session.create_client('s3', 'myregion')
-        self.assertEqual(client.meta.partition, 'aws')
+        assert client.meta.partition == 'aws'

@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import string
+import pytest
 
 import jmespath
 from jmespath.exceptions import JMESPathError
@@ -130,7 +131,8 @@ KNOWN_EXTRA_OUTPUT_KEYS = [
 ]
 
 
-def test_lint_pagination_configs():
+def _generate_page_configs():
+    page_configs = []
     session = botocore.session.get_session()
     loader = session.get_component('data_loader')
     services = loader.list_available_services('paginators-1')
@@ -139,8 +141,14 @@ def test_lint_pagination_configs():
         page_config = loader.load_service_model(service_name,
                                                 'paginators-1',
                                                 service_model.api_version)
-        for op_name, single_config in page_config['pagination'].items():
-            _lint_single_paginator(op_name, single_config, service_model)
+        yield (service_model, page_config['pagination'])
+    return page_configs
+
+
+@pytest.mark.parametrize('service_model, pagination', _generate_page_configs())
+def test_lint_pagination_configs(service_model, pagination):
+    for op_name, single_config in pagination.items():
+        _lint_single_paginator(op_name, single_config, service_model)
 
 
 def _lint_single_paginator(operation_name, page_config,
