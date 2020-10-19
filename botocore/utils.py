@@ -23,9 +23,11 @@ import random
 import os
 import socket
 import cgi
+import warnings
 
 import dateutil.parser
 from dateutil.tz import tzutc
+from urllib3.util.url import IPV6_ADDRZ_RE
 
 import botocore
 import botocore.awsrequest
@@ -40,14 +42,16 @@ from botocore.exceptions import (
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
     ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
-    InvalidRegionError, UnsupportedOutpostResourceError,
+    InvalidRegionError, InvalidIMDSEndpointError, UnsupportedOutpostResourceError,
     UnsupportedS3ControlConfigurationError, UnsupportedS3ControlArnError,
-    InvalidHostLabelError,
+    InvalidHostLabelError, HTTPClientError
 )
+from urllib3.exceptions import LocationParseError
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
 METADATA_BASE_URL = 'http://169.254.169.254/'
+METADATA_BASE_URL_IPv6 = 'http://[fe80:ec2::254%eth0]/'
 
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
@@ -274,10 +278,11 @@ class IMDSFetcher(object):
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
-                 env=None, user_agent=None):
+                 env=None, user_agent=None, config=None):
         self._timeout = timeout
         self._num_attempts = num_attempts
-        self._base_url = base_url
+        self._base_url = self._select_base_url(base_url, config)
+
         if env is None:
             env = os.environ.copy()
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
@@ -287,6 +292,36 @@ class IMDSFetcher(object):
             timeout=self._timeout,
             proxies=get_environ_proxies(self._base_url),
         )
+
+    def get_base_url(self):
+        return self._base_url
+    
+    def _select_base_url(self, base_url, config):
+        if config is None:
+            config = {}
+
+        requires_ipv6 = ensure_boolean(config.get('imds_use_ipv6', False))
+        custom_metadata_endpoint = config.get('ec2_metadata_service_endpoint')
+
+        if requires_ipv6 and custom_metadata_endpoint:
+            logger.warn("Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint.")
+        
+        chosen_base_url = None
+
+        if base_url != METADATA_BASE_URL:
+            chosen_base_url = base_url
+        elif custom_metadata_endpoint:
+            chosen_base_url = custom_metadata_endpoint
+        elif requires_ipv6:
+            chosen_base_url = METADATA_BASE_URL_IPv6
+        else:
+            chosen_base_url = METADATA_BASE_URL
+
+        logger.info("IMDS ENDPOINT: %s" % chosen_base_url)
+        if not is_valid_uri(chosen_base_url):
+            raise InvalidIMDSEndpointError(endpoint=chosen_base_url)
+
+        return chosen_base_url
 
     def _fetch_metadata_token(self):
         self._assert_enabled()
@@ -308,6 +343,11 @@ class IMDSFetcher(object):
                     raise BadIMDSRequestError(request)
             except ReadTimeoutError:
                 return None
+            except HTTPClientError as e:
+                if isinstance(e.kwargs.get('error'), LocationParseError):
+                    raise InvalidIMDSEndpointError(endpoint=url, error=e)
+                else:
+                    raise
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
@@ -896,6 +936,10 @@ class ArgumentGenerator(object):
         ])
 
 
+def is_valid_ipv6_endpoint_url(endpoint_url):
+    netloc = urlparse(endpoint_url).netloc
+    return IPV6_ADDRZ_RE.match(netloc) is not None
+
 def is_valid_endpoint_url(endpoint_url):
     """Verify the endpoint_url is valid.
 
@@ -919,6 +963,8 @@ def is_valid_endpoint_url(endpoint_url):
         re.IGNORECASE)
     return allowed.match(hostname)
 
+def is_valid_uri(endpoint_url):
+    return is_valid_endpoint_url(endpoint_url) or is_valid_ipv6_endpoint_url(endpoint_url)
 
 def validate_region_name(region_name):
     """Provided region_name must be a valid host label."""

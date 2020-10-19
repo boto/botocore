@@ -26,6 +26,7 @@ from botocore.awsrequest import AWSResponse
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
+from botocore.exceptions import InvalidIMDSEndpointError
 from botocore.exceptions import ReadTimeoutError
 from botocore.exceptions import ConnectTimeoutError
 from botocore.exceptions import UnsupportedS3ArnError
@@ -68,6 +69,7 @@ from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenLoader
+from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
 from botocore.exceptions import SSOTokenLoadError
 from botocore.utils import IMDSFetcher
 from botocore.utils import BadIMDSRequestError
@@ -2292,11 +2294,25 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
     def add_imds_connection_error(self, exception):
         self._imds_responses.append(exception)
 
+    def add_default_imds_responses(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
     def get_imds_response(self, request):
         response = self._imds_responses.pop(0)
         if isinstance(response, Exception):
             raise response
         return response
+
+    def _test_imds_base_url(self, config, expected_url):
+        self.add_default_imds_responses()
+
+        fetcher = InstanceMetadataFetcher(config=config)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(fetcher.get_base_url(), expected_url)
 
     def test_disabled_by_environment(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'true'}
@@ -2316,20 +2332,78 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         url = 'https://example.com/'
         env = {'AWS_EC2_METADATA_DISABLED': 'false'}
 
-        self.add_get_token_imds_response(token='token')
-        self.add_get_role_name_imds_response()
-        self.add_get_credentials_imds_response()
+        self.add_default_imds_responses()
 
         fetcher = InstanceMetadataFetcher(base_url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
 
         self.assertEqual(result, self._expected_creds)
 
+    def test_imds_use_ipv6(self):
+        configs = [({'imds_use_ipv6': 'true'},'http://[fe80:ec2::254%eth0]/'),
+                ({'imds_use_ipv6': 'tRuE'}, 'http://[fe80:ec2::254%eth0]/'), 
+                ({'imds_use_ipv6': 'false'}, 'http://169.254.169.254/'), 
+                ({'imds_use_ipv6': 'foo'}, 'http://169.254.169.254/'),
+                ({'imds_use_ipv6': 'true',
+                'ec2_metadata_service_endpoint': 'http://[fe80:ec2::010%eth0]/'},
+                'http://[fe80:ec2::010%eth0]/')]
+
+        for config, expected_url in configs:
+            self._test_imds_base_url(config, expected_url)
+
+    def test_metadata_endpoint(self):
+        urls = ['http://fe80:ec2:0000:0000:0000:0000:0000:0000/',
+                'http://[fe80:ec2::010%eth0]/', 'http://192.168.1.1/']
+        for url in urls:
+            self.assertTrue(is_valid_uri(url))
+        
+    def test_ipv6_endpoint_no_brackets_env_var_set(self):
+        url = 'http://fe80:ec2::010/'
+        config = {'ec2_metadata_service_endpoint': url}
+        self.assertFalse(is_valid_ipv6_endpoint_url(url))
+
+    def test_ipv6_invalid_endpoint(self):
+        url = 'not.a:valid:dom@in'
+        config = {'ec2_metadata_service_endpoint': url}
+        with self.assertRaises(InvalidIMDSEndpointError):
+            InstanceMetadataFetcher(config=config)
+
+    def test_ipv6_endpoint_env_var_set_and_args(self):
+        url = 'http://[fe80:ec2::254]/'
+        url_arg = 'http://fe80:ec2:0000:0000:0000:8a2e:0370:7334/'
+        config = {'ec2_metadata_service_endpoint': url}
+
+        self.add_default_imds_responses()
+
+        fetcher = InstanceMetadataFetcher(config=config, base_url=url_arg)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(fetcher.get_base_url(), url_arg)
+
+    def test_ipv6_imds_not_allocated(self):
+        url = 'http://fe80:ec2:0000:0000:0000:0000:0000:0000/'
+        config = {'ec2_metadata_service_endpoint': url}
+
+        self.add_imds_response(
+            status_code=400, body=b'{}')
+
+        fetcher = InstanceMetadataFetcher(config=config)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_ipv6_imds_empty_config(self):
+        configs = [({'ec2_metadata_service_endpoint': ''},'http://169.254.169.254/'),
+                ({'imds_use_ipv6': ''}, 'http://169.254.169.254/'),
+                ({}, 'http://169.254.169.254/'),
+                (None, 'http://169.254.169.254/')]
+
+        for config, expected_url in configs:
+            self._test_imds_base_url(config, expected_url)
+
     def test_includes_user_agent_header(self):
         user_agent = 'my-user-agent'
-        self.add_get_token_imds_response(token='token')
-        self.add_get_role_name_imds_response()
-        self.add_get_credentials_imds_response()
+        self.add_default_imds_responses()
 
         InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
@@ -2442,9 +2516,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_token_is_included(self):
         user_agent = 'my-user-agent'
-        self.add_get_token_imds_response(token='token')
-        self.add_get_role_name_imds_response()
-        self.add_get_credentials_imds_response()
+        self.add_default_imds_responses()
 
         result = InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
