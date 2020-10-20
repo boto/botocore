@@ -370,10 +370,10 @@ class RefreshableCredentials(Credentials):
     """
     # The time at which we'll attempt to refresh, but not
     # block if someone else is refreshing.
-    _advisory_refresh_timeout = 15 * 60
+    _advisory_refresh_timeout = int(os.getenv('BOTOCORE_TOKEN_ADVISORY_REFRESH_TIMEOUT', 15 * 60))
     # The time at which all threads will block waiting for
     # refreshed credentials.
-    _mandatory_refresh_timeout = 10 * 60
+    _mandatory_refresh_timeout = int(os.getenv('BOTOCORE_TOKEN_MANDATORY_REFRESH_TIMEOUT', 10 * 60))
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,

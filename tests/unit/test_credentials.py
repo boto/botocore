@@ -107,6 +107,17 @@ class TestRefreshableCredentials(TestCredentials):
             time_fetcher=self.mock_time
         )
 
+        environ_mock = {
+            'BOTOCORE_TOKEN_ADVISORY_REFRESH_TIMEOUT': 10 * 60,
+            'BOTOCORE_TOKEN_MANDATORY_REFRESH_TIMEOUT': 5 * 60,
+        }
+        with mock.patch.dict(os.environ, environ_mock):
+            self.override_creds = credentials.RefreshableCredentials(
+                'ORIGINAL-ACCESS', 'ORIGINAL-SECRET', 'ORIGINAL-TOKEN',
+                self.expiry_time, self.refresher, 'iam-role',
+                time_fetcher=self.mock_time
+            )
+
     def test_refresh_needed(self):
         # The expiry time was set for 30 minutes ago, so if we
         # say the current time is utcnow(), then we should need
@@ -171,6 +182,17 @@ class TestRefreshableCredentials(TestCredentials):
 
         with self.assertRaises(botocore.exceptions.CredentialRetrievalError):
             self.creds.access_key
+
+    def test_refresh_needed_environment_override(self):
+        # Make sure that if the specified time limit difference is 10
+        # minutes (in the environment overriden) credentials then we
+        # refresh
+        self.mock_time.return_value = (
+            datetime.now(tzlocal()) - timedelta(minutes=20))
+        self.assertTrue(self.override_creds.refresh_needed())
+        self.assertEqual(self.creds.access_key, 'NEW-ACCESS')
+        self.assertEqual(self.creds.secret_key, 'NEW-SECRET')
+        self.assertEqual(self.creds.token, 'NEW-TOKEN')
 
 
 class TestDeferredRefreshableCredentials(unittest.TestCase):
