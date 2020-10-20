@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.19.1
+======
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``batch``: Update batch client to latest version
+
+
+1.19.0
+======
+
+* api-change:``backup``: Update backup client to latest version
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* feature:imds: Updated InstanceMetadataFetcher to use custom ipv6 uri as endpoint if envvar or config set
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.18.18
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.18.17
 =======
 

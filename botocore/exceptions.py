@@ -92,6 +92,10 @@ class ConnectionError(BotoCoreError):
     fmt = 'An HTTP Client failed to establish a connection: {error}'
 
 
+class InvalidIMDSEndpointError(BotoCoreError):
+    fmt = 'Invalid endpoint EC2 Instance Metadata endoints: {endpoint}'
+
+
 class EndpointConnectionError(ConnectionError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 

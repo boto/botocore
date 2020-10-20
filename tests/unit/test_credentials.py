@@ -1660,6 +1660,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
             'config_file': 'c',
             'metadata_service_timeout': 1,
             'metadata_service_num_attempts': 1,
+            'imds_use_ipv6': 'false',
         }
         self.config_loader = ConfigValueStore()
         for name, value in self.fake_instance_variables.items():
