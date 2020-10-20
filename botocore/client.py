@@ -29,8 +29,7 @@ from botocore.paginate import Paginator
 from botocore.utils import (
     CachedProperty, get_service_module_name, S3RegionRedirector,
     S3ArnParamHandler, S3EndpointSetter, ensure_boolean,
-    S3ControlArnParamHandler, S3ControlEndpointSetter,
-)
+    S3ControlArnParamHandler, S3ControlEndpointSetter)
 from botocore.args import ClientArgsCreator
 from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses

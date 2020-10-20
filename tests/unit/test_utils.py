@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import io
+from unittest.mock import call
 
 from tests import unittest
 from tests import RawResponse
@@ -1926,8 +1927,10 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_register(self):
         event_emitter = mock.Mock()
         self.endpoint_setter.register(event_emitter)
-        event_emitter.register.assert_called_with(
-            'before-sign.s3', self.endpoint_setter.set_endpoint)
+        event_emitter.register.assert_has_calls([
+            call('before-sign.s3', self.endpoint_setter.set_endpoint),
+            call('before-call.s3.WriteGetObjectResponse', self.endpoint_setter.update_endpoint_to_banner)
+        ])
 
     def test_outpost_endpoint(self):
         request = self.get_s3_outpost_request()

@@ -61,7 +61,7 @@ REGISTER_LAST = object()
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 _ACCESSPOINT_ARN = (
-    r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
+    r'^arn:(aws).*:(s3|s3-banner):[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
     r'[a-zA-Z0-9\-]{1,63}$'
 )
 _OUTPOST_ARN = (

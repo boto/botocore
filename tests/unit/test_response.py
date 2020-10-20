@@ -194,7 +194,7 @@ class FakeRawResponse(six.BytesIO):
 class TestGetResponse(BaseResponseTest):
     maxDiff = None
 
-    def test_get_response_streaming_ok(self):
+    def test_get_response_streaming_ok_transfer_encoding_chunked(self):
         headers = {
             'content-type': 'image/png',
             'server': 'AmazonS3',
@@ -214,6 +214,25 @@ class TestGetResponse(BaseResponseTest):
         self.assertTrue(isinstance(res[1]['Body'], response.StreamingBody))
         self.assertEqual(res[1]['ETag'],
                          '"00000000000000000000000000000000"')
+
+    def test_get_response_etag_missing(self):
+        headers = {
+            'content-type': 'image/png',
+            'server': 'AmazonS3',
+            'AcceptRanges': 'bytes',
+            'Content-Length': '23',
+        }
+        raw = FakeRawResponse(b'\x89PNG\r\n\x1a\n\x00\x00')
+
+        http_response = AWSResponse(None, 200, headers, raw)
+
+        session = botocore.session.get_session()
+        service_model = session.get_service_model('s3')
+        operation_model = service_model.operation_model('GetObject')
+
+        res = response.get_response(operation_model, http_response)
+        self.assertTrue(isinstance(res[1]['Body'], response.StreamingBody))
+        self.assertFalse('Etag' in res[1])
 
     def test_get_response_streaming_ng(self):
         headers = {

@@ -698,6 +698,14 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         # Try to retrieve the object using the presigned url.
         self.assertEqual(http_get(presigned_url).data, b'foo')
 
+    def test_presign_s3banner(self):
+        self.client_config.signature_version = 's3v4'
+        self.client = self.session.create_client(
+            's3', config=self.client_config)
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': 'arn:aws:s3-banner:us-west-2:123456789012:accesspoint:my-banner-ap-name', 'Key': 'test2.txt'})
+        self.assertTrue(presigned_url.startswith('https://my-banner-ap-name-123456789012.s3-banner.us-west-2.amazonaws.com/test2.txt'), )
+
     def test_presign_post_sigv2(self):
 
         # Create some of the various supported conditions.
