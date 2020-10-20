@@ -117,10 +117,9 @@ Each call to ``parse()`` returns a dict has this form::
 import re
 import base64
 import json
-import xml.etree.cElementTree
 import logging
 
-from botocore.compat import six, XMLParseError
+from botocore.compat import six, ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 
 from botocore.utils import parse_timestamp, merge_dicts, \
@@ -446,8 +445,8 @@ class BaseXMLResponseParser(ResponseParser):
 
     def _parse_xml_string_to_dom(self, xml_string):
         try:
-            parser = xml.etree.cElementTree.XMLParser(
-                target=xml.etree.cElementTree.TreeBuilder(),
+            parser = ETree.XMLParser(
+                target=ETree.TreeBuilder(),
                 encoding=self.DEFAULT_ENCODING)
             parser.feed(xml_string)
             root = parser.close()
@@ -758,7 +757,7 @@ class EventStreamXMLParser(BaseEventStreamParser, BaseXMLResponseParser):
 
     def _initial_body_parse(self, xml_string):
         if not xml_string:
-            return xml.etree.cElementTree.Element('')
+            return ETree.Element('')
         return self._parse_xml_string_to_dom(xml_string)
 
 
@@ -941,7 +940,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
 
     def _initial_body_parse(self, xml_string):
         if not xml_string:
-            return xml.etree.cElementTree.Element('')
+            return ETree.Element('')
         return self._parse_xml_string_to_dom(xml_string)
 
     def _do_error_parse(self, response, shape):

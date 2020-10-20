@@ -471,6 +471,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         r'AWS4-HMAC-SHA256 '
         r'Credential=\w+/\d+/'
         r'(?P<signing_region>[a-z0-9-]+)/'
+        r'(?P<signing_name>[a-z0-9-]+)/'
     )
 
     def setUp(self):
@@ -489,9 +490,31 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             auth_header).group('signing_region')
         self.assertEqual(expected_region, actual_region)
 
+    def assert_signing_name(self, request, expected_name):
+        auth_header = request.headers['Authorization'].decode('utf-8')
+        actual_name = self._V4_AUTH_REGEX.match(
+            auth_header).group('signing_name')
+        self.assertEqual(expected_name, actual_name)
+
     def assert_signing_region_in_url(self, url, expected_region):
         qs_components = parse_qs(urlsplit(url).query)
         self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
+
+    def assert_expected_copy_source_header(self,
+                                           http_stubber, expected_copy_source):
+        request = self.http_stubber.requests[0]
+        self.assertIn('x-amz-copy-source', request.headers)
+        self.assertEqual(
+            request.headers['x-amz-copy-source'], expected_copy_source)
+
+    def add_copy_object_response(self, http_stubber):
+        http_stubber.add_response(
+            body=b'<CopyObjectResult></CopyObjectResult>'
+        )
+
+    def assert_endpoint(self, request, expected_endpoint):
+        actual_endpoint = urlsplit(request.url).netloc
+        self.assertEqual(actual_endpoint, expected_endpoint)
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
@@ -628,6 +651,161 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         url = self.client.generate_presigned_url(
             'get_object', {'Bucket': accesspoint_arn, 'Key': 'mykey'})
         self.assert_signing_region_in_url(url, 'us-east-1')
+
+    def test_copy_source_str_with_accesspoint_arn(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_str_with_accesspoint_arn_and_version_id(self):
+        copy_source = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject?versionId=myversionid'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject'
+            )
+        )
+
+    def test_copy_source_dict_with_accesspoint_arn_and_version_id(self):
+        copy_source = {
+            'Bucket':
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
+            'Key': 'myprefix/myobject',
+            'VersionId': 'myversionid'
+        }
+        self.client, self.http_stubber = self.create_stubbed_s3_client()
+        self.add_copy_object_response(self.http_stubber)
+        self.client.copy_object(
+            Bucket='mybucket', Key='mykey', CopySource=copy_source
+        )
+        self.assert_expected_copy_source_header(
+            self.http_stubber,
+            expected_copy_source=(
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'myendpoint/object/myprefix/myobject?versionId=myversionid'
+            )
+        )
+
+    def test_basic_outpost_arn(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1')
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=outpost_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-outposts')
+        self.assert_signing_region(request, 'us-west-2')
+        expected_endpoint = (
+            'myaccesspoint-123456789012.op-01234567890123456.'
+            's3-outposts.us-west-2.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+    def test_outpost_arn_with_s3_accelerate(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            config=Config(s3={'use_accelerate_endpoint': True}))
+        with self.assertRaises(
+                botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_outpost_arn_with_s3_dualstack(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            config=Config(s3={'use_dualstack_endpoint': True}))
+        with self.assertRaises(
+                botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_format(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_no_accesspoint(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_resource_format(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:myaccesspoint'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_sub_resources(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:mybucket:object:foo'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_incorrect_outpost_invalid_character(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-0123456.890123456:accesspoint:myaccesspoint'
+        )
+        with self.assertRaises(botocore.exceptions.ParamValidationError):
+            self.client.list_objects(Bucket=outpost_arn)
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
@@ -1326,7 +1504,7 @@ def test_correct_url_used_for_s3():
     yield t.case(
         region='fips-us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
-        expected_url='https://bucket.s3-fips-us-gov-west-1.amazonaws.com/key')
+        expected_url='https://bucket.s3-fips.us-gov-west-1.amazonaws.com/key')
 
 
     # Test path style addressing.

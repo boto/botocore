@@ -92,6 +92,10 @@ class ConnectionError(BotoCoreError):
     fmt = 'An HTTP Client failed to establish a connection: {error}'
 
 
+class InvalidIMDSEndpointError(BotoCoreError):
+    fmt = 'Invalid endpoint EC2 Instance Metadata endoints: {endpoint}'
+
+
 class EndpointConnectionError(ConnectionError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
@@ -298,6 +302,17 @@ class UnknownParameterError(ValidationError):
     )
 
 
+class InvalidRegionError(ValidationError, ValueError):
+    """
+    Invalid region_name provided to client or resource.
+
+    :ivar region_name: region_name that was being validated.
+    """
+    fmt = (
+        "Provided region_name '{region_name}' doesn't match a supported format."
+    )
+
+
 class AliasConflictParameterError(ValidationError):
     """
     Error when an alias is provided for a parameter as well as the original.
@@ -461,10 +476,47 @@ class UnsupportedS3ArnError(BotoCoreError):
     )
 
 
+class UnsupportedS3ControlArnError(BotoCoreError):
+    """Error when S3 ARN provided to S3 control parameter is not supported"""
+    fmt = (
+        'S3 ARN "{arn}" provided is invalid for this operation. {msg}'
+    )
+
+
+class InvalidHostLabelError(BotoCoreError):
+    """Error when an invalid host label would be bound to an endpoint"""
+    fmt = (
+        'Invalid host label to be bound to the hostname of the endpoint: '
+        '"{label}".'
+    )
+
+
+class UnsupportedOutpostResourceError(BotoCoreError):
+    """Error when S3 Outpost ARN provided to Bucket parameter is incomplete"""
+    fmt = (
+        'S3 Outpost ARN resource "{resource_name}" provided to "Bucket" '
+        'parameter is invalid. Only ARNs for S3 Outpost arns with an '
+        'access-point sub-resource are supported.'
+    )
+
+
 class UnsupportedS3AccesspointConfigurationError(BotoCoreError):
     """Error when an unsupported configuration is used with access-points"""
     fmt = (
         'Unsupported configuration when using S3 access-points: {msg}'
+    )
+
+class InvalidEndpointDiscoveryConfigurationError(BotoCoreError):
+    """Error when invalid value supplied for endpoint_discovery_enabled"""
+    fmt = (
+        'Unsupported configuration value for endpoint_discovery_enabled. '
+        'Expected one of ("true", "false", "auto") but got {config_value}.'
+    )
+
+class UnsupportedS3ControlConfigurationError(BotoCoreError):
+    """Error when an unsupported configuration is used with S3 Control"""
+    fmt = (
+        'Unsupported configuration when using S3 Control: {msg}'
     )
 
 

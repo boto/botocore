@@ -18,7 +18,6 @@ This module contains builtin handlers for events emitted by botocore.
 
 import base64
 import logging
-import xml.etree.cElementTree
 import copy
 import re
 import warnings
@@ -26,7 +25,8 @@ import uuid
 
 from botocore.compat import (
     unquote, json, six, unquote_str, ensure_bytes, get_md5,
-    MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit, XMLParseError
+    MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit, XMLParseError,
+    ETree,
 )
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
@@ -60,10 +60,15 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
-VALID_S3_ARN = re.compile(
+_ACCESSPOINT_ARN = (
     r'^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
     r'[a-zA-Z0-9\-]{1,63}$'
 )
+_OUTPOST_ARN = (
+    r'^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
+    r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$'
+)
+VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {
@@ -106,8 +111,8 @@ def check_for_200_error(response, **kwargs):
 def _looks_like_special_case_error(http_response):
     if http_response.status_code == 200:
         try:
-            parser = xml.etree.cElementTree.XMLParser(
-                target=xml.etree.cElementTree.TreeBuilder(),
+            parser = ETree.XMLParser(
+                target=ETree.TreeBuilder(),
                 encoding='utf-8')
             parser.feed(http_response.content)
             root = parser.close()
@@ -307,6 +312,12 @@ def document_copy_source_form(section, event_name, **kwargs):
             "the string format because it is more explicit.  The dictionary "
             "format is: {'Bucket': 'bucket', 'Key': 'key', 'VersionId': 'id'}."
             "  Note that the VersionId key is optional and may be omitted."
+            " To specify an S3 access point, provide the access point"
+            " ARN for the ``Bucket`` key in the copy source dictionary. If you"
+            " want to provide the copy source for an S3 access point as a"
+            " string instead of a dictionary, the ARN provided must be the"
+            " full S3 access point object ARN"
+            " (i.e. {accesspoint_arn}/object/{key})"
         )
 
 
@@ -340,12 +351,16 @@ def handle_copy_source_param(params, **kwargs):
 def _quote_source_header_from_dict(source_dict):
     try:
         bucket = source_dict['Bucket']
-        key = percent_encode(source_dict['Key'], safe=SAFE_CHARS + '/')
+        key = source_dict['Key']
         version_id = source_dict.get('VersionId')
+        if VALID_S3_ARN.search(bucket):
+            final = '%s/object/%s' % (bucket, key)
+        else:
+            final = '%s/%s' % (bucket, key)
     except KeyError as e:
         raise ParamValidationError(
             report='Missing required parameter: %s' % str(e))
-    final = '%s/%s' % (bucket, key)
+    final = percent_encode(final, safe=SAFE_CHARS + '/')
     if version_id is not None:
         final += '?versionId=%s' % version_id
     return final
@@ -464,8 +479,8 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     if http_response.raw is None:
         return
     response_body = http_response.content
-    parser = xml.etree.cElementTree.XMLParser(
-        target=xml.etree.cElementTree.TreeBuilder(),
+    parser = ETree.XMLParser(
+        target=ETree.TreeBuilder(),
         encoding='utf-8')
     parser.feed(response_body)
     root = parser.close()
@@ -834,6 +849,7 @@ class ClientMethodAlias(object):
         return getattr(client, self._actual)
 
 
+# TODO: Remove this class as it is no longer used
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
@@ -1049,17 +1065,25 @@ BUILTIN_HANDLERS = [
     ('before-call.neptune.CreateDBCluster',
      inject_presigned_url_rds),
 
-    # RDS PresignedUrl documentation customizations
+    # Neptune PresignedUrl documentation customizations
     ('docs.*.neptune.CopyDBClusterSnapshot.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
     ('docs.*.neptune.CreateDBCluster.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 
     #############
-    # S3 Control
+    # DocDB
     #############
-    ('before-call.s3-control.*',
-     HeaderToHostHoister('x-amz-account-id').hoist),
+    ('before-call.docdb.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.docdb.CreateDBCluster',
+     inject_presigned_url_rds),
+
+    # DocDB PresignedUrl documentation customizations
+    ('docs.*.docdb.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.docdb.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 
     ###########
     # SMS Voice

@@ -38,18 +38,71 @@ EMPTY_MESSAGE = (
     )
 )
 
-INT32_HEADER = (
-    (b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00\x00\xa0\x0c"
-     b"{'foo':'bar'}\xd3\x89\x02\x85"),
+INT8_HEADER = (
+    (
+        b"\x00\x00\x00\x17\x00\x00\x00\x07)\x86\x01X\x04"
+        b"byte\x02\xff\xc2\xf8i\xdc"
+    ),
     EventStreamMessage(
         prelude=MessagePrelude(
-            total_length=0x2b,
-            headers_length=0x0e,
-            crc=0x348bec7b,
+            total_length=0x17,
+            headers_length=0x7,
+            crc=0x29860158,
         ),
-        headers={'event-id': 0x0000a00c},
-        payload=b"{'foo':'bar'}",
-        crc=0xd3890285,
+        headers={'byte': -1},
+        payload=b'',
+        crc=0xc2f869dc,
+    )
+)
+
+INT16_HEADER = (
+    (
+        b"\x00\x00\x00\x19\x00\x00\x00\tq\x0e\x92>\x05"
+        b"short\x03\xff\xff\xb2|\xb6\xcc"
+    ),
+    EventStreamMessage(
+        prelude=MessagePrelude(
+            total_length=0x19,
+            headers_length=0x9,
+            crc=0x710e923e,
+        ),
+        headers={'short': -1},
+        payload=b'',
+        crc=0xb27cb6cc,
+    )
+)
+
+INT32_HEADER = (
+    (
+        b"\x00\x00\x00\x1d\x00\x00\x00\r\x83\xe3\xf0\xe7\x07"
+        b"integer\x04\xff\xff\xff\xff\x8b\x8e\x12\xeb"
+    ),
+    EventStreamMessage(
+        prelude=MessagePrelude(
+            total_length=0x1D,
+            headers_length=0xD,
+            crc=0x83e3f0e7,
+        ),
+        headers={'integer': -1},
+        payload=b'',
+        crc=0x8b8e12eb,
+    )
+)
+
+INT64_HEADER = (
+    (
+        b"\x00\x00\x00\x1e\x00\x00\x00\x0e]J\xdb\x8d\x04"
+        b"long\x05\xff\xff\xff\xff\xff\xff\xff\xffK\xc22\xda"
+    ),
+    EventStreamMessage(
+        prelude=MessagePrelude(
+            total_length=0x1E,
+            headers_length=0xE,
+            crc=0x5d4adb8d,
+        ),
+        headers={'long': -1},
+        payload=b'',
+        crc=0x4bc232da,
     )
 )
 
@@ -137,7 +190,10 @@ ERROR_EVENT_MESSAGE = (
 # Tuples of encoded messages and their expected decoded output
 POSITIVE_CASES = [
     EMPTY_MESSAGE,
+    INT8_HEADER,
+    INT16_HEADER,
     INT32_HEADER,
+    INT64_HEADER,
     PAYLOAD_NO_HEADERS,
     PAYLOAD_ONE_STR_HEADER,
     ALL_HEADERS_TYPES,
@@ -286,9 +342,10 @@ def test_message_prelude_properties():
 
 
 def test_message_to_response_dict():
-    response_dict = INT32_HEADER[1].to_response_dict()
+    response_dict = PAYLOAD_ONE_STR_HEADER[1].to_response_dict()
     assert_equal(response_dict['status_code'], 200)
-    assert_equal(response_dict['headers'], {'event-id': 0x0000a00c})
+    expected_headers = {'content-type': 'application/json'}
+    assert_equal(response_dict['headers'], expected_headers)
     assert_equal(response_dict['body'], b"{'foo':'bar'}")
 
 
@@ -314,6 +371,12 @@ def test_unpack_uint32():
     (value, bytes_consumed) = DecodeUtils.unpack_uint32(b'\xDE\xAD\xBE\xEF')
     assert_equal(bytes_consumed, 4)
     assert_equal(value, 0xDEADBEEF)
+
+
+def test_unpack_int8():
+    (value, bytes_consumed) = DecodeUtils.unpack_int8(b'\xFE')
+    assert_equal(bytes_consumed, 1)
+    assert_equal(value, -2)
 
 
 def test_unpack_int16():

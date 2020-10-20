@@ -14,21 +14,23 @@ import logging
 import functools
 
 from botocore import waiter, xform_name
+from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
-from botocore.exceptions import ClientError, DataNotFoundError
-from botocore.exceptions import OperationNotPageableError
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import (
+    ClientError, DataNotFoundError, OperationNotPageableError,
+    UnknownSignatureVersionError, InvalidEndpointDiscoveryConfigurationError
+)
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
-from botocore.utils import CachedProperty
-from botocore.utils import get_service_module_name
-from botocore.utils import S3RegionRedirector
-from botocore.utils import S3ArnParamHandler
-from botocore.utils import S3EndpointSetter
+from botocore.utils import (
+    CachedProperty, get_service_module_name, S3RegionRedirector,
+    S3ArnParamHandler, S3EndpointSetter, ensure_boolean,
+    S3ControlArnParamHandler, S3ControlEndpointSetter,
+)
 from botocore.args import ClientArgsCreator
 from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
@@ -86,6 +88,9 @@ class ClientCreator(object):
         service_client = cls(**client_args)
         self._register_retries(service_client)
         self._register_s3_events(
+            service_client, endpoint_bridge, endpoint_url, client_config,
+            scoped_config)
+        self._register_s3_control_events(
             service_client, endpoint_bridge, endpoint_url, client_config,
             scoped_config)
         self._register_endpoint_discovery(
@@ -197,13 +202,34 @@ class ClientCreator(object):
         elif self._config_store:
             enabled = self._config_store.get_config_variable(
                 'endpoint_discovery_enabled')
-        if enabled:
-            manager = EndpointDiscoveryManager(client)
+
+        enabled = self._normalize_endpoint_discovery_config(enabled)
+        if enabled and self._requires_endpoint_discovery(client, enabled):
+            discover = enabled is True
+            manager = EndpointDiscoveryManager(client, always_discover=discover)
             handler = EndpointDiscoveryHandler(manager)
             handler.register(events, service_id)
         else:
             events.register('before-parameter-build',
                             block_endpoint_discovery_required_operations)
+
+    def _normalize_endpoint_discovery_config(self, enabled):
+        """Config must either be a boolean-string or string-literal 'auto'"""
+        if isinstance(enabled, str):
+            enabled = enabled.lower().strip()
+            if enabled == 'auto':
+                return enabled
+            elif enabled in ('true', 'false'):
+                return ensure_boolean(enabled)
+        elif isinstance(enabled, bool):
+            return enabled
+
+        raise InvalidEndpointDiscoveryConfigurationError(config_value=enabled)
+
+    def _requires_endpoint_discovery(self, client, enabled):
+        if enabled == "auto":
+            return client.meta.service_model.endpoint_discovery_required
+        return enabled
 
     def _register_s3_events(self, client, endpoint_bridge, endpoint_url,
                             client_config, scoped_config):
@@ -220,6 +246,21 @@ class ClientCreator(object):
         ).register(client.meta.events)
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
+
+    def _register_s3_control_events(
+        self, client, endpoint_bridge,
+        endpoint_url, client_config, scoped_config
+    ):
+        if client.meta.service_model.service_name != 's3control':
+            return
+        S3ControlArnParamHandler().register(client.meta.events)
+        S3ControlEndpointSetter(
+            endpoint_resolver=self._endpoint_resolver,
+            region=client.meta.region_name,
+            s3_config=client.meta.config.s3,
+            endpoint_url=endpoint_url,
+            partition=client.meta.partition
+        ).register(client.meta.events)
 
     def _set_s3_presign_signature_version(self, client_meta,
                                           client_config, scoped_config):

@@ -93,7 +93,7 @@ class TestS3Addressing(BaseSessionTest):
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
             prepared_request.url,
-            'https://safename.s3-fips-us-gov-west-1.amazonaws.com/')
+            'https://safename.s3-fips.us-gov-west-1.amazonaws.com/')
 
     def test_list_objects_non_dns_name_non_classic(self):
         self.region_name = 'us-west-2'
@@ -198,7 +198,7 @@ class TestS3Addressing(BaseSessionTest):
             'https://s3.us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
     def test_invalid_endpoint_raises_exception(self):
-        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
+        with self.assertRaisesRegexp(ValueError, 'Invalid region'):
             self.session.create_client('s3', 'Invalid region')
 
     def test_non_existent_region(self):

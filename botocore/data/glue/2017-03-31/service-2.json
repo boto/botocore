@@ -200,6 +200,23 @@
       ],
       "documentation":"<p>Stops one or more job runs for a specified job definition.</p>"
     },
+    "BatchUpdatePartition":{
+      "name":"BatchUpdatePartition",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"BatchUpdatePartitionRequest"},
+      "output":{"shape":"BatchUpdatePartitionResponse"},
+      "errors":[
+        {"shape":"InvalidInputException"},
+        {"shape":"EntityNotFoundException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Updates one or more partitions in a batch operation.</p>"
+    },
     "CancelMLTaskRun":{
       "name":"CancelMLTaskRun",
       "http":{
@@ -481,6 +498,40 @@
       ],
       "documentation":"<p>Removes a classifier from the Data Catalog.</p>"
     },
+    "DeleteColumnStatisticsForPartition":{
+      "name":"DeleteColumnStatisticsForPartition",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DeleteColumnStatisticsForPartitionRequest"},
+      "output":{"shape":"DeleteColumnStatisticsForPartitionResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Delete the partition column statistics of a column.</p>"
+    },
+    "DeleteColumnStatisticsForTable":{
+      "name":"DeleteColumnStatisticsForTable",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DeleteColumnStatisticsForTableRequest"},
+      "output":{"shape":"DeleteColumnStatisticsForTableResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Retrieves table statistics of columns.</p>"
+    },
     "DeleteConnection":{
       "name":"DeleteConnection",
       "http":{
@@ -743,6 +794,40 @@
         {"shape":"OperationTimeoutException"}
       ],
       "documentation":"<p>Lists all classifier objects in the Data Catalog.</p>"
+    },
+    "GetColumnStatisticsForPartition":{
+      "name":"GetColumnStatisticsForPartition",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetColumnStatisticsForPartitionRequest"},
+      "output":{"shape":"GetColumnStatisticsForPartitionResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Retrieves partition statistics of columns.</p>"
+    },
+    "GetColumnStatisticsForTable":{
+      "name":"GetColumnStatisticsForTable",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetColumnStatisticsForTableRequest"},
+      "output":{"shape":"GetColumnStatisticsForTableResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Retrieves table statistics of columns.</p>"
     },
     "GetConnection":{
       "name":"GetConnection",
@@ -1089,6 +1174,23 @@
       ],
       "documentation":"<p>Retrieves information about a specified partition.</p>"
     },
+    "GetPartitionIndexes":{
+      "name":"GetPartitionIndexes",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetPartitionIndexesRequest"},
+      "output":{"shape":"GetPartitionIndexesResponse"},
+      "errors":[
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"EntityNotFoundException"},
+        {"shape":"ConflictException"}
+      ],
+      "documentation":"<p>Retrieves the partition indexes associated with a table.</p>"
+    },
     "GetPartitions":{
       "name":"GetPartitions",
       "http":{
@@ -1120,6 +1222,22 @@
         {"shape":"OperationTimeoutException"}
       ],
       "documentation":"<p>Gets code to perform a specified mapping.</p>"
+    },
+    "GetResourcePolicies":{
+      "name":"GetResourcePolicies",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetResourcePoliciesRequest"},
+      "output":{"shape":"GetResourcePoliciesResponse"},
+      "errors":[
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Retrieves the security configurations for the resource policies set on individual resources, and also the account-level policy.</p> <p>This operation also returns the Data Catalog resource policy. However, if you enabled metadata encryption in Data Catalog settings, and you do not have permission on the AWS KMS key, the operation can't return the Data Catalog resource policy.</p>"
     },
     "GetResourcePolicy":{
       "name":"GetResourcePolicy",
@@ -1556,6 +1674,24 @@
       ],
       "documentation":"<p>Resets a bookmark entry.</p>"
     },
+    "ResumeWorkflowRun":{
+      "name":"ResumeWorkflowRun",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ResumeWorkflowRunRequest"},
+      "output":{"shape":"ResumeWorkflowRunResponse"},
+      "errors":[
+        {"shape":"InvalidInputException"},
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"ConcurrentRunsExceededException"},
+        {"shape":"IllegalWorkflowStateException"}
+      ],
+      "documentation":"<p>Restarts selected nodes of a previous partially completed workflow run and resumes the workflow run. The selected nodes and all nodes that are downstream from the selected nodes are run.</p>"
+    },
     "SearchTables":{
       "name":"SearchTables",
       "http":{
@@ -1839,6 +1975,40 @@
       ],
       "documentation":"<p>Modifies an existing classifier (a <code>GrokClassifier</code>, an <code>XMLClassifier</code>, a <code>JsonClassifier</code>, or a <code>CsvClassifier</code>, depending on which field is present).</p>"
     },
+    "UpdateColumnStatisticsForPartition":{
+      "name":"UpdateColumnStatisticsForPartition",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"UpdateColumnStatisticsForPartitionRequest"},
+      "output":{"shape":"UpdateColumnStatisticsForPartitionResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Creates or updates partition statistics of columns.</p>"
+    },
+    "UpdateColumnStatisticsForTable":{
+      "name":"UpdateColumnStatisticsForTable",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"UpdateColumnStatisticsForTableRequest"},
+      "output":{"shape":"UpdateColumnStatisticsForTableResponse"},
+      "errors":[
+        {"shape":"EntityNotFoundException"},
+        {"shape":"InvalidInputException"},
+        {"shape":"InternalServiceException"},
+        {"shape":"OperationTimeoutException"},
+        {"shape":"GlueEncryptionException"}
+      ],
+      "documentation":"<p>Creates or updates table statistics of columns.</p>"
+    },
     "UpdateConnection":{
       "name":"UpdateConnection",
       "http":{
@@ -2091,6 +2261,11 @@
     "ActionList":{
       "type":"list",
       "member":{"shape":"Action"}
+    },
+    "AdditionalPlanOptionsMap":{
+      "type":"map",
+      "key":{"shape":"GenericString"},
+      "value":{"shape":"GenericString"}
     },
     "AlreadyExistsException":{
       "type":"structure",
@@ -2524,7 +2699,131 @@
       "type":"list",
       "member":{"shape":"BatchStopJobRunSuccessfulSubmission"}
     },
+    "BatchUpdatePartitionFailureEntry":{
+      "type":"structure",
+      "members":{
+        "PartitionValueList":{
+          "shape":"BoundedPartitionValueList",
+          "documentation":"<p>A list of values defining the partitions.</p>"
+        },
+        "ErrorDetail":{
+          "shape":"ErrorDetail",
+          "documentation":"<p>The details about the batch update partition error.</p>"
+        }
+      },
+      "documentation":"<p>Contains information about a batch update partition error.</p>"
+    },
+    "BatchUpdatePartitionFailureList":{
+      "type":"list",
+      "member":{"shape":"BatchUpdatePartitionFailureEntry"}
+    },
+    "BatchUpdatePartitionRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "Entries"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the catalog in which the partition is to be updated. Currently, this should be the AWS account ID.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the metadata database in which the partition is to be updated.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the metadata table in which the partition is to be updated.</p>"
+        },
+        "Entries":{
+          "shape":"BatchUpdatePartitionRequestEntryList",
+          "documentation":"<p>A list of up to 100 <code>BatchUpdatePartitionRequestEntry</code> objects to update.</p>"
+        }
+      }
+    },
+    "BatchUpdatePartitionRequestEntry":{
+      "type":"structure",
+      "required":[
+        "PartitionValueList",
+        "PartitionInput"
+      ],
+      "members":{
+        "PartitionValueList":{
+          "shape":"BoundedPartitionValueList",
+          "documentation":"<p>A list of values defining the partitions.</p>"
+        },
+        "PartitionInput":{
+          "shape":"PartitionInput",
+          "documentation":"<p>The structure used to update a partition.</p>"
+        }
+      },
+      "documentation":"<p>A structure that contains the values and structure used to update a partition.</p>"
+    },
+    "BatchUpdatePartitionRequestEntryList":{
+      "type":"list",
+      "member":{"shape":"BatchUpdatePartitionRequestEntry"},
+      "max":100,
+      "min":1
+    },
+    "BatchUpdatePartitionResponse":{
+      "type":"structure",
+      "members":{
+        "Errors":{
+          "shape":"BatchUpdatePartitionFailureList",
+          "documentation":"<p>The errors encountered when trying to update the requested partitions. A list of <code>BatchUpdatePartitionFailureEntry</code> objects.</p>"
+        }
+      }
+    },
+    "BinaryColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "MaximumLength",
+        "AverageLength",
+        "NumberOfNulls"
+      ],
+      "members":{
+        "MaximumLength":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Maximum length of the column.</p>"
+        },
+        "AverageLength":{
+          "shape":"NonNegativeDouble",
+          "documentation":"<p>Average length of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        }
+      },
+      "documentation":"<p>Defines a binary column statistics data.</p>"
+    },
+    "Blob":{"type":"blob"},
     "Boolean":{"type":"boolean"},
+    "BooleanColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "NumberOfTrues",
+        "NumberOfFalses",
+        "NumberOfNulls"
+      ],
+      "members":{
+        "NumberOfTrues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of true value.</p>"
+        },
+        "NumberOfFalses":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of false value.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        }
+      },
+      "documentation":"<p>Defines a boolean column statistics.</p>"
+    },
     "BooleanNullable":{"type":"boolean"},
     "BooleanValue":{"type":"boolean"},
     "BoundedPartitionValueList":{
@@ -2808,6 +3107,24 @@
       },
       "documentation":"<p>A column in a <code>Table</code>.</p>"
     },
+    "ColumnError":{
+      "type":"structure",
+      "members":{
+        "ColumnName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the column.</p>"
+        },
+        "Error":{
+          "shape":"ErrorDetail",
+          "documentation":"<p>The error message occurred during operation.</p>"
+        }
+      },
+      "documentation":"<p>Defines a column containing error.</p>"
+    },
+    "ColumnErrors":{
+      "type":"list",
+      "member":{"shape":"ColumnError"}
+    },
     "ColumnList":{
       "type":"list",
       "member":{"shape":"Column"}
@@ -2817,6 +3134,107 @@
       "max":1024,
       "min":1,
       "pattern":"[\\u0020-\\uD7FF\\uE000-\\uFFFD\\uD800\\uDC00-\\uDBFF\\uDFFF\\t]*"
+    },
+    "ColumnStatistics":{
+      "type":"structure",
+      "required":[
+        "ColumnName",
+        "ColumnType",
+        "AnalyzedTime",
+        "StatisticsData"
+      ],
+      "members":{
+        "ColumnName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the column.</p>"
+        },
+        "ColumnType":{
+          "shape":"TypeString",
+          "documentation":"<p>The type of the column.</p>"
+        },
+        "AnalyzedTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The analyzed time of the column statistics.</p>"
+        },
+        "StatisticsData":{
+          "shape":"ColumnStatisticsData",
+          "documentation":"<p>The statistics of the column.</p>"
+        }
+      },
+      "documentation":"<p>Defines a column statistics.</p>"
+    },
+    "ColumnStatisticsData":{
+      "type":"structure",
+      "required":["Type"],
+      "members":{
+        "Type":{
+          "shape":"ColumnStatisticsType",
+          "documentation":"<p>The name of the column.</p>"
+        },
+        "BooleanColumnStatisticsData":{
+          "shape":"BooleanColumnStatisticsData",
+          "documentation":"<p>Boolean Column Statistics Data.</p>"
+        },
+        "DateColumnStatisticsData":{
+          "shape":"DateColumnStatisticsData",
+          "documentation":"<p>Date Column Statistics Data.</p>"
+        },
+        "DecimalColumnStatisticsData":{
+          "shape":"DecimalColumnStatisticsData",
+          "documentation":"<p>Decimal Column Statistics Data.</p>"
+        },
+        "DoubleColumnStatisticsData":{
+          "shape":"DoubleColumnStatisticsData",
+          "documentation":"<p>Double Column Statistics Data.</p>"
+        },
+        "LongColumnStatisticsData":{
+          "shape":"LongColumnStatisticsData",
+          "documentation":"<p>Long Column Statistics Data.</p>"
+        },
+        "StringColumnStatisticsData":{
+          "shape":"StringColumnStatisticsData",
+          "documentation":"<p>String Column Statistics Data.</p>"
+        },
+        "BinaryColumnStatisticsData":{
+          "shape":"BinaryColumnStatisticsData",
+          "documentation":"<p>Binary Column Statistics Data.</p>"
+        }
+      },
+      "documentation":"<p>Defines a column statistics data.</p>"
+    },
+    "ColumnStatisticsError":{
+      "type":"structure",
+      "members":{
+        "ColumnStatistics":{
+          "shape":"ColumnStatistics",
+          "documentation":"<p>The ColumnStatistics of the column.</p>"
+        },
+        "Error":{
+          "shape":"ErrorDetail",
+          "documentation":"<p>The error message occurred during operation.</p>"
+        }
+      },
+      "documentation":"<p>Defines a column containing error.</p>"
+    },
+    "ColumnStatisticsErrors":{
+      "type":"list",
+      "member":{"shape":"ColumnStatisticsError"}
+    },
+    "ColumnStatisticsList":{
+      "type":"list",
+      "member":{"shape":"ColumnStatistics"}
+    },
+    "ColumnStatisticsType":{
+      "type":"string",
+      "enum":[
+        "BOOLEAN",
+        "DATE",
+        "DECIMAL",
+        "DOUBLE",
+        "LONG",
+        "STRING",
+        "BINARY"
+      ]
     },
     "ColumnTypeString":{
       "type":"string",
@@ -2908,6 +3326,17 @@
       "type":"list",
       "member":{"shape":"Condition"}
     },
+    "ConflictException":{
+      "type":"structure",
+      "members":{
+        "Message":{
+          "shape":"MessageString",
+          "documentation":"<p>A message describing the problem.</p>"
+        }
+      },
+      "documentation":"<p>The <code>CreatePartitions</code> API was called on a table that has indexes enabled. </p>",
+      "exception":true
+    },
     "ConfusionMatrix":{
       "type":"structure",
       "members":{
@@ -2943,7 +3372,7 @@
         },
         "ConnectionType":{
           "shape":"ConnectionType",
-          "documentation":"<p>The type of the connection. Currently, only JDBC is supported; SFTP is not supported.</p>"
+          "documentation":"<p>The type of the connection. Currently, SFTP is not supported.</p>"
         },
         "MatchCriteria":{
           "shape":"MatchCriteria",
@@ -2951,7 +3380,7 @@
         },
         "ConnectionProperties":{
           "shape":"ConnectionProperties",
-          "documentation":"<p>These key-value pairs define parameters for the connection:</p> <ul> <li> <p> <code>HOST</code> - The host URI: either the fully qualified domain name (FQDN) or the IPv4 address of the database host.</p> </li> <li> <p> <code>PORT</code> - The port number, between 1024 and 65535, of the port on which the database host is listening for database connections.</p> </li> <li> <p> <code>USER_NAME</code> - The name under which to log in to the database. The value string for <code>USER_NAME</code> is \"<code>USERNAME</code>\".</p> </li> <li> <p> <code>PASSWORD</code> - A password, if one is used, for the user name.</p> </li> <li> <p> <code>ENCRYPTED_PASSWORD</code> - When you enable connection password protection by setting <code>ConnectionPasswordEncryption</code> in the Data Catalog encryption settings, this field stores the encrypted password.</p> </li> <li> <p> <code>JDBC_DRIVER_JAR_URI</code> - The Amazon Simple Storage Service (Amazon S3) path of the JAR file that contains the JDBC driver to use.</p> </li> <li> <p> <code>JDBC_DRIVER_CLASS_NAME</code> - The class name of the JDBC driver to use.</p> </li> <li> <p> <code>JDBC_ENGINE</code> - The name of the JDBC engine to use.</p> </li> <li> <p> <code>JDBC_ENGINE_VERSION</code> - The version of the JDBC engine to use.</p> </li> <li> <p> <code>CONFIG_FILES</code> - (Reserved for future use.)</p> </li> <li> <p> <code>INSTANCE_ID</code> - The instance ID to use.</p> </li> <li> <p> <code>JDBC_CONNECTION_URL</code> - The URL for connecting to a JDBC data source.</p> </li> <li> <p> <code>JDBC_ENFORCE_SSL</code> - A Boolean string (true, false) specifying whether Secure Sockets Layer (SSL) with hostname matching is enforced for the JDBC connection on the client. The default is false.</p> </li> <li> <p> <code>CUSTOM_JDBC_CERT</code> - An Amazon S3 location specifying the customer's root certificate. AWS Glue uses this root certificate to validate the customer’s certificate when connecting to the customer database. AWS Glue only handles X.509 certificates. The certificate provided must be DER-encoded and supplied in Base64 encoding PEM format.</p> </li> <li> <p> <code>SKIP_CUSTOM_JDBC_CERT_VALIDATION</code> - By default, this is <code>false</code>. AWS Glue validates the Signature algorithm and Subject Public Key Algorithm for the customer certificate. The only permitted algorithms for the Signature algorithm are SHA256withRSA, SHA384withRSA or SHA512withRSA. For the Subject Public Key Algorithm, the key length must be at least 2048. You can set the value of this property to <code>true</code> to skip AWS Glue’s validation of the customer certificate.</p> </li> <li> <p> <code>CUSTOM_JDBC_CERT_STRING</code> - A custom JDBC certificate string which is used for domain match or distinguished name match to prevent a man-in-the-middle attack. In Oracle database, this is used as the <code>SSL_SERVER_CERT_DN</code>; in Microsoft SQL Server, this is used as the <code>hostNameInCertificate</code>.</p> </li> <li> <p> <code>CONNECTION_URL</code> - The URL for connecting to a general (non-JDBC) data source.</p> </li> <li> <p> <code>KAFKA_BOOTSTRAP_SERVERS</code> - A comma-separated list of host and port pairs that are the addresses of the Apache Kafka brokers in a Kafka cluster to which a Kafka client will connect to and bootstrap itself.</p> </li> </ul>"
+          "documentation":"<p>These key-value pairs define parameters for the connection:</p> <ul> <li> <p> <code>HOST</code> - The host URI: either the fully qualified domain name (FQDN) or the IPv4 address of the database host.</p> </li> <li> <p> <code>PORT</code> - The port number, between 1024 and 65535, of the port on which the database host is listening for database connections.</p> </li> <li> <p> <code>USER_NAME</code> - The name under which to log in to the database. The value string for <code>USER_NAME</code> is \"<code>USERNAME</code>\".</p> </li> <li> <p> <code>PASSWORD</code> - A password, if one is used, for the user name.</p> </li> <li> <p> <code>ENCRYPTED_PASSWORD</code> - When you enable connection password protection by setting <code>ConnectionPasswordEncryption</code> in the Data Catalog encryption settings, this field stores the encrypted password.</p> </li> <li> <p> <code>JDBC_DRIVER_JAR_URI</code> - The Amazon Simple Storage Service (Amazon S3) path of the JAR file that contains the JDBC driver to use.</p> </li> <li> <p> <code>JDBC_DRIVER_CLASS_NAME</code> - The class name of the JDBC driver to use.</p> </li> <li> <p> <code>JDBC_ENGINE</code> - The name of the JDBC engine to use.</p> </li> <li> <p> <code>JDBC_ENGINE_VERSION</code> - The version of the JDBC engine to use.</p> </li> <li> <p> <code>CONFIG_FILES</code> - (Reserved for future use.)</p> </li> <li> <p> <code>INSTANCE_ID</code> - The instance ID to use.</p> </li> <li> <p> <code>JDBC_CONNECTION_URL</code> - The URL for connecting to a JDBC data source.</p> </li> <li> <p> <code>JDBC_ENFORCE_SSL</code> - A Boolean string (true, false) specifying whether Secure Sockets Layer (SSL) with hostname matching is enforced for the JDBC connection on the client. The default is false.</p> </li> <li> <p> <code>CUSTOM_JDBC_CERT</code> - An Amazon S3 location specifying the customer's root certificate. AWS Glue uses this root certificate to validate the customer’s certificate when connecting to the customer database. AWS Glue only handles X.509 certificates. The certificate provided must be DER-encoded and supplied in Base64 encoding PEM format.</p> </li> <li> <p> <code>SKIP_CUSTOM_JDBC_CERT_VALIDATION</code> - By default, this is <code>false</code>. AWS Glue validates the Signature algorithm and Subject Public Key Algorithm for the customer certificate. The only permitted algorithms for the Signature algorithm are SHA256withRSA, SHA384withRSA or SHA512withRSA. For the Subject Public Key Algorithm, the key length must be at least 2048. You can set the value of this property to <code>true</code> to skip AWS Glue’s validation of the customer certificate.</p> </li> <li> <p> <code>CUSTOM_JDBC_CERT_STRING</code> - A custom JDBC certificate string which is used for domain match or distinguished name match to prevent a man-in-the-middle attack. In Oracle database, this is used as the <code>SSL_SERVER_CERT_DN</code>; in Microsoft SQL Server, this is used as the <code>hostNameInCertificate</code>.</p> </li> <li> <p> <code>CONNECTION_URL</code> - The URL for connecting to a general (non-JDBC) data source.</p> </li> <li> <p> <code>KAFKA_BOOTSTRAP_SERVERS</code> - A comma-separated list of host and port pairs that are the addresses of the Apache Kafka brokers in a Kafka cluster to which a Kafka client will connect to and bootstrap itself.</p> </li> <li> <p> <code>KAFKA_SSL_ENABLED</code> - Whether to enable or disable SSL on an Apache Kafka connection. Default value is \"true\".</p> </li> <li> <p> <code>KAFKA_CUSTOM_CERT</code> - The Amazon S3 URL for the private CA cert file (.pem format). The default is an empty string.</p> </li> <li> <p> <code>KAFKA_SKIP_CUSTOM_CERT_VALIDATION</code> - Whether to skip the validation of the CA cert file or not. AWS Glue validates for three algorithms: SHA256withRSA, SHA384withRSA and SHA512withRSA. Default value is \"false\".</p> </li> </ul>"
         },
         "PhysicalConnectionRequirements":{
           "shape":"PhysicalConnectionRequirements",
@@ -2990,7 +3419,7 @@
         },
         "ConnectionType":{
           "shape":"ConnectionType",
-          "documentation":"<p>The type of the connection. Currently, these types are supported:</p> <ul> <li> <p> <code>JDBC</code> - Designates a connection to a database through Java Database Connectivity (JDBC).</p> </li> <li> <p> <code>KAFKA</code> - Designates a connection to an Apache Kafka streaming platform.</p> </li> <li> <p> <code>MONGODB</code> - Designates a connection to a MongoDB document database.</p> </li> </ul> <p>SFTP is not supported.</p>"
+          "documentation":"<p>The type of the connection. Currently, these types are supported:</p> <ul> <li> <p> <code>JDBC</code> - Designates a connection to a database through Java Database Connectivity (JDBC).</p> </li> <li> <p> <code>KAFKA</code> - Designates a connection to an Apache Kafka streaming platform.</p> </li> <li> <p> <code>MONGODB</code> - Designates a connection to a MongoDB document database.</p> </li> <li> <p> <code>NETWORK</code> - Designates a network connection to a data source within an Amazon Virtual Private Cloud environment (Amazon VPC).</p> </li> </ul> <p>SFTP is not supported.</p>"
         },
         "MatchCriteria":{
           "shape":"MatchCriteria",
@@ -3054,7 +3483,10 @@
         "SKIP_CUSTOM_JDBC_CERT_VALIDATION",
         "CUSTOM_JDBC_CERT_STRING",
         "CONNECTION_URL",
-        "KAFKA_BOOTSTRAP_SERVERS"
+        "KAFKA_BOOTSTRAP_SERVERS",
+        "KAFKA_SSL_ENABLED",
+        "KAFKA_CUSTOM_CERT",
+        "KAFKA_SKIP_CUSTOM_CERT_VALIDATION"
       ]
     },
     "ConnectionType":{
@@ -3063,7 +3495,8 @@
         "JDBC",
         "SFTP",
         "MONGODB",
-        "KAFKA"
+        "KAFKA",
+        "NETWORK"
       ]
     },
     "ConnectionsList":{
@@ -3313,6 +3746,10 @@
         "JdbcTargets":{
           "shape":"JdbcTargetList",
           "documentation":"<p>Specifies JDBC targets.</p>"
+        },
+        "MongoDBTargets":{
+          "shape":"MongoDBTargetList",
+          "documentation":"<p>Specifies Amazon DocumentDB or MongoDB targets.</p>"
         },
         "DynamoDBTargets":{
           "shape":"DynamoDBTargetList",
@@ -3724,7 +4161,7 @@
         },
         "MaxCapacity":{
           "shape":"NullableDouble",
-          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job or an Apache Spark ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
+          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job or an Apache Spark ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\") or Apache Spark streaming ETL job (<code>JobCommand.Name</code>=\"gluestreaming\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
         },
         "SecurityConfiguration":{
           "shape":"NameString",
@@ -3956,6 +4393,10 @@
         "TableInput":{
           "shape":"TableInput",
           "documentation":"<p>The <code>TableInput</code> object that defines the metadata table to create in the catalog.</p>"
+        },
+        "PartitionIndexes":{
+          "shape":"PartitionIndexList",
+          "documentation":"<p>A list of partition indexes, <code>PartitionIndex</code> structures, to create in the table.</p>"
         }
       }
     },
@@ -4064,6 +4505,10 @@
         "Tags":{
           "shape":"TagsMap",
           "documentation":"<p>The tags to be used with this workflow.</p>"
+        },
+        "MaxConcurrentRuns":{
+          "shape":"NullableInteger",
+          "documentation":"<p>You can use this parameter to prevent unwanted multiple updates to data, to control costs, or in some cases, to prevent exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.</p>"
         }
       }
     },
@@ -4240,9 +4685,31 @@
         "CreateTableDefaultPermissions":{
           "shape":"PrincipalPermissionsList",
           "documentation":"<p>Creates a set of default permissions on the table for principals. </p>"
+        },
+        "TargetDatabase":{
+          "shape":"DatabaseIdentifier",
+          "documentation":"<p>A <code>DatabaseIdentifier</code> structure that describes a target database for resource linking.</p>"
+        },
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the database resides.</p>"
         }
       },
       "documentation":"<p>The <code>Database</code> object represents a logical grouping of tables that might reside in a Hive metastore or an RDBMS.</p>"
+    },
+    "DatabaseIdentifier":{
+      "type":"structure",
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the database resides.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database.</p>"
+        }
+      },
+      "documentation":"<p>A structure that describes a target database for resource linking.</p>"
     },
     "DatabaseInput":{
       "type":"structure",
@@ -4267,6 +4734,10 @@
         "CreateTableDefaultPermissions":{
           "shape":"PrincipalPermissionsList",
           "documentation":"<p>Creates a set of default permissions on the table for principals. </p>"
+        },
+        "TargetDatabase":{
+          "shape":"DatabaseIdentifier",
+          "documentation":"<p>A <code>DatabaseIdentifier</code> structure that describes a target database for resource linking.</p>"
         }
       },
       "documentation":"<p>The structure used to create or update a database.</p>"
@@ -4276,6 +4747,76 @@
       "member":{"shape":"Database"}
     },
     "DatabaseName":{"type":"string"},
+    "DateColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "NumberOfNulls",
+        "NumberOfDistinctValues"
+      ],
+      "members":{
+        "MinimumValue":{
+          "shape":"Timestamp",
+          "documentation":"<p>Minimum value of the column.</p>"
+        },
+        "MaximumValue":{
+          "shape":"Timestamp",
+          "documentation":"<p>Maximum value of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        },
+        "NumberOfDistinctValues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of distinct values.</p>"
+        }
+      },
+      "documentation":"<p>Defines a date column statistics data.</p>"
+    },
+    "DecimalColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "NumberOfNulls",
+        "NumberOfDistinctValues"
+      ],
+      "members":{
+        "MinimumValue":{
+          "shape":"DecimalNumber",
+          "documentation":"<p>Minimum value of the column.</p>"
+        },
+        "MaximumValue":{
+          "shape":"DecimalNumber",
+          "documentation":"<p>Maximum value of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        },
+        "NumberOfDistinctValues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of distinct values.</p>"
+        }
+      },
+      "documentation":"<p>Defines a decimal column statistics data.</p>"
+    },
+    "DecimalNumber":{
+      "type":"structure",
+      "required":[
+        "UnscaledValue",
+        "Scale"
+      ],
+      "members":{
+        "UnscaledValue":{
+          "shape":"Blob",
+          "documentation":"<p>The unscaled numeric value.</p>"
+        },
+        "Scale":{
+          "shape":"Integer",
+          "documentation":"<p>The scale that determines where the decimal point falls in the unscaled value.</p>"
+        }
+      },
+      "documentation":"<p>Contains a numeric value in decimal format.</p>"
+    },
     "DeleteBehavior":{
       "type":"string",
       "enum":[
@@ -4295,6 +4836,73 @@
       }
     },
     "DeleteClassifierResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "DeleteColumnStatisticsForPartitionRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "PartitionValues",
+        "ColumnName"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "PartitionValues":{
+          "shape":"ValueStringList",
+          "documentation":"<p>A list of partition values identifying the partition.</p>"
+        },
+        "ColumnName":{
+          "shape":"NameString",
+          "documentation":"<p>Name of the column.</p>"
+        }
+      }
+    },
+    "DeleteColumnStatisticsForPartitionResponse":{
+      "type":"structure",
+      "members":{
+      }
+    },
+    "DeleteColumnStatisticsForTableRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "ColumnName"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "ColumnName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the column.</p>"
+        }
+      }
+    },
+    "DeleteColumnStatisticsForTableResponse":{
       "type":"structure",
       "members":{
       }
@@ -4448,6 +5056,10 @@
         "PolicyHashCondition":{
           "shape":"HashString",
           "documentation":"<p>The hash value returned when this policy was set.</p>"
+        },
+        "ResourceArn":{
+          "shape":"GlueResourceArn",
+          "documentation":"<p>The ARN of the AWS Glue resource for the resource policy to be deleted.</p>"
         }
       }
     },
@@ -4738,6 +5350,33 @@
       "max":25,
       "min":1
     },
+    "Double":{"type":"double"},
+    "DoubleColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "NumberOfNulls",
+        "NumberOfDistinctValues"
+      ],
+      "members":{
+        "MinimumValue":{
+          "shape":"Double",
+          "documentation":"<p>Minimum value of the column.</p>"
+        },
+        "MaximumValue":{
+          "shape":"Double",
+          "documentation":"<p>Maximum value of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        },
+        "NumberOfDistinctValues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of distinct values.</p>"
+        }
+      },
+      "documentation":"<p>Defines a double column statistics data.</p>"
+    },
     "DynamoDBTarget":{
       "type":"structure",
       "members":{
@@ -4772,11 +5411,18 @@
           "documentation":"<p>The unique of the node within the workflow where the edge ends.</p>"
         }
       },
-      "documentation":"<p>An edge represents a directed connection between two AWS Glue components which are part of the workflow the edge belongs to.</p>"
+      "documentation":"<p>An edge represents a directed connection between two AWS Glue components that are part of the workflow the edge belongs to.</p>"
     },
     "EdgeList":{
       "type":"list",
       "member":{"shape":"Edge"}
+    },
+    "EnableHybridValues":{
+      "type":"string",
+      "enum":[
+        "TRUE",
+        "FALSE"
+      ]
     },
     "EncryptionAtRest":{
       "type":"structure",
@@ -5039,6 +5685,95 @@
         }
       }
     },
+    "GetColumnNamesList":{
+      "type":"list",
+      "member":{"shape":"NameString"},
+      "max":100,
+      "min":0
+    },
+    "GetColumnStatisticsForPartitionRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "PartitionValues",
+        "ColumnNames"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "PartitionValues":{
+          "shape":"ValueStringList",
+          "documentation":"<p>A list of partition values identifying the partition.</p>"
+        },
+        "ColumnNames":{
+          "shape":"GetColumnNamesList",
+          "documentation":"<p>A list of the column names.</p>"
+        }
+      }
+    },
+    "GetColumnStatisticsForPartitionResponse":{
+      "type":"structure",
+      "members":{
+        "ColumnStatisticsList":{
+          "shape":"ColumnStatisticsList",
+          "documentation":"<p>List of ColumnStatistics that failed to be retrieved.</p>"
+        },
+        "Errors":{
+          "shape":"ColumnErrors",
+          "documentation":"<p>Error occurred during retrieving column statistics data.</p>"
+        }
+      }
+    },
+    "GetColumnStatisticsForTableRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "ColumnNames"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "ColumnNames":{
+          "shape":"GetColumnNamesList",
+          "documentation":"<p>A list of the column names.</p>"
+        }
+      }
+    },
+    "GetColumnStatisticsForTableResponse":{
+      "type":"structure",
+      "members":{
+        "ColumnStatisticsList":{
+          "shape":"ColumnStatisticsList",
+          "documentation":"<p>List of ColumnStatistics that failed to be retrieved.</p>"
+        },
+        "Errors":{
+          "shape":"ColumnErrors",
+          "documentation":"<p>List of ColumnStatistics that failed to be retrieved.</p>"
+        }
+      }
+    },
     "GetConnectionRequest":{
       "type":"structure",
       "required":["Name"],
@@ -5075,7 +5810,7 @@
         },
         "ConnectionType":{
           "shape":"ConnectionType",
-          "documentation":"<p>The type of connections to return. Currently, only JDBC is supported; SFTP is not supported.</p>"
+          "documentation":"<p>The type of connections to return. Currently, SFTP is not supported.</p>"
         }
       },
       "documentation":"<p>Filters the connection definitions that are returned by the <code>GetConnections</code> API operation.</p>"
@@ -5248,6 +5983,10 @@
         "MaxResults":{
           "shape":"PageSize",
           "documentation":"<p>The maximum number of databases to return in one response.</p>"
+        },
+        "ResourceShareType":{
+          "shape":"ResourceShareType",
+          "documentation":"<p>Allows you to specify that you want to list the databases shared with your account. The allowable values are <code>FOREIGN</code> or <code>ALL</code>. </p> <ul> <li> <p>If set to <code>FOREIGN</code>, will list the databases shared with your account. </p> </li> <li> <p>If set to <code>ALL</code>, will list the databases shared with your account, as well as the databases in yor local account. </p> </li> </ul>"
         }
       }
     },
@@ -5712,6 +6451,44 @@
         }
       }
     },
+    "GetPartitionIndexesRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The catalog ID where the table resides.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>Specifies the name of a database from which you want to retrieve partition indexes.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>Specifies the name of a table for which you want to retrieve the partition indexes.</p>"
+        },
+        "NextToken":{
+          "shape":"Token",
+          "documentation":"<p>A continuation token, included if this is a continuation call.</p>"
+        }
+      }
+    },
+    "GetPartitionIndexesResponse":{
+      "type":"structure",
+      "members":{
+        "PartitionIndexDescriptorList":{
+          "shape":"PartitionIndexDescriptorList",
+          "documentation":"<p>A list of index descriptors.</p>"
+        },
+        "NextToken":{
+          "shape":"Token",
+          "documentation":"<p>A continuation token, present if the current list segment is not the last.</p>"
+        }
+      }
+    },
     "GetPartitionRequest":{
       "type":"structure",
       "required":[
@@ -5823,6 +6600,10 @@
         "Language":{
           "shape":"Language",
           "documentation":"<p>The programming language of the code to perform the mapping.</p>"
+        },
+        "AdditionalPlanOptionsMap":{
+          "shape":"AdditionalPlanOptionsMap",
+          "documentation":"<p>A map to hold additional optional key-value parameters.</p> <p>Currently, these key-value pairs are supported:</p> <ul> <li> <p> <code>inferSchema</code>  —  Specifies whether to set <code>inferSchema</code> to true or false for the default script generated by an AWS Glue job. For example, to set <code>inferSchema</code> to true, pass the following key value pair:</p> <p> <code>--additional-plan-options-map '{\"inferSchema\":\"true\"}'</code> </p> </li> </ul>"
         }
       }
     },
@@ -5839,9 +6620,43 @@
         }
       }
     },
+    "GetResourcePoliciesRequest":{
+      "type":"structure",
+      "members":{
+        "NextToken":{
+          "shape":"Token",
+          "documentation":"<p>A continuation token, if this is a continuation request.</p>"
+        },
+        "MaxResults":{
+          "shape":"PageSize",
+          "documentation":"<p>The maximum size of a list to return.</p>"
+        }
+      }
+    },
+    "GetResourcePoliciesResponse":{
+      "type":"structure",
+      "members":{
+        "GetResourcePoliciesResponseList":{
+          "shape":"GetResourcePoliciesResponseList",
+          "documentation":"<p>A list of the individual resource policies and the account-level resource policy.</p>"
+        },
+        "NextToken":{
+          "shape":"Token",
+          "documentation":"<p>A continuation token, if the returned list does not contain the last resource policy available.</p>"
+        }
+      }
+    },
+    "GetResourcePoliciesResponseList":{
+      "type":"list",
+      "member":{"shape":"GluePolicy"}
+    },
     "GetResourcePolicyRequest":{
       "type":"structure",
       "members":{
+        "ResourceArn":{
+          "shape":"GlueResourceArn",
+          "documentation":"<p>The ARN of the AWS Glue resource for the resource policy to be retrieved. For more information about AWS Glue resource ARNs, see the <a href=\"https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-common.html#aws-glue-api-regex-aws-glue-arn-id\">AWS Glue ARN string pattern</a> </p>"
+        }
       }
     },
     "GetResourcePolicyResponse":{
@@ -6321,6 +7136,28 @@
       "documentation":"<p>An encryption operation failed.</p>",
       "exception":true
     },
+    "GluePolicy":{
+      "type":"structure",
+      "members":{
+        "PolicyInJson":{
+          "shape":"PolicyJsonString",
+          "documentation":"<p>Contains the requested policy document, in JSON format.</p>"
+        },
+        "PolicyHash":{
+          "shape":"HashString",
+          "documentation":"<p>Contains the hash value associated with this policy.</p>"
+        },
+        "CreateTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time at which the policy was created.</p>"
+        },
+        "UpdateTime":{
+          "shape":"Timestamp",
+          "documentation":"<p>The date and time at which the policy was last updated.</p>"
+        }
+      },
+      "documentation":"<p>A structure for returning a resource policy.</p>"
+    },
     "GlueResourceArn":{
       "type":"string",
       "max":10240,
@@ -6587,7 +7424,7 @@
         },
         "MaxCapacity":{
           "shape":"NullableDouble",
-          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job or an Apache Spark ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
+          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job, an Apache Spark ETL job, or an Apache Spark streaming ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\") or Apache Spark streaming ETL job (<code>JobCommand.Name</code>=\"gluestreaming\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
         },
         "WorkerType":{
           "shape":"WorkerType",
@@ -6672,7 +7509,7 @@
       "members":{
         "Name":{
           "shape":"GenericString",
-          "documentation":"<p>The name of the job command. For an Apache Spark ETL job, this must be <code>glueetl</code>. For a Python shell job, it must be <code>pythonshell</code>.</p>"
+          "documentation":"<p>The name of the job command. For an Apache Spark ETL job, this must be <code>glueetl</code>. For a Python shell job, it must be <code>pythonshell</code>. For an Apache Spark streaming ETL job, this must be <code>gluestreaming</code>.</p>"
         },
         "ScriptLocation":{
           "shape":"ScriptLocationString",
@@ -6867,7 +7704,7 @@
         },
         "MaxCapacity":{
           "shape":"NullableDouble",
-          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job or an Apache Spark ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
+          "documentation":"<p>The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. A DPU is a relative measure of processing power that consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information, see the <a href=\"https://aws.amazon.com/glue/pricing/\">AWS Glue pricing page</a>.</p> <p>Do not set <code>Max Capacity</code> if using <code>WorkerType</code> and <code>NumberOfWorkers</code>.</p> <p>The value that can be allocated for <code>MaxCapacity</code> depends on whether you are running a Python shell job or an Apache Spark ETL job:</p> <ul> <li> <p>When you specify a Python shell job (<code>JobCommand.Name</code>=\"pythonshell\"), you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.</p> </li> <li> <p>When you specify an Apache Spark ETL job (<code>JobCommand.Name</code>=\"glueetl\") or Apache Spark streaming ETL job (<code>JobCommand.Name</code>=\"gluestreaming\"), you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job type cannot have a fractional DPU allocation.</p> </li> </ul>"
         },
         "WorkerType":{
           "shape":"WorkerType",
@@ -6924,6 +7761,34 @@
     },
     "JsonPath":{"type":"string"},
     "JsonValue":{"type":"string"},
+    "KeyList":{
+      "type":"list",
+      "member":{"shape":"NameString"},
+      "min":1
+    },
+    "KeySchemaElement":{
+      "type":"structure",
+      "required":[
+        "Name",
+        "Type"
+      ],
+      "members":{
+        "Name":{
+          "shape":"NameString",
+          "documentation":"<p>The name of a partition key.</p>"
+        },
+        "Type":{
+          "shape":"ColumnTypeString",
+          "documentation":"<p>The type of a partition key.</p>"
+        }
+      },
+      "documentation":"<p>A partition key pair consisting of a name and a type.</p>"
+    },
+    "KeySchemaElementList":{
+      "type":"list",
+      "member":{"shape":"KeySchemaElement"},
+      "min":1
+    },
     "KeyString":{
       "type":"string",
       "max":255,
@@ -7230,6 +8095,33 @@
       "type":"string",
       "enum":["EQUALS"]
     },
+    "Long":{"type":"long"},
+    "LongColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "NumberOfNulls",
+        "NumberOfDistinctValues"
+      ],
+      "members":{
+        "MinimumValue":{
+          "shape":"Long",
+          "documentation":"<p>Minimum value of the column.</p>"
+        },
+        "MaximumValue":{
+          "shape":"Long",
+          "documentation":"<p>Maximum value of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        },
+        "NumberOfDistinctValues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of distinct values.</p>"
+        }
+      },
+      "documentation":"<p>Defines a long column statistics data.</p>"
+    },
     "MLTransform":{
       "type":"structure",
       "members":{
@@ -7376,6 +8268,28 @@
     },
     "MessageString":{"type":"string"},
     "MillisecondsCount":{"type":"long"},
+    "MongoDBTarget":{
+      "type":"structure",
+      "members":{
+        "ConnectionName":{
+          "shape":"ConnectionName",
+          "documentation":"<p>The name of the connection to use to connect to the Amazon DocumentDB or MongoDB target.</p>"
+        },
+        "Path":{
+          "shape":"Path",
+          "documentation":"<p>The path of the Amazon DocumentDB or MongoDB target (database/collection).</p>"
+        },
+        "ScanAll":{
+          "shape":"NullableBoolean",
+          "documentation":"<p>Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table.</p> <p>A value of <code>true</code> means to scan all records, while a value of <code>false</code> means to sample the records. If no value is specified, the value defaults to <code>true</code>.</p>"
+        }
+      },
+      "documentation":"<p>Specifies an Amazon DocumentDB or MongoDB data store to crawl.</p>"
+    },
+    "MongoDBTargetList":{
+      "type":"list",
+      "member":{"shape":"MongoDBTarget"}
+    },
     "NameString":{
       "type":"string",
       "max":255,
@@ -7425,7 +8339,11 @@
           "documentation":"<p>Details of the crawler when the node represents a crawler.</p>"
         }
       },
-      "documentation":"<p>A node represents an AWS Glue component like Trigger, Job etc. which is part of a workflow.</p>"
+      "documentation":"<p>A node represents an AWS Glue component such as a trigger, or job, etc., that is part of a workflow.</p>"
+    },
+    "NodeIdList":{
+      "type":"list",
+      "member":{"shape":"NameString"}
     },
     "NodeList":{
       "type":"list",
@@ -7445,6 +8363,10 @@
     },
     "NonNegativeInteger":{
       "type":"integer",
+      "min":0
+    },
+    "NonNegativeLong":{
+      "type":"long",
       "min":0
     },
     "NotificationProperty":{
@@ -7561,6 +8483,10 @@
         "LastAnalyzedTime":{
           "shape":"Timestamp",
           "documentation":"<p>The last time at which column statistics were computed for this partition.</p>"
+        },
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the partition resides.</p>"
         }
       },
       "documentation":"<p>Represents a slice of table data.</p>"
@@ -7582,6 +8508,60 @@
     "PartitionErrors":{
       "type":"list",
       "member":{"shape":"PartitionError"}
+    },
+    "PartitionIndex":{
+      "type":"structure",
+      "required":[
+        "Keys",
+        "IndexName"
+      ],
+      "members":{
+        "Keys":{
+          "shape":"KeyList",
+          "documentation":"<p>The keys for the partition index.</p>"
+        },
+        "IndexName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partition index.</p>"
+        }
+      },
+      "documentation":"<p>A structure for a partition index.</p>"
+    },
+    "PartitionIndexDescriptor":{
+      "type":"structure",
+      "required":[
+        "IndexName",
+        "Keys",
+        "IndexStatus"
+      ],
+      "members":{
+        "IndexName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partition index.</p>"
+        },
+        "Keys":{
+          "shape":"KeySchemaElementList",
+          "documentation":"<p>A list of one or more keys, as <code>KeySchemaElement</code> structures, for the partition index.</p>"
+        },
+        "IndexStatus":{
+          "shape":"PartitionIndexStatus",
+          "documentation":"<p>The status of the partition index. </p>"
+        }
+      },
+      "documentation":"<p>A descriptor for a partition index in a table.</p>"
+    },
+    "PartitionIndexDescriptorList":{
+      "type":"list",
+      "member":{"shape":"PartitionIndexDescriptor"}
+    },
+    "PartitionIndexList":{
+      "type":"list",
+      "member":{"shape":"PartitionIndex"},
+      "max":3
+    },
+    "PartitionIndexStatus":{
+      "type":"string",
+      "enum":["ACTIVE"]
     },
     "PartitionInput":{
       "type":"structure",
@@ -7790,6 +8770,10 @@
           "shape":"PolicyJsonString",
           "documentation":"<p>Contains the policy document to set, in JSON format.</p>"
         },
+        "ResourceArn":{
+          "shape":"GlueResourceArn",
+          "documentation":"<p>The ARN of the AWS Glue resource for the resource policy to be set. For more information about AWS Glue resource ARNs, see the <a href=\"https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-common.html#aws-glue-api-regex-aws-glue-arn-id\">AWS Glue ARN string pattern</a> </p>"
+        },
         "PolicyHashCondition":{
           "shape":"HashString",
           "documentation":"<p>The hash value returned when the previous policy was set using <code>PutResourcePolicy</code>. Its purpose is to prevent concurrent modifications of a policy. Do not use this parameter if no previous policy has been set.</p>"
@@ -7797,6 +8781,10 @@
         "PolicyExistsCondition":{
           "shape":"ExistCondition",
           "documentation":"<p>A value of <code>MUST_EXIST</code> is used to update a policy. A value of <code>NOT_EXIST</code> is used to create a new policy. If a value of <code>NONE</code> or a null value is used, the call will not depend on the existence of a policy.</p>"
+        },
+        "EnableHybrid":{
+          "shape":"EnableHybridValues",
+          "documentation":"<p>Allows you to specify if you want to use both resource-level and account/catalog-level resource policies. A resource-level policy is a policy attached to an individual resource such as a database or a table.</p> <p>The default value of <code>NO</code> indicates that resource-level policies cannot co-exist with an account-level policy. A value of <code>YES</code> means the use of both resource-level and account/catalog-level resource policies is allowed.</p>"
         }
       }
     },
@@ -7880,6 +8868,13 @@
       "documentation":"<p>A resource numerical limit was exceeded.</p>",
       "exception":true
     },
+    "ResourceShareType":{
+      "type":"string",
+      "enum":[
+        "FOREIGN",
+        "ALL"
+      ]
+    },
     "ResourceType":{
       "type":"string",
       "enum":[
@@ -7907,6 +8902,41 @@
       "member":{"shape":"ResourceUri"},
       "max":1000,
       "min":0
+    },
+    "ResumeWorkflowRunRequest":{
+      "type":"structure",
+      "required":[
+        "Name",
+        "RunId",
+        "NodeIds"
+      ],
+      "members":{
+        "Name":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the workflow to resume.</p>"
+        },
+        "RunId":{
+          "shape":"IdString",
+          "documentation":"<p>The ID of the workflow run to resume.</p>"
+        },
+        "NodeIds":{
+          "shape":"NodeIdList",
+          "documentation":"<p>A list of the node IDs for the nodes you want to restart. The nodes that are to be restarted must have a run attempt in the original run.</p>"
+        }
+      }
+    },
+    "ResumeWorkflowRunResponse":{
+      "type":"structure",
+      "members":{
+        "RunId":{
+          "shape":"IdString",
+          "documentation":"<p>The new ID assigned to the resumed workflow run. Each resume of a workflow run will have a new run ID.</p>"
+        },
+        "NodeIds":{
+          "shape":"NodeIdList",
+          "documentation":"<p>A list of the node IDs for the nodes that were actually restarted.</p>"
+        }
+      }
     },
     "Role":{"type":"string"},
     "RoleArn":{
@@ -7952,6 +8982,10 @@
         "Exclusions":{
           "shape":"PathList",
           "documentation":"<p>A list of glob patterns used to exclude from the crawl. For more information, see <a href=\"https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html\">Catalog Tables with a Crawler</a>.</p>"
+        },
+        "ConnectionName":{
+          "shape":"ConnectionName",
+          "documentation":"<p>The name of a connection which allows a job or crawler to access data in Amazon S3 within an Amazon Virtual Private Cloud environment (Amazon VPC).</p>"
         }
       },
       "documentation":"<p>Specifies a data store in Amazon Simple Storage Service (Amazon S3).</p>"
@@ -8055,7 +9089,7 @@
       "members":{
         "CatalogId":{
           "shape":"CatalogIdString",
-          "documentation":"<p>A unique identifier, consisting of <code> <i>account_id</i>/datalake</code>.</p>"
+          "documentation":"<p>A unique identifier, consisting of <code> <i>account_id</i> </code>.</p>"
         },
         "NextToken":{
           "shape":"Token",
@@ -8063,7 +9097,7 @@
         },
         "Filters":{
           "shape":"SearchPropertyPredicates",
-          "documentation":"<p>A list of key-value pairs, and a comparator used to filter the search results. Returns all entities matching the predicate.</p>"
+          "documentation":"<p>A list of key-value pairs, and a comparator used to filter the search results. Returns all entities matching the predicate.</p> <p>The <code>Comparator</code> member of the <code>PropertyPredicate</code> struct is used only for time fields, and can be omitted for other field types. Also, when comparing string values, such as when <code>Key=Name</code>, a fuzzy match algorithm is used. The <code>Key</code> field (for example, the value of the <code>Name</code> field) is split on certain punctuation characters, for example, -, :, #, etc. into tokens. Then each token is exact-match compared with the <code>Value</code> member of <code>PropertyPredicate</code>. For example, if <code>Key=Name</code> and <code>Value=link</code>, tables named <code>customer-link</code> and <code>xx-link-yy</code> are returned, but <code>xxlinkyy</code> is not returned.</p>"
         },
         "SearchText":{
           "shape":"ValueString",
@@ -8076,6 +9110,10 @@
         "MaxResults":{
           "shape":"PageSize",
           "documentation":"<p>The maximum number of tables to return in a single response.</p>"
+        },
+        "ResourceShareType":{
+          "shape":"ResourceShareType",
+          "documentation":"<p>Allows you to specify that you want to search the tables shared with your account. The allowable values are <code>FOREIGN</code> or <code>ALL</code>. </p> <ul> <li> <p>If set to <code>FOREIGN</code>, will search the tables shared with your account. </p> </li> <li> <p>If set to <code>ALL</code>, will search the tables shared with your account, as well as the tables in yor local account. </p> </li> </ul>"
         }
       }
     },
@@ -8559,6 +9597,34 @@
       },
       "documentation":"<p>Describes the physical storage of table data.</p>"
     },
+    "StringColumnStatisticsData":{
+      "type":"structure",
+      "required":[
+        "MaximumLength",
+        "AverageLength",
+        "NumberOfNulls",
+        "NumberOfDistinctValues"
+      ],
+      "members":{
+        "MaximumLength":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Maximum value of the column.</p>"
+        },
+        "AverageLength":{
+          "shape":"NonNegativeDouble",
+          "documentation":"<p>Average value of the column.</p>"
+        },
+        "NumberOfNulls":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of nulls.</p>"
+        },
+        "NumberOfDistinctValues":{
+          "shape":"NonNegativeLong",
+          "documentation":"<p>Number of distinct values.</p>"
+        }
+      },
+      "documentation":"<p>Defines a string column statistics data.</p>"
+    },
     "StringList":{
       "type":"list",
       "member":{"shape":"GenericString"}
@@ -8634,6 +9700,14 @@
         "IsRegisteredWithLakeFormation":{
           "shape":"Boolean",
           "documentation":"<p>Indicates whether the table has been registered with AWS Lake Formation.</p>"
+        },
+        "TargetTable":{
+          "shape":"TableIdentifier",
+          "documentation":"<p>A <code>TableIdentifier</code> structure that describes a target table for resource linking.</p>"
+        },
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the table resides.</p>"
         }
       },
       "documentation":"<p>Represents a collection of related data organized in columns and rows.</p>"
@@ -8655,6 +9729,24 @@
     "TableErrors":{
       "type":"list",
       "member":{"shape":"TableError"}
+    },
+    "TableIdentifier":{
+      "type":"structure",
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the table resides.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database that contains the target table.</p>"
+        },
+        "Name":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the target table.</p>"
+        }
+      },
+      "documentation":"<p>A structure that describes a target table for resource linking.</p>"
     },
     "TableInput":{
       "type":"structure",
@@ -8707,6 +9799,10 @@
         "Parameters":{
           "shape":"ParametersMap",
           "documentation":"<p>These key-value pairs define properties associated with the table.</p>"
+        },
+        "TargetTable":{
+          "shape":"TableIdentifier",
+          "documentation":"<p>A <code>TableIdentifier</code> structure that describes a target table for resource linking.</p>"
         }
       },
       "documentation":"<p>A structure used to define a table.</p>"
@@ -9182,6 +10278,12 @@
       },
       "documentation":"<p>A structure used to provide information used to update a trigger. This object updates the previous trigger definition by overwriting it completely.</p>"
     },
+    "TypeString":{
+      "type":"string",
+      "max":20000,
+      "min":0,
+      "pattern":"[\\u0020-\\uD7FF\\uE000-\\uFFFD\\uD800\\uDC00-\\uDBFF\\uDFFF\\t]*"
+    },
     "URI":{
       "type":"string",
       "max":1024,
@@ -9242,6 +10344,87 @@
       "type":"structure",
       "members":{
       }
+    },
+    "UpdateColumnStatisticsForPartitionRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "PartitionValues",
+        "ColumnStatisticsList"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "PartitionValues":{
+          "shape":"ValueStringList",
+          "documentation":"<p>A list of partition values identifying the partition.</p>"
+        },
+        "ColumnStatisticsList":{
+          "shape":"UpdateColumnStatisticsList",
+          "documentation":"<p>A list of the column statistics.</p>"
+        }
+      }
+    },
+    "UpdateColumnStatisticsForPartitionResponse":{
+      "type":"structure",
+      "members":{
+        "Errors":{
+          "shape":"ColumnStatisticsErrors",
+          "documentation":"<p>Error occurred during updating column statistics data.</p>"
+        }
+      }
+    },
+    "UpdateColumnStatisticsForTableRequest":{
+      "type":"structure",
+      "required":[
+        "DatabaseName",
+        "TableName",
+        "ColumnStatisticsList"
+      ],
+      "members":{
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog where the partitions in question reside. If none is supplied, the AWS account ID is used by default.</p>"
+        },
+        "DatabaseName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the catalog database where the partitions reside.</p>"
+        },
+        "TableName":{
+          "shape":"NameString",
+          "documentation":"<p>The name of the partitions' table.</p>"
+        },
+        "ColumnStatisticsList":{
+          "shape":"UpdateColumnStatisticsList",
+          "documentation":"<p>A list of the column statistics.</p>"
+        }
+      }
+    },
+    "UpdateColumnStatisticsForTableResponse":{
+      "type":"structure",
+      "members":{
+        "Errors":{
+          "shape":"ColumnStatisticsErrors",
+          "documentation":"<p>List of ColumnStatisticsErrors.</p>"
+        }
+      }
+    },
+    "UpdateColumnStatisticsList":{
+      "type":"list",
+      "member":{"shape":"ColumnStatistics"},
+      "max":25,
+      "min":0
     },
     "UpdateConnectionRequest":{
       "type":"structure",
@@ -9593,11 +10776,11 @@
         },
         "PartitionValueList":{
           "shape":"BoundedPartitionValueList",
-          "documentation":"<p>A list of the values defining the partition.</p>"
+          "documentation":"<p>List of partition key values that define the partition to update.</p>"
         },
         "PartitionInput":{
           "shape":"PartitionInput",
-          "documentation":"<p>The new partition object to update the partition to.</p>"
+          "documentation":"<p>The new partition object to update the partition to.</p> <p>The <code>Values</code> property can't be changed. If you want to change the partition key values for a partition, delete and recreate the partition.</p>"
         }
       }
     },
@@ -9708,6 +10891,10 @@
         "DefaultRunProperties":{
           "shape":"WorkflowRunProperties",
           "documentation":"<p>A collection of properties to be used as part of each execution of the workflow.</p>"
+        },
+        "MaxConcurrentRuns":{
+          "shape":"NullableInteger",
+          "documentation":"<p>You can use this parameter to prevent unwanted multiple updates to data, to control costs, or in some cases, to prevent exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.</p>"
         }
       }
     },
@@ -9749,7 +10936,7 @@
         },
         "DatabaseName":{
           "shape":"NameString",
-          "documentation":"<p>The name of the database where the function resides.</p>"
+          "documentation":"<p>The name of the catalog database that contains the function.</p>"
         },
         "ClassName":{
           "shape":"NameString",
@@ -9770,6 +10957,10 @@
         "ResourceUris":{
           "shape":"ResourceUriList",
           "documentation":"<p>The resource URIs for the function.</p>"
+        },
+        "CatalogId":{
+          "shape":"CatalogIdString",
+          "documentation":"<p>The ID of the Data Catalog in which the function resides.</p>"
         }
       },
       "documentation":"<p>Represents the equivalent of a Hive user-defined function (<code>UDF</code>) definition.</p>"
@@ -9883,6 +11074,10 @@
         "Graph":{
           "shape":"WorkflowGraph",
           "documentation":"<p>The graph representing all the AWS Glue components that belong to the workflow as nodes and directed connections between them as edges.</p>"
+        },
+        "MaxConcurrentRuns":{
+          "shape":"NullableInteger",
+          "documentation":"<p>You can use this parameter to prevent unwanted multiple updates to data, to control costs, or in some cases, to prevent exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.</p>"
         }
       },
       "documentation":"<p>A workflow represents a flow in which AWS Glue components should be executed to complete a logical task.</p>"
@@ -9912,11 +11107,15 @@
       "members":{
         "Name":{
           "shape":"NameString",
-          "documentation":"<p>Name of the workflow which was executed.</p>"
+          "documentation":"<p>Name of the workflow that was executed.</p>"
         },
         "WorkflowRunId":{
           "shape":"IdString",
           "documentation":"<p>The ID of this workflow run.</p>"
+        },
+        "PreviousRunId":{
+          "shape":"IdString",
+          "documentation":"<p>The ID of the previous workflow run.</p>"
         },
         "WorkflowRunProperties":{
           "shape":"WorkflowRunProperties",
@@ -9933,6 +11132,10 @@
         "Status":{
           "shape":"WorkflowRunStatus",
           "documentation":"<p>The status of the workflow run.</p>"
+        },
+        "ErrorMessage":{
+          "shape":"ErrorString",
+          "documentation":"<p>This error message describes any error that may have occurred in starting the workflow run. Currently the only error message is \"Concurrent runs exceeded for workflow: <code>foo</code>.\"</p>"
         },
         "Statistics":{
           "shape":"WorkflowRunStatistics",
@@ -9959,19 +11162,19 @@
         },
         "TimeoutActions":{
           "shape":"IntegerValue",
-          "documentation":"<p>Total number of Actions which timed out.</p>"
+          "documentation":"<p>Total number of Actions that timed out.</p>"
         },
         "FailedActions":{
           "shape":"IntegerValue",
-          "documentation":"<p>Total number of Actions which have failed.</p>"
+          "documentation":"<p>Total number of Actions that have failed.</p>"
         },
         "StoppedActions":{
           "shape":"IntegerValue",
-          "documentation":"<p>Total number of Actions which have stopped.</p>"
+          "documentation":"<p>Total number of Actions that have stopped.</p>"
         },
         "SucceededActions":{
           "shape":"IntegerValue",
-          "documentation":"<p>Total number of Actions which have succeeded.</p>"
+          "documentation":"<p>Total number of Actions that have succeeded.</p>"
         },
         "RunningActions":{
           "shape":"IntegerValue",
@@ -9986,7 +11189,8 @@
         "RUNNING",
         "COMPLETED",
         "STOPPING",
-        "STOPPED"
+        "STOPPED",
+        "ERROR"
       ]
     },
     "WorkflowRuns":{

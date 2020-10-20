@@ -17,6 +17,30 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Subscribers"
+    },
+    "DescribeBudgetPerformanceHistory": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "BudgetPerformanceHistory"
+    },
+    "DescribeBudgetActionHistories": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ActionHistories"
+    },
+    "DescribeBudgetActionsForAccount": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Actions"
+    },
+    "DescribeBudgetActionsForBudget": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Actions"
     }
   }
 }

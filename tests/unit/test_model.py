@@ -331,6 +331,23 @@ class TestOperationModelFromService(unittest.TestCase):
         operation_two = self.service_model.operation_model('OperationName')
         self.assertFalse(operation_two.is_endpoint_discovery_operation)
 
+    def test_endpoint_discovery_required(self):
+        operation = self.model['operations']['OperationName']
+        operation['endpointdiscovery'] = {'required': True}
+        service_model = model.ServiceModel(self.model)
+        self.assertTrue(service_model.endpoint_discovery_required)
+
+    def test_endpoint_discovery_required_false(self):
+        self.model['operations']['OperationName']['endpointdiscovery'] = {}
+        service_model = model.ServiceModel(self.model)
+        self.assertFalse(service_model.endpoint_discovery_required)
+
+    def test_endpoint_discovery_required_no_value(self):
+        operation = self.model['operations']['OperationName']
+        self.assertTrue(operation.get('endpointdiscovery') is None)
+        service_model = model.ServiceModel(self.model)
+        self.assertFalse(service_model.endpoint_discovery_required)
+
     def test_endpoint_discovery_present(self):
         operation = self.model['operations']['OperationName']
         operation['endpointdiscovery'] = {'required': True}

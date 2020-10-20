@@ -13,6 +13,9 @@
 import os
 import uuid
 
+import botocore
+from tests import BaseEnvVar
+
 _ORIGINAL = os.environ.copy()
 # These are environment variables that allow users to control
 # the location of config files used by botocore.
@@ -26,6 +29,36 @@ _CREDENTIAL_ENV_VARS = [
     'AWS_SECRET_ACCESS_KEY',
     'AWS_SESSION_TOKEN',
 ]
+
+TEST_MODELS_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'models',
+)
+
+
+def create_session(**kwargs):
+    # Create session and inject functional test models into loader
+    loader = _create_functional_test_loader()
+    session = botocore.session.Session(**kwargs)
+    session.register_component('data_loader', loader)
+    session.set_config_variable('credentials_file', 'noexist/foo/botocore')
+    return session
+
+
+def _create_functional_test_loader():
+    loader = botocore.loaders.Loader()
+    loader.search_paths.insert(0, TEST_MODELS_DIR)
+    return loader
+
+
+class FunctionalSessionTest(BaseEnvVar):
+    def setUp(self, **environ):
+        super(FunctionalSessionTest, self).setUp()
+        self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
+        self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        self.environ.update(environ)
+        self.session = create_session()
+        self.session.config_filename = 'no-exist-foo'
 
 
 def setup_package():

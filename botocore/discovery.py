@@ -16,6 +16,7 @@ import weakref
 
 from botocore import xform_name
 from botocore.exceptions import BotoCoreError, HTTPClientError, ConnectionError
+from botocore.model import OperationNotFoundError
 from botocore.utils import CachedProperty
 
 logger = logging.getLogger(__name__)
@@ -59,8 +60,11 @@ class EndpointDiscoveryModel(object):
         return keys
 
     def discovery_required_for(self, operation_name):
-        operation_model = self._service_model.operation_model(operation_name)
-        return operation_model.endpoint_discovery.get('required', False)
+        try:
+            operation_model = self._service_model.operation_model(operation_name)
+            return operation_model.endpoint_discovery.get('required', False)
+        except OperationNotFoundError:
+            return False
 
     def discovery_operation_kwargs(self, **kwargs):
         input_keys = self.discovery_operation_keys
@@ -81,13 +85,13 @@ class EndpointDiscoveryModel(object):
         for member_name, member_shape in shape.members.items():
             if member_shape.metadata.get('endpointdiscoveryid'):
                 ids[member_name] = params[member_name]
-            elif member_shape.type_name == 'structure':
+            elif member_shape.type_name == 'structure' and member_name in params:
                 self._gather_ids(member_shape, params[member_name], ids)
         return ids
 
 
 class EndpointDiscoveryManager(object):
-    def __init__(self, client, cache=None, current_time=None):
+    def __init__(self, client, cache=None, current_time=None, always_discover=True):
         if cache is None:
             cache = {}
         self._cache = cache
@@ -95,6 +99,7 @@ class EndpointDiscoveryManager(object):
         if current_time is None:
             current_time = time.time
         self._time = current_time
+        self._always_discover = always_discover
 
         # This needs to be a weak ref in order to prevent memory leaks on
         # python 2.6
@@ -166,6 +171,17 @@ class EndpointDiscoveryManager(object):
         return endpoints[0]['Address']
 
     def describe_endpoint(self, **kwargs):
+        operation = kwargs['Operation']
+        discovery_required = self._model.discovery_required_for(operation)
+
+        if not self._always_discover and not discovery_required:
+            # Discovery set to only run on required operations
+            logger.debug(
+                'Optional discovery disabled. Skipping discovery for Operation: %s'
+                % operation
+            )
+            return None
+
         # Get the endpoint for the provided operation and identifiers
         cache_key = self._create_cache_key(**kwargs)
         endpoints = self._get_current_endpoints(cache_key)
@@ -184,7 +200,7 @@ class EndpointDiscoveryManager(object):
         if stale_entries:
             # We have stale entries, use those while discovery is failing
             return self._select_endpoint(stale_entries)
-        if self._model.discovery_required_for(kwargs['Operation']):
+        if discovery_required:
             # It looks strange to be checking recently_failed again but,
             # this informs us as to whether or not we tried to refresh earlier
             if recently_failed:
