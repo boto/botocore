@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.1
+======
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``batch``: Update batch client to latest version
+
+
 1.19.0
 ======
 
