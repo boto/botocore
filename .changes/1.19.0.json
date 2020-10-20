@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``docdb``", 
+    "description": "Update docdb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudfront``", 
+    "description": "Update cloudfront client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "imds", 
+    "description": "Updated InstanceMetadataFetcher to use custom ipv6 uri as endpoint if envvar or config set", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }
+]
