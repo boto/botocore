@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.2
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.19.1
 ======
 
