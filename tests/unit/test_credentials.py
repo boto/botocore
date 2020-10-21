@@ -178,8 +178,8 @@ class TestRefreshableCredentials(TestCredentials):
 
     def test_refresh_needed_environment_override(self):
         # Make sure that if the specified time limit difference is 10
-        # minutes (in the environment overriden) credentials then we
-        # refresh
+        # minutes or lower (in the environment override) then we do 
+        # refresh the credentials
         with mock.patch.dict(os.environ, self.environ_mock):
             self.mock_time.return_value = (
                 datetime.now(tzlocal()) - timedelta(minutes=40))
@@ -189,9 +189,9 @@ class TestRefreshableCredentials(TestCredentials):
             self.assertEqual(self.creds.token, 'NEW-TOKEN')
 
     def test_no_refresh_needed_environment_override(self):
-        # Make sure that if the specified time limit difference is 10
-        # minutes (in the environment overriden) credentials then we
-        # refresh
+        # Make sure that if the specified time limit difference is
+        # greater than 10 minutes (in the environment override)
+        # then we do not refresh credentials
         with mock.patch.dict(os.environ, self.environ_mock):
             self.mock_time.return_value = (
                 datetime.now(tzlocal()) - timedelta(minutes=41))
