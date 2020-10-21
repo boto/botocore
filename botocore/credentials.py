@@ -368,12 +368,6 @@ class RefreshableCredentials(Credentials):
     :ivar method: A string which identifies where the credentials
         were found.
     """
-    # The time at which we'll attempt to refresh, but not
-    # block if someone else is refreshing.
-    _advisory_refresh_timeout = int(os.getenv('BOTOCORE_TOKEN_ADVISORY_REFRESH_TIMEOUT', 15 * 60))
-    # The time at which all threads will block waiting for
-    # refreshed credentials.
-    _mandatory_refresh_timeout = int(os.getenv('BOTOCORE_TOKEN_MANDATORY_REFRESH_TIMEOUT', 10 * 60))
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,
@@ -405,6 +399,22 @@ class RefreshableCredentials(Credentials):
             refresh_using=refresh_using
         )
         return instance
+
+    @property
+    def _advisory_refresh_timeout(self):
+        # The time at which we'll attempt to refresh, but not
+        # block if someone else is refreshing.
+        return int(
+            os.getenv('BOTOCORE_TOKEN_ADVISORY_REFRESH_TIMEOUT', 15 * 60)
+        )
+
+    @property
+    def _mandatory_refresh_timeout(self):
+        # The time at which all threads will block waiting for
+        # refreshed credentials.
+        return int(
+            os.getenv('BOTOCORE_TOKEN_MANDATORY_REFRESH_TIMEOUT', 10 * 60)
+        )
 
     @property
     def access_key(self):
