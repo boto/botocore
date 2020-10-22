@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.19.3
+======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+
+
 1.19.2
 ======
 
