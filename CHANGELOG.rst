@@ -2,6 +2,26 @@
 CHANGELOG
 =========
 
+1.19.3
+======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+
+
+1.19.2
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.19.1
 ======
 
