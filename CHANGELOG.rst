@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.4
+======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.19.3
 ======
 
