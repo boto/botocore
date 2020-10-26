@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.5
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+
+
 1.19.4
 ======
 
