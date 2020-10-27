@@ -197,6 +197,18 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "Workforces"
+    },
+    "ListImageVersions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ImageVersions"
+    },
+    "ListImages": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Images"
     }
   }
 }
