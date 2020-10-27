@@ -562,12 +562,24 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         accesspoint_arn = (
             'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
-        self.client, _ = self.create_stubbed_s3_client(
+        self.client, http_stubber = self.create_stubbed_s3_client(
             endpoint_url='https://custom.com')
-        with self.assertRaises(
-                botocore.exceptions.
-                UnsupportedS3AccesspointConfigurationError):
-            self.client.list_objects(Bucket=accesspoint_arn)
+        http_stubber.add_response()
+        self.client.list_objects(Bucket=accesspoint_arn)
+        expected_endpoint = 'myendpoint-123456789012.custom.com'
+        self.assert_endpoint(http_stubber.requests[0], expected_endpoint)
+
+    def test_accesspoint_arn_with_custom_endpoint_and_dualstack(self):
+        accesspoint_arn = (
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
+        )
+        self.client, http_stubber = self.create_stubbed_s3_client(
+            endpoint_url='https://custom.com',
+            config=Config(s3={'use_dualstack_endpoint': True}))
+        http_stubber.add_response()
+        self.client.list_objects(Bucket=accesspoint_arn)
+        expected_endpoint = 'myendpoint-123456789012.custom.com'
+        self.assert_endpoint(http_stubber.requests[0], expected_endpoint)
 
     def test_accesspoint_arn_with_s3_accelerate(self):
         accesspoint_arn = (
@@ -742,6 +754,24 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         expected_endpoint = (
             'myaccesspoint-123456789012.op-01234567890123456.'
             's3-outposts.us-west-2.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+    def test_basic_outpost_arn(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            endpoint_url='https://custom.com',
+            region_name='us-east-1')
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=outpost_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-outposts')
+        self.assert_signing_region(request, 'us-west-2')
+        expected_endpoint = (
+            'myaccesspoint-123456789012.op-01234567890123456.custom.com'
         )
         self.assert_endpoint(request, expected_endpoint)
 

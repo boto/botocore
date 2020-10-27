@@ -1543,13 +1543,6 @@ class S3EndpointSetter(object):
         return 's3_accesspoint' in request.context
 
     def _validate_accesspoint_supported(self, request):
-        if self._endpoint_url:
-            raise UnsupportedS3AccesspointConfigurationError(
-                msg=(
-                    'Client cannot use a custom "endpoint_url" when '
-                    'specifying an access-point ARN.'
-                )
-            )
         if self._use_accelerate_endpoint:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
@@ -1609,19 +1602,26 @@ class S3EndpointSetter(object):
         accesspoint_netloc_components = [
             '%s-%s' % (s3_accesspoint['name'], s3_accesspoint['account']),
         ]
-        if 'outpost_name' in s3_accesspoint:
-            outpost_host = [s3_accesspoint['outpost_name'], 's3-outposts']
-            accesspoint_netloc_components.extend(outpost_host)
+        outpost_name = s3_accesspoint.get('outpost_name')
+        if self._endpoint_url:
+            if outpost_name:
+                accesspoint_netloc_components.append(outpost_name)
+            endpoint_url_netloc = urlsplit(self._endpoint_url).netloc
+            accesspoint_netloc_components.append(endpoint_url_netloc)
         else:
-            accesspoint_netloc_components.append('s3-accesspoint')
-        if self._s3_config.get('use_dualstack_endpoint'):
-            accesspoint_netloc_components.append('dualstack')
-        accesspoint_netloc_components.extend(
-            [
-                region_name,
-                self._get_dns_suffix(region_name)
-            ]
-        )
+            if outpost_name:
+                outpost_host = [outpost_name, 's3-outposts']
+                accesspoint_netloc_components.extend(outpost_host)
+            else:
+                accesspoint_netloc_components.append('s3-accesspoint')
+            if self._s3_config.get('use_dualstack_endpoint'):
+                accesspoint_netloc_components.append('dualstack')
+            accesspoint_netloc_components.extend(
+                [
+                    region_name,
+                    self._get_dns_suffix(region_name)
+                ]
+            )
         return '.'.join(accesspoint_netloc_components)
 
     def _get_accesspoint_path(self, original_path, request_context):
@@ -1770,7 +1770,6 @@ class S3ControlEndpointSetter(object):
         return 'outpost_id' in request.context
 
     def _validate_endpoint_from_arn_details_supported(self, request):
-        self._validate_no_custom_endpoint()
         if not self._s3_config.get('use_arn_region', False):
             arn_region = request.context['arn_details']['region']
             if arn_region != self._region:
@@ -1797,17 +1796,7 @@ class S3ControlEndpointSetter(object):
         if 'outpost_name' in request.context['arn_details']:
             self._validate_outpost_redirection_valid(request)
 
-    def _validate_no_custom_endpoint(self):
-        if self._endpoint_url:
-            raise UnsupportedS3ControlConfigurationError(
-                msg=(
-                    'Client cannot use a custom "endpoint_url" when '
-                    'specifying a resource ARN.'
-                )
-            )
-
     def _validate_outpost_redirection_valid(self, request):
-        self._validate_no_custom_endpoint()
         if self._s3_config.get('use_dualstack_endpoint'):
             raise UnsupportedS3ControlConfigurationError(
                 msg=(
@@ -1865,22 +1854,29 @@ class S3ControlEndpointSetter(object):
 
     def _construct_s3_control_endpoint(self, region_name, account):
         self._validate_host_labels(region_name, account)
-        netloc = [
-            account,
-            's3-control',
-        ]
-        self._add_dualstack(netloc)
-        dns_suffix = self._get_dns_suffix(region_name)
-        netloc.extend([region_name, dns_suffix])
+        if self._endpoint_url:
+            endpoint_url_netloc = urlsplit(self._endpoint_url).netloc
+            netloc = [account, endpoint_url_netloc]
+        else:
+            netloc = [
+                account,
+                's3-control',
+            ]
+            self._add_dualstack(netloc)
+            dns_suffix = self._get_dns_suffix(region_name)
+            netloc.extend([region_name, dns_suffix])
         return self._construct_netloc(netloc)
 
     def _construct_outpost_endpoint(self, region_name):
         self._validate_host_labels(region_name)
-        netloc = [
-            's3-outposts',
-            region_name,
-            self._get_dns_suffix(region_name),
-        ]
+        if self._endpoint_url:
+            return urlsplit(self._endpoint_url).netloc
+        else:
+            netloc = [
+                's3-outposts',
+                region_name,
+                self._get_dns_suffix(region_name),
+            ]
         return self._construct_netloc(netloc)
 
     def _construct_netloc(self, netloc):
