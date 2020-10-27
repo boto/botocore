@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.19.6
+======
+
+* api-change:``glue``: Update glue client to latest version
+
+
+1.19.5
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+
+
+1.19.4
+======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.19.3
 ======
 
