@@ -27,7 +27,6 @@ import warnings
 
 import dateutil.parser
 from dateutil.tz import tzutc
-from urllib3.util.url import IPV6_ADDRZ_RE
 
 import botocore
 import botocore.awsrequest
@@ -141,6 +140,38 @@ EVENT_ALIASES = {
     "tagging": "resource-groups-tagging-api"
 }
 
+# Vendoring IPv6 validation regex patterns from urllib3
+# https://github.com/urllib3/urllib3/blob/7e856c0/src/urllib3/util/url.py
+IPV4_PAT = r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}"
+HEX_PAT = "[0-9A-Fa-f]{1,4}"
+LS32_PAT = "(?:{hex}:{hex}|{ipv4})".format(hex=HEX_PAT, ipv4=IPV4_PAT)
+_subs = {"hex": HEX_PAT, "ls32": LS32_PAT}
+_variations = [
+    #                            6( h16 ":" ) ls32
+    "(?:%(hex)s:){6}%(ls32)s",
+    #                       "::" 5( h16 ":" ) ls32
+    "::(?:%(hex)s:){5}%(ls32)s",
+    # [               h16 ] "::" 4( h16 ":" ) ls32
+    "(?:%(hex)s)?::(?:%(hex)s:){4}%(ls32)s",
+    # [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+    "(?:(?:%(hex)s:)?%(hex)s)?::(?:%(hex)s:){3}%(ls32)s",
+    # [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+    "(?:(?:%(hex)s:){0,2}%(hex)s)?::(?:%(hex)s:){2}%(ls32)s",
+    # [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+    "(?:(?:%(hex)s:){0,3}%(hex)s)?::%(hex)s:%(ls32)s",
+    # [ *4( h16 ":" ) h16 ] "::"              ls32
+    "(?:(?:%(hex)s:){0,4}%(hex)s)?::%(ls32)s",
+    # [ *5( h16 ":" ) h16 ] "::"              h16
+    "(?:(?:%(hex)s:){0,5}%(hex)s)?::%(hex)s",
+    # [ *6( h16 ":" ) h16 ] "::"
+    "(?:(?:%(hex)s:){0,6}%(hex)s)?::",
+]
+
+UNRESERVED_PAT = r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._!\-~"
+IPV6_PAT = "(?:" + "|".join([x % _subs for x in _variations]) + ")"
+ZONE_ID_PAT = "(?:%25|%)(?:[" + UNRESERVED_PAT + "]|%[a-fA-F0-9]{2})+"
+IPV6_ADDRZ_PAT = r"\[" + IPV6_PAT + r"(?:" + ZONE_ID_PAT + r")?\]"
+IPV6_ADDRZ_RE = re.compile("^" + IPV6_ADDRZ_PAT + "$")
 
 def ensure_boolean(val):
     """Ensures a boolean value if a string or boolean is provided
@@ -317,7 +348,7 @@ class IMDSFetcher(object):
         else:
             chosen_base_url = METADATA_BASE_URL
 
-        logger.info("IMDS ENDPOINT: %s" % chosen_base_url)
+        logger.debug("IMDS ENDPOINT: %s" % chosen_base_url)
         if not is_valid_uri(chosen_base_url):
             raise InvalidIMDSEndpointError(endpoint=chosen_base_url)
 
