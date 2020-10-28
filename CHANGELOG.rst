@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.7
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+
+
 1.19.6
 ======
 
