@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.8
+======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``codeartifact``: Update codeartifact client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
 1.19.7
 ======
 
