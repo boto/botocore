@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.9
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``braket``: Update braket client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.19.8
 ======
 
