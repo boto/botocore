@@ -1680,8 +1680,7 @@
     "ContentType":{"type":"string"},
     "ContinuationEvent":{
       "type":"structure",
-      "members":{
-      },
+      "members":{},
       "documentation":"<p/>",
       "event":true
     },
@@ -2994,8 +2993,7 @@
     "End":{"type":"long"},
     "EndEvent":{
       "type":"structure",
-      "members":{
-      },
+      "members":{},
       "documentation":"<p>A message that indicates the request is complete and no more messages will be sent. You should not assume that the request is complete until the client receives an <code>EndEvent</code>.</p>",
       "event":true
     },
@@ -6485,11 +6483,11 @@
     },
     "ProgressEvent":{
       "type":"structure",
+      "required":["Progress"],
       "members":{
-        "Details":{
+        "Progress":{
           "shape":"Progress",
-          "documentation":"<p>The Progress event details.</p>",
-          "eventpayload":true
+          "documentation":"<p>The Progress event details.</p>"
         }
       },
       "documentation":"<p>This data type contains information about the progress event of an operation.</p>",
@@ -7917,11 +7915,11 @@
     "RecordDelimiter":{"type":"string"},
     "RecordsEvent":{
       "type":"structure",
+      "required":["Records"],
       "members":{
-        "Payload":{
+        "Records":{
           "shape":"Body",
-          "documentation":"<p>The byte array of partial, one or more result records.</p>",
-          "eventpayload":true
+          "documentation":"<p>The byte array of partial, one or more result records.</p>"
         }
       },
       "documentation":"<p>The container for the records event.</p>",
@@ -8417,6 +8415,7 @@
     },
     "SelectObjectContentEventStream":{
       "type":"structure",
+      "required":["Records"],
       "members":{
         "Records":{
           "shape":"RecordsEvent",
@@ -8444,13 +8443,13 @@
     },
     "SelectObjectContentOutput":{
       "type":"structure",
+      "required":["EventStream"],
       "members":{
-        "Payload":{
+        "EventStream":{
           "shape":"SelectObjectContentEventStream",
-          "documentation":"<p>The array of results.</p>"
+          "documentation":"<p>The event stream that your consumer can use to read records.</p>"
         }
-      },
-      "payload":"Payload"
+      }
     },
     "SelectObjectContentRequest":{
       "type":"structure",
@@ -8655,11 +8654,11 @@
     },
     "StatsEvent":{
       "type":"structure",
+      "required": ["Stats"],
       "members":{
-        "Details":{
+        "Stats":{
           "shape":"Stats",
-          "documentation":"<p>The Stats event details.</p>",
-          "eventpayload":true
+          "documentation":"<p>The Stats event details.</p>"
         }
       },
       "documentation":"<p>Container for the Stats Event.</p>",
