@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.19.11
+=======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``mq``: Update mq client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.19.10
 =======
 
