@@ -283,6 +283,12 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "destinationSummaries"
+    },
+    "ListThingPrincipals": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "principals"
     }
   }
 }

@@ -2,6 +2,52 @@
 CHANGELOG
 =========
 
+1.19.12
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+
+
+1.19.11
+=======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``mq``: Update mq client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.19.10
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.19.9
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``braket``: Update braket client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.19.8
 ======
 
