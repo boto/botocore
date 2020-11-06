@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.19.13
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+
+
 1.19.12
 =======
 
