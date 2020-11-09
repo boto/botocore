@@ -18,7 +18,7 @@ from nose.tools import assert_equal, assert_raises
 from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
     total_seconds, unquote_str, six, ensure_bytes, get_md5,
-    compat_shell_split, get_tzinfo_options
+    compat_shell_split, get_tzinfo_options, HAS_CRT
 )
 from tests import BaseEnvVar, unittest
 
@@ -175,3 +175,12 @@ class TestTimezoneOperations(unittest.TestCase):
 
         for tzinfo in options:
             self.assertIsInstance(tzinfo(), datetime.tzinfo)
+
+
+class TestCRTIntegration(unittest.TestCase):
+    def test_has_crt_gloabl(self):
+        try:
+            import awscrt.auth
+            assert HAS_CRT
+        except ImportError:
+            assert not HAS_CRT

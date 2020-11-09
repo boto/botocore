@@ -27,7 +27,7 @@ import logging
 import io
 import datetime
 import re
-from botocore.compat import six
+from botocore.compat import six, HAS_CRT
 
 import mock
 
@@ -103,8 +103,10 @@ def test_generator():
             log.debug("Skipping test: %s", test_case)
             continue
 
-        yield (_test_signature_version_4, test_case, 'old')
-        yield (_test_signature_version_4, test_case, 'crt')
+        if HAS_CRT:
+            yield (_test_signature_version_4, test_case, 'crt')
+        else:
+            yield (_test_signature_version_4, test_case, 'old')
     datetime_patcher.stop()
 
 
