@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.19.14
+=======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
 1.19.13
 =======
 
