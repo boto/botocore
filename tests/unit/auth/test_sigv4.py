@@ -35,6 +35,8 @@ import botocore.auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 
+from tests import requires_crt
+
 try:
     from urllib.parse import urlsplit
     from urllib.parse import parse_qsl
@@ -104,9 +106,9 @@ def test_generator():
             continue
 
         if HAS_CRT:
-            yield (_test_signature_version_4, test_case, 'crt')
+            yield (_test_crt_signature_version_4, test_case)
         else:
-            yield (_test_signature_version_4, test_case, 'old')
+            yield (_test_signature_version_4, test_case)
     datetime_patcher.stop()
 
 
@@ -138,39 +140,43 @@ def create_request_from_raw_request(raw_request):
     return request
 
 
-def _test_signature_version_4(test_case, signer):
+def _test_signature_version_4(test_case):
     test_case = _SignatureTestCase(test_case)
     request = create_request_from_raw_request(test_case.raw_request)
 
-    if signer == 'crt':
-        # Use CRT logging to diagnose interim steps (canonical request, etc)
-        # import awscrt.io
-        # awscrt.io.init_logging(awscrt.io.LogLevel.Trace, 'stdout')
-        auth = botocore.auth.CrtSigV4Auth(test_case.credentials,
-                                          SERVICE, REGION)
-        auth.add_auth(request)
-        actual_auth_header = request.headers['Authorization']
+    auth = botocore.auth.SigV4Auth(test_case.credentials, SERVICE, REGION)
+    actual_canonical_request = auth.canonical_request(request)
+    actual_string_to_sign = auth.string_to_sign(request,
+                                                actual_canonical_request)
+    auth.add_auth(request)
+    actual_auth_header = request.headers['Authorization']
+
+    # Some stuff only works right when you go through auth.add_auth()
+    # So don't assert the interim steps unless the end result was wrong.
+    if actual_auth_header != test_case.authorization_header:
+        assert_equal(actual_canonical_request, test_case.canonical_request,
+                     test_case.raw_request, 'canonical_request')
+
+        assert_equal(actual_string_to_sign, test_case.string_to_sign,
+                     test_case.raw_request, 'string_to_sign')
+
         assert_equal(actual_auth_header, test_case.authorization_header,
                      test_case.raw_request, 'authheader')
-    else:
-        auth = botocore.auth.SigV4Auth(test_case.credentials, SERVICE, REGION)
-        actual_canonical_request = auth.canonical_request(request)
-        actual_string_to_sign = auth.string_to_sign(request,
-                                                    actual_canonical_request)
-        auth.add_auth(request)
-        actual_auth_header = request.headers['Authorization']
 
-        # Some stuff only works right when you go through auth.add_auth()
-        # So don't assert the interim steps unless the end result was wrong.
-        if actual_auth_header != test_case.authorization_header:
-            assert_equal(actual_canonical_request, test_case.canonical_request,
-                         test_case.raw_request, 'canonical_request')
+@requires_crt
+def _test_crt_signature_version_4(test_case):
+    test_case = _SignatureTestCase(test_case)
+    request = create_request_from_raw_request(test_case.raw_request)
 
-            assert_equal(actual_string_to_sign, test_case.string_to_sign,
-                         test_case.raw_request, 'string_to_sign')
-
-            assert_equal(actual_auth_header, test_case.authorization_header,
-                         test_case.raw_request, 'authheader')
+    # Use CRT logging to diagnose interim steps (canonical request, etc)
+    # import awscrt.io
+    # awscrt.io.init_logging(awscrt.io.LogLevel.Trace, 'stdout')
+    auth = botocore.crt.auth.CrtSigV4Auth(test_case.credentials,
+                                          SERVICE, REGION)
+    auth.add_auth(request)
+    actual_auth_header = request.headers['Authorization']
+    assert_equal(actual_auth_header, test_case.authorization_header,
+                 test_case.raw_request, 'authheader')
 
 
 def assert_equal(actual, expected, raw_request, part):
