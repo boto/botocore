@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.19.15
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.19.14
 =======
 
