@@ -12,30 +12,23 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import base64
-import datetime
-from hashlib import sha256
-from hashlib import sha1
-import hmac
-import logging
-from email.utils import formatdate
-from operator import itemgetter
-import functools
-import time
 import calendar
-import json
+import datetime
+import functools
+from email.utils import formatdate
+from hashlib import sha1, sha256
+import hmac
+from io import BytesIO
+import logging
+from operator import itemgetter
+import time
 
+from botocore.compat import(
+    encodebytes, ensure_unicode, HTTPHeaders, json, parse_qs, quote,
+    six, unquote, urlsplit, urlunsplit, HAS_CRT, MD5_AVAILABLE
+)
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
-from botocore.compat import HTTPHeaders
-from botocore.compat import quote, unquote, urlsplit, parse_qs
-from botocore.compat import urlunsplit
-from botocore.compat import encodebytes
-from botocore.compat import six
-from botocore.compat import json
-from botocore.compat import MD5_AVAILABLE
-from botocore.compat import ensure_unicode
-from botocore.compat import HAS_CRT
-from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -865,31 +858,7 @@ class HmacV1PostAuth(HmacV1Auth):
         request.context['s3-presign-post-policy'] = policy
 
 
-if HAS_CRT:
-    from botocore.crt.auth import (
-        CrtSigV4Auth,
-        CrtSigV4QueryAuth,
-        CrtS3SigV4Auth,
-        CrtS3SigV4QueryAuth
-    )
-    AUTH_TYPE_MAPS = {
-        'v4': CrtSigV4Auth,
-        'v4-query': CrtSigV4QueryAuth,
-        's3v4': CrtS3SigV4Auth,
-        's3v4-query': CrtS3SigV4QueryAuth,
-    }
-else:
-    AUTH_TYPE_MAPS = {
-        'v4': SigV4Auth,
-        'v4-query': SigV4QueryAuth,
-        's3v4': S3SigV4Auth,
-        's3v4-query': S3SigV4QueryAuth,
-    }
-
-
-# Defined at the bottom instead of the top of the module because the Auth
-# classes weren't defined yet.
-AUTH_TYPE_MAPS.update({
+AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
@@ -897,4 +866,16 @@ AUTH_TYPE_MAPS.update({
     's3-query': HmacV1QueryAuth,
     's3-presign-post': HmacV1PostAuth,
     's3v4-presign-post': S3SigV4PostAuth,
-})
+}
+
+# Define v4 signers depending on if CRT is present
+if HAS_CRT:
+    from botocore.crt.auth import CRT_AUTH_TYPE_MAPS
+    AUTH_TYPE_MAPS.update(CRT_AUTH_TYPE_MAPS)
+else:
+    AUTH_TYPE_MAPS.update({
+        'v4': SigV4Auth,
+        'v4-query': SigV4QueryAuth,
+        's3v4': S3SigV4Auth,
+        's3v4-query': S3SigV4QueryAuth,
+    })
