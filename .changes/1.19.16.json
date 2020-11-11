@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``databrew``", 
+    "description": "Update databrew client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``forecast``", 
+    "description": "Update forecast client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplify``", 
+    "description": "Update amplify client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.16
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``databrew``: Update databrew client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.19.15
 =======
 
