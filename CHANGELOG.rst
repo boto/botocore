@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.17
+=======
+
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``polly``: Update polly client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.19.16
 =======
 
