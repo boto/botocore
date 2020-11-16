@@ -25,7 +25,7 @@ import uuid
 
 from botocore.compat import (
     unquote, json, six, unquote_str, ensure_bytes, get_md5,
-    MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit, XMLParseError,
+    OrderedDict, urlsplit, urlunsplit, XMLParseError,
     ETree,
 )
 from botocore.docs.utils import AutoPopulatedParam
@@ -37,15 +37,11 @@ from botocore.signers import add_generate_db_auth_token
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
-from botocore.exceptions import MissingServiceIdError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
-from botocore.utils import hyphenize_service_id
 from botocore.utils import conditionally_calculate_md5
 
-from botocore import retryhandler
 from botocore import utils
-from botocore import translate
 import botocore
 import botocore.auth
 
