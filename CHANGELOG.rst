@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.19.19
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``iotsecuretunneling``: Update iotsecuretunneling client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.19.18
 =======
 
