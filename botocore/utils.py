@@ -374,15 +374,15 @@ class IMDSFetcher(object):
                     raise BadIMDSRequestError(request)
             except ReadTimeoutError:
                 return None
+            except RETRYABLE_HTTP_ERRORS as e:
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
             except HTTPClientError as e:
                 if isinstance(e.kwargs.get('error'), LocationParseError):
                     raise InvalidIMDSEndpointError(endpoint=url, error=e)
                 else:
                     raise
-            except RETRYABLE_HTTP_ERRORS as e:
-                logger.debug(
-                    "Caught retryable HTTP exception while making metadata "
-                    "service request to %s: %s", url, e, exc_info=True)
         return None
 
     def _get_request(self, url_path, retry_func, token=None):
