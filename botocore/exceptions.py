@@ -93,7 +93,7 @@ class ConnectionError(BotoCoreError):
 
 
 class InvalidIMDSEndpointError(BotoCoreError):
-    fmt = 'Invalid endpoint EC2 Instance Metadata endoints: {endpoint}'
+    fmt = 'Invalid endpoint EC2 Instance Metadata endpoint: {endpoint}'
 
 
 class EndpointConnectionError(ConnectionError):

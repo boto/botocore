@@ -298,15 +298,15 @@ class IMDSFetcher(object):
                     raise BadIMDSRequestError(request)
             except ReadTimeoutError:
                 return None
+            except RETRYABLE_HTTP_ERRORS as e:
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
             except HTTPClientError as e:
                 if isinstance(e.kwargs.get('error'), LocationParseError):
                     raise InvalidIMDSEndpointError(endpoint=url, error=e)
                 else:
                     raise
-            except RETRYABLE_HTTP_ERRORS as e:
-                logger.debug(
-                    "Caught retryable HTTP exception while making metadata "
-                    "service request to %s: %s", url, e, exc_info=True)
         return None
 
     def _get_request(self, url_path, retry_func, token=None):
@@ -2137,7 +2137,7 @@ def conditionally_calculate_md5(params, **kwargs):
     """Only add a Content-MD5 if the system supports it."""
     headers = params['headers']
     body = params['body']
-    if MD5_AVAILABLE and body and 'Content-MD5' not in headers:
+    if MD5_AVAILABLE and body is not None and 'Content-MD5' not in headers:
         md5_digest = calculate_md5(body, **kwargs)
         params['headers']['Content-MD5'] = md5_digest
 
