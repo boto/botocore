@@ -32,7 +32,7 @@ import botocore
 import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import (
-        json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
+        json, quote, zip_longest, urlsplit, urlunsplit,
         six, urlparse, total_seconds, get_tzinfo_options, get_md5,
         MD5_AVAILABLE
 )
@@ -864,9 +864,9 @@ class ArgumentGenerator(object):
             stack.pop()
 
     def _generate_type_structure(self, shape, stack):
+        skeleton = {}
         if stack.count(shape.name) > 1:
-            return {}
-        skeleton = OrderedDict()
+            return skeleton
         for member_name, member_shape in shape.members.items():
             skeleton[member_name] = self._generate_skeleton(
                 member_shape, stack, name=member_name)
@@ -886,9 +886,7 @@ class ArgumentGenerator(object):
         key_shape = shape.key
         value_shape = shape.value
         assert key_shape.type_name == 'string'
-        return OrderedDict([
-            ('KeyName', self._generate_skeleton(value_shape, stack)),
-        ])
+        return {'KeyName': self._generate_skeleton(value_shape, stack)}
 
 
 def is_valid_ipv6_endpoint_url(endpoint_url):
