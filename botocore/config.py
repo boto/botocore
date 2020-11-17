@@ -160,6 +160,7 @@ class Config(object):
         ('parameter_validation', True),
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
+        ('proxies_kwargs', None),
         ('s3', None),
         ('retries', None),
         ('client_cert', None),

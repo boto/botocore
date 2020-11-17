@@ -91,10 +91,14 @@ class ProxyConfiguration(object):
     functions to retreive well structured proxy urls and proxy headers from the
     proxy configuration dictionary.
     """
-    def __init__(self, proxies=None):
+    def __init__(self, proxies=None, proxies_kwargs=None):
         if proxies is None:
             proxies = {}
+        if proxies_kwargs is None:
+            proxies_kwargs = {}
+
         self._proxies = proxies
+        self._proxies_kwargs = proxies_kwargs
 
     def proxy_url_for(self, url):
         """Retrieves the corresponding proxy url for a given url. """
@@ -112,6 +116,9 @@ class ProxyConfiguration(object):
             basic_auth = self._construct_basic_auth(username, password)
             headers['Proxy-Authorization'] = basic_auth
         return headers
+
+    def proxies_kwargs(self):
+        return self._proxies_kwargs
 
     def _fix_proxy_url(self, proxy_url):
         if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
@@ -152,9 +159,11 @@ class URLLib3Session(object):
                  max_pool_connections=MAX_POOL_CONNECTIONS,
                  socket_options=None,
                  client_cert=None,
+                 proxies_kwargs=None,
     ):
         self._verify = verify
-        self._proxy_config = ProxyConfiguration(proxies=proxies)
+        self._proxy_config = ProxyConfiguration(proxies=proxies,
+                                                proxies_kwargs=proxies_kwargs)
         self._pool_classes_by_scheme = {
             'http': botocore.awsrequest.AWSHTTPConnectionPool,
             'https': botocore.awsrequest.AWSHTTPSConnectionPool,
@@ -191,6 +200,7 @@ class URLLib3Session(object):
             'key_file': self._key_file,
         }
         pool_manager_kwargs.update(**extra_kwargs)
+        pool_manager_kwargs.update(**self._proxy_config.proxies_kwargs())
         return pool_manager_kwargs
 
     def _get_ssl_context(self):
@@ -232,12 +242,23 @@ class URLLib3Session(object):
         return manager
 
     def _get_request_target(self, url, proxy_url):
-        if proxy_url and url.startswith('http:'):
-            # HTTP proxies expect the request_target to be the absolute url to
-            # know which host to establish a connection to
+        has_proxy = proxy_url is not None
+
+        if not has_proxy:
+            return self._path_url(url)
+
+        # HTTP proxies expect the request_target to be the absolute url to know
+        # which host to establish a connection to. urllib3 also supports
+        # forwarding for HTTPS through the 'use_forwarding_for_https' parameter.
+        proxy_scheme = urlparse(proxy_url).scheme
+        using_https_forwarding_proxy = (
+            proxy_scheme == 'https' and
+            self._proxy_config.proxies_kwargs().get('use_forwarding_for_https', False)
+        )
+
+        if using_https_forwarding_proxy or url.startswith('http:'):
             return url
         else:
-            # otherwise just set the request target to the url path
             return self._path_url(url)
 
     def _chunked(self, headers):

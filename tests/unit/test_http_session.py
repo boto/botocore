@@ -141,6 +141,63 @@ class TestURLLib3Session(unittest.TestCase):
         URLLib3Session(client_cert=cert)
         self.assert_pool_manager_call(cert_file=cert[0], key_file=cert[1])
 
+    def test_http_proxy_scheme_with_http_url(self):
+        proxies = {'http': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        self.request.url = 'http://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['http'],
+            proxy_headers={},
+        )
+        self.assert_request_sent(url=self.request.url)
+
+    def test_http_proxy_scheme_with_https_url(self):
+        proxies = {'https': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+        )
+        self.assert_request_sent()
+
+    def test_https_proxy_scheme_with_http_url(self):
+        proxies = {'http': 'https://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        self.request.url = 'http://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['http'],
+            proxy_headers={},
+        )
+        self.assert_request_sent(url=self.request.url)
+
+    def test_https_proxy_scheme_tls_in_tls(self):
+        proxies = {'https': 'https://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+        )
+        self.assert_request_sent()
+
+    def test_https_proxy_scheme_forwarding_https_url(self):
+        proxies = {'https': 'https://proxy.com'}
+        proxies_kwargs = {"use_forwarding_for_https":  True}
+        session = URLLib3Session(proxies=proxies, proxies_kwargs=proxies_kwargs)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+            use_forwarding_for_https=True,
+        )
+        self.assert_request_sent(url=self.request.url)
+
     def test_basic_https_proxy_with_client_cert(self):
         proxies = {'https': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies, client_cert='/some/cert')
@@ -165,6 +222,23 @@ class TestURLLib3Session(unittest.TestCase):
             proxy_headers={},
             cert_file=cert[0],
             key_file=cert[1],
+        )
+        self.assert_request_sent()
+
+    def test_urllib3_proxies_kwargs_included(self):
+        cert = ('/some/cert', '/some/key')
+        proxies = {'https': 'https://proxy.com'}
+        proxies_kwargs = {'proxy_ssl_context': None}
+        session = URLLib3Session(proxies=proxies, client_cert=cert,
+                                 proxies_kwargs=proxies_kwargs)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+            cert_file=cert[0],
+            key_file=cert[1],
+            proxy_ssl_context=None
         )
         self.assert_request_sent()
 
