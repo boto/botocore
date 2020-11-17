@@ -91,6 +91,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'verify': True,
             'max_pool_connections': 10,
             'proxies': None,
+            'proxies_kwargs': None,
             'socket_options': self.default_socket_options,
             'client_cert': None,
         }
