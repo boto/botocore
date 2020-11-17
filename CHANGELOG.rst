@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.19.20
+=======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``network-firewall``: Update network-firewall client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
+1.19.19
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``iotsecuretunneling``: Update iotsecuretunneling client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``synthetics``: Update synthetics client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
+1.19.18
+=======
+
+* api-change:``textract``: Update textract client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.19.17
 =======
 

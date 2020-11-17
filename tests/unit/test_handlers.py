@@ -1217,6 +1217,17 @@ class TestAddMD5(BaseMD5Test):
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
 
+    def test_add_md5_with_empty_body(self):
+        request_dict = {
+            'body': b'',
+            'headers': {}
+        }
+        self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
+        conditionally_calculate_md5(request_dict)
+        self.assertEqual(
+            request_dict['headers']['Content-MD5'],
+            'OFj2IjCsPJFfMAxmQxLGPw==')
+
     def test_add_md5_with_bytearray_object(self):
         request_dict = {
             'body': bytearray(b'foobar'),
