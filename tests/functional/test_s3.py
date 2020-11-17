@@ -919,6 +919,18 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         self.assertIn('content-md5', self.get_sent_headers())
 
+    def test_content_md5_set_empty_body(self):
+        with self.http_stubber:
+            self.client.put_object(Bucket='foo', Key='bar', Body='')
+        self.assertIn('content-md5', self.get_sent_headers())
+
+    def test_content_md5_set_empty_file(self):
+        with self.http_stubber:
+            with temporary_file('rb') as f:
+                assert f.read() == b''
+                self.client.put_object(Bucket='foo', Key='bar', Body=f)
+        self.assertIn('content-md5', self.get_sent_headers())
+
     def test_content_sha256_set_if_config_value_is_true(self):
         config = Config(signature_version='s3v4', s3={
             'payload_signing_enabled': True

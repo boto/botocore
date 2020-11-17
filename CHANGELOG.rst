@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.20
+=======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``network-firewall``: Update network-firewall client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+
+
 1.19.19
 =======
 

@@ -2215,7 +2215,7 @@ def conditionally_calculate_md5(params, **kwargs):
     """Only add a Content-MD5 if the system supports it."""
     headers = params['headers']
     body = params['body']
-    if MD5_AVAILABLE and body and 'Content-MD5' not in headers:
+    if MD5_AVAILABLE and body is not None and 'Content-MD5' not in headers:
         md5_digest = calculate_md5(body, **kwargs)
         params['headers']['Content-MD5'] = md5_digest
 
