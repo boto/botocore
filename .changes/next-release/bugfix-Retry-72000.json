@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "Retry",
-  "description": "Fix bug where retries were attempted on any response with an \"Error\" key."
-}

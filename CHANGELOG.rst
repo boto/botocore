@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.19.21
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* bugfix:Retry: Fix bug where retries were attempted on any response with an "Error" key.
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``backup``: Update backup client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+
+
 1.19.20
 =======
 
