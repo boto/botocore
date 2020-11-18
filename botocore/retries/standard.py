@@ -198,7 +198,10 @@ class RetryContext(object):
         """
         if self.parsed_response is None:
             return
-        return self.parsed_response.get('Error', {}).get('Code')
+        error = self.parsed_response.get('Error', {})
+        if not isinstance(error, dict):
+            return
+        return error.get('Code')
 
     def add_retry_metadata(self, **kwargs):
         """Add key/value pairs to the retry metadata.
