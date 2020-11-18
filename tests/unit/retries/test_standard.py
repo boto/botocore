@@ -572,6 +572,24 @@ class TestRetryContext(unittest.TestCase):
         self.assertEqual(context.get_retry_metadata(),
                          {'MaxAttemptsReached': True})
 
+    def test_handles_non_error_top_level_error_key_get_error_code(self):
+        response = AWSResponse(
+            status_code=200,
+            raw=None,
+            headers={},
+            url='https://foo',
+        )
+        # A normal response can have a top level "Error" key that doesn't map
+        # to an error code and should be ignored
+        context = standard.RetryContext(
+            attempt_number=1,
+            operation_model=None,
+            parsed_response={'Error': 'This is a 200 response body'},
+            http_response=response,
+            caught_exception=None,
+        )
+        self.assertEqual(context.get_error_code(), None)
+
 
 class TestThrottlingErrorDetector(unittest.TestCase):
     def setUp(self):
