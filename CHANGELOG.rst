@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.19.22
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.19.21
 =======
 
