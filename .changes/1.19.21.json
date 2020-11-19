@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``elasticache``", 
+    "description": "Update elasticache client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Retry", 
+    "description": "Fix bug where retries were attempted on any response with an \"Error\" key.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3control``", 
+    "description": "Update s3control client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``outposts``", 
+    "description": "Update outposts client to latest version", 
+    "type": "api-change"
+  }
+]

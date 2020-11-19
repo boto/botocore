@@ -1,0 +1,57 @@
+[
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-runtime``", 
+    "description": "Update lex-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-models``", 
+    "description": "Update lex-models client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisanalyticsv2``", 
+    "description": "Update kinesisanalyticsv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }
+]
