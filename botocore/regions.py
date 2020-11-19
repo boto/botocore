@@ -115,6 +115,12 @@ class EndpointResolver(BaseEndpointResolver):
                     result.append(endpoint_name)
         return result
 
+    def get_partition_dns_suffix(self, partition_name):
+        for partition in self._endpoint_data['partitions']:
+            if partition['partition'] == partition_name:
+                return partition['dnsSuffix']
+        return None
+
     def construct_endpoint(self, service_name, region_name=None, partition_name=None):
         if partition_name is not None:
             valid_partition = None
