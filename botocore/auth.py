@@ -617,16 +617,24 @@ class S3SigV4PostAuth(SigV4Auth):
         request.context['s3-presign-post-policy'] = policy
 
 
+# NOTE: This import is at the bottom because it resolves an import error when
+# the botocore.crt.auth module imports functions/classes defined above from
+# this module. In the future, we should isolate those functions/classes into
+# a separate utility module to avoid any potential circular import.
+import botocore.crt.auth
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v4': SigV4Auth,
+    'v4a': botocore.crt.auth.CrtSigV4AsymAuth,
     'v4-query': SigV4QueryAuth,
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,
+    's3v4a': botocore.crt.auth.CrtS3SigV4AsymAuth,
+    's3v4a-query': botocore.crt.auth.CrtS3SigV4AsymQueryAuth
 
 }

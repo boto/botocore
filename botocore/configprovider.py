@@ -118,6 +118,10 @@ DEFAULT_S3_CONFIG_VARS = {
          ('s3', 'use_arn_region')],
         'AWS_S3_USE_ARN_REGION', None, utils.ensure_boolean
     ),
+    's3_disable_multiregion_access_points': (
+        ('s3', 's3_disable_multiregion_access_points'),
+        'AWS_S3_DISABLE_MULTIREGION_ACCESS_POINTS', None, utils.ensure_boolean
+    ),
 }
 # A mapping for the proxy specific configuration vars. These are
 # used to configure how botocore interacts with proxy setups while
