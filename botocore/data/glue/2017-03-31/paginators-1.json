@@ -88,6 +88,30 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": "PartitionIndexDescriptorList"
+    },
+    "GetResourcePolicies": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "GetResourcePoliciesResponseList"
+    },
+    "ListRegistries": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Registries"
+    },
+    "ListSchemaVersions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Schemas"
+    },
+    "ListSchemas": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Schemas"
     }
   }
 }
