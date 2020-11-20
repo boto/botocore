@@ -65,6 +65,48 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "RoutingProfileQueueConfigSummaryList"
+    },
+    "ListApprovedOrigins": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Origins"
+    },
+    "ListInstanceAttributes": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Attributes"
+    },
+    "ListInstanceStorageConfigs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "StorageConfigs"
+    },
+    "ListInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InstanceSummaryList"
+    },
+    "ListLambdaFunctions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "LambdaFunctions"
+    },
+    "ListLexBots": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "LexBots"
+    },
+    "ListSecurityKeys": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "SecurityKeys"
     }
   }
 }
