@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.19.23
+=======
+
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.19.22
 =======
 
