@@ -47,6 +47,18 @@
       "limit_key": "MaxItems",
       "output_token": "NextMarker",
       "result_key": "ProvisionedConcurrencyConfigs"
+    },
+    "ListCodeSigningConfigs": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "CodeSigningConfigs"
+    },
+    "ListFunctionsByCodeSigningConfig": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "FunctionArns"
     }
   }
 }

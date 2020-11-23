@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.19.24
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``signer``: Update signer client to latest version
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``codeartifact``: Update codeartifact client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``timestream-query``: Update timestream-query client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.19.23
 =======
 
