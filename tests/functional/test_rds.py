@@ -65,6 +65,23 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
+    def test_start_db_instance_automated_backups_replication(self):
+        params = {
+            'SourceDBInstanceArn': 'arn:aws:rds:us-east-1:123456789012:db:source-db-instance',
+            'SourceRegion': 'us-east-1',
+        }
+        response_body = (
+            b'<StartDBInstanceAutomatedBackupsReplicationResponse>'
+            b'<StartDBInstanceAutomatedBackupsReplicationResult>'
+            b'</StartDBInstanceAutomatedBackupsReplicationResult>'
+            b'</StartDBInstanceAutomatedBackupsReplicationResponse>'
+        )
+        self.http_stubber.add_response(body=response_body)
+        with self.http_stubber:
+            self.client.start_db_instance_automated_backups_replication(**params)
+            sent_request = self.http_stubber.requests[0]
+            self.assert_presigned_url_injected_in_request(sent_request.body)
+
 
 class TestRDS(unittest.TestCase):
     def setUp(self):
