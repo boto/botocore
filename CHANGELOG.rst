@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.19.25
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``timestream-write``: Update timestream-write client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``mwaa``: Update mwaa client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
 1.19.24
 =======
 
