@@ -1800,6 +1800,12 @@
             },
             "hostname" : "rds.eu-west-3.amazonaws.com"
           },
+          "sa-east-1" : {
+            "credentialScope" : {
+              "region" : "sa-east-1"
+            },
+            "hostname" : "rds.sa-east-1.amazonaws.com"
+          },
           "us-east-1" : {
             "credentialScope" : {
               "region" : "us-east-1"
@@ -5456,6 +5462,7 @@
       },
       "snowball" : {
         "endpoints" : {
+          "af-south-1" : { },
           "ap-east-1" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
@@ -6730,6 +6737,16 @@
           "cn-northwest-1" : { }
         }
       },
+      "docdb" : {
+        "endpoints" : {
+          "cn-northwest-1" : {
+            "credentialScope" : {
+              "region" : "cn-northwest-1"
+            },
+            "hostname" : "rds.cn-northwest-1.amazonaws.com.cn"
+          }
+        }
+      },
       "ds" : {
         "endpoints" : {
           "cn-north-1" : { },
@@ -7027,6 +7044,12 @@
       },
       "polly" : {
         "endpoints" : {
+          "cn-northwest-1" : { }
+        }
+      },
+      "ram" : {
+        "endpoints" : {
+          "cn-north-1" : { },
           "cn-northwest-1" : { }
         }
       },
@@ -8017,11 +8040,23 @@
           "protocols" : [ "https" ]
         },
         "endpoints" : {
+          "dataplane-us-gov-east-1" : {
+            "credentialScope" : {
+              "region" : "us-gov-east-1"
+            },
+            "hostname" : "greengrass-ats.iot.us-gov-east-1.amazonaws.com"
+          },
           "dataplane-us-gov-west-1" : {
             "credentialScope" : {
               "region" : "us-gov-west-1"
             },
             "hostname" : "greengrass-ats.iot.us-gov-west-1.amazonaws.com"
+          },
+          "fips-us-gov-east-1" : {
+            "credentialScope" : {
+              "region" : "us-gov-east-1"
+            },
+            "hostname" : "greengrass-fips.us-gov-east-1.amazonaws.com"
           },
           "us-gov-east-1" : { },
           "us-gov-west-1" : {
@@ -9235,6 +9270,11 @@
         }
       },
       "cloudtrail" : {
+        "endpoints" : {
+          "us-isob-east-1" : { }
+        }
+      },
+      "codedeploy" : {
         "endpoints" : {
           "us-isob-east-1" : { }
         }
