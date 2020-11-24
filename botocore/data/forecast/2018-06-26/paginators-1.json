@@ -35,6 +35,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Predictors"
+    },
+    "ListPredictorBacktestExportJobs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "PredictorBacktestExportJobs"
     }
   }
 }

@@ -1,0 +1,107 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``translate``", 
+    "description": "Update translate client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kafka``", 
+    "description": "Update kafka client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-insights``", 
+    "description": "Update application-insights client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``signer``", 
+    "description": "Update signer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codestar-connections``", 
+    "description": "Update codestar-connections client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codeartifact``", 
+    "description": "Update codeartifact client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elasticache``", 
+    "description": "Update elasticache client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``forecast``", 
+    "description": "Update forecast client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``timestream-query``", 
+    "description": "Update timestream-query client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sso-admin``", 
+    "description": "Update sso-admin client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``securityhub``", 
+    "description": "Update securityhub client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``outposts``", 
+    "description": "Update outposts client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``license-manager``", 
+    "description": "Update license-manager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }
+]

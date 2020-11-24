@@ -2,6 +2,69 @@
 CHANGELOG
 =========
 
+1.19.25
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``timestream-write``: Update timestream-write client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``mwaa``: Update mwaa client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
+1.19.24
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``application-insights``: Update application-insights client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``signer``: Update signer client to latest version
+* api-change:``codestar-connections``: Update codestar-connections client to latest version
+* api-change:``codeartifact``: Update codeartifact client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``timestream-query``: Update timestream-query client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
+1.19.23
+=======
+
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``codeguru-reviewer``: Update codeguru-reviewer client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.19.22
 =======
 
