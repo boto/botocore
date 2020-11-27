@@ -43,7 +43,7 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
     InvalidRegionError, InvalidIMDSEndpointError, UnsupportedOutpostResourceError,
     UnsupportedS3ControlConfigurationError, UnsupportedS3ControlArnError,
-    InvalidHostLabelError, HTTPClientError
+    InvalidHostLabelError, HTTPClientError, UnsupportedS3ConfigurationError,
 )
 from urllib3.exceptions import LocationParseError
 
@@ -1527,10 +1527,27 @@ class S3EndpointSetter(object):
         event_emitter.register('before-call.s3.WriteGetObjectResponse', self.update_endpoint_to_banner)
 
     def update_endpoint_to_banner(self, params, context, **kwargs):
-        self._validate_no_custom_endpoint()
-        self._validate_no_accelerated_endpoint()
+        if self._use_accelerate_endpoint:
+            raise UnsupportedS3ConfigurationError(
+                msg='S3 client does not support accelerate endpoints for banner operations',
+            )
+
         self._override_signing_name(context, 's3-banner')
-        self._update_url_netloc(params, self._region, 's3-banner')
+        if self._endpoint_url:
+            # Only update the url if an explicit url was not provided
+            return
+
+        resolver = self._endpoint_resolver
+        resolved = resolver.construct_endpoint('s3-banner', self._region)
+
+        # Ideally we would be able to replace the endpoint before
+        # serialization but there's no event to do that currently
+        new_endpoint = 'https://{host_prefix}{hostname}'.format(
+            host_prefix=params['host_prefix'],
+            hostname=resolved['hostname'],
+        )
+
+        params['url'] = _get_new_endpoint(params['url'], new_endpoint, False)
 
     def set_endpoint(self, request, **kwargs):
         if self._use_accesspoint_endpoint(request):
@@ -1572,7 +1589,7 @@ class S3EndpointSetter(object):
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client does not support s3 dualstack configuration '
-                    'when an banner access point ARN is specified.'
+                    'when a banner access point ARN is specified.'
                 )
             )
         outpost_name = request.context['s3_accesspoint'].get('outpost_name')
@@ -1611,20 +1628,6 @@ class S3EndpointSetter(object):
         logger.debug(
             'Updating URI from %s to %s' % (request.url, accesspoint_endpoint))
         request.url = accesspoint_endpoint
-
-    def _validate_no_custom_endpoint(self):
-        if self._endpoint_url:
-            raise UnsupportedS3AccesspointConfigurationError(
-                msg=(
-                    'Client cannot use a custom "endpoint_url" for the requested operation'
-                )
-            )
-
-    def _validate_no_accelerated_endpoint(self):
-        if self._s3_config.get('use_accelerate_endpoint'):
-            raise UnsupportedS3AccesspointConfigurationError(
-                msg='S3 client does not support accelerate endpoints for the requested operation',
-            )
 
     def _get_accesspoint_netloc(self, request_context, region_name):
         s3_accesspoint = request_context['s3_accesspoint']
@@ -1689,11 +1692,6 @@ class S3EndpointSetter(object):
         # used in combination with the accesspoint setting logic.
         signing_context['signing_name'] = signing_name
         context['signing'] = signing_context
-
-    def _update_url_netloc(self, params, region_name, service_name):
-        resolved = self._endpoint_resolver.construct_endpoint('s3', region_name)
-        new_endpoint = 'http://{}{}.{}.{}'.format(params['host_prefix'], service_name, region_name, resolved['dnsSuffix'])
-        params['url'] = _get_new_endpoint(params['url'], new_endpoint, use_new_scheme=False)
 
     @CachedProperty
     def _use_accelerate_endpoint(self):

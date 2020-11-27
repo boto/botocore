@@ -30,15 +30,10 @@ class TestCredentialPrecedence(BaseEnvVar):
 
     def setUp(self):
         super(TestCredentialPrecedence, self).setUp()
-        self.env_original = os.environ.copy()
 
         # Set the config file to something that doesn't exist so
         # that we don't accidentally load a config.
         os.environ['AWS_CONFIG_FILE'] = '~/.aws/config-missing'
-
-    def tearDown(self):
-        super(TestCredentialPrecedence, self).tearDown()
-        os.environ = self.env_original.copy()
 
     def create_session(self, *args, **kwargs):
         """
@@ -374,8 +369,5 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         os.environ['AWS_CONFIG_FILE'] = self.config_file
         os.environ['AWS_SECRET_ACCESS_KEY'] = user_creds['SecretAccessKey']
         os.environ['AWS_ACCESS_KEY_ID'] = user_creds['AccessKeyId']
-        # Clear session token if set
-        if 'AWS_SESSION_TOKEN' in os.environ:
-            del os.environ['AWS_SESSION_TOKEN']
 
         self.assert_s3_read_only_session(Session(profile='assume'))

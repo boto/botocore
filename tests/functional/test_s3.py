@@ -22,8 +22,10 @@ from botocore.config import Config
 from botocore.compat import datetime, urlsplit, parse_qs, get_md5
 from botocore.exceptions import (
     ParamValidationError, ClientError,
-    UnsupportedS3AccesspointConfigurationError)
-from botocore.exceptions import InvalidS3UsEast1RegionalEndpointConfigError
+    UnsupportedS3ConfigurationError,
+    UnsupportedS3AccesspointConfigurationError,
+    InvalidS3UsEast1RegionalEndpointConfigError,
+)
 from botocore.parsers import ResponseParserError
 from botocore import UNSIGNED
 
@@ -60,20 +62,18 @@ class BaseS3ClientConfigurationTest(BaseSessionTest):
 
     def assert_signing_region(self, request, expected_region):
         auth_header = request.headers['Authorization'].decode('utf-8')
-        try:
-            actual_region = self._V4_AUTH_REGEX.match(
-                auth_header).group('signing_region')
-        except AttributeError:
-            raise Exception("Couldn't find signing_region in the auth header")
-        self.assertEqual(expected_region, actual_region, "")
+        actual_region = None
+        match = self._V4_AUTH_REGEX.match(auth_header)
+        if match:
+            actual_region = match.group('signing_region')
+        self.assertEqual(expected_region, actual_region)
 
     def assert_signing_name(self, request, expected_name):
         auth_header = request.headers['Authorization'].decode('utf-8')
-        try:
-            actual_name = self._V4_AUTH_REGEX.match(
-                auth_header).group('signing_name')
-        except AttributeError:
-            raise Exception("Couldn't find signing_name in the auth header")
+        actual_name = None
+        match = self._V4_AUTH_REGEX.match(auth_header)
+        if match:
+            actual_name = match.group('signing_name')
         self.assertEqual(expected_name, actual_name)
 
     def assert_signing_region_in_url(self, url, expected_region):
@@ -503,7 +503,6 @@ class TestS3Copy(BaseS3OperationTest):
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
-    ACCESS_POINT_SERVICE='s3'
     def setUp(self):
         super(TestAccesspointArn, self).setUp()
         self.client, self.http_stubber = self.create_stubbed_s3_client()
@@ -528,49 +527,49 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
-                'arn:aws:%s::123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3::123456789012:accesspoint:myendpoint'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_missing_account_id_in_arn(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2::accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2::accesspoint:myendpoint'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_missing_accesspoint_name_in_arn(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_accesspoint_includes_asterisk(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:*' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:*'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_accesspoint_includes_dot(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:my.endpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:my.endpoint'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_accesspoint_arn_contains_subresources(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint:object' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint:object'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_accesspoint_arn_with_custom_endpoint(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, http_stubber = self.create_stubbed_s3_client(
             endpoint_url='https://custom.com')
@@ -593,7 +592,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_accesspoint_arn_with_s3_accelerate(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_accelerate_endpoint': True}))
@@ -604,7 +603,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_accesspoint_arn_cross_partition(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
             region_name='cn-north-1')
@@ -615,7 +614,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_accesspoint_arn_cross_partition_use_client_region(self):
         accesspoint_arn = (
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
             region_name='cn-north-1',
@@ -628,7 +627,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_signs_with_arn_region(self):
         accesspoint_arn = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name='us-east-1')
@@ -638,7 +637,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_signs_with_client_region_when_use_arn_region_false(self):
         accesspoint_arn = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name='us-east-1',
@@ -650,7 +649,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_presign_signs_with_arn_region(self):
         accesspoint_arn = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
             region_name='us-east-1',
@@ -662,7 +661,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_presign_signs_with_client_region_when_use_arn_region_false(self):
         accesspoint_arn = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
             region_name='us-east-1',
@@ -676,8 +675,8 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_copy_source_str_with_accesspoint_arn(self):
         copy_source = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint/'
-            'object/myprefix/myobject' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject'
         )
         self.client, self.http_stubber = self.create_stubbed_s3_client()
         self.add_copy_object_response(self.http_stubber)
@@ -687,15 +686,15 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.assert_expected_copy_source_header(
             self.http_stubber,
             expected_copy_source=(
-                b'arn%3Aaws%3A'+self.ACCESS_POINT_SERVICE.encode()+b'%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
                 b'myendpoint/object/myprefix/myobject'
             )
         )
 
     def test_copy_source_str_with_accesspoint_arn_and_version_id(self):
         copy_source = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint/'
-            'object/myprefix/myobject?versionId=myversionid' % self.ACCESS_POINT_SERVICE
+            'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint/'
+            'object/myprefix/myobject?versionId=myversionid'
         )
         self.client, self.http_stubber = self.create_stubbed_s3_client()
         self.add_copy_object_response(self.http_stubber)
@@ -705,7 +704,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.assert_expected_copy_source_header(
             self.http_stubber,
             expected_copy_source=(
-                b'arn%3Aaws%3A'+self.ACCESS_POINT_SERVICE.encode()+b'%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
                 b'myendpoint/object/myprefix/myobject?versionId=myversionid'
             )
         )
@@ -713,7 +712,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
     def test_copy_source_dict_with_accesspoint_arn(self):
         copy_source = {
             'Bucket':
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint' % self.ACCESS_POINT_SERVICE,
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
             'Key': 'myprefix/myobject',
         }
         self.client, self.http_stubber = self.create_stubbed_s3_client()
@@ -724,7 +723,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.assert_expected_copy_source_header(
             self.http_stubber,
             expected_copy_source=(
-                b'arn%3Aaws%3A'+self.ACCESS_POINT_SERVICE.encode()+b'%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
                 b'myendpoint/object/myprefix/myobject'
             )
         )
@@ -732,7 +731,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
     def test_copy_source_dict_with_accesspoint_arn_and_version_id(self):
         copy_source = {
             'Bucket':
-                'arn:aws:%s:us-west-2:123456789012:accesspoint:myendpoint'% self.ACCESS_POINT_SERVICE,
+                'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint',
             'Key': 'myprefix/myobject',
             'VersionId': 'myversionid'
         }
@@ -744,7 +743,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.assert_expected_copy_source_header(
             self.http_stubber,
             expected_copy_source=(
-                b'arn%3Aaws%3A'+self.ACCESS_POINT_SERVICE.encode()+b'%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
+                b'arn%3Aaws%3As3%3Aus-west-2%3A123456789012%3Aaccesspoint%3A'
                 b'myendpoint/object/myprefix/myobject?versionId=myversionid'
             )
         )
@@ -792,9 +791,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_accelerate_endpoint': True}))
-        with self.assertRaises(
-                botocore.exceptions.
-                UnsupportedS3AccesspointConfigurationError):
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_outpost_arn_with_s3_dualstack(self):
@@ -804,9 +801,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_dualstack_endpoint': True}))
-        with self.assertRaises(
-                botocore.exceptions.
-                        UnsupportedS3AccesspointConfigurationError):
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_incorrect_outpost_format(self):
@@ -847,19 +842,13 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=outpost_arn)
 
-
-class TestBannerAccesspointArn(TestAccesspointArn):
-    ACCESS_POINT_SERVICE = 's3-banner'
-
     def test_banner_arn_with_s3_dualstack(self):
         banner_arn = (
-            'arn:aws:%s:us-west-2:123456789012:accesspoint/myBanner'% self.ACCESS_POINT_SERVICE
+            'arn:aws:s3-banner:us-west-2:123456789012:accesspoint/myBanner'
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_dualstack_endpoint': True}))
-        with self.assertRaises(
-                botocore.exceptions.
-                        UnsupportedS3AccesspointConfigurationError):
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=banner_arn)
 
     def test_basic_banner_arn(self):
@@ -974,43 +963,53 @@ class TestS3PutObject(BaseS3OperationTest):
             self.assertEqual(len(http_stubber.requests), 2)
 
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
-
     def create_stubbed_s3_client(self, **kwargs):
         client = self.create_s3_client(**kwargs)
         http_stubber = ClientHTTPStubber(client)
         http_stubber.start()
         return client, http_stubber
 
-    def assert_endpoint(self, request, expected_endpoint):
-        actual_endpoint = urlsplit(request.url).netloc
-        self.assertEqual(expected_endpoint,actual_endpoint)
-
     def test_endpoint_redirection(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name='us-west-2')
         self.http_stubber.add_response()
-        self.client.write_get_object_response(RequestRoute='endpoint-io.a1c1d5c7', RequestToken='SecretToken')
+        self.client.write_get_object_response(
+            RequestRoute='endpoint-io.a1c1d5c7',
+            RequestToken='SecretToken',
+        )
         request = self.http_stubber.requests[0]
         self.assert_signing_name(request, 's3-banner')
         self.assert_signing_region(request, 'us-west-2')
         expected_endpoint = (
-            'https://endpoint-io.a1c1d5c7.s3-banner.us-west-2.amazonaws.com/'
+            'endpoint-io.a1c1d5c7.s3-banner.us-west-2.amazonaws.com'
         )
-        self.assertEqual(expected_endpoint,request.url)
+        self.assert_endpoint(request, expected_endpoint)
 
     def test_endpoint_redirection_fails_with_custom_endpoint(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
-            region_name='us-west-2', endpoint_url="https://s3.us-west-2.amazonaws")
+            region_name='us-west-2', endpoint_url="https://example.com")
         self.http_stubber.add_response()
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
-            self.client.write_get_object_response(RequestRoute='endpoint-io.a1c1d5c7', RequestToken='SecretToken')
+        self.client.write_get_object_response(
+            RequestRoute='endpoint-io.a1c1d5c7',
+            RequestToken='SecretToken',
+        )
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-banner')
+        self.assert_signing_region(request, 'us-west-2')
+        self.assert_endpoint(request, 'endpoint-io.a1c1d5c7.example.com')
 
     def test_endpoint_redirection_fails_with_accelerate_endpoint(self):
+        config = Config(s3={'use_accelerate_endpoint': True})
         self.client, self.http_stubber = self.create_stubbed_s3_client(
-            region_name='us-west-2', config=Config(s3={'use_accelerate_endpoint': True}))
+            region_name='us-west-2',
+            config=config,
+        )
         self.http_stubber.add_response()
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
-            self.client.write_get_object_response(RequestRoute='endpoint-io.a1c1d5c7', RequestToken='SecretToken')
+        with self.assertRaises(UnsupportedS3ConfigurationError):
+            self.client.write_get_object_response(
+                RequestRoute='endpoint-io.a1c1d5c7',
+                RequestToken='SecretToken',
+            )
 
 
 class TestS3SigV4(BaseS3OperationTest):
