@@ -209,6 +209,72 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "Images"
+    },
+    "ListActions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ActionSummaries"
+    },
+    "ListAppImageConfigs": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AppImageConfigs"
+    },
+    "ListArtifacts": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ArtifactSummaries"
+    },
+    "ListAssociations": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AssociationSummaries"
+    },
+    "ListContexts": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ContextSummaries"
+    },
+    "ListFeatureGroups": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "FeatureGroupSummaries"
+    },
+    "ListModelPackageGroups": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ModelPackageGroupSummaryList"
+    },
+    "ListPipelineExecutionSteps": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "PipelineExecutionSteps"
+    },
+    "ListPipelineExecutions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "PipelineExecutionSummaries"
+    },
+    "ListPipelineParametersForExecution": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "PipelineParameters"
+    },
+    "ListPipelines": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "PipelineSummaries"
     }
   }
 }
