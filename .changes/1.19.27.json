@@ -1,0 +1,82 @@
+[
+  {
+    "category": "``sagemaker-featurestore-runtime``", 
+    "description": "Update sagemaker-featurestore-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecr-public``", 
+    "description": "Update ecr-public client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``honeycode``", 
+    "description": "Update honeycode client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplifybackend``", 
+    "description": "Update amplifybackend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lookoutvision``", 
+    "description": "Update lookoutvision client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``connect``", 
+    "description": "Update connect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``connect-contact-lens``", 
+    "description": "Update connect-contact-lens client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``profile``", 
+    "description": "Update profile client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appintegrations``", 
+    "description": "Update appintegrations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devops-guru``", 
+    "description": "Update devops-guru client to latest version", 
+    "type": "api-change"
+  }
+]
