@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.19.27
+=======
+
+* api-change:``sagemaker-featurestore-runtime``: Update sagemaker-featurestore-runtime client to latest version
+* api-change:``ecr-public``: Update ecr-public client to latest version
+* api-change:``honeycode``: Update honeycode client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``amplifybackend``: Update amplifybackend client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``lookoutvision``: Update lookoutvision client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``connect-contact-lens``: Update connect-contact-lens client to latest version
+* api-change:``profile``: Update profile client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``appintegrations``: Update appintegrations client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``devops-guru``: Update devops-guru client to latest version
+
+
 1.19.26
 =======
 
