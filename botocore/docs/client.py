@@ -52,6 +52,8 @@ class ClientDocumenter(object):
             self._client.meta.service_model)
         section.write(
             'A low-level client representing %s' % official_service_name)
+        section.style.new_line()
+        section.include_doc_string(self._client.meta.service_model.documentation)
 
         # Write out the client example instantiation.
         self._add_client_creation_example(section)
