@@ -5,12 +5,12 @@
     "endpointPrefix":"profile",
     "jsonVersion":"1.1",
     "protocol":"rest-json",
-    "serviceAbbreviation":"Profile",
+    "serviceAbbreviation":"Customer Profiles",
     "serviceFullName":"Amazon Connect Customer Profiles",
-    "serviceId":"Profile",
+    "serviceId":"Customer Profiles",
     "signatureVersion":"v4",
     "signingName":"profile",
-    "uid":"profile-2020-08-15"
+    "uid":"customer-profiles-2020-08-15"
   },
   "operations":{
     "AddProfileKey":{
