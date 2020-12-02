@@ -107,6 +107,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "SecurityKeys"
+    },
+    "ListIntegrationAssociations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "IntegrationAssociationSummaryList"
+    },
+    "ListUseCases": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "UseCaseSummaryList"
     }
   }
 }
