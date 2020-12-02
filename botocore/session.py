@@ -427,7 +427,7 @@ class Session(object):
                 'credential_provider').load_credentials()
         return self._credentials
 
-    def user_agent(self):
+    def user_agent(self, truncate=False):
         """
         Return a string suitable for use as a User-Agent header.
         The string will be of the form:
@@ -449,7 +449,12 @@ class Session(object):
         If ``user_agent_extra`` is not empty, then this value will be
         appended to the end of the user agent string.
 
+        If ``truncate`` is True we return only agent_name and agent_version
+        it can be done for security reasons
+
         """
+        if truncate:
+            return '%s/%s' % (self.user_agent_name, self.user_agent_version)
         base = '%s/%s Python/%s %s/%s' % (self.user_agent_name,
                                           self.user_agent_version,
                                           platform.python_version(),
