@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``license-manager``", 
+    "description": "Update license-manager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``compute-optimizer``", 
+    "description": "Update compute-optimizer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``amplifybackend``", 
+    "description": "Update amplifybackend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "api-change"
+  }
+]
