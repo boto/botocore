@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.19.29
+=======
+
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``amplifybackend``: Update amplifybackend client to latest version
+* api-change:``batch``: Update batch client to latest version
+
+
 1.19.28
 =======
 
