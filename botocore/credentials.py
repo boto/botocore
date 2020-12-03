@@ -80,7 +80,7 @@ def create_credential_resolver(session, cache=None, region_name=None):
         iam_role_fetcher=InstanceMetadataFetcher(
             timeout=metadata_timeout,
             num_attempts=num_attempts,
-            user_agent=session.user_agent(),
+            user_agent=session.user_agent(truncate=True),
             config=imds_config)
     )
 

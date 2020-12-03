@@ -403,6 +403,15 @@ class TestSessionUserAgent(BaseSessionTest):
         self.assertTrue(user_agent.endswith('custom-thing/other'))
         self.assertIn('exec-env/FooEnv', user_agent)
 
+    def test_can_remove_extra_from_user_agent(self):
+        self.session.user_agent_version = '24.0'
+        self.session.user_agent_extra = 'custom-thing/other'
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        user_agent = self.session.user_agent(truncate=True)
+        self.assertFalse(user_agent.endswith('custom-thing/other'))
+        self.assertNotIn('exec-env/FooEnv', user_agent)
+        self.assertTrue(user_agent.startswith('Botocore/24.0'))
+
 
 class TestConfigLoaderObject(BaseSessionTest):
     def test_config_loader_delegation(self):

@@ -24,7 +24,9 @@ import sys
 from dateutil.tz import tzlocal
 from botocore.exceptions import CredentialRetrievalError
 
-from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
+from tests import (
+    unittest, IntegerRefresher, BaseEnvVar, BaseSessionTest, random_chars
+)
 from tests import temporary_file, StubbedSession, SessionHTTPStubber
 from botocore import UNSIGNED
 from botocore.credentials import EnvProvider, ContainerProvider
@@ -828,3 +830,15 @@ class TestProcessProvider(unittest.TestCase):
             reg = r"(?s)^((?!b').)*$"
             with self.assertRaisesRegexp(CredentialRetrievalError, reg):
                 session.get_credentials()
+
+
+class TestInstanceMetadataFetcher(BaseSessionTest):
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_imds_use_truncated_user_agent(self, send):
+        self.session.user_agent_version = '24.0'
+        resolver = create_credential_resolver(self.session)
+        provider = resolver.get_provider('iam-role')
+        provider.load()
+        args, _ = send.call_args
+        self.assertEqual(args[0].headers['User-Agent'], 'Botocore/24.0')
