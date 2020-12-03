@@ -127,7 +127,15 @@ DEFAULT_S3_CONFIG_VARS = {
         'AWS_S3_US_EAST_1_REGIONAL_ENDPOINT', None, None
     )
 }
-
+# A mapping for the proxy specific configuration vars. These are
+# used to configure how botocore interacts with proxy setups while
+# sending requests.
+DEFAULT_PROXIES_CONFIG_VARS = {
+    'proxy_ca_bundle': ('proxy_ca_bundle', None, None, None),
+    'proxy_client_cert': ('proxy_client_cert', None, None, None),
+    'proxy_use_forwarding_for_https': (
+        'proxy_use_forwarding_for_https', None, None, utils.normalize_boolean),
+}
 
 def create_botocore_default_config_mapping(session):
     chain_builder = ConfigChainFactory(session=session)
@@ -136,6 +144,10 @@ def create_botocore_default_config_mapping(session):
     config_mapping['s3'] = SectionConfigProvider(
         's3', session, _create_config_chain_mapping(
             chain_builder, DEFAULT_S3_CONFIG_VARS)
+    )
+    config_mapping['proxies_config'] = SectionConfigProvider(
+        'proxies_config', session, _create_config_chain_mapping(
+            chain_builder, DEFAULT_PROXIES_CONFIG_VARS)
     )
     return config_mapping
 

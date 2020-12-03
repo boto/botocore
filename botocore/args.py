@@ -105,7 +105,7 @@ class ClientArgsCreator(object):
             timeout=(new_config.connect_timeout, new_config.read_timeout),
             socket_options=socket_options,
             client_cert=new_config.client_cert,
-            proxies_kwargs=new_config.proxies_kwargs)
+            proxies_config=new_config.proxies_config)
 
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
@@ -166,7 +166,7 @@ class ClientArgsCreator(object):
                 read_timeout=client_config.read_timeout,
                 max_pool_connections=client_config.max_pool_connections,
                 proxies=client_config.proxies,
-                proxies_kwargs=client_config.proxies_kwargs,
+                proxies_config=client_config.proxies_config,
                 retries=client_config.retries,
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
