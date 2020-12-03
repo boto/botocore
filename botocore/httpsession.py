@@ -24,7 +24,8 @@ from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import (
     ConnectionClosedError, EndpointConnectionError, HTTPClientError,
-    ReadTimeoutError, ProxyConnectionError, ConnectTimeoutError, SSLError
+    ReadTimeoutError, ProxyConnectionError, ConnectTimeoutError, SSLError,
+    InvalidProxiesConfigError
 )
 
 filter_ssl_warnings()
@@ -85,20 +86,20 @@ def create_urllib3_context(ssl_version=None, cert_reqs=None,
 
 
 class ProxyConfiguration(object):
-    """Represents a proxy configuration dictionary.
+    """Represents a proxy configuration dictionary and additional settings.
 
     This class represents a proxy configuration dictionary and provides utility
     functions to retreive well structured proxy urls and proxy headers from the
     proxy configuration dictionary.
     """
-    def __init__(self, proxies=None, proxies_kwargs=None):
+    def __init__(self, proxies=None, proxies_settings=None):
         if proxies is None:
             proxies = {}
-        if proxies_kwargs is None:
-            proxies_kwargs = {}
+        if proxies_settings is None:
+            proxies_settings = {}
 
         self._proxies = proxies
-        self._proxies_kwargs = proxies_kwargs
+        self._proxies_settings = proxies_settings
 
     def proxy_url_for(self, url):
         """Retrieves the corresponding proxy url for a given url. """
@@ -117,8 +118,9 @@ class ProxyConfiguration(object):
             headers['Proxy-Authorization'] = basic_auth
         return headers
 
-    def proxies_kwargs(self):
-        return self._proxies_kwargs
+    @property
+    def settings(self):
+        return self._proxies_settings
 
     def _fix_proxy_url(self, proxy_url):
         if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
@@ -159,11 +161,11 @@ class URLLib3Session(object):
                  max_pool_connections=MAX_POOL_CONNECTIONS,
                  socket_options=None,
                  client_cert=None,
-                 proxies_kwargs=None,
+                 proxies_config=None,
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(proxies=proxies,
-                                                proxies_kwargs=proxies_kwargs)
+                                                proxies_settings=proxies_config)
         self._pool_classes_by_scheme = {
             'http': botocore.awsrequest.AWSHTTPConnectionPool,
             'https': botocore.awsrequest.AWSHTTPSConnectionPool,
@@ -189,6 +191,17 @@ class URLLib3Session(object):
         self._manager = PoolManager(**self._get_pool_manager_kwargs())
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
 
+    @property
+    def _proxies_kwargs(self):
+        proxies_settings = self._proxy_config.settings
+        proxy_ssl_context = self._setup_proxy_ssl_context(proxies_settings)
+        proxies_kwargs = {
+            'proxy_ssl_context': proxy_ssl_context,
+            'use_forwarding_for_https': proxies_settings.get(
+                'proxy_use_forwarding_for_https'),
+        }
+        return {k: v for k, v in proxies_kwargs.items() if v is not None}
+
     def _get_pool_manager_kwargs(self, **extra_kwargs):
         pool_manager_kwargs = {
             'strict': True,
@@ -200,7 +213,6 @@ class URLLib3Session(object):
             'key_file': self._key_file,
         }
         pool_manager_kwargs.update(**extra_kwargs)
-        pool_manager_kwargs.update(**self._proxy_config.proxies_kwargs())
         return pool_manager_kwargs
 
     def _get_ssl_context(self):
@@ -211,6 +223,7 @@ class URLLib3Session(object):
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
             proxy_manager_kwargs = self._get_pool_manager_kwargs(
                 proxy_headers=proxy_headers)
+            proxy_manager_kwargs.update(**self._proxies_kwargs)
             proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
@@ -234,6 +247,26 @@ class URLLib3Session(object):
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
 
+    def _setup_proxy_ssl_context(self, proxies_settings):
+        proxy_ca_bundle = proxies_settings.get('proxy_ca_bundle')
+        proxy_cert = proxies_settings.get('proxy_client_cert')
+        if proxy_ca_bundle is None and proxy_cert is None:
+            return None
+
+        context = self._get_ssl_context()
+        try:
+            if proxy_ca_bundle is not None:
+                context.load_verify_locations(cafile=proxy_ca_bundle)
+
+            if isinstance(proxy_cert, tuple):
+                context.load_cert_chain(proxy_cert[0], keyfile=proxy_cert[1])
+            elif isinstance(proxy_cert, str):
+                context.load_cert_chain(proxy_cert)
+
+            return context
+        except (IOError, URLLib3SSLError) as e:
+            raise InvalidProxiesConfigError(error=e)
+
     def _get_connection_manager(self, url, proxy_url=None):
         if proxy_url:
             manager = self._get_proxy_manager(proxy_url)
@@ -253,7 +286,7 @@ class URLLib3Session(object):
         proxy_scheme = urlparse(proxy_url).scheme
         using_https_forwarding_proxy = (
             proxy_scheme == 'https' and
-            self._proxy_config.proxies_kwargs().get('use_forwarding_for_https', False)
+            self._proxies_kwargs.get('use_forwarding_for_https', False)
         )
 
         if using_https_forwarding_proxy or url.startswith('http:'):

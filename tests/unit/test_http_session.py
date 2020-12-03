@@ -141,6 +141,55 @@ class TestURLLib3Session(unittest.TestCase):
         URLLib3Session(client_cert=cert)
         self.assert_pool_manager_call(cert_file=cert[0], key_file=cert[1])
 
+    def test_proxies_config_settings(self):
+        proxies = {'http': 'http://proxy.com'}
+        proxies_config = {
+            'proxy_ca_bundle': 'path/to/bundle',
+            'proxy_client_cert': ('path/to/cert', 'path/to/key'),
+            'proxy_use_forwarding_for_https': False,
+        }
+        use_forwarding = proxies_config['proxy_use_forwarding_for_https']
+        with patch('botocore.httpsession.create_urllib3_context'):
+            session = URLLib3Session(
+                proxies=proxies,
+                proxies_config=proxies_config
+            )
+            self.request.url = 'http://example.com/'
+            session.send(self.request.prepare())
+            self.assert_proxy_manager_call(
+                proxies['http'],
+                proxy_headers={},
+                proxy_ssl_context=ANY,
+                use_forwarding_for_https=use_forwarding
+            )
+        self.assert_request_sent(url=self.request.url)
+
+    def test_proxies_config_settings_unknown_config(self):
+        proxies = {'http': 'http://proxy.com'}
+        proxies_config = {
+            'proxy_ca_bundle': None,
+            'proxy_client_cert': None,
+            'proxy_use_forwarding_for_https': True,
+            'proxy_not_a_real_arg': 'do not pass'
+        }
+        use_forwarding = proxies_config['proxy_use_forwarding_for_https']
+        session = URLLib3Session(
+            proxies=proxies,
+            proxies_config=proxies_config
+        )
+        self.request.url = 'http://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['http'],
+            proxy_headers={},
+            use_forwarding_for_https=use_forwarding
+        )
+        self.assertNotIn(
+            'proxy_not_a_real_arg',
+            self.proxy_manager_fun.call_args
+        )
+        self.assert_request_sent(url=self.request.url)
+
     def test_http_proxy_scheme_with_http_url(self):
         proxies = {'http': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
@@ -187,8 +236,8 @@ class TestURLLib3Session(unittest.TestCase):
 
     def test_https_proxy_scheme_forwarding_https_url(self):
         proxies = {'https': 'https://proxy.com'}
-        proxies_kwargs = {"use_forwarding_for_https":  True}
-        session = URLLib3Session(proxies=proxies, proxies_kwargs=proxies_kwargs)
+        proxies_config = {"proxy_use_forwarding_for_https":  True}
+        session = URLLib3Session(proxies=proxies, proxies_config=proxies_config)
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         self.assert_proxy_manager_call(
@@ -228,19 +277,22 @@ class TestURLLib3Session(unittest.TestCase):
     def test_urllib3_proxies_kwargs_included(self):
         cert = ('/some/cert', '/some/key')
         proxies = {'https': 'https://proxy.com'}
-        proxies_kwargs = {'proxy_ssl_context': None}
-        session = URLLib3Session(proxies=proxies, client_cert=cert,
-                                 proxies_kwargs=proxies_kwargs)
-        self.request.url = 'https://example.com/'
-        session.send(self.request.prepare())
-        self.assert_proxy_manager_call(
-            proxies['https'],
-            proxy_headers={},
-            cert_file=cert[0],
-            key_file=cert[1],
-            proxy_ssl_context=None
-        )
-        self.assert_request_sent()
+        proxies_config = {'proxy_client_cert': "path/to/cert"}
+        with patch('botocore.httpsession.create_urllib3_context'):
+            session = URLLib3Session(
+                proxies=proxies, client_cert=cert,
+                proxies_config=proxies_config
+            )
+            self.request.url = 'https://example.com/'
+            session.send(self.request.prepare())
+            self.assert_proxy_manager_call(
+                proxies['https'],
+                proxy_headers={},
+                cert_file=cert[0],
+                key_file=cert[1],
+                proxy_ssl_context=ANY
+            )
+            self.assert_request_sent()
 
     def test_basic_request(self):
         session = URLLib3Session()

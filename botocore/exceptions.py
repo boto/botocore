@@ -633,3 +633,9 @@ class CapacityNotAvailableError(BotoCoreError):
     fmt = (
         'Insufficient request capacity available.'
     )
+
+
+class InvalidProxiesConfigError(BotoCoreError):
+    fmt = (
+        'Invalid configuration value(s) provided for proxies_config.'
+    )

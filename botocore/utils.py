@@ -220,6 +220,15 @@ def normalize_url_path(path):
     return remove_dot_segments(path)
 
 
+def normalize_boolean(val):
+    """Returns None if val is None, otherwise ensure value
+    converted to boolean"""
+    if val is None:
+        return val
+    else:
+        return ensure_boolean(val)
+
+
 def remove_dot_segments(url):
     # RFC 3986, section 5.2.4 "Remove Dot Segments"
     # Also, AWS services require consecutive slashes to be removed,
