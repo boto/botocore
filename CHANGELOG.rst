@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.19.30
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.19.29
 =======
 
