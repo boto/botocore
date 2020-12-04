@@ -1046,6 +1046,8 @@ BUILTIN_HANDLERS = [
      inject_presigned_url_rds),
     ('before-call.rds.CreateDBInstanceReadReplica',
      inject_presigned_url_rds),
+    ('before-call.rds.StartDBInstanceAutomatedBackupsReplication',
+     inject_presigned_url_rds),
 
     # RDS PresignedUrl documentation customizations
     ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
@@ -1055,6 +1057,8 @@ BUILTIN_HANDLERS = [
     ('docs.*.rds.CopyDBSnapshot.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
     ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.StartDBInstanceAutomatedBackupsReplication.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 
     #############
