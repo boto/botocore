@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.19.31
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+
+
 1.19.30
 =======
 
