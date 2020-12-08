@@ -2,6 +2,42 @@
 CHANGELOG
 =========
 
+1.19.32
+=======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``auditmanager``: Update auditmanager client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``sagemaker-edge``: Update sagemaker-edge client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``healthlake``: Update healthlake client to latest version
+* api-change:``emr-containers``: Update emr-containers client to latest version
+
+
+1.19.31
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+
+
+1.19.30
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.19.29
 =======
 
