@@ -275,6 +275,48 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "PipelineSummaries"
+    },
+    "ListDataQualityJobDefinitions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "JobDefinitionSummaries"
+    },
+    "ListDeviceFleets": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "DeviceFleetSummaries"
+    },
+    "ListDevices": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "DeviceSummaries"
+    },
+    "ListEdgePackagingJobs": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "EdgePackagingJobSummaries"
+    },
+    "ListModelBiasJobDefinitions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "JobDefinitionSummaries"
+    },
+    "ListModelExplainabilityJobDefinitions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "JobDefinitionSummaries"
+    },
+    "ListModelQualityJobDefinitions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "JobDefinitionSummaries"
     }
   }
 }

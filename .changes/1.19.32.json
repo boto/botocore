@@ -1,0 +1,52 @@
+[
+  {
+    "category": "``ecr``", 
+    "description": "Update ecr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kendra``", 
+    "description": "Update kendra client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``auditmanager``", 
+    "description": "Update auditmanager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-runtime``", 
+    "description": "Update sagemaker-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-edge``", 
+    "description": "Update sagemaker-edge client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``forecast``", 
+    "description": "Update forecast client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``healthlake``", 
+    "description": "Update healthlake client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr-containers``", 
+    "description": "Update emr-containers client to latest version", 
+    "type": "api-change"
+  }
+]
