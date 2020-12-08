@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.19.32
+=======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``kendra``: Update kendra client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``auditmanager``: Update auditmanager client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``sagemaker-edge``: Update sagemaker-edge client to latest version
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``healthlake``: Update healthlake client to latest version
+* api-change:``emr-containers``: Update emr-containers client to latest version
+
+
 1.19.31
 =======
 
