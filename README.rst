@@ -88,7 +88,7 @@ Contributing
 We value feedback and contributions from our community. Whether it's a bug report, new feature, correction, or additional documentation, we welcome your issues and pull requests. Please read through this `CONTRIBUTING <https://github.com/boto/botocore/blob/develop/CONTRIBUTING.rst>`__ document before submitting any issues or pull requests to ensure we have all the necessary information to effectively respond to your contribution. 
 
 
-Maintenance and Support for CLI Major Versions
+Maintenance and Support for SDK Major Versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Botocore was made generally available on 06/22/2015 and is currently in the full support phase of the availability life cycle.
