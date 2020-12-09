@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.33
+=======
+
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.19.32
 =======
 
