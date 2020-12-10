@@ -559,6 +559,30 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "TransitGatewayPrefixListReferences"
+    },
+    "DescribeNetworkInsightsAnalyses": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "NetworkInsightsAnalyses"
+    },
+    "DescribeNetworkInsightsPaths": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "NetworkInsightsPaths"
+    },
+    "DescribeTransitGatewayConnectPeers": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayConnectPeers"
+    },
+    "DescribeTransitGatewayConnects": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayConnects"
     }
   }
 }
