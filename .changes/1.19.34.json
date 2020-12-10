@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``networkmanager``", 
+    "description": "Update networkmanager client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kendra``", 
+    "description": "Update kendra client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]
