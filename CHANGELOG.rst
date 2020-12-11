@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.35
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``pi``: Update pi client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+
+
 1.19.34
 =======
 
