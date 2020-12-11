@@ -1,5 +1,0 @@
-{
-  "category": "``guardduty``", 
-  "type": "api-change", 
-  "description": "Update guardduty client to latest version"
-}
