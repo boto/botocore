@@ -1980,6 +1980,8 @@ class CredentialResolver(object):
 
 
 class SSOCredentialFetcher(CachedCredentialFetcher):
+    _UTC_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+
     def __init__(self, start_url, sso_region, role_name, account_id,
                  client_creator, token_loader=None, cache=None,
                  expiry_window_seconds=None):
@@ -1989,7 +1991,6 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
         self._account_id = account_id
         self._start_url = start_url
         self._token_loader = token_loader
-
         super(SSOCredentialFetcher, self).__init__(
             cache, expiry_window_seconds
         )
@@ -2017,7 +2018,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
         # fromtimestamp expects seconds so: milliseconds / 1000 = seconds
         timestamp_seconds = timestamp_ms / 1000.0
         timestamp = datetime.datetime.fromtimestamp(timestamp_seconds, tzutc())
-        return _serialize_if_needed(timestamp)
+        return timestamp.strftime(self._UTC_DATE_FORMAT)
 
     def _get_credentials(self):
         """Get credentials by calling SSO get role credentials."""
