@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.36
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``devops-guru``: Update devops-guru client to latest version
+
+
 1.19.35
 =======
 
