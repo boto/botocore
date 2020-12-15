@@ -257,6 +257,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Entities"
+    },
+    "ListOpsItemEvents": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Summaries"
+    },
+    "ListOpsMetadata": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "OpsMetadataList"
     }
   }
 }

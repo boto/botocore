@@ -146,6 +146,14 @@ class TestStreamWrapper(unittest.TestCase):
                 [b'1234567890', b'1234567890', b'12345'],
             )
 
+    def test_streaming_line_iterator_keepends(self):
+        body = six.BytesIO(b'1234567890\n1234567890\n12345')
+        stream = response.StreamingBody(body, content_length=27)
+        self.assert_lines(
+            stream.iter_lines(keepends=True),
+            [b'1234567890\n', b'1234567890\n', b'12345'],
+        )
+
     def test_catches_urllib3_read_timeout(self):
         class TimeoutBody(object):
             def read(*args, **kwargs):
