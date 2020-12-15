@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.19.37
+=======
+
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``greengrassv2``: Update greengrassv2 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``iotdeviceadvisor``: Update iotdeviceadvisor client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``amp``: Update amp client to latest version
+* api-change:``iotfleethub``: Update iotfleethub client to latest version
+
+
+1.19.36
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``devops-guru``: Update devops-guru client to latest version
+
+
+1.19.35
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``pi``: Update pi client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+
+
 1.19.34
 =======
 

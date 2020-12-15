@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``globalaccelerator``", 
+    "description": "Update globalaccelerator client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devops-guru``", 
+    "description": "Update devops-guru client to latest version", 
+    "type": "api-change"
+  }
+]
