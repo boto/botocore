@@ -289,6 +289,30 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "principals"
+    },
+    "GetBehaviorModelTrainingSummaries": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "summaries"
+    },
+    "ListCustomMetrics": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "metricNames"
+    },
+    "ListDetectMitigationActionsExecutions": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "actionsExecutions"
+    },
+    "ListDetectMitigationActionsTasks": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "tasks"
     }
   }
 }
