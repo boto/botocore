@@ -48,6 +48,7 @@ SERVICE_RENAMES = {
     'iot1click-projects': 'iot-1click-projects',
     'iotevents-data': 'iot-events-data',
     'iotevents': 'iot-events',
+    'iotwireless': 'iot-wireless',
     'kinesisanalytics': 'kinesis-analytics',
     'kinesisanalyticsv2': 'kinesis-analytics-v2',
     'kinesisvideo': 'kinesis-video',
