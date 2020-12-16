@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.19.38
+=======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``amp``: Update amp client to latest version
+* api-change:``location``: Update location client to latest version
+* api-change:``wellarchitected``: Update wellarchitected client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+
+
 1.19.37
 =======
 
