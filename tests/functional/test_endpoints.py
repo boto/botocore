@@ -88,7 +88,9 @@ ENDPOINT_PREFIX_OVERRIDE = {
     # iotevents data endpoints.json and service-2.json don't line up.
     'ioteventsdata': 'data.iotevents',
     'iotsecuredtunneling': 'api.tunneling.iot',
+    'iotwireless': 'api.iotwireless',
 }
+
 NOT_SUPPORTED_IN_SDK = [
     'mobileanalytics',
     'transcribestreaming',
