@@ -392,6 +392,56 @@ class TestWaitersObjects(unittest.TestCase):
         with self.assertRaisesRegexp(WaiterError, error_message):
             waiter.wait()
 
+    def _assert_failure_state_error_raised(self, acceptors, responses, expected_msg):
+        config = self.create_waiter_config(
+            acceptors=acceptors)
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        self.client_responses_are(
+            *responses,
+            for_operation=operation_method
+        )
+        with self.assertRaisesRegexp(WaiterError, expected_msg):
+            waiter.wait()
+
+    def test_waiter_failure_state_error(self):
+        test_cases = [
+            ([{'state': 'failure', 'matcher': 'path',
+               'argument': 'Foo', 'expected': 'FAILURE'}],
+             [{'Foo': 'FAILURE'}],
+             'FAILURE'),
+            ([{'state': 'failure', 'matcher': 'pathAll',
+               'argument': 'Tables[].State', 'expected': 'FAILURE'}],
+             [{'Tables': [{"State": "FAILURE"}]}],
+             'FAILURE'),
+            ([{'state': 'failure', 'matcher': 'pathAny',
+               'argument': 'Tables[].State', 'expected': 'FAILURE'}],
+             [{'Tables': [{"State": "FAILURE"}]}],
+             'FAILURE'),
+            ([{'state': 'failure', 'matcher': 'status', 'expected': 404}],
+             [{'ResponseMetadata': {'HTTPStatusCode': 404}}],
+             '404'),
+            ([{'state': 'failure', 'matcher': 'error', 'expected': 'FailError'}],
+             [{'Error': {'Code': 'FailError', 'Message': 'foo'}}],
+             'FailError'),
+            ([{'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'}],
+             [{'Success': False}]*4,
+             'Max attempts exceeded'),
+            ([
+                {'state': 'success', 'matcher': 'status', 'expected': 200},
+                {'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'},
+            ],
+             [{'Success': False},
+              {'Error': {'Code': 'RetryMe', 'Message': 'foo'}},
+              {'Success': False},
+              {'Success': False},
+              ],
+             'Previously accepted state'),
+        ]
+
+        for acceptors, responses, expected_msg in test_cases:
+            self._assert_failure_state_error_raised(acceptors, responses, expected_msg)
+
     def test_waiter_transitions_to_failure_state(self):
         acceptors = [
             # A success state that will never be hit.
@@ -435,24 +485,6 @@ class TestWaitersObjects(unittest.TestCase):
         waiter = Waiter('MyWaiter', config, operation_method)
         waiter.wait()
         self.assertEqual(operation_method.call_count, 3)
-
-    def test_waiter_transitions_to_retry_but_max_attempts_exceeded(self):
-        acceptors = [
-            {'state': 'success', 'matcher': 'status', 'expected': 200},
-            {'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'},
-        ]
-        config = self.create_waiter_config(acceptors=acceptors)
-        operation_method = mock.Mock()
-        self.client_responses_are(
-            {'Success': False},
-            {'Error': {'Code': 'RetryMe', 'Message': 'foo'}},
-            {'Success': False},
-            {'Success': False},
-            for_operation=operation_method
-        )
-        waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
-            waiter.wait()
 
     def test_kwargs_are_passed_through(self):
         acceptors = [
