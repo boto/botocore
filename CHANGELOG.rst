@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.19.39
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``route53resolver``: Update route53resolver client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.19.38
 =======
 
