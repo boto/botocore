@@ -283,8 +283,14 @@ class JSONFileCache(object):
 
     CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'boto', 'cache'))
 
-    def __init__(self, working_dir=CACHE_DIR):
+    def __init__(self, working_dir=CACHE_DIR, dumps_func=None):
         self._working_dir = working_dir
+        if dumps_func is None:
+            dumps_func = self._default_dumps
+        self._dumps = dumps_func
+
+    def _default_dumps(self, obj):
+        return json.dumps(obj, default=_serialize_if_needed)
 
     def __contains__(self, cache_key):
         actual_key = self._convert_cache_key(cache_key)
@@ -302,7 +308,7 @@ class JSONFileCache(object):
     def __setitem__(self, cache_key, value):
         full_key = self._convert_cache_key(cache_key)
         try:
-            file_content = json.dumps(value, default=_serialize_if_needed)
+            file_content = self._dumps(value)
         except (TypeError, ValueError):
             raise ValueError("Value cannot be cached, must be "
                              "JSON serializable: %s" % value)
