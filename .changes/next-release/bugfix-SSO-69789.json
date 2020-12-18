@@ -1,5 +1,0 @@
-{
-  "description": "Fixed timestamp format for SSO credential expirations",
-  "type": "bugfix",
-  "category": "SSO"
-}
