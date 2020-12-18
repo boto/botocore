@@ -3271,7 +3271,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         self.assertEqual(credentials['access_key'], 'foo')
         self.assertEqual(credentials['secret_key'], 'bar')
         self.assertEqual(credentials['token'], 'baz')
-        self.assertEqual(credentials['expiry_time'], '2008-09-23T12:43:20UTC')
+        self.assertEqual(credentials['expiry_time'], '2008-09-23T12:43:20Z')
         cache_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
         expected_cached_credentials = {
             'ProviderType': 'sso',
@@ -3279,7 +3279,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
                 'AccessKeyId': 'foo',
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
-                'Expiration': '2008-09-23T12:43:20UTC',
+                'Expiration': '2008-09-23T12:43:20Z',
             }
         }
         self.assertEqual(self.cache[cache_key], expected_cached_credentials)
