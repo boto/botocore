@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.19.40
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* bugfix:SSO: Fixed timestamp format for SSO credential expirations
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.19.39
 =======
 
