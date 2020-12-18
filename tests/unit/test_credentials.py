@@ -2695,6 +2695,22 @@ class TestJSONCache(unittest.TestCase):
         filename = os.path.join(self.tempdir, 'mykey.json')
         self.assertEqual(os.stat(filename).st_mode & 0xFFF, 0o600)
 
+    def test_cache_with_custom_dumps_func(self):
+        def _custom_serializer(obj):
+            return "custom foo"
+        def _custom_dumps(obj):
+            return json.dumps(obj, default=_custom_serializer)
+        custom_dir = os.path.join(self.tempdir, 'custom')
+        custom_cache = credentials.JSONFileCache(
+            custom_dir,
+            dumps_func=_custom_dumps
+        )
+        custom_cache['test'] = {'bar': object()}
+        self.assertEqual(
+            custom_cache['test'],
+            {'bar': 'custom foo'}
+        )
+
 
 class TestRefreshLogic(unittest.TestCase):
     def test_mandatory_refresh_needed(self):
