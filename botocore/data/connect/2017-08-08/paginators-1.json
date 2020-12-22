@@ -119,6 +119,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "UseCaseSummaryList"
+    },
+    "ListQuickConnects": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "QuickConnectSummaryList"
     }
   }
 }
