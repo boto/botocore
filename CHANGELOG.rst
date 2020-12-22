@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.42
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.19.41
 =======
 
