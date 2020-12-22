@@ -2,6 +2,46 @@
 CHANGELOG
 =========
 
+1.19.42
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``connect``: Update connect client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.19.41
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``service-quotas``: Update service-quotas client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``connectparticipant``: Update connectparticipant client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``outposts``: Update outposts client to latest version
+* api-change:``servicecatalog-appregistry``: Update servicecatalog-appregistry client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.19.40
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* bugfix:SSO: Fixed timestamp format for SSO credential expirations
+* api-change:``personalize-runtime``: Update personalize-runtime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.19.39
 =======
 
