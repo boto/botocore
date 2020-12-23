@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``compute-optimizer``", 
+    "description": "Update compute-optimizer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``resource-groups``", 
+    "description": "Update resource-groups client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }
+]
