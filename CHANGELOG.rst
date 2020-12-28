@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.19.44
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
 1.19.43
 =======
 
