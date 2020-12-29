@@ -16,7 +16,10 @@
       "limit_key": "MaxResults"
     },
     "ListGroupResources": {
-      "result_key": "ResourceIdentifiers",
+      "result_key": [
+        "ResourceIdentifiers",
+        "Resources"
+      ],
       "output_token": "NextToken",
       "input_token": "NextToken",
       "limit_key": "MaxResults"
