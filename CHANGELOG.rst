@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.19.45
+=======
+
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
+1.19.44
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.19.43
+=======
+
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.19.42
 =======
 
