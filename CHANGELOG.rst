@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.19.45
+=======
+
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+
+
 1.19.44
 =======
 
