@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.19.48
+=======
+
+* api-change:``healthlake``: Update healthlake client to latest version
+* api-change:``cloudsearch``: Update cloudsearch client to latest version
+
+
 1.19.47
 =======
 
