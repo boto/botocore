@@ -54,6 +54,7 @@ SERVICE_RENAMES = {
     'kinesisvideo': 'kinesis-video',
     'lex-models': 'lex-model-building-service',
     'lex-runtime': 'lex-runtime-service',
+    'lexv2-runtime': 'lex-runtime-v2',
     'logs': 'cloudwatch-logs',
     'machinelearning': 'machine-learning',
     'marketplacecommerceanalytics': 'marketplace-commerce-analytics',
