@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``devops-guru``", 
+    "description": "Update devops-guru client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }
+]
