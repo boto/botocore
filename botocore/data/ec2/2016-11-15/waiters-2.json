@@ -455,6 +455,11 @@
           "matcher": "pathAll",
           "state": "success",
           "argument": "Subnets[].State"
+        },
+        {
+          "state": "retry",
+          "matcher": "error",
+          "expected": "InvalidSubnetID.NotFound"
         }
       ]
     },
