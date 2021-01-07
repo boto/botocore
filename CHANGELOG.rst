@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.19.51
+=======
+
+* api-change:``devops-guru``: Update devops-guru client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.19.50
+=======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+
+
 1.19.49
 =======
 
