@@ -398,8 +398,12 @@ class ClientArgsCreator:
         scoped_keepalive = scoped_config and self._ensure_boolean(
             scoped_config.get("tcp_keepalive", False)
         )
-        # Enables TCP Keepalive if specified in client config object or shared config file.
-        if client_keepalive or scoped_keepalive:
+        envvar_keepalive = self._config_store.get_config_variable(
+            'tcp_keepalive'
+        )
+        # Enables TCP Keepalive if specified in client environment, config
+        # object, or shared config file.
+        if client_keepalive or scoped_keepalive or envvar_keepalive:
             socket_options.append((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
         return socket_options
 

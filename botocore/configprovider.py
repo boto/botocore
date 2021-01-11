@@ -139,6 +139,9 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     # We can't have a default here for v1 because we need to defer to
     # whatever the defaults are in _retry.json.
     'max_attempts': ('max_attempts', 'AWS_MAX_ATTEMPTS', None, int),
+    'tcp_keepalive': (
+        'tcp_keepalive', 'AWS_TCP_KEEPALIVE', False, utils.ensure_boolean
+    ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
