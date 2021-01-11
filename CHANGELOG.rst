@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.19.52
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
 1.19.51
 =======
 
