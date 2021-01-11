@@ -53,6 +53,7 @@ SERVICE_RENAMES = {
     'kinesisanalyticsv2': 'kinesis-analytics-v2',
     'kinesisvideo': 'kinesis-video',
     'lex-models': 'lex-model-building-service',
+    'lexv2-models': 'lex-models-v2',
     'lex-runtime': 'lex-runtime-service',
     'logs': 'cloudwatch-logs',
     'machinelearning': 'machine-learning',
