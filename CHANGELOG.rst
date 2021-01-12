@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.19.53
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``auditmanager``: Update auditmanager client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.19.52
 =======
 
