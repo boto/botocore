@@ -903,6 +903,12 @@ def inject_api_version_header_if_needed(model, params, **kwargs):
     params['headers']['x-amz-api-version'] = model.service_model.api_version
 
 
+def remove_lex_v2_start_conversation(class_attributes, **kwargs):
+    """Operation requires h2 which is currently unsupported in Python"""
+    if 'start_conversation' in class_attributes:
+        del class_attributes['start_conversation']
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -918,6 +924,7 @@ BUILTIN_HANDLERS = [
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
+    ('creating-client-class.lex-runtime-v2', remove_lex_v2_start_conversation),
     ('after-call.iam', json_decode_policies),
 
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
