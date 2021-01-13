@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.19.54
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.19.53
 =======
 
