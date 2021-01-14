@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.19.55
+=======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.19.54
+=======
+
+* api-change:``frauddetector``: Update frauddetector client to latest version
+* api-change:``personalize``: Update personalize client to latest version
+
+
 1.19.53
 =======
 
