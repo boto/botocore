@@ -94,6 +94,12 @@
       "limit_key": "Limit",
       "output_token": "NextToken",
       "result_key": "RemediationExecutionStatuses"
+    },
+    "GetDiscoveredResourceCounts": {
+      "input_token": "nextToken",
+      "limit_key": "limit",
+      "output_token": "nextToken",
+      "result_key": "resourceCounts"
     }
   }
 }
