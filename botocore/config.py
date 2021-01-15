@@ -63,6 +63,26 @@ class Config(object):
         {'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}.
         The proxies are used on each request.
 
+    :type proxies_config: dict
+    :param proxies_config: A dictionary of additional proxy configurations.
+        Valid keys are:
+
+        * 'proxy_ca_bundle' -- The path to a custom certificate bundle to use
+          when establishing SSL/TLS connections with proxy.
+
+        * 'proxy_client_cert' -- The path to a certificate for proxy
+          TLS client authentication.
+
+          When a str is provided it is treated as a path to a proxy client
+          certificate. When a two element tuple is provided, it will be
+          interpreted as the path to the client certificate, and the path
+          to the certificate key.
+
+        * 'proxy_use_forwarding_for_https' -- For HTTPS proxies,
+          forward your requests to HTTPS destinations with an absolute
+          URI. We strongly recommend you only use this option with
+          trusted or corporate proxies. Value must be boolean.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -160,6 +180,7 @@ class Config(object):
         ('parameter_validation', True),
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
+        ('proxies_config', None),
         ('s3', None),
         ('retries', None),
         ('client_cert', None),
