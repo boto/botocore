@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``acm-pca``", 
+    "description": "Update acm-pca client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``chime``", 
+    "description": "Update chime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }
+]
