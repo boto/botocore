@@ -280,7 +280,8 @@ class EndpointCreator(object):
                         http_session_cls=URLLib3Session,
                         proxies=None,
                         socket_options=None,
-                        client_cert=None):
+                        client_cert=None,
+                        proxies_config=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
@@ -296,6 +297,7 @@ class EndpointCreator(object):
             max_pool_connections=max_pool_connections,
             socket_options=socket_options,
             client_cert=client_cert,
+            proxies_config=proxies_config
         )
 
         return Endpoint(
