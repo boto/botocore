@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.19.58
+=======
+
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
 1.19.57
 =======
 
