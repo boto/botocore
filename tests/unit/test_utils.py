@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import io
+
 from tests import unittest
 from tests import RawResponse
 from dateutil.tz import tzutc, tzoffset
@@ -916,6 +918,19 @@ class TestSwitchToVirtualHostStyle(unittest.TestCase):
             region_name=region_name, default_endpoint_url='s3.amazonaws.com')
         self.assertEqual(request.url,
                          'https://bucket.s3.amazonaws.com/key.txt')
+
+
+class TestSwitchToChunkedEncodingForNonSeekableObjects(unittest.TestCase):
+    def test_switch_to_chunked_encodeing_for_stream_like_object(self):
+        request = AWSRequest(
+            method='POST', headers={},
+            data=io.BufferedIOBase(b"some initial binary data"),
+            url='https://foo.amazonaws.com/bucket/key.txt'
+        )
+        prepared_request = request.prepare()
+        self.assertEqual(
+            prepared_request.headers, {'Transfer-Encoding': 'chunked'}
+        )
 
 
 class TestInstanceCache(unittest.TestCase):
