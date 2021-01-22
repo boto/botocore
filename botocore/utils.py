@@ -15,6 +15,7 @@ import re
 import time
 import logging
 import datetime
+import contextlib
 import hashlib
 import binascii
 import functools
@@ -264,7 +265,7 @@ class IMDSFetcher(object):
 
     def get_base_url(self):
         return self._base_url
-    
+
     def _select_base_url(self, base_url, config):
         if config is None:
             config = {}
@@ -274,7 +275,7 @@ class IMDSFetcher(object):
 
         if requires_ipv6 and custom_metadata_endpoint:
             logger.warn("Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint.")
-        
+
         chosen_base_url = None
 
         if base_url != METADATA_BASE_URL:
@@ -2445,3 +2446,29 @@ class SSOTokenLoader(object):
                 'invalid.'
             )
             raise SSOTokenLoadError(error_msg=error_msg)
+
+
+@contextlib.contextmanager
+def original_ld_library_path(env=None):
+    # See: https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
+    # When running under pyinstaller, it will set an
+    # LD_LIBRARY_PATH to ensure it prefers its bundled version of libs.
+    # There are times where we don't want this behavior, for example when
+    # running a separate subprocess.
+    if env is None:
+        env = os.environ
+
+    value_to_put_back = env.get('LD_LIBRARY_PATH')
+    # The first case is where a user has exported an LD_LIBRARY_PATH
+    # in their env.  This will be mapped to LD_LIBRARY_PATH_ORIG.
+    if 'LD_LIBRARY_PATH_ORIG' in env:
+        env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH_ORIG']
+    else:
+        # Otherwise if they didn't set an LD_LIBRARY_PATH we just need
+        # to make sure this value is unset.
+        env.pop('LD_LIBRARY_PATH', None)
+    try:
+        yield
+    finally:
+        if value_to_put_back is not None:
+            env['LD_LIBRARY_PATH'] = value_to_put_back
