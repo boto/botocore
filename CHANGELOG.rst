@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.59
+=======
+
+* api-change:``greengrassv2``: Update greengrassv2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``lexv2-runtime``: Update lexv2-runtime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.19.58
 =======
 
