@@ -315,23 +315,25 @@ class IMDSFetcher(object):
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
     _TOKEN_PATH = 'latest/api/token'
     _TOKEN_TTL = '21600'
+    _MAX_SLEEP_TIME = 1
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
-                 env=None, user_agent=None, config=None):
+                 env=None, user_agent=None, config=None, sleep=time.sleep):
         self._timeout = timeout
         self._num_attempts = num_attempts
         self._base_url = self._select_base_url(base_url, config)
 
         if env is None:
-            env = os.environ.copy()
-        self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
-        self._disabled = self._disabled == 'true'
+            env = os.environ
+        disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
+        self._disabled = disabled == 'true'
         self._user_agent = user_agent
         self._session = botocore.httpsession.URLLib3Session(
             timeout=self._timeout,
             proxies=get_environ_proxies(self._base_url),
         )
+        self._sleep = sleep
 
     def get_base_url(self):
         return self._base_url
@@ -344,7 +346,7 @@ class IMDSFetcher(object):
         custom_metadata_endpoint = config.get('ec2_metadata_service_endpoint')
 
         if requires_ipv6 and custom_metadata_endpoint:
-            logger.warn("Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint.")
+            logger.warning("Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint.")
         
         chosen_base_url = None
 
@@ -373,6 +375,8 @@ class IMDSFetcher(object):
         request = botocore.awsrequest.AWSRequest(
             method='PUT', url=url, headers=headers)
         for i in range(self._num_attempts):
+            if i:
+                self._sleep(min(0.1 * 2**i, self._MAX_SLEEP_TIME))
             try:
                 response = self._session.send(request.prepare())
                 if response.status_code == 200:
@@ -419,6 +423,8 @@ class IMDSFetcher(object):
             headers['x-aws-ec2-metadata-token'] = token
         self._add_user_agent(headers)
         for i in range(self._num_attempts):
+            if i:
+                self._sleep(min(0.1 * 2**i, self._MAX_SLEEP_TIME))
             try:
                 request = botocore.awsrequest.AWSRequest(
                     method='GET', url=url, headers=headers)

@@ -71,7 +71,6 @@ from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenLoader
 from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
 from botocore.exceptions import SSOTokenLoadError
-from botocore.utils import IMDSFetcher
 from botocore.utils import BadIMDSRequestError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
@@ -2261,6 +2260,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             'expiry_time': self._creds['Expiration'],
             'role_name': self._role_name
         }
+        self.sleep = mock.Mock()
 
     def tearDown(self):
         self._urllib3_patch.stop()
@@ -2421,8 +2421,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_http_connection_error_for_role_name_is_retried(self):
         # Connection related errors should be retried
@@ -2431,8 +2432,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_empty_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
@@ -2442,8 +2444,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_non_200_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2454,8 +2457,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             status_code=429, body=b'{"message": "Slow down"}')
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_http_connection_errors_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2464,8 +2468,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_empty_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2475,8 +2480,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(body=b'')
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_invalid_json_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2486,23 +2492,37 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(body=b'{"AccessKey":')
         self.add_get_credentials_imds_response()
         result = InstanceMetadataFetcher(
-            num_attempts=2).retrieve_iam_role_credentials()
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_exhaust_retries_on_role_name_request(self):
         self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
-            num_attempts=1).retrieve_iam_role_credentials()
+            num_attempts=1, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
+        self.assertEqual(self.sleep.call_count, 0)
 
     def test_exhaust_retries_on_credentials_request(self):
         self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
-            num_attempts=1).retrieve_iam_role_credentials()
+            num_attempts=1, sleep=self.sleep).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
+        self.assertEqual(self.sleep.call_count, 0)
+
+    def test_non_200_response_for_fetch_token_is_retried(self):
+        self.add_imds_response(
+            status_code=429, body=b'{"message": "Slow down"}')
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2, sleep=self.sleep).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(self.sleep.call_count, 1)
 
     def test_missing_fields_in_credentials_response(self):
         self.add_get_token_imds_response(token='token')
