@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import base64
 import re
 
 from tests import temporary_file
@@ -18,7 +19,7 @@ from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import datetime, urlsplit, parse_qs
+from botocore.compat import datetime, urlsplit, parse_qs, get_md5
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.exceptions import InvalidS3UsEast1RegionalEndpointConfigError
 from botocore.parsers import ResponseParserError
@@ -2246,3 +2247,21 @@ def _verify_presigned_url_addressing(region, bucket, key, s3_config,
     parts = urlsplit(url)
     actual = '%s://%s%s' % parts[:3]
     assert_equal(actual, expected_url)
+
+
+class TestS3DeleteObjects(BaseS3OperationTest):
+    def test_escape_keys_in_xml_payload(self):
+        self.http_stubber.add_response()
+        with self.http_stubber:
+            response = self.client.delete_objects(
+                Bucket='mybucket',
+                Delete={
+                    'Objects': [{'Key': 'some\r\n\rkey'}]
+                },
+            )
+        request = self.http_stubber.requests[0]
+        self.assertNotIn(b'\r\n\r', request.body)
+        self.assertIn(b'&#xD;&#xA;&#xD;', request.body)
+        content_md5_bytes = get_md5(request.body).digest()
+        content_md5 = base64.b64encode(content_md5_bytes)
+        self.assertEqual(content_md5, request.headers['Content-MD5'])

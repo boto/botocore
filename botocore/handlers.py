@@ -80,6 +80,32 @@ def handle_service_name_alias(service_name, **kwargs):
     return SERVICE_NAME_ALIASES.get(service_name, service_name)
 
 
+def encode_delete_objects_keys(params, **kwargs):
+    # Replace \r and \n with the escaped sequence over the whole XML document
+    # to avoid linebreak normalization modifying customer input when the
+    # document is parsed. Ideally, we would do this in ElementTree.tostring,
+    # but it doesn't allow us to override entity escaping for text fields. For
+    # this operation \r and \n can only appear in the XML document if they were
+    # passed as part of the customer input.
+    body = params['body']
+    replaced = False
+    if b'\r' in body:
+        replaced = True
+        body = body.replace(b'\r', b'&#xD;')
+    if b'\n' in body:
+        replaced = True
+        body = body.replace(b'\n', b'&#xA;')
+
+    if not replaced:
+        return
+
+    params['body'] = body
+    if 'Content-MD5' in params['headers']:
+        # The Content-MD5 is now wrong, so we'll need to recalculate it
+        del params['headers']['Content-MD5']
+        conditionally_calculate_md5(params, **kwargs)
+
+
 def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
@@ -957,6 +983,7 @@ BUILTIN_HANDLERS = [
     ('before-call.apigateway', add_accept_header),
     ('before-call.s3.PutObject', conditionally_calculate_md5),
     ('before-call.s3.UploadPart', conditionally_calculate_md5),
+    ('before-call.s3.DeleteObjects', encode_delete_objects_keys),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
