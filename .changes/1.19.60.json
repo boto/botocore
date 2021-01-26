@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``backup``", 
+    "description": "Update backup client to latest version", 
+    "type": "api-change"
+  }
+]
