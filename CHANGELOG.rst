@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.19.60
+=======
+
+* api-change:``backup``: Update backup client to latest version
+
+
 1.19.59
 =======
 
