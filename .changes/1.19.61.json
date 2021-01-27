@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``elasticache``", 
+    "description": "Update elasticache client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``customer-profiles``", 
+    "description": "Update customer-profiles client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sesv2``", 
+    "description": "Update sesv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``accessanalyzer``", 
+    "description": "Update accessanalyzer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lightsail``", 
+    "description": "Update lightsail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "api-change"
+  }
+]

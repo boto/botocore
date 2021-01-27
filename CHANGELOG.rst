@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.19.61
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``customer-profiles``: Update customer-profiles client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.19.60
 =======
 
