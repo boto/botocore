@@ -16,6 +16,7 @@ _H2_REQUIRED = object()
 # Service names to list of known HTTP 2 operations
 _KNOWN_SERVICES = {
     'kinesis': ['SubscribeToShard'],
+    'lexv2-runtime': ['StartConversation'],
 }
 
 

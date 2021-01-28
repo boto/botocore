@@ -70,7 +70,6 @@ def type_check(valid_types):
 def range_check(name, value, shape, error_type, errors):
     failed = False
     min_allowed = float('-inf')
-    max_allowed = float('inf')
     if 'min' in shape.metadata:
         min_allowed = shape.metadata['min']
         if value < min_allowed:
@@ -82,8 +81,7 @@ def range_check(name, value, shape, error_type, errors):
             if value < min_allowed:
                 failed = True
     if failed:
-        errors.report(name, error_type, param=value,
-                      valid_range=[min_allowed, max_allowed])
+        errors.report(name, error_type, param=value, min_allowed=min_allowed)
 
 
 class ValidationErrors(object):
@@ -117,17 +115,15 @@ class ValidationErrors(object):
                                         str(type(additional['param'])),
                                         ', '.join(additional['valid_types']))
         elif error_type == 'invalid range':
-            min_allowed = additional['valid_range'][0]
-            max_allowed = additional['valid_range'][1]
-            return ('Invalid range for parameter %s, value: %s, valid range: '
-                    '%s-%s' % (name, additional['param'],
-                               min_allowed, max_allowed))
+            min_allowed = additional['min_allowed']
+            return ('Invalid value for parameter %s, value: %s, '
+                    'valid min value: %s' % (name, additional['param'],
+                                             min_allowed))
         elif error_type == 'invalid length':
-            min_allowed = additional['valid_range'][0]
-            max_allowed = additional['valid_range'][1]
-            return ('Invalid length for parameter %s, value: %s, valid range: '
-                    '%s-%s' % (name, additional['param'],
-                               min_allowed, max_allowed))
+            min_allowed = additional['min_allowed']
+            return ('Invalid length for parameter %s, value: %s, '
+                    'valid min length: %s' % (name, additional['param'],
+                                              min_allowed))
         elif error_type == 'unable to encode to json':
             return 'Invalid parameter %s must be json serializable: %s' \
                 % (name, additional['type_error'])

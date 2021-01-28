@@ -2,6 +2,47 @@
 CHANGELOG
 =========
 
+1.19.62
+=======
+
+* api-change:``wellarchitected``: Update wellarchitected client to latest version
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``databrew``: Update databrew client to latest version
+* bugfix:Validator: Fix showing incorrect max-value in error message for range and length value validation
+* api-change:``iot``: Update iot client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.19.61
+=======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``customer-profiles``: Update customer-profiles client to latest version
+* api-change:``sesv2``: Update sesv2 client to latest version
+* api-change:``accessanalyzer``: Update accessanalyzer client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``es``: Update es client to latest version
+
+
+1.19.60
+=======
+
+* api-change:``backup``: Update backup client to latest version
+
+
+1.19.59
+=======
+
+* api-change:``greengrassv2``: Update greengrassv2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``lexv2-runtime``: Update lexv2-runtime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.19.58
 =======
 
