@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "Validator",
-  "description": "Fix showing incorrect max-value in error message for range and length value validation"
-}

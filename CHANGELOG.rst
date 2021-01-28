@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.19.62
+=======
+
+* api-change:``wellarchitected``: Update wellarchitected client to latest version
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``databrew``: Update databrew client to latest version
+* bugfix:Validator: Fix showing incorrect max-value in error message for range and length value validation
+* api-change:``iot``: Update iot client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
 1.19.61
 =======
 
