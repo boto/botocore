@@ -12,7 +12,6 @@ from botocore.exceptions import (
     ConnectTimeoutError, ReadTimeoutError, EndpointConnectionError,
     ConnectionClosedError,
 )
-from botocore.vendored.requests import exceptions as requests_exceptions
 
 
 class TestClientHTTPBehavior(unittest.TestCase):
@@ -77,10 +76,6 @@ class TestClientHTTPBehavior(unittest.TestCase):
 
     def test_read_timeout_exception(self):
         with self.assertRaises(ReadTimeoutError):
-            self._read_timeout_server()
-
-    def test_old_read_timeout_exception(self):
-        with self.assertRaises(requests_exceptions.ReadTimeout):
             self._read_timeout_server()
 
     @unittest.skip('The current implementation will fail to timeout on linux')
