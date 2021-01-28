@@ -278,8 +278,8 @@ class TestValidateRanges(BaseTestValidate):
                 'Long': -10,
             },
             errors=[
-                'Invalid range for parameter Int',
-                'Invalid range for parameter Long',
+                'Invalid value for parameter Int',
+                'Invalid value for parameter Long',
             ]
         )
 
@@ -423,7 +423,7 @@ class TestValidationFloatType(BaseTestValidate):
                 'Float': 1,
             },
             errors=[
-                'Invalid range for parameter Float',
+                'Invalid value for parameter Float',
             ]
         )
 
@@ -441,7 +441,7 @@ class TestValidationFloatType(BaseTestValidate):
                 'Float': decimal.Decimal('1'),
             },
             errors=[
-                'Invalid range for parameter Float',
+                'Invalid value for parameter Float',
             ]
         )
 

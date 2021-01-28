@@ -58,3 +58,19 @@ class TestLex(BaseSessionTest):
 
         content_header = request.headers.get('x-amz-content-sha256')
         self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')
+
+
+class TestLexV2(BaseSessionTest):
+
+    def test_start_conversation(self):
+        """StartConversation operation removed due to h2 requirement"""
+        lexv2 = self.session.create_client('lexv2-runtime', 'us-west-2')
+        try:
+            lexv2.start_conversation
+        except AttributeError:
+            pass
+        else:
+            self.fail(
+                'start_conversation shouldn\'t be available on the '
+                'lexv2-runtime client.'
+            )
