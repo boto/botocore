@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import io
 import sys
 import logging
 import functools
@@ -404,12 +405,18 @@ class AWSRequestPreparer(object):
 
         # Try getting the length from a seekable stream
         if hasattr(body, 'seek') and hasattr(body, 'tell'):
-            orig_pos = body.tell()
-            body.seek(0, 2)
-            end_file_pos = body.tell()
-            body.seek(orig_pos)
-            return end_file_pos - orig_pos
-
+            try:
+                orig_pos = body.tell()
+                body.seek(0, 2)
+                end_file_pos = body.tell()
+                body.seek(orig_pos)
+                return end_file_pos - orig_pos
+            except io.UnsupportedOperation:
+                # in case when body is, for example, io.BufferedIOBase object
+                # it has "seek" method which throws "UnsupportedOperation"
+                # exception in such case we want to fall back to "chunked"
+                # encoding
+                pass
         # Failed to determine the length
         return None
 
