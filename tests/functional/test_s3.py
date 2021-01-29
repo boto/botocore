@@ -844,7 +844,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_banner_arn_with_s3_dualstack(self):
         banner_arn = (
-            'arn:aws:s3-banner:us-west-2:123456789012:accesspoint/myBanner'
+            'arn:aws:s3-object-lambdas:us-west-2:123456789012:accesspoint/myBanner'
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_dualstack_endpoint': True}))
@@ -853,17 +853,17 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_basic_banner_arn(self):
         banner_arn = (
-            'arn:aws:s3-banner:us-west-2:123456789012:accesspoint/myBanner'
+            'arn:aws:s3-object-lambdas:us-west-2:123456789012:accesspoint/myBanner'
         )
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name='us-east-1')
         self.http_stubber.add_response()
         self.client.list_objects(Bucket=banner_arn)
         request = self.http_stubber.requests[0]
-        self.assert_signing_name(request, 's3-banner')
+        self.assert_signing_name(request, 's3-object-lambdas')
         self.assert_signing_region(request, 'us-west-2')
         expected_endpoint = (
-            'myBanner-123456789012.s3-banner.us-west-2.amazonaws.com'
+            'myBanner-123456789012.s3-object-lambdas.us-west-2.amazonaws.com'
         )
         self.assert_endpoint(request, expected_endpoint)
 
@@ -978,10 +978,10 @@ class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
             RequestToken='SecretToken',
         )
         request = self.http_stubber.requests[0]
-        self.assert_signing_name(request, 's3-banner')
+        self.assert_signing_name(request, 's3-object-lambdas')
         self.assert_signing_region(request, 'us-west-2')
         expected_endpoint = (
-            'endpoint-io.a1c1d5c7.s3-banner.us-west-2.amazonaws.com'
+            'endpoint-io.a1c1d5c7.s3-object-lambdas.us-west-2.amazonaws.com'
         )
         self.assert_endpoint(request, expected_endpoint)
 
@@ -994,7 +994,7 @@ class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
             RequestToken='SecretToken',
         )
         request = self.http_stubber.requests[0]
-        self.assert_signing_name(request, 's3-banner')
+        self.assert_signing_name(request, 's3-object-lambdas')
         self.assert_signing_region(request, 'us-west-2')
         self.assert_endpoint(request, 'endpoint-io.a1c1d5c7.example.com')
 

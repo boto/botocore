@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import io
-from unittest.mock import call
 
 from tests import unittest
 from tests import RawResponse
