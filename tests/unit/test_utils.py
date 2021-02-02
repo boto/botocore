@@ -2002,12 +2002,15 @@ class TestS3EndpointSetter(unittest.TestCase):
         )
         self.assertEqual(request.url, expected_url)
 
-    def test_accesspoint_errors_for_custom_endpoint(self):
+    def test_accesspoint_supports_custom_endpoint(self):
         endpoint_setter = self.get_endpoint_setter(
             endpoint_url='https://custom.com')
         request = self.get_s3_accesspoint_request()
-        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
-            self.call_set_endpoint(endpoint_setter, request=request)
+        self.call_set_endpoint(endpoint_setter, request=request)
+        expected_url = 'https://%s-%s.custom.com/' % (
+            self.accesspoint_name, self.account,
+        )
+        self.assertEqual(request.url, expected_url)
 
     def test_errors_for_mismatching_partition(self):
         endpoint_setter = self.get_endpoint_setter(partition='aws-cn')
