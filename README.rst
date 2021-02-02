@@ -14,9 +14,9 @@ botocore package is the foundation for the
 `boto3 <https://github.com/boto/boto3>`__.
 
 On 10/29/2020 deprecation for Python 3.4 and Python 3.5 was announced and support
-will be dropped on 02/01/2021. To avoid disruption, customers using Botocore
+was dropped on 02/01/2021. To avoid disruption, customers using Botocore
 on Python 3.4 or 3.5 may need to upgrade their version of Python or pin the
-version of Botocore in use prior to 02/01/2021. For more information, see
+version of Botocore. For more information, see
 this `blog post <https://aws.amazon.com/blogs/developer/announcing-the-end-of-support-for-python-3-4-and-3-5-in-the-aws-sdk-for-python-and-aws-cli-v1/>`__.
 
 Getting Started

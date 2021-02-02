@@ -420,15 +420,23 @@ class TestS3ControlRedirection(unittest.TestCase):
     def test_outpost_redirection_custom_endpoint(self):
         self._bootstrap_client(endpoint_url='https://outpost.foo.com/')
         self.stubber.add_response()
-        with self.assertRaises(UnsupportedS3ControlConfigurationError):
-            with self.stubber:
-                self.client.create_bucket(Bucket='foo', OutpostId='op-123')
+        with self.stubber:
+            self.client.create_bucket(Bucket='foo', OutpostId='op-123')
+        _assert_netloc(self.stubber, 'outpost.foo.com')
+        _assert_header(self.stubber, 'x-amz-outpost-id', 'op-123')
 
     def test_normal_ap_request_has_correct_endpoint(self):
         self.stubber.add_response()
         with self.stubber:
             self.client.get_access_point_policy(Name='MyAp', AccountId='1234')
         _assert_netloc(self.stubber, '1234.s3-control.us-west-2.amazonaws.com')
+
+    def test_normal_ap_request_custom_endpoint(self):
+        self._bootstrap_client(endpoint_url='https://example.com/')
+        self.stubber.add_response()
+        with self.stubber:
+            self.client.get_access_point_policy(Name='MyAp', AccountId='1234')
+        _assert_netloc(self.stubber, '1234.example.com')
 
     def test_normal_bucket_request_has_correct_endpoint(self):
         self.stubber.add_response()
