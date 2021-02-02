@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.20.0
+======
+
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``lookoutvision``: Update lookoutvision client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* feature:Python: Dropped support for Python 3.4 and 3.5
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``location``: Update location client to latest version
+* enhancement:s3: Amazon S3 now supports AWS PrivateLink, providing direct access to S3 via a private endpoint within your virtual private network.
+* api-change:``iotwireless``: Update iotwireless client to latest version
+
+
 1.19.63
 =======
 
