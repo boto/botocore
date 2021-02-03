@@ -583,6 +583,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "TransitGatewayConnects"
+    },
+    "DescribeAddressesAttribute": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Addresses"
     }
   }
 }

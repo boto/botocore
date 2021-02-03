@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.20.1
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``databrew``: Update databrew client to latest version
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``auditmanager``: Update auditmanager client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+
+
 1.20.0
 ======
 
