@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.20.2
+======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+* api-change:``emr-containers``: Update emr-containers client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.20.1
 ======
 
