@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.20.3
+======
+
+* api-change:``macie``: Update macie client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.20.2
 ======
 
