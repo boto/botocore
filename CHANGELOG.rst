@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.20.4
+======
+
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.20.3
 ======
 
