@@ -1,0 +1,5 @@
+{
+  "category": "``mediaconvert``", 
+  "type": "api-change", 
+  "description": "Update mediaconvert client to latest version"
+}
