@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.20.5
+======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
 1.20.4
 ======
 
