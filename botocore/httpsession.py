@@ -45,7 +45,10 @@ def get_cert_path(verify):
     if verify is not True:
         return verify
 
-    return where()
+    cert_path = where()
+    logger.debug("Certificate path: {0}".format(cert_path))
+
+    return cert_path
 
 
 def create_urllib3_context(ssl_version=None, cert_reqs=None,

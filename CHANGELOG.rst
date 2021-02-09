@@ -2,6 +2,37 @@
 CHANGELOG
 =========
 
+1.20.5
+======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``qldb-session``: Update qldb-session client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
+1.20.4
+======
+
+* api-change:``dataexchange``: Update dataexchange client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``ivs``: Update ivs client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* api-change:``iotsitewise``: Update iotsitewise client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.20.3
+======
+
+* api-change:``macie``: Update macie client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.20.2
 ======
 
