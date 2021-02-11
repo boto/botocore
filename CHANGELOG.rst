@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.20.6
+======
+
+* api-change:``databrew``: Update databrew client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.20.5
 ======
 
