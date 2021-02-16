@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``devops-guru``", 
+    "description": "Update devops-guru client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }
+]
