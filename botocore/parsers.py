@@ -116,10 +116,9 @@ Each call to ``parse()`` returns a dict has this form::
 """
 import re
 import base64
-import json
 import logging
 
-from botocore.compat import six, ETree, XMLParseError
+from botocore.compat import six, json, ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 
 from botocore.utils import parse_timestamp, merge_dicts, \

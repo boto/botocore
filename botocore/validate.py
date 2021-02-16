@@ -15,9 +15,9 @@ Validation Errors
 
 from botocore.compat import six
 import decimal
-import json
 from datetime import datetime
 
+from botocore.compat import json
 from botocore.utils import parse_to_aware_datetime
 from botocore.utils import is_json_value_header
 from botocore.exceptions import ParamValidationError

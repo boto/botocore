@@ -12,14 +12,13 @@ spec.  This can happen for a number of reasons:
 
 """
 import base64
-import json
 import datetime
 import dateutil.tz
 from tests import unittest
 
 from botocore.model import ServiceModel
 from botocore import serialize
-from botocore.compat import six
+from botocore.compat import six, json
 from botocore.exceptions import ParamValidationError
 from botocore.serialize import SERIALIZERS
 

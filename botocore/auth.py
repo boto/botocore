@@ -22,7 +22,6 @@ from operator import itemgetter
 import functools
 import time
 import calendar
-import json
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence

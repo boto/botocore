@@ -10,10 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import json
 import time
 from base64 import b64decode
 from uuid import uuid4
+
+from botocore.compat import json
 from tests import unittest, BaseSessionTest, ClientHTTPStubber
 
 

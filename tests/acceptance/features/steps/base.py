@@ -1,5 +1,4 @@
-import json
-
+from botocore.compat import json
 from botocore import xform_name
 from botocore.exceptions import ClientError
 

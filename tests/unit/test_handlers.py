@@ -17,11 +17,10 @@ import base64
 import mock
 import copy
 import os
-import json
 
 import botocore
 import botocore.session
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, json
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import MissingServiceIdError

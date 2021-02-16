@@ -17,7 +17,6 @@ import mock
 import os
 import tempfile
 import shutil
-import json
 import copy
 
 from dateutil.tz import tzlocal, tzutc

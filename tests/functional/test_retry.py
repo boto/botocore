@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import contextlib
-import json
 from tests import BaseSessionTest, mock, ClientHTTPStubber
 
+from botocore.compat import json
 from botocore.exceptions import ClientError
 from botocore.config import Config
 

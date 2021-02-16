@@ -10,12 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import json
 import logging
 import re
 import time
 
-from botocore.compat import ensure_unicode, ensure_bytes, urlparse
+from botocore.compat import ensure_unicode, ensure_bytes, urlparse, json
 from botocore.retryhandler import EXCEPTION_MAP as RETRYABLE_EXCEPTIONS
 
 

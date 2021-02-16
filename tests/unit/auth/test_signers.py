@@ -16,13 +16,12 @@ from tests import unittest
 import datetime
 import time
 import base64
-import json
 
 import mock
 
 import botocore.auth
 import botocore.credentials
-from botocore.compat import HTTPHeaders, urlsplit, parse_qs, six
+from botocore.compat import HTTPHeaders, urlsplit, parse_qs, six, json
 from botocore.awsrequest import AWSRequest
 
 

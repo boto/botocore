@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import mock
 import datetime
-import json
 
 from dateutil.tz import tzutc
 
@@ -20,6 +19,7 @@ import botocore
 import botocore.session
 import botocore.auth
 import botocore.awsrequest
+from botocore.compat import json
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials

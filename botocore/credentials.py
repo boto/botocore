@@ -17,7 +17,6 @@ import logging
 import os
 import getpass
 import threading
-import json
 import subprocess
 from collections import namedtuple
 from copy import deepcopy
@@ -31,6 +30,7 @@ import botocore.compat
 from botocore import UNSIGNED
 from botocore.compat import total_seconds
 from botocore.compat import compat_shell_split
+from botocore.compat import json
 from botocore.config import Config
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError

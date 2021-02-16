@@ -12,7 +12,8 @@
 # language governing permissions and limitations under the License.
 """This is a dummy implementation of a credential provider process."""
 import argparse
-import json
+
+from botocore.compat import json
 
 
 def main():

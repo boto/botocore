@@ -14,10 +14,10 @@ import os
 import mock
 import tempfile
 import shutil
-import json
 import time
 from uuid import uuid4
 
+from botocore.compat import json
 from botocore.session import Session
 from botocore.exceptions import ClientError
 from tests import BaseEnvVar, temporary_file, random_chars

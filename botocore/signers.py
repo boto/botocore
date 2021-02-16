@@ -12,12 +12,11 @@
 # language governing permissions and limitations under the License.
 import datetime
 import weakref
-import json
 import base64
 
 import botocore
 import botocore.auth
-from botocore.compat import six, OrderedDict
+from botocore.compat import six, json, OrderedDict
 from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError

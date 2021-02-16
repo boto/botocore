@@ -13,13 +13,13 @@
 
 import os
 import glob
-import json
 import pprint
 import logging
 import difflib
 from tests import create_session
 
 import botocore.session
+from botocore.compat import json
 from botocore import xform_name
 from botocore import parsers
 

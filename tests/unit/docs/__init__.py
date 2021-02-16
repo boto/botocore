@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
-import json
 import tempfile
 import shutil
 
@@ -19,7 +18,7 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 import mock
 
 from tests import unittest
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, json
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel, OperationModel
 from botocore.client import ClientCreator

@@ -12,7 +12,6 @@
 # language governing permissions and limitations under thimport mock
 import contextlib
 import copy
-import json
 import logging
 import os
 import socket
@@ -24,6 +23,7 @@ from nose.tools import assert_equal
 from tests import temporary_file
 from tests import ClientHTTPStubber
 from botocore import xform_name
+from botocore.compat import json
 import botocore.session
 import botocore.config
 import botocore.exceptions

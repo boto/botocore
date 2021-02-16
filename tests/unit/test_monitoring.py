@@ -11,13 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import mock, unittest
-import json
 import re
 import socket
 import time
 
 from botocore.awsrequest import AWSRequest
-from botocore.compat import six
+from botocore.compat import six, json
 from botocore.exceptions import ConnectionError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import OperationModel
