@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.20.11
+=======
+
+* api-change:``health``: Update health client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.20.10
 =======
 
