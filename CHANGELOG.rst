@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.20.13
+=======
+
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.20.12
 =======
 
