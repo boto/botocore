@@ -1532,13 +1532,13 @@ class S3EndpointSetter(object):
                 msg='S3 client does not support accelerate endpoints for banner operations',
             )
 
-        self._override_signing_name(context, 's3-object-lambdas')
+        self._override_signing_name(context, 's3-object-lambda')
         if self._endpoint_url:
             # Only update the url if an explicit url was not provided
             return
 
         resolver = self._endpoint_resolver
-        resolved = resolver.construct_endpoint('s3-object-lambdas', self._region)
+        resolved = resolver.construct_endpoint('s3-object-lambda', self._region)
 
         # Ideally we would be able to replace the endpoint before
         # serialization but there's no event to do that currently
@@ -1585,7 +1585,7 @@ class S3EndpointSetter(object):
                 )
             )
         s3_service = request.context['s3_accesspoint'].get('service')
-        if s3_service == 's3-object-lambdas' and self._s3_config.get('use_dualstack_endpoint'):
+        if s3_service == 's3-object-lambda' and self._s3_config.get('use_dualstack_endpoint'):
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client does not support s3 dualstack configuration '
@@ -1644,8 +1644,8 @@ class S3EndpointSetter(object):
             if outpost_name:
                 outpost_host = [outpost_name, 's3-outposts']
                 accesspoint_netloc_components.extend(outpost_host)
-            elif s3_accesspoint['service'] == 's3-object-lambdas':
-                accesspoint_netloc_components.append('s3-object-lambdas')
+            elif s3_accesspoint['service'] == 's3-object-lambda':
+                accesspoint_netloc_components.append('s3-object-lambda')
             else:
                 accesspoint_netloc_components.append('s3-accesspoint')
             if self._s3_config.get('use_dualstack_endpoint'):
