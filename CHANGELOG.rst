@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.20.14
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``redshift-data``: Update redshift-data client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.20.13
 =======
 
