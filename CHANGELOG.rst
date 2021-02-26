@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.20.17
+=======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.20.16
 =======
 
