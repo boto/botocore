@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.19
+=======
+
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* bugfix:S3: Fix an issue with XML newline normalization that could result in the DeleteObjects operation incorrectly deleting the wrong keys.
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
 1.20.18
 =======
 
