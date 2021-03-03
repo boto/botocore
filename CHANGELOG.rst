@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.20
+=======
+
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``wellarchitected``: Update wellarchitected client to latest version
+
+
 1.20.19
 =======
 
