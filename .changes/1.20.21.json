@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``servicediscovery``", 
+    "description": "Update servicediscovery client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mwaa``", 
+    "description": "Update mwaa client to latest version", 
+    "type": "api-change"
+  }
+]
