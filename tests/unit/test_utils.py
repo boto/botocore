@@ -488,14 +488,16 @@ class TestArgumentGenerator(unittest.TestCase):
                 'B': {'type': 'integer'},
                 'C': {'type': 'float'},
                 'D': {'type': 'boolean'},
-                'E': {'type': 'timestamp'}
+                'E': {'type': 'timestamp'},
+                'F': {'type': 'double'},
             },
             generated_skeleton={
                 'A': '',
                 'B': 0,
                 'C': 0.0,
                 'D': True,
-                'E': datetime.datetime(1970, 1, 1, 0, 0, 0)
+                'E': datetime.datetime(1970, 1, 1, 0, 0, 0),
+                'F': 0.0,
             }
         )
 
