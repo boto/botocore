@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.20.22
+=======
+
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``network-firewall``: Update network-firewall client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+
+
 1.20.21
 =======
 
