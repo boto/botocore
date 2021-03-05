@@ -852,6 +852,27 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
+    def test_s3_object_lambda_arn_with_us_east_1(self):
+        # test that us-east-1 region is not resolved
+        # into s3 global endpoint
+        s3_object_lambda_arn = (
+            'arn:aws:s3-object-lambda:us-east-1:123456789012:'
+            'accesspoint/myBanner'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1',
+            config=Config(s3={'use_arn_region': False})
+        )
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_object_lambda_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-object-lambda')
+        self.assert_signing_region(request, 'us-east-1')
+        expected_endpoint = (
+            'myBanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
     def test_basic_s3_object_lambda_arn(self):
         s3_object_lambda_arn = (
             'arn:aws:s3-object-lambda:us-west-2:123456789012:'
@@ -964,6 +985,7 @@ class TestS3PutObject(BaseS3OperationTest):
             self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
             self.assertEqual(len(http_stubber.requests), 2)
 
+
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
     def create_stubbed_s3_client(self, **kwargs):
         client = self.create_s3_client(**kwargs)
@@ -972,20 +994,23 @@ class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
         return client, http_stubber
 
     def test_endpoint_redirection(self):
-        self.client, self.http_stubber = self.create_stubbed_s3_client(
-            region_name='us-west-2')
-        self.http_stubber.add_response()
-        self.client.write_get_object_response(
-            RequestRoute='endpoint-io.a1c1d5c7',
-            RequestToken='SecretToken',
-        )
-        request = self.http_stubber.requests[0]
-        self.assert_signing_name(request, 's3-object-lambda')
-        self.assert_signing_region(request, 'us-west-2')
-        expected_endpoint = (
-            'endpoint-io.a1c1d5c7.s3-object-lambda.us-west-2.amazonaws.com'
-        )
-        self.assert_endpoint(request, expected_endpoint)
+        regions = ['us-west-2', 'us-east-1']
+        for region in regions:
+            self.client, self.http_stubber = self.create_stubbed_s3_client(
+                region_name=region)
+            self.http_stubber.add_response()
+            self.client.write_get_object_response(
+                RequestRoute='endpoint-io.a1c1d5c7',
+                RequestToken='SecretToken',
+            )
+            request = self.http_stubber.requests[0]
+            self.assert_signing_name(request, 's3-object-lambda')
+            self.assert_signing_region(request, region)
+            expected_endpoint = (
+                'endpoint-io.a1c1d5c7.s3-object-lambda.'
+                '%s.amazonaws.com' % region
+            )
+            self.assert_endpoint(request, expected_endpoint)
 
     def test_endpoint_redirection_fails_with_custom_endpoint(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
@@ -1079,7 +1104,6 @@ class TestS3SigV4(BaseS3OperationTest):
         unsigned = 'UNSIGNED-PAYLOAD'
         self.assertNotEqual(sent_headers['x-amz-content-sha256'], unsigned)
         self.assertNotIn('content-md5', sent_headers)
-
 
 
 class TestCanSendIntegerHeaders(BaseSessionTest):
