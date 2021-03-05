@@ -939,7 +939,7 @@ class ArgumentGenerator(object):
                 return ''
             elif shape.type_name in ['integer', 'long']:
                 return 0
-            elif shape.type_name == 'float':
+            elif shape.type_name in ['float', 'double']:
                 return 0.0
             elif shape.type_name == 'boolean':
                 return True
