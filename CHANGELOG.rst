@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.20.23
+=======
+
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.20.22
 =======
 
