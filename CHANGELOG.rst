@@ -2,6 +2,154 @@
 CHANGELOG
 =========
 
+1.20.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``efs``: Update efs client to latest version
+
+
+1.20.23
+=======
+
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
+1.20.22
+=======
+
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``network-firewall``: Update network-firewall client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``athena``: Update athena client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+
+
+1.20.21
+=======
+
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mwaa``: Update mwaa client to latest version
+
+
+1.20.20
+=======
+
+* api-change:``forecast``: Update forecast client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``macie2``: Update macie2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``wellarchitected``: Update wellarchitected client to latest version
+
+
+1.20.19
+=======
+
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* bugfix:S3: Fix an issue with XML newline normalization that could result in the DeleteObjects operation incorrectly deleting the wrong keys.
+* api-change:``managedblockchain``: Update managedblockchain client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
+1.20.18
+=======
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
+1.20.17
+=======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``sso-admin``: Update sso-admin client to latest version
+* api-change:``eks``: Update eks client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.20.16
+=======
+
+* api-change:``databrew``: Update databrew client to latest version
+* api-change:``detective``: Update detective client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``imagebuilder``: Update imagebuilder client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+
+
+1.20.15
+=======
+
+* api-change:``es``: Update es client to latest version
+* api-change:``mediapackage-vod``: Update mediapackage-vod client to latest version
+* api-change:``appflow``: Update appflow client to latest version
+* api-change:``ecr-public``: Update ecr-public client to latest version
+* api-change:``compute-optimizer``: Update compute-optimizer client to latest version
+
+
+1.20.14
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``redshift-data``: Update redshift-data client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``iotevents``: Update iotevents client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
+1.20.13
+=======
+
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.20.12
+=======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.20.11
+=======
+
+* api-change:``health``: Update health client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.20.10
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``lookoutvision``: Update lookoutvision client to latest version
+
+
 1.20.9
 ======
 
