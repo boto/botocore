@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.20.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codeguruprofiler``: Update codeguruprofiler client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``iotwireless``: Update iotwireless client to latest version
+* api-change:``efs``: Update efs client to latest version
+
+
 1.20.23
 =======
 
