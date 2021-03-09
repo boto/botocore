@@ -14,7 +14,8 @@
     "ListPipelines": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "result_key": "pipelines"
+      "result_key": "pipelines",
+      "limit_key": "maxResults"
     },
     "ListWebhooks": {
       "input_token": "NextToken",

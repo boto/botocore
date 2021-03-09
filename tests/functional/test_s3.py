@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import base64
 import re
 
 from tests import temporary_file
@@ -18,7 +19,7 @@ from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import datetime, urlsplit, parse_qs
+from botocore.compat import datetime, urlsplit, parse_qs, get_md5
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.parsers import ResponseParserError
 from botocore.loaders import Loader
@@ -2037,27 +2038,6 @@ def _verify_presigned_url_addressing(region, bucket, key, s3_config,
 
 
 class TestRequestPayerObjectTagging(BaseS3OperationTest):
-    def test_request_payer_not_in_model(self):
-        # Explicit loader for only the included models
-        loader = Loader(
-            include_default_extras=False,
-            include_default_search_paths=False,
-            extra_search_paths=[Loader.BUILTIN_DATA_PATH],
-        )
-        model = loader.load_service_model('s3', 'service-2')
-        fail_msg = (
-            'RequestPayer found in "%s" members, s3 service-2.sdk-extras.json '
-            'entry for this shape is no longer needed and should be removed.'
-        )
-        errors = []
-        request_shapes = ['GetObjectTaggingRequest', 'PutObjectTaggingRequest']
-        for request_shape in request_shapes:
-            members = model['shapes'][request_shape]['members']
-            if 'RequestPayer' in members:
-                errors.append(fail_msg % request_shape)
-        if errors:
-            self.fail('\n'.join(errors))
-
     def _assert_request_payer_header(self, op_name, **kwargs):
         self.http_stubber.add_response()
         with self.http_stubber:
@@ -2079,3 +2059,21 @@ class TestRequestPayerObjectTagging(BaseS3OperationTest):
             Key='key',
             RequestPayer='requester',
         )
+
+
+class TestS3DeleteObjects(BaseS3OperationTest):
+    def test_escape_keys_in_xml_payload(self):
+        self.http_stubber.add_response()
+        with self.http_stubber:
+            response = self.client.delete_objects(
+                Bucket='mybucket',
+                Delete={
+                    'Objects': [{'Key': 'some\r\n\rkey'}]
+                },
+            )
+        request = self.http_stubber.requests[0]
+        self.assertNotIn(b'\r\n\r', request.body)
+        self.assertIn(b'&#xD;&#xA;&#xD;', request.body)
+        content_md5_bytes = get_md5(request.body).digest()
+        content_md5 = base64.b64encode(content_md5_bytes)
+        self.assertEqual(content_md5, request.headers['Content-MD5'])
