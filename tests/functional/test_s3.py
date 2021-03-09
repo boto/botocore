@@ -2038,27 +2038,6 @@ def _verify_presigned_url_addressing(region, bucket, key, s3_config,
 
 
 class TestRequestPayerObjectTagging(BaseS3OperationTest):
-    def test_request_payer_not_in_model(self):
-        # Explicit loader for only the included models
-        loader = Loader(
-            include_default_extras=False,
-            include_default_search_paths=False,
-            extra_search_paths=[Loader.BUILTIN_DATA_PATH],
-        )
-        model = loader.load_service_model('s3', 'service-2')
-        fail_msg = (
-            'RequestPayer found in "%s" members, s3 service-2.sdk-extras.json '
-            'entry for this shape is no longer needed and should be removed.'
-        )
-        errors = []
-        request_shapes = ['GetObjectTaggingRequest', 'PutObjectTaggingRequest']
-        for request_shape in request_shapes:
-            members = model['shapes'][request_shape]['members']
-            if 'RequestPayer' in members:
-                errors.append(fail_msg % request_shape)
-        if errors:
-            self.fail('\n'.join(errors))
-
     def _assert_request_payer_header(self, op_name, **kwargs):
         self.http_stubber.add_response()
         with self.http_stubber:
