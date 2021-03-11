@@ -1,5 +1,0 @@
-{
-  "category": "``network-firewall``", 
-  "type": "api-change", 
-  "description": "Update network-firewall client to latest version"
-}
