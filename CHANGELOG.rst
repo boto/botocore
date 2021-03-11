@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.20.26
+=======
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``wafv2``: Update wafv2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``network-firewall``: Update network-firewall client to latest version
+
+
 1.20.25
 =======
 
