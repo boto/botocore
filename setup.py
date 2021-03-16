@@ -50,7 +50,6 @@ setup(
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
-    extras_require={},
     license="Apache License 2.0",
     python_requires=">= 2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*",
     classifiers=[

@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.29
+=======
+
+* api-change:``lambda``: Allow empty list for function response types
+* api-change:``iam``: Documentation updates for AWS Identity and Access Management (IAM).
+* api-change:``mediaconnect``: This release adds support for the SRT-listener protocol on sources and outputs.
+* api-change:``accessanalyzer``: This release adds support for the ValidatePolicy API. IAM Access Analyzer is adding over 100 policy checks and actionable recommendations that help you validate your policies during authoring.
+* api-change:``mediatailor``: MediaTailor channel assembly is a new manifest-only service that allows you to assemble linear streams using your existing VOD content.
+* api-change:``mwaa``: This release adds UPDATE_FAILED and UNAVAILABLE MWAA environment states.
+* api-change:``gamelift``: GameLift expands to six new AWS Regions, adds support for multi-location fleets to streamline management of hosting resources, and lets you customize more of the game session placement process.
+
+
 1.20.28
 =======
 
