@@ -294,6 +294,20 @@ class TestURLLib3Session(unittest.TestCase):
             )
             self.assert_request_sent()
 
+    def test_proxy_ssl_context_uses_check_hostname(self):
+        cert = ('/some/cert', '/some/key')
+        proxies = {'https': 'https://proxy.com'}
+        proxies_config = {'proxy_client_cert': "path/to/cert"}
+        with patch('botocore.httpsession.create_urllib3_context'):
+            session = URLLib3Session(
+                proxies=proxies, client_cert=cert,
+                proxies_config=proxies_config
+            )
+            self.request.url = 'https://example.com/'
+            session.send(self.request.prepare())
+            last_call = self.proxy_manager_fun.call_args[-1]
+            self.assertIs(last_call['ssl_context'].check_hostname, True)
+
     def test_basic_request(self):
         session = URLLib3Session()
         session.send(self.request.prepare())
