@@ -43,7 +43,6 @@ setup(
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
-    extras_require={},
     license="Apache License 2.0",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

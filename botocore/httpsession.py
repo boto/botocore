@@ -258,6 +258,9 @@ class URLLib3Session(object):
 
         context = self._get_ssl_context()
         try:
+            # urllib3 disables this by default but we need
+            # it for proper proxy tls negotiation.
+            context.check_hostname = True
             if proxy_ca_bundle is not None:
                 context.load_verify_locations(cafile=proxy_ca_bundle)
 

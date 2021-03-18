@@ -20,7 +20,11 @@ from nose.tools import assert_equal
 import botocore.session
 from botocore.config import Config
 from botocore.compat import datetime, urlsplit, parse_qs, get_md5
-from botocore.exceptions import ParamValidationError, ClientError
+from botocore.exceptions import (
+    ParamValidationError, ClientError,
+    UnsupportedS3ConfigurationError,
+    UnsupportedS3AccesspointConfigurationError,
+)
 from botocore.parsers import ResponseParserError
 from botocore.loaders import Loader
 from botocore import UNSIGNED
@@ -45,9 +49,40 @@ class BaseS3OperationTest(BaseSessionTest):
 
 
 class BaseS3ClientConfigurationTest(BaseSessionTest):
+    _V4_AUTH_REGEX = re.compile(
+        r'AWS4-HMAC-SHA256 '
+        r'Credential=\w+/\d+/'
+        r'(?P<signing_region>[a-z0-9-]+)/'
+        r'(?P<signing_name>[a-z0-9-]+)/'
+    )
+
     def setUp(self):
         super(BaseS3ClientConfigurationTest, self).setUp()
         self.region = 'us-west-2'
+
+    def assert_signing_region(self, request, expected_region):
+        auth_header = request.headers['Authorization'].decode('utf-8')
+        actual_region = None
+        match = self._V4_AUTH_REGEX.match(auth_header)
+        if match:
+            actual_region = match.group('signing_region')
+        self.assertEqual(expected_region, actual_region)
+
+    def assert_signing_name(self, request, expected_name):
+        auth_header = request.headers['Authorization'].decode('utf-8')
+        actual_name = None
+        match = self._V4_AUTH_REGEX.match(auth_header)
+        if match:
+            actual_name = match.group('signing_name')
+        self.assertEqual(expected_name, actual_name)
+
+    def assert_signing_region_in_url(self, url, expected_region):
+        qs_components = parse_qs(urlsplit(url).query)
+        self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
+
+    def assert_endpoint(self, request, expected_endpoint):
+        actual_endpoint = urlsplit(request.url).netloc
+        self.assertEqual(actual_endpoint, expected_endpoint)
 
     def create_s3_client(self, **kwargs):
         client_kwargs = {
@@ -352,13 +387,6 @@ class TestS3Copy(BaseS3OperationTest):
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
-    _V4_AUTH_REGEX = re.compile(
-        r'AWS4-HMAC-SHA256 '
-        r'Credential=\w+/\d+/'
-        r'(?P<signing_region>[a-z0-9-]+)/'
-        r'(?P<signing_name>[a-z0-9-]+)/'
-    )
-
     def setUp(self):
         super(TestAccesspointArn, self).setUp()
         self.client, self.http_stubber = self.create_stubbed_s3_client()
@@ -368,22 +396,6 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         http_stubber = ClientHTTPStubber(client)
         http_stubber.start()
         return client, http_stubber
-
-    def assert_signing_region(self, request, expected_region):
-        auth_header = request.headers['Authorization'].decode('utf-8')
-        actual_region = self._V4_AUTH_REGEX.match(
-            auth_header).group('signing_region')
-        self.assertEqual(expected_region, actual_region)
-
-    def assert_signing_name(self, request, expected_name):
-        auth_header = request.headers['Authorization'].decode('utf-8')
-        actual_name = self._V4_AUTH_REGEX.match(
-            auth_header).group('signing_name')
-        self.assertEqual(expected_name, actual_name)
-
-    def assert_signing_region_in_url(self, url, expected_region):
-        qs_components = parse_qs(urlsplit(url).query)
-        self.assertIn(expected_region, qs_components['X-Amz-Credential'][0])
 
     def assert_expected_copy_source_header(self,
                                            http_stubber, expected_copy_source):
@@ -396,10 +408,6 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         http_stubber.add_response(
             body=b'<CopyObjectResult></CopyObjectResult>'
         )
-
-    def assert_endpoint(self, request, expected_endpoint):
-        actual_endpoint = urlsplit(request.url).netloc
-        self.assertEqual(actual_endpoint, expected_endpoint)
 
     def test_missing_region_in_arn(self):
         accesspoint_arn = (
@@ -667,9 +675,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_accelerate_endpoint': True}))
-        with self.assertRaises(
-                botocore.exceptions.
-                UnsupportedS3AccesspointConfigurationError):
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_outpost_arn_with_s3_dualstack(self):
@@ -679,9 +685,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         self.client, _ = self.create_stubbed_s3_client(
             config=Config(s3={'use_dualstack_endpoint': True}))
-        with self.assertRaises(
-                botocore.exceptions.
-                UnsupportedS3AccesspointConfigurationError):
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_incorrect_outpost_format(self):
@@ -721,6 +725,54 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=outpost_arn)
+
+    def test_s3_object_lambda_arn_with_s3_dualstack(self):
+        s3_object_lambda_arn = (
+            'arn:aws:s3-object-lambda:us-west-2:123456789012:'
+            'accesspoint/myBanner'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            config=Config(s3={'use_dualstack_endpoint': True}))
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=s3_object_lambda_arn)
+
+    def test_s3_object_lambda_arn_with_us_east_1(self):
+        # test that us-east-1 region is not resolved
+        # into s3 global endpoint
+        s3_object_lambda_arn = (
+            'arn:aws:s3-object-lambda:us-east-1:123456789012:'
+            'accesspoint/myBanner'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1',
+            config=Config(s3={'use_arn_region': False})
+        )
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_object_lambda_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-object-lambda')
+        self.assert_signing_region(request, 'us-east-1')
+        expected_endpoint = (
+            'myBanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+    def test_basic_s3_object_lambda_arn(self):
+        s3_object_lambda_arn = (
+            'arn:aws:s3-object-lambda:us-west-2:123456789012:'
+            'accesspoint/myBanner'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-east-1')
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_object_lambda_arn)
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-object-lambda')
+        self.assert_signing_region(request, 'us-west-2')
+        expected_endpoint = (
+            'myBanner-123456789012.s3-object-lambda.us-west-2.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
@@ -816,6 +868,59 @@ class TestS3PutObject(BaseS3OperationTest):
             # invalid and eventually return the 200 response.
             self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
             self.assertEqual(len(http_stubber.requests), 2)
+
+
+class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
+    def create_stubbed_s3_client(self, **kwargs):
+        client = self.create_s3_client(**kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        return client, http_stubber
+
+    def test_endpoint_redirection(self):
+        regions = ['us-west-2', 'us-east-1']
+        for region in regions:
+            self.client, self.http_stubber = self.create_stubbed_s3_client(
+                region_name=region)
+            self.http_stubber.add_response()
+            self.client.write_get_object_response(
+                RequestRoute='endpoint-io.a1c1d5c7',
+                RequestToken='SecretToken',
+            )
+            request = self.http_stubber.requests[0]
+            self.assert_signing_name(request, 's3-object-lambda')
+            self.assert_signing_region(request, region)
+            expected_endpoint = (
+                'endpoint-io.a1c1d5c7.s3-object-lambda.'
+                '%s.amazonaws.com' % region
+            )
+            self.assert_endpoint(request, expected_endpoint)
+
+    def test_endpoint_redirection_fails_with_custom_endpoint(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-west-2', endpoint_url="https://example.com")
+        self.http_stubber.add_response()
+        self.client.write_get_object_response(
+            RequestRoute='endpoint-io.a1c1d5c7',
+            RequestToken='SecretToken',
+        )
+        request = self.http_stubber.requests[0]
+        self.assert_signing_name(request, 's3-object-lambda')
+        self.assert_signing_region(request, 'us-west-2')
+        self.assert_endpoint(request, 'endpoint-io.a1c1d5c7.example.com')
+
+    def test_endpoint_redirection_fails_with_accelerate_endpoint(self):
+        config = Config(s3={'use_accelerate_endpoint': True})
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-west-2',
+            config=config,
+        )
+        self.http_stubber.add_response()
+        with self.assertRaises(UnsupportedS3ConfigurationError):
+            self.client.write_get_object_response(
+                RequestRoute='endpoint-io.a1c1d5c7',
+                RequestToken='SecretToken',
+            )
 
 
 class TestS3SigV4(BaseS3OperationTest):
