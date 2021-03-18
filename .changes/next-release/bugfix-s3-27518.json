@@ -1,5 +1,0 @@
-{
-  "category": "s3", 
-  "type": "bugfix", 
-  "description": "Updated mislabeled exceptions for S3 Object Lambda"
-}
