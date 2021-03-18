@@ -1524,12 +1524,15 @@ class S3EndpointSetter(object):
 
     def register(self, event_emitter):
         event_emitter.register('before-sign.s3', self.set_endpoint)
-        event_emitter.register('before-call.s3.WriteGetObjectResponse', self.update_endpoint_to_banner)
+        event_emitter.register(
+            'before-call.s3.WriteGetObjectResponse',
+            self.update_endpoint_to_s3_object_lambda
+        )
 
-    def update_endpoint_to_banner(self, params, context, **kwargs):
+    def update_endpoint_to_s3_object_lambda(self, params, context, **kwargs):
         if self._use_accelerate_endpoint:
             raise UnsupportedS3ConfigurationError(
-                msg='S3 client does not support accelerate endpoints for banner operations',
+                msg='S3 client does not support accelerate endpoints for S3 Object Lambda operations',
             )
 
         self._override_signing_name(context, 's3-object-lambda')
@@ -1589,7 +1592,7 @@ class S3EndpointSetter(object):
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client does not support s3 dualstack configuration '
-                    'when a banner access point ARN is specified.'
+                    'when an S3 Object Lambda access point ARN is specified.'
                 )
             )
         outpost_name = request.context['s3_accesspoint'].get('outpost_name')

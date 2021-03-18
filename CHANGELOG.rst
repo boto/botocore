@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.20.32
+=======
+
+* bugfix:s3: Updated mislabeled exceptions for S3 Object Lambda
+
+
 1.20.31
 =======
 

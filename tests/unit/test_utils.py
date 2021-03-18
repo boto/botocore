@@ -1932,7 +1932,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             mock.call('before-sign.s3', self.endpoint_setter.set_endpoint),
             mock.call(
                 'before-call.s3.WriteGetObjectResponse',
-                self.endpoint_setter.update_endpoint_to_banner,
+                self.endpoint_setter.update_endpoint_to_s3_object_lambda,
             )
         ])
 
