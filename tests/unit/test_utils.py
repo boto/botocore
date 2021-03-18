@@ -1928,8 +1928,13 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_register(self):
         event_emitter = mock.Mock()
         self.endpoint_setter.register(event_emitter)
-        event_emitter.register.assert_called_with(
-            'before-sign.s3', self.endpoint_setter.set_endpoint)
+        event_emitter.register.assert_has_calls([
+            mock.call('before-sign.s3', self.endpoint_setter.set_endpoint),
+            mock.call(
+                'before-call.s3.WriteGetObjectResponse',
+                self.endpoint_setter.update_endpoint_to_banner,
+            )
+        ])
 
     def test_outpost_endpoint(self):
         request = self.get_s3_outpost_request()
