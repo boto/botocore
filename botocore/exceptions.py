@@ -500,11 +500,19 @@ class UnsupportedOutpostResourceError(BotoCoreError):
     )
 
 
+class UnsupportedS3ConfigurationError(BotoCoreError):
+    """Error when an unsupported configuration is used with access-points"""
+    fmt = (
+        'Unsupported configuration when using S3: {msg}'
+    )
+
+
 class UnsupportedS3AccesspointConfigurationError(BotoCoreError):
     """Error when an unsupported configuration is used with access-points"""
     fmt = (
         'Unsupported configuration when using S3 access-points: {msg}'
     )
+
 
 class InvalidEndpointDiscoveryConfigurationError(BotoCoreError):
     """Error when invalid value supplied for endpoint_discovery_enabled"""
@@ -512,6 +520,7 @@ class InvalidEndpointDiscoveryConfigurationError(BotoCoreError):
         'Unsupported configuration value for endpoint_discovery_enabled. '
         'Expected one of ("true", "false", "auto") but got {config_value}.'
     )
+
 
 class UnsupportedS3ControlConfigurationError(BotoCoreError):
     """Error when an unsupported configuration is used with S3 Control"""
