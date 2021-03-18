@@ -43,7 +43,7 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
     InvalidRegionError, InvalidIMDSEndpointError, UnsupportedOutpostResourceError,
     UnsupportedS3ControlConfigurationError, UnsupportedS3ControlArnError,
-    InvalidHostLabelError, HTTPClientError
+    InvalidHostLabelError, HTTPClientError, UnsupportedS3ConfigurationError,
 )
 from urllib3.exceptions import LocationParseError
 
@@ -1524,6 +1524,30 @@ class S3EndpointSetter(object):
 
     def register(self, event_emitter):
         event_emitter.register('before-sign.s3', self.set_endpoint)
+        event_emitter.register('before-call.s3.WriteGetObjectResponse', self.update_endpoint_to_banner)
+
+    def update_endpoint_to_banner(self, params, context, **kwargs):
+        if self._use_accelerate_endpoint:
+            raise UnsupportedS3ConfigurationError(
+                msg='S3 client does not support accelerate endpoints for banner operations',
+            )
+
+        self._override_signing_name(context, 's3-object-lambda')
+        if self._endpoint_url:
+            # Only update the url if an explicit url was not provided
+            return
+
+        resolver = self._endpoint_resolver
+        resolved = resolver.construct_endpoint('s3-object-lambda', self._region)
+
+        # Ideally we would be able to replace the endpoint before
+        # serialization but there's no event to do that currently
+        new_endpoint = 'https://{host_prefix}{hostname}'.format(
+            host_prefix=params['host_prefix'],
+            hostname=resolved['hostname'],
+        )
+
+        params['url'] = _get_new_endpoint(params['url'], new_endpoint, False)
 
     def set_endpoint(self, request, **kwargs):
         if self._use_accesspoint_endpoint(request):
@@ -1550,14 +1574,22 @@ class S3EndpointSetter(object):
                     'when an access-point ARN is specified.'
                 )
             )
-        request_partion = request.context['s3_accesspoint']['partition']
-        if request_partion != self._partition:
+        request_partition = request.context['s3_accesspoint']['partition']
+        if request_partition != self._partition:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client is configured for "%s" partition, but access-point'
                     ' ARN provided is for "%s" partition. The client and '
                     ' access-point partition must be the same.' % (
-                        self._partition, request_partion)
+                        self._partition, request_partition)
+                )
+            )
+        s3_service = request.context['s3_accesspoint'].get('service')
+        if s3_service == 's3-object-lambda' and self._s3_config.get('use_dualstack_endpoint'):
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client does not support s3 dualstack configuration '
+                    'when a banner access point ARN is specified.'
                 )
             )
         outpost_name = request.context['s3_accesspoint'].get('outpost_name')
@@ -1581,7 +1613,7 @@ class S3EndpointSetter(object):
 
     def _resolve_signing_name_for_accesspoint_endpoint(self, request):
         accesspoint_service = request.context['s3_accesspoint']['service']
-        self._override_signing_name(request, accesspoint_service)
+        self._override_signing_name(request.context, accesspoint_service)
 
     def _switch_to_accesspoint_endpoint(self, request, region_name):
         original_components = urlsplit(request.url)
@@ -1612,6 +1644,8 @@ class S3EndpointSetter(object):
             if outpost_name:
                 outpost_host = [outpost_name, 's3-outposts']
                 accesspoint_netloc_components.extend(outpost_host)
+            elif s3_accesspoint['service'] == 's3-object-lambda':
+                accesspoint_netloc_components.append('s3-object-lambda')
             else:
                 accesspoint_netloc_components.append('s3-accesspoint')
             if self._s3_config.get('use_dualstack_endpoint'):
@@ -1650,14 +1684,14 @@ class S3EndpointSetter(object):
         signing_context['region'] = region_name
         request.context['signing'] = signing_context
 
-    def _override_signing_name(self, request, signing_name):
-        signing_context = request.context.get('signing', {})
+    def _override_signing_name(self, context, signing_name):
+        signing_context = context.get('signing', {})
         # S3SigV4Auth will use the context['signing']['signing_name'] value to
         # sign with if present. This is used by the Bucket redirector
         # as well but we should be fine because the redirector is never
         # used in combination with the accesspoint setting logic.
         signing_context['signing_name'] = signing_name
-        request.context['signing'] = signing_context
+        context['signing'] = signing_context
 
     @CachedProperty
     def _use_accelerate_endpoint(self):
@@ -1727,6 +1761,7 @@ class S3EndpointSetter(object):
 
         # By default, try to use virtual style with path fallback.
         return fix_s3_host
+
 
 
 class S3ControlEndpointSetter(object):
