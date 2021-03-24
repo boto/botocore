@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "S3",
-  "description": "Fix an issue with XML newline normalization in PutBucketLifecycleConfiguration requests."
-}
