@@ -591,21 +591,25 @@ class EC2QueryParser(QueryParser):
 class BaseJSONParser(ResponseParser):
 
     def _handle_structure(self, shape, value):
-        member_shapes = shape.members
-        if value is None:
-            # If the comes across the wire as "null" (None in python),
-            # we should be returning this unchanged, instead of as an
-            # empty dict.
-            return None
         final_parsed = {}
-        for member_name in member_shapes:
-            member_shape = member_shapes[member_name]
-            json_name = member_shape.serialization.get('name', member_name)
-            raw_value = value.get(json_name)
-            if raw_value is not None:
-                final_parsed[member_name] = self._parse_shape(
-                    member_shapes[member_name],
-                    raw_value)
+        if shape.is_document_type:
+            final_parsed = value
+        else:
+            member_shapes = shape.members
+            if value is None:
+                # If the comes across the wire as "null" (None in python),
+                # we should be returning this unchanged, instead of as an
+                # empty dict.
+                return None
+            final_parsed = {}
+            for member_name in member_shapes:
+                member_shape = member_shapes[member_name]
+                json_name = member_shape.serialization.get('name', member_name)
+                raw_value = value.get(json_name)
+                if raw_value is not None:
+                    final_parsed[member_name] = self._parse_shape(
+                        member_shapes[member_name],
+                        raw_value)
         return final_parsed
 
     def _handle_map(self, shape, value):

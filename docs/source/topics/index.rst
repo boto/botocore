@@ -6,3 +6,4 @@ Botocore Topic Guides
 
    events
    paginators
+   document_type
