@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.36
+=======
+
+* api-change:``ssm``: This release allows SSM Explorer customers to enable OpsData sources across their organization when creating a resource data sync.
+* api-change:``route53``: Documentation updates for route53
+* bugfix:S3: Fix an issue with XML newline normalization in PutBucketLifecycleConfiguration requests.
+* api-change:``s3``: Documentation updates for Amazon S3
+* api-change:``s3control``: Documentation updates for s3-control
+* api-change:``ec2``: maximumEfaInterfaces added to DescribeInstanceTypes API
+* api-change:``greengrass``: Updated the parameters to make name required for CreateGroup API.
+
+
 1.20.35
 =======
 
