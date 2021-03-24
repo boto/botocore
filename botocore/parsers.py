@@ -140,7 +140,7 @@ class ResponseParserFactory(object):
         You can specify any kwargs that are allowed by a ResponseParser
         class.  There are currently two arguments:
 
-            * timestamp_parser - A callable that can parse a timetsamp string
+            * timestamp_parser - A callable that can parse a timestamp string
             * blob_parser - A callable that can parse a blob type
 
         """
