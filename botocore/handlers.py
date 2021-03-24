@@ -80,7 +80,7 @@ def handle_service_name_alias(service_name, **kwargs):
     return SERVICE_NAME_ALIASES.get(service_name, service_name)
 
 
-def encode_delete_objects_keys(params, **kwargs):
+def escape_xml_payload(params, **kwargs):
     # Replace \r and \n with the escaped sequence over the whole XML document
     # to avoid linebreak normalization modifying customer input when the
     # document is parsed. Ideally, we would do this in ElementTree.tostring,
@@ -983,7 +983,8 @@ BUILTIN_HANDLERS = [
     ('before-call.apigateway', add_accept_header),
     ('before-call.s3.PutObject', conditionally_calculate_md5),
     ('before-call.s3.UploadPart', conditionally_calculate_md5),
-    ('before-call.s3.DeleteObjects', encode_delete_objects_keys),
+    ('before-call.s3.DeleteObjects', escape_xml_payload),
+    ('before-call.s3.PutBucketLifecycleConfiguration', escape_xml_payload),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),

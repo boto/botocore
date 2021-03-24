@@ -2353,8 +2353,13 @@ def _verify_presigned_url_addressing(region, bucket, key, s3_config,
     assert_equal(actual, expected_url)
 
 
-class TestS3DeleteObjects(BaseS3OperationTest):
-    def test_escape_keys_in_xml_payload(self):
+class TestS3XMLPayloadEscape(BaseS3OperationTest):
+    def assert_correct_content_md5(self, request):
+        content_md5_bytes = get_md5(request.body).digest()
+        content_md5 = base64.b64encode(content_md5_bytes)
+        self.assertEqual(content_md5, request.headers['Content-MD5'])
+
+    def test_escape_keys_in_xml_delete_objects(self):
         self.http_stubber.add_response()
         with self.http_stubber:
             response = self.client.delete_objects(
@@ -2366,6 +2371,21 @@ class TestS3DeleteObjects(BaseS3OperationTest):
         request = self.http_stubber.requests[0]
         self.assertNotIn(b'\r\n\r', request.body)
         self.assertIn(b'&#xD;&#xA;&#xD;', request.body)
-        content_md5_bytes = get_md5(request.body).digest()
-        content_md5 = base64.b64encode(content_md5_bytes)
-        self.assertEqual(content_md5, request.headers['Content-MD5'])
+        self.assert_correct_content_md5(request)
+
+    def test_escape_keys_in_xml_put_bucket_lifecycle_configuration(self):
+        self.http_stubber.add_response()
+        with self.http_stubber:
+            response = self.client.put_bucket_lifecycle_configuration(
+                Bucket='mybucket',
+                LifecycleConfiguration={
+                    'Rules': [{
+                        'Prefix': 'my\r\n\rprefix',
+                        'Status': 'ENABLED',
+                    }]
+                }
+            )
+        request = self.http_stubber.requests[0]
+        self.assertNotIn(b'my\r\n\rprefix', request.body)
+        self.assertIn(b'my&#xD;&#xA;&#xD;prefix', request.body)
+        self.assert_correct_content_md5(request)
