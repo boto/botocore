@@ -86,6 +86,14 @@
           "http_status_code": 400
         }
       }
+    },
+    "too_many_requests_400": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "TooManyRequestsException",
+          "http_status_code": 400
+        }
+      }
     }
   },
   "retry": {
@@ -108,7 +116,8 @@
           "request_throttled_exception": {"$ref": "request_throttled_exception"},
           "throttling": {"$ref": "throttling"},
           "too_many_requests": {"$ref": "too_many_requests"},
-          "throughput_exceeded": {"$ref": "throughput_exceeded"}
+          "throughput_exceeded": {"$ref": "throughput_exceeded"},
+          "too_many_requests_400": {"$ref": "too_many_requests_400"}
       }
     },
     "organizations": {
@@ -281,20 +290,6 @@
             "applies_when": {
               "response": {
                 "service_error_code": "IDPCommunicationError",
-                "http_status_code": 400
-              }
-            }
-          }
-        }
-      }
-    },
-    "servicequotas": {
-      "__default__": {
-        "policies": {
-          "too_many_requests_400": {
-            "applies_when": {
-              "response": {
-                "service_error_code": "TooManyRequestsException",
                 "http_status_code": 400
               }
             }
