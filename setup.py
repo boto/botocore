@@ -26,15 +26,8 @@ def find_version(*file_paths):
 requires = [
     'jmespath>=0.7.1,<1.0.0',
     'python-dateutil>=2.1,<3.0.0',
+    'urllib3>=1.25.4,<1.27',
 ]
-
-
-if sys.version_info[:2] == (3, 4):
-    # urllib3 dropped support for python 3.4 in point release 1.25.8
-    requires.append('urllib3>=1.25.4,<1.25.8')
-else:
-    requires.append('urllib3>=1.25.4,<1.27')
-
 
 
 setup(
