@@ -65,6 +65,12 @@
       "limit_key": "MaxRecords",
       "output_token": "Marker",
       "result_key": "PendingMaintenanceActions"
+    },
+    "DescribeEventSubscriptions": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "EventSubscriptionsList"
     }
   }
 }
