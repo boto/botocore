@@ -41,7 +41,7 @@ above::
 
     for reservation in client.describe_instances()['Reservations']:
         for instance in reservation['Instances']:
-            print instance['InstanceId']
+            print(instance['InstanceId'])
 
     # All instances that are in a state of pending.
     reservations = client.describe_instances(
