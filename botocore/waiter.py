@@ -75,6 +75,13 @@ def create_waiter_with_client(waiter_name, waiter_model, client):
     )
 
 
+def is_valid_waiter_error(response):
+    error = response.get('Error')
+    if isinstance(error, dict) and 'Code' in error:
+        return True
+    return False
+
+
 class NormalizedOperationMethod(object):
     def __init__(self, client_method):
         self._client_method = client_method
@@ -206,7 +213,7 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
-            if 'Error' in response:
+            if is_valid_waiter_error(response):
                 return
             return expression.search(response) == expected
         return acceptor_matches
@@ -216,7 +223,7 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
-            if 'Error' in response:
+            if is_valid_waiter_error(response):
                 return
             result = expression.search(response)
             if not isinstance(result, list) or not result:
@@ -236,7 +243,7 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
-            if 'Error' in response:
+            if is_valid_waiter_error(response):
                 return
             result = expression.search(response)
             if not isinstance(result, list) or not result:
@@ -321,7 +328,7 @@ class Waiter(object):
                 # If none of the acceptors matched, we should
                 # transition to the failure state if an error
                 # response was received.
-                if 'Error' in response:
+                if is_valid_waiter_error(response):
                     # Transition to a failure state, which we
                     # can just handle here by raising an exception.
                     raise WaiterError(
