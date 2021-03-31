@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.20.42
+=======
+
+* api-change:``iot``: Added ability to prefix search on attribute value for ListThings API.
+* api-change:``pricing``: Minor documentation and link updates.
+* api-change:``transcribe``: Amazon Transcribe now supports creating custom language models in the following languages: British English (en-GB), Australian English (en-AU), Indian Hindi (hi-IN), and US Spanish (es-US).
+* api-change:``cloudhsm``: Minor documentation and link updates.
+* api-change:``comprehend``: Support for customer managed KMS encryption of Comprehend custom models
+* api-change:``cognito-sync``: Minor documentation updates and link updates.
+* api-change:``batch``: AWS Batch adds support for Amazon EFS File System
+* api-change:``detective``: Added the ability to assign tag values to Detective behavior graphs. Tag values can be used for attribute-based access control, and for cost allocation for billing.
+* api-change:``iotwireless``: Add Sidewalk support to APIs: GetWirelessDevice, ListWirelessDevices, GetWirelessDeviceStatistics. Add Gateway connection status in GetWirelessGatewayStatistics API.
+* api-change:``cloudformation``: 1. Added a new parameter RegionConcurrencyType in OperationPreferences. 2. Changed the name of AccountUrl to AccountsUrl in DeploymentTargets parameter.
+* api-change:``cloud9``: Add ImageId input parameter to CreateEnvironmentEC2 endpoint. New parameter enables creation of environments with different AMIs.
+* api-change:``directconnect``: This release adds MACsec support to AWS Direct Connect
+* api-change:``redshift``: Enable customers to share access to their Redshift clusters from other VPCs (including VPCs from other accounts).
+* api-change:``workmail``: This release adds support for mobile device access rules management in Amazon WorkMail.
+* api-change:``datapipeline``: Minor documentation updates and link updates.
+* api-change:``machinelearning``: Minor documentation updates and link updates.
+
+
 1.20.41
 =======
 
