@@ -27,22 +27,13 @@ import logging
 import io
 import datetime
 import re
-from botocore.compat import six, HAS_CRT
+from botocore.compat import six, urlsplit, parse_qsl, HAS_CRT
 
 import mock
 
 import botocore.auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-
-from tests import requires_crt
-
-try:
-    from urllib.parse import urlsplit
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import urlsplit
-    from urlparse import parse_qsl
 
 
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
@@ -163,7 +154,7 @@ def _test_signature_version_4(test_case):
         assert_equal(actual_auth_header, test_case.authorization_header,
                      test_case.raw_request, 'authheader')
 
-@requires_crt
+
 def _test_crt_signature_version_4(test_case):
     test_case = _SignatureTestCase(test_case)
     request = create_request_from_raw_request(test_case.raw_request)

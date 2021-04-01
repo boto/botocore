@@ -71,10 +71,14 @@ def skip_if_windows(reason):
     return decorator
 
 
-def requires_crt(cls, reason=None):
+def requires_crt(reason=None):
     if reason is None:
-        reason = "Test requires awscrt to be installed."
-    return unittest.skipIf(not HAS_CRT, reason)(cls)
+        reason = "Test requires awscrt to be installed"
+
+    def decorator(func):
+        return unittest.skipIf(not HAS_CRT, reason)(func)
+    return decorator
+
 
 def random_chars(num_chars):
     """Returns random hex characters.
