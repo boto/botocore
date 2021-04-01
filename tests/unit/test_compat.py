@@ -178,7 +178,7 @@ class TestTimezoneOperations(unittest.TestCase):
 
 
 class TestCRTIntegration(unittest.TestCase):
-    def test_has_crt_gloabl(self):
+    def test_has_crt_global(self):
         try:
             import awscrt.auth
             assert HAS_CRT

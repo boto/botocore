@@ -210,19 +210,6 @@ class SigV4Auth(BaseSigner):
             header_map['host'] = _host_from_url(request.url)
         return header_map
 
-    def _canonical_host(self, url):
-        url_parts = urlsplit(url)
-        default_ports = {
-            'http': 80,
-            'https': 443
-        }
-        if any(url_parts.scheme == scheme and url_parts.port == port
-               for scheme, port in default_ports.items()):
-            # No need to include the port if it's the default port.
-            return url_parts.hostname
-        # Strip out auth if it's present in the netloc.
-        return url_parts.netloc.rsplit('@', 1)[-1]
-
     def canonical_query_string(self, request):
         # The query string can come from two parts.  One is the
         # params attribute of the request.  The other is from the request
