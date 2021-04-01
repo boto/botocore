@@ -353,6 +353,8 @@ except ImportError:
 # Detect if CRT is available for use
 try:
     import awscrt.auth
-    HAS_CRT = True
+    # Allow user opt-out if needed
+    disabled = os.environ.get('BOTO_DISABLE_CRT', False)
+    HAS_CRT = not disabled
 except ImportError:
     HAS_CRT = False
