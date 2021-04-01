@@ -329,6 +329,22 @@ class TestWaitersObjects(unittest.TestCase):
         waiter.wait()
         self.assertEqual(operation_method.call_count, 3)
 
+    def test_waiter_matches_with_invalid_error_response(self):
+        # Verify that the call will not raise WaiterError
+        # because of 'Error' key in success response.
+        config = self.create_waiter_config(
+            max_attempts=3,
+            acceptors=[{'state': 'success', 'matcher': 'path',
+                        'argument': 'Foo', 'expected': 'SUCCESS'}])
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        self.client_responses_are(
+            {'Foo': 'SUCCESS', 'Error': 'foo'},
+            for_operation=operation_method
+        )
+        waiter.wait()
+        self.assertEqual(operation_method.call_count, 1)
+
     def test_waiter_never_matches(self):
         # Verify that a matcher will fail after max_attempts
         # is exceeded.
