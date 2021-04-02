@@ -41,6 +41,7 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         self.assertEqual(parsed['Table']['TableStatus'], 'ACTIVE')
 
 
+#Test for Stepfunction
 @attr('slow')
 class TestWaiterForStepfunctions(unittest.TestCase):
     def setUp(self):
