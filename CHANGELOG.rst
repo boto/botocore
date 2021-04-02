@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.20.44
+=======
+
+* api-change:``mediapackage``: SPEKE v2 is an upgrade to the existing SPEKE API to support multiple encryption keys, based on an encryption contract selected by the customer.
+* api-change:``imagebuilder``: This release adds support for Block Device Mappings for container image builds, and adds distribution configuration support for EC2 launch templates in AMI builds.
+
+
 1.20.43
 =======
 
