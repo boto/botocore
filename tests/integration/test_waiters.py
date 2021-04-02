@@ -19,8 +19,6 @@ from botocore.exceptions import WaiterError
 import json
 
 # This is the same test as above, except using the client interface.
-
-
 @attr('slow')
 class TestWaiterForDynamoDB(unittest.TestCase):
     def setUp(self):
@@ -63,12 +61,12 @@ class TestWaiterForStepfunctions(unittest.TestCase):
                     "Action": "sts:AssumeRole"
                 }
             ]
-         }
-
+        }
 
     def test_waiter_execution_succeeded(self):
 
-        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-1',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        role = self.iam_client.create_role(
+            RoleName='test-role-stepfunction-1', AssumeRolePolicyDocument=json.dumps(self.role_policy))
         definition = {
             "Comment": "Test Step Function",
             "StartAt": "Hello",
@@ -112,11 +110,11 @@ class TestWaiterForStepfunctions(unittest.TestCase):
         self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
         self.assertEqual(response['status'], 'SUCCEEDED')
         self.client.delete_state_machine(stateMachineArn=stateMachineArn)
-        
 
     def test_waiter_execution_failed(self):
 
-        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-2',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        role = self.iam_client.create_role(
+            RoleName='test-role-stepfunction-2', AssumeRolePolicyDocument=json.dumps(self.role_policy))
         # A Step Machine with a fail state
         definition = {
             "Comment": "Test Step Function",
@@ -157,11 +155,11 @@ class TestWaiterForStepfunctions(unittest.TestCase):
         self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
         self.assertEqual(response['status'], 'FAILED')
         self.client.delete_state_machine(stateMachineArn=stateMachineArn)
-        
 
     def test_waiter_execution_aborted(self):
 
-        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-3',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        role = self.iam_client.create_role(
+            RoleName='test-role-stepfunction-3', AssumeRolePolicyDocument=json.dumps(self.role_policy))
         definition = {
             "Comment": "Test Step Function",
             "StartAt": "Hello",
@@ -209,7 +207,6 @@ class TestWaiterForStepfunctions(unittest.TestCase):
         self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
         self.assertEqual(response['status'], 'ABORTED')
         self.client.delete_state_machine(stateMachineArn=stateMachineArn)
-        
 
 
 class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
