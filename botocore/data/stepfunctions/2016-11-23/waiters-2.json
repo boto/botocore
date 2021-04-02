@@ -1,0 +1,36 @@
+{
+    "version": 2,
+    "waiters": {
+        "ExecutionComplete": {
+            "delay": 15,
+            "maxAttempts": 40,
+            "operation": "DescribeExecution",
+            "acceptors": [
+                {
+                    "matcher": "path",
+                    "expected": "SUCCEEDED",
+                    "argument": "status",
+                    "state": "success"
+                },
+                {
+                    "matcher": "path",
+                    "expected": "FAILED",
+                    "argument": "status",
+                    "state": "failure"
+                },
+                {
+                    "matcher": "path",
+                    "expected": "TIMED_OUT",
+                    "argument": "status",
+                    "state": "failure"
+                },
+                {
+                    "matcher": "path",
+                    "expected": "ABORTED",
+                    "argument": "status",
+                    "state": "failure"
+                }
+            ]
+        }
+    }
+}

@@ -10,15 +10,19 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
+
 from tests import unittest, random_chars
 
 from nose.plugins.attrib import attr
 
 import botocore.session
 from botocore.exceptions import WaiterError
-
+import json
 
 # This is the same test as above, except using the client interface.
+
+
 @attr('slow')
 class TestWaiterForDynamoDB(unittest.TestCase):
     def setUp(self):
@@ -39,6 +43,175 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         waiter.wait(TableName=table_name)
         parsed = self.client.describe_table(TableName=table_name)
         self.assertEqual(parsed['Table']['TableStatus'], 'ACTIVE')
+
+
+@attr('slow')
+class TestWaiterForStepfunctions(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('stepfunctions', 'us-west-2')
+
+        self.sts_client = self.session.create_client('sts')
+        self.iam_client = self.session.create_client('iam')
+        account_id = self.sts_client.get_caller_identity()['Account']
+        self.role_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::%s:root" % account_id
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+         }
+
+
+    def test_waiter_execution_succeeded(self):
+
+        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-1',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        definition = {
+            "Comment": "Test Step Function",
+            "StartAt": "Hello",
+            "States": {
+                "Hello": {
+                    "Type": "Pass",
+                    "Result": "Hello",
+                    "Next": "World"
+                },
+                "World": {
+                    "Type": "Pass",
+                    "Result": "World",
+                    "Next": "Wait"
+                },
+                "Wait": {
+                    "Comment": "A Wait state delays the state machine from continuing for a specified time.",
+                    "Type": "Wait",
+                    "Seconds": 3,
+                    "End": True
+                }
+            }
+        }
+
+        stepfunction_response = self.client.create_state_machine(
+            name='botocoretest-statemachine',
+            definition=json.dumps(definition),
+            roleArn=role['Role']['Arn']
+        )
+
+        stateMachineArn = stepfunction_response['stateMachineArn']
+
+        stepfunction_execute_response = self.client.start_execution(
+            stateMachineArn=stateMachineArn, input=json.dumps('{"Comments":"Hello World"}'))
+        executionArn = stepfunction_execute_response['executionArn']
+
+        waiter = self.client.get_waiter('execution_complete')
+        waiter.wait(executionArn=executionArn)
+
+        response = self.client.describe_execution(executionArn=executionArn)
+        # Cleanup
+        self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
+        self.assertEqual(response['status'], 'SUCCEEDED')
+        self.client.delete_state_machine(stateMachineArn=stateMachineArn)
+        
+
+    def test_waiter_execution_failed(self):
+
+        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-2',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        # A Step Machine with a fail state
+        definition = {
+            "Comment": "Test Step Function",
+            "StartAt": "Hello",
+            "States": {
+                "Hello": {
+                    "Type": "Pass",
+                    "Result": "Hello",
+                    "Next": "World"
+                },
+                "World": {
+                    "Type": "Pass",
+                    "Result": "World",
+                    "Next": "Wait"
+                },
+                "Wait": {
+                    "Comment": "A Wait state delays the state machine from continuing for a specified time.",
+                    "Type": "Fail",
+                }
+            }
+        }
+        stepfunction_response = self.client.create_state_machine(
+            name='botocoretest-statemachine-fail',
+            definition=json.dumps(definition),
+            roleArn=role['Role']['Arn']
+        )
+        stateMachineArn = stepfunction_response['stateMachineArn']
+
+        stepfunction_execute_response = self.client.start_execution(
+            stateMachineArn=stateMachineArn, input=json.dumps('{"Comments":"Hello World"}'))
+        executionArn = stepfunction_execute_response['executionArn']
+        waiter = self.client.get_waiter('execution_complete')
+        with self.assertRaises(WaiterError):
+            waiter.wait(executionArn=executionArn)
+
+        response = self.client.describe_execution(executionArn=executionArn)
+        # Cleanup
+        self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
+        self.assertEqual(response['status'], 'FAILED')
+        self.client.delete_state_machine(stateMachineArn=stateMachineArn)
+        
+
+    def test_waiter_execution_aborted(self):
+
+        role = self.iam_client.create_role(RoleName = 'test-role-stepfunction-3',AssumeRolePolicyDocument = json.dumps(self.role_policy))
+        definition = {
+            "Comment": "Test Step Function",
+            "StartAt": "Hello",
+            "States": {
+                "Hello": {
+                    "Type": "Pass",
+                    "Result": "Hello",
+                    "Next": "World"
+                },
+                "World": {
+                    "Type": "Pass",
+                    "Result": "World",
+                    "Next": "Wait"
+                },
+                "Wait": {
+                    "Comment": "A Wait state delays the state machine from continuing for a specified time.",
+                    "Type": "Wait",
+                    "Seconds": 3,
+                    "End": True
+                }
+            }
+        }
+
+        stepfunction_response = self.client.create_state_machine(
+            name='botocoretest-statemachine-abort',
+            definition=json.dumps(definition),
+            roleArn=role['Role']['Arn']
+        )
+
+        stateMachineArn = stepfunction_response['stateMachineArn']
+
+        stepfunction_execute_response = self.client.start_execution(
+            stateMachineArn=stateMachineArn, input=json.dumps('{"Comments":"Hello World"}'))
+        executionArn = stepfunction_execute_response['executionArn']
+
+        # Aborting the state machine
+        self.client.stop_execution(executionArn=executionArn)
+
+        waiter = self.client.get_waiter('execution_complete')
+        with self.assertRaises(WaiterError):
+            waiter.wait(executionArn=executionArn)
+
+        response = self.client.describe_execution(executionArn=executionArn)
+        # Cleanup
+        self.iam_client.delete_role(RoleName=role['Role']['RoleName'])
+        self.assertEqual(response['status'], 'ABORTED')
+        self.client.delete_state_machine(stateMachineArn=stateMachineArn)
+        
 
 
 class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
