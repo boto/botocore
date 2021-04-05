@@ -349,10 +349,3 @@ try:
     from collections.abc import MutableMapping
 except ImportError:
     from collections import MutableMapping
-
-# Detect if CRT is available for use
-try:
-    import awscrt.auth
-    HAS_CRT = True
-except ImportError:
-    HAS_CRT = False
