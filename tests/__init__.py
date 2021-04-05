@@ -34,9 +34,9 @@ from nose.tools import assert_equal
 import botocore.loaders
 import botocore.session
 from botocore.awsrequest import AWSResponse
-from botocore.compat import (
-    parse_qs, six, urlparse, HAS_CRT
-)
+from botocore.compat import six
+from botocore.compat import urlparse
+from botocore.compat import parse_qs
 from botocore import utils
 from botocore import credentials
 from botocore.stub import Stubber
@@ -68,15 +68,6 @@ def skip_if_windows(reason):
     def decorator(func):
         return unittest.skipIf(
             platform.system() not in ['Darwin', 'Linux'], reason)(func)
-    return decorator
-
-
-def requires_crt(reason=None):
-    if reason is None:
-        reason = "Test requires awscrt to be installed"
-
-    def decorator(func):
-        return unittest.skipIf(not HAS_CRT, reason)(func)
     return decorator
 
 

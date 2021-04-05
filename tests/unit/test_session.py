@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.config
-from tests import unittest, create_session, temporary_file, requires_crt
+from tests import unittest, create_session, temporary_file
 import os
 import logging
 import tempfile
@@ -407,22 +407,6 @@ class TestSessionUserAgent(BaseSessionTest):
         user_agent = self.session.user_agent()
         self.assertTrue(user_agent.endswith('custom-thing/other'))
         self.assertIn('exec-env/FooEnv', user_agent)
-
-    @requires_crt()
-    def test_crt_user_agent_appended(self):
-        user_agent = self.session.user_agent()
-        self.assertIn(' awscrt/', user_agent)
-        self.assertNotIn('awscrt/Unknown', user_agent)
-
-    @requires_crt()
-    def test_crt_and_extra_user_agent(self):
-        user_agent = self.session.user_agent()
-        self.assertIn(' awscrt/', user_agent)
-        self.assertNotIn('custom-thing/other', user_agent)
-        self.session.user_agent_extra = 'custom-thing/other'
-        user_agent_w_extra = self.session.user_agent()
-        self.assertIn(' awscrt/', user_agent)
-        self.assertTrue(user_agent_w_extra.endswith('custom-thing/other'))
 
 
 class TestConfigLoaderObject(BaseSessionTest):
