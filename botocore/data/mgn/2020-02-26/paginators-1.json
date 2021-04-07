@@ -1,34 +1,28 @@
 {
   "pagination": {
-    "ListChannels": {
+    "DescribeJobLogItems": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "channels"
+      "result_key": "items"
     },
-    "ListStreamKeys": {
+    "DescribeJobs": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "streamKeys"
+      "result_key": "items"
     },
-    "ListStreams": {
+    "DescribeReplicationConfigurationTemplates": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "streams"
+      "result_key": "items"
     },
-    "ListPlaybackKeyPairs": {
+    "DescribeSourceServers": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "keyPairs"
-    },
-    "ListRecordingConfigurations": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
-      "limit_key": "maxResults",
-      "result_key": "recordingConfigurations"
+      "result_key": "items"
     }
   }
 }
