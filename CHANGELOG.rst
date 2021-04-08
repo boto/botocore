@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.48
+=======
+
+* api-change:``lookoutequipment``: This release introduces support for Amazon Lookout for Equipment.
+* api-change:``kinesis-video-archived-media``: Documentation updates for archived.kinesisvideo
+* api-change:``robomaker``: This release allows RoboMaker customers to specify custom tools to run with their simulation job
+* api-change:``appstream``: This release provides support for image updates
+* api-change:``ram``: Documentation updates for AWS RAM resource sharing
+* api-change:``customer-profiles``: Documentation updates for Put-Integration API
+* api-change:``autoscaling``: Amazon EC2 Auto Scaling announces Warm Pools that help applications to scale out faster by pre-initializing EC2 instances and save money by requiring fewer continuously running instances
+
+
 1.20.47
 =======
 
