@@ -747,6 +747,8 @@ class Session(object):
             * path/to/cert/bundle.pem - A filename of the CA cert bundle to
               uses.  You can specify this argument if you want to use a
               different CA cert bundle than the one used by botocore.
+            * True - check environment configuration for CA cert bundle
+            * None - check environment configuration for CA cert bundle
 
         :type endpoint_url: string
         :param endpoint_url: The complete URL to use for the constructed
@@ -798,7 +800,7 @@ class Session(object):
 
         # Figure out the verify value base on the various
         # configuration options.
-        if verify is None:
+        if verify in [None, True]:
             verify = self.get_config_variable('ca_bundle')
 
         if api_version is None:
