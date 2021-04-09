@@ -595,6 +595,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "ReplaceRootVolumeTasks"
+    },
+    "DescribeStoreImageTasks": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "StoreImageTaskResults"
     }
   }
 }
