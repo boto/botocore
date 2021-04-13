@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.20.51
+=======
+
+* api-change:``lightsail``: Documentation updates for Amazon Lightsail.
+* api-change:``sts``: This release adds the SourceIdentity parameter that can be set when assuming a role.
+* api-change:``comprehendmedical``: The InferICD10CM API now returns TIME_EXPRESSION entities that refer to medical conditions.
+* api-change:``rds``: Clarify that enabling or disabling automated backups causes a brief downtime, not an outage.
+* api-change:``redshift``: Added support to enable AQUA in Amazon Redshift clusters.
+
+
+1.20.50
+=======
+
+* api-change:``fsx``: Support for cross-region and cross-account backup copies
+* api-change:``codebuild``: AWS CodeBuild now allows you to set the access permissions for build artifacts, project artifacts, and log files that are uploaded to an Amazon S3 bucket that is owned by another account.
+
+
+1.20.49
+=======
+
+* api-change:``redshift``: Add support for case sensitive table level restore
+* api-change:``ec2``: Add paginator support to DescribeStoreImageTasks and update documentation.
+* api-change:``shield``: CreateProtection now throws InvalidParameterException instead of InternalErrorException when system tags (tag with keys prefixed with "aws:") are passed in.
+
+
 1.20.48
 =======
 
