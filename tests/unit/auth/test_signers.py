@@ -28,11 +28,11 @@ from botocore.awsrequest import AWSRequest
 
 class BaseTestWithFixedDate(unittest.TestCase):
     def setUp(self):
-        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
-        self.datetime_patch = mock.patch('botocore.auth.datetime.datetime')
+        self.datetime_patch = mock.patch('botocore.auth.datetime')
         self.datetime_mock = self.datetime_patch.start()
-        self.datetime_mock.utcnow.return_value = self.fixed_date
-        self.datetime_mock.strptime.return_value = self.fixed_date
+        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
+        self.datetime_mock.datetime.utcnow.return_value = self.fixed_date
+        self.datetime_mock.datetime.strptime.return_value = self.fixed_date
 
     def tearDown(self):
         self.datetime_patch.stop()
@@ -285,14 +285,13 @@ class TestSigV3(unittest.TestCase):
 
 class TestS3SigV4Auth(BaseTestWithFixedDate):
 
-    AuthClass = botocore.auth.S3SigV4Auth
     maxDiff = None
 
     def setUp(self):
         super(TestS3SigV4Auth, self).setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
-        self.auth = self.AuthClass(
+        self.auth = botocore.auth.S3SigV4Auth(
             self.credentials, 'ec2', 'eu-central-1')
         self.request = AWSRequest(data=six.BytesIO(b"foo bar baz"))
         self.request.method = 'PUT'
@@ -320,16 +319,12 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         request.method = 'GET'
         credentials = botocore.credentials.Credentials('access_key',
                                                        'secret_key')
-        auth = self.AuthClass(credentials, 's3', 'us-east-1')
+        auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
         auth.add_auth(request)
         self.assertTrue(
             request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
 
     def test_query_string_params_in_urls(self):
-        if not hasattr(self.AuthClass, 'canonical_query_string'):
-            raise unittest.SkipTest('%s does not expose interim steps' %
-                                    self.AuthClass.__name__)
-
         request = AWSRequest()
         request.url = (
             'https://s3.amazonaws.com/bucket?'
@@ -351,7 +346,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         request.headers[header] = value
         credentials = botocore.credentials.Credentials('access_key',
                                                        'secret_key')
-        auth = self.AuthClass(credentials, 's3', 'us-east-1')
+        auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
         auth.add_auth(request)
         self.assertNotIn(header, request.headers['Authorization'])
 
@@ -589,13 +584,13 @@ class TestSigV4(unittest.TestCase):
 class TestSigV4Resign(BaseTestWithFixedDate):
 
     maxDiff = None
-    AuthClass = botocore.auth.SigV4Auth
 
     def setUp(self):
         super(TestSigV4Resign, self).setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
-        self.auth = self.AuthClass(self.credentials, 'ec2', 'us-west-2')
+        self.auth = botocore.auth.SigV4Auth(self.credentials,
+                                            'ec2', 'us-west-2')
         self.request = AWSRequest()
         self.request.method = 'PUT'
         self.request.url = 'https://ec2.amazonaws.com/'
@@ -713,7 +708,6 @@ class TestS3SigV2Presign(BasePresignTest):
 class TestSigV4Presign(BasePresignTest):
 
     maxDiff = None
-    AuthClass = botocore.auth.SigV4QueryAuth
 
     def setUp(self):
         self.access_key = 'access_key'
@@ -722,7 +716,7 @@ class TestSigV4Presign(BasePresignTest):
                                                             self.secret_key)
         self.service_name = 'myservice'
         self.region_name = 'myregion'
-        self.auth = self.AuthClass(
+        self.auth = botocore.auth.SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)
         self.datetime_patcher = mock.patch.object(
             botocore.auth.datetime, 'datetime',

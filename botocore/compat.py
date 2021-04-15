@@ -19,7 +19,6 @@ import warnings
 import hashlib
 import logging
 import shlex
-import os
 from math import floor
 
 from botocore.vendored import six
@@ -350,12 +349,3 @@ try:
     from collections.abc import MutableMapping
 except ImportError:
     from collections import MutableMapping
-
-# Detect if CRT is available for use
-try:
-    import awscrt.auth
-    # Allow user opt-out if needed
-    disabled = os.environ.get('BOTO_DISABLE_CRT', "false")
-    HAS_CRT = not disabled.lower() == 'true'
-except ImportError:
-    HAS_CRT = False
