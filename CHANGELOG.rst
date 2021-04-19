@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.20.54
+=======
+
+* api-change:``savingsplans``: Added support for Amazon SageMaker in Machine Learning Savings Plans
+* api-change:``ce``: Adding support for Sagemaker savings plans in GetSavingsPlansPurchaseRecommendation API
+
+
 1.20.53
 =======
 
