@@ -4414,7 +4414,7 @@
         },
         "fileContent":{
           "shape":"FileContent",
-          "documentation":"<p>The base-64 encoded binary data object that represents the content of the file.</p>"
+          "documentation":"<p>The content of the file, in binary object format. </p>"
         }
       }
     },
