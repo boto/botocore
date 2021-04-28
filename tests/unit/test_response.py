@@ -16,6 +16,7 @@ import datetime
 
 from dateutil.tz import tzutc
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
+from io import TextIOWrapper
 
 import botocore
 from botocore import response
@@ -102,6 +103,12 @@ class TestStreamWrapper(unittest.TestCase):
         self.assertEqual(b'c' * 2, next(stream))
         with self.assertRaises(StopIteration):
             next(stream)
+
+    def test_streaming_body_is_file_like(self):
+        body = six.BytesIO(b'1234567890')
+        stream = response.StreamingBody(body, content_length=10)
+        t = TextIOWrapper(stream, encoding="utf-8")
+        self.assertEqual(t.read(), '1234567890')
 
     def test_iter_chunks_single_byte(self):
         body = six.BytesIO(b'abcde')

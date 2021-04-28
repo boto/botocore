@@ -44,6 +44,7 @@ class StreamingBody(object):
         self._raw_stream = raw_stream
         self._content_length = content_length
         self._amount_read = 0
+        self.closed = False
 
     def set_socket_timeout(self, timeout):
         """Set the timeout seconds on the socket."""
@@ -86,6 +87,15 @@ class StreamingBody(object):
             self._verify_content_length()
         return chunk
 
+    def readable(self):
+        return True
+        
+    def writable(self):
+        return False
+        
+    def seekable(self):
+        return False
+        
     def __iter__(self):
         """Return an iterator to yield 1k chunks from the raw stream.
         """
@@ -139,6 +149,7 @@ class StreamingBody(object):
     def close(self):
         """Close the underlying http response stream."""
         self._raw_stream.close()
+        self.closed = True
 
 
 def get_response(operation_model, http_response):
