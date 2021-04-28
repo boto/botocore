@@ -205,6 +205,8 @@ class TestTransformName(unittest.TestCase):
                          'describe-stored-iscsi-volumes')
         self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'),
                          'create-stored-iscsi-volume')
+        self.assertEqual(xform_name('sourceServerIDs', '-'),
+                         'source-server-ids')
 
     def test_special_case_ends_with_s(self):
         self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
