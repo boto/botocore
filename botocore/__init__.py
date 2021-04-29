@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '1.20.60'
+__version__ = '1.20.61'
 
 
 class NullHandler(logging.Handler):
@@ -30,9 +30,9 @@ log.addHandler(NullHandler())
 
 _first_cap_regex = re.compile('(.)([A-Z][a-z]+)')
 _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
-# The regex below handles the special case where some acryonym
+# The regex below handles the special case where some acronym
 # name is pluralized, e.g GatewayARNs, ListWebACLs, SomeCNAMEs.
-_special_case_transform = re.compile('[A-Z]{3,}s$')
+_special_case_transform = re.compile('[A-Z]{2,}s$')
 # Prepopulate the cache with special cases that don't match
 # our regular transformation.
 _xform_cache = {
