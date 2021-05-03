@@ -520,6 +520,21 @@ class TestArgumentGenerator(unittest.TestCase):
             }
         )
 
+    def test_will_respect_min_value_for_values(self):
+        self.arg_generator = ArgumentGenerator(use_member_names=True)
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {'type': 'string', 'min': 5},
+                'B': {'type': 'integer', 'min': 10},
+                'C': {'type': 'float', 'min': 10.0},
+            },
+            generated_skeleton={
+                'A': 'A    ',
+                'B': 10,
+                'C': 10.0,
+            }
+        )
+
     def test_will_use_member_names_for_string_values_of_list(self):
         self.arg_generator = ArgumentGenerator(use_member_names=True)
         # We're not using assert_skeleton_from_model_is

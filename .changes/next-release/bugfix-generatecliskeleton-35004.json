@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "generate-cli-skeleton",
+  "description": "Fix not using min value in skeleton generation. `#2337 <https://github.com/boto/botocore/issues/2337>`__"
+}

@@ -933,14 +933,15 @@ class ArgumentGenerator(object):
                 return self._generate_type_map(shape, stack)
             elif shape.type_name == 'string':
                 if self._use_member_names:
-                    return name
+                    min_value = shape.metadata.get('min', 0)
+                    return name.ljust(min_value)
                 if shape.enum:
                     return random.choice(shape.enum)
                 return ''
             elif shape.type_name in ['integer', 'long']:
-                return 0
+                return shape.metadata.get('min', 0)
             elif shape.type_name in ['float', 'double']:
-                return 0.0
+                return shape.metadata.get('min', 0.0)
             elif shape.type_name == 'boolean':
                 return True
             elif shape.type_name == 'timestamp':
