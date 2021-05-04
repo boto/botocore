@@ -4,7 +4,8 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": [
-        "CloudFormation"
+        "CloudFormation",
+        "Service"
       ]
     },
     "GetResourceCollection": {
@@ -58,6 +59,19 @@
       "result_key": [
         "ProactiveInsights",
         "ReactiveInsights"
+      ]
+    },
+    "GetCostEstimation": {
+      "input_token": "NextToken",
+      "non_aggregate_keys": [
+        "Status",
+        "TotalCost",
+        "TimeRange",
+        "ResourceCollection"
+      ],
+      "output_token": "NextToken",
+      "result_key": [
+        "Costs"
       ]
     }
   }
