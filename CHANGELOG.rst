@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.20.68
+=======
+
+* api-change:``servicediscovery``: Bugfix: Improved input validation for RegisterInstance action, InstanceId field
+* api-change:``kafka``: IAM Access Control for Amazon MSK enables you to create clusters that use IAM to authenticate clients and to allow or deny Apache Kafka actions for those clients.
+* api-change:``ssm``: SSM feature release - ChangeCalendar integration with StateManager.
+* api-change:``snowball``: AWS Snow Family adds APIs for ordering and managing Snow jobs with long term pricing
+
+
 1.20.67
 =======
 
