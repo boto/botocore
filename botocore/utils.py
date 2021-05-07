@@ -173,6 +173,10 @@ ZONE_ID_PAT = "(?:%25|%)(?:[" + UNRESERVED_PAT + "]|%[a-fA-F0-9]{2})+"
 IPV6_ADDRZ_PAT = r"\[" + IPV6_PAT + r"(?:" + ZONE_ID_PAT + r")?\]"
 IPV6_ADDRZ_RE = re.compile("^" + IPV6_ADDRZ_PAT + "$")
 
+# These are the characters that are stripped by post-bpo-43882 urlparse().
+UNSAFE_URL_CHARS = frozenset('\t\r\n')
+
+
 def ensure_boolean(val):
     """Ensures a boolean value if a string or boolean is provided
 
@@ -977,6 +981,8 @@ class ArgumentGenerator(object):
 
 
 def is_valid_ipv6_endpoint_url(endpoint_url):
+    if UNSAFE_URL_CHARS.intersection(endpoint_url):
+        return False
     netloc = urlparse(endpoint_url).netloc
     return IPV6_ADDRZ_RE.match(netloc) is not None
 
@@ -990,6 +996,10 @@ def is_valid_endpoint_url(endpoint_url):
     :return: True if the endpoint url is valid. False otherwise.
 
     """
+    # post-bpo-43882 urlsplit() strips unsafe characters from URL, causing
+    # it to pass hostname validation below.  Detect them early to fix that.
+    if UNSAFE_URL_CHARS.intersection(endpoint_url):
+        return False
     parts = urlsplit(endpoint_url)
     hostname = parts.hostname
     if hostname is None:
