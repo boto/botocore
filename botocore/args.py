@@ -267,8 +267,8 @@ class ClientArgsCreator(object):
     def _compute_sts_endpoint_config(self, **resolve_endpoint_kwargs):
         endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
         if self._should_set_global_sts_endpoint(
-                resolve_endpoint_kwargs['region_name'],
-                resolve_endpoint_kwargs['endpoint_url']):
+                endpoint_config['region_name'],
+                endpoint_config['endpoint_url']):
             self._set_global_sts_endpoint(
                 endpoint_config, resolve_endpoint_kwargs['is_secure'])
         return endpoint_config
