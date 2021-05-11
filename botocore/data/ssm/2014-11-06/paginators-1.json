@@ -269,6 +269,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "OpsMetadataList"
+    },
+    "ListOpsItemRelatedItems": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Summaries"
     }
   }
 }
