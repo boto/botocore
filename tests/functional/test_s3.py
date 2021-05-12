@@ -858,10 +858,12 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'accesspoint/mybanner'
         )
         self.client, _ = self.create_stubbed_s3_client(
-            region_name='fips-us-gov-west-1')
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': False})
+        )
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(expected_exception,
-                                     'cross region Access Point'):
+                                     'ARNs in another region are not allowed'):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
         self.client, _ = self.create_stubbed_s3_client(
@@ -870,8 +872,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(
-                expected_exception,
-                'FIPS region fips-us-gov-west-1 does not match'):
+                expected_exception, 'does not allow for cross-region calls'):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
     def test_s3_object_lambda_with_global_regions(self):
@@ -879,19 +880,14 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'arn:aws:s3-object-lambda:us-east-1:123456789012:'
             'accesspoint/mybanner'
         )
-        self.client, _ = self.create_stubbed_s3_client(
-            region_name='s3-external-1')
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(
-                expected_exception,
-                's3-external-1 is not a regional endpoint'):
-            self.client.list_objects(Bucket=s3_object_lambda_arn)
-        self.client, _ = self.create_stubbed_s3_client(
-            region_name='aws-global')
-        expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(expected_exception,
-                                     'aws-global is not a regional endpoint'):
-            self.client.list_objects(Bucket=s3_object_lambda_arn)
+        expected_msg = 'a regional endpoint must be specified'
+        for region in ('aws-global', 's3-external-1'):
+            self.client, _ = self.create_stubbed_s3_client(
+                region_name=region, config=Config(s3={'use_arn_region': False})
+            )
+            with self.assertRaisesRegexp(expected_exception, expected_msg):
+                self.client.list_objects(Bucket=s3_object_lambda_arn)
 
     def test_s3_object_lambda_arn_with_us_east_1(self):
         # test that us-east-1 region is not resolved
@@ -933,14 +929,14 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
 
     def test_outposts_raise_exception_if_fips_region(self):
         outpost_arn = (
-            'arn:aws:s3-outposts:us-gov-wast-1:123456789012:outpost:'
+            'arn:aws:s3-outposts:us-gov-east-1:123456789012:outpost:'
             'op-01234567890123456:accesspoint:myaccesspoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
-            region_name='us-gov-wast-1-fips')
+            region_name='us-gov-east-1-fips')
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(expected_exception,
-                                     'Outpost Access Points do not support'):
+                                     'outpost ARNs do not support FIPS'):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_accesspoint_fips_raise_for_cross_region(self):
@@ -949,10 +945,12 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
-            region_name='fips-us-gov-west-1')
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': False})
+        )
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(expected_exception,
-                                     'cross region Access Point'):
+                                     'ARNs in another region are not allowed'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
         self.client, _ = self.create_stubbed_s3_client(
@@ -961,8 +959,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(
-                expected_exception,
-                'FIPS region fips-us-gov-west-1 does not match'):
+                expected_exception, 'does not allow for cross-region'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
     def test_accesspoint_with_global_regions(self):
@@ -970,16 +967,33 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
         )
         self.client, _ = self.create_stubbed_s3_client(
-            region_name='aws-global')
+            region_name='aws-global',
+            config=Config(s3={'use_arn_region': False})
+        )
         expected_exception = UnsupportedS3AccesspointConfigurationError
         with self.assertRaisesRegexp(expected_exception,
-                                     'aws-global is not a regional endpoint'):
+                                     'regional endpoint must be specified'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
-        # in shouldn't raise if use_arn_region is True
+        # It shouldn't raise if use_arn_region is True
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name='s3-external-1',
             config=Config(s3={'use_arn_region': True})
+        )
+
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_accesspoint_arn)
+        request = self.http_stubber.requests[0]
+        expected_endpoint = (
+            'myendpoint-123456789012.s3-accesspoint.'
+            'us-east-1.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+        # It shouldn't raise if no use_arn_region is specified since
+        # use_arn_region defaults to True
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='s3-external-1',
         )
 
         self.http_stubber.add_response()

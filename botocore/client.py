@@ -21,7 +21,8 @@ from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import (
     ClientError, DataNotFoundError, OperationNotPageableError,
-    UnknownSignatureVersionError, InvalidEndpointDiscoveryConfigurationError
+    UnknownSignatureVersionError, InvalidEndpointDiscoveryConfigurationError,
+    UnknownFIPSEndpointError,
 )
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
@@ -96,6 +97,7 @@ class ClientCreator(object):
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
+        self._register_lazy_block_unknown_fips_pseudo_regions(service_client)
         return service_client
 
     def create_client_class(self, service_name, api_version=None):
@@ -230,6 +232,33 @@ class ClientCreator(object):
         if enabled == "auto":
             return client.meta.service_model.endpoint_discovery_required
         return enabled
+
+    def _register_lazy_block_unknown_fips_pseudo_regions(self, client):
+        # This function blocks usage of FIPS pseudo-regions when the endpoint
+        # is not explicitly known to exist to the client to prevent accidental
+        # usage of incorrect or non-FIPS endpoints. This is done lazily by
+        # registering an exception on the before-sign event to allow for
+        # general client usage such as can_paginate, exceptions, etc.
+        region_name = client.meta.region_name
+        if not region_name or 'fips' not in region_name.lower():
+            return
+
+        partition = client.meta.partition
+        endpoint_prefix = client.meta.service_model.endpoint_prefix
+        known_regions = self._endpoint_resolver.get_available_endpoints(
+            endpoint_prefix,
+            partition,
+            allow_non_regional=True,
+        )
+
+        if region_name not in known_regions:
+            def _lazy_fips_exception(**kwargs):
+                service_name = client.meta.service_model.service_name
+                raise UnknownFIPSEndpointError(
+                    region_name=region_name,
+                    service_name=service_name,
+                )
+            client.meta.events.register('before-sign', _lazy_fips_exception)
 
     def _register_s3_events(self, client, endpoint_bridge, endpoint_url,
                             client_config, scoped_config):

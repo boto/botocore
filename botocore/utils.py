@@ -1577,36 +1577,45 @@ class S3EndpointSetter(object):
         if 'outpost_name' in request.context['s3_accesspoint']:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
-                    'Invalid configuration Outpost Access Points '
-                    'do not support FIPS- regions'
+                    'Client is configured to use the FIPS psuedo-region "%s", '
+                    'but outpost ARNs do not support FIPS endpoints.' % (
+                        self._region)
                 )
             )
         client_region = self._region.replace('fips-', '').replace('-fips', '')
         accesspoint_region = request.context['s3_accesspoint']['region']
         if accesspoint_region != client_region:
-            if self._s3_config.get('use_arn_region'):
+            if self._s3_config.get('use_arn_region', True):
                 raise UnsupportedS3AccesspointConfigurationError(
                     msg=(
-                        'Invalid configuration, '
-                        'FIPS region %s does not match ARN region %s' %
-                        (self._region, accesspoint_region)
+                        'Client is configured to use the FIPS psuedo-region '
+                        '"%s", but the access-point ARN provided is for the '
+                        '"%s" region. The use_arn_region configuration does '
+                        'not allow for cross-region calls when a FIPS '
+                        'pseudo-region is configured.' % (
+                            self._region, accesspoint_region)
                     )
                 )
             else:
                 raise UnsupportedS3AccesspointConfigurationError(
                     msg=(
-                        'Invalid configuration, cross region Access Point ARN'
+                        'Client is configured to use the FIPS psuedo-region '
+                        '"%s", but the access-point ARN provided is for the '
+                        '"%s" region. For clients using a FIPS psuedo-region '
+                        'calls to access-point ARNs in another region are not '
+                        'allowed.' % (self._region, accesspoint_region)
                     )
                 )
 
     def _validate_global_regions(self, request):
-        if self._s3_config.get('use_arn_region'):
+        if self._s3_config.get('use_arn_region', True):
             return
         if self._region in ['aws-global', 's3-external-1']:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
-                    'Invalid configuration, client region %s '
-                    'is not a regional endpoint' % self._region
+                    'Client is configured to use the global psuedo-region '
+                    '"%s". When providing access-point ARNs a regional '
+                    'endpoint must be specified.' % self._region
                 )
             )
 
