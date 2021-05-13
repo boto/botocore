@@ -198,6 +198,20 @@ class UnknownEndpointError(BaseEndpointResolverError, ValueError):
         '{service_name} in region {region_name}')
 
 
+class UnknownFIPSEndpointError(BaseEndpointResolverError):
+    """
+    Could not construct a FIPS endpoint.
+
+    :ivar service_name: The name of the service.
+    :ivar region_name: The name of the region.
+    """
+    fmt = (
+        'The provided FIPS pseudo-region "{region_name}" is not known for '
+        'the service "{service_name}". A FIPS compliant endpoint cannot be '
+        'constructed.'
+    )
+
+
 class ProfileNotFound(BotoCoreError):
     """
     The specified configuration profile was not found in the
