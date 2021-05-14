@@ -1565,6 +1565,8 @@ class S3EndpointSetter(object):
     def set_endpoint(self, request, **kwargs):
         if self._use_accesspoint_endpoint(request):
             self._validate_accesspoint_supported(request)
+            self._validate_fips_supported(request)
+            self._validate_global_regions(request)
             region_name = self._resolve_region_for_accesspoint_endpoint(
                 request)
             self._resolve_signing_name_for_accesspoint_endpoint(
@@ -1578,6 +1580,54 @@ class S3EndpointSetter(object):
 
     def _use_accesspoint_endpoint(self, request):
         return 's3_accesspoint' in request.context
+
+    def _validate_fips_supported(self, request):
+        if 'fips' not in self._region:
+            return
+        if 'outpost_name' in request.context['s3_accesspoint']:
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client is configured to use the FIPS psuedo-region "%s", '
+                    'but outpost ARNs do not support FIPS endpoints.' % (
+                        self._region)
+                )
+            )
+        client_region = self._region.replace('fips-', '').replace('-fips', '')
+        accesspoint_region = request.context['s3_accesspoint']['region']
+        if accesspoint_region != client_region:
+            if self._s3_config.get('use_arn_region', True):
+                raise UnsupportedS3AccesspointConfigurationError(
+                    msg=(
+                        'Client is configured to use the FIPS psuedo-region '
+                        '"%s", but the access-point ARN provided is for the '
+                        '"%s" region. The use_arn_region configuration does '
+                        'not allow for cross-region calls when a FIPS '
+                        'pseudo-region is configured.' % (
+                            self._region, accesspoint_region)
+                    )
+                )
+            else:
+                raise UnsupportedS3AccesspointConfigurationError(
+                    msg=(
+                        'Client is configured to use the FIPS psuedo-region '
+                        '"%s", but the access-point ARN provided is for the '
+                        '"%s" region. For clients using a FIPS psuedo-region '
+                        'calls to access-point ARNs in another region are not '
+                        'allowed.' % (self._region, accesspoint_region)
+                    )
+                )
+
+    def _validate_global_regions(self, request):
+        if self._s3_config.get('use_arn_region', True):
+            return
+        if self._region in ['aws-global', 's3-external-1']:
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client is configured to use the global psuedo-region '
+                    '"%s". When providing access-point ARNs a regional '
+                    'endpoint must be specified.' % self._region
+                )
+            )
 
     def _validate_accesspoint_supported(self, request):
         if self._use_accelerate_endpoint:
@@ -1658,9 +1708,13 @@ class S3EndpointSetter(object):
                 outpost_host = [outpost_name, 's3-outposts']
                 accesspoint_netloc_components.extend(outpost_host)
             elif s3_accesspoint['service'] == 's3-object-lambda':
-                accesspoint_netloc_components.append('s3-object-lambda')
+                component = self._inject_fips_if_needed(
+                    's3-object-lambda', request_context)
+                accesspoint_netloc_components.append(component)
             else:
-                accesspoint_netloc_components.append('s3-accesspoint')
+                component = self._inject_fips_if_needed(
+                    's3-accesspoint', request_context)
+                accesspoint_netloc_components.append(component)
             if self._s3_config.get('use_dualstack_endpoint'):
                 accesspoint_netloc_components.append('dualstack')
             accesspoint_netloc_components.extend(
@@ -1670,6 +1724,11 @@ class S3EndpointSetter(object):
                 ]
             )
         return '.'.join(accesspoint_netloc_components)
+
+    def _inject_fips_if_needed(self, component, request_context):
+        if 'fips' in request_context.get('client_region', ''):
+            return '%s-fips' % component
+        return component
 
     def _get_accesspoint_path(self, original_path, request_context):
         # The Bucket parameter was substituted with the access-point name as

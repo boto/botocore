@@ -852,6 +852,43 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
+    def test_s3_object_lambda_fips_raise_for_cross_region(self):
+        s3_object_lambda_arn = (
+            'arn:aws-us-gov:s3-object-lambda:us-gov-east-1:123456789012:'
+            'accesspoint/mybanner'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': False})
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(expected_exception,
+                                     'ARNs in another region are not allowed'):
+            self.client.list_objects(Bucket=s3_object_lambda_arn)
+
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': True})
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(
+                expected_exception, 'does not allow for cross-region calls'):
+            self.client.list_objects(Bucket=s3_object_lambda_arn)
+
+    def test_s3_object_lambda_with_global_regions(self):
+        s3_object_lambda_arn = (
+            'arn:aws:s3-object-lambda:us-east-1:123456789012:'
+            'accesspoint/mybanner'
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        expected_msg = 'a regional endpoint must be specified'
+        for region in ('aws-global', 's3-external-1'):
+            self.client, _ = self.create_stubbed_s3_client(
+                region_name=region, config=Config(s3={'use_arn_region': False})
+            )
+            with self.assertRaisesRegexp(expected_exception, expected_msg):
+                self.client.list_objects(Bucket=s3_object_lambda_arn)
+
     def test_s3_object_lambda_arn_with_us_east_1(self):
         # test that us-east-1 region is not resolved
         # into s3 global endpoint
@@ -887,6 +924,84 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.assert_signing_region(request, 'us-west-2')
         expected_endpoint = (
             'myBanner-123456789012.s3-object-lambda.us-west-2.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+    def test_outposts_raise_exception_if_fips_region(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-gov-east-1:123456789012:outpost:'
+            'op-01234567890123456:accesspoint:myaccesspoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='us-gov-east-1-fips')
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(expected_exception,
+                                     'outpost ARNs do not support FIPS'):
+            self.client.list_objects(Bucket=outpost_arn)
+
+    def test_accesspoint_fips_raise_for_cross_region(self):
+        s3_accesspoint_arn = (
+            'arn:aws-us-gov:s3:us-gov-east-1:123456789012:'
+            'accesspoint:myendpoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': False})
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(expected_exception,
+                                     'ARNs in another region are not allowed'):
+            self.client.list_objects(Bucket=s3_accesspoint_arn)
+
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='fips-us-gov-west-1',
+            config=Config(s3={'use_arn_region': True})
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(
+                expected_exception, 'does not allow for cross-region'):
+            self.client.list_objects(Bucket=s3_accesspoint_arn)
+
+    def test_accesspoint_with_global_regions(self):
+        s3_accesspoint_arn = (
+            'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
+        )
+        self.client, _ = self.create_stubbed_s3_client(
+            region_name='aws-global',
+            config=Config(s3={'use_arn_region': False})
+        )
+        expected_exception = UnsupportedS3AccesspointConfigurationError
+        with self.assertRaisesRegexp(expected_exception,
+                                     'regional endpoint must be specified'):
+            self.client.list_objects(Bucket=s3_accesspoint_arn)
+
+        # It shouldn't raise if use_arn_region is True
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='s3-external-1',
+            config=Config(s3={'use_arn_region': True})
+        )
+
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_accesspoint_arn)
+        request = self.http_stubber.requests[0]
+        expected_endpoint = (
+            'myendpoint-123456789012.s3-accesspoint.'
+            'us-east-1.amazonaws.com'
+        )
+        self.assert_endpoint(request, expected_endpoint)
+
+        # It shouldn't raise if no use_arn_region is specified since
+        # use_arn_region defaults to True
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='s3-external-1',
+        )
+
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_accesspoint_arn)
+        request = self.http_stubber.requests[0]
+        expected_endpoint = (
+            'myendpoint-123456789012.s3-accesspoint.'
+            'us-east-1.amazonaws.com'
         )
         self.assert_endpoint(request, expected_endpoint)
 
@@ -1906,32 +2021,19 @@ def test_correct_url_used_for_s3():
     )
     yield t.case(
         region='s3-external-1', bucket=accesspoint_arn, key='key',
+        s3_config={'use_arn_region': True},
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield t.case(
-        region='s3-external-1', bucket=accesspoint_arn, key='key',
-        s3_config={'use_arn_region': False},
-        expected_url=(
-            'https://myendpoint-123456789012.s3-accesspoint.'
-            's3-external-1.amazonaws.com/key'
-        )
-    )
+
     yield t.case(
         region='aws-global', bucket=accesspoint_arn, key='key',
+        s3_config={'use_arn_region': True},
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/key'
-        )
-    )
-    yield t.case(
-        region='aws-global', bucket=accesspoint_arn, key='key',
-        s3_config={'use_arn_region': False},
-        expected_url=(
-            'https://myendpoint-123456789012.s3-accesspoint.'
-            'aws-global.amazonaws.com/key'
         )
     )
     yield t.case(
@@ -1976,27 +2078,27 @@ def test_correct_url_used_for_s3():
         )
     )
     accesspoint_arn_gov = (
-        'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
+        'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
     )
     yield t.case(
-        region='us-gov-east-1', bucket=accesspoint_arn_gov, key='key',
+        region='us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
-            'us-gov-east-1.amazonaws.com/key'
+            'us-gov-west-1.amazonaws.com/key'
         )
     )
     yield t.case(
         region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         expected_url=(
-            'https://myendpoint-123456789012.s3-accesspoint.'
-            'us-gov-east-1.amazonaws.com/key'
+            'https://myendpoint-123456789012.s3-accesspoint-fips.'
+            'us-gov-west-1.amazonaws.com/key'
         )
     )
     yield t.case(
         region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
-            'https://myendpoint-123456789012.s3-accesspoint.'
+            'https://myendpoint-123456789012.s3-accesspoint-fips.'
             'fips-us-gov-west-1.amazonaws.com/key'
         )
     )
@@ -2033,16 +2135,26 @@ def test_correct_url_used_for_s3():
         )
     )
     yield t.case(
-        region='us-gov-east-1', bucket=accesspoint_arn_gov, key='key',
+        region='us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         s3_config={
             'use_dualstack_endpoint': True,
         },
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.dualstack.'
-            'us-gov-east-1.amazonaws.com/key'
+            'us-gov-west-1.amazonaws.com/key'
         )
     )
-
+    yield t.case(
+        region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
+        s3_config={
+            'use_arn_region': True,
+            'use_dualstack_endpoint': True,
+        },
+        expected_url=(
+            'https://myendpoint-123456789012.s3-accesspoint-fips.dualstack.'
+            'us-gov-west-1.amazonaws.com/key'
+        )
+    )
     # None of the various s3 settings related to paths should affect what
     # endpoint to use when an access-point is provided.
     yield t.case(
@@ -2141,6 +2253,30 @@ def test_correct_url_used_for_s3():
         s3_config=us_east_1_regional_endpoint_legacy,
         expected_url=(
             'https://bucket.s3.unknown.amazonaws.com/key'))
+
+    s3_object_lambda_arn_gov = (
+        'arn:aws-us-gov:s3-object-lambda:us-gov-west-1:'
+        '123456789012:accesspoint:mybanner'
+    )
+    yield t.case(
+        region='fips-us-gov-west-1', bucket=s3_object_lambda_arn_gov, key='key',
+        expected_url=(
+            'https://mybanner-123456789012.s3-object-lambda-fips.'
+            'us-gov-west-1.amazonaws.com/key'
+        )
+    )
+    s3_object_lambda_arn = (
+        'arn:aws:s3-object-lambda:us-east-1:'
+        '123456789012:accesspoint:mybanner'
+    )
+    yield t.case(
+        region='aws-global', bucket=s3_object_lambda_arn, key='key',
+        s3_config={'use_arn_region': True},
+        expected_url=(
+            'https://mybanner-123456789012.s3-object-lambda.'
+            'us-east-1.amazonaws.com/key'
+        )
+    )
 
 
 class BaseTestCase:

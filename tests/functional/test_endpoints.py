@@ -177,3 +177,44 @@ def _assert_service_name_matches_endpoint_prefix(session, service_name):
         "Actual service name `%s` does not match expected service name "
         "we computed: `%s`" % (
             actual_service_name, computed_name))
+
+
+_S3_ALLOWED_PSEUDO_FIPS_REGIONS = [
+    'fips-accesspoint-ca-central-1',
+    'fips-accesspoint-us-east-1',
+    'fips-accesspoint-us-east-2',
+    'fips-accesspoint-us-west-1',
+    'fips-accesspoint-us-west-2',
+    'fips-accesspoint-us-gov-east-1',
+    'fips-accesspoint-us-gov-west-1',
+    'fips-us-gov-west-1',
+]
+
+
+def _assert_is_not_psuedo_fips_region(region_name):
+    if region_name in _S3_ALLOWED_PSEUDO_FIPS_REGIONS:
+        return
+
+    msg = (
+        'New S3 FIPS pseudo-region added: "%s". '
+        'FIPS has compliancy requirements that may not be met in all cases '
+        'for S3 clients due to the custom endpoint resolution and '
+        'construction logic.'
+    )
+
+    if 'fips' in region_name:
+        raise RuntimeError(msg % region_name)
+
+
+def test_no_s3_fips_regions():
+    # Fail if additional FIPS pseudo-regions are added to S3.
+    # This may be removed once proper support is implemented for FIPS in S3.
+    session = get_session()
+    loader = session.get_component('data_loader')
+    endpoints = loader.load_data('endpoints')
+
+    for partition in endpoints['partitions']:
+        s3_service = partition['services'].get('s3', {})
+        for region_name in s3_service['endpoints']:
+            region_name = region_name.lower()
+            yield _assert_is_not_psuedo_fips_region, region_name
