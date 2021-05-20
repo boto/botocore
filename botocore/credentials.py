@@ -45,6 +45,7 @@ from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import FileWebIdentityTokenLoader
 from botocore.utils import SSOTokenLoader
+from botocore.utils import original_ld_library_path
 
 
 logger = logging.getLogger(__name__)
@@ -977,10 +978,11 @@ class ProcessProvider(CredentialProvider):
         # We're not using shell=True, so we need to pass the
         # command and all arguments as a list.
         process_list = compat_shell_split(credential_process)
-        p = self._popen(process_list,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        with original_ld_library_path():
+            p = self._popen(process_list,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise CredentialRetrievalError(
                 provider=self.METHOD, error_msg=stderr.decode('utf-8'))

@@ -76,6 +76,7 @@ from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenFetcher
 from botocore.utils import SSOTokenLoader
 from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
+from botocore.utils import original_ld_library_path
 from botocore.exceptions import SSOTokenLoadError
 from botocore.utils import IMDSFetcher
 from botocore.utils import BadIMDSRequestError
@@ -2373,8 +2374,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_imds_use_ipv6(self):
         configs = [({'imds_use_ipv6': 'true'},'http://[fe80:ec2::254%eth0]/'),
-                ({'imds_use_ipv6': 'tRuE'}, 'http://[fe80:ec2::254%eth0]/'), 
-                ({'imds_use_ipv6': 'false'}, 'http://169.254.169.254/'), 
+                ({'imds_use_ipv6': 'tRuE'}, 'http://[fe80:ec2::254%eth0]/'),
+                ({'imds_use_ipv6': 'false'}, 'http://169.254.169.254/'),
                 ({'imds_use_ipv6': 'foo'}, 'http://169.254.169.254/'),
                 ({'imds_use_ipv6': 'true',
                 'ec2_metadata_service_endpoint': 'http://[fe80:ec2::010%eth0]/'},
@@ -2388,7 +2389,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
                 'http://[fe80:ec2::010%eth0]/', 'http://192.168.1.1/']
         for url in urls:
             self.assertTrue(is_valid_uri(url))
-        
+
     def test_ipv6_endpoint_no_brackets_env_var_set(self):
         url = 'http://fe80:ec2::010/'
         config = {'ec2_metadata_service_endpoint': url}
@@ -2964,3 +2965,28 @@ class TestSSOTokenLoader(unittest.TestCase):
         self.cache[self.cache_key] = {}
         with self.assertRaises(SSOTokenLoadError):
             access_token = self.loader(self.start_url)
+
+
+class TestOriginalLDLibraryPath(unittest.TestCase):
+    def test_swaps_original_ld_library_path(self):
+        env = {'LD_LIBRARY_PATH_ORIG': '/my/original',
+               'LD_LIBRARY_PATH': '/pyinstallers/version'}
+        with original_ld_library_path(env):
+            self.assertEqual(env['LD_LIBRARY_PATH'],
+                             '/my/original')
+        self.assertEqual(env['LD_LIBRARY_PATH'],
+                            '/pyinstallers/version')
+
+    def test_no_ld_library_path_original(self):
+        env = {'LD_LIBRARY_PATH': '/pyinstallers/version'}
+        with original_ld_library_path(env):
+            self.assertIsNone(env.get('LD_LIBRARY_PATH'))
+        self.assertEqual(env['LD_LIBRARY_PATH'],
+                            '/pyinstallers/version')
+
+    def test_no_ld_library_path(self):
+        env = {'OTHER_VALUE': 'foo'}
+        with original_ld_library_path(env):
+            self.assertIsNone(env.get('LD_LIBRARY_PATH'))
+            self.assertEqual(env, {'OTHER_VALUE': 'foo'})
+        self.assertEqual(env, {'OTHER_VALUE': 'foo'})
