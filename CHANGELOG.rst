@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.20.78
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``s3``: Documentation updates for Amazon S3
+* api-change:``forecast``: Updated attribute statistics in DescribeDatasetImportJob response to support Long values
+* api-change:``opsworkscm``: New PUPPET_API_CRL attribute returned by DescribeServers API; new EngineVersion of 2019 available for Puppet Enterprise servers.
+
+
 1.20.77
 =======
 
