@@ -2,6 +2,7 @@ import os.path
 import logging
 import socket
 from base64 import b64encode
+import sys
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
 from urllib3.util.retry import Retry
@@ -85,6 +86,14 @@ def create_urllib3_context(ssl_version=None, cert_reqs=None,
         # We do our own verification, including fingerprints and alternative
         # hostnames. So disable it here
         context.check_hostname = False
+
+    # Enable logging of TLS session keys via defacto standard environment variable
+    # 'SSLKEYLOGFILE', if the feature is available (Python 3.8+). Skip empty values.
+    if hasattr(context, 'keylog_filename'):
+        keylogfile = os.environ.get('SSLKEYLOGFILE')
+        if keylogfile and not sys.flags.ignore_environment:
+            context.keylog_filename = keylogfile
+
     return context
 
 
