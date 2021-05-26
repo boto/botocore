@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.20.81
+=======
+
+* api-change:``qldb``: Support STANDARD permissions mode in CreateLedger and DescribeLedger. Add UpdateLedgerPermissionsMode to update permissions mode on existing ledgers.
+* api-change:``cloudfront``: Documentation fix for CloudFront
+* api-change:``outposts``: Add ConflictException to DeleteOutpost, CreateOutpost
+* api-change:``mwaa``: Adds scheduler count selection for Environments using Airflow version 2.0.2 or later.
+* api-change:``ec2``: This release adds resource ids and tagging support for VPC security group rules.
+* api-change:``ecs``: The release adds support for registering External instances to your Amazon ECS clusters.
+* api-change:``acm-pca``: This release enables customers to store CRLs in S3 buckets with Block Public Access enabled. The release adds the S3ObjectAcl parameter to the CreateCertificateAuthority and UpdateCertificateAuthority APIs to allow customers to choose whether their CRL will be publicly available.
+
+
 1.20.80
 =======
 
