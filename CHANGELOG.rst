@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.20.82
+=======
+
+* api-change:``ec2``: This release removes resource ids and tagging support for VPC security group rules.
+
+
 1.20.81
 =======
 
