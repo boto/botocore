@@ -39,6 +39,18 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "Entries"
+    },
+    "ListDevicePositions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Entries"
+    },
+    "ListRouteCalculators": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Entries"
     }
   }
 }
