@@ -3,8 +3,8 @@
   "metadata":{
     "apiVersion":"2006-03-01",
     "checksumFormat":"md5",
-    "endpointPrefix":"s3",
-    "globalEndpoint":"s3.amazonaws.com",
+    "endpointPrefix":"{isPathStyle ? '' : Bucket + '.'}s3",
+    "globalEndpoint":"{isPathStyle ? '' : Bucket + '.'}s3.amazonaws.com",
     "protocol":"rest-xml",
     "serviceAbbreviation":"Amazon S3",
     "serviceFullName":"Amazon Simple Storage Service",
@@ -17,7 +17,7 @@
       "name":"AbortMultipartUpload",
       "http":{
         "method":"DELETE",
-        "requestUri":"/{Bucket}/{Key+}",
+        "requestUri":"/{isPathStyle ? Bucket + '/' : ''}{Key+}",
         "responseCode":204
       },
       "input":{"shape":"AbortMultipartUploadRequest"},
