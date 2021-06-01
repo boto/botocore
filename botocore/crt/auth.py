@@ -7,7 +7,7 @@ from botocore.auth import (
 )
 from botocore.compat import awscrt, HTTPHeaders, parse_qs, urlsplit, urlunsplit
 from botocore.utils import percent_encode_sequence
-
+from botocore.exceptions import NoCredentialsError
 
 class CrtSigV4Auth(BaseSigner):
     REQUIRES_REGION = True
