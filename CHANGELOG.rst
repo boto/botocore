@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.20.86
+=======
+
+* api-change:``autoscaling``: You can now launch EC2 instances with GP3 volumes when using Auto Scaling groups with Launch Configurations
+* api-change:``lightsail``: Documentation updates for Lightsail
+* api-change:``ecs``: Documentation updates for Amazon ECS.
+* api-change:``docdb``: This SDK release adds support for DocDB global clusters.
+* api-change:``iam``: Documentation updates for AWS Identity and Access Management (IAM).
+* api-change:``braket``: Introduction of a RETIRED status for devices.
+
+
 1.20.85
 =======
 
