@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.20.87
+=======
+
+* api-change:``s3``: S3 Inventory now supports Bucket Key Status
+* api-change:``s3control``: Amazon S3 Batch Operations now supports S3 Bucket Keys.
+* api-change:``route53resolver``: Documentation updates for Route 53 Resolver
+* api-change:``ssm``: Documentation updates for ssm to fix customer reported issue
+* api-change:``forecast``: Added optional field AutoMLOverrideStrategy to CreatePredictor API that allows users to customize AutoML strategy. If provided in CreatePredictor request, this field is visible in DescribePredictor and GetAccuracyMetrics responses.
+
+
+1.20.86
+=======
+
+* api-change:``autoscaling``: You can now launch EC2 instances with GP3 volumes when using Auto Scaling groups with Launch Configurations
+* api-change:``lightsail``: Documentation updates for Lightsail
+* api-change:``ecs``: Documentation updates for Amazon ECS.
+* api-change:``docdb``: This SDK release adds support for DocDB global clusters.
+* api-change:``iam``: Documentation updates for AWS Identity and Access Management (IAM).
+* api-change:``braket``: Introduction of a RETIRED status for devices.
+
+
 1.20.85
 =======
 
