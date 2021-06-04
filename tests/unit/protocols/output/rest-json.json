@@ -913,5 +913,218 @@
         }
       }
     ]
+  },
+  {
+    "description": "Serializes document with standalone primitive as part of the JSON response payload with no escaping.",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "documentValue": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": "foo"
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": \"foo\"}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": 123
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": 123}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": 1.2
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": 1.2}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": true
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": true}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": ""
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": \"\"}"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Serializes inline documents as part of the JSON response payload with no escaping.",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "documentValue": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": {"foo": "bar"}
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": {\"foo\": \"bar\"}}"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Serializes aggregate documents as part of the JSON response payload with no escaping.",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "documentValue": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": {
+              "str": "test",
+              "num": 123,
+              "float": 1.2,
+              "bool": true,
+              "null": "",
+              "document": {"foo": false},
+              "list": ["myname", 321, 1.3, true, "", {"nested": true}, [200, ""]]
+          }
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": {\"str\": \"test\", \"num\": 123, \"float\": 1.2, \"bool\": true, \"null\": \"\", \"document\": {\"foo\": false}, \"list\": [\"myname\", 321, 1.3, true, \"\", {\"nested\": true}, [200, \"\"]]}}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "documentValue": [
+              "test",
+              123,
+              1.2,
+              true,
+              "",
+              {"str": "myname", "num": 321, "float": 1.3, "bool": true, "null": "", "document": {"nested": true}, "list": [200, ""]},
+              ["foo", false]
+          ]
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"documentValue\": [\"test\", 123, 1.2, true, \"\", {\"str\": \"myname\", \"num\": 321, \"float\": 1.3, \"bool\": true, \"null\": \"\", \"document\": {\"nested\": true}, \"list\": [200, \"\"]}, [\"foo\", false]]}"
+        }
+      }
+    ]
   }
 ]

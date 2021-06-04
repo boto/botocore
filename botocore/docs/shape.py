@@ -66,6 +66,8 @@ class ShapeDocumenter(object):
         else:
             history.append(shape.name)
             is_top_level_param = (len(history) == 2)
+            if hasattr(shape, 'is_document_type') and shape.is_document_type:
+                param_type = 'document'
             getattr(self, 'document_shape_type_%s' % param_type,
                     self.document_shape_default)(
                         section, shape, history=history, name=name,
@@ -90,6 +92,7 @@ class ShapeDocumenter(object):
 
     def _get_special_py_default(self, shape):
         special_defaults = {
+            'document_type': '{...}|[...]|123|123.4|\'string\'|True|None',
             'jsonvalue_header': '{...}|[...]|123|123.4|\'string\'|True|None',
             'streaming_input_shape': 'b\'bytes\'|file',
             'streaming_output_shape': 'StreamingBody()',
@@ -99,6 +102,7 @@ class ShapeDocumenter(object):
 
     def _get_special_py_type_name(self, shape):
         special_type_names = {
+            'document_type': ':ref:`document<document>`',
             'jsonvalue_header': 'JSON serializable',
             'streaming_input_shape': 'bytes or seekable file-like object',
             'streaming_output_shape': ':class:`.StreamingBody`',
@@ -109,6 +113,8 @@ class ShapeDocumenter(object):
     def _get_value_for_special_type(self, shape, special_type_map):
         if is_json_value_header(shape):
             return special_type_map['jsonvalue_header']
+        if hasattr(shape, 'is_document_type') and shape.is_document_type:
+            return special_type_map['document_type']
         for special_type, marked_shape in self._context[
                 'special_shape_types'].items():
             if special_type in special_type_map:
