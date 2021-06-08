@@ -610,5 +610,215 @@
         }
       }
     ]
+  },
+  {
+    "description": "Serialize document with standalone primitive type in a JSON response",
+    "metadata": {
+      "protocol": "json"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "inlineDocument": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": "foo"
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": \"foo\"}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": 123
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": 123}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": 1.2
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": 1.2}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": true
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": true}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": ""
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": \"\"}"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Serialize inline document in a JSON response",
+    "metadata": {
+      "protocol": "json"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "inlineDocument": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "inlineDocument": {"foo": "bar"}
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"inlineDocument\": {\"foo\": \"bar\"}}"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Serialize aggregate documents in a JSON response",
+    "metadata": {
+      "protocol": "json"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "parentDocument": {
+                "shape": "DocumentType"
+            }
+        }
+      },
+      "DocumentType": {
+          "type": "structure",
+          "document": true
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "parentDocument": {
+              "str": "test",
+              "num": 123,
+              "float": 1.2,
+              "bool": true,
+              "null": "",
+              "document": {"foo": false},
+              "list": ["myname", 321, 1.3, true, "", {"nested": true}, [200, ""]]
+          }
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"parentDocument\": {\"str\": \"test\", \"num\": 123, \"float\": 1.2, \"bool\": true, \"null\": \"\", \"document\": {\"foo\": false}, \"list\": [\"myname\", 321, 1.3, true, \"\", {\"nested\": true}, [200, \"\"]]}}"
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "parentDocument": [
+              "test",
+              123,
+              1.2,
+              true,
+              "",
+              {"str": "myname", "num": 321, "float": 1.3, "bool": true, "null": "", "document": {"nested": true}, "list": [200, ""]},
+              ["foo", false]
+          ]
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "{\"parentDocument\": [\"test\", 123, 1.2, true, \"\", {\"str\": \"myname\", \"num\": 321, \"float\": 1.3, \"bool\": true, \"null\": \"\", \"document\": {\"nested\": true}, \"list\": [200, \"\"]}, [\"foo\", false]]}"
+        }
+      }
+    ]
   }
 ]

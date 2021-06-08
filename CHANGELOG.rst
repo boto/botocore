@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.20.90
+=======
+
+* api-change:``fsx``: This release adds support for auditing end-user access to files, folders, and file shares using Windows event logs, enabling customers to meet their security and compliance needs.
+* api-change:``servicecatalog``: increase max pagesize for List/Search apis
+* api-change:``macie2``: This release of the Amazon Macie API introduces stricter validation of S3 object criteria for classification jobs.
+* api-change:``cognito-idp``: Documentation updates for cognito-idp
+
+
+1.20.89
+=======
+
+* api-change:``sagemaker``: AWS SageMaker - Releasing new APIs related to Callback steps in model building pipelines. Adds experiment integration to model building pipelines.
+* api-change:``glue``: Add SampleSize variable to S3Target to enable s3-sampling feature through API.
+* api-change:``personalize``: Update regex validation in kmsKeyArn and s3 path API parameters for AWS Personalize APIs
+* api-change:``eks``: Added updateConfig option that allows customers to control upgrade velocity in Managed Node Group.
+
+
+1.20.88
+=======
+
+* api-change:``rds``: Documentation updates for RDS: fixing an outdated link to the RDS documentation in DBInstance$DBInstanceStatus
+* api-change:``pi``: The new GetDimensionKeyDetails action retrieves the attributes of the specified dimension group for a DB instance or data source.
+* api-change:``cloudtrail``: AWS CloudTrail supports data events on new service resources, including Amazon DynamoDB tables and S3 Object Lambda access points.
+* api-change:``medialive``: Add support for automatically setting the H.264 adaptive quantization and GOP B-frame fields.
+* api-change:``autoscaling``: Documentation updates for Amazon EC2 Auto Scaling
+* api-change:``qldb``: Documentation updates for Amazon QLDB
+
+
 1.20.87
 =======
 

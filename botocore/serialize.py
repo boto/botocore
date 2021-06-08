@@ -362,21 +362,24 @@ class JSONSerializer(Serializer):
         method(serialized, value, shape, key)
 
     def _serialize_type_structure(self, serialized, value, shape, key):
-        if key is not None:
-            # If a key is provided, this is a result of a recursive
-            # call so we need to add a new child dict as the value
-            # of the passed in serialized dict.  We'll then add
-            # all the structure members as key/vals in the new serialized
-            # dictionary we just created.
-            new_serialized = self.MAP_TYPE()
-            serialized[key] = new_serialized
-            serialized = new_serialized
-        members = shape.members
-        for member_key, member_value in value.items():
-            member_shape = members[member_key]
-            if 'name' in member_shape.serialization:
-                member_key = member_shape.serialization['name']
-            self._serialize(serialized, member_value, member_shape, member_key)
+        if shape.is_document_type:
+            serialized[key] = value
+        else:
+            if key is not None:
+                # If a key is provided, this is a result of a recursive
+                # call so we need to add a new child dict as the value
+                # of the passed in serialized dict.  We'll then add
+                # all the structure members as key/vals in the new serialized
+                # dictionary we just created.
+                new_serialized = self.MAP_TYPE()
+                serialized[key] = new_serialized
+                serialized = new_serialized
+            members = shape.members
+            for member_key, member_value in value.items():
+                member_shape = members[member_key]
+                if 'name' in member_shape.serialization:
+                    member_key = member_shape.serialization['name']
+                self._serialize(serialized, member_value, member_shape, member_key)
 
     def _serialize_type_map(self, serialized, value, shape, key):
         map_obj = self.MAP_TYPE()
