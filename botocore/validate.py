@@ -127,6 +127,11 @@ class ValidationErrors(object):
         elif error_type == 'unable to encode to json':
             return 'Invalid parameter %s must be json serializable: %s' \
                 % (name, additional['type_error'])
+        elif error_type == 'invalid type for document':
+            return 'Invalid type for document parameter %s, value: %s, type: %s, ' \
+                   'valid types: %s' % (name, additional['param'],
+                                        str(type(additional['param'])),
+                                        ', '.join(additional['valid_types']))
 
     def _get_name(self, name):
         if not name:
@@ -164,6 +169,8 @@ class ParamValidator(object):
     def _check_special_validation_cases(self, shape):
         if is_json_value_header(shape):
             return self._validate_jsonvalue_string
+        if shape.type_name == 'structure' and shape.is_document_type:
+            return self._validate_document
 
     def _validate(self, params, shape, errors, name):
         special_validator = self._check_special_validation_cases(shape)
@@ -180,6 +187,25 @@ class ParamValidator(object):
             json.dumps(params)
         except (ValueError, TypeError) as e:
             errors.report(name, 'unable to encode to json', type_error=e)
+
+    def _validate_document(self, params, shape, errors, name):
+        if params is None:
+            return
+
+        if isinstance(params, dict):
+            for key in params:
+                self._validate_document(params[key], shape, errors, key)
+        elif isinstance(params, list):
+            for index, entity in enumerate(params):
+                self._validate_document(entity, shape, errors,
+                                        '%s[%d]' % (name, index))
+        elif not isinstance(params, (six.string_types, int, bool, float)):
+            valid_types = (str, int, bool, float, list, dict)
+            valid_type_names = [six.text_type(t) for t in valid_types]
+            errors.report(name, 'invalid type for document',
+                          param=params,
+                          param_type=type(params),
+                          valid_types=valid_type_names)
 
     @type_check(valid_types=(dict,))
     def _validate_structure(self, params, shape, errors, name):
