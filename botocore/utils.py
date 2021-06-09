@@ -783,7 +783,7 @@ def datetime2timestamp(dt, default_timezone=None):
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     if hasattr(d, "total_seconds"):
-        return d.total_seconds()  # Works in Python 2.7+
+        return d.total_seconds()  # Works in Python 3.6+
     return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
 
 
