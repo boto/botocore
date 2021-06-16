@@ -96,6 +96,11 @@ class InvalidIMDSEndpointError(BotoCoreError):
     fmt = 'Invalid endpoint EC2 Instance Metadata endpoint: {endpoint}'
 
 
+class InvalidIMDSEndpointModeError(BotoCoreError):
+    fmt = ('Invalid EC2 Instance Metadata endpoint mode: {mode}'
+        ' Valid endpoint modes (case-insensitive): {valid_modes}.')
+
+
 class EndpointConnectionError(ConnectionError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 

@@ -45,6 +45,7 @@ from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import FileWebIdentityTokenLoader
 from botocore.utils import SSOTokenLoader
+from botocore.utils import resolve_imds_endpoint_mode
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,8 @@ def create_credential_resolver(session, cache=None, region_name=None):
     imds_config = {
         'ec2_metadata_service_endpoint': session.get_config_variable(
             'ec2_metadata_service_endpoint'),
-        'imds_use_ipv6': session.get_config_variable('imds_use_ipv6')
+        'ec2_metadata_service_endpoint_mode': resolve_imds_endpoint_mode(
+            session)
     }
 
     if cache is None:
