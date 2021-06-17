@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.20.97
+=======
+
+* api-change:``kendra``: Amazon Kendra now supports the indexing of web documents for search through the web crawler.
+* api-change:``sagemaker``: Enable ml.g4dn instance types for SageMaker Batch Transform and SageMaker Processing
+* api-change:``rds``: This release enables Database Activity Streams for RDS Oracle
+* api-change:``chime``: This release adds a new API UpdateSipMediaApplicationCall, to update an in-progress call for SipMediaApplication.
+
+
+1.20.96
+=======
+
+* api-change:``kms``: Adds support for multi-Region keys
+* api-change:``ec2``: This release adds support for VLAN-tagged network traffic over an Elastic Network Interface (ENI). This feature is in limited Preview for this release. Contact your account manager if you are interested in this feature.
+* api-change:``rds``: This release enables fast cloning in Aurora Serverless. You can now clone between Aurora Serverless clusters and Aurora Provisioned clusters.
+* api-change:``mediatailor``: Adds AWS Secrets Manager Access Token Authentication for Source Locations
+
+
 1.20.95
 =======
 
