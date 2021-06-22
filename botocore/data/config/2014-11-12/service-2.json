@@ -6503,6 +6503,8 @@
         "AWS::EC2::VPCEndpointService",
         "AWS::EC2::FlowLog",
         "AWS::EC2::VPCPeeringConnection",
+        "AWS::EFS::FileSystem",
+        "AWS::EFS::AccessPoint",
         "AWS::Elasticsearch::Domain",
         "AWS::IAM::Group",
         "AWS::IAM::Policy",
