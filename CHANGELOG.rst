@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.20.101
+========
+
+* api-change:``proton``: Added waiters for template registration, service operations, and environment deployments.
+* api-change:``amplifybackend``: Imports an existing backend authentication resource.
+* api-change:``snowball``: AWS Snow Family customers can remotely monitor and operate their connected AWS Snowcone devices. AWS Snowball Edge Storage Optimized customers can now import and export their data using NFS.
+
+
 1.20.100
 ========
 
