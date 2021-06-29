@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.20.102
+========
+
+* api-change:``sagemaker``: Sagemaker Neo now supports running compilation jobs using customer's Amazon VPC
+* api-change:``glue``: Add JSON Support for Glue Schema Registry
+* api-change:``redshift``: Added InvalidClusterStateFault to the DisableLogging API, thrown when calling the API on a non available cluster.
+* api-change:``mediaconvert``: MediaConvert adds support for HDR10+, ProRes 4444,  and XAVC outputs, ADM/DAMF support for Dolby Atmos ingest, and alternative audio and WebVTT caption ingest via HLS inputs. MediaConvert also now supports creating trickplay outputs for Roku devices for HLS, CMAF, and DASH output groups.
+
+
+1.20.101
+========
+
+* api-change:``proton``: Added waiters for template registration, service operations, and environment deployments.
+* api-change:``amplifybackend``: Imports an existing backend authentication resource.
+* api-change:``snowball``: AWS Snow Family customers can remotely monitor and operate their connected AWS Snowcone devices. AWS Snowball Edge Storage Optimized customers can now import and export their data using NFS.
+
+
 1.20.100
 ========
 
