@@ -1,8 +1,8 @@
 botocore
-==
+
 >>>>>>> JAVA PROJECT  ![visitors](https://visitor-badge.glitch.me/badge?page_id=boto/botocore)   
 botocore
-========
+
 
 .. image:: https://codecov.io/github/boto/botocore/coverage.svg?branch=develop
     :target: https://codecov.io/github/boto/botocore?branch=develop
