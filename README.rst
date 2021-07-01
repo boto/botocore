@@ -83,7 +83,8 @@ applicable for ``botocore``:
 * Open a support ticket with `AWS Support <https://console.aws.amazon.com/support/home#/>`__
 * If it turns out that you may have found a bug, please `open an issue <https://github.com/boto/botocore/issues/new>`__
 
-
+>>>>>>>==
+>>>>>>>>>>>>>||
 Contributing
 ------------
 
