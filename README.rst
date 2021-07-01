@@ -1,6 +1,5 @@
 botocore
-
->>>>>>> JAVA PROJECT  ![visitors](https://visitor-badge.glitch.me/badge?page_id=boto/botocore)   
+![visitors](https://visitor-badge.glitch.me/badge?page_id=boto/botocore)
 botocore
 
 
