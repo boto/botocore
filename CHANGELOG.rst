@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.20.108
+========
+
+* api-change:``eks``: Added waiters for EKS FargateProfiles.
+* api-change:``outposts``: Added property filters for listOutposts
+* api-change:``fms``: AWS Firewall Manager now supports route table monitoring, and provides remediation action recommendations to security administrators for AWS Network Firewall policies with misconfigured routes.
+* api-change:``mediatailor``: Add ListAlerts for Channel, Program, Source Location, and VOD Source to return alerts for resources.
+* api-change:``devops-guru``: Add AnomalyReportedTimeRange field to include open and close time of anomalies.
+* api-change:``ssm-contacts``: Updated description for CreateContactChannel contactId.
+
+
 1.20.107
 ========
 
