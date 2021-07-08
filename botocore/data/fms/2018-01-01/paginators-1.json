@@ -17,6 +17,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "PolicyList"
+    },
+    "ListAppsLists": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AppsLists"
+    },
+    "ListProtocolsLists": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ProtocolsLists"
     }
   }
 }
