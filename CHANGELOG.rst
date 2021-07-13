@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.20.111
+========
+
+* api-change:``amplifybackend``: Added Sign in with Apple OAuth provider.
+* api-change:``redshift``: Release new APIs to support new Redshift feature - Authentication Profile
+* api-change:``ssm``: Changes to OpsCenter APIs to support a new feature, operational insights.
+* api-change:``lex-models``: Customers can now migrate bots built with Lex V1 APIs to V2 APIs. This release adds APIs to initiate and manage the migration of a bot.
+* api-change:``directconnect``: This release adds a new filed named awsLogicalDeviceId that it displays the AWS Direct Connect endpoint which terminates a physical connection's BGP Sessions.
+* api-change:``pricing``: Documentation updates for api.pricing
+
+
 1.20.110
 ========
 
