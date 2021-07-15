@@ -46,7 +46,8 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError, InvalidRegionError,
     UnsupportedOutpostResourceError,
     UnsupportedS3ControlConfigurationError, UnsupportedS3ControlArnError,
-    InvalidHostLabelError, InvalidIMDSEndpointError, HTTPClientError,
+    InvalidHostLabelError, InvalidIMDSEndpointError,
+    InvalidIMDSEndpointModeError, HTTPClientError,
     UnsupportedS3ConfigurationError,
 )
 from urllib3.exceptions import LocationParseError
@@ -54,7 +55,8 @@ from urllib3.exceptions import LocationParseError
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
 METADATA_BASE_URL = 'http://169.254.169.254/'
-METADATA_BASE_URL_IPv6 = 'http://[fe80:ec2::254%eth0]/'
+METADATA_BASE_URL_IPv6 = 'http://[fd00:ec2::254]/'
+METADATA_ENDPOINT_MODES = ('ipv4', 'ipv6')
 
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
@@ -112,6 +114,27 @@ def ensure_boolean(val):
         return val
     else:
         return val.lower() == 'true'
+
+
+def resolve_imds_endpoint_mode(session):
+    """Resolving IMDS endpoint mode to either IPv6 or IPv4.
+
+    ec2_metadata_service_endpoint_mode takes precedence over imds_use_ipv6.
+    """
+    endpoint_mode = session.get_config_variable(
+        'ec2_metadata_service_endpoint_mode')
+    if endpoint_mode is not None:
+        lendpoint_mode = endpoint_mode.lower()
+        if lendpoint_mode not in METADATA_ENDPOINT_MODES:
+            error_msg_kwargs = {
+                'mode': endpoint_mode,
+                'valid_modes': METADATA_ENDPOINT_MODES
+            }
+            raise InvalidIMDSEndpointModeError(**error_msg_kwargs)
+        return lendpoint_mode
+    elif session.get_config_variable('imds_use_ipv6'):
+            return 'ipv6'
+    return 'ipv4'
 
 
 def is_json_value_header(shape):
@@ -270,7 +293,8 @@ class IMDSFetcher(object):
         if config is None:
             config = {}
 
-        requires_ipv6 = ensure_boolean(config.get('imds_use_ipv6', False))
+        requires_ipv6 = config.get(
+            'ec2_metadata_service_endpoint_mode') == 'ipv6'
         custom_metadata_endpoint = config.get('ec2_metadata_service_endpoint')
 
         if requires_ipv6 and custom_metadata_endpoint:
@@ -709,7 +733,7 @@ def datetime2timestamp(dt, default_timezone=None):
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     if hasattr(d, "total_seconds"):
-        return d.total_seconds()  # Works in Python 2.7+
+        return d.total_seconds()  # Works in Python 3.6+
     return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
 
 
