@@ -607,6 +607,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "SecurityGroupRules"
+    },
+    "DescribeInstanceEventWindows": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InstanceEventWindows"
     }
   }
 }
