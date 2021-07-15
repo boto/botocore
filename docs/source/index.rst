@@ -6,8 +6,8 @@ Services.  Botocore serves as the foundation for the
 `AWS-CLI <https://github.com/aws/aws-cli/>`_ command line utilities.
 It will also play an important role in the boto3.x project.
 
-The botocore package is compatible with Python versions Python 2.7,
-Python 3.4 and higher.
+The botocore package is compatible with Python versions Python 3.6
+and higher.
 
 
 Contents:
