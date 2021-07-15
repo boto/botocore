@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import io
 
+from tests import create_session
 from tests import unittest
 from tests import RawResponse
 from dateutil.tz import tzutc, tzoffset
@@ -29,6 +30,7 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.exceptions import InvalidIMDSEndpointError
+from botocore.exceptions import InvalidIMDSEndpointModeError
 from botocore.exceptions import ReadTimeoutError
 from botocore.exceptions import ConnectTimeoutError
 from botocore.exceptions import UnsupportedS3ArnError
@@ -38,6 +40,7 @@ from botocore.model import ServiceModel
 from botocore.model import OperationModel
 from botocore.regions import EndpointResolver
 from botocore.utils import ensure_boolean
+from botocore.utils import resolve_imds_endpoint_mode
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
@@ -95,6 +98,57 @@ class TestEnsureBoolean(unittest.TestCase):
 
     def test_string_lowercase_true(self):
         self.assertEqual(ensure_boolean('true'), True)
+
+
+class TestResolveIMDSEndpointMode(unittest.TestCase):
+    def create_session_with_config(self, endpoint_mode, imds_use_IPv6):
+        session = create_session()
+        session.set_config_variable('ec2_metadata_service_endpoint_mode',
+                                    endpoint_mode)
+        session.set_config_variable('imds_use_ipv6',
+                                    imds_use_IPv6)
+        return session
+
+    def test_resolve_endpoint_mode_no_config(self):
+        session = self.create_session_with_config(None, None)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv4')
+
+    def test_resolve_endpoint_mode_IPv6(self):
+        session = self.create_session_with_config('IPv6', None)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
+
+    def test_resolve_endpoint_mode_IPv6(self):
+        session = self.create_session_with_config('IPv4', None)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv4')
+
+    def test_resolve_endpoint_mode_none_use_IPv6_true(self):
+        session = self.create_session_with_config(None, True)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
+
+    def test_resolve_endpoint_mode_none_use_IPv6_false(self):
+        session = self.create_session_with_config(None, False)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv4')
+
+    def test_resolve_endpoint_mode_IPv6_use_IPv6_false(self):
+        session = self.create_session_with_config('IPv6', False)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
+
+    def test_resolve_endpoint_mode_IPv4_use_IPv6_true(self):
+        session = self.create_session_with_config('IPv4', True)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv4')
+
+    def test_resolve_endpoint_mode_IPv6_use_IPv6_true(self):
+        session = self.create_session_with_config('IPv6', True)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
+
+    def test_resolve_endpoint_mode_IPv6_mixed_casing_use_IPv6_true(self):
+        session = self.create_session_with_config('iPv6', None)
+        self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
+
+    def test_resolve_endpoint_mode_invalid_input(self):
+        session = self.create_session_with_config('IPv3', True)
+        with self.assertRaises(InvalidIMDSEndpointModeError):
+            resolve_imds_endpoint_mode(session)
 
 
 class TestIsJSONValueHeader(unittest.TestCase):
@@ -2366,26 +2420,30 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         self.assertEqual(result, self._expected_creds)
 
-    def test_imds_use_ipv6(self):
-        configs = [({'imds_use_ipv6': 'true'},'http://[fe80:ec2::254%eth0]/'),
-                ({'imds_use_ipv6': 'tRuE'}, 'http://[fe80:ec2::254%eth0]/'), 
-                ({'imds_use_ipv6': 'false'}, 'http://169.254.169.254/'), 
-                ({'imds_use_ipv6': 'foo'}, 'http://169.254.169.254/'),
-                ({'imds_use_ipv6': 'true',
-                'ec2_metadata_service_endpoint': 'http://[fe80:ec2::010%eth0]/'},
-                'http://[fe80:ec2::010%eth0]/')]
+    def test_ec2_metadata_endpoint_service_mode(self):
+        configs = [({'ec2_metadata_service_endpoint_mode': 'ipv6'},
+                    'http://[fd00:ec2::254]/'),
+                ({'ec2_metadata_service_endpoint_mode': 'ipv6'},
+                 'http://[fd00:ec2::254]/'),
+                ({'ec2_metadata_service_endpoint_mode': 'ipv4'},
+                 'http://169.254.169.254/'),
+                ({'ec2_metadata_service_endpoint_mode': 'foo'},
+                 'http://169.254.169.254/'),
+                ({'ec2_metadata_service_endpoint_mode': 'ipv6',
+                'ec2_metadata_service_endpoint': 'http://[fd00:ec2::010]/'},
+                'http://[fd00:ec2::010]/')]
 
         for config, expected_url in configs:
             self._test_imds_base_url(config, expected_url)
 
     def test_metadata_endpoint(self):
-        urls = ['http://fe80:ec2:0000:0000:0000:0000:0000:0000/',
-                'http://[fe80:ec2::010%eth0]/', 'http://192.168.1.1/']
+        urls = ['http://fd00:ec2:0000:0000:0000:0000:0000:0000/',
+                'http://[fd00:ec2::010]/', 'http://192.168.1.1/']
         for url in urls:
             self.assertTrue(is_valid_uri(url))
-        
+
     def test_ipv6_endpoint_no_brackets_env_var_set(self):
-        url = 'http://fe80:ec2::010/'
+        url = 'http://fd00:ec2::010/'
         config = {'ec2_metadata_service_endpoint': url}
         self.assertFalse(is_valid_ipv6_endpoint_url(url))
 
@@ -2396,8 +2454,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             InstanceMetadataFetcher(config=config)
 
     def test_ipv6_endpoint_env_var_set_and_args(self):
-        url = 'http://[fe80:ec2::254]/'
-        url_arg = 'http://fe80:ec2:0000:0000:0000:8a2e:0370:7334/'
+        url = 'http://[fd00:ec2::254]/'
+        url_arg = 'http://fd00:ec2:0000:0000:0000:8a2e:0370:7334/'
         config = {'ec2_metadata_service_endpoint': url}
 
         self.add_default_imds_responses()
@@ -2409,7 +2467,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(fetcher.get_base_url(), url_arg)
 
     def test_ipv6_imds_not_allocated(self):
-        url = 'http://fe80:ec2:0000:0000:0000:0000:0000:0000/'
+        url = 'http://fd00:ec2:0000:0000:0000:0000:0000:0000/'
         config = {'ec2_metadata_service_endpoint': url}
 
         self.add_imds_response(
@@ -2421,7 +2479,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_ipv6_imds_empty_config(self):
         configs = [({'ec2_metadata_service_endpoint': ''},'http://169.254.169.254/'),
-                ({'imds_use_ipv6': ''}, 'http://169.254.169.254/'),
+                ({'ec2_metadata_service_endpoint_mode': ''}, 'http://169.254.169.254/'),
                 ({}, 'http://169.254.169.254/'),
                 (None, 'http://169.254.169.254/')]
 

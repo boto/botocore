@@ -75,10 +75,14 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'ec2_metadata_service_endpoint',
         'AWS_EC2_METADATA_SERVICE_ENDPOINT',
         None, None),
+    'ec2_metadata_service_endpoint_mode': (
+        'ec2_metadata_service_endpoint_mode',
+        'AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE',
+        None, None),
     'imds_use_ipv6': (
         'imds_use_ipv6',
         'AWS_IMDS_USE_IPV6',
-        False, None),
+        False, utils.ensure_boolean),
     'parameter_validation': ('parameter_validation', None, True, None),
     # Client side monitoring configurations.
     # Note: These configurations are considered internal to botocore.

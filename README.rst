@@ -10,7 +10,7 @@ botocore package is the foundation for the
 `AWS CLI <https://github.com/aws/aws-cli>`__ as well as
 `boto3 <https://github.com/boto/boto3>`__.
 
-On 01/15/2021 deprecation for Python 2.7 was announced and support will be dropped
+On 01/15/2021 deprecation for Python 2.7 was announced and support was dropped
 on 07/15/2021. To avoid disruption, customers using Botocore on Python 2.7 may
 need to upgrade their version of Python or pin the version of Botocore. For
 more information, see this `blog post <https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-python-2-7-in-aws-sdk-for-python-and-aws-cli-v1/>`__.
