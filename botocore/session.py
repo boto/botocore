@@ -732,7 +732,7 @@ class Session(object):
 
         :type service_name: string
         :param service_name: The name of the service for which a client will
-            be created.  You can use the ``Sesssion.get_available_services()``
+            be created.  You can use the ``Session.get_available_services()``
             method to get a list of all available service names.
 
         :type region_name: string
