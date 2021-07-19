@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.21.2
+======
+
+* api-change:``imagebuilder``: Documentation updates for reversal of default value for additional instance configuration SSM switch, plus improved descriptions for semantic versioning.
+* api-change:``directconnect``: Documentation updates for directconnect
+* api-change:``health``: In the Health API, the maximum number of entities for the EventFilter and EntityFilter data types has changed from 100 to 99. This change is related to an internal optimization of the AWS Health service.
+* api-change:``robomaker``: This release allows customers to create a new version of WorldTemplates with support for Doors.
+* api-change:``location``: Add five new API operations: UpdateGeofenceCollection, UpdateMap, UpdatePlaceIndex, UpdateRouteCalculator, UpdateTracker.
+* api-change:``emr-containers``: Updated DescribeManagedEndpoint and ListManagedEndpoints to return failureReason and stateDetails in API response.
+
+
 1.21.1
 ======
 
