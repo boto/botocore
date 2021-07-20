@@ -27,20 +27,20 @@ contributions as well:
   comment on changes in code coverage for every pull request.
   In practice, this means that every bug fix and feature addition should
   include unit tests.
-* We may choose not to accept pull requests that change the JSON service descriptions,
-  such as ``botocore/data/aws/s3/2006-03-01/service-2.json`` and changes to any of the
-  following files in ``botocore/data/``:
+* If you identify an issue with the JSON service descriptions,
+  such as ``botocore/data/aws/s3/2006-03-01/service-2.json``, please submit an
+  `issue <https://github.com/boto/botocore/issues>`__ so we can get it
+  fixed upstream.
+* Changes to paginators, waiters, and endpoints are also generated upstream based on our internal knowledge of the AWS services.
+  These include any of the  following files in ``botocore/data/``:
   
   * ``_endpoints.json``
   * ``*.paginators-1.json``
   * ``*.waiters-2.json``
 
-  We generate these files upstream based on our internal knowledge of the AWS services. 
-  If there is something incorrect with or missing from these files, it may be
-  more appropriate to submit an
-  `issue <https://github.com/boto/botocore/issues>`__ so we can get the issue
-  fixed upstream.  This constraint only applies to the above mentioned files.
-  We do accept, and encourage, changes to the ``botocore/data/_retry.json`` file.
+  If you identify an issue with these files, such as a missing paginator or waiter, please submit an
+  `issue <https://github.com/boto/botocore/issues>`__ so we can get it fixed upstream.
+*  We do accept, and encourage, changes to the ``botocore/data/_retry.json`` file.
 * Code should follow `pep 8 <https://www.python.org/dev/peps/pep-0008/>`__,
   although if you are modifying an existing module, it is more important
   for the code to be consistent if there are any discrepancies.
