@@ -1353,6 +1353,9 @@ class S3RegionRedirector(object):
                 "automatically determined." % (client_region, bucket))
             return
 
+        if client_region == new_region:
+            return
+
         logger.debug(
             "S3 client configured for region %s but the bucket %s is in region"
             " %s; Please configure the proper region to avoid multiple "
