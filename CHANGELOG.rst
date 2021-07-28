@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.21.9
+======
+
+* api-change:``sso-admin``: Documentation updates for arn:aws:trebuchet:::service:v1:03a2216d-1cda-4696-9ece-1387cb6f6952
+* api-change:``cloudformation``: SDK update to support Importing existing Stacks to new/existing Self Managed StackSet - Stack Import feature.
+
+
 1.21.8
 ======
 
