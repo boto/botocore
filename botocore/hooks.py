@@ -349,6 +349,7 @@ class EventAliaser(BaseEventHooks):
         self._event_aliases = event_aliases
         if event_aliases is None:
             self._event_aliases = EVENT_ALIASES
+        self._alias_name_cache = {}
         self._emitter = event_emitter
 
     def emit(self, event_name, **kwargs):
@@ -388,6 +389,9 @@ class EventAliaser(BaseEventHooks):
         )
 
     def _alias_event_name(self, event_name):
+        if event_name in self._alias_name_cache:
+            return self._alias_name_cache[event_name]
+
         for old_part, new_part in self._event_aliases.items():
 
             # We can't simply do a string replace for everything, otherwise we
@@ -416,7 +420,10 @@ class EventAliaser(BaseEventHooks):
             logger.debug("Changing event name from %s to %s" % (
                 event_name, new_name
             ))
+            self._alias_name_cache[event_name] = new_name
             return new_name
+
+        self._alias_name_cache[event_name] = event_name
         return event_name
 
     def _replace_subsection(self, sections, old_parts, new_part):
