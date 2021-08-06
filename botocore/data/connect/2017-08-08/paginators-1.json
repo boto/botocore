@@ -137,6 +137,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "LexBots"
+    },
+    "ListAgentStatuses": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AgentStatusSummaryList"
     }
   }
 }
