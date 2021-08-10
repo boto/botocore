@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.21.18
+=======
+
+* api-change:``chime``: Add support for "auto" in Region field of StartMeetingTranscription API request.
+* enchancement:Client: Improve client performance by caching _alias_event_name on EventAliaser
+
+
 1.21.17
 =======
 
