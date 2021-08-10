@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.21.18
+=======
+
+* api-change:``chime``: Add support for "auto" in Region field of StartMeetingTranscription API request.
+* enchancement:Client: Improve client performance by caching _alias_event_name on EventAliaser
+
+
+1.21.17
+=======
+
+* api-change:``wafv2``: This release adds APIs to support versioning feature of AWS WAF Managed rule groups
+* api-change:``rekognition``: This release adds support for four new types of segments (opening credits, content segments, slates, and studio logos), improved accuracy for credits and shot detection and new filters to control black frame detection.
+* api-change:``ssm``: Documentation updates for AWS Systems Manager.
+
+
+1.21.16
+=======
+
+* api-change:``synthetics``: Documentation updates for Visual Monitoring feature and other doc ticket fixes.
+* api-change:``chime-sdk-identity``: The Amazon Chime SDK Identity APIs allow software developers to create and manage unique instances of their messaging applications.
+* api-change:``chime-sdk-messaging``: The Amazon Chime SDK Messaging APIs allow software developers to send and receive messages in custom messaging applications.
+* api-change:``connect``: This release adds support for agent status and hours of operation. For details, see the Release Notes in the Amazon Connect Administrator Guide.
+* api-change:``lightsail``: This release adds support to track when a bucket access key was last used.
+* api-change:``athena``: Documentation updates for Athena.
+
+
 1.21.15
 =======
 
