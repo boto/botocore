@@ -980,6 +980,7 @@ class ProcessProvider(CredentialProvider):
         # command and all arguments as a list.
         process_list = compat_shell_split(credential_process)
         p = self._popen(process_list,
+                        stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
