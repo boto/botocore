@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.21.23
+=======
+
+* api-change:``cloud9``: Added DryRun parameter to CreateEnvironmentEC2 API. Added ManagedCredentialsActions parameter to UpdateEnvironment API
+* api-change:``ec2``: This release adds support for EC2 ED25519 key pairs for authentication
+* api-change:``clouddirectory``: Documentation updates for clouddirectory
+* api-change:``ce``: This release is a new feature for Cost Categories: Split charge rules. Split charge rules enable you to allocate shared costs between your cost category values.
+* api-change:``logs``: Documentation-only update for CloudWatch Logs
+
+
+1.21.22
+=======
+
+* api-change:``iotsitewise``: AWS IoT SiteWise added query window for the interpolation interval. AWS IoT SiteWise computes each interpolated value by using data points from the timestamp of each interval minus the window to the timestamp of each interval plus the window.
+* api-change:``s3``: Documentation updates for Amazon S3
+* api-change:``codebuild``: CodeBuild now allows you to select how batch build statuses are sent to the source provider for a project.
+* api-change:``ds``: This release adds support for describing client authentication settings.
+* api-change:``config``: Update ResourceType enum with values for Backup Plan, Selection, Vault, RecoveryPoint; ECS Cluster, Service, TaskDefinition; EFS AccessPoint, FileSystem; EKS Cluster; ECR Repository resources
+* api-change:``license-manager``: AWS License Manager now allows end users to call CheckoutLicense API using new CheckoutType PERPETUAL. Perpetual checkouts allow sellers to check out a quantity of entitlements to be drawn down for consumption.
+
+
+1.21.21
+=======
+
+* api-change:``quicksight``: Documentation updates for QuickSight.
+* api-change:``emr``: Update emr client to latest version
+* api-change:``customer-profiles``: This release introduces Standard Profile Objects, namely Asset and Case which contain values populated by data from third party systems and belong to a specific profile. This release adds an optional parameter, ObjectFilter to the ListProfileObjects API in order to search for these Standard Objects.
+* api-change:``elasticache``: This release adds ReplicationGroupCreateTime field to ReplicationGroup which indicates the UTC time when ElastiCache ReplicationGroup is created
+
+
 1.21.20
 =======
 
