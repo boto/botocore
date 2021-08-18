@@ -1247,7 +1247,7 @@ class TestRegionRedirect(BaseS3ClientTest):
 
         eu_bucket = self.create_bucket(self.bucket_region)
         msg = 'The authorization mechanism you have provided is not supported.'
-        with self.assertRaisesRegexp(ClientError, msg):
+        with self.assertRaisesRegex(ClientError, msg):
             sigv2_client.list_objects(Bucket=eu_bucket)
 
     def test_region_redirects_multiple_requests(self):

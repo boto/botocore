@@ -879,12 +879,12 @@ class TestSessionRegionSetup(BaseSessionTest):
     def test_new_session_with_valid_region(self):
         s3_client = self.session.create_client('s3', 'us-west-2')
         self.assertIsInstance(s3_client, client.BaseClient)
-        self.assertEquals(s3_client.meta.region_name, 'us-west-2')
+        self.assertEqual(s3_client.meta.region_name, 'us-west-2')
 
     def test_new_session_with_unknown_region(self):
         s3_client = self.session.create_client('s3', 'MyCustomRegion1')
         self.assertIsInstance(s3_client, client.BaseClient)
-        self.assertEquals(s3_client.meta.region_name, 'MyCustomRegion1')
+        self.assertEqual(s3_client.meta.region_name, 'MyCustomRegion1')
 
     def test_new_session_with_invalid_region(self):
         with self.assertRaises(botocore.exceptions.InvalidRegionError):
