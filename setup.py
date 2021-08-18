@@ -2,7 +2,6 @@
 import codecs
 import os.path
 import re
-import sys
 
 from setuptools import setup, find_packages
 
@@ -56,5 +55,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )
