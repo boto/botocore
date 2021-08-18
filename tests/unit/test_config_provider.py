@@ -308,7 +308,7 @@ class TestConfigValueStore(unittest.TestCase):
         provider = ConfigValueStore()
         provider.set_config_variable('fake_variable', 'foo')
         value = provider.get_config_variable('fake_variable')
-        self.assertEquals(value, 'foo')
+        self.assertEqual(value, 'foo')
 
     def test_can_set_config_provider(self):
         foo_value_provider = mock.Mock(spec=BaseProvider)

@@ -405,7 +405,7 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
 
-        with self.assertRaisesRegexp(WaiterError, error_message):
+        with self.assertRaisesRegex(WaiterError, error_message):
             waiter.wait()
 
     def _assert_failure_state_error_raised(self, acceptors, responses, expected_msg):
@@ -417,7 +417,7 @@ class TestWaitersObjects(unittest.TestCase):
             *responses,
             for_operation=operation_method
         )
-        with self.assertRaisesRegexp(WaiterError, expected_msg):
+        with self.assertRaisesRegex(WaiterError, expected_msg):
             waiter.wait()
 
     def test_waiter_failure_state_error(self):

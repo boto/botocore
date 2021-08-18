@@ -826,7 +826,7 @@ class TestProcessProvider(unittest.TestCase):
             # Finally `(?s)` at the beginning makes dots match newlines so
             # we can handle a multi-line string.
             reg = r"(?s)^((?!b').)*$"
-            with self.assertRaisesRegexp(CredentialRetrievalError, reg):
+            with self.assertRaisesRegex(CredentialRetrievalError, reg):
                 session.get_credentials()
 
 
