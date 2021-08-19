@@ -87,10 +87,10 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertIsNone(body)
 
         streaming = payload['streaming']
-        self.assertEquals(streaming, False)
+        self.assertEqual(streaming, False)
 
         url = payload['url']
-        self.assertEquals(url, 'https://s3.us-west-2.amazonaws.com/')
+        self.assertEqual(url, 'https://s3.us-west-2.amazonaws.com/')
 
         self.assertEqual(source, 'BOTOCORE')
 
