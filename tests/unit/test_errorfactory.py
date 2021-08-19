@@ -39,7 +39,7 @@ class TestBaseClientExceptions(unittest.TestCase):
     def test_gettattr_message(self):
         exception_cls = type('MyException', (ClientError,), {})
         self.code_to_exception['MyExceptionCode'] = exception_cls
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AttributeError, 'Valid exceptions are: MyException'):
             self.exceptions.SomeUnmodeledError
 

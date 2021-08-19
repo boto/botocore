@@ -105,8 +105,8 @@ class TestServiceModel(unittest.TestCase):
         }
         service_name = 'myservice'
         service_model = model.ServiceModel(service_model, service_name)
-        with self.assertRaisesRegexp(model.UndefinedModelAttributeError,
-                                     service_name):
+        with self.assertRaisesRegex(model.UndefinedModelAttributeError,
+                                    service_name):
             service_model.service_id
 
     def test_operation_does_not_exist(self):

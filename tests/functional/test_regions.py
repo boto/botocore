@@ -526,7 +526,7 @@ class TestEndpointResolution(BaseSessionTest):
         client, stubber = self.create_stubbed_client('s3', 'us-east-2')
         stubber.add_response()
         client.list_buckets()
-        self.assertEquals(
+        self.assertEqual(
             stubber.requests[0].url,
             'https://s3.us-east-2.amazonaws.com/'
         )
@@ -537,7 +537,7 @@ class TestEndpointResolution(BaseSessionTest):
         client.list_buckets()
         # Validate we don't fall back to partition endpoint for
         # regionalized services.
-        self.assertEquals(
+        self.assertEqual(
             stubber.requests[0].url,
             'https://s3.not-real.amazonaws.com/'
         )

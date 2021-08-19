@@ -483,8 +483,8 @@ class TestS3Copy(BaseS3OperationTest):
         )
 
         # Validate we retried and got second body
-        self.assertEquals(len(self.http_stubber.requests), 2)
-        self.assertEquals(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assertEqual(len(self.http_stubber.requests), 2)
+        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
         self.assertTrue('CopyObjectResult' in response)
 
     def test_s3_copy_object_with_incomplete_response(self):
@@ -862,7 +862,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={'use_arn_region': False})
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(expected_exception,
+        with self.assertRaisesRegex(expected_exception,
                                      'ARNs in another region are not allowed'):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
@@ -871,7 +871,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={'use_arn_region': True})
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 expected_exception, 'does not allow for cross-region calls'):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
@@ -886,7 +886,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             self.client, _ = self.create_stubbed_s3_client(
                 region_name=region, config=Config(s3={'use_arn_region': False})
             )
-            with self.assertRaisesRegexp(expected_exception, expected_msg):
+            with self.assertRaisesRegex(expected_exception, expected_msg):
                 self.client.list_objects(Bucket=s3_object_lambda_arn)
 
     def test_s3_object_lambda_arn_with_us_east_1(self):
@@ -935,8 +935,8 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, _ = self.create_stubbed_s3_client(
             region_name='us-gov-east-1-fips')
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(expected_exception,
-                                     'outpost ARNs do not support FIPS'):
+        with self.assertRaisesRegex(expected_exception,
+                                    'outpost ARNs do not support FIPS'):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_accesspoint_fips_raise_for_cross_region(self):
@@ -949,8 +949,8 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={'use_arn_region': False})
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(expected_exception,
-                                     'ARNs in another region are not allowed'):
+        with self.assertRaisesRegex(expected_exception,
+                                    'ARNs in another region are not allowed'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
         self.client, _ = self.create_stubbed_s3_client(
@@ -958,7 +958,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={'use_arn_region': True})
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 expected_exception, 'does not allow for cross-region'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
@@ -971,8 +971,8 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={'use_arn_region': False})
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegexp(expected_exception,
-                                     'regional endpoint must be specified'):
+        with self.assertRaisesRegex(expected_exception,
+                                    'regional endpoint must be specified'):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
         # It shouldn't raise if use_arn_region is True
