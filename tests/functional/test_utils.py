@@ -51,10 +51,10 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             fetcher = InstanceMetadataFetcher()
             send_mock.side_effect = ConnectionClosedError(endpoint_url="foo")
             creds = fetcher.retrieve_iam_role_credentials()
-        self.assertEquals(send_mock.call_count, 2)
+        self.assertEqual(send_mock.call_count, 2)
         for call_instance in send_mock.call_args_list:
             self.assertTrue(call_instance[0][0].url.startswith(fetcher.get_base_url()))
-        self.assertEquals(creds, {})
+        self.assertEqual(creds, {})
 
     def test_catch_invalid_imds_error(self):
         with mock.patch('botocore.httpsession.URLLib3Session.send') as send_mock:

@@ -597,8 +597,8 @@ class TestHandlesInvalidXMLResponses(unittest.TestCase):
         parser = parsers.QueryParser()
         output_shape = None
         # The XML body should be in the error message.
-        with self.assertRaisesRegexp(parsers.ResponseParserError,
-                                     '<DeleteTagsResponse'):
+        with self.assertRaisesRegex(parsers.ResponseParserError,
+                                    '<DeleteTagsResponse'):
             parser.parse(
                 {'body': invalid_xml, 'headers': {}, 'status_code': 200},
                 output_shape)
