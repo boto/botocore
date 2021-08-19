@@ -2,6 +2,7 @@ import select
 import socket
 import contextlib
 import threading
+import mock
 from tests import unittest
 from contextlib import contextmanager
 
@@ -10,7 +11,7 @@ from botocore.config import Config
 from botocore.vendored.six.moves import BaseHTTPServer, socketserver
 from botocore.exceptions import (
     ConnectTimeoutError, ReadTimeoutError, EndpointConnectionError,
-    ConnectionClosedError,
+    ConnectionClosedError, ClientError, ProxyConnectionError
 )
 from botocore.vendored.requests import exceptions as requests_exceptions
 
@@ -43,6 +44,56 @@ class TestClientHTTPBehavior(unittest.TestCase):
                 client.describe_regions()
         except BackgroundTaskFailed:
             self.fail('Background task did not exit, proxy was not used.')
+
+    def test_proxy_request_includes_host_header(self):
+        proxy_url = 'http://user:pass@localhost:%s/' % self.port
+        config = Config(
+            proxies={'https': proxy_url},
+            proxies_config={'proxy_use_forwarding_for_https': True},
+            region_name='us-west-1'
+        )
+        environ = {'BOTO_EXPERIMENTAL__ADD_PROXY_HOST_HEADER': "True"}
+        self.environ_patch = mock.patch('os.environ', environ)
+        self.environ_patch.start()
+        client = self.session.create_client('ec2', config=config)
+
+        class ConnectProxyHandler(ProxyHandler):
+            event = threading.Event()
+
+            def do_CONNECT(self):
+                remote_host, remote_port = self.path.split(':')
+
+                # Ensure we're sending the correct host header in CONNECT
+                if self.headers.get('host') != remote_host:
+                    self.send_response(400)
+                    self.end_headers()
+                    return
+
+                self.send_response(200)
+                self.end_headers()
+
+                remote_host, remote_port = self.path.split(':')
+                remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                remote_socket.connect((remote_host, int(remote_port)))
+
+                self._tunnel(self.request, remote_socket)
+                remote_socket.close()
+
+        try:
+            with background(run_server, args=(ConnectProxyHandler, self.port)):
+                ConnectProxyHandler.event.wait(timeout=60)
+                client.describe_regions()
+        except BackgroundTaskFailed:
+            self.fail('Background task did not exit, proxy was not used.')
+        except ProxyConnectionError:
+            self.fail('Proxy CONNECT failed, unable to establish connection.')
+        except ClientError as e:
+            # Fake credentials won't resolve against service
+            # but we've successfully contacted through the proxy
+            assert e.response['Error']['Code'] == 'AuthFailure'
+        finally:
+            self.environ_patch.stop()
+
 
     def _read_timeout_server(self):
         config = Config(
@@ -161,23 +212,37 @@ class SimpleHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 class ProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     tunnel_chunk_size = 1024
+    poll_limit = 10**4
 
     def _tunnel(self, client, remote):
         client.setblocking(0)
         remote.setblocking(0)
         sockets = [client, remote]
+        noop_count = 0
         while True:
             readable, writeable, _ = select.select(sockets, sockets, [], 1)
             if client in readable and remote in writeable:
+                noop_count = 0
                 client_bytes = client.recv(self.tunnel_chunk_size)
                 if not client_bytes:
                     break
                 remote.sendall(client_bytes)
             if remote in readable and client in writeable:
+                noop_count = 0
                 remote_bytes = remote.recv(self.tunnel_chunk_size)
                 if not remote_bytes:
                     break
                 client.sendall(remote_bytes)
+
+            if noop_count > self.poll_limit:
+                # We have a case where all communication has
+                # finished but we never saw an empty read.
+                # This will leave both sockets as writeable
+                # indefinitely. We'll force a break here if
+                # we've crossed our polling limit.
+                break
+
+            noop_count += 1
 
     def do_CONNECT(self):
         if not self.validate_auth():
