@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.21.27
+=======
+
+* api-change:``dms``: Amazon AWS DMS service now support Redis target endpoint migration. Now S3 endpoint setting is capable to setup features which are used to be configurable only in extract connection attributes.
+* api-change:``frauddetector``: Updated an element of the DescribeModelVersion API response (LogitMetrics -> logOddsMetrics) for clarity. Added new exceptions to several APIs to protect against unlikely scenarios.
+* api-change:``iotsitewise``: Documentation updates for AWS IoT SiteWise
+* api-change:``dlm``: Added AMI deprecation support for Amazon Data Lifecycle Manager EBS-backed AMI policies.
+* api-change:``glue``: Add support for Custom Blueprints
+* api-change:``apigateway``: Adding some of the pending releases (1) Adding WAF Filter to GatewayResponseType enum (2) Ensuring consistent error model for all operations (3) Add missing BRE to GetVpcLink operation
+* api-change:``backup``: AWS Backup - Features: Evaluate your backup activity and generate audit reports.
+
+
 1.21.26
 =======
 
