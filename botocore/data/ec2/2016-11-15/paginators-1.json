@@ -613,6 +613,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "InstanceEventWindows"
+    },
+    "DescribeTrunkInterfaceAssociations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InterfaceAssociations"
     }
   }
 }
