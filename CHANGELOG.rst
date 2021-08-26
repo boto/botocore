@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.21.30
+=======
+
+* api-change:``transcribe``: This release adds support for batch transcription in six new languages - Afrikaans, Danish, Mandarin Chinese (Taiwan), New Zealand English, South African English, and Thai.
+* api-change:``rekognition``: This release added new attributes to Rekognition RecognizeCelebities and GetCelebrityInfo API operations.
+* api-change:``ec2``: Support added for resizing VPC prefix lists
+* api-change:``compute-optimizer``: Adds support for 1) the AWS Graviton (AWS_ARM64) recommendation preference for Amazon EC2 instance and Auto Scaling group recommendations, and 2) the ability to get the enrollment statuses for all member accounts of an organization.
+
+
+1.21.29
+=======
+
+* api-change:``fms``: AWS Firewall Manager now supports triggering resource cleanup workflow when account or resource goes out of policy scope for AWS WAF, Security group, AWS Network Firewall, and Amazon Route 53 Resolver DNS Firewall policies.
+* api-change:``ec2``: Support added for IMDS IPv6 endpoint
+* api-change:``datasync``: Added include filters to CreateTask and UpdateTask, and added exclude filters to StartTaskExecution, giving customers more granular control over how DataSync transfers files, folders, and objects.
+* api-change:``events``: AWS CWEvents adds an enum of EXTERNAL for EcsParameters LaunchType for PutTargets API
+
+
 1.21.28
 =======
 
