@@ -377,6 +377,130 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed, expected)
 
 
+class TestTaggedUnions(unittest.TestCase):
+    def assert_tagged_union_response_with_unknown_member(self,
+                                                         parser,
+                                                         response,
+                                                         output_shape,
+                                                         expected_parsed_response,
+                                                         expected_log):
+        with self.assertLogs() as captured_log:
+            parsed = parser.parse(response, output_shape)
+            self.assertEqual(parsed, expected_parsed_response)
+            self.assertEqual(len(captured_log.records), 1)
+            self.assertIn(('Received a tagged union response with member '
+                           'unknown to client'),
+                          captured_log.records[0].getMessage())
+
+    def test_base_json_parser_handles_unknwon_member(self):
+        parser = parsers.JSONParser()
+        response = b'{"Foo": "mystring"}'
+        headers = {'x-amzn-requestid': 'request-id'}
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'union':True,
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        response = {'body': response, 'headers': headers, 'status_code': 200}
+        # Parsed response omits data from service since it is not
+        # modeled in the client
+        expected_parsed_response = {
+            'SDK_UNKNOWN_MEMBER': {
+                'name': 'Foo'
+            },
+            'ResponseMetadata':
+            {'RequestId': 'request-id',
+             'HTTPStatusCode': 200,
+             'HTTPHeaders': {
+                 'x-amzn-requestid': 'request-id'}
+             }
+        }
+        expected_log = "Received a response with an unknown member Foo set"
+        self.assert_tagged_union_response_with_unknown_member(
+            parser, response, output_shape, expected_parsed_response,
+            expected_log
+        )
+
+    def test_base_xml_parser_handles_unknown_member(self):
+        parser = parsers.QueryParser()
+        response = (
+            '<OperationNameResponse>'
+            '  <OperationNameResult><Foo>mystring</Foo></OperationNameResult>'
+            '  <ResponseMetadata>'
+            '    <RequestId>request-id</RequestId>'
+            '  </ResponseMetadata>'
+            '</OperationNameResponse>').encode('utf-8')
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'union':True,
+                'resultWrapper': 'OperationNameResult',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    },
+                }
+            },
+            model.ShapeResolver({
+                'StringType': {
+                    'type': 'string',
+                },
+            })
+        )
+        response = {'body': response, 'headers': {}, 'status_code': 200}
+        # Parsed response omits data from service since it is not
+        # modeled in the client
+        expected_parsed_response = {
+            'SDK_UNKNOWN_MEMBER': {
+                'name': 'Foo'
+            },
+            'ResponseMetadata':{
+                'RequestId': 'request-id',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {}
+            }
+        }
+        expected_log = "Received a response with an unknown member Foo set"
+        self.assert_tagged_union_response_with_unknown_member(
+            parser, response, output_shape, expected_parsed_response,
+            expected_log
+        )
+
+    def test_parser_errors_out_when_multiple_members_set(self):
+        parser = parsers.JSONParser()
+        response = b'{"Foo": "mystring", "Bar": "mystring2"}'
+        headers = {'x-amzn-requestid': 'request-id'}
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'union':True,
+                'members': {
+                    'Foo': {
+                        'shape': 'StringType',
+                    },
+                    'Bar': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+
+        response = {'body': response, 'headers': headers, 'status_code': 200}
+        with self.assertRaises(parsers.ResponseParserError):
+            parser.parse(response, output_shape)
+
+
 class TestHeaderResponseInclusion(unittest.TestCase):
     def create_parser(self):
         return parsers.JSONParser()

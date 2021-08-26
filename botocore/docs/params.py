@@ -141,6 +141,28 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         documentation_section = section.add_new_section('param-documentation')
         if shape.documentation:
             documentation_section.style.indent()
+            if getattr(shape, 'is_tagged_union', False):
+                tagged_union_docs = section.add_new_section(
+                    'param-tagged-union-docs'
+                )
+                note = (
+                    '.. note::'
+                    '    This is a Tagged Union structure. Only one of the '
+                    '    following top level keys will be set: %s. '
+                    '    If a client receives an unknown member it will '
+                    '    set ``SDK_UNKNOWN_MEMBER`` as the top level key, '
+                    '    which maps to the name or tag of the unknown '
+                    '    member. The structure of ``SDK_UNKNOWN_MEMBER`` is '
+                    '    as follows'
+                )
+                tagged_union_members_str = ', '.join(
+                    ['``%s``' % key for key in shape.members.keys()]
+                )
+                unknown_code_example = ('\'SDK_UNKNOWN_MEMBER\': '
+                                        '{\'name\': \'UnknownMemberName\'}')
+                tagged_union_docs.write(note % (tagged_union_members_str))
+                example = section.add_new_section('param-unknown-example')
+                example.style.codeblock(unknown_code_example)
             documentation_section.include_doc_string(shape.documentation)
         section.style.new_paragraph()
 
@@ -206,6 +228,19 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             documentation_section = section.add_new_section(
                 'param-documentation')
             documentation_section.style.indent()
+            if getattr(shape, 'is_tagged_union', False):
+                tagged_union_docs = section.add_new_section(
+                    'param-tagged-union-docs'
+                )
+                note = (
+                    '.. note::'
+                    '    This is a Tagged Union structure. Only one of the '
+                    '    following top level keys can be set: %s. '
+                )
+                tagged_union_members_str = ', '.join(
+                    ['``%s``' % key for key in shape.members.keys()]
+                )
+                tagged_union_docs.write(note % (tagged_union_members_str))
             documentation_section.include_doc_string(shape.documentation)
             self._add_special_trait_documentation(documentation_section, shape)
         end_param_section = section.add_new_section('end-param')
