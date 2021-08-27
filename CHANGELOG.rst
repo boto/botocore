@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.21.31
+=======
+
+* api-change:``s3``: Documentation updates for Amazon S3.
+* api-change:``emr``: Update emr client to latest version
+* api-change:``ec2``: This release adds the BootMode flag to the ImportImage API and showing the detected BootMode of an ImportImage task.
+
+
 1.21.30
 =======
 
