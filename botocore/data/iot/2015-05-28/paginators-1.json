@@ -313,6 +313,18 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "tasks"
+    },
+    "ListFleetMetrics": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "fleetMetrics"
+    },
+    "ListJobTemplates": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "jobTemplates"
     }
   }
 }
