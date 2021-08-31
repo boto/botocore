@@ -45,6 +45,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
         except BackgroundTaskFailed:
             self.fail('Background task did not exit, proxy was not used.')
 
+    @unittest.skip('Proxy cannot connect to service when run in CodeBuild.')
     def test_proxy_request_includes_host_header(self):
         proxy_url = 'http://user:pass@localhost:%s/' % self.port
         config = Config(
