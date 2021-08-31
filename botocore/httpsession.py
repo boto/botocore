@@ -1,4 +1,5 @@
 import os.path
+import os
 import logging
 import socket
 from base64 import b64encode
@@ -95,6 +96,17 @@ def create_urllib3_context(ssl_version=None, cert_reqs=None,
             context.keylog_filename = keylogfile
 
     return context
+
+
+def ensure_boolean(val):
+    """Ensures a boolean value if a string or boolean is provided
+
+    For strings, the value for True/False is case insensitive
+    """
+    if isinstance(val, bool):
+        return val
+    else:
+        return val.lower() == 'true'
 
 
 class ProxyConfiguration(object):
@@ -318,6 +330,15 @@ class URLLib3Session(object):
             manager = self._get_connection_manager(request.url, proxy_url)
             conn = manager.connection_from_url(request.url)
             self._setup_ssl_cert(conn, request.url, self._verify)
+            if ensure_boolean(
+                os.environ.get('BOTO_EXPERIMENTAL__ADD_PROXY_HOST_HEADER', '')
+            ):
+                # This is currently an "experimental" feature which provides
+                # no guarantees of backwards compatibility. It may be subject
+                # to change or removal in any patch version. Anyone opting in
+                # to this feature should strictly pin botocore.
+                host = urlparse(request.url).hostname
+                conn.proxy_headers['host'] = host
 
             request_target = self._get_request_target(request.url, proxy_url)
             urllib_response = conn.urlopen(
