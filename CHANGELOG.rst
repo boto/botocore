@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.21.34
+=======
+
+* api-change:``ec2``: Added LaunchTemplate support for the IMDS IPv6 endpoint
+* api-change:``cloudtrail``: Documentation updates for CloudTrail
+* api-change:``mediatailor``: This release adds support for wall clock programs in LINEAR channels.
+* api-change:``config``: Documentation updates for config
+* api-change:``servicecatalog-appregistry``: Introduction of GetAssociatedResource API and GetApplication response extension for Resource Groups support.
+
+
 1.21.33
 =======
 
