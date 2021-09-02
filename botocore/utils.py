@@ -33,7 +33,8 @@ import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import (
         json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
-        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE
+        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
+        HAS_CRT
 )
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
@@ -44,7 +45,7 @@ from botocore.exceptions import (
     InvalidRegionError, InvalidIMDSEndpointError, InvalidIMDSEndpointModeError,
     UnsupportedOutpostResourceError, UnsupportedS3ControlConfigurationError,
     UnsupportedS3ControlArnError, InvalidHostLabelError, HTTPClientError,
-    UnsupportedS3ConfigurationError,
+    UnsupportedS3ConfigurationError, MissingDependencyException
 )
 from urllib3.exceptions import LocationParseError
 
@@ -325,6 +326,13 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
     # If we're down to a single key, set it.
     source[current_key] = value
+
+
+def is_global_accesspoint(context):
+    """Determine if request is intended for an MRAP accesspoint."""
+    s3_accesspoint = context.get('s3_accesspoint', {})
+    is_global = s3_accesspoint.get('region') == ''
+    return is_global
 
 
 class _RetriesExceededError(Exception):
@@ -1558,6 +1566,7 @@ class S3EndpointSetter(object):
 
     def register(self, event_emitter):
         event_emitter.register('before-sign.s3', self.set_endpoint)
+        event_emitter.register('choose-signer.s3', self.set_signer)
         event_emitter.register(
             'before-call.s3.WriteGetObjectResponse',
             self.update_endpoint_to_s3_object_lambda
@@ -1687,9 +1696,31 @@ class S3EndpointSetter(object):
                     'when an outpost ARN is specified.'
                 )
             )
+        self._validate_mrap_s3_config(request)
+
+    def _validate_mrap_s3_config(self, request):
+        if not is_global_accesspoint(request.context):
+            return
+        if self._s3_config.get('s3_disable_multiregion_access_points'):
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Invalid configuration, Multi-Region Access Point '
+                    'ARNs are disabled.'
+                )
+            )
+        elif self._s3_config.get('use_dualstack_endpoint'):
+            raise UnsupportedS3AccesspointConfigurationError(
+                msg=(
+                    'Client does not support s3 dualstack configuration '
+                    'when a Multi-Region Access Point ARN is specified.'
+                )
+            )
 
     def _resolve_region_for_accesspoint_endpoint(self, request):
-        if self._s3_config.get('use_arn_region', True):
+        if is_global_accesspoint(request.context):
+            # Requests going to MRAP endpoints MUST be set to any (*) region.
+            self._override_signing_region(request, '*')
+        elif self._s3_config.get('use_arn_region', True):
             accesspoint_region = request.context['s3_accesspoint']['region']
             # If we are using the region from the access point,
             # we will also want to make sure that we set it as the
@@ -1697,6 +1728,17 @@ class S3EndpointSetter(object):
             self._override_signing_region(request, accesspoint_region)
             return accesspoint_region
         return self._region
+
+    def set_signer(self, context, **kwargs):
+        if is_global_accesspoint(context):
+            if HAS_CRT:
+                return 's3v4a'
+            else:
+                raise MissingDependencyException(
+                    msg="Using S3 with an MRAP arn requires an additional "
+                    "dependency. You will need to pip install "
+                    "botocore[crt] before proceeding."
+                )
 
     def _resolve_signing_name_for_accesspoint_endpoint(self, request):
         accesspoint_service = request.context['s3_accesspoint']['service']
@@ -1706,7 +1748,7 @@ class S3EndpointSetter(object):
         original_components = urlsplit(request.url)
         accesspoint_endpoint = urlunsplit((
             original_components.scheme,
-            self._get_accesspoint_netloc(request.context, region_name),
+            self._get_netloc(request.context, region_name),
             self._get_accesspoint_path(
                 original_components.path, request.context),
             original_components.query,
@@ -1715,6 +1757,32 @@ class S3EndpointSetter(object):
         logger.debug(
             'Updating URI from %s to %s' % (request.url, accesspoint_endpoint))
         request.url = accesspoint_endpoint
+
+    def _get_netloc(self, request_context, region_name):
+        if is_global_accesspoint(request_context):
+            return self._get_mrap_netloc(request_context)
+        else:
+            return self._get_accesspoint_netloc(request_context, region_name)
+
+    def _get_mrap_netloc(self, request_context):
+        s3_accesspoint = request_context['s3_accesspoint']
+        region_name = 's3-global'
+        mrap_netloc_components = [
+            s3_accesspoint['name']
+        ]
+        if self._endpoint_url:
+            endpoint_url_netloc = urlsplit(self._endpoint_url).netloc
+            mrap_netloc_components.append(endpoint_url_netloc)
+        else:
+            partition = s3_accesspoint['partition']
+            mrap_netloc_components.extend(
+                [
+                    'accesspoint',
+                    region_name,
+                    self._get_partition_dns_suffix(partition)
+                ]
+            )
+        return '.'.join(mrap_netloc_components)
 
     def _get_accesspoint_netloc(self, request_context, region_name):
         s3_accesspoint = request_context['s3_accesspoint']
@@ -1762,6 +1830,14 @@ class S3EndpointSetter(object):
         name = request_context['s3_accesspoint']['name']
         # All S3 operations require at least a / in their path.
         return original_path.replace('/' + name, '', 1) or '/'
+
+    def _get_partition_dns_suffix(self, partition_name):
+        dns_suffix = self._endpoint_resolver.get_partition_dns_suffix(
+            partition_name
+        )
+        if dns_suffix is None:
+            dns_suffix = self._DEFAULT_DNS_SUFFIX
+        return dns_suffix
 
     def _get_dns_suffix(self, region_name):
         resolved = self._endpoint_resolver.construct_endpoint(

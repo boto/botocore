@@ -13,7 +13,7 @@
 import base64
 import re
 
-from tests import temporary_file
+from tests import temporary_file, requires_crt
 from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
 from nose.tools import assert_equal
 
@@ -525,12 +525,12 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             body=b'<CopyObjectResult></CopyObjectResult>'
         )
 
-    def test_missing_region_in_arn(self):
-        accesspoint_arn = (
-            'arn:aws:s3::123456789012:accesspoint:myendpoint'
-        )
-        with self.assertRaises(botocore.exceptions.ParamValidationError):
-            self.client.list_objects(Bucket=accesspoint_arn)
+    def assert_endpoint(self, request, expected_endpoint):
+        actual_endpoint = urlsplit(request.url).netloc
+        self.assertEqual(actual_endpoint, expected_endpoint)
+
+    def assert_header_matches(self, request, header_key, expected_value):
+        self.assertEqual(request.headers.get(header_key), expected_value)
 
     def test_missing_account_id_in_arn(self):
         accesspoint_arn = (
@@ -549,13 +549,6 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
     def test_accesspoint_includes_asterisk(self):
         accesspoint_arn = (
             'arn:aws:s3:us-west-2:123456789012:accesspoint:*'
-        )
-        with self.assertRaises(botocore.exceptions.ParamValidationError):
-            self.client.list_objects(Bucket=accesspoint_arn)
-
-    def test_accesspoint_includes_dot(self):
-        accesspoint_arn = (
-            'arn:aws:s3:us-west-2:123456789012:accesspoint:my.endpoint'
         )
         with self.assertRaises(botocore.exceptions.ParamValidationError):
             self.client.list_objects(Bucket=accesspoint_arn)
@@ -1004,6 +997,168 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'us-east-1.amazonaws.com'
         )
         self.assert_endpoint(request, expected_endpoint)
+
+    @requires_crt()
+    def test_mrap_arn_with_client_regions(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        region_tests = [
+            ('us-east-1', 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'),
+            ('us-west-2', 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'),
+            ('aws-global', 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'),
+        ]
+        for region, expected in region_tests:
+            self._assert_mrap_endpoint(mrap_arn, region, expected)
+
+    @requires_crt()
+    def test_mrap_arn_with_other_partition(self):
+        mrap_arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        expected = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com.cn'
+        self._assert_mrap_endpoint(mrap_arn, 'cn-north-1', expected)
+
+    @requires_crt()
+    def test_mrap_arn_with_invalid_s3_configs(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        config_tests = [
+            (
+              'us-west-2',
+              Config(s3={'use_dualstack_endpoint': True})
+            ),
+            (
+              'us-west-2',
+              Config(s3={'use_accelerate_endpoint': True})
+            )
+        ]
+        for region, config in config_tests:
+            self._assert_mrap_config_failure(mrap_arn, region, config=config)
+
+    @requires_crt()
+    def test_mrap_arn_with_custom_endpoint(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        endpoint_url = 'https://test.endpoint.amazonaws.com'
+        expected = 'mfzwi23gnjvgw.mrap.test.endpoint.amazonaws.com'
+        self._assert_mrap_endpoint(
+            mrap_arn, 'us-east-1', expected, endpoint_url=endpoint_url
+        )
+
+    @requires_crt()
+    def test_mrap_arn_with_vpc_endpoint(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        endpoint_url = 'https://vpce-123-abc.vpce.s3-global.amazonaws.com'
+        expected = 'mfzwi23gnjvgw.mrap.vpce-123-abc.vpce.s3-global.amazonaws.com'
+        self._assert_mrap_endpoint(
+            mrap_arn, 'us-west-2', expected, endpoint_url=endpoint_url
+        )
+
+    @requires_crt()
+    def test_mrap_arn_with_disable_config_enabled(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        config = Config(s3={'s3_disable_multiregion_access_points': True})
+        for region in ('us-west-2', 'aws-global'):
+            self._assert_mrap_config_failure(mrap_arn, region, config)
+
+    @requires_crt()
+    def test_mrap_arn_with_disable_config_enabled_custom_endpoint(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:myendpoint'
+        config = Config(s3={'s3_disable_multiregion_access_points': True})
+        self._assert_mrap_config_failure(mrap_arn, 'us-west-2', config)
+
+    @requires_crt()
+    def test_mrap_arn_with_disable_config_disabled(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        config = Config(s3={'s3_disable_multiregion_access_points': False})
+        expected = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'
+        self._assert_mrap_endpoint(mrap_arn, 'us-west-2', expected, config=config)
+
+    @requires_crt()
+    def test_global_arn_without_mrap_suffix(self):
+        global_arn_tests = [
+            (
+                'arn:aws:s3::123456789012:accesspoint:myendpoint',
+                'myendpoint.accesspoint.s3-global.amazonaws.com',
+            ),
+            (
+                'arn:aws:s3::123456789012:accesspoint:my.bucket',
+                'my.bucket.accesspoint.s3-global.amazonaws.com',
+            ),
+        ]
+        for arn, expected in global_arn_tests:
+            self._assert_mrap_endpoint(arn, 'us-west-2', expected)
+
+    @requires_crt()
+    def test_mrap_signing_algorithm_is_sigv4a(self):
+        s3_accesspoint_arn = (
+            'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        )
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name='us-west-2'
+        )
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=s3_accesspoint_arn)
+        request = self.http_stubber.requests[0]
+        self._assert_sigv4a_used(request.headers)
+
+    @requires_crt()
+    def test_mrap_presigned_url(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        config = Config(s3={'s3_disable_multiregion_access_points': False})
+        expected_url = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'
+        self._assert_mrap_presigned_url(mrap_arn, 'us-west-2', expected_url, config=config)
+
+    @requires_crt()
+    def test_mrap_presigned_url_disabled(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        config = Config(s3={'s3_disable_multiregion_access_points': True})
+        self._assert_mrap_config_presigned_failure(mrap_arn, 'us-west-2', config)
+
+    def _assert_mrap_config_failure(self, arn, region, config):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name=region, config=config)
+        with self.assertRaises(botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=arn)
+
+    def _assert_mrap_presigned_url(
+        self, arn, region, expected, endpoint_url=None, config=None
+    ):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name=region, endpoint_url=endpoint_url, config=config)
+        presigned_url = self.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': arn, 'Key': 'test_object'}
+        )
+        url_parts = urlsplit(presigned_url)
+        self.assertEqual(url_parts.netloc, expected)
+        # X-Amz-Region-Set header MUST be * (percent-encoded as %2A) for MRAPs
+        self.assertIn('X-Amz-Region-Set=%2A', url_parts.query)
+
+    def _assert_mrap_config_presigned_failure(self, arn, region, config):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name=region, config=config)
+        with self.assertRaises(botocore.exceptions.
+                UnsupportedS3AccesspointConfigurationError):
+            self.client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': arn, 'Key': 'test_object'}
+            )
+
+    def _assert_mrap_endpoint(
+        self, arn, region, expected, endpoint_url=None, config=None
+    ):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name=region, endpoint_url=endpoint_url, config=config)
+        self.http_stubber.add_response()
+        self.client.list_objects(Bucket=arn)
+        request = self.http_stubber.requests[0]
+        self.assert_endpoint(request, expected)
+        # MRAP requests MUST include a global signing region stored in the
+        # X-Amz-Region-Set header as *.
+        self.assert_header_matches(request, 'X-Amz-Region-Set', b'*')
+
+    def _assert_sigv4a_used(self, headers):
+        self.assertIn(
+            b'AWS4-ECDSA-P256-SHA256', headers.get('Authorization', '')
+        )
+
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
