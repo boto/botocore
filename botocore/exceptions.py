@@ -621,10 +621,6 @@ class MD5UnavailableError(BotoCoreError):
     fmt = "This system does not support MD5 generation."
 
 
-class MissingDependencyException(BotoCoreError):
-    fmt = "Missing Dependency: {msg}"
-
-
 class MetadataRetrievalError(BotoCoreError):
     fmt = "Error retrieving metadata: {error_msg}"
 

@@ -42,7 +42,6 @@ from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
 from botocore.utils import hyphenize_service_id
 from botocore.utils import conditionally_calculate_md5
-from botocore.utils import is_global_accesspoint
 
 from botocore import retryhandler
 from botocore import utils
@@ -62,8 +61,8 @@ REGISTER_LAST = object()
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 _ACCESSPOINT_ARN = (
-    r'^arn:(aws).*:(s3|s3-object-lambda):[a-z\-0-9]*:[0-9]{12}:accesspoint[/:]'
-    r'[a-zA-Z0-9\-.]{1,63}$'
+    r'^arn:(aws).*:(s3|s3-object-lambda):[a-z\-0-9]+:[0-9]{12}:accesspoint[/:]'
+    r'[a-zA-Z0-9\-]{1,63}$'
 )
 _OUTPOST_ARN = (
     r'^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
@@ -176,10 +175,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
     if auth_type.startswith('v4'):
         signature_version = 'v4'
         if signing_name == 's3':
-            if is_global_accesspoint(context):
-                signature_version = 's3v4a'
-            else:
-                signature_version = 's3v4'
+            signature_version = 's3v4'
 
         # If the operation needs an unsigned body, we set additional context
         # allowing the signer to be aware of this.
