@@ -35,6 +35,36 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Members"
+    },
+    "DescribeActionTargets": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ActionTargets"
+    },
+    "DescribeProducts": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Products"
+    },
+    "DescribeStandards": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Standards"
+    },
+    "DescribeStandardsControls": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Controls"
+    },
+    "ListOrganizationAdminAccounts": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AdminAccounts"
     }
   }
 }
