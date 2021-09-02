@@ -1986,6 +1986,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         self.endpoint_setter.register(event_emitter)
         event_emitter.register.assert_has_calls([
             mock.call('before-sign.s3', self.endpoint_setter.set_endpoint),
+            mock.call('choose-signer.s3', self.endpoint_setter.set_signer),
             mock.call(
                 'before-call.s3.WriteGetObjectResponse',
                 self.endpoint_setter.update_endpoint_to_s3_object_lambda,
