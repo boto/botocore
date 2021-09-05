@@ -16,11 +16,8 @@ from tests import mock
 from tests import unittest
 
 from botocore.compat import six
-from botocore.awsrequest import AWSRequest
 from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
-from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
 from botocore.model import OperationModel, ServiceId
@@ -297,7 +294,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
     def test_create_endpoint_with_default_timeout(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
             http_session_cls=self.mock_session)
@@ -305,7 +302,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(session_args.get('timeout'), DEFAULT_TIMEOUT)
 
     def test_create_endpoint_with_customized_timeout(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', timeout=123,
             http_session_cls=self.mock_session)
@@ -313,7 +310,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(session_args.get('timeout'), 123)
 
     def test_get_endpoint_default_verify_ssl(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
             http_session_cls=self.mock_session)
@@ -321,7 +318,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertTrue(session_args.get('verify'))
 
     def test_verify_ssl_can_be_disabled(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify=False,
             http_session_cls=self.mock_session)
@@ -329,7 +326,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertFalse(session_args.get('verify'))
 
     def test_verify_ssl_can_specify_cert_bundle(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify='/path/cacerts.pem',
             http_session_cls=self.mock_session)
@@ -338,7 +335,7 @@ class TestEndpointCreator(unittest.TestCase):
 
     def test_client_cert_can_specify_path(self):
         client_cert = '/some/path/cert'
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', client_cert=client_cert,
             http_session_cls=self.mock_session)
@@ -347,7 +344,7 @@ class TestEndpointCreator(unittest.TestCase):
 
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
             http_session_cls=self.mock_session)
@@ -356,7 +353,7 @@ class TestEndpointCreator(unittest.TestCase):
 
     def test_env_ignored_if_explicitly_passed(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify='/path/cacerts.pem',
             http_session_cls=self.mock_session)
@@ -365,7 +362,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_can_specify_max_pool_conns(self):
-        endpoint = self.creator.create_endpoint(
+        self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
             max_pool_connections=100,

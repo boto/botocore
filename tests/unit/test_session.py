@@ -676,10 +676,10 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n'
-                    '    myservice2 = %s\n' % (
-                        config_api_version, second_config_api_version)
+            f.write(
+                f'foo_api_versions =\n'
+                f'    myservice = {config_api_version}\n'
+                f'    myservice2 = {second_config_api_version}\n'
             )
             f.flush()
 
@@ -754,9 +754,10 @@ class TestClientMonitoring(BaseSessionTest):
             client.meta.events)
 
     def assert_monitoring_host_and_port(self, session, host, port):
-        with mock.patch('botocore.monitoring.SocketPublisher',
-                        spec=True) as mock_publisher:
-            client = session.create_client('ec2', 'us-west-2')
+        with mock.patch(
+            'botocore.monitoring.SocketPublisher', spec=True
+        ) as mock_publisher:
+            session.create_client('ec2', 'us-west-2')
         self.assertEqual(mock_publisher.call_count, 1)
         _, args, kwargs = mock_publisher.mock_calls[0]
         self.assertEqual(kwargs.get('host'), host)
@@ -897,7 +898,7 @@ class TestSessionRegionSetup(BaseSessionTest):
 
     def test_new_session_with_invalid_region(self):
         with self.assertRaises(botocore.exceptions.InvalidRegionError):
-            s3_client = self.session.create_client('s3', 'not.a.real#region')
+            self.session.create_client('s3', 'not.a.real#region')
 
     def test_new_session_with_none_region(self):
         s3_client = self.session.create_client('s3', region_name=None)

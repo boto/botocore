@@ -33,7 +33,7 @@ contributions as well:
   fixed upstream.
 * Changes to paginators, waiters, and endpoints are also generated upstream based on our internal knowledge of the AWS services.
   These include any of the  following files in ``botocore/data/``:
-  
+
   * ``_endpoints.json``
   * ``*.paginators-1.json``
   * ``*.waiters-2.json``

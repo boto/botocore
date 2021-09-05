@@ -103,45 +103,68 @@ class ValidationErrors(object):
         error_type, name, additional = error
         name = self._get_name(name)
         if error_type == 'missing required field':
-            return 'Missing required parameter in %s: "%s"' % (
-                name, additional['required_name'])
+            return (
+                'Missing required parameter in %s: "%s"' % (
+                    name, additional['required_name']
+                )
+            )
         elif error_type == 'unknown field':
-            return 'Unknown parameter in %s: "%s", must be one of: %s' % (
-                name, additional['unknown_param'],
-                ', '.join(additional['valid_names']))
+            return (
+                'Unknown parameter in %s: "%s", must be one of: %s' % (
+                    name, additional['unknown_param'],
+                    ', '.join(additional['valid_names'])
+                )
+            )
         elif error_type == 'invalid type':
-            return 'Invalid type for parameter %s, value: %s, type: %s, ' \
-                   'valid types: %s' % (name, additional['param'],
-                                        str(type(additional['param'])),
-                                        ', '.join(additional['valid_types']))
+            return (
+                'Invalid type for parameter %s, value: %s, type: %s, '
+                'valid types: %s' % (
+                    name, additional['param'],
+                    str(type(additional['param'])),
+                    ', '.join(additional['valid_types'])
+                )
+            )
         elif error_type == 'invalid range':
             min_allowed = additional['min_allowed']
-            return ('Invalid value for parameter %s, value: %s, '
-                    'valid min value: %s' % (name, additional['param'],
-                                             min_allowed))
+            return (
+                'Invalid value for parameter %s, value: %s, valid min value: '
+                '%s' % (name, additional['param'], min_allowed)
+            )
         elif error_type == 'invalid length':
             min_allowed = additional['min_allowed']
-            return ('Invalid length for parameter %s, value: %s, '
-                    'valid min length: %s' % (name, additional['param'],
-                                              min_allowed))
+            return (
+                'Invalid length for parameter %s, value: %s, '
+                'valid min length: %s' % (
+                    name, additional['param'], min_allowed
+                )
+            )
         elif error_type == 'unable to encode to json':
-            return 'Invalid parameter %s must be json serializable: %s' \
-                % (name, additional['type_error'])
+            return (
+                'Invalid parameter %s must be json serializable: %s' % (
+                    name, additional['type_error']
+                )
+            )
         elif error_type == 'invalid type for document':
-            return 'Invalid type for document parameter %s, value: %s, type: %s, ' \
-                   'valid types: %s' % (name, additional['param'],
-                                        str(type(additional['param'])),
-                                        ', '.join(additional['valid_types']))
+            return (
+                'Invalid type for document parameter %s, value: %s, type: %s, '
+                'valid types: %s' % (
+                    name,
+                    additional['param'],
+                    str(type(additional['param'])),
+                    ', '.join(additional['valid_types'])
+                )
+            )
         elif error_type == 'more than one input':
-            return 'Invalid number of parameters set for tagged union structure' \
-                    ' %s. Can only set one of the following keys: %s.' % (
-                        name, '. '.join(additional['members'])
-                    )
+            return (
+                'Invalid number of parameters set for tagged union structure '
+                '%s. Can only set one of the following keys: '
+                '%s.' % (name, '. '.join(additional['members']))
+            )
         elif error_type == 'empty input':
-            return 'Must set one of the following keys for tagged union' \
-                    'structure %s: %s.' % (
-                        name, '. '.join(additional['members'])
-                    )
+            return (
+                'Must set one of the following keys for tagged union'
+                'structure %s: %s.' % (name, '. '.join(additional['members']))
+            )
 
     def _get_name(self, name):
         if not name:

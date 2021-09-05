@@ -19,12 +19,11 @@ import tempfile
 import shutil
 import io
 import socket
-import sys
 
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
 from botocore.exceptions import UnseekableStreamError
-from botocore.awsrequest import AWSRequest, AWSPreparedRequest, AWSResponse
+from botocore.awsrequest import AWSRequest, AWSResponse
 from botocore.awsrequest import AWSHTTPConnection, AWSHTTPSConnection, HeadersDict
 from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
@@ -236,13 +235,18 @@ class TestAWSRequest(unittest.TestCase):
         # we first need to determine if the thing is a file like object.
         # We should not be using an isinstance check.  Instead, we should
         # be using duck type checks.
+
         class LooksLikeFile(object):
+
             def __init__(self):
                 self.seek_called = False
+
             def read(self, amount=None):
                 pass
+
             def seek(self, where):
                 self.seek_called = True
+
         looks_like_file = LooksLikeFile()
         self.prepared_request.body = looks_like_file
         self.prepared_request.reset_stream()
@@ -504,8 +508,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.sock = s
             wait_mock.return_value = True
 
-            conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
@@ -525,8 +530,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # that was sent back.
             wait_mock.return_value = True
 
-            conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             # Assert that we waited for the 100-continue response
             self.assertEqual(wait_mock.call_count, 2)
             response = conn.getresponse()

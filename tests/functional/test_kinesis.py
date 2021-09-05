@@ -11,10 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import json
-import time
 from base64 import b64decode
 from uuid import uuid4
-from tests import unittest, BaseSessionTest, ClientHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestKinesisListStreams(BaseSessionTest):

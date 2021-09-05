@@ -224,4 +224,3 @@ class TestEscapeControls(unittest.TestCase):
     def test_escapes_controls(self):
         escaped = escape_controls('\na\rb\tc\fd\be')
         self.assertEqual(escaped, '\\na\\rb\\tc\\fd\\be')
-

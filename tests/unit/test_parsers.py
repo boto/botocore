@@ -401,7 +401,7 @@ class TestTaggedUnions(unittest.TestCase):
             'OutputShape',
             {
                 'type': 'structure',
-                'union':True,
+                'union': True,
                 'members': {
                     'Str': {
                         'shape': 'StringType',
@@ -443,7 +443,7 @@ class TestTaggedUnions(unittest.TestCase):
             'OutputShape',
             {
                 'type': 'structure',
-                'union':True,
+                'union': True,
                 'resultWrapper': 'OperationNameResult',
                 'members': {
                     'Str': {
@@ -464,7 +464,7 @@ class TestTaggedUnions(unittest.TestCase):
             'SDK_UNKNOWN_MEMBER': {
                 'name': 'Foo'
             },
-            'ResponseMetadata':{
+            'ResponseMetadata': {
                 'RequestId': 'request-id',
                 'HTTPStatusCode': 200,
                 'HTTPHeaders': {}
@@ -484,7 +484,7 @@ class TestTaggedUnions(unittest.TestCase):
             'OutputShape',
             {
                 'type': 'structure',
-                'union':True,
+                'union': True,
                 'members': {
                     'Foo': {
                         'shape': 'StringType',
@@ -1268,7 +1268,7 @@ class TestParseErrorResponses(unittest.TestCase):
         body = (b'{"code":"AccessDeniedException","type":"Client","message":'
                 b'"Access denied"}')
         headers = {
-             'x-amzn-requestid': 'request-id'
+            'x-amzn-requestid': 'request-id'
         }
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
@@ -1285,7 +1285,7 @@ class TestParseErrorResponses(unittest.TestCase):
             "message": "blah",
             "deletes": 0}'''
         headers = {
-             'x-amzn-requestid': 'request-id'
+            'x-amzn-requestid': 'request-id'
         }
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
@@ -1297,7 +1297,7 @@ class TestParseErrorResponses(unittest.TestCase):
         body = (b'{"Code":"AccessDeniedException","type":"Client","Message":'
                 b'"Access denied"}')
         headers = {
-             'x-amzn-requestid': 'request-id'
+            'x-amzn-requestid': 'request-id'
         }
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
@@ -1407,7 +1407,7 @@ class TestParseErrorResponses(unittest.TestCase):
         # We should be able to handle this gracefully and still at least
         # populate a "Message" key so that consumers don't have to
         # conditionally check for this.
-        body =  (
+        body = (
             '<ErrorResponse>'
             '  <Error>'
             '    <Type>Sender</Type>'
@@ -1425,6 +1425,7 @@ class TestParseErrorResponses(unittest.TestCase):
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
 
+
 def _generic_test_bodies():
     generic_html_body = (
         '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
@@ -1434,7 +1435,9 @@ def _generic_test_bodies():
 
     return [generic_html_body, empty_body, none_body]
 
-@pytest.mark.parametrize("parser, body",
+
+@pytest.mark.parametrize(
+    "parser, body",
     itertools.product(
         parsers.PROTOCOL_PARSERS.values(),
         _generic_test_bodies()

@@ -209,7 +209,7 @@ class TestTimezoneOperations(unittest.TestCase):
 class TestCRTIntegration(unittest.TestCase):
     def test_has_crt_global(self):
         try:
-            import awscrt.auth
+            import awscrt.auth # noqa
             assert HAS_CRT
         except ImportError:
             assert not HAS_CRT

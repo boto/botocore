@@ -10098,4 +10098,3 @@ CHANGELOG
 * feature:``EMR``: Added support for adding EBS storage to EMR instances.
 * bugfix:pagination: Refactored pagination to handle non-string service tokens.
 * bugfix:credentials: Fix race condition in credential provider.
-

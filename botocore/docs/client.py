@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import inspect
-
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.method import document_custom_method
 from botocore.docs.method import document_model_driven_method

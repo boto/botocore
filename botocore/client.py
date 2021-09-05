@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
-import functools
 
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
@@ -20,9 +19,8 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import (
-    ClientError, DataNotFoundError, OperationNotPageableError,
-    UnknownSignatureVersionError, InvalidEndpointDiscoveryConfigurationError,
-    UnknownFIPSEndpointError,
+    DataNotFoundError, OperationNotPageableError, UnknownSignatureVersionError,
+    InvalidEndpointDiscoveryConfigurationError, UnknownFIPSEndpointError,
 )
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
@@ -32,11 +30,6 @@ from botocore.utils import (
     S3ArnParamHandler, S3EndpointSetter, ensure_boolean,
     S3ControlArnParamHandler, S3ControlEndpointSetter,
 )
-from botocore.args import ClientArgsCreator
-from botocore import UNSIGNED
-# Keep this imported.  There's pre-existing code that uses
-# "from botocore.client import Config".
-from botocore.config import Config
 from botocore.history import get_global_history_recorder
 from botocore.discovery import (
     EndpointDiscoveryHandler, EndpointDiscoveryManager,
@@ -44,6 +37,15 @@ from botocore.discovery import (
 )
 from botocore.retries import standard
 from botocore.retries import adaptive
+
+# Keep these imported.  There's pre-existing code that uses:
+# "from botocore.client import Config"
+# "from botocore.client import ClientError"
+# etc.
+from botocore.config import Config # noqa
+from botocore.exceptions import ClientError # noqa
+from botocore.args import ClientArgsCreator # noqa
+from botocore import UNSIGNED # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -465,8 +467,9 @@ class ClientEndpointBridge(object):
             else:
                 # Use the sslCommonName over the hostname for Python 2.6 compat.
                 hostname = resolved.get('sslCommonName', resolved.get('hostname'))
-                endpoint_url = self._make_url(hostname, is_secure,
-                                            resolved.get('protocols', []))
+                endpoint_url = self._make_url(
+                    hostname, is_secure, resolved.get('protocols', [])
+                )
         signature_version = self._resolve_signature_version(
             service_name, resolved)
         signing_name = self._resolve_signing_name(service_name, resolved)

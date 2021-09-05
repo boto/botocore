@@ -89,7 +89,6 @@ def _waiter_configs():
     validator = Draft4Validator(WAITER_SCHEMA)
     for service_name in session.get_available_services():
         client = session.create_client(service_name, 'us-east-1')
-        service_model = client.meta.service_model
         try:
             # We use the loader directly here because we need the entire
             # json document, not just the portions exposed (either
@@ -164,14 +163,16 @@ def _validate_acceptor(acceptor, op_model, waiter_name):
         # check a few things about this returned search result.
         search_result = _search_jmespath_expression(expression, op_model)
         if search_result is None:
-            raise AssertionError("JMESPath expression did not match "
-                                 "anything for waiter '%s': %s"
-                                 % (waiter_name, expression))
+            raise AssertionError(
+                f"JMESPath expression did not match anything for waiter "
+                f"'{waiter_name}': {expression}"
+            )
         if acceptor.matcher in ['pathAll', 'pathAny']:
-            assert isinstance(search_result, list), \
-                    ("Attempted to use '%s' matcher in waiter '%s' "
-                     "with non list result in JMESPath expression: %s"
-                     % (acceptor.matcher, waiter_name, expression))
+            assert isinstance(search_result, list), (
+                f"Attempted to use '{acceptor.matcher}' matcher in waiter "
+                f"'{waiter_name}' with non list result in JMESPath expression: "
+                f"{expression}"
+            )
 
 
 def _search_jmespath_expression(expression, op_model):

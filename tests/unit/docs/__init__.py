@@ -114,7 +114,7 @@ class BaseDocsTest(unittest.TestCase):
                     'type': 'string'
                 }
             },
-            'documentation':'AWS MyService Description'
+            'documentation': 'AWS MyService Description'
         }
 
         self.waiter_json_model = {

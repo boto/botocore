@@ -78,6 +78,7 @@ class ApiVersionNotFoundError(BotoCoreError):
 
 class HTTPClientError(BotoCoreError):
     fmt = 'An HTTP Client raised an unhandled exception: {error}'
+
     def __init__(self, request=None, response=None, **kwargs):
         self.request = request
         self.response = response
@@ -97,8 +98,10 @@ class InvalidIMDSEndpointError(BotoCoreError):
 
 
 class InvalidIMDSEndpointModeError(BotoCoreError):
-    fmt = ('Invalid EC2 Instance Metadata endpoint mode: {mode}'
-        ' Valid endpoint modes (case-insensitive): {valid_modes}.')
+    fmt = (
+        'Invalid EC2 Instance Metadata endpoint mode: {mode}'
+        ' Valid endpoint modes (case-insensitive): {valid_modes}.'
+    )
 
 
 class EndpointConnectionError(ConnectionError):

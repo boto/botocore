@@ -150,6 +150,7 @@ SERVICE_DESCRIPTION_WITH_RETRIES = {
     },
 }
 
+
 @pytest.mark.parametrize('case', RETRYABLE_TRANSIENT_ERRORS)
 def test_can_detect_retryable_transient_errors(case):
     transient_checker = standard.TransientRetryableChecker()
@@ -170,7 +171,8 @@ def test_can_detect_modeled_retryable_errors(case):
     )
 
 
-@pytest.mark.parametrize('case',
+@pytest.mark.parametrize(
+    'case',
     [
         case for case in
         RETRYABLE_TRANSIENT_ERRORS +
@@ -208,7 +210,7 @@ def _verify_retryable(checker, operation_model,
         if isinstance(error, Exception):
             caught_exception = error
         else:
-            parsed_response = {'Error':  {'Code': error, 'Message': 'Error'}}
+            parsed_response = {'Error': {'Code': error, 'Message': 'Error'}}
     context = standard.RetryContext(
         attempt_number=1,
         operation_model=operation_model,

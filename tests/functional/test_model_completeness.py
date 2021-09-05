@@ -36,14 +36,14 @@ def test_paginators_and_waiters_are_not_lost_in_new_version(
     # there will be a successor existing in latest version.
     loader = Loader()
     try:
-        previous = loader.load_service_model(
+        loader.load_service_model(
             service_name, type_name, previous_version
         )
     except DataNotFoundError:
         pass
     else:
         try:
-            latest = loader.load_service_model(
+            loader.load_service_model(
                 service_name, type_name, latest_version
             )
         except DataNotFoundError as e:
