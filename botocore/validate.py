@@ -132,6 +132,16 @@ class ValidationErrors(object):
                    'valid types: %s' % (name, additional['param'],
                                         str(type(additional['param'])),
                                         ', '.join(additional['valid_types']))
+        elif error_type == 'more than one input':
+            return 'Invalid number of parameters set for tagged union structure' \
+                    ' %s. Can only set one of the following keys: %s.' % (
+                        name, '. '.join(additional['members'])
+                    )
+        elif error_type == 'empty input':
+            return 'Must set one of the following keys for tagged union' \
+                    'structure %s: %s.' % (
+                        name, '. '.join(additional['members'])
+                    )
 
     def _get_name(self, name):
         if not name:
@@ -209,6 +219,14 @@ class ParamValidator(object):
 
     @type_check(valid_types=(dict,))
     def _validate_structure(self, params, shape, errors, name):
+        if shape.is_tagged_union:
+            if len(params) == 0:
+                errors.report(name, 'empty input', members=shape.members)
+            elif len(params) > 1:
+                errors.report(
+                    name, 'more than one input', members=shape.members
+                )
+
         # Validate required fields.
         for required_member in shape.metadata.get('required', []):
             if required_member not in params:

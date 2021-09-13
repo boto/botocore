@@ -328,6 +328,31 @@ class ResponseParser(object):
         name = response['context'].get('operation_name')
         return EventStream(response['body'], shape, parser, name)
 
+    def _get_first_key(self, value):
+        return list(value)[0]
+
+    def _has_unknown_tagged_union_member(self, shape, value):
+        if shape.is_tagged_union:
+            if len(value) != 1:
+                error_msg = (
+                    "Invalid service response: %s must only have one member "
+                    "set."
+                )
+                raise ResponseParserError(error_msg % shape.name)
+            tag = self._get_first_key(value)
+            if tag not in shape.members:
+                msg = (
+                    "Received a tagged union response with member "
+                    "unknown to client: %s. Please upgrade SDK for full "
+                    "response support."
+                )
+                LOG.info(msg % tag)
+                return True
+        return False
+
+    def _handle_unknown_tagged_union_member(self, tag):
+        return {'SDK_UNKNOWN_MEMBER': {'name': tag}}
+
 
 class BaseXMLResponseParser(ResponseParser):
     def __init__(self, timestamp_parser=None, blob_parser=None):
@@ -375,6 +400,9 @@ class BaseXMLResponseParser(ResponseParser):
         if shape.metadata.get('exception', False):
             node = self._get_error_root(node)
         xml_dict = self._build_name_to_xml_node(node)
+        if self._has_unknown_tagged_union_member(shape, xml_dict):
+            tag = self._get_first_key(xml_dict)
+            return self._handle_unknown_tagged_union_member(tag)
         for member_name in members:
             member_shape = members[member_name]
             if 'location' in member_shape.serialization or \
@@ -602,6 +630,9 @@ class BaseJSONParser(ResponseParser):
                 # empty dict.
                 return None
             final_parsed = {}
+            if self._has_unknown_tagged_union_member(shape, value):
+                tag = self._get_first_key(value)
+                return self._handle_unknown_tagged_union_member(tag)
             for member_name in member_shapes:
                 member_shape = member_shapes[member_name]
                 json_name = member_shape.serialization.get('name', member_name)
