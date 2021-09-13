@@ -1,4 +1,3 @@
-
 name: Run tests
 
 on:
@@ -28,7 +27,7 @@ jobs:
         python scripts/ci/install
     - name: Run tests
       run: |
-        python scripts/ci/run-tests
+        python scripts/ci/run-tests --with-cov
     - name: codecov
       run: |
         rm tests/coverage.xml
