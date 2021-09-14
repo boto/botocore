@@ -56,7 +56,7 @@ class Shape(object):
                         'jsonvalue', 'timestampFormat', 'hostLabel']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception',
-                      'endpointdiscoveryid', 'retryable', 'document']
+                      'endpointdiscoveryid', 'retryable', 'document', 'union']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -139,6 +139,7 @@ class Shape(object):
             * required
             * idempotencyToken
             * document
+            * union
 
         :rtype: dict
         :return: Metadata about the shape.
@@ -210,6 +211,10 @@ class StructureShape(Shape):
     @CachedProperty
     def is_document_type(self):
         return self.metadata.get('document', False)
+
+    @CachedProperty
+    def is_tagged_union(self):
+        return self.metadata.get('union', False)
 
 
 class ListShape(Shape):

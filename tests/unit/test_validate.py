@@ -205,6 +205,129 @@ class TestValidateDocumentType(BaseTestValidate):
             ])
 
 
+class TestValidateTaggedUnion(BaseTestValidate):
+    def test_accepts_one_member(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'taggedUnion': {
+                        'shape': 'TaggedUnionType',
+                    }
+                }
+            },
+            'TaggedUnionType': {
+                'type': 'structure',
+                'union': True,
+                'members': {
+                    'Foo': {'shape': 'StringType'},
+                    'Bar': {'shape': 'StringType'},
+                }
+            },
+            'StringType': {'type': 'string'}
+        }
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={
+                'taggedUnion': {'Foo': "mystring"}
+            }
+        )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
+
+
+    def test_validate_one_member_is_set(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'taggedUnion': {
+                        'shape': 'TaggedUnionType',
+                    }
+                }
+            },
+            'TaggedUnionType': {
+                'type': 'structure',
+                'union': True,
+                'members': {
+                    'Foo': {'shape': 'StringType'},
+                    'Bar': {'shape': 'StringType'},
+                }
+            },
+            'StringType': {'type': 'string'}
+        }
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={
+                'taggedUnion': {'Foo': "mystring",
+                                'Bar': "mystring2"
+                                }
+            }
+        )
+        error_msg = errors.generate_report()
+        self.assertIn(
+            'Invalid number of parameters set for tagged union structure',
+            error_msg
+        )
+
+    def test_validate_known_member_is_set(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'taggedUnion': {
+                        'shape': 'TaggedUnionType',
+                    }
+                }
+            },
+            'TaggedUnionType': {
+                'type': 'structure',
+                'union': True,
+                'members': {
+                    'Foo': {'shape': 'StringType'},
+                    'Bar': {'shape': 'StringType'},
+                }
+            },
+            'StringType': {'type': 'string'}
+        }
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={
+                'taggedUnion': {'unknown': "mystring"}
+            }
+        )
+        error_msg = errors.generate_report()
+        self.assertIn('Unknown parameter in taggedUnion', error_msg)
+
+    def test_validate_structure_is_not_empty(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'taggedUnion': {
+                        'shape': 'TaggedUnionType',
+                    }
+                }
+            },
+            'TaggedUnionType': {
+                'type': 'structure',
+                'union': True,
+                'members': {
+                    'Foo': {'shape': 'StringType'},
+                    'Bar': {'shape': 'StringType'},
+                }
+            },
+            'StringType': {'type': 'string'}
+        }
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={
+                'taggedUnion': {}
+            }
+        )
+        error_msg = errors.generate_report()
+        self.assertIn('Must set one of the following keys', error_msg)
+
 
 class TestValidateTypes(BaseTestValidate):
     def setUp(self):
