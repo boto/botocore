@@ -10,11 +10,12 @@ from subprocess import check_call
 _dname = os.path.dirname
 
 REPO_ROOT = _dname(_dname(_dname(os.path.abspath(__file__))))
-os.chdir(os.path.join(REPO_ROOT, 'tests'))
+os.chdir(os.path.join(REPO_ROOT, "tests"))
 
 
 def run(command):
     return check_call(command, shell=True)
+
 
 try:
     import awscrt
@@ -22,4 +23,4 @@ except ImportError:
     print("MISSING DEPENDENCY: awscrt must be installed to run the crt tests.")
     sys.exit(1)
 
-run('nosetests botocore --with-xunit unit/ functional/')
+run(f'{REPO_ROOT}/scripts/ci/run-tests unit/ functional/')
