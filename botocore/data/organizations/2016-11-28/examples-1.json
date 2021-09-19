@@ -510,7 +510,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to request information about the current user's organization:/n/n",
+        "description": "The following example shows how to request information about the current user's organization:",
         "id": "to-get-information-about-an-organization-1472503400505",
         "title": "To get information about an organization"
       }
@@ -533,7 +533,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to request details about an OU:/n/n",
+        "description": "The following example shows how to request details about an OU:",
         "id": "to-get-information-about-an-organizational-unit",
         "title": "To get information about an organizational unit"
       }
@@ -562,7 +562,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to request information about a policy:/n/n",
+        "description": "The following example shows how to request information about a policy:",
         "id": "to-get-information-about-a-policy",
         "title": "To get information about a policy"
       }
@@ -579,7 +579,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to detach a policy from an OU:/n/n",
+        "description": "The following example shows how to detach a policy from an OU:",
         "id": "to-detach-a-policy-from-a-root-ou-or-account",
         "title": "To detach a policy from a root, OU, or account"
       }
@@ -606,7 +606,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to disable the service control policy (SCP) policy type in a root. The response shows that the PolicyTypes response element no longer includes SERVICE_CONTROL_POLICY:/n/n",
+        "description": "The following example shows how to disable the service control policy (SCP) policy type in a root. The response shows that the PolicyTypes response element no longer includes SERVICE_CONTROL_POLICY:",
         "id": "to-disable-a-policy-type-in-a-root",
         "title": "To disable a policy type in a root"
       }
@@ -643,7 +643,7 @@
           "output": {
           }
         },
-        "description": "This example shows the administrator asking all the invited accounts in the organization to approve enabling all features in the organization. AWS Organizations sends an email to the address that is registered with every invited member account asking the owner to approve the change by accepting the handshake that is sent. After all invited member accounts accept the handshake, the organization administrator can finalize the change to enable all features, and those with appropriate permissions can create policies and apply them to roots, OUs, and accounts:/n/n",
+        "description": "This example shows the administrator asking all the invited accounts in the organization to approve enabling all features in the organization. AWS Organizations sends an email to the address that is registered with every invited member account asking the owner to approve the change by accepting the handshake that is sent. After all invited member accounts accept the handshake, the organization administrator can finalize the change to enable all features, and those with appropriate permissions can create policies and apply them to roots, OUs, and accounts:",
         "id": "to-enable-all-features-in-an-organization",
         "title": "To enable all features in an organization"
       }
@@ -673,7 +673,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to enable the service control policy (SCP) policy type in a root. The output shows a root object with a PolicyTypes response element showing that SCPs are now enabled:/n/n",
+        "description": "The following example shows how to enable the service control policy (SCP) policy type in a root. The output shows a root object with a PolicyTypes response element showing that SCPs are now enabled:",
         "id": "to-enable-a-policy-type-in-a-root",
         "title": "To enable a policy type in a root"
       }
@@ -843,7 +843,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to request a list of the accounts in an OU:/n/n",
+        "description": "The following example shows how to request a list of the accounts in an OU:",
         "id": "to-retrieve-a-list-of-all-of-the-accounts-in-a-root-or-ou-1472509590974",
         "title": "To retrieve a list of all of the accounts in a root or OU"
       }
@@ -872,7 +872,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to request a list of the child OUs in a parent root or OU:/n/n",
+        "description": "The following example shows how to request a list of the child OUs in a parent root or OU:",
         "id": "to-retrieve-a-list-of-all-of-the-child-accounts-and-OUs-in-a-parent-container",
         "title": "To retrieve a list of all of the child accounts and OUs in a parent root or OU"
       }
@@ -1118,7 +1118,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to get a list of OUs in a specified root:/n/n",
+        "description": "The following example shows how to get a list of OUs in a specified root:",
         "id": "to-retrieve-a-list-of-all-of-the-OUs-in-a-parent-container",
         "title": "To retrieve a list of all of the child OUs in a parent root or OU"
       }
@@ -1142,7 +1142,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to list the root or OUs that contain account 444444444444:/n/n",
+        "description": "The following example shows how to list the root or OUs that contain account 444444444444:",
         "id": "to-retrieve-a-list-of-all-of-the-parents-of-a-child-ou-or-account",
         "title": "To retrieve a list of all of the parents of a child OU or account"
       }
@@ -1186,7 +1186,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to get a list of service control policies (SCPs):/n/n",
+        "description": "The following example shows how to get a list of service control policies (SCPs):",
         "id": "to-retrieve-a-list-of--policies-in-the-organization",
         "title": "To retrieve a list policies in the organization"
       }
@@ -1215,7 +1215,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to get a list of all service control policies (SCPs) of the type specified by the Filter parameter, that are directly attached to an account. The returned list does not include policies that apply to the account because of inheritance from its location in an OU hierarchy:/n/n",
+        "description": "The following example shows how to get a list of all service control policies (SCPs) of the type specified by the Filter parameter, that are directly attached to an account. The returned list does not include policies that apply to the account because of inheritance from its location in an OU hierarchy:",
         "id": "to-retrieve-a-list-of-policies-attached-to-a-root-ou-or-account",
         "title": "To retrieve a list policies attached to a root, OU, or account"
       }
@@ -1245,7 +1245,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to get the list of the roots in the current organization:/n/n",
+        "description": "The following example shows how to get the list of the roots in the current organization:",
         "id": "to-retrieve-a-list-of-roots-in-the-organization",
         "title": "To retrieve a list of roots in the organization"
       }
@@ -1283,7 +1283,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to get the list of roots, OUs, and accounts to which the specified policy is attached:/n/n",
+        "description": "The following example shows how to get the list of roots, OUs, and accounts to which the specified policy is attached:",
         "id": "to-retrieve-a-list-of-roots-ous-and-accounts-to-which-a-policy-is-attached",
         "title": "To retrieve a list of roots, OUs, and accounts to which a policy is attached"
       }
@@ -1301,7 +1301,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to move a member account from the root to an OU:/n/n",
+        "description": "The following example shows how to move a member account from the root to an OU:",
         "id": "to-move-an-ou-or-account-to-another-ou-or-the-root",
         "title": "To move an OU or account to another OU or the root"
       }
@@ -1341,7 +1341,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to rename an OU. The output confirms the new name:/n/n",
+        "description": "The following example shows how to rename an OU. The output confirms the new name:",
         "id": "to-rename-an-organizational-unit",
         "title": "To rename an organizational unit"
       }
@@ -1372,7 +1372,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to rename a policy and give it a new description and new content. The output confirms the new name and description text:/n/n",
+        "description": "The following example shows how to rename a policy and give it a new description and new content. The output confirms the new name and description text:",
         "id": "to-update-the-details-of-a-policy",
         "title": "To update the details of a policy"
       },
@@ -1400,7 +1400,7 @@
           "output": {
           }
         },
-        "description": "The following example shows how to replace the JSON text of the SCP from the preceding example with a new JSON policy text string that allows S3 actions instead of EC2 actions:/n/n",
+        "description": "The following example shows how to replace the JSON text of the SCP from the preceding example with a new JSON policy text string that allows S3 actions instead of EC2 actions:",
         "id": "to-update-the-content-of-a-policy",
         "title": "To update the content of a policy"
       }
