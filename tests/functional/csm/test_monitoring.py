@@ -18,9 +18,9 @@ import os
 import socket
 import threading
 
-import mock
 from nose.tools import assert_equal
 
+from tests import mock
 from tests import temporary_file
 from tests import ClientHTTPStubber
 from botocore import xform_name

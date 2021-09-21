@@ -13,7 +13,6 @@
 
 import os
 import sys
-import mock
 import time
 import random
 import shutil
@@ -23,12 +22,12 @@ import binascii
 import platform
 import select
 import datetime
+import unittest
+from unittest import mock
 from io import BytesIO
 from subprocess import Popen, PIPE
 
 from dateutil.tz import tzlocal
-import unittest
-
 from nose.tools import assert_equal
 
 import botocore.loaders

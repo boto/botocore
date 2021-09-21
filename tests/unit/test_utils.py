@@ -13,12 +13,12 @@
 import io
 
 from tests import create_session
+from tests import mock
 from tests import unittest
 from tests import RawResponse
 from dateutil.tz import tzutc, tzoffset
 import datetime
 import copy
-import mock
 
 import botocore
 from botocore import xform_name

@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Unit tests for the binary event stream decoder. """
-
-from mock import Mock
 from nose.tools import assert_equal, raises
+
+from tests import mock
 
 from botocore.parsers import EventStreamXMLParser
 from botocore.eventstream import (
@@ -428,7 +428,7 @@ def test_unpack_prelude():
 
 
 def create_mock_raw_stream(*data):
-    raw_stream = Mock()
+    raw_stream = mock.Mock()
     def generator():
         for chunk in data:
             yield chunk
@@ -441,8 +441,8 @@ def test_event_stream_wrapper_iteration():
         b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00",
         b"\x00\xa0\x0c{'foo':'bar'}\xd3\x89\x02\x85",
     )
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
+    parser = mock.Mock(spec=EventStreamXMLParser)
+    output_shape = mock.Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     events = list(event_stream)
     assert_equal(len(events), 1)
@@ -458,15 +458,15 @@ def test_event_stream_wrapper_iteration():
 @raises(EventStreamError)
 def test_eventstream_wrapper_iteration_error():
     raw_stream = create_mock_raw_stream(ERROR_EVENT_MESSAGE[0])
-    parser = Mock(spec=EventStreamXMLParser)
+    parser = mock.Mock(spec=EventStreamXMLParser)
     parser.parse.return_value = {}
-    output_shape = Mock()
+    output_shape = mock.Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     list(event_stream)
 
 
 def test_event_stream_wrapper_close():
-    raw_stream = Mock()
+    raw_stream = mock.Mock()
     event_stream = EventStream(raw_stream, None, None, '')
     event_stream.close()
     raw_stream.close.assert_called_once_with()
@@ -478,8 +478,8 @@ def test_event_stream_initial_response():
         b'\x05event\x0b:event-type\x07\x00\x10initial-response\r:content-type',
         b'\x07\x00\ttext/json{"InitialResponse": "sometext"}\xf6\x98$\x83'
     )
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
+    parser = mock.Mock(spec=EventStreamXMLParser)
+    output_shape = mock.Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     event = event_stream.get_initial_response()
     headers = {
@@ -498,8 +498,8 @@ def test_event_stream_initial_response_wrong_type():
         b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00",
         b"\x00\xa0\x0c{'foo':'bar'}\xd3\x89\x02\x85",
     )
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
+    parser = mock.Mock(spec=EventStreamXMLParser)
+    output_shape = mock.Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     event_stream.get_initial_response()
 
@@ -507,7 +507,7 @@ def test_event_stream_initial_response_wrong_type():
 @raises(NoInitialResponseError)
 def test_event_stream_initial_response_no_event():
     raw_stream = create_mock_raw_stream(b'')
-    parser = Mock(spec=EventStreamXMLParser)
-    output_shape = Mock()
+    parser = mock.Mock(spec=EventStreamXMLParser)
+    output_shape = mock.Mock()
     event_stream = EventStream(raw_stream, output_shape, parser, '')
     event_stream.get_initial_response()
