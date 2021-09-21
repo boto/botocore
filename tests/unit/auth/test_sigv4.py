@@ -27,12 +27,12 @@ import logging
 import io
 import datetime
 import re
-from botocore.compat import six, urlsplit, parse_qsl, HAS_CRT
 
-import mock
+from tests import mock
 
 import botocore.auth
 from botocore.awsrequest import AWSRequest
+from botocore.compat import six, urlsplit, parse_qsl, HAS_CRT
 from botocore.credentials import Credentials
 
 

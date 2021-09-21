@@ -13,9 +13,9 @@
 from datetime import datetime
 import re
 
-import mock
 
 from tests import BaseSessionTest
+from tests import mock
 from tests import temporary_file
 from tests import assert_url_equal
 from tests import ClientHTTPStubber

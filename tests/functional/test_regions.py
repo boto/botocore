@@ -10,15 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import create_session
-
-import mock
 from nose.tools import assert_equal, assert_raises
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
 
-from tests import BaseSessionTest, ClientHTTPStubber
+from tests import create_session, mock, BaseSessionTest, ClientHTTPStubber
 
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because

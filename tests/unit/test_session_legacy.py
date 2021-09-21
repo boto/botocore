@@ -13,13 +13,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.config
-from tests import unittest, create_session, temporary_file
+from tests import mock, unittest, create_session, temporary_file
 import os
 import logging
 import tempfile
 import shutil
-
-import mock
 
 import botocore.session
 import botocore.exceptions

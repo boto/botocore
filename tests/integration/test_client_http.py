@@ -2,7 +2,7 @@ import select
 import socket
 import contextlib
 import threading
-import mock
+from tests import mock
 from tests import unittest
 from contextlib import contextmanager
 

@@ -11,13 +11,12 @@ to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
 
 """
 import os
-import mock
 from pprint import pformat
 import warnings
 import logging
 from nose.tools import assert_equal, assert_true
 
-from tests import ClientHTTPStubber
+from tests import mock, ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
