@@ -619,6 +619,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "InterfaceAssociations"
+    },
+    "GetVpnConnectionDeviceTypes": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "VpnConnectionDeviceTypes"
     }
   }
 }
