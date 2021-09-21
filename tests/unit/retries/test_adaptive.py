@@ -1,5 +1,6 @@
-from tests import mock
 from tests import unittest
+
+import mock
 
 from botocore.retries import adaptive
 from botocore.retries import standard

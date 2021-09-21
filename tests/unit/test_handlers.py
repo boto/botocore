@@ -11,9 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import mock, unittest, BaseSessionTest
+from tests import unittest, BaseSessionTest
 
 import base64
+import mock
 import copy
 import os
 import json

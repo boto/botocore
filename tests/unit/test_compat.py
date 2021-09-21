@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import mock
 
 from nose.tools import assert_equal, assert_raises
 
@@ -19,7 +20,7 @@ from botocore.compat import (
     total_seconds, unquote_str, six, ensure_bytes, get_md5,
     compat_shell_split, get_tzinfo_options, HAS_CRT
 )
-from tests import BaseEnvVar, mock, unittest
+from tests import BaseEnvVar, unittest
 
 
 class TotalSecondsTest(BaseEnvVar):

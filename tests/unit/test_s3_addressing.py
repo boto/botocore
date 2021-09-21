@@ -16,6 +16,7 @@
 import os
 
 from tests import BaseSessionTest, ClientHTTPStubber
+from mock import patch, Mock
 
 from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url

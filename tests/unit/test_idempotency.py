@@ -11,8 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import mock, unittest
+from tests import unittest
 import re
+import mock
 from botocore.handlers import generate_idempotent_uuid
 
 

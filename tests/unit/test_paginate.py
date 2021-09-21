@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import mock
 from tests import unittest
 from botocore import model
 from botocore.paginate import Paginator
@@ -20,6 +19,8 @@ from botocore.paginate import TokenDecoder
 from botocore.paginate import TokenEncoder
 from botocore.exceptions import PaginationError
 from botocore.compat import six
+
+import mock
 
 
 def encode_token(token):
