@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.21.46
+=======
+
+* api-change:``imagebuilder``: This feature adds support for specifying GP3 volume throughput and configuring instance metadata options for instances launched by EC2 Image Builder.
+* api-change:``wafv2``: Added the regex match rule statement, for matching web requests against a single regular expression.
+* api-change:``mediatailor``: This release adds support to configure logs for playback configuration.
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``iam``: Added changes to OIDC API about not using port numbers in the URL.
+* api-change:``license-manager``: AWS License Manager now allows customers to change their Windows Server or SQL license types from Bring-Your-Own-License (BYOL) to License Included or vice-versa (using the customer's media).
+* api-change:``mediapackage-vod``: MediaPackage VOD will now return the current processing statuses of an asset's endpoints. The status can be QUEUED, PROCESSING, PLAYABLE, or FAILED.
+
+
 1.21.45
 =======
 

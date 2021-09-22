@@ -1,7 +1,6 @@
 import socket
 
-from mock import patch, Mock, ANY
-from tests import unittest
+from tests import mock, unittest
 from nose.tools import raises
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
@@ -57,7 +56,7 @@ class TestHttpSessionUtils(unittest.TestCase):
         self.assertEqual(path, cert_path)
 
     def test_get_cert_path_certifi_or_default(self):
-        with patch('botocore.httpsession.where') as where:
+        with mock.patch('botocore.httpsession.where') as where:
             path = '/bundle/path'
             where.return_value = path
             cert_path = get_cert_path(True)
@@ -73,17 +72,17 @@ class TestURLLib3Session(unittest.TestCase):
             data=b'',
         )
 
-        self.response = Mock()
+        self.response = mock.Mock()
         self.response.headers = {}
         self.response.stream.return_value = b''
 
-        self.pool_manager = Mock()
-        self.connection = Mock()
+        self.pool_manager = mock.Mock()
+        self.connection = mock.Mock()
         self.connection.urlopen.return_value = self.response
         self.pool_manager.connection_from_url.return_value = self.connection
 
-        self.pool_patch = patch('botocore.httpsession.PoolManager')
-        self.proxy_patch = patch('botocore.httpsession.proxy_from_url')
+        self.pool_patch = mock.patch('botocore.httpsession.PoolManager')
+        self.proxy_patch = mock.patch('botocore.httpsession.proxy_from_url')
         self.pool_manager_cls = self.pool_patch.start()
         self.proxy_manager_fun = self.proxy_patch.start()
         self.pool_manager_cls.return_value = self.pool_manager
@@ -102,7 +101,7 @@ class TestURLLib3Session(unittest.TestCase):
             url=url,
             body=body,
             headers=headers,
-            retries=ANY,
+            retries=mock.ANY,
             assert_same_host=False,
             preload_content=False,
             decode_content=False,
@@ -112,9 +111,9 @@ class TestURLLib3Session(unittest.TestCase):
     def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
         call_kwargs = {
             'strict': True,
-            'maxsize': ANY,
-            'timeout': ANY,
-            'ssl_context': ANY,
+            'maxsize': mock.ANY,
+            'timeout': mock.ANY,
+            'ssl_context': mock.ANY,
             'socket_options': [],
             'cert_file': None,
             'key_file': None,
@@ -149,7 +148,7 @@ class TestURLLib3Session(unittest.TestCase):
             'proxy_use_forwarding_for_https': False,
         }
         use_forwarding = proxies_config['proxy_use_forwarding_for_https']
-        with patch('botocore.httpsession.create_urllib3_context'):
+        with mock.patch('botocore.httpsession.create_urllib3_context'):
             session = URLLib3Session(
                 proxies=proxies,
                 proxies_config=proxies_config
@@ -159,7 +158,7 @@ class TestURLLib3Session(unittest.TestCase):
             self.assert_proxy_manager_call(
                 proxies['http'],
                 proxy_headers={},
-                proxy_ssl_context=ANY,
+                proxy_ssl_context=mock.ANY,
                 use_forwarding_for_https=use_forwarding
             )
         self.assert_request_sent(url=self.request.url)
@@ -278,7 +277,7 @@ class TestURLLib3Session(unittest.TestCase):
         cert = ('/some/cert', '/some/key')
         proxies = {'https': 'https://proxy.com'}
         proxies_config = {'proxy_client_cert': "path/to/cert"}
-        with patch('botocore.httpsession.create_urllib3_context'):
+        with mock.patch('botocore.httpsession.create_urllib3_context'):
             session = URLLib3Session(
                 proxies=proxies, client_cert=cert,
                 proxies_config=proxies_config
@@ -290,7 +289,7 @@ class TestURLLib3Session(unittest.TestCase):
                 proxy_headers={},
                 cert_file=cert[0],
                 key_file=cert[1],
-                proxy_ssl_context=ANY
+                proxy_ssl_context=mock.ANY
             )
             self.assert_request_sent()
 
@@ -298,7 +297,7 @@ class TestURLLib3Session(unittest.TestCase):
         cert = ('/some/cert', '/some/key')
         proxies = {'https': 'https://proxy.com'}
         proxies_config = {'proxy_client_cert': "path/to/cert"}
-        with patch('botocore.httpsession.create_urllib3_context'):
+        with mock.patch('botocore.httpsession.create_urllib3_context'):
             session = URLLib3Session(
                 proxies=proxies, client_cert=cert,
                 proxies_config=proxies_config

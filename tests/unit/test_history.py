@@ -1,6 +1,5 @@
+from tests import mock
 from tests import unittest
-
-import mock
 
 from botocore.history import HistoryRecorder
 from botocore.history import BaseHistoryHandler

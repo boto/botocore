@@ -12,8 +12,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import (
-    unittest, temporary_file, random_chars, ClientHTTPStubber,
-    ConsistencyWaiter,
+    mock, unittest, temporary_file, random_chars,
+    ClientHTTPStubber, ConsistencyWaiter,
 )
 import os
 import time
@@ -22,7 +22,6 @@ import tempfile
 import shutil
 import threading
 import logging
-import mock
 from tarfile import TarFile
 from contextlib import closing
 
