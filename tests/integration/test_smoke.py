@@ -14,7 +14,8 @@ import os
 from pprint import pformat
 import warnings
 import logging
-from nose.tools import assert_equal, assert_true
+
+import pytest
 
 from tests import mock, ClientHTTPStubber
 from botocore import xform_name
@@ -245,60 +246,55 @@ def _list_services(dict_entries):
         return [key for key in dict_entries if key in wanted_services]
 
 
-def test_can_make_request_with_client():
-    # Same as test_can_make_request, but with Client objects
-    # instead of service/operations.
-    session = botocore.session.get_session()
+@pytest.fixture()
+def botocore_session():
+    return botocore.session.get_session()
+
+
+def _smoke_tests():
     for service_name in _list_services(SMOKE_TESTS):
-        client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
-            method_name = xform_name(operation_name)
-            yield _make_client_call, client, method_name, kwargs
+            yield service_name, operation_name, kwargs
 
 
-def _make_client_call(client, operation_name, kwargs):
-    method = getattr(client, operation_name)
-    with warnings.catch_warnings(record=True) as caught_warnings:
-        response = method(**kwargs)
-        assert_equal(len(caught_warnings), 0,
-                     "Warnings were emitted during smoke test: %s"
-                     % caught_warnings)
-        assert_true('Errors' not in response)
-
-
-def test_can_make_request_and_understand_errors_with_client():
-    session = botocore.session.get_session()
+def _error_tests():
     for service_name in _list_services(ERROR_TESTS):
-        client = _get_client(session, service_name)
         for operation_name in ERROR_TESTS[service_name]:
             kwargs = ERROR_TESTS[service_name][operation_name]
-            method_name = xform_name(operation_name)
-            yield _make_error_client_call, client, method_name, kwargs
+            yield service_name, operation_name, kwargs
 
 
-def _make_error_client_call(client, operation_name, kwargs):
-    method = getattr(client, operation_name)
-    try:
+@pytest.mark.parametrize("service_name, operation_name, kwargs", _smoke_tests())
+def test_can_make_request_with_client(
+    botocore_session, service_name, operation_name, kwargs
+):
+    # Same as test_can_make_request, but with Client objects
+    # instead of service/operations.
+    client = _get_client(botocore_session, service_name)
+    method = getattr(client, xform_name(operation_name))
+    with warnings.catch_warnings(record=True) as caught_warnings:
         response = method(**kwargs)
-    except ClientError as e:
-        pass
-    else:
-        raise AssertionError("Expected client error was not raised "
-                             "for %s.%s" % (client, operation_name))
+        err_msg = f"Warnings were emitted during smoke test: {caught_warnings}"
+        assert len(caught_warnings) == 0, err_msg
+        assert 'Errors' not in response
 
 
-def test_client_can_retry_request_properly():
-    session = botocore.session.get_session()
-    for service_name in _list_services(SMOKE_TESTS):
-        client = _get_client(session, service_name)
-        for operation_name in SMOKE_TESTS[service_name]:
-            kwargs = SMOKE_TESTS[service_name][operation_name]
-            yield (_make_client_call_with_errors, client,
-                   operation_name, kwargs)
+@pytest.mark.parametrize("service_name, operation_name, kwargs", _error_tests())
+def test_can_make_request_and_understand_errors_with_client(
+    botocore_session, service_name, operation_name, kwargs
+):
+    client = _get_client(botocore_session, service_name)
+    method = getattr(client, xform_name(operation_name))
+    with pytest.raises(ClientError):
+        response = method(**kwargs)
 
 
-def _make_client_call_with_errors(client, operation_name, kwargs):
+@pytest.mark.parametrize("service_name, operation_name, kwargs", _smoke_tests())
+def test_client_can_retry_request_properly(
+    botocore_session, service_name, operation_name, kwargs
+):
+    client = _get_client(botocore_session, service_name)
     operation = getattr(client, xform_name(operation_name))
     exception = ConnectionClosedError(endpoint_url='https://mock.eror')
     with ClientHTTPStubber(client, strict=False) as http_stubber:

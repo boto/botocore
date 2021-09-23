@@ -18,7 +18,7 @@ import os
 import socket
 import threading
 
-from nose.tools import assert_equal
+import pytest
 
 from tests import mock
 from tests import temporary_file
@@ -47,12 +47,6 @@ EXPECTED_EXCEPTIONS_THROWN = (
     botocore.exceptions.ClientError, NonRetryableException, RetryableException)
 
 
-def test_client_monitoring():
-    test_cases = _load_test_cases()
-    for case in test_cases:
-        yield _run_test_case, case
-
-
 def _load_test_cases():
     with open(CASES_FILE) as f:
         loaded_tests = json.loads(f.read())
@@ -77,6 +71,11 @@ def _replace_expected_anys(test_cases):
             for entry, value in expected_event.items():
                 if value in ['ANY_STR', 'ANY_INT']:
                     expected_event[entry] = mock.ANY
+
+
+@pytest.mark.parametrize("test_case", _load_test_cases())
+def test_client_monitoring(test_case):
+    _run_test_case(test_case)
 
 
 @contextlib.contextmanager
@@ -121,8 +120,7 @@ def _run_test_case(case):
                 case['configuration'], listener.port) as session:
             for api_call in case['apiCalls']:
                 _make_api_call(session, api_call)
-    assert_equal(
-        listener.received_events, case['expectedMonitoringEvents'])
+    assert listener.received_events == case['expectedMonitoringEvents']
 
 
 def _make_api_call(session, api_call):

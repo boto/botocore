@@ -12,9 +12,10 @@
 # language governing permissions and limitations under the License.
 from tests import unittest, RawResponse
 import datetime
+import itertools
 
 from dateutil.tz import tzutc
-from nose.tools import assert_equal
+import pytest
 
 from botocore import parsers
 from botocore import model
@@ -1424,27 +1425,26 @@ class TestParseErrorResponses(unittest.TestCase):
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
 
+def _generic_test_bodies():
+    generic_html_body = (
+        '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+    ).encode('utf-8')
+    empty_body = b''
+    none_body = None
 
-def test_can_handle_generic_error_message():
+    return [generic_html_body, empty_body, none_body]
+
+@pytest.mark.parametrize("parser, body",
+    itertools.product(
+        parsers.PROTOCOL_PARSERS.values(),
+        _generic_test_bodies()
+    ),
+)
+def test_can_handle_generic_error_message(parser, body):
     # There are times when you can get a service to respond with a generic
     # html error page.  We should be able to handle this case.
-    for parser_cls in parsers.PROTOCOL_PARSERS.values():
-        generic_html_body =  (
-            '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
-        ).encode('utf-8')
-        empty_body = b''
-        none_body = None
-        yield _assert_parses_generic_error, parser_cls(), generic_html_body
-        yield _assert_parses_generic_error, parser_cls(), empty_body
-        yield _assert_parses_generic_error, parser_cls(), none_body
-
-
-def _assert_parses_generic_error(parser, body):
-    # There are times when you can get a service to respond with a generic
-    # html error page.  We should be able to handle this case.
-    parsed = parser.parse({
-        'body': body, 'headers': {}, 'status_code': 503}, None)
-    assert_equal(
-        parsed['Error'],
-        {'Code': '503', 'Message': 'Service Unavailable'})
-    assert_equal(parsed['ResponseMetadata']['HTTPStatusCode'], 503)
+    parsed = parser().parse(
+        {'body': body, 'headers': {}, 'status_code': 503}, None
+    )
+    assert parsed['Error'] == {'Code': '503', 'Message': 'Service Unavailable'}
+    assert parsed['ResponseMetadata']['HTTPStatusCode'] == 503
