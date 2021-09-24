@@ -26,6 +26,20 @@ import datetime
 from io import BytesIO
 from subprocess import Popen, PIPE
 
+# Both nose and py.test will add the first parent directory it
+# encounters that does not have a __init__.py to the sys.path. In
+# our case, this is the root of the repository. This means that Python
+# will import the botocore package from source instead of any installed
+# distribution. This environment variable provides the option to remove the
+# repository root from sys.path to be able to rely on the installed
+# distribution when running the tests.
+if os.environ.get('TESTS_REMOVE_REPO_ROOT_FROM_PATH'):
+    rootdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path = [
+        path for path in sys.path
+        if not os.path.isdir(path) or not os.path.samefile(path, rootdir)
+    ]
+
 from dateutil.tz import tzlocal
 import unittest
 
