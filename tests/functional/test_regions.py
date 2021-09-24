@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equal, assert_raises
+import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
@@ -55,13 +55,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-northeast-1.amazonaws.com',
         'rds': 'rds.ap-northeast-1.amazonaws.com',
         'redshift': 'redshift.ap-northeast-1.amazonaws.com',
-        's3': 's3-ap-northeast-1.amazonaws.com',
+        's3': 's3.ap-northeast-1.amazonaws.com',
         'sdb': 'sdb.ap-northeast-1.amazonaws.com',
         'sns': 'sns.ap-northeast-1.amazonaws.com',
         'sqs': 'ap-northeast-1.queue.amazonaws.com',
         'storagegateway': 'storagegateway.ap-northeast-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-northeast-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-northeast-1.amazonaws.com',
         'swf': 'swf.ap-northeast-1.amazonaws.com',
         'workspaces': 'workspaces.ap-northeast-1.amazonaws.com'
     },
@@ -87,13 +87,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-southeast-1.amazonaws.com',
         'rds': 'rds.ap-southeast-1.amazonaws.com',
         'redshift': 'redshift.ap-southeast-1.amazonaws.com',
-        's3': 's3-ap-southeast-1.amazonaws.com',
+        's3': 's3.ap-southeast-1.amazonaws.com',
         'sdb': 'sdb.ap-southeast-1.amazonaws.com',
         'sns': 'sns.ap-southeast-1.amazonaws.com',
         'sqs': 'ap-southeast-1.queue.amazonaws.com',
         'storagegateway': 'storagegateway.ap-southeast-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-southeast-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-southeast-1.amazonaws.com',
         'swf': 'swf.ap-southeast-1.amazonaws.com',
         'workspaces': 'workspaces.ap-southeast-1.amazonaws.com'
     },
@@ -122,13 +122,13 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.ap-southeast-2.amazonaws.com',
         'rds': 'rds.ap-southeast-2.amazonaws.com',
         'redshift': 'redshift.ap-southeast-2.amazonaws.com',
-        's3': 's3-ap-southeast-2.amazonaws.com',
+        's3': 's3.ap-southeast-2.amazonaws.com',
         'sdb': 'sdb.ap-southeast-2.amazonaws.com',
         'sns': 'sns.ap-southeast-2.amazonaws.com',
         'sqs': 'ap-southeast-2.queue.amazonaws.com',
         'storagegateway': 'storagegateway.ap-southeast-2.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.ap-southeast-2.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.ap-southeast-2.amazonaws.com',
         'swf': 'swf.ap-southeast-2.amazonaws.com',
         'workspaces': 'workspaces.ap-southeast-2.amazonaws.com'
     },
@@ -186,7 +186,7 @@ KNOWN_REGIONS = {
         'sqs': 'eu-central-1.queue.amazonaws.com',
         'storagegateway': 'storagegateway.eu-central-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.eu-central-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.eu-central-1.amazonaws.com',
         'swf': 'swf.eu-central-1.amazonaws.com'
     },
     'eu-west-1': {
@@ -222,22 +222,19 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.eu-west-1.amazonaws.com',
         'rds': 'rds.eu-west-1.amazonaws.com',
         'redshift': 'redshift.eu-west-1.amazonaws.com',
-        's3': 's3-eu-west-1.amazonaws.com',
+        's3': 's3.eu-west-1.amazonaws.com',
         'sdb': 'sdb.eu-west-1.amazonaws.com',
         'sns': 'sns.eu-west-1.amazonaws.com',
         'sqs': 'eu-west-1.queue.amazonaws.com',
         'ssm': 'ssm.eu-west-1.amazonaws.com',
         'storagegateway': 'storagegateway.eu-west-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.eu-west-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.eu-west-1.amazonaws.com',
         'swf': 'swf.eu-west-1.amazonaws.com',
         'workspaces': 'workspaces.eu-west-1.amazonaws.com'
     },
     'fips-us-gov-west-1': {
-        's3': 's3-fips-us-gov-west-1.amazonaws.com'
-    },
-    'local': {
-        'dynamodb': 'localhost:8000'
+        's3': 's3-fips.us-gov-west-1.amazonaws.com'
     },
     's3-external-1': {
         's3': 's3-external-1.amazonaws.com'
@@ -258,13 +255,13 @@ KNOWN_REGIONS = {
         'kms': 'kms.sa-east-1.amazonaws.com',
         'monitoring': 'monitoring.sa-east-1.amazonaws.com',
         'rds': 'rds.sa-east-1.amazonaws.com',
-        's3': 's3-sa-east-1.amazonaws.com',
+        's3': 's3.sa-east-1.amazonaws.com',
         'sdb': 'sdb.sa-east-1.amazonaws.com',
         'sns': 'sns.sa-east-1.amazonaws.com',
         'sqs': 'sa-east-1.queue.amazonaws.com',
         'storagegateway': 'storagegateway.sa-east-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.sa-east-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.sa-east-1.amazonaws.com',
         'swf': 'swf.sa-east-1.amazonaws.com'
     },
     'us-east-1': {
@@ -310,14 +307,14 @@ KNOWN_REGIONS = {
         'redshift': 'redshift.us-east-1.amazonaws.com',
         'route53': 'route53.amazonaws.com',
         'route53domains': 'route53domains.us-east-1.amazonaws.com',
-        's3': 's3.amazonaws.com',
+        's3': 's3.us-east-1.amazonaws.com',
         'sdb': 'sdb.amazonaws.com',
         'sns': 'sns.us-east-1.amazonaws.com',
         'sqs': 'queue.amazonaws.com',
         'ssm': 'ssm.us-east-1.amazonaws.com',
         'storagegateway': 'storagegateway.us-east-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-east-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-east-1.amazonaws.com',
         'support': 'support.us-east-1.amazonaws.com',
         'swf': 'swf.us-east-1.amazonaws.com',
         'workspaces': 'workspaces.us-east-1.amazonaws.com',
@@ -339,7 +336,7 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.us-gov-west-1.amazonaws.com',
         'rds': 'rds.us-gov-west-1.amazonaws.com',
         'redshift': 'redshift.us-gov-west-1.amazonaws.com',
-        's3': 's3-us-gov-west-1.amazonaws.com',
+        's3': 's3.us-gov-west-1.amazonaws.com',
         'sns': 'sns.us-gov-west-1.amazonaws.com',
         'sqs': 'us-gov-west-1.queue.amazonaws.com',
         'sts': 'sts.us-gov-west-1.amazonaws.com',
@@ -366,13 +363,13 @@ KNOWN_REGIONS = {
         'logs': 'logs.us-west-1.amazonaws.com',
         'monitoring': 'monitoring.us-west-1.amazonaws.com',
         'rds': 'rds.us-west-1.amazonaws.com',
-        's3': 's3-us-west-1.amazonaws.com',
+        's3': 's3.us-west-1.amazonaws.com',
         'sdb': 'sdb.us-west-1.amazonaws.com',
         'sns': 'sns.us-west-1.amazonaws.com',
         'sqs': 'us-west-1.queue.amazonaws.com',
         'storagegateway': 'storagegateway.us-west-1.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-west-1.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-west-1.amazonaws.com',
         'swf': 'swf.us-west-1.amazonaws.com'
     },
     'us-west-2': {
@@ -408,14 +405,14 @@ KNOWN_REGIONS = {
         'monitoring': 'monitoring.us-west-2.amazonaws.com',
         'rds': 'rds.us-west-2.amazonaws.com',
         'redshift': 'redshift.us-west-2.amazonaws.com',
-        's3': 's3-us-west-2.amazonaws.com',
+        's3': 's3.us-west-2.amazonaws.com',
         'sdb': 'sdb.us-west-2.amazonaws.com',
         'sns': 'sns.us-west-2.amazonaws.com',
         'sqs': 'us-west-2.queue.amazonaws.com',
         'ssm': 'ssm.us-west-2.amazonaws.com',
         'storagegateway': 'storagegateway.us-west-2.amazonaws.com',
         'streams.dynamodb': 'streams.dynamodb.us-west-2.amazonaws.com',
-        'sts': 'sts.amazonaws.com',
+        'sts': 'sts.us-west-2.amazonaws.com',
         'swf': 'swf.us-west-2.amazonaws.com',
         'workspaces': 'workspaces.us-west-2.amazonaws.com'
     }
@@ -445,7 +442,17 @@ def _get_patched_session():
     return session
 
 
-def test_known_endpoints():
+def _known_endpoints_by_region():
+    for region_name, service_dict in KNOWN_REGIONS.items():
+        for service_name, endpoint in service_dict.items():
+            yield service_name, region_name, endpoint
+
+
+@pytest.mark.parametrize(
+    "service_name, region_name, expected_endpoint",
+    _known_endpoints_by_region()
+)
+def test_single_service_region_endpoint(service_name, region_name, expected_endpoint):
     # Verify the actual values from the partition files.  While
     # TestEndpointHeuristics verified the generic functionality given any
     # endpoints file, this test actually verifies the partition data against a
@@ -454,18 +461,10 @@ def test_known_endpoints():
     # logic evolves.
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    for region_name, service_dict in KNOWN_REGIONS.items():
-        for service_name, endpoint in service_dict.items():
-            yield (_test_single_service_region, service_name,
-                   region_name, endpoint, resolver)
-
-
-def _test_single_service_region(service_name, region_name,
-                                expected_endpoint, resolver):
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
     expected = 'https://%s' % expected_endpoint
-    assert_equal(result['endpoint_url'], expected)
+    assert result['endpoint_url'] == expected
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
@@ -480,25 +479,23 @@ def test_all_s3_endpoints_have_s3v4():
             assert 'v4' not in resolved['signatureVersions']
 
 
-def test_known_endpoints():
+@pytest.mark.parametrize(
+    "service_name, expected_endpoint",
+    KNOWN_AWS_PARTITION_WIDE.items()
+)
+def test_single_service_partition_endpoint(service_name, expected_endpoint):
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    for service_name, endpoint in KNOWN_AWS_PARTITION_WIDE.items():
-        yield (_test_single_service_partition_endpoint, service_name,
-               endpoint, resolver)
-
-
-def _test_single_service_partition_endpoint(service_name, expected_endpoint,
-                                            resolver):
     bridge = ClientEndpointBridge(resolver)
     result = bridge.resolve(service_name)
-    assert_equal(result['endpoint_url'], expected_endpoint)
+    assert result['endpoint_url'] == expected_endpoint
 
 
 def test_non_partition_endpoint_requires_region():
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    assert_raises(NoRegionError, resolver.construct_endpoint, 'ec2')
+    with pytest.raises(NoRegionError):
+        resolver.construct_endpoint('ec2')
 
 
 class TestEndpointResolution(BaseSessionTest):

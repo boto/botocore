@@ -1,3 +1,5 @@
+import pytest
+
 from tests import unittest
 
 from botocore import model
@@ -5,30 +7,11 @@ from botocore.compat import OrderedDict
 from botocore.exceptions import MissingServiceIdError
 
 
-def test_missing_model_attribute_raises_exception():
-    # We're using a nose test generator here to cut down
-    # on the duplication.  The property names below
-    # all have the same test logic.
+@pytest.mark.parametrize("property_name", ['api_version', 'protocol'])
+def test_missing_model_attribute_raises_exception(property_name):
     service_model = model.ServiceModel({'metadata': {'endpointPrefix': 'foo'}})
-    property_names = ['api_version', 'protocol']
-
-    def _test_attribute_raise_exception(attr_name):
-        try:
-            getattr(service_model, attr_name)
-        except model.UndefinedModelAttributeError:
-            # This is what we expect, so the test passes.
-            pass
-        except Exception as e:
-            raise AssertionError("Expected UndefinedModelAttributeError to "
-                                 "be raised, but %s was raised instead" %
-                                 (e.__class__))
-        else:
-            raise AssertionError(
-                "Expected UndefinedModelAttributeError to "
-                "be raised, but no exception was raised for: %s" % attr_name)
-
-    for name in property_names:
-        yield _test_attribute_raise_exception, name
+    with pytest.raises(model.UndefinedModelAttributeError):
+        getattr(service_model, property_name)
 
 
 class TestServiceId(unittest.TestCase):

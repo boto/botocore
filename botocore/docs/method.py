@@ -96,10 +96,13 @@ def document_custom_signature(section, name, method,
     :param exclude: The names of the parameters to exclude from
         documentation.
     """
-    args, varargs, keywords, defaults = inspect.getargspec(method)
-    args = args[1:]
+    argspec = inspect.getfullargspec(method)
     signature_params = inspect.formatargspec(
-        args, varargs, keywords, defaults)
+        args=argspec.args[1:],
+        varargs=argspec.varargs,
+        varkw=argspec.varkw,
+        defaults=argspec.defaults
+    )
     signature_params = signature_params.lstrip('(')
     signature_params = signature_params.rstrip(')')
     section.style.start_sphinx_py_method(name, signature_params)

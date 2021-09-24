@@ -10,9 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
+
 from tests import mock
 from tests import unittest
-from nose.tools import assert_equal
 
 import botocore
 import botocore.session as session
@@ -447,15 +448,12 @@ def assert_chain_does_provide(providers, expected_value):
     provider = ChainProvider(
         providers=providers,
     )
-    value = provider.provide()
-    assert_equal(value, expected_value)
+    assert provider.provide() == expected_value
 
 
-def test_chain_provider():
-    # Each case is a tuple with the first element being the expected return
-    # value form the ChainProvider. The second value being a list of return
-    # values from the individual providers that are in the chain.
-    cases = [
+@pytest.mark.parametrize(
+    'case',
+    (
         (None, []),
         (None, [None]),
         ('foo', ['foo']),
@@ -466,11 +464,16 @@ def test_chain_provider():
         ('bar', [None, 'bar', None]),
         ('foo', ['foo', 'bar', None]),
         ('foo', ['foo', 'bar', 'baz']),
-    ]
-    for case in cases:
-        yield assert_chain_does_provide, \
-            _make_providers_that_return(case[1]), \
-            case[0]
+    )
+)
+def test_chain_provider(case):
+    # Each case is a tuple with the first element being the expected return
+    # value from the ChainProvider. The second value being a list of return
+    # values from the individual providers that are in the chain.
+    assert_chain_does_provide(
+        _make_providers_that_return(case[1]),
+        case[0]
+    )
 
 
 class TestChainProvider(unittest.TestCase):

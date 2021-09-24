@@ -10,31 +10,41 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+import pytest
 
-from nose.tools import assert_true
+from tests import unittest
 
 import botocore.session
 from botocore.paginate import PageIterator
 from botocore.exceptions import OperationNotPageableError
 
 
-def test_emr_endpoints_work_with_py26():
+@pytest.fixture()
+def botocore_session():
+    return botocore.session.get_session()
+
+@pytest.mark.parametrize(
+    "region",
+    [
+        'us-east-1',
+        'us-west-2',
+        'us-west-2',
+        'ap-northeast-1',
+        'ap-southeast-1',
+        'ap-southeast-2',
+        'sa-east-1',
+        'eu-west-1',
+        'eu-central-1'
+    ]
+)
+def test_emr_endpoints_work_with_py26(botocore_session, region):
     # Verify that we can talk to all currently supported EMR endpoints.
     # Python2.6 has an SSL cert bug where it can't read the SAN of
     # certain SSL certs.  We therefore need to always use the CN
     # as the hostname.
-    session = botocore.session.get_session()
-    for region in ['us-east-1', 'us-west-2', 'us-west-2', 'ap-northeast-1',
-                   'ap-southeast-1', 'ap-southeast-2', 'sa-east-1', 'eu-west-1',
-                   'eu-central-1']:
-        yield _test_can_list_clusters_in_region, session, region
-
-
-def _test_can_list_clusters_in_region(session, region):
-    client = session.create_client('emr', region_name=region)
+    client = botocore_session.create_client('emr', region_name=region)
     response = client.list_clusters()
-    assert_true('Clusters' in response)
+    assert 'Clusters' in response
 
 
 # I consider these integration tests because they're

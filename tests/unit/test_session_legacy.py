@@ -19,6 +19,8 @@ import logging
 import tempfile
 import shutil
 
+import pytest
+
 import botocore.session
 import botocore.exceptions
 from botocore.model import ServiceModel
@@ -702,21 +704,29 @@ class TestSessionComponent(BaseSessionTest):
         self.assertIs(
             self.session._get_internal_component('internal'), component)
         with self.assertRaises(ValueError):
-            self.session.get_component('internal')
+            # get_component has been deprecated to the public
+            with pytest.warns(DeprecationWarning):
+                self.session.get_component('internal')
 
     def test_internal_endpoint_resolver_is_same_as_deprecated_public(self):
         endpoint_resolver = self.session._get_internal_component(
             'endpoint_resolver')
-        self.assertIs(
-            self.session.get_component('endpoint_resolver'), endpoint_resolver)
+        # get_component has been deprecated to the public
+        with pytest.warns(DeprecationWarning):
+            self.assertIs(
+                self.session.get_component('endpoint_resolver'),
+                endpoint_resolver
+            )
 
     def test_internal_exceptions_factory_is_same_as_deprecated_public(self):
         exceptions_factory = self.session._get_internal_component(
             'exceptions_factory')
-        self.assertIs(
-            self.session.get_component('exceptions_factory'),
-            exceptions_factory
-        )
+        # get_component has been deprecated to the public
+        with pytest.warns(DeprecationWarning):
+            self.assertIs(
+                self.session.get_component('exceptions_factory'),
+                exceptions_factory
+            )
 
 
 class TestComponentLocator(unittest.TestCase):
