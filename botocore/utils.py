@@ -380,7 +380,9 @@ class IMDSFetcher(object):
         custom_metadata_endpoint = config.get('ec2_metadata_service_endpoint')
 
         if requires_ipv6 and custom_metadata_endpoint:
-            logger.warn("Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint.")
+            logger.warning(
+                "Custom endpoint and IMDS_USE_IPV6 are both set. Using custom endpoint."
+            )
 
         chosen_base_url = None
 

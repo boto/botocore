@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
+
 from botocore.session import get_session
 
 _H2_REQUIRED = object()
@@ -19,33 +21,41 @@ _KNOWN_SERVICES = {
     'lexv2-runtime': ['StartConversation'],
 }
 
-
-def test_all_uses_of_h2_are_known():
+def _all_test_cases():
     session = get_session()
     loader = session.get_component('data_loader')
 
     services = loader.list_available_services('service-2')
+    h2_services = []
+    h2_operations = []
 
     for service in services:
         service_model = session.get_service_model(service)
         h2_config = service_model.metadata.get('protocolSettings', {}).get('h2')
         if h2_config == 'required':
-            yield _assert_h2_service_is_known, service
+            h2_services.append(service)
         elif h2_config == 'eventstream':
             for operation in service_model.operation_names:
                 operation_model = service_model.operation_model(operation)
                 if operation_model.has_event_stream_output:
-                    yield _assert_h2_operation_is_known, service, operation
+                    h2_operations.append([service, operation])
+
+    return h2_services, h2_operations
 
 
-def _assert_h2_service_is_known(service):
+H2_SERVICES, H2_OPERATIONS = _all_test_cases()
+
+
+@pytest.mark.parametrize("h2_service", H2_SERVICES)
+def test_all_uses_of_h2_are_known(h2_service):
     # Validates that a service that requires HTTP 2 for all operations is known
-    message = 'Found unknown HTTP 2 service: %s' % service
-    assert _KNOWN_SERVICES.get(service) is _H2_REQUIRED, message
+    message = 'Found unknown HTTP 2 service: %s' % h2_service
+    assert _KNOWN_SERVICES.get(h2_service) is _H2_REQUIRED, message
 
 
-def _assert_h2_operation_is_known(service, operation):
+@pytest.mark.parametrize("h2_service, operation", H2_OPERATIONS)
+def test_all_h2_operations_are_known(h2_service, operation):
     # Validates that an operation that requires HTTP 2 is known
-    known_operations = _KNOWN_SERVICES.get(service, [])
-    message = 'Found unknown HTTP 2 operation: %s.%s' % (service, operation)
+    known_operations = _KNOWN_SERVICES.get(h2_service, [])
+    message = 'Found unknown HTTP 2 operation: %s.%s' % (h2_service, operation)
     assert operation in known_operations, message

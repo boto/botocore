@@ -1,3 +1,5 @@
+import pytest
+
 from botocore.session import Session
 
 
@@ -578,14 +580,43 @@ SERVICES = {
 }
 
 
-def test_event_alias():
+def _event_aliases():
+    for client_name in SERVICES.keys():
+        endpoint_prefix = SERVICES[client_name].get('endpoint_prefix')
+        service_id = SERVICES[client_name]['service_id']
+        yield client_name, service_id
+
+
+def _event_aliases_with_endpoint_prefix():
     for client_name in SERVICES.keys():
         endpoint_prefix = SERVICES[client_name].get('endpoint_prefix')
         service_id = SERVICES[client_name]['service_id']
         if endpoint_prefix is not None:
-            yield _assert_handler_called, client_name, endpoint_prefix
-        yield _assert_handler_called, client_name, service_id
-        yield _assert_handler_called, client_name, client_name
+            yield client_name, endpoint_prefix
+
+
+@pytest.mark.parametrize(
+    "client_name, endpoint_prefix",
+    _event_aliases_with_endpoint_prefix()
+)
+def test_event_alias_by_endpoint_prefix(client_name, endpoint_prefix):
+    _assert_handler_called(client_name, endpoint_prefix)
+
+
+@pytest.mark.parametrize(
+    "client_name, service_id",
+    _event_aliases()
+)
+def test_event_alias_by_service_id(client_name, service_id):
+    _assert_handler_called(client_name, service_id)
+
+
+@pytest.mark.parametrize(
+    "client_name, service_id",
+    _event_aliases()
+)
+def test_event_alias_by_client_name(client_name, service_id):
+    _assert_handler_called(client_name, client_name)
 
 
 def _assert_handler_called(client_name, event_part):

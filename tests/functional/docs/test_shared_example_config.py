@@ -10,12 +10,14 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
+
 import botocore.session
 from botocore.model import OperationNotFoundError
 from botocore.utils import parse_timestamp
 
 
-def test_lint_shared_example_configs():
+def _shared_example_configs():
     session = botocore.session.Session()
     loader = session.get_component('data_loader')
     services = loader.list_available_services('examples-1')
@@ -27,10 +29,14 @@ def test_lint_shared_example_configs():
         examples = example_config.get("examples", {})
         for operation, operation_examples in examples.items():
             for example in operation_examples:
-                yield _lint_single_example, operation, example, service_model
+                yield operation, example, service_model
 
 
-def _lint_single_example(operation_name, example_config, service_model):
+@pytest.mark.parametrize(
+    "operation_name, example_config, service_model",
+    _shared_example_configs()
+)
+def test_lint_shared_example_configs(operation_name, example_config, service_model):
     # The operation should actually exist
     assert_operation_exists(service_model, operation_name)
     operation_model = service_model.operation_model(operation_name)

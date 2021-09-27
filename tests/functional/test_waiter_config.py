@@ -13,6 +13,8 @@
 import jmespath
 from jsonschema import Draft4Validator
 
+import pytest
+
 import botocore.session
 from botocore.exceptions import UnknownServiceError
 from botocore.utils import ArgumentGenerator
@@ -82,7 +84,7 @@ WAITER_SCHEMA = {
 }
 
 
-def test_lint_waiter_configs():
+def _waiter_configs():
     session = botocore.session.get_session()
     validator = Draft4Validator(WAITER_SCHEMA)
     for service_name in session.get_available_services():
@@ -98,9 +100,14 @@ def test_lint_waiter_configs():
         except UnknownServiceError:
             # The service doesn't have waiters
             continue
-        yield _validate_schema, validator, waiter_model
-        for waiter_name in client.waiter_names:
-            yield _lint_single_waiter, client, waiter_name, service_model
+        yield validator, waiter_model, client
+
+
+@pytest.mark.parametrize("validator, waiter_model, client", _waiter_configs())
+def test_lint_waiter_configs(validator, waiter_model, client):
+    _validate_schema(validator, waiter_model)
+    for waiter_name in client.waiter_names:
+        _lint_single_waiter(client, waiter_name, client.meta.service_model)
 
 
 def _lint_single_waiter(client, waiter_name, service_model):

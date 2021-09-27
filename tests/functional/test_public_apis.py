@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 
+import pytest
 
 from tests import mock
 from tests import ClientHTTPStubber
@@ -46,23 +47,7 @@ class EarlyExit(Exception):
     pass
 
 
-def _test_public_apis_will_not_be_signed(client, operation, kwargs):
-    with ClientHTTPStubber(client) as http_stubber:
-        http_stubber.responses.append(EarlyExit())
-        try:
-            operation(**kwargs)
-        except EarlyExit:
-            pass
-        request = http_stubber.requests[0]
-    sig_v2_disabled = 'SignatureVersion=2' not in request.url
-    assert sig_v2_disabled, "SigV2 is incorrectly enabled"
-    sig_v3_disabled = 'X-Amzn-Authorization' not in request.headers
-    assert sig_v3_disabled, "SigV3 is incorrectly enabled"
-    sig_v4_disabled = 'Authorization' not in request.headers
-    assert sig_v4_disabled, "SigV4 is incorrectly enabled"
-
-
-def test_public_apis_will_not_be_signed():
+def _public_apis():
     session = Session()
 
     # Mimic the scenario that user does not have aws credentials setup
@@ -73,4 +58,22 @@ def test_public_apis_will_not_be_signed():
         for operation_name in PUBLIC_API_TESTS[service_name]:
             kwargs = PUBLIC_API_TESTS[service_name][operation_name]
             method = getattr(client, xform_name(operation_name))
-            yield _test_public_apis_will_not_be_signed, client, method, kwargs
+            yield client, method, kwargs
+
+
+@pytest.mark.parametrize("client, operation, kwargs", _public_apis())
+def test_public_apis_will_not_be_signed(client, operation, kwargs):
+    with ClientHTTPStubber(client) as http_stubber:
+        http_stubber.responses.append(EarlyExit())
+        try:
+            operation(**kwargs)
+        except EarlyExit:
+            pass
+        request = http_stubber.requests[0]
+
+    sig_v2_disabled = 'SignatureVersion=2' not in request.url
+    assert sig_v2_disabled, "SigV2 is incorrectly enabled"
+    sig_v3_disabled = 'X-Amzn-Authorization' not in request.headers
+    assert sig_v3_disabled, "SigV3 is incorrectly enabled"
+    sig_v4_disabled = 'Authorization' not in request.headers
+    assert sig_v4_disabled, "SigV4 is incorrectly enabled"

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from nose.tools import assert_equal, assert_raises
+import pytest
 
 from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
@@ -97,7 +97,13 @@ class TestGetMD5(unittest.TestCase):
                 get_md5()
 
 
-def test_compat_shell_split_windows():
+@pytest.fixture
+def shell_split_runner():
+    # Single runner fixture for all tests
+    return ShellSplitTestRunner()
+
+
+def get_windows_test_cases():
     windows_cases = {
         r'': [],
         r'spam \\': [r'spam', '\\\\'],
@@ -120,14 +126,21 @@ def test_compat_shell_split_windows():
         r'a\\\"b c d': [r'a\"b', r'c', r'd'],
         r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
     }
-    runner = ShellSplitTestRunner()
-    for input_string, expected_output in windows_cases.items():
-        yield runner.assert_equal, input_string, expected_output, "win32"
-
-    yield runner.assert_raises, r'"', ValueError, "win32"
+    return windows_cases.items()
 
 
-def test_compat_shell_split_unix():
+@pytest.mark.parametrize("input_string, expected_output", get_windows_test_cases())
+def test_compat_shell_split_windows(
+    shell_split_runner, input_string, expected_output
+):
+    shell_split_runner.assert_equal(input_string, expected_output, "win32")
+
+
+def test_compat_shell_split_windows_raises_error(shell_split_runner):
+    shell_split_runner.assert_raises(r'"', ValueError, "win32")
+
+
+def get_unix_test_cases():
     unix_cases = {
         r'': [],
         r'spam \\': [r'spam', '\\'],
@@ -150,21 +163,38 @@ def test_compat_shell_split_unix():
         r'a\\\"b c d': [r'a\"b', r'c', r'd'],
         r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
     }
-    runner = ShellSplitTestRunner()
-    for input_string, expected_output in unix_cases.items():
-        yield runner.assert_equal, input_string, expected_output, "linux2"
-        yield runner.assert_equal, input_string, expected_output, "darwin"
+    return unix_cases.items()
 
-    yield runner.assert_raises, r'"', ValueError, "linux2"
-    yield runner.assert_raises, r'"', ValueError, "darwin"
+
+@pytest.mark.parametrize("input_string, expected_output", get_unix_test_cases())
+def test_compat_shell_split_unix_linux2(
+    shell_split_runner, input_string, expected_output
+):
+    shell_split_runner.assert_equal(input_string, expected_output, "linux2")
+
+
+@pytest.mark.parametrize("input_string, expected_output", get_unix_test_cases())
+def test_compat_shell_split_unix_darwin(
+    shell_split_runner, input_string, expected_output
+):
+    shell_split_runner.assert_equal(input_string, expected_output, "darwin")
+
+
+def test_compat_shell_split_unix_linux2_raises_error(shell_split_runner):
+    shell_split_runner.assert_raises(r'"', ValueError, "linux2")
+
+
+def test_compat_shell_split_unix_darwin_raises_error(shell_split_runner):
+    shell_split_runner.assert_raises(r'"', ValueError, "darwin")
 
 
 class ShellSplitTestRunner(object):
     def assert_equal(self, s, expected, platform):
-        assert_equal(compat_shell_split(s, platform), expected)
+        assert compat_shell_split(s, platform) == expected
 
     def assert_raises(self, s, exception_cls, platform):
-        assert_raises(exception_cls, compat_shell_split, s, platform)
+        with pytest.raises(exception_cls):
+            compat_shell_split(s, platform)
 
 
 class TestTimezoneOperations(unittest.TestCase):

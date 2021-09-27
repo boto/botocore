@@ -16,8 +16,8 @@
 This is a test runner for all the JSON tests defined in
 ``tests/unit/protocols/``, including both the input/output tests.
 
-You can use the normal ``nosetests tests/unit/test_protocols.py`` to run
-this test.  In addition, there are several env vars you can use during
+You can use the normal ``python -m pytest tests/unit/test_protocols.py``
+to run this test.  In addition, there are several env vars you can use during
 development.
 
 Tests are broken down by filename, test suite, testcase.  When a test fails
@@ -37,24 +37,27 @@ failed test.
 To run tests from only a single file, you can set the
 BOTOCORE_TEST env var::
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json nosetests tests/unit/test_protocols.py
+    BOTOCORE_TEST=tests/unit/compliance/input/json.json pytest tests/unit/test_protocols.py
 
 To run a single test suite you can set the BOTOCORE_TEST_ID env var:
 
     BOTOCORE_TEST=tests/unit/compliance/input/json.json BOTOCORE_TEST_ID=5 \
-        nosetests tests/unit/test_protocols.py
+        pytest tests/unit/test_protocols.py
 
 To run a single test case in a suite (useful when debugging a single test), you
 can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
-    BOTOCORE_TEST_ID=5:1 nosetests test/unit/test_protocols.py
+    BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
 
 """
 import os
 import copy
+from enum import Enum
 
 from base64 import b64decode
 from dateutil.tz import tzutc
+
+import pytest
 
 from botocore.awsrequest import HeadersDict
 from botocore.compat import json, OrderedDict, urlsplit
@@ -68,8 +71,6 @@ from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
 from botocore.model import NoShapeFoundError
-
-from nose.tools import assert_equal as _assert_equal
 
 TEST_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -94,19 +95,34 @@ PROTOCOL_TEST_BLACKLIST = [
 ]
 
 
-def test_compliance():
+class TestType(Enum):
+    # Tell test runner to ignore this class
+    __test__ = False
+
+    INPUT = "input"
+    OUTPUT = "output"
+
+
+def _compliance_tests(test_type=None):
+    inp = test_type is None or test_type is TestType.INPUT
+    out = test_type is None or test_type is TestType.OUTPUT
+
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
                 if model.get('description') in PROTOCOL_TEST_BLACKLIST:
                     continue
-                if 'params' in case:
-                    yield _test_input, model, case, basename
-                elif 'response' in case:
-                    yield _test_output, model, case, basename
+                if 'params' in case and inp:
+                    yield model, case, basename
+                elif 'response' in case and out:
+                    yield model, case, basename
 
 
-def _test_input(json_description, case, basename):
+@pytest.mark.parametrize(
+    "json_description, case, basename",
+    _compliance_tests(TestType.INPUT)
+)
+def test_input_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
     service_description['operations'] = {
         case.get('name', 'OperationName'): case,
@@ -152,8 +168,11 @@ class MockRawResponse(object):
     def stream(self):
         yield self._data
 
-
-def _test_output(json_description, case, basename):
+@pytest.mark.parametrize(
+    "json_description, case, basename",
+    _compliance_tests(TestType.OUTPUT)
+)
+def test_output_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
     operation_name = case.get('name', 'OperationName')
     service_description['operations'] = {
@@ -322,7 +341,7 @@ def assert_equal(first, second, prefix):
     # A better assert equals.  It allows you to just provide
     # prefix instead of the entire message.
     try:
-        _assert_equal(first, second)
+        assert first == second
     except Exception:
         try:
             better = "%s (actual != expected)\n%s !=\n%s" % (
