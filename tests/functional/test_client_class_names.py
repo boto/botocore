@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import pytest
+from nose.tools import assert_equal
 
 import botocore.session
 
@@ -68,8 +68,14 @@ SERVICE_TO_CLASS_NAME = {
     'workspaces': 'WorkSpaces'
 }
 
-@pytest.mark.parametrize("service_name", SERVICE_TO_CLASS_NAME)
-def test_client_has_correct_class_name(service_name):
+
+def test_client_has_correct_class_name():
     session = botocore.session.get_session()
-    client = session.create_client(service_name, REGION)
-    assert client.__class__.__name__ == SERVICE_TO_CLASS_NAME[service_name]
+    for service_name in SERVICE_TO_CLASS_NAME:
+        client = session.create_client(service_name, REGION)
+        yield (_assert_class_name_matches_ref_class_name, client,
+               SERVICE_TO_CLASS_NAME[service_name])
+
+
+def _assert_class_name_matches_ref_class_name(client, ref_class_name):
+    assert_equal(client.__class__.__name__, ref_class_name)

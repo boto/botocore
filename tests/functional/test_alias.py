@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import pytest
-
 import botocore.session
 from botocore.stub import Stubber
 from botocore.exceptions import ParamValidationError
@@ -48,16 +46,16 @@ ALIAS_CASES = [
 ]
 
 
-@pytest.mark.parametrize("case", ALIAS_CASES)
-def test_can_use_alias(case):
+def test_can_use_alias():
     session = botocore.session.get_session()
-    _can_use_parameter_in_client_call(session, case)
+    for case in ALIAS_CASES:
+        yield _can_use_parameter_in_client_call, session, case
 
 
-@pytest.mark.parametrize("case", ALIAS_CASES)
-def test_can_use_original_name(case):
+def test_can_use_original_name():
     session = botocore.session.get_session()
-    _can_use_parameter_in_client_call(session, case, False)
+    for case in ALIAS_CASES:
+        yield _can_use_parameter_in_client_call, session, case, False
 
 
 def _can_use_parameter_in_client_call(session, case, use_alias=True):

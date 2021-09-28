@@ -10,52 +10,40 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import pytest
-
 from botocore.session import Session
+from nose.tools import assert_false
 
 
 def _all_services():
     session = Session()
     service_names = session.get_available_services()
-    return [session.get_service_model(name) for name in service_names]
-
-
-# Only compute our service models once
-ALL_SERVICES = _all_services()
-
-
-def _all_service_error_shapes():
-    for service_model in ALL_SERVICES:
-        for shape in service_model.error_shapes:
-            yield shape
+    for service_name in service_names:
+        yield session.get_service_model(service_name)
 
 
 def _all_operations():
-    for service_model in ALL_SERVICES:
+    for service_model in _all_services():
         for operation_name in service_model.operation_names:
-            yield service_model.operation_model(operation_name).output_shape
+            yield service_model.operation_model(operation_name)
 
 
 def _assert_not_shadowed(key, shape):
     if not shape:
         return
-
-    assert key not in shape.members, (
-        f'Found shape "{shape.name}" that shadows the botocore response key "{key}"'
+    msg = (
+        'Found shape "%s" that shadows the botocore response key "%s"'
     )
+    assert_false(key in shape.members, msg % (shape.name, key))
 
 
-@pytest.mark.parametrize("operation_output_shape", _all_operations())
-def test_response_metadata_is_not_shadowed(operation_output_shape):
-    _assert_not_shadowed('ResponseMetadata', operation_output_shape)
+def test_response_metadata_is_not_shadowed():
+    for operation_model in _all_operations():
+        shape = operation_model.output_shape
+        yield _assert_not_shadowed, 'ResponseMetadata', shape
 
 
-@pytest.mark.parametrize("error_shape", _all_service_error_shapes())
-def test_exceptions_do_not_shadow_response_metadata(error_shape):
-    _assert_not_shadowed('ResponseMetadata', error_shape)
-
-
-@pytest.mark.parametrize("error_shape", _all_service_error_shapes())
-def test_exceptions_do_not_shadow_error(error_shape):
-    _assert_not_shadowed('Error', error_shape)
+def test_exceptions_do_not_shadow():
+    for service_model in _all_services():
+        for shape in service_model.error_shapes:
+            yield _assert_not_shadowed, 'ResponseMetadata', shape
+            yield _assert_not_shadowed, 'Error', shape

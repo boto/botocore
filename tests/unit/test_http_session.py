@@ -1,9 +1,8 @@
 import socket
 
-import pytest
-from urllib3.exceptions import NewConnectionError, ProtocolError
-
 from tests import mock, unittest
+from nose.tools import raises
+from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
@@ -390,15 +389,15 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         session.send(self.request.prepare())
 
+    @raises(EndpointConnectionError)
     def test_catches_new_connection_error(self):
         error = NewConnectionError(None, None)
-        with pytest.raises(EndpointConnectionError):
-           self.make_request_with_error(error)
+        self.make_request_with_error(error)
 
+    @raises(ConnectionClosedError)
     def test_catches_bad_status_line(self):
         error = ProtocolError(None)
-        with pytest.raises(ConnectionClosedError):
-            self.make_request_with_error(error)
+        self.make_request_with_error(error)
 
     def test_aws_connection_classes_are_used(self):
         session = URLLib3Session()

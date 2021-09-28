@@ -1,7 +1,7 @@
-import pytest
-
 from tests import mock
 from tests import unittest
+
+from nose.tools import assert_equal, assert_is_instance
 
 from botocore.retries import standard
 from botocore.retries import quota
@@ -150,46 +150,43 @@ SERVICE_DESCRIPTION_WITH_RETRIES = {
     },
 }
 
-@pytest.mark.parametrize('case', RETRYABLE_TRANSIENT_ERRORS)
-def test_can_detect_retryable_transient_errors(case):
+
+def test_can_detect_retryable_transient_errors():
     transient_checker = standard.TransientRetryableChecker()
-    _verify_retryable(transient_checker, None, *case)
+    for case in RETRYABLE_TRANSIENT_ERRORS:
+        yield (_verify_retryable, transient_checker, None) + case
 
 
-@pytest.mark.parametrize('case', RETRYABLE_THROTTLED_RESPONSES)
-def test_can_detect_retryable_throttled_errors(case):
+def test_can_detect_retryable_throttled_errors():
     throttled_checker = standard.ThrottledRetryableChecker()
-    _verify_retryable(throttled_checker, None, *case)
+    for case in RETRYABLE_THROTTLED_RESPONSES:
+        yield (_verify_retryable, throttled_checker, None) + case
 
 
-@pytest.mark.parametrize('case', RETRYABLE_MODELED_ERRORS)
-def test_can_detect_modeled_retryable_errors(case):
+def test_can_detect_modeled_retryable_errors():
     modeled_retry_checker = standard.ModeledRetryableChecker()
-    _verify_retryable(
-        modeled_retry_checker, get_operation_model_with_retries(), *case
-    )
+    test_params = (_verify_retryable, modeled_retry_checker,
+                   get_operation_model_with_retries())
+    for case in RETRYABLE_MODELED_ERRORS:
+        test_case = test_params + case
+        yield test_case
 
 
-@pytest.mark.parametrize('case',
-    [
-        case for case in
-        RETRYABLE_TRANSIENT_ERRORS +
-        RETRYABLE_THROTTLED_RESPONSES +
-        RETRYABLE_MODELED_ERRORS
-        if case[2]
-    ]
-)
-def test_standard_retry_conditions(case):
-    """This is verifying that the high level object used for checking
-    retry conditions still handles all the individual testcases.
-
-    It's possible that cases that are retryable for an individual checker
-    aren't retryable for a different checker.  We need to filter out all
-    the False cases (if case[2]).
-    """
+def test_standard_retry_conditions():
+    # This is verifying that the high level object used for checking
+    # retry conditions still handles all the individual testcases.
     standard_checker = standard.StandardRetryConditions()
     op_model = get_operation_model_with_retries()
-    _verify_retryable(standard_checker, op_model, *case)
+    all_cases = (
+        RETRYABLE_TRANSIENT_ERRORS + RETRYABLE_THROTTLED_RESPONSES +
+        RETRYABLE_MODELED_ERRORS)
+    # It's possible that cases that are retryable for an individual checker
+    # are retryable for a different checker.  We need to filter out all
+    # the False cases.
+    all_cases = [c for c in all_cases if c[2]]
+    test_params = (_verify_retryable, standard_checker, op_model)
+    for case in all_cases:
+        yield test_params + case
 
 
 def get_operation_model_with_retries():
@@ -216,7 +213,7 @@ def _verify_retryable(checker, operation_model,
         http_response=http_response,
         caught_exception=caught_exception,
     )
-    assert checker.is_retryable(context) == is_retryable
+    assert_equal(checker.is_retryable(context), is_retryable)
 
 
 def arbitrary_retry_context():
@@ -236,38 +233,36 @@ def test_can_honor_max_attempts():
     checker = standard.MaxAttemptsChecker(max_attempts=3)
     context = arbitrary_retry_context()
     context.attempt_number = 1
-    assert checker.is_retryable(context) is True
+    assert_equal(checker.is_retryable(context), True)
 
     context.attempt_number = 2
-    assert checker.is_retryable(context) is True
+    assert_equal(checker.is_retryable(context), True)
 
     context.attempt_number = 3
-    assert checker.is_retryable(context) is False
+    assert_equal(checker.is_retryable(context), False)
 
 
 def test_max_attempts_adds_metadata_key_when_reached():
     checker = standard.MaxAttemptsChecker(max_attempts=3)
     context = arbitrary_retry_context()
     context.attempt_number = 3
-    assert checker.is_retryable(context) is False
-    assert context.get_retry_metadata() == {'MaxAttemptsReached': True}
+    assert_equal(checker.is_retryable(context), False)
+    assert_equal(context.get_retry_metadata(), {'MaxAttemptsReached': True})
 
 
 def test_can_create_default_retry_handler():
     mock_client = mock.Mock()
     mock_client.meta.service_model.service_id = model.ServiceId('my-service')
-    assert isinstance(
-        standard.register_retry_handler(mock_client),
-        standard.RetryHandler
-    )
+    assert_is_instance(standard.register_retry_handler(mock_client),
+                       standard.RetryHandler)
     call_args_list = mock_client.meta.events.register.call_args_list
     # We should have registered the retry quota to after-calls
     first_call = call_args_list[0][0]
     second_call = call_args_list[1][0]
     # Not sure if there's a way to verify the class associated with the
     # bound method matches what we expect.
-    assert first_call[0] == 'after-call.my-service'
-    assert second_call[0] == 'needs-retry.my-service'
+    assert_equal(first_call[0], 'after-call.my-service')
+    assert_equal(second_call[0], 'needs-retry.my-service')
 
 
 class TestRetryHandler(unittest.TestCase):

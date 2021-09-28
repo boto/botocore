@@ -13,10 +13,9 @@
 import base64
 import re
 
-import pytest
-
 from tests import temporary_file, requires_crt
 from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
+from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
@@ -1224,7 +1223,7 @@ class TestS3GetBucketLifecycle(BaseS3OperationTest):
 
 class TestS3PutObject(BaseS3OperationTest):
     def test_500_error_with_non_xml_body(self):
-        # Note: This exact tesdict may not be applicable from
+        # Note: This exact test case may not be applicable from
         # an integration standpoint if the issue is fixed in the future.
         #
         # The issue is that:
@@ -1702,51 +1701,51 @@ class TestGeneratePresigned(BaseS3OperationTest):
             'get_object', {'Bucket': 'mybucket', 'Key': 'mykey'})
         self.assert_is_v2_presigned_url(url)
 
+def test_checksums_included_in_expected_operations():
+    """Validate expected calls include Content-MD5 header"""
 
-def _checksum_test_cases():
-    yield ('put_bucket_tagging',
+    t = S3ChecksumCases(_verify_checksum_in_headers)
+    yield t.case('put_bucket_tagging',
             {"Bucket": "foo", "Tagging":{"TagSet":[]}})
-    yield ('put_bucket_lifecycle',
+    yield t.case('put_bucket_lifecycle',
             {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
-    yield ('put_bucket_lifecycle_configuration',
+    yield t.case('put_bucket_lifecycle_configuration',
             {"Bucket": "foo", "LifecycleConfiguration":{"Rules":[]}})
-    yield ('put_bucket_cors',
+    yield t.case('put_bucket_cors',
             {"Bucket": "foo", "CORSConfiguration":{"CORSRules": []}})
-    yield ('delete_objects',
+    yield t.case('delete_objects',
             {"Bucket": "foo", "Delete": {"Objects": [{"Key": "bar"}]}})
-    yield ('put_bucket_replication',
+    yield t.case('put_bucket_replication',
             {"Bucket": "foo",
              "ReplicationConfiguration": {"Role":"", "Rules": []}})
-    yield ('put_bucket_acl',
+    yield t.case('put_bucket_acl',
             {"Bucket": "foo", "AccessControlPolicy":{}})
-    yield ('put_bucket_logging',
+    yield t.case('put_bucket_logging',
             {"Bucket": "foo",
              "BucketLoggingStatus":{}})
-    yield ('put_bucket_notification',
+    yield t.case('put_bucket_notification',
             {"Bucket": "foo", "NotificationConfiguration":{}})
-    yield ('put_bucket_policy',
+    yield t.case('put_bucket_policy',
             {"Bucket": "foo", "Policy": "<bucket-policy>"})
-    yield ('put_bucket_request_payment',
+    yield t.case('put_bucket_request_payment',
             {"Bucket": "foo", "RequestPaymentConfiguration":{"Payer": ""}})
-    yield ('put_bucket_versioning',
+    yield t.case('put_bucket_versioning',
             {"Bucket": "foo", "VersioningConfiguration":{}})
-    yield ('put_bucket_website',
+    yield t.case('put_bucket_website',
             {"Bucket": "foo",
              "WebsiteConfiguration":{}})
-    yield ('put_object_acl',
+    yield t.case('put_object_acl',
             {"Bucket": "foo", "Key": "bar", "AccessControlPolicy":{}})
-    yield ('put_object_legal_hold',
+    yield t.case('put_object_legal_hold',
             {"Bucket": "foo", "Key": "bar", "LegalHold":{"Status": "ON"}})
-    yield ('put_object_retention',
+    yield t.case('put_object_retention',
             {"Bucket": "foo", "Key": "bar",
              "Retention":{"RetainUntilDate":"2020-11-05"}})
-    yield ('put_object_lock_configuration',
+    yield t.case('put_object_lock_configuration',
             {"Bucket": "foo", "ObjectLockConfiguration":{}})
 
 
-@pytest.mark.parametrize("operation, operation_kwargs", _checksum_test_cases())
-def test_checksums_included_in_expected_operations(operation, operation_kwargs):
-    """Validate expected calls include Content-MD5 header"""
+def _verify_checksum_in_headers(operation, operation_kwargs):
     environ = {}
     with mock.patch('os.environ', environ):
         environ['AWS_ACCESS_KEY_ID'] = 'access_key'
@@ -1762,38 +1761,42 @@ def test_checksums_included_in_expected_operations(operation, operation_kwargs):
             assert 'Content-MD5' in stub.requests[-1].headers
 
 
-def _s3_addressing_test_cases():
+def test_correct_url_used_for_s3():
+    # Test that given various sets of config options and bucket names,
+    # we construct the expect endpoint url.
+    t = S3AddressingCases(_verify_expected_endpoint_url)
+
     # The default behavior for sigv2. DNS compatible buckets
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.us-west-2.amazonaws.com/key')
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-west-1', bucket='bucket', key='key',
+    yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.us-west-1.amazonaws.com/key')
-    yield dict(region='us-west-1', bucket='bucket', key='key',
+    yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3', is_secure=False,
                  expected_url='http://bucket.s3.us-west-1.amazonaws.com/key')
 
     # Virtual host addressing is independent of signature version.
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
                      'https://bucket.s3.us-west-2.amazonaws.com/key'))
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-west-1', bucket='bucket', key='key',
+    yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
                      'https://bucket.s3.us-west-1.amazonaws.com/key'))
-    yield dict(region='us-west-1', bucket='bucket', key='key',
+    yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
                      'http://bucket.s3.us-west-1.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='bucket-with-num-1', key='key',
         signature_version='s3v4', is_secure=False,
         expected_url='http://bucket-with-num-1.s3.us-west-1.amazonaws.com/key')
@@ -1801,121 +1804,121 @@ def _s3_addressing_test_cases():
     # Regions outside of the 'aws' partition.
     # These should still default to virtual hosted addressing
     # unless explicitly configured otherwise.
-    yield dict(region='cn-north-1', bucket='bucket', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
                      'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
     # This isn't actually supported because cn-north-1 is sigv4 only,
     # but we'll still double check that our internal logic is correct
     # when building the expected url.
-    yield dict(region='cn-north-1', bucket='bucket', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url=(
                      'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
     # If the request is unsigned, we should have the default
     # fix_s3_host behavior which is to use virtual hosting where
     # possible but fall back to path style when needed.
-    yield dict(region='cn-north-1', bucket='bucket', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version=UNSIGNED,
                  expected_url=(
                      'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
-    yield dict(region='cn-north-1', bucket='bucket.dot', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket.dot', key='key',
                  signature_version=UNSIGNED,
                  expected_url=(
                      'https://s3.cn-north-1.amazonaws.com.cn/bucket.dot/key'))
 
     # And of course you can explicitly specify which style to use.
     virtual_hosting = {'addressing_style': 'virtual'}
-    yield dict(region='cn-north-1', bucket='bucket', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version=UNSIGNED,
                  s3_config=virtual_hosting,
                  expected_url=(
                      'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
     path_style = {'addressing_style': 'path'}
-    yield dict(region='cn-north-1', bucket='bucket', key='key',
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version=UNSIGNED,
                  s3_config=path_style,
                  expected_url=(
                      'https://s3.cn-north-1.amazonaws.com.cn/bucket/key'))
 
     # If you don't have a DNS compatible bucket, we use path style.
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
         expected_url='https://s3.us-west-2.amazonaws.com/bucket.dot/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket.dot', key='key',
         expected_url='https://s3.amazonaws.com/bucket.dot/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='BucketName', key='key',
         expected_url='https://s3.amazonaws.com/BucketName/key')
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='bucket_name', key='key',
         expected_url='https://s3.us-west-1.amazonaws.com/bucket_name/key')
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='-bucket-name', key='key',
         expected_url='https://s3.us-west-1.amazonaws.com/-bucket-name/key')
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='bucket-name-', key='key',
         expected_url='https://s3.us-west-1.amazonaws.com/bucket-name-/key')
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='aa', key='key',
         expected_url='https://s3.us-west-1.amazonaws.com/aa/key')
-    yield dict(
+    yield t.case(
         region='us-west-1', bucket='a'*64, key='key',
         expected_url=('https://s3.us-west-1.amazonaws.com/%s/key' % ('a' * 64))
     )
 
     # Custom endpoint url should always be used.
-    yield dict(
+    yield t.case(
         customer_provided_endpoint='https://my-custom-s3/',
         bucket='foo', key='bar',
         expected_url='https://my-custom-s3/foo/bar')
-    yield dict(
+    yield t.case(
         customer_provided_endpoint='https://my-custom-s3/',
         bucket='bucket.dots', key='bar',
         expected_url='https://my-custom-s3/bucket.dots/bar')
     # Doesn't matter what region you specify, a custom endpoint url always
     # wins.
-    yield dict(
+    yield t.case(
         customer_provided_endpoint='https://my-custom-s3/',
         region='us-west-2', bucket='foo', key='bar',
         expected_url='https://my-custom-s3/foo/bar')
 
     # Explicitly configuring "virtual" addressing_style.
     virtual_hosting = {'addressing_style': 'virtual'}
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.us-west-2.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='eu-central-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.eu-central-1.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         customer_provided_endpoint='https://foo.amazonaws.com',
         expected_url='https://bucket.foo.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.unknown.amazonaws.com/key')
 
     # Test us-gov with virtual addressing.
-    yield dict(
+    yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.us-gov-west-1.amazonaws.com/key')
 
-    yield dict(
+    yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
         expected_url='https://bucket.s3.us-gov-west-1.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='fips-us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
         expected_url='https://bucket.s3-fips.us-gov-west-1.amazonaws.com/key')
@@ -1923,67 +1926,67 @@ def _s3_addressing_test_cases():
 
     # Test path style addressing.
     path_style = {'addressing_style': 'path'}
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=path_style,
         expected_url='https://s3.amazonaws.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=path_style,
         customer_provided_endpoint='https://foo.amazonaws.com/',
         expected_url='https://foo.amazonaws.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=path_style,
         expected_url='https://s3.unknown.amazonaws.com/bucket/key')
 
     # S3 accelerate
     use_accelerate = {'use_accelerate_endpoint': True}
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate,
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         # region is ignored with S3 accelerate.
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_accelerate,
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
     # Provided endpoints still get recognized as accelerate endpoints.
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         customer_provided_endpoint='http://s3-accelerate.amazonaws.com',
         expected_url='http://bucket.s3-accelerate.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate, is_secure=False,
         # Note we're using http://  because is_secure=False.
         expected_url='http://bucket.s3-accelerate.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # s3-accelerate must be the first part of the url.
         customer_provided_endpoint='https://foo.s3-accelerate.amazonaws.com',
         expected_url='https://foo.s3-accelerate.amazonaws.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # The endpoint must be an Amazon endpoint.
         customer_provided_endpoint='https://s3-accelerate.notamazon.com',
         expected_url='https://s3-accelerate.notamazon.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # Extra components must be whitelisted.
         customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
         expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=use_accelerate,
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
     # Use virtual even if path is specified for s3 accelerate because
     # path style will not work with S3 accelerate.
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={'use_accelerate_endpoint': True,
                    'addressing_style': 'path'},
@@ -1991,17 +1994,17 @@ def _s3_addressing_test_cases():
 
     # S3 dual stack endpoints.
     use_dualstack = {'use_dualstack_endpoint': True}
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3',
         # Still default to virtual hosted when possible on sigv2.
         expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region=None, bucket='bucket', key='key',
         s3_config=use_dualstack,
         # Uses us-east-1 for no region set.
         expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='aws-global', bucket='bucket', key='key',
         s3_config=use_dualstack,
         # Pseudo-regions should not have any special resolving logic even when
@@ -2010,32 +2013,32 @@ def _s3_addressing_test_cases():
         # region name.
         expected_url=(
             'https://bucket.s3.dualstack.aws-global.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3',
         # Still default to virtual hosted when possible on sigv2.
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
         expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
         expected_url='https://bucket.s3.dualstack.unknown.amazonaws.com/key')
     # Non DNS compatible buckets use path style for dual stack.
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
         s3_config=use_dualstack,
         # Still default to virtual hosted when possible.
         expected_url=(
             'https://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key'))
     # Supports is_secure (use_ssl=False in create_client()).
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key', is_secure=False,
         s3_config=use_dualstack,
         # Still default to virtual hosted when possible.
@@ -2048,7 +2051,7 @@ def _s3_addressing_test_cases():
         'use_dualstack_endpoint': True,
         'addressing_style': 'path',
     }
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=force_path_style,
         # Still default to virtual hosted when possible.
@@ -2059,32 +2062,32 @@ def _s3_addressing_test_cases():
         'use_accelerate_endpoint': True,
         'use_dualstack_endpoint': True,
     }
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack,
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         # Region is ignored with S3 accelerate.
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack,
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
     # Only s3-accelerate overrides a customer endpoint.
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack,
         customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
         expected_url=(
             'https://bucket.s3-accelerate.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # Dualstack is whitelisted.
         customer_provided_endpoint=(
             'https://s3-accelerate.dualstack.amazonaws.com'),
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # Even whitelisted parts cannot be duplicated.
         customer_provided_endpoint=(
@@ -2092,7 +2095,7 @@ def _s3_addressing_test_cases():
         expected_url=(
             'https://s3-accelerate.dualstack.dualstack'
             '.amazonaws.com/bucket/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # More than two extra parts is not allowed.
         customer_provided_endpoint=(
@@ -2101,12 +2104,12 @@ def _s3_addressing_test_cases():
         expected_url=(
             'https://s3-accelerate.dualstack.dualstack.dualstack.amazonaws.com'
             '/bucket/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         # Extra components must be whitelisted.
         customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
         expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack, is_secure=False,
         # Note we're using http://  because is_secure=False.
@@ -2115,7 +2118,7 @@ def _s3_addressing_test_cases():
     # Use virtual even if path is specified for s3 accelerate because
     # path style will not work with S3 accelerate.
     use_accelerate_dualstack['addressing_style'] = 'path'
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack,
         expected_url=(
@@ -2125,14 +2128,14 @@ def _s3_addressing_test_cases():
     accesspoint_arn = (
         'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': True},
         expected_url=(
@@ -2140,30 +2143,30 @@ def _s3_addressing_test_cases():
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='myendpoint/key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/myendpoint/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='foo/myendpoint/key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/foo/myendpoint/key'
         )
     )
-    yield dict(
+    yield t.case(
         # Note: The access-point arn has us-west-2 and the client's region is
-        # us-east-1, for the defauldict the access-point arn region is used.
+        # us-east-1, for the default case the access-point arn region is used.
         region='us-east-1', bucket=accesspoint_arn, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
@@ -2171,7 +2174,7 @@ def _s3_addressing_test_cases():
             'us-east-1.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='s3-external-1', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': True},
         expected_url=(
@@ -2180,7 +2183,7 @@ def _s3_addressing_test_cases():
         )
     )
 
-    yield dict(
+    yield t.case(
         region='aws-global', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': True},
         expected_url=(
@@ -2188,7 +2191,7 @@ def _s3_addressing_test_cases():
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='unknown', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
@@ -2196,7 +2199,7 @@ def _s3_addressing_test_cases():
             'unknown.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='unknown', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': True},
         expected_url=(
@@ -2207,21 +2210,21 @@ def _s3_addressing_test_cases():
     accesspoint_arn_cn = (
         'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
     )
-    yield dict(
+    yield t.case(
         region='cn-north-1', bucket=accesspoint_arn_cn, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'cn-north-1.amazonaws.com.cn/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='cn-northwest-1', bucket=accesspoint_arn_cn, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'cn-north-1.amazonaws.com.cn/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='cn-northwest-1', bucket=accesspoint_arn_cn, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
@@ -2232,21 +2235,21 @@ def _s3_addressing_test_cases():
     accesspoint_arn_gov = (
         'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
     )
-    yield dict(
+    yield t.case(
         region='us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-gov-west-1.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint-fips.'
             'us-gov-west-1.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
@@ -2255,7 +2258,7 @@ def _s3_addressing_test_cases():
         )
     )
 
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key', is_secure=False,
         expected_url=(
             'http://myendpoint-123456789012.s3-accesspoint.'
@@ -2263,9 +2266,9 @@ def _s3_addressing_test_cases():
         )
     )
     # Dual-stack with access-point arn
-    yield dict(
+    yield t.case(
         # Note: The access-point arn has us-west-2 and the client's region is
-        # us-east-1, for the defauldict the access-point arn region is used.
+        # us-east-1, for the default case the access-point arn region is used.
         region='us-east-1', bucket=accesspoint_arn, key='key',
         s3_config={
             'use_dualstack_endpoint': True,
@@ -2275,7 +2278,7 @@ def _s3_addressing_test_cases():
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket=accesspoint_arn, key='key',
         s3_config={
             'use_dualstack_endpoint': True,
@@ -2286,7 +2289,7 @@ def _s3_addressing_test_cases():
             'us-east-1.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         s3_config={
             'use_dualstack_endpoint': True,
@@ -2296,7 +2299,7 @@ def _s3_addressing_test_cases():
             'us-gov-west-1.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='fips-us-gov-west-1', bucket=accesspoint_arn_gov, key='key',
         s3_config={
             'use_arn_region': True,
@@ -2309,7 +2312,7 @@ def _s3_addressing_test_cases():
     )
     # None of the various s3 settings related to paths should affect what
     # endpoint to use when an access-point is provided.
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         s3_config={'adressing_style': 'auto'},
         expected_url=(
@@ -2317,7 +2320,7 @@ def _s3_addressing_test_cases():
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         s3_config={'adressing_style': 'virtual'},
         expected_url=(
@@ -2325,7 +2328,7 @@ def _s3_addressing_test_cases():
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         s3_config={'adressing_style': 'path'},
         expected_url=(
@@ -2334,31 +2337,31 @@ def _s3_addressing_test_cases():
         )
     )
 
-    # Use us-east-1 regional endpoindicts: regional
+    # Use us-east-1 regional endpoint cases: regional
     us_east_1_regional_endpoint = {
         'us_east_1_regional_endpoint': 'regional'
     }
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint,
         expected_url=(
             'https://bucket.s3.us-east-1.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint,
         expected_url=(
             'https://bucket.s3.us-west-2.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region=None, bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint,
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint,
         expected_url=(
             'https://bucket.s3.unknown.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
             'us_east_1_regional_endpoint': 'regional',
@@ -2366,7 +2369,7 @@ def _s3_addressing_test_cases():
         },
         expected_url=(
             'https://bucket.s3.dualstack.us-east-1.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
             'us_east_1_regional_endpoint': 'regional',
@@ -2374,7 +2377,7 @@ def _s3_addressing_test_cases():
         },
         expected_url=(
             'https://bucket.s3-accelerate.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config={
             'us_east_1_regional_endpoint': 'regional',
@@ -2384,23 +2387,23 @@ def _s3_addressing_test_cases():
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
 
-    # Use us-east-1 regional endpoindicts: legacy
+    # Use us-east-1 regional endpoint cases: legacy
     us_east_1_regional_endpoint_legacy = {
         'us_east_1_regional_endpoint': 'legacy'
     }
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint_legacy,
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
 
-    yield dict(
+    yield t.case(
         region=None, bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint_legacy,
         expected_url=(
             'https://bucket.s3.amazonaws.com/key'))
 
-    yield dict(
+    yield t.case(
         region='unknown', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint_legacy,
         expected_url=(
@@ -2410,7 +2413,7 @@ def _s3_addressing_test_cases():
         'arn:aws-us-gov:s3-object-lambda:us-gov-west-1:'
         '123456789012:accesspoint:mybanner'
     )
-    yield dict(
+    yield t.case(
         region='fips-us-gov-west-1', bucket=s3_object_lambda_arn_gov, key='key',
         expected_url=(
             'https://mybanner-123456789012.s3-object-lambda-fips.'
@@ -2421,7 +2424,7 @@ def _s3_addressing_test_cases():
         'arn:aws:s3-object-lambda:us-east-1:'
         '123456789012:accesspoint:mybanner'
     )
-    yield dict(
+    yield t.case(
         region='aws-global', bucket=s3_object_lambda_arn, key='key',
         s3_config={'use_arn_region': True},
         expected_url=(
@@ -2431,17 +2434,33 @@ def _s3_addressing_test_cases():
     )
 
 
-@pytest.mark.parametrize("test_case", _s3_addressing_test_cases())
-def test_correct_url_used_for_s3(test_case):
-    # Test that given various sets of config options and bucket names,
-    # we construct the expect endpoint url.
-    _verify_expected_endpoint_url(**test_case)
+class BaseTestCase:
+    def __init__(self, verify_function):
+        self._verify = verify_function
+
+    def case(self, **kwargs):
+        return self._verify, kwargs
 
 
-def _verify_expected_endpoint_url(
-    region=None, bucket='bucket', key='key', s3_config=None, is_secure=True,
-    customer_provided_endpoint=None, expected_url=None, signature_version=None
-):
+class S3AddressingCases(BaseTestCase):
+    def case(self, region=None, bucket='bucket', key='key',
+             s3_config=None, is_secure=True, customer_provided_endpoint=None,
+             expected_url=None, signature_version=None):
+        return (
+            self._verify, region, bucket, key, s3_config, is_secure,
+            customer_provided_endpoint, expected_url, signature_version
+        )
+
+
+class S3ChecksumCases(BaseTestCase):
+    def case(self, operation, operation_args):
+        return self._verify, operation, operation_args
+
+
+def _verify_expected_endpoint_url(region, bucket, key, s3_config,
+                                  is_secure=True,
+                                  customer_provided_endpoint=None,
+                                  expected_url=None, signature_version=None):
     environ = {}
     with mock.patch('os.environ', environ):
         environ['AWS_ACCESS_KEY_ID'] = 'access_key'
@@ -2460,7 +2479,7 @@ def _verify_expected_endpoint_url(
         with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.add_response()
             s3.put_object(Bucket=bucket, Key=key, Body=b'bar')
-            assert http_stubber.requests[0].url == expected_url
+            assert_equal(http_stubber.requests[0].url, expected_url)
 
 
 def _create_s3_client(region, is_secure, endpoint_url, s3_config,
@@ -2483,85 +2502,90 @@ def _create_s3_client(region, is_secure, endpoint_url, s3_config,
         return s3
 
 
-
-def _addressing_for_presigned_url_test_cases():
+def test_addressing_for_presigned_urls():
+    # See TestGeneratePresigned for more detailed test cases
+    # on presigned URLs.  Here's we're just focusing on the
+    # adddressing mode used for presigned URLs.
+    # We special case presigned URLs due to backwards
+    # compatibility.
+    t = S3AddressingCases(_verify_presigned_url_addressing)
 
     # us-east-1, or the "global" endpoint. A signature version of
     # None means the user doesn't have signature version configured.
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version=None,
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-1', bucket='bucket', key='key',
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  s3_config={'addressing_style': 'path'},
                  expected_url='https://s3.amazonaws.com/bucket/key')
 
     # A region that supports both 's3' and 's3v4'.
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version=None,
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  s3_config={'addressing_style': 'path'},
                  expected_url='https://s3.us-west-2.amazonaws.com/bucket/key')
 
     # An 's3v4' only region.
-    yield dict(region='us-east-2', bucket='bucket', key='key',
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
                  signature_version=None,
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-2', bucket='bucket', key='key',
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-2', bucket='bucket', key='key',
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://bucket.s3.amazonaws.com/key')
-    yield dict(region='us-east-2', bucket='bucket', key='key',
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  s3_config={'addressing_style': 'path'},
                  expected_url='https://s3.us-east-2.amazonaws.com/bucket/key')
 
     # Dualstack endpoints
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         signature_version=None,
         s3_config={'use_dualstack_endpoint': True},
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         signature_version='s3',
         s3_config={'use_dualstack_endpoint': True},
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         signature_version='s3v4',
         s3_config={'use_dualstack_endpoint': True},
         expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
 
     # Accelerate
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version=None,
                  s3_config={'use_accelerate_endpoint': True},
                  expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
 
     # A region that we don't know about.
-    yield dict(region='us-west-50', bucket='bucket', key='key',
+    yield t.case(region='us-west-50', bucket='bucket', key='key',
                  signature_version=None,
                  expected_url='https://bucket.s3.amazonaws.com/key')
 
     # Customer provided URL results in us leaving the host untouched.
-    yield dict(region='us-west-2', bucket='bucket', key='key',
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version=None,
                  customer_provided_endpoint='https://foo.com/',
                  expected_url='https://foo.com/bucket/key')
@@ -2570,14 +2594,14 @@ def _addressing_for_presigned_url_test_cases():
     accesspoint_arn = (
         'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
     )
-    yield dict(
+    yield t.case(
         region='us-west-2', bucket=accesspoint_arn, key='key',
         expected_url=(
             'https://myendpoint-123456789012.s3-accesspoint.'
             'us-west-2.amazonaws.com/key'
         )
     )
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket=accesspoint_arn, key='key',
         s3_config={'use_arn_region': False},
         expected_url=(
@@ -2590,29 +2614,23 @@ def _addressing_for_presigned_url_test_cases():
     us_east_1_regional_endpoint = {
         'us_east_1_regional_endpoint': 'regional'
     }
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint, signature_version='s3',
         expected_url=(
             'https://bucket.s3.us-east-1.amazonaws.com/key'))
-    yield dict(
+    yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=us_east_1_regional_endpoint, signature_version='s3v4',
         expected_url=(
             'https://bucket.s3.us-east-1.amazonaws.com/key'))
 
 
-@pytest.mark.parametrize("test_case", _addressing_for_presigned_url_test_cases())
-def test_addressing_for_presigned_urls(test_case):
-    # Here's we're just focusing on the addressing mode used for presigned URLs.
-    # We special case presigned URLs due to backward compatibility.
-    _verify_presigned_url_addressing(**test_case)
-
-
-def _verify_presigned_url_addressing(
-    region=None, bucket='bucket', key='key', s3_config=None, is_secure=True,
-    customer_provided_endpoint=None, expected_url=None, signature_version=None
-):
+def _verify_presigned_url_addressing(region, bucket, key, s3_config,
+                                     is_secure=True,
+                                     customer_provided_endpoint=None,
+                                     expected_url=None,
+                                     signature_version=None):
     s3 = _create_s3_client(region=region, is_secure=is_secure,
                            endpoint_url=customer_provided_endpoint,
                            s3_config=s3_config,
@@ -2623,7 +2641,7 @@ def _verify_presigned_url_addressing(
     # those are tested elsewhere.  We just care about the hostname/path.
     parts = urlsplit(url)
     actual = '%s://%s%s' % parts[:3]
-    assert actual == expected_url
+    assert_equal(actual, expected_url)
 
 
 class TestS3XMLPayloadEscape(BaseS3OperationTest):

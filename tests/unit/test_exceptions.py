@@ -14,6 +14,8 @@
 import pickle
 from tests import unittest
 
+from nose.tools import assert_equal
+
 import botocore.awsrequest
 import botocore.session
 from botocore import exceptions
@@ -22,7 +24,7 @@ from botocore import exceptions
 def test_client_error_can_handle_missing_code_or_message():
     response = {'Error': {}}
     expect = 'An error occurred (Unknown) when calling the blackhole operation: Unknown'
-    assert str(exceptions.ClientError(response, 'blackhole')) == expect
+    assert_equal(str(exceptions.ClientError(response, 'blackhole')), expect)
 
 
 def test_client_error_has_operation_name_set():
@@ -34,7 +36,7 @@ def test_client_error_has_operation_name_set():
 def test_client_error_set_correct_operation_name():
     response = {'Error': {}}
     exception = exceptions.ClientError(response, 'blackhole')
-    assert exception.operation_name == 'blackhole'
+    assert_equal(exception.operation_name, 'blackhole')
 
 
 def test_retry_info_added_when_present():

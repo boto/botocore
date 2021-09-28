@@ -10,15 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import pytest
-
 from tests import unittest, random_chars
+
+from nose.plugins.attrib import attr
 
 import botocore.session
 from botocore.exceptions import WaiterError
 
 
-@pytest.mark.slow
+# This is the same test as above, except using the client interface.
+@attr('slow')
 class TestWaiterForDynamoDB(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
