@@ -12,12 +12,11 @@
 # language governing permissions and limitations under the License.
 import re
 
-from nose.tools import assert_true
+import pytest
+
 from botocore.session import get_session
 
-BLACKLIST = [
-]
-
+BLOCKLIST = []
 
 # Service names are limited here to 50 characters here as that seems like a
 # reasonable limit in the general case. Services can be added to the
@@ -34,31 +33,35 @@ VALID_NAME_EXPLANATION = (
     'characters and dashes. The name must start with a letter and may not end '
     'with a dash'
 )
+MIN_NAME_LENGTH_EXPLANATION = (
+    'Service name must be greater than or equal to 2 characters in length.'
+)
+MAX_NAME_LENGTH_EXPLANATION = (
+    'Service name must be less than or equal to 50 characters in length.'
+)
 MIN_SERVICE_NAME_LENGTH = 2
 MAX_SERVICE_NAME_LENGTH = 50
 
 
-def _assert_name_length(service_name):
-    if service_name not in BLACKLIST:
-        service_name_length = len(service_name)
-        assert_true(service_name_length >= MIN_SERVICE_NAME_LENGTH,
-                    'Service name must be greater than or equal to 2 '
-                    'characters in length.')
-        assert_true(service_name_length <= MAX_SERVICE_NAME_LENGTH,
-                    'Service name must be less than or equal to 50 '
-                    'characters in length.')
-
-
-def _assert_name_pattern(service_name):
-    if service_name not in BLACKLIST:
-        valid = VALID_NAME_REGEX.match(service_name) is not None
-        assert_true(valid, VALID_NAME_EXPLANATION)
-
-
-def test_service_names_are_valid():
+def _service_names():
     session = get_session()
     loader = session.get_component('data_loader')
-    service_names = loader.list_available_services('service-2')
-    for service_name in service_names:
-        yield _assert_name_length, service_name
-        yield _assert_name_pattern, service_name
+    return loader.list_available_services('service-2')
+
+
+@pytest.mark.parametrize("service_name", _service_names())
+def test_service_names_are_valid_length(service_name):
+    if service_name not in BLOCKLIST:
+        service_name_length = len(service_name)
+        is_not_too_short = service_name_length >= MIN_SERVICE_NAME_LENGTH
+        is_not_too_long = service_name_length <= MAX_SERVICE_NAME_LENGTH
+
+        assert is_not_too_short, MIN_NAME_LENGTH_EXPLANATION
+        assert is_not_too_long, MAX_NAME_LENGTH_EXPLANATION
+
+
+@pytest.mark.parametrize("service_name", _service_names())
+def test_service_names_are_valid_pattern(service_name):
+    if service_name not in BLOCKLIST:
+        valid = VALID_NAME_REGEX.match(service_name) is not None
+        assert valid, VALID_NAME_EXPLANATION

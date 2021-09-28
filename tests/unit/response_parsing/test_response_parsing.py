@@ -17,6 +17,9 @@ import json
 import pprint
 import logging
 import difflib
+
+import pytest
+
 from tests import create_session
 
 import botocore.session
@@ -102,7 +105,7 @@ def _convert_bytes_to_str(parsed):
         return parsed
 
 
-def test_xml_parsing():
+def _xml_test_cases():
     for dp in ['responses', 'errors']:
         data_path = os.path.join(os.path.dirname(__file__), 'xml')
         data_path = os.path.join(data_path, dp)
@@ -119,8 +122,17 @@ def test_xml_parsing():
                 expected = _get_expected_parsed_result(xmlfile)
                 operation_model = _get_operation_model(service_model, xmlfile)
                 raw_response_body = _get_raw_response_body(xmlfile)
-                yield _test_parsed_response, xmlfile, raw_response_body, \
-                    operation_model, expected
+                yield xmlfile, raw_response_body, operation_model, expected
+
+
+@pytest.mark.parametrize(
+    "xmlfile, raw_response_body, operation_model, expected",
+    _xml_test_cases()
+)
+def test_xml_parsing(xmlfile, raw_response_body, operation_model, expected):
+    _test_parsed_response(
+        xmlfile, raw_response_body, operation_model, expected
+    )
 
 
 def _get_raw_response_body(xmlfile):
@@ -153,7 +165,7 @@ def _get_expected_parsed_result(filename):
         return json.load(f)
 
 
-def test_json_errors_parsing():
+def _json_test_cases():
     # The outputs/ directory has sample output responses
     # For each file in outputs/ there's a corresponding file
     # in expected/ that has the expected parsed response.
@@ -179,148 +191,16 @@ def test_json_errors_parsing():
                 operation_model = service_model.operation_model(op_name)
         with open(raw_response_file, 'rb') as f:
             raw_response_body = f.read()
-        yield _test_parsed_response, raw_response_file, \
-            raw_response_body, operation_model, expected
+        yield raw_response_file, raw_response_body, operation_model, expected
 
 
-def _uhg_test_json_parsing():
-    input_path = os.path.join(os.path.dirname(__file__), 'json')
-    input_path = os.path.join(input_path, 'inputs')
-    output_path = os.path.join(os.path.dirname(__file__), 'json')
-    output_path = os.path.join(output_path, 'outputs')
-    session = botocore.session.get_session()
-    jsonfiles = glob.glob('%s/*.json' % input_path)
-    service_names = set()
-    for fn in jsonfiles:
-        service_names.add(os.path.split(fn)[1].split('-')[0])
-    for service_name in service_names:
-        service_model = session.get_service_model(service_name)
-        service_json_files = glob.glob('%s/%s-*.json' % (input_path,
-                                                         service_name))
-        for jsonfile in service_json_files:
-            expected = _get_expected_parsed_result(jsonfile)
-            operation_model = _get_operation_model(service_model, jsonfile)
-            with open(jsonfile, 'rb') as f:
-                raw_response_body = f.read()
-            yield _test_parsed_response, jsonfile, \
-                raw_response_body, operation_model, expected
-            # TODO: handle the __headers crap.
-
-
-#class TestHeaderParsing(unittest.TestCase):
-#
-#    maxDiff = None
-#
-#    def setUp(self):
-#        self.session = botocore.session.get_session()
-#        self.s3 = self.session.get_service('s3')
-#
-#    def test_put_object(self):
-#        http_response = Mock()
-#        http_response.encoding = 'utf-8'
-#        http_response.headers = CaseInsensitiveDict(
-#            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-#             'Content-Length': '0',
-#             'x-amz-request-id': '2B74ECB010FF029E',
-#             'ETag': '"b081e66e7e0c314285c655cafb4d1e71"',
-#             'x-amz-id-2': 'bKECRRBFttBRVbJPIVBLQwwipI0i+s9HMvNFdttR17ouR0pvQSKEJUR+1c6cW1nQ',
-#             'Server': 'AmazonS3',
-#             'content-type': 'text/xml'})
-#        http_response.content = ''
-#        put_object = self.s3.get_operation('PutObject')
-#        expected = {"ETag": '"b081e66e7e0c314285c655cafb4d1e71"'}
-#        response_data = get_response(self.session, put_object, http_response)[1]
-#        self.assertEqual(response_data, expected)
-#
-#    def test_head_object(self):
-#        http_response = Mock()
-#        http_response.encoding = 'utf-8'
-#        http_response.headers = CaseInsensitiveDict(
-#            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-#             'Content-Length': '265',
-#             'x-amz-request-id': '2B74ECB010FF029E',
-#             'ETag': '"40d06eb6194712ac1c915783004ef730"',
-#             'Server': 'AmazonS3',
-#             'content-type': 'binary/octet-stream',
-#             'Content-Type': 'binary/octet-stream',
-#             'accept-ranges': 'bytes',
-#             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-#             'x-amz-server-side-encryption': 'AES256',
-#             'x-amz-meta-mykey1': 'value1',
-#             'x-amz-meta-mykey2': 'value2',
-#             })
-#        http_response.content = ''
-#        http_response.request.method = 'HEAD'
-#        put_object = self.s3.get_operation('HeadObject')
-#        expected = {"AcceptRanges": "bytes",
-#                    "ContentType": "binary/octet-stream",
-#                    "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
-#                    "ContentLength": "265",
-#                    "ETag": '"40d06eb6194712ac1c915783004ef730"',
-#                    "ServerSideEncryption": "AES256",
-#                    "Metadata": {
-#                        'mykey1': 'value1',
-#                        'mykey2': 'value2',
-#                    }}
-#        response_data = get_response(self.session, put_object,
-#                                     http_response)[1]
-#        self.assertEqual(response_data, expected)
-#
-#    def test_list_objects_with_invalid_content_length(self):
-#        http_response = Mock()
-#        http_response.encoding = 'utf-8'
-#        http_response.headers = CaseInsensitiveDict(
-#            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-#             # We say we have 265 bytes but we're returning 0,
-#             # this should raise an exception because this is not
-#             # a HEAD request.
-#             'Content-Length': '265',
-#             'x-amz-request-id': '2B74ECB010FF029E',
-#             'ETag': '"40d06eb6194712ac1c915783004ef730"',
-#             'Server': 'AmazonS3',
-#             'content-type': 'binary/octet-stream',
-#             'Content-Type': 'binary/octet-stream',
-#             'accept-ranges': 'bytes',
-#             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-#             'x-amz-server-side-encryption': 'AES256'
-#             })
-#        http_response.content = ''
-#        http_response.request.method = 'GET'
-#        list_objects = self.s3.get_operation('ListObjects')
-#        expected = {"AcceptRanges": "bytes",
-#                    "ContentType": "binary/octet-stream",
-#                    "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
-#                    "ContentLength": "265",
-#                    "ETag": '"40d06eb6194712ac1c915783004ef730"',
-#                    "ServerSideEncryption": "AES256"
-#                    }
-#        with self.assertRaises(IncompleteReadError):
-#            response_data = get_response(self.session, list_objects,
-#                                         http_response)[1]
-#
-#    def test_head_object_with_json(self):
-#        http_response = Mock()
-#        http_response.encoding = 'utf-8'
-#        http_response.headers = CaseInsensitiveDict(
-#            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-#             'Content-Length': '0',
-#             'x-amz-request-id': '2B74ECB010FF029E',
-#             'ETag': '"40d06eb6194712ac1c915783004ef730"',
-#             'Server': 'AmazonS3',
-#             'content-type': 'application/json',
-#             'Content-Type': 'application/json',
-#             'accept-ranges': 'bytes',
-#             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-#             'x-amz-server-side-encryption': 'AES256'})
-#        http_response.content = ''
-#        put_object = self.s3.get_operation('HeadObject')
-#        expected = {"AcceptRanges": "bytes",
-#                    "ContentType": "application/json",
-#                    "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
-#                    "ContentLength": "0",
-#                    "ETag": '"40d06eb6194712ac1c915783004ef730"',
-#                    "ServerSideEncryption": "AES256"
-#                    }
-#        response_data = get_response(self.session, put_object,
-#                                     http_response)[1]
-#        self.assertEqual(response_data, expected)
+@pytest.mark.parametrize(
+    "raw_response_file, raw_response_body, operation_model, expected",
+    _json_test_cases()
+)
+def test_json_errors_parsing(
+    raw_response_file, raw_response_body, operation_model, expected
+):
+    _test_parsed_response(
+        raw_response_file, raw_response_body, operation_model, expected
+    )

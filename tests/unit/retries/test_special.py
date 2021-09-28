@@ -1,7 +1,6 @@
 from tests import unittest
 
 import mock
-from nose.tools import assert_equal, assert_is_instance
 
 from botocore.compat import six
 from botocore.awsrequest import AWSResponse

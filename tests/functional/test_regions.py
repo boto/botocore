@@ -13,7 +13,7 @@
 from tests import create_session
 
 import mock
-from nose.tools import assert_equal, assert_raises
+import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
@@ -449,7 +449,17 @@ def _get_patched_session():
     return session
 
 
-def test_all_known_endpoints():
+def _known_endpoints_by_region():
+    for region_name, service_dict in KNOWN_REGIONS.items():
+        for service_name, endpoint in service_dict.items():
+            yield service_name, region_name, endpoint
+
+
+@pytest.mark.parametrize(
+    "service_name, region_name, expected_endpoint",
+    _known_endpoints_by_region()
+)
+def test_single_service_region_endpoint(service_name, region_name, expected_endpoint):
     # Verify the actual values from the partition files.  While
     # TestEndpointHeuristics verified the generic functionality given any
     # endpoints file, this test actually verifies the partition data against a
@@ -458,20 +468,12 @@ def test_all_known_endpoints():
     # logic evolves.
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    for region_name, service_dict in KNOWN_REGIONS.items():
-        for service_name, endpoint in service_dict.items():
-            yield (_test_single_service_region, service_name,
-                   region_name, endpoint, resolver)
-
-
-def _test_single_service_region(service_name, region_name,
-                                expected_endpoint, resolver):
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
     scheme = urlparse(expected_endpoint).scheme
     if not scheme:
         expected_endpoint = 'https://%s' % expected_endpoint
-    assert_equal(result['endpoint_url'], expected_endpoint)
+    assert result['endpoint_url'] == expected_endpoint
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
@@ -486,25 +488,23 @@ def test_all_s3_endpoints_have_s3v4():
             assert 'v4' not in resolved['signatureVersions']
 
 
-def test_known_endpoints():
+@pytest.mark.parametrize(
+    "service_name, expected_endpoint",
+    KNOWN_AWS_PARTITION_WIDE.items()
+)
+def test_single_service_partition_endpoint(service_name, expected_endpoint):
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    for service_name, endpoint in KNOWN_AWS_PARTITION_WIDE.items():
-        yield (_test_single_service_partition_endpoint, service_name,
-               endpoint, resolver)
-
-
-def _test_single_service_partition_endpoint(service_name, expected_endpoint,
-                                            resolver):
     bridge = ClientEndpointBridge(resolver)
     result = bridge.resolve(service_name)
-    assert_equal(result['endpoint_url'], expected_endpoint)
+    assert result['endpoint_url'] == expected_endpoint
 
 
 def test_non_partition_endpoint_requires_region():
     resolver = _get_patched_session()._get_internal_component(
         'endpoint_resolver')
-    assert_raises(NoRegionError, resolver.construct_endpoint, 'ec2')
+    with pytest.raises(NoRegionError):
+        resolver.construct_endpoint('ec2')
 
 
 class TestEndpointResolution(BaseSessionTest):
