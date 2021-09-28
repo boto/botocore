@@ -393,7 +393,7 @@ class TestTaggedUnions(unittest.TestCase):
                            'unknown to client'),
                           captured_log.records[0].getMessage())
 
-    def test_base_json_parser_handles_unknwon_member(self):
+    def test_base_json_parser_handles_unknown_member(self):
         parser = parsers.JSONParser()
         response = b'{"Foo": "mystring"}'
         headers = {'x-amzn-requestid': 'request-id'}
