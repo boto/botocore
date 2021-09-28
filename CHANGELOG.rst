@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.21.50
+=======
+
+* api-change:``transfer``: Added changes for managed workflows feature APIs.
+* api-change:``imagebuilder``: Fix description for AmiDistributionConfiguration Name property, which actually refers to the output AMI name. Also updated for consistent terminology to use "base" image, and another update to fix description text.
+
+
 1.21.49
 =======
 
