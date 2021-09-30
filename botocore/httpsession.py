@@ -4,6 +4,7 @@ import logging
 import socket
 from base64 import b64encode
 import sys
+from urllib.parse import unquote
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
 from urllib3.util.retry import Retry
@@ -21,8 +22,6 @@ except ImportError:
     from urllib3.util.ssl_ import SSLContext
 
 import botocore.awsrequest
-from botocore.vendored import six
-from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import (
     ConnectionClosedError, EndpointConnectionError, HTTPClientError,

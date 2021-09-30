@@ -17,8 +17,6 @@ import logging
 import time
 import threading
 
-from botocore.vendored import six
-
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
@@ -120,7 +118,7 @@ class Endpoint(object):
     def _encode_headers(self, headers):
         # In place encoding of headers to utf-8 if they are unicode.
         for key, value in headers.items():
-            if isinstance(value, six.text_type):
+            if isinstance(value, str):
                 headers[key] = value.encode('utf-8')
 
     def prepare_request(self, request):

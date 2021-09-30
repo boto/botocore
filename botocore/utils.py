@@ -33,10 +33,10 @@ import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import (
         json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
-        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
+        urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
         HAS_CRT
 )
-from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
+from urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
@@ -706,10 +706,10 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     first.
     """
     # If its not a binary or text string, make it a text string.
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
-        input_str = six.text_type(input_str)
+    if not isinstance(input_str, (bytes, str)):
+        input_str = str(input_str)
     # If it's not bytes, make it bytes by UTF-8 encoding it.
-    if not isinstance(input_str, six.binary_type):
+    if not isinstance(input_str, bytes):
         input_str = input_str.encode('utf-8')
     return quote(input_str, safe=safe)
 

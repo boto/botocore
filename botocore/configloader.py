@@ -13,10 +13,9 @@
 # language governing permissions and limitations under the License.
 import os
 import shlex
+import configparser
 import copy
 import sys
-
-from botocore.compat import six
 
 import botocore.exceptions
 
@@ -144,10 +143,10 @@ def raw_config_parse(config_filename, parse_subsections=True):
         path = os.path.expanduser(path)
         if not os.path.isfile(path):
             raise botocore.exceptions.ConfigNotFound(path=_unicode_path(path))
-        cp = six.moves.configparser.RawConfigParser()
+        cp = configparser.RawConfigParser()
         try:
             cp.read([path])
-        except (six.moves.configparser.Error, UnicodeDecodeError):
+        except (configparser.Error, UnicodeDecodeError):
             raise botocore.exceptions.ConfigParseError(
                 path=_unicode_path(path))
         else:
@@ -169,7 +168,7 @@ def raw_config_parse(config_filename, parse_subsections=True):
 
 
 def _unicode_path(path):
-    if isinstance(path, six.text_type):
+    if isinstance(path, str):
         return path
     # According to the documentation getfilesystemencoding can return None
     # on unix in which case the default encoding is used instead.

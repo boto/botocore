@@ -43,8 +43,6 @@ import calendar
 import datetime
 from xml.etree import ElementTree
 
-from botocore.compat import six
-
 from botocore.compat import json, formatdate
 from botocore.utils import parse_to_aware_datetime
 from botocore.utils import percent_encode
@@ -165,7 +163,7 @@ class Serializer(object):
         # Returns the base64-encoded version of value, handling
         # both strings and bytes. The returned value is a string
         # via the default encoding.
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode(self.DEFAULT_ENCODING)
         return base64.b64encode(value).strip().decode(
             self.DEFAULT_ENCODING)
@@ -523,7 +521,7 @@ class BaseRestSerializer(Serializer):
                 partitioned['body_kwargs'], shape)
 
     def _encode_payload(self, body):
-        if isinstance(body, six.text_type):
+        if isinstance(body, str):
             return body.encode(self.DEFAULT_ENCODING)
         return body
 
@@ -695,7 +693,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = six.text_type(params)
+        node.text = str(params)
 
 
 SERIALIZERS = {

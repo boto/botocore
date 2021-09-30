@@ -14,7 +14,6 @@ import re
 import numbers
 from botocore.utils import parse_timestamp
 from botocore.docs.utils import escape_controls
-from botocore.compat import six
 
 
 class SharedExampleDocumenter(object):
@@ -167,7 +166,7 @@ class SharedExampleDocumenter(object):
         # We do the string conversion because this might accept a type that
         # we don't specifically address.
         safe_value = escape_controls(value)
-        section.write(u"'%s'," % six.text_type(safe_value))
+        section.write("'%s'," % str(safe_value))
 
     def _document_number(self, section, value, path):
         section.write("%s," % str(value))

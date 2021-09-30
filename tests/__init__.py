@@ -33,7 +33,7 @@ import botocore.loaders
 import botocore.session
 from botocore.awsrequest import AWSResponse
 from botocore.compat import (
-    parse_qs, six, urlparse, HAS_CRT
+    parse_qs, urlparse, HAS_CRT
 )
 from botocore import utils
 from botocore import credentials
@@ -342,7 +342,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
 
 def _urlparse(url):
-    if isinstance(url, six.binary_type):
+    if isinstance(url, bytes):
         # Not really necessary, but it helps to reduce noise on Python 2.x
         url = url.decode('utf8')
     return urlparse(url)

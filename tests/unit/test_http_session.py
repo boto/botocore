@@ -5,7 +5,6 @@ from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from tests import mock, unittest
 
-from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
 from botocore.httpsession import get_cert_path

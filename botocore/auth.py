@@ -25,7 +25,7 @@ import time
 
 from botocore.compat import(
     encodebytes, ensure_unicode, HTTPHeaders, json, parse_qs, quote,
-    six, unquote, urlsplit, urlunsplit, HAS_CRT, MD5_AVAILABLE
+    unquote, urlsplit, urlunsplit, HAS_CRT, MD5_AVAILABLE
 )
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -72,9 +72,9 @@ def _get_body_as_dict(request):
     # string or bytes. In those cases we attempt to load the data as a
     # dict.
     data = request.data
-    if isinstance(data, six.binary_type):
+    if isinstance(data, bytes):
         data = json.loads(data.decode('utf-8'))
-    elif isinstance(data, six.string_types):
+    elif isinstance(data, str):
         data = json.loads(data)
     return data
 
@@ -112,7 +112,7 @@ class SigV2Auth(BaseSigner):
             # issues during retries.
             if key == 'Signature':
                 continue
-            value = six.text_type(params[key])
+            value = str(params[key])
             pairs.append(quote(key.encode('utf-8'), safe='') + '=' +
                          quote(value.encode('utf-8'), safe='-_~'))
         qs = '&'.join(pairs)
