@@ -778,6 +778,17 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         self.assert_endpoint(request, expected_endpoint)
 
+    def test_outpost_arn_presigned_url(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
+            'op-01234567890123456/accesspoint/myaccesspoint'
+        )
+        expected_url = (
+            'myaccesspoint-123456789012.op-01234567890123456.'
+            's3-outposts.us-west-2.amazonaws.com'
+        )
+        self._assert_presigned_url(outpost_arn, 'us-west-2', expected_url)
+
     def test_outpost_arn_with_s3_accelerate(self):
         outpost_arn = (
             'arn:aws:s3-outposts:us-west-2:123456789012:outpost:'
@@ -1118,7 +1129,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
                 UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=arn)
 
-    def _assert_mrap_presigned_url(
+    def _assert_presigned_url(
         self, arn, region, expected, endpoint_url=None, config=None
     ):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
@@ -1129,6 +1140,17 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
         url_parts = urlsplit(presigned_url)
         self.assertEqual(url_parts.netloc, expected)
+
+    def _assert_mrap_presigned_url(
+        self, arn, region, expected, endpoint_url=None, config=None
+    ):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name=region, endpoint_url=endpoint_url, config=config)
+        presigned_url = self.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': arn, 'Key': 'test_object'}
+        )
+        url_parts = urlsplit(presigned_url)
         # X-Amz-Region-Set header MUST be * (percent-encoded as %2A) for MRAPs
         self.assertIn('X-Amz-Region-Set=%2A', url_parts.query)
 
