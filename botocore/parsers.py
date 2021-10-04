@@ -335,8 +335,8 @@ class ResponseParser(object):
         if shape.is_tagged_union:
             if len(value) != 1:
                 error_msg = (
-                    "Invalid service response: %s must only have one member "
-                    "set."
+                    "Invalid service response: %s must have one and only "
+                    "one member set."
                 )
                 raise ResponseParserError(error_msg % shape.name)
             tag = self._get_first_key(value)
