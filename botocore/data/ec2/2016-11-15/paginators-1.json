@@ -625,6 +625,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "VpnConnectionDeviceTypes"
+    },
+    "DescribeCapacityReservationFleets": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "CapacityReservationFleets"
     }
   }
 }
