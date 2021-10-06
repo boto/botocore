@@ -15,8 +15,10 @@ import re
 
 import pytest
 
-from tests import temporary_file, requires_crt
-from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
+from tests import (
+    create_session, mock, temporary_file, requires_crt, unittest,
+    BaseSessionTest, ClientHTTPStubber, FreezeTime
+)
 
 import botocore.session
 from botocore.config import Config
@@ -29,6 +31,9 @@ from botocore.exceptions import (
 )
 from botocore.parsers import ResponseParserError
 from botocore import UNSIGNED
+
+
+DATE = datetime.datetime(2021, 8, 27, 0, 0, 0)
 
 
 class TestS3BucketValidation(unittest.TestCase):
@@ -787,7 +792,72 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             'myaccesspoint-123456789012.op-01234567890123456.'
             's3-outposts.us-west-2.amazonaws.com'
         )
-        self._assert_presigned_url(outpost_arn, 'us-west-2', expected_url)
+        expected_credentials = '20210827%2Fus-west-2%2Fs3-outposts%2Faws4_request'
+        expected_signature = (
+            'a944fbe2bfbae429f922746546d1c6f890649c88ba7826bd1d258ac13f327e09'
+        )
+        config = Config(signature_version='s3v4')
+        presigned_url = self._get_presigned_url(
+            outpost_arn, 'us-west-2', config=config
+        )
+        self._assert_presigned_url(
+            presigned_url, expected_url,
+            expected_signature, expected_credentials
+        )
+
+    def test_outpost_arn_presigned_url_with_use_arn_region(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
+            'op-01234567890123456/accesspoint/myaccesspoint'
+        )
+        expected_url = (
+            'myaccesspoint-123456789012.op-01234567890123456.'
+            's3-outposts.us-west-2.amazonaws.com'
+        )
+        expected_credentials = '20210827%2Fus-west-2%2Fs3-outposts%2Faws4_request'
+        expected_signature = (
+            'a944fbe2bfbae429f922746546d1c6f890649c88ba7826bd1d258ac13f327e09'
+        )
+        config = Config(
+            signature_version='s3v4',
+            s3={
+                'use_arn_region': True,
+            }
+        )
+        presigned_url = self._get_presigned_url(
+            outpost_arn, 'us-west-2', config=config
+        )
+        self._assert_presigned_url(
+            presigned_url, expected_url,
+            expected_signature, expected_credentials
+        )
+
+    def test_outpost_arn_presigned_url_cross_region_arn(self):
+        outpost_arn = (
+            'arn:aws:s3-outposts:us-east-1:123456789012:outpost/'
+            'op-01234567890123456/accesspoint/myaccesspoint'
+        )
+        expected_url = (
+            'myaccesspoint-123456789012.op-01234567890123456.'
+            's3-outposts.us-east-1.amazonaws.com'
+        )
+        expected_credentials = '20210827%2Fus-east-1%2Fs3-outposts%2Faws4_request'
+        expected_signature = (
+            '7f93df0b81f80e590d95442d579bd6cf749a35ff4bbdc6373fa669b89c7fce4e'
+        )
+        config = Config(
+            signature_version='s3v4',
+            s3={
+                'use_arn_region': True,
+            }
+        )
+        presigned_url = self._get_presigned_url(
+            outpost_arn, 'us-west-2', config=config
+        )
+        self._assert_presigned_url(
+            presigned_url, expected_url,
+            expected_signature, expected_credentials
+        )
 
     def test_outpost_arn_with_s3_accelerate(self):
         outpost_arn = (
@@ -1129,28 +1199,45 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
                 UnsupportedS3AccesspointConfigurationError):
             self.client.list_objects(Bucket=arn)
 
-    def _assert_presigned_url(
-        self, arn, region, expected, endpoint_url=None, config=None
-    ):
+    @FreezeTime(botocore.auth.datetime, date=DATE)
+    def _get_presigned_url(self, arn, region, config=None, endpoint_url=None):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
-            region_name=region, endpoint_url=endpoint_url, config=config)
+            region_name=region,
+            endpoint_url=endpoint_url,
+            config=config,
+            aws_access_key_id='ACCESS_KEY_ID',
+            aws_secret_access_key='SECRET_ACCESS_KEY'
+        )
         presigned_url = self.client.generate_presigned_url(
             'get_object',
-            Params={'Bucket': arn, 'Key': 'test_object'}
+            Params={'Bucket': arn, 'Key': 'obj'},
+            ExpiresIn=900
         )
+        return presigned_url
+
+    def _assert_presigned_url(
+        self,
+        presigned_url,
+        expected_url,
+        expected_signature,
+        expected_credentials
+    ):
         url_parts = urlsplit(presigned_url)
-        self.assertEqual(url_parts.netloc, expected)
+        assert url_parts.netloc == expected_url
+        query_strs = url_parts.query.split('&')
+        query_parts = dict(part.split('=') for part in query_strs)
+        assert expected_signature == query_parts['X-Amz-Signature']
+        assert expected_credentials in query_parts['X-Amz-Credential']
+
 
     def _assert_mrap_presigned_url(
         self, arn, region, expected, endpoint_url=None, config=None
     ):
-        self.client, self.http_stubber = self.create_stubbed_s3_client(
-            region_name=region, endpoint_url=endpoint_url, config=config)
-        presigned_url = self.client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': arn, 'Key': 'test_object'}
+        presigned_url = self._get_presigned_url(
+            arn, region, endpoint_url=None, config=None
         )
         url_parts = urlsplit(presigned_url)
+        self.assertEqual(expected, url_parts.hostname)
         # X-Amz-Region-Set header MUST be * (percent-encoded as %2A) for MRAPs
         self.assertIn('X-Amz-Region-Set=%2A', url_parts.query)
 
