@@ -216,13 +216,9 @@ class Session(object):
 
     def _get_crt_version(self):
         try:
-            import pkg_resources
-            return pkg_resources.get_distribution("awscrt").version
-        except Exception:
-            # We're catching *everything* here to avoid failing
-            # on pkg_resources issues. This is unlikely in our
-            # supported versions but it avoids making a hard
-            # dependency on the package being present.
+            import awscrt
+            return awscrt.__version__
+        except AttributeError:
             return "Unknown"
 
     @property
