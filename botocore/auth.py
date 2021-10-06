@@ -632,7 +632,7 @@ class HmacV1Auth(BaseSigner):
                      'response-content-encoding', 'delete', 'lifecycle',
                      'tagging', 'restore', 'storageClass', 'notification',
                      'replication', 'requestPayment', 'analytics', 'metrics',
-                     'inventory', 'select', 'select-type']
+                     'inventory', 'select', 'select-type', 'object-lock']
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials

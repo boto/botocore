@@ -97,7 +97,8 @@ class TestHMACV1(unittest.TestCase):
         # specified as query strings end up in the canonical resource.
         operations = ('acl', 'cors', 'lifecycle', 'policy',
                       'notification', 'logging', 'tagging',
-                      'requestPayment', 'versioning', 'website')
+                      'requestPayment', 'versioning', 'website',
+                      'object-lock')
         for operation in operations:
             url = '/quotes?%s' % operation
             split = urlsplit(url)
