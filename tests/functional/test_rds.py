@@ -10,10 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.session
 from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.stub import Stubber
-from tests import unittest
 
 
 class TestRDSPresignUrlInjection(BaseSessionTest):
@@ -80,9 +78,9 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
 
-class TestRDS(unittest.TestCase):
+class TestRDS(BaseSessionTest):
     def setUp(self):
-        self.session = botocore.session.get_session()
+        super().setUp()
         self.client = self.session.create_client('rds', 'us-west-2')
         self.stubber = Stubber(self.client)
         self.stubber.activate()
