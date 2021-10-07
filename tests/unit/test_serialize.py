@@ -21,7 +21,6 @@ from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
 from botocore.exceptions import ParamValidationError
-from botocore.serialize import SERIALIZERS
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -394,13 +393,17 @@ class TestInstanceCreation(unittest.TestCase):
             self.assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail(
-                "Shouldn't fail serializing valid parameter without validation".format(e))
+                "Shouldn't fail serializing valid parameter without "
+                "validation: {}".format(e)
+            )
 
         try:
             self.assert_serialize_invalid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail(
-                "Shouldn't fail serializing invalid parameter without validation".format(e))
+                "Shouldn't fail serializing invalid parameter without "
+                "validation: {}".format(e)
+            )
 
     def test_instantiate_with_validation(self):
         request_serializer = serialize.create_serializer(
@@ -409,7 +412,9 @@ class TestInstanceCreation(unittest.TestCase):
             self.assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail(
-                "Shouldn't fail serializing valid parameter with validation".format(e))
+                "Shouldn't fail serializing invalid parameter without "
+                "validation: {}".format(e)
+            )
 
         with self.assertRaises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)

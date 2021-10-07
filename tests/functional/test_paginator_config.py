@@ -147,6 +147,7 @@ def _pagination_configs():
                 service_model
             )
 
+
 @pytest.mark.parametrize(
     "operation_name, page_config, service_model",
     _pagination_configs()

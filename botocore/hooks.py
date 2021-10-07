@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import copy
 import logging
-from collections import defaultdict, deque, namedtuple
+from collections import deque, namedtuple
 from botocore.compat import accepts_kwargs, six
 from botocore.utils import EVENT_ALIASES
 
@@ -428,9 +428,11 @@ class EventAliaser(BaseEventHooks):
 
     def _replace_subsection(self, sections, old_parts, new_part):
         for i in range(len(sections)):
-            if sections[i] == old_parts[0] and \
-                    sections[i:i+len(old_parts)] == old_parts:
-                sections[i:i+len(old_parts)] = [new_part]
+            if (
+                sections[i] == old_parts[0] and
+                sections[i:i + len(old_parts)] == old_parts
+            ):
+                sections[i:i + len(old_parts)] = [new_part]
                 return
 
     def __copy__(self):
@@ -521,8 +523,9 @@ class _PrefixTrie(object):
                 # will result in final_list = [3, 2, 1], which is
                 # why we reverse the lists.
                 node_list = current_node['values']
-                complete_order = (node_list.first + node_list.middle +
-                                  node_list.last)
+                complete_order = (
+                    node_list.first + node_list.middle + node_list.last
+                )
                 collected.extendleft(reversed(complete_order))
             if not index == key_parts_len:
                 children = current_node['children']

@@ -384,8 +384,10 @@ class ServiceModel(object):
     def endpoint_discovery_required(self):
         for operation in self.operation_names:
             model = self.operation_model(operation)
-            if (model.endpoint_discovery is not None and
-                    model.endpoint_discovery.get('required')):
+            if (
+                model.endpoint_discovery is not None
+                and model.endpoint_discovery.get('required')
+            ):
                 return True
         return False
 
@@ -413,7 +415,6 @@ class ServiceModel(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.service_name)
-
 
 
 class OperationModel(object):
@@ -522,9 +523,11 @@ class OperationModel(object):
         if not input_shape:
             return []
 
-        return [name for (name, shape) in input_shape.members.items()
-                if 'idempotencyToken' in shape.metadata and
-                shape.metadata['idempotencyToken']]
+        return [
+            name for (name, shape) in input_shape.members.items()
+            if 'idempotencyToken' in shape.metadata
+            and shape.metadata['idempotencyToken']
+        ]
 
     @CachedProperty
     def auth_type(self):

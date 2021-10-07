@@ -67,9 +67,9 @@ class TestCredentialPrecedence(BaseEnvVar):
         # If all three are given, then the access/secret keys should
         # take precedence.
         s = self.create_session(profile='test')
-
-        client = s.create_client('s3', aws_access_key_id='code',
-                                 aws_secret_access_key='code-secret')
+        s.create_client(
+            's3', aws_access_key_id='code', aws_secret_access_key='code-secret'
+        )
 
         credentials_cls.assert_called_with(
             access_key='code', secret_key='code-secret', token=mock.ANY)
@@ -79,7 +79,6 @@ class TestCredentialPrecedence(BaseEnvVar):
         # then the one set by code should take precedence.
         os.environ['AWS_DEFAULT_PROFILE'] = 'test'
         s = self.create_session(profile='default')
-
         credentials = s.get_credentials()
 
         self.assertEqual(credentials.access_key, 'default')
@@ -92,9 +91,9 @@ class TestCredentialPrecedence(BaseEnvVar):
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'secret'
         s = self.create_session()
-
-        client = s.create_client('s3', aws_access_key_id='code',
-                                 aws_secret_access_key='code-secret')
+        s.create_client(
+            's3', aws_access_key_id='code', aws_secret_access_key='code-secret'
+        )
 
         credentials_cls.assert_called_with(
             access_key='code', secret_key='code-secret', token=mock.ANY)

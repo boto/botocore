@@ -28,7 +28,7 @@ class TestLoaderAllowsDataPathOverride(unittest.TestCase):
 
     def test_can_override_session(self):
         with temporary_file('w') as f:
-            # We're going to override _retry.json in 
+            # We're going to override _retry.json in
             # botocore/data by setting our own data directory.
             override_name = self.create_file(
                 f, contents='{"foo": "bar"}', name='_retry.json')

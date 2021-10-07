@@ -5,7 +5,6 @@ from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from tests import mock, unittest
 
-from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
 from botocore.httpsession import get_cert_path
@@ -236,7 +235,7 @@ class TestURLLib3Session(unittest.TestCase):
 
     def test_https_proxy_scheme_forwarding_https_url(self):
         proxies = {'https': 'https://proxy.com'}
-        proxies_config = {"proxy_use_forwarding_for_https":  True}
+        proxies_config = {"proxy_use_forwarding_for_https": True}
         session = URLLib3Session(proxies=proxies, proxies_config=proxies_config)
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
@@ -393,7 +392,7 @@ class TestURLLib3Session(unittest.TestCase):
     def test_catches_new_connection_error(self):
         error = NewConnectionError(None, None)
         with pytest.raises(EndpointConnectionError):
-           self.make_request_with_error(error)
+            self.make_request_with_error(error)
 
     def test_catches_bad_status_line(self):
         error = ProtocolError(None)
@@ -401,7 +400,7 @@ class TestURLLib3Session(unittest.TestCase):
             self.make_request_with_error(error)
 
     def test_aws_connection_classes_are_used(self):
-        session = URLLib3Session()
+        session = URLLib3Session() # noqa
         # ensure the pool manager is using the correct classes
         http_class = self.pool_manager.pool_classes_by_scheme.get('http')
         self.assertIs(http_class, AWSHTTPConnectionPool)

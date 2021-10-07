@@ -302,10 +302,10 @@ def test_negative_cases(encoded, exception):
 def test_header_parser():
     """Test that the header parser supports all header types. """
     headers_data = (
-     b"\x010\x00\x011\x01\x012\x02\x02\x013\x03\x00\x03"
-     b"\x014\x04\x00\x00\x00\x04\x015\x05\x00\x00\x00\x00\x00\x00\x00\x05"
-     b"\x016\x06\x00\x05bytes\x017\x07\x00\x04utf8"
-     b"\x018\x08\x00\x00\x00\x00\x00\x00\x00\x08\x019\x090123456789abcdef"
+        b"\x010\x00\x011\x01\x012\x02\x02\x013\x03\x00\x03"
+        b"\x014\x04\x00\x00\x00\x04\x015\x05\x00\x00\x00\x00\x00\x00\x00\x05"
+        b"\x016\x06\x00\x05bytes\x017\x07\x00\x04utf8"
+        b"\x018\x08\x00\x00\x00\x00\x00\x00\x00\x08\x019\x090123456789abcdef"
     )
 
     expected_headers = {
@@ -337,7 +337,7 @@ def test_message_prelude_properties():
 
 def test_message_to_response_dict():
     response_dict = PAYLOAD_ONE_STR_HEADER[1].to_response_dict()
-    assert response_dict['status_code'] ==200
+    assert response_dict['status_code'] == 200
 
     expected_headers = {'content-type': 'application/json'}
     assert response_dict['headers'] == expected_headers
@@ -424,6 +424,7 @@ def test_unpack_prelude():
 
 def create_mock_raw_stream(*data):
     raw_stream = mock.Mock()
+
     def generator():
         for chunk in data:
             yield chunk

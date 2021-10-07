@@ -23,7 +23,6 @@ import random
 import os
 import socket
 import cgi
-import warnings
 
 import dateutil.parser
 from dateutil.tz import tzutc
@@ -32,9 +31,9 @@ import botocore
 import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import (
-        json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
-        six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
-        HAS_CRT
+    json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
+    six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
+    HAS_CRT
 )
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
@@ -208,7 +207,7 @@ def resolve_imds_endpoint_mode(session):
             raise InvalidIMDSEndpointModeError(**error_msg_kwargs)
         return lendpoint_mode
     elif session.get_config_variable('imds_use_ipv6'):
-            return 'ipv6'
+        return 'ipv6'
     return 'ipv4'
 
 
@@ -221,10 +220,12 @@ def is_json_value_header(shape):
     :return: True if this type is a jsonvalue, False otherwise
     :rtype: Bool
     """
-    return (hasattr(shape, 'serialization') and
-            shape.serialization.get('jsonvalue', False) and
-            shape.serialization.get('location') == 'header' and
-            shape.type_name == 'string')
+    return (
+        hasattr(shape, 'serialization') and
+        shape.serialization.get('jsonvalue', False) and
+        shape.serialization.get('location') == 'header' and
+        shape.type_name == 'string'
+    )
 
 
 def get_service_module_name(service_model):
@@ -1020,6 +1021,7 @@ def is_valid_ipv6_endpoint_url(endpoint_url):
     netloc = urlparse(endpoint_url).netloc
     return IPV6_ADDRZ_RE.match(netloc) is not None
 
+
 def is_valid_endpoint_url(endpoint_url):
     """Verify the endpoint_url is valid.
 
@@ -1047,8 +1049,10 @@ def is_valid_endpoint_url(endpoint_url):
         re.IGNORECASE)
     return allowed.match(hostname)
 
+
 def is_valid_uri(endpoint_url):
     return is_valid_endpoint_url(endpoint_url) or is_valid_ipv6_endpoint_url(endpoint_url)
+
 
 def validate_region_name(region_name):
     """Provided region_name must be a valid host label."""
@@ -1220,7 +1224,7 @@ def switch_host_s3_accelerate(request, operation_name, **kwargs):
 
     if operation_name in ['ListBuckets', 'CreateBucket', 'DeleteBucket']:
         return
-    _switch_hosts(request, endpoint,  use_new_scheme=False)
+    _switch_hosts(request, endpoint, use_new_scheme=False)
 
 
 def switch_host_with_param(request, param_name):
@@ -1937,7 +1941,6 @@ class S3EndpointSetter(object):
         return fix_s3_host
 
 
-
 class S3ControlEndpointSetter(object):
     _DEFAULT_PARTITION = 'aws'
     _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
@@ -1967,7 +1970,6 @@ class S3ControlEndpointSetter(object):
             self._add_headers_from_arn_details(request)
         elif self._use_endpoint_from_outpost_id(request):
             self._validate_outpost_redirection_valid(request)
-            outpost_id = request.context['outpost_id']
             self._override_signing_name(request, 's3-outposts')
             new_netloc = self._construct_outpost_endpoint(self._region)
             self._update_request_netloc(request, new_netloc)

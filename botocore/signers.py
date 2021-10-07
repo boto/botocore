@@ -22,7 +22,10 @@ from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.utils import fix_s3_host, datetime2timestamp
+from botocore.utils import datetime2timestamp
+
+# Keep these imported.  There's pre-existing code that uses them.
+from botocore.utils import fix_s3_host # noqa
 
 
 class RequestSigner(object):
@@ -330,8 +333,9 @@ class CloudFrontSigner(object):
         :rtype: str
         :return: The signed URL.
         """
-        if (date_less_than is not None and policy is not None or
-                date_less_than is None and policy is None):
+        both_args_supplied = date_less_than is not None and policy is not None
+        neither_arg_supplied = date_less_than is None and policy is None
+        if both_args_supplied or neither_arg_supplied:
             e = 'Need to provide either date_less_than or policy, but not both'
             raise ValueError(e)
         if date_less_than is not None:
@@ -347,7 +351,7 @@ class CloudFrontSigner(object):
         params.extend([
             'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
             'Key-Pair-Id=%s' % self.key_id,
-            ])
+        ])
         return self._build_url(url, params)
 
     def _build_url(self, base_url, extra_params):

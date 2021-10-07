@@ -701,7 +701,7 @@ class BaseJSONParser(ResponseParser):
         except ValueError:
             # if the body cannot be parsed, include
             # the literal string as the message
-            return { 'message': body }
+            return {'message': body}
 
 
 class BaseEventStreamParser(ResponseParser):
@@ -998,7 +998,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             # the error response from other sources like the HTTP status code.
             try:
                 return self._parse_error_from_body(response)
-            except ResponseParserError as e:
+            except ResponseParserError:
                 LOG.debug(
                     'Exception caught when parsing error response body:',
                     exc_info=True)

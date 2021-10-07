@@ -35,6 +35,7 @@ class _ANY(object):
     def __repr__(self):
         return '<ANY>'
 
+
 ANY = _ANY()
 
 
@@ -326,9 +327,10 @@ class Stubber(object):
             raise UnStubbedResponseError(
                 operation_name=model.name,
                 reason=(
-                        'Unexpected API Call: A call was made but no additional calls expected. '
-                        'Either the API Call was not stubbed or it was called multiple times.'
-                        )
+                    'Unexpected API Call: A call was made but no additional '
+                    'calls expected. Either the API Call was not stubbed or '
+                    'it was called multiple times.'
+                )
             )
 
         name = self._queue[0]['operation_name']

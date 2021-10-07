@@ -582,7 +582,6 @@ SERVICES = {
 
 def _event_aliases():
     for client_name in SERVICES.keys():
-        endpoint_prefix = SERVICES[client_name].get('endpoint_prefix')
         service_id = SERVICES[client_name]['service_id']
         yield client_name, service_id
 
@@ -590,7 +589,6 @@ def _event_aliases():
 def _event_aliases_with_endpoint_prefix():
     for client_name in SERVICES.keys():
         endpoint_prefix = SERVICES[client_name].get('endpoint_prefix')
-        service_id = SERVICES[client_name]['service_id']
         if endpoint_prefix is not None:
             yield client_name, endpoint_prefix
 

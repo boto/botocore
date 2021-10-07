@@ -329,27 +329,27 @@ class TestCreateClientArgs(unittest.TestCase):
 
     def test_uses_config_value_if_present_for_max_attempts(self):
         config = self.call_get_client_args(
-                client_config=Config(retries={'max_attempts': 2})
+            client_config=Config(retries={'max_attempts': 2})
         )['client_config']
         self.assertEqual(config.retries['total_max_attempts'], 3)
 
     def test_uses_client_config_over_config_store_max_attempts(self):
         self.config_store.set_config_variable('max_attempts', 4)
         config = self.call_get_client_args(
-                client_config=Config(retries={'max_attempts': 2})
+            client_config=Config(retries={'max_attempts': 2})
         )['client_config']
         self.assertEqual(config.retries['total_max_attempts'], 3)
 
     def test_uses_client_config_total_over_config_store_max_attempts(self):
         self.config_store.set_config_variable('max_attempts', 4)
         config = self.call_get_client_args(
-                client_config=Config(retries={'total_max_attempts': 2})
+            client_config=Config(retries={'total_max_attempts': 2})
         )['client_config']
         self.assertEqual(config.retries['total_max_attempts'], 2)
 
     def test_max_attempts_unset_if_retries_is_none(self):
         config = self.call_get_client_args(
-                client_config=Config(retries=None)
+            client_config=Config(retries=None)
         )['client_config']
         self.assertEqual(config.retries, {'mode': 'legacy'})
 
@@ -360,13 +360,13 @@ class TestCreateClientArgs(unittest.TestCase):
 
     def test_retry_mode_set_on_client_config(self):
         config = self.call_get_client_args(
-                client_config=Config(retries={'mode': 'standard'})
+            client_config=Config(retries={'mode': 'standard'})
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
 
     def test_client_config_beats_config_store(self):
         self.config_store.set_config_variable('retry_mode', 'adaptive')
         config = self.call_get_client_args(
-                client_config=Config(retries={'mode': 'standard'})
+            client_config=Config(retries={'mode': 'standard'})
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')

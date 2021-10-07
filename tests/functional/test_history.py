@@ -1,6 +1,4 @@
-from contextlib import contextmanager
-
-from tests import mock, BaseSessionTest, ClientHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.history import BaseHistoryHandler
 from botocore.history import get_global_history_recorder
 
@@ -55,9 +53,9 @@ class TestRecordStatementsInjections(BaseSessionTest):
         event = api_call_events[0]
         event_type, payload, source = event
         self.assertEqual(payload, {
-                'operation': u'ListBuckets',
-                'params': {},
-                'service': 's3'
+            'operation': u'ListBuckets',
+            'params': {},
+            'service': 's3'
         })
         self.assertEqual(source, 'BOTOCORE')
 
@@ -102,7 +100,9 @@ class TestRecordStatementsInjections(BaseSessionTest):
         event = http_response_events[0]
         event_type, payload, source = event
 
-        self.assertEqual(payload, {
+        self.assertEqual(
+            payload,
+            {
                 'status_code': 200,
                 'headers': {},
                 'streaming': False,

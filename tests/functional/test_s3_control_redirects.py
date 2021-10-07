@@ -15,7 +15,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests import unittest, mock, BaseSessionTest, ClientHTTPStubber
+from tests import unittest, ClientHTTPStubber
 
 from botocore import exceptions
 from botocore.exceptions import (
@@ -27,7 +27,6 @@ from botocore.exceptions import (
 from botocore.session import Session
 from botocore.compat import urlsplit
 from botocore.config import Config
-from botocore.awsrequest import AWSResponse
 
 
 ACCESSPOINT_ARN_TEST_CASES = [
@@ -98,14 +97,14 @@ ACCESSPOINT_ARN_TEST_CASES = [
             'exception': 'UnsupportedS3ControlConfigurationError',
         }
     },
-    #{
+    # {
     #    'arn': 'arn:aws-us-gov:s3-outposts:fips-us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
     #    'region': 'fips-us-gov-east-1',
     #    'config': {'s3': {'use_arn_region': True}},
     #    'assertions': {
     #        'exception': 'UnsupportedS3ArnError',
     #    }
-    #},
+    # },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'region': 'us-gov-east-1-fips',

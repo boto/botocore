@@ -420,37 +420,64 @@ class TestWaitersObjects(unittest.TestCase):
 
     def test_waiter_failure_state_error(self):
         test_cases = [
-            ([{'state': 'failure', 'matcher': 'path',
-               'argument': 'Foo', 'expected': 'FAILURE'}],
-             [{'Foo': 'FAILURE'}],
-             'FAILURE'),
-            ([{'state': 'failure', 'matcher': 'pathAll',
-               'argument': 'Tables[].State', 'expected': 'FAILURE'}],
-             [{'Tables': [{"State": "FAILURE"}]}],
-             'FAILURE'),
-            ([{'state': 'failure', 'matcher': 'pathAny',
-               'argument': 'Tables[].State', 'expected': 'FAILURE'}],
-             [{'Tables': [{"State": "FAILURE"}]}],
-             'FAILURE'),
-            ([{'state': 'failure', 'matcher': 'status', 'expected': 404}],
-             [{'ResponseMetadata': {'HTTPStatusCode': 404}}],
-             '404'),
-            ([{'state': 'failure', 'matcher': 'error', 'expected': 'FailError'}],
-             [{'Error': {'Code': 'FailError', 'Message': 'foo'}}],
-             'FailError'),
-            ([{'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'}],
-             [{'Success': False}]*4,
-             'Max attempts exceeded'),
-            ([
-                {'state': 'success', 'matcher': 'status', 'expected': 200},
-                {'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'},
-            ],
-             [{'Success': False},
-              {'Error': {'Code': 'RetryMe', 'Message': 'foo'}},
-              {'Success': False},
-              {'Success': False},
-              ],
-             'Previously accepted state'),
+            (
+                [
+                    {
+                        'state': 'failure', 'matcher': 'path',
+                        'argument': 'Foo', 'expected': 'FAILURE'
+                    }
+                ],
+                [{'Foo': 'FAILURE'}],
+                'FAILURE'
+            ),
+            (
+                [
+                    {
+                        'state': 'failure', 'matcher': 'pathAll',
+                        'argument': 'Tables[].State', 'expected': 'FAILURE'
+                    }
+                ],
+                [{'Tables': [{"State": "FAILURE"}]}],
+                'FAILURE'
+            ),
+            (
+                [
+                    {
+                        'state': 'failure', 'matcher': 'pathAny',
+                        'argument': 'Tables[].State', 'expected': 'FAILURE'
+                    }
+                ],
+                [{'Tables': [{"State": "FAILURE"}]}],
+                'FAILURE'
+            ),
+            (
+                [{'state': 'failure', 'matcher': 'status', 'expected': 404}],
+                [{'ResponseMetadata': {'HTTPStatusCode': 404}}],
+                '404'
+            ),
+            (
+                [{'state': 'failure', 'matcher': 'error', 'expected': 'FailError'}],
+                [{'Error': {'Code': 'FailError', 'Message': 'foo'}}],
+                'FailError'
+            ),
+            (
+                [{'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'}],
+                [{'Success': False}]*4,
+                'Max attempts exceeded'
+            ),
+            (
+                [
+                    {'state': 'success', 'matcher': 'status', 'expected': 200},
+                    {'state': 'retry', 'matcher': 'error', 'expected': 'RetryMe'},
+                ],
+                [
+                    {'Success': False},
+                    {'Error': {'Code': 'RetryMe', 'Message': 'foo'}},
+                    {'Success': False},
+                    {'Success': False},
+                ],
+                'Previously accepted state'
+            ),
         ]
 
         for acceptors, responses, expected_msg in test_cases:

@@ -5,7 +5,7 @@ import socket
 from base64 import b64encode
 import sys
 
-from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
+from urllib3 import PoolManager, proxy_from_url, Timeout
 from urllib3.util.retry import Retry
 from urllib3.util.ssl_ import (
     ssl, OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION, DEFAULT_CIPHERS,
@@ -21,7 +21,6 @@ except ImportError:
     from urllib3.util.ssl_ import SSLContext
 
 import botocore.awsrequest
-from botocore.vendored import six
 from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import (
@@ -178,18 +177,20 @@ class URLLib3Session(object):
     v2.7.0 implemented this themselves, later version urllib3 support this
     directly via a flag to urlopen so enabling it if needed should be trivial.
     """
-    def __init__(self,
-                 verify=True,
-                 proxies=None,
-                 timeout=None,
-                 max_pool_connections=MAX_POOL_CONNECTIONS,
-                 socket_options=None,
-                 client_cert=None,
-                 proxies_config=None,
+    def __init__(
+        self,
+        verify=True,
+        proxies=None,
+        timeout=None,
+        max_pool_connections=MAX_POOL_CONNECTIONS,
+        socket_options=None,
+        client_cert=None,
+        proxies_config=None,
     ):
         self._verify = verify
-        self._proxy_config = ProxyConfiguration(proxies=proxies,
-                                                proxies_settings=proxies_config)
+        self._proxy_config = ProxyConfiguration(
+            proxies=proxies, proxies_settings=proxies_config
+        )
         self._pool_classes_by_scheme = {
             'http': botocore.awsrequest.AWSHTTPConnectionPool,
             'https': botocore.awsrequest.AWSHTTPSConnectionPool,

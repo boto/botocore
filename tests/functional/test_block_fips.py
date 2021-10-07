@@ -56,10 +56,10 @@ class TestBlockFIPS(BaseSessionTest):
         region = 'us-weast-1-fips'
         client, _ = self._make_client('accessanalyzer', region)
         with self.assertRaises(UnknownFIPSEndpointError):
-            url = client.generate_presigned_url('list_analyzers', Params={})
+            client.generate_presigned_url('list_analyzers', Params={})
 
     def test_blocks_unknown_fips_pseudo_regions_presign_post(self):
         region = 'fips-us-gov-weast-1'
         client, _ = self._make_client('s3', region)
         with self.assertRaises(UnknownFIPSEndpointError):
-            post = client.generate_presigned_post('foo-bucket', 'foo-key')
+            client.generate_presigned_post('foo-bucket', 'foo-key')

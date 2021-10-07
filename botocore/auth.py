@@ -18,17 +18,20 @@ import functools
 from email.utils import formatdate
 from hashlib import sha1, sha256
 import hmac
-from io import BytesIO
 import logging
 from operator import itemgetter
 import time
 
-from botocore.compat import(
+from botocore.compat import (
     encodebytes, ensure_unicode, HTTPHeaders, json, parse_qs, quote,
-    six, unquote, urlsplit, urlunsplit, HAS_CRT, MD5_AVAILABLE
+    six, unquote, urlsplit, urlunsplit, HAS_CRT
 )
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
+
+# Imports for backwards compatibility
+from botocore.compat import MD5_AVAILABLE # noqa
+
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +116,9 @@ class SigV2Auth(BaseSigner):
             if key == 'Signature':
                 continue
             value = six.text_type(params[key])
-            pairs.append(quote(key.encode('utf-8'), safe='') + '=' +
-                         quote(value.encode('utf-8'), safe='-_~'))
+            quoted_key = quote(key.encode('utf-8'), safe='')
+            quoted_value = quote(value.encode('utf-8'), safe='-_~')
+            pairs.append(f'{quoted_key}={quoted_value}')
         qs = '&'.join(pairs)
         string_to_sign += qs
         logger.debug('String to sign: %s', string_to_sign)
@@ -275,9 +279,10 @@ class SigV4Auth(BaseSigner):
         return ' '.join(value.split())
 
     def signed_headers(self, headers_to_sign):
-        l = ['%s' % n.lower().strip() for n in set(headers_to_sign)]
-        l = sorted(l)
-        return ';'.join(l)
+        headers = sorted(
+            [n.lower().strip() for n in set(headers_to_sign)]
+        )
+        return ';'.join(headers)
 
     def payload(self, request):
         if not self._should_sha256_sign_payload(request):
@@ -387,11 +392,11 @@ class SigV4Auth(BaseSigner):
         self._inject_signature_to_request(request, signature)
 
     def _inject_signature_to_request(self, request, signature):
-        l = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
+        auth_str = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
         headers_to_sign = self.headers_to_sign(request)
-        l.append('SignedHeaders=%s' % self.signed_headers(headers_to_sign))
-        l.append('Signature=%s' % signature)
-        request.headers['Authorization'] = ', '.join(l)
+        auth_str.append('SignedHeaders=%s' % self.signed_headers(headers_to_sign))
+        auth_str.append('Signature=%s' % signature)
+        request.headers['Authorization'] = ', '.join(auth_str)
         return request
 
     def _modify_request_before_signing(self, request):
