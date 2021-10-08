@@ -10,12 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import os
-
 from tests import ClientHTTPStubber, temporary_file
 from tests.functional import FunctionalSessionTest
 
-import botocore
 from botocore.config import Config
 from botocore.compat import json
 from botocore.discovery import EndpointDiscoveryRequired
@@ -87,7 +84,6 @@ class TestEndpointDiscovery(FunctionalSessionTest):
             self.assert_endpoint_discovery_used(stubber, discovered_endpoint)
 
     def test_endpoint_discovery_with_invalid_endpoint(self):
-        discovered_endpoint = 'https://discovered.domain'
         response = {
             'Error': {
                 'Code': 'InvalidEndpointException',

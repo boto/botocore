@@ -9,6 +9,7 @@ from botocore.compat import awscrt, HTTPHeaders, parse_qs, urlsplit, urlunsplit
 from botocore.utils import percent_encode_sequence
 from botocore.exceptions import NoCredentialsError
 
+
 class CrtSigV4Auth(BaseSigner):
     REQUIRES_REGION = True
     _PRESIGNED_HEADERS_BLOCKLIST = [
@@ -73,7 +74,7 @@ class CrtSigV4Auth(BaseSigner):
             signed_body_value=explicit_payload,
             signed_body_header_type=body_header,
             expiration_in_seconds=self._expiration_in_seconds,
-            )
+        )
         crt_request = self._crt_request_from_aws_request(request)
         future = awscrt.auth.aws_sign_request(crt_request, signing_config)
         future.result()
@@ -256,7 +257,7 @@ class CrtSigV4AsymAuth(BaseSigner):
             signed_body_value=explicit_payload,
             signed_body_header_type=body_header,
             expiration_in_seconds=self._expiration_in_seconds,
-            )
+        )
         crt_request = self._crt_request_from_aws_request(request)
         future = awscrt.auth.aws_sign_request(crt_request, signing_config)
         future.result()
@@ -373,6 +374,7 @@ class CrtS3SigV4AsymAuth(CrtSigV4AsymAuth):
     def _should_add_content_sha256_header(self, explicit_payload):
         # Always add X-Amz-Content-SHA256 header
         return True
+
 
 class CrtSigV4AsymQueryAuth(CrtSigV4AsymAuth):
     DEFAULT_EXPIRES = 3600

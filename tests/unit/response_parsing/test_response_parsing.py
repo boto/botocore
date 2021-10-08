@@ -30,11 +30,11 @@ log = logging.getLogger(__name__)
 
 
 SPECIAL_CASES = [
-    'iam-get-user-policy.xml', # Needs the JSON decode from handlers.py
+    'iam-get-user-policy.xml',  # Needs the JSON decode from handlers.py
     'iam-list-roles.xml',  # Needs the JSON decode from handlers.py for the policy
-    's3-get-bucket-location.xml', # Confirmed, this will need a special handler
-    #'s3-list-multipart-uploads.xml',  # Bug in model, missing delimeter
-    'cloudformation-get-template.xml', # Need to JSON decode the template body.
+    's3-get-bucket-location.xml',  # Confirmed, this will need a special handler
+    # 's3-list-multipart-uploads.xml',  # Bug in model, missing delimeter
+    'cloudformation-get-template.xml',  # Need to JSON decode the template body.
 ]
 
 
@@ -154,7 +154,6 @@ def _get_operation_model(service_model, filename):
     for operation_name in operation_names:
         if xform_name(operation_name) == opname.replace('-', '_'):
             return service_model.operation_model(operation_name)
-    return operation
 
 
 def _get_expected_parsed_result(filename):

@@ -20,7 +20,6 @@ import copy
 import logging
 import os
 import platform
-import re
 import socket
 import warnings
 
@@ -49,7 +48,6 @@ from botocore import monitoring
 from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
-from botocore import utils
 from botocore.utils import EVENT_ALIASES, validate_region_name
 from botocore.compat import MutableMapping, HAS_CRT
 
@@ -155,7 +153,7 @@ class Session(object):
     def _register_data_loader(self):
         self._components.lazy_register_component(
             'data_loader',
-            lambda:  create_loader(self.get_config_variable('data_path')))
+            lambda: create_loader(self.get_config_variable('data_path')))
 
     def _register_endpoint_resolver(self):
         def create_default_resolver():
@@ -216,13 +214,9 @@ class Session(object):
 
     def _get_crt_version(self):
         try:
-            import pkg_resources
-            return pkg_resources.get_distribution("awscrt").version
-        except Exception:
-            # We're catching *everything* here to avoid failing
-            # on pkg_resources issues. This is unlikely in our
-            # supported versions but it avoids making a hard
-            # dependency on the package being present.
+            import awscrt
+            return awscrt.__version__
+        except AttributeError:
             return "Unknown"
 
     @property

@@ -14,7 +14,7 @@ from tests import mock
 from tests import unittest
 
 from botocore.stub import Stubber
-from botocore.exceptions import ParamValidationError, StubResponseError, UnStubbedResponseError
+from botocore.exceptions import ParamValidationError, UnStubbedResponseError
 from botocore.model import ServiceModel
 from botocore import hooks
 
@@ -189,7 +189,6 @@ class TestStubber(unittest.TestCase):
         actual_response_meta = response[1]['ResponseMetadata']
         self.assertIn('RequestId', actual_response_meta)
         self.assertEqual(actual_response_meta['RequestId'], "79104EXAMPLEB723")
-
 
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()

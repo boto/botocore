@@ -12,7 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import (
-    mock, unittest, temporary_file, random_chars,
+    unittest, temporary_file, random_chars,
     ClientHTTPStubber, ConsistencyWaiter,
 )
 import os
@@ -28,7 +28,6 @@ from contextlib import closing
 import pytest
 import urllib3
 
-from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
 from botocore.compat import six, zip_longest, OrderedDict
 import botocore.session
@@ -503,8 +502,9 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertEqual(len(parsed['Contents']), 1)
         self.assertEqual(parsed['Contents'][0]['Key'], key_name)
 
-        parsed = self.client.list_objects_v2(Bucket=self.bucket_name,
-                                          EncodingType='url')
+        parsed = self.client.list_objects_v2(
+            Bucket=self.bucket_name, EncodingType='url'
+        )
         self.assertEqual(len(parsed['Contents']), 1)
         self.assertEqual(parsed['Contents'][0]['Key'], 'foo%08')
 
@@ -518,8 +518,9 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertEqual(len(parsed['Versions']), 1)
         self.assertEqual(parsed['Versions'][0]['Key'], key_name)
 
-        parsed = self.client.list_object_versions(Bucket=self.bucket_name,
-                                          EncodingType='url')
+        parsed = self.client.list_object_versions(
+            Bucket=self.bucket_name, EncodingType='url'
+        )
         self.assertEqual(len(parsed['Versions']), 1)
         self.assertEqual(parsed['Versions'][0]['Key'], 'foo%03')
 

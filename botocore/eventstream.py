@@ -464,7 +464,7 @@ class EventStreamBuffer(object):
         prelude = MessagePrelude(*raw_prelude)
         self._validate_prelude(prelude)
         # The minus 4 removes the prelude crc from the bytes to be checked
-        _validate_checksum(prelude_bytes[:_PRELUDE_LENGTH-4], prelude.crc)
+        _validate_checksum(prelude_bytes[:_PRELUDE_LENGTH - 4], prelude.crc)
         return prelude
 
     def _parse_headers(self):
@@ -484,7 +484,7 @@ class EventStreamBuffer(object):
 
     def _parse_message_bytes(self):
         # The minus 4 includes the prelude crc to the bytes to be checked
-        message_bytes = self._data[_PRELUDE_LENGTH-4:self._prelude.payload_end]
+        message_bytes = self._data[_PRELUDE_LENGTH - 4:self._prelude.payload_end]
         return message_bytes
 
     def _validate_message_crc(self):

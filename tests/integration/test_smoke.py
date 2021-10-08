@@ -17,11 +17,10 @@ import logging
 
 import pytest
 
-from tests import mock, ClientHTTPStubber
+from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-from botocore.endpoint import Endpoint
 from botocore.exceptions import ConnectionClosedError
 
 
@@ -30,84 +29,76 @@ from botocore.exceptions import ConnectionClosedError
 # Empty params means that the operation will be called with no params.  This is
 # used as a quick verification that we can successfully make calls to services.
 SMOKE_TESTS = {
- 'acm': {'ListCertificates': {}},
- 'apigateway': {'GetRestApis': {}},
- 'application-autoscaling': {
-     'DescribeScalableTargets': {
-         'ServiceNamespace': 'ecs'
-     }},
- 'autoscaling': {'DescribeAccountLimits': {},
-                 'DescribeAdjustmentTypes': {}},
- 'cloudformation': {'DescribeStacks': {},
-                    'ListStacks': {}},
- 'cloudfront': {'ListDistributions': {},
-                'ListStreamingDistributions': {}},
- 'cloudhsmv2': {'DescribeBackups': {}},
- 'cloudsearch': {'DescribeDomains': {},
-                 'ListDomainNames': {}},
- 'cloudtrail': {'DescribeTrails': {}},
- 'cloudwatch': {'ListMetrics': {}},
- 'codecommit': {'ListRepositories': {}},
- 'codedeploy': {'ListApplications': {}},
- 'codepipeline': {'ListActionTypes': {}},
- 'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
- 'cognito-sync': {'ListIdentityPoolUsage': {}},
- 'config': {'DescribeDeliveryChannels': {}},
- 'datapipeline': {'ListPipelines': {}},
- 'devicefarm': {'ListProjects': {}},
- 'directconnect': {'DescribeConnections': {}},
- 'ds': {'DescribeDirectories': {}},
- 'dynamodb': {'ListTables': {}},
- 'dynamodbstreams': {'ListStreams': {}},
- 'ec2': {'DescribeRegions': {},
-         'DescribeInstances': {}},
-  'ecr': {'DescribeRepositories': {}},
- 'ecs': {'DescribeClusters': {}},
- 'elasticache': {'DescribeCacheClusters': {}},
- 'elasticbeanstalk': {'DescribeApplications': {}},
- 'elastictranscoder': {'ListPipelines': {}},
- 'elb': {'DescribeLoadBalancers': {}},
- 'emr': {'ListClusters': {}},
- 'es': {'ListDomainNames': {}},
- 'events': {'ListRules': {}},
-  'firehose': {'ListDeliveryStreams': {}},
- 'gamelift': {'ListBuilds': {}},
- 'glacier': {'ListVaults': {}},
- 'iam': {'ListUsers': {}},
- # Does not work with session credentials so
- # importexport tests are not run.
- #'importexport': {'ListJobs': {}},
- 'importexport': {},
- 'inspector': {'DescribeCrossAccountAccessRole': {}},
- 'iot': {'DescribeEndpoint': {}},
- 'kinesis': {'ListStreams': {}},
- 'kms': {'ListKeys': {}},
- 'lambda': {'ListFunctions': {}},
- 'logs': {'DescribeLogGroups': {}},
- 'opsworks': {'DescribeStacks': {}},
- 'rds': {'DescribeDBInstances': {}},
- 'redshift': {'DescribeClusters': {}},
- 'route53': {'ListHostedZones': {}},
- 'route53domains': {'ListDomains': {}},
- 's3': {'ListBuckets': {}},
- 'sdb': {'ListDomains': {}},
- 'ses': {'ListIdentities': {}},
- 'shield': {'GetSubscriptionState': {}},
- 'sns': {'ListTopics': {}},
- 'sqs': {'ListQueues': {}},
- 'ssm': {'ListDocuments': {}},
- 'storagegateway': {'ListGateways': {}},
- # sts tests would normally go here, but
- # there aren't any calls you can make when
- # using session credentials so we don't run any
- # sts tests.
- 'sts': {},
- #'sts': {'GetSessionToken': {}},
- # Subscription needed for support API calls.
- 'support': {},
- 'swf': {'ListDomains': {'registrationStatus': 'REGISTERED'}},
- 'waf': {'ListWebACLs': {'Limit': 1}},
- 'workspaces': {'DescribeWorkspaces': {}},
+    'acm': {'ListCertificates': {}},
+    'apigateway': {'GetRestApis': {}},
+    'application-autoscaling': {'DescribeScalableTargets': {'ServiceNamespace': 'ecs'}},
+    'autoscaling': {'DescribeAccountLimits': {}, 'DescribeAdjustmentTypes': {}},
+    'cloudformation': {'DescribeStacks': {}, 'ListStacks': {}},
+    'cloudfront': {'ListDistributions': {}, 'ListStreamingDistributions': {}},
+    'cloudhsmv2': {'DescribeBackups': {}},
+    'cloudsearch': {'DescribeDomains': {}, 'ListDomainNames': {}},
+    'cloudtrail': {'DescribeTrails': {}},
+    'cloudwatch': {'ListMetrics': {}},
+    'codecommit': {'ListRepositories': {}},
+    'codedeploy': {'ListApplications': {}},
+    'codepipeline': {'ListActionTypes': {}},
+    'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
+    'cognito-sync': {'ListIdentityPoolUsage': {}},
+    'config': {'DescribeDeliveryChannels': {}},
+    'datapipeline': {'ListPipelines': {}},
+    'devicefarm': {'ListProjects': {}},
+    'directconnect': {'DescribeConnections': {}},
+    'ds': {'DescribeDirectories': {}},
+    'dynamodb': {'ListTables': {}},
+    'dynamodbstreams': {'ListStreams': {}},
+    'ec2': {'DescribeRegions': {}, 'DescribeInstances': {}},
+    'ecr': {'DescribeRepositories': {}},
+    'ecs': {'DescribeClusters': {}},
+    'elasticache': {'DescribeCacheClusters': {}},
+    'elasticbeanstalk': {'DescribeApplications': {}},
+    'elastictranscoder': {'ListPipelines': {}},
+    'elb': {'DescribeLoadBalancers': {}},
+    'emr': {'ListClusters': {}},
+    'es': {'ListDomainNames': {}},
+    'events': {'ListRules': {}},
+    'firehose': {'ListDeliveryStreams': {}},
+    'gamelift': {'ListBuilds': {}},
+    'glacier': {'ListVaults': {}},
+    'iam': {'ListUsers': {}},
+    # Does not work with session credentials so
+    # importexport tests are not run.
+    # 'importexport': {'ListJobs': {}},
+    'importexport': {},
+    'inspector': {'DescribeCrossAccountAccessRole': {}},
+    'iot': {'DescribeEndpoint': {}},
+    'kinesis': {'ListStreams': {}},
+    'kms': {'ListKeys': {}},
+    'lambda': {'ListFunctions': {}},
+    'logs': {'DescribeLogGroups': {}},
+    'opsworks': {'DescribeStacks': {}},
+    'rds': {'DescribeDBInstances': {}},
+    'redshift': {'DescribeClusters': {}},
+    'route53': {'ListHostedZones': {}},
+    'route53domains': {'ListDomains': {}},
+    's3': {'ListBuckets': {}},
+    'sdb': {'ListDomains': {}},
+    'ses': {'ListIdentities': {}},
+    'shield': {'GetSubscriptionState': {}},
+    'sns': {'ListTopics': {}},
+    'sqs': {'ListQueues': {}},
+    'ssm': {'ListDocuments': {}},
+    'storagegateway': {'ListGateways': {}},
+    # sts tests would normally go here, but
+    # there aren't any calls you can make when
+    # using session credentials so we don't run any
+    # sts tests.
+    'sts': {},
+    # 'sts': {'GetSessionToken': {}},
+    # Subscription needed for support API calls.
+    'support': {},
+    'swf': {'ListDomains': {'registrationStatus': 'REGISTERED'}},
+    'waf': {'ListWebACLs': {'Limit': 1}},
+    'workspaces': {'DescribeWorkspaces': {}},
 }
 
 
@@ -119,25 +110,32 @@ ERROR_TESTS = {
     'application-autoscaling': {
         'DescribeScalableTargets': {
             'ServiceNamespace': 'fake-service-namespace'
-        }},
-    'autoscaling': {'CreateLaunchConfiguration': {
-        'LaunchConfigurationName': 'foo',
-        'ImageId': 'ami-12345678',
-        'InstanceType': 'm1.small',
-        }},
-    'cloudformation': {'CreateStack': {
-        'StackName': 'fake',
-        'TemplateURL': 'http://s3.amazonaws.com/foo/bar',
-        }},
+        }
+    },
+    'autoscaling': {
+        'CreateLaunchConfiguration': {
+            'LaunchConfigurationName': 'foo',
+            'ImageId': 'ami-12345678',
+            'InstanceType': 'm1.small',
+        }
+    },
+    'cloudformation': {
+        'CreateStack': {
+            'StackName': 'fake',
+            'TemplateURL': 'http://s3.amazonaws.com/foo/bar',
+        }
+    },
     'cloudfront': {'GetDistribution': {'Id': 'fake-id'}},
     'cloudhsmv2': {'ListTags': {'ResourceId': 'fake-id'}},
     'cloudsearch': {'DescribeIndexFields': {'DomainName': 'fakedomain'}},
     'cloudtrail': {'DeleteTrail': {'Name': 'fake-trail'}},
-    'cloudwatch': {'SetAlarmState': {
-        'AlarmName': 'abc',
-        'StateValue': 'mno',
-        'StateReason': 'xyz',
-        }},
+    'cloudwatch': {
+        'SetAlarmState': {
+            'AlarmName': 'abc',
+            'StateValue': 'mno',
+            'StateReason': 'xyz',
+        }
+    },
     'logs': {'GetLogEvents': {'logGroupName': 'a', 'logStreamName': 'b'}},
     'codecommit': {'ListBranches': {'repositoryName': 'fake-repo'}},
     'codedeploy': {'GetDeployment': {'deploymentId': 'fake-id'}},
@@ -146,7 +144,7 @@ ERROR_TESTS = {
     'cognito-sync': {'DescribeIdentityPoolUsage': {'IdentityPoolId': 'fake'}},
     'config': {
         'GetResourceConfigHistory': {'resourceType': '', 'resourceId': 'fake'},
-        },
+    },
     'datapipeline': {'GetPipelineDefinition': {'pipelineId': 'fake'}},
     'devicefarm': {'GetDevice': {'arn': 'arn:aws:devicefarm:REGION::device:f'}},
     'directconnect': {'DescribeConnections': {'connectionId': 'fake'}},
@@ -159,7 +157,7 @@ ERROR_TESTS = {
     'elasticache': {'DescribeCacheClusters': {'CacheClusterId': 'fake'}},
     'elasticbeanstalk': {
         'DescribeEnvironmentResources': {'EnvironmentId': 'x'},
-        },
+    },
     'elb': {'DescribeLoadBalancers': {'LoadBalancerNames': ['fake']}},
     'elastictranscoder': {'ReadJob': {'Id': 'fake'}},
     'emr': {'DescribeCluster': {'ClusterId': 'fake'}},
@@ -181,18 +179,20 @@ ERROR_TESTS = {
     'sns': {
         'ConfirmSubscription': {'TopicArn': 'a', 'Token': 'b'},
         'Publish': {'Message': 'hello', 'TopicArn': 'fake'},
-        },
+    },
     'sqs': {'GetQueueUrl': {'QueueName': 'fake'}},
     'ssm': {'GetDocument': {'Name': 'fake'}},
     'storagegateway': {'ListVolumes': {'GatewayARN': 'x'*50}},
     'sts': {'GetFederationToken': {'Name': 'fake', 'Policy': 'fake'}},
-    'support': {'CreateCase': {
-        'subject': 'x',
-        'communicationBody': 'x',
-        'categoryCode': 'x',
-        'serviceCode': 'x',
-        'severityCode': 'low',
-        }},
+    'support': {
+        'CreateCase': {
+            'subject': 'x',
+            'communicationBody': 'x',
+            'categoryCode': 'x',
+            'serviceCode': 'x',
+            'severityCode': 'low',
+        }
+    },
     'swf': {'DescribeDomain': {'name': 'fake'}},
     'waf': {'GetWebACL': {'WebACLId': 'fake'}},
     'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake-directory-id'}},
@@ -287,7 +287,7 @@ def test_can_make_request_and_understand_errors_with_client(
     client = _get_client(botocore_session, service_name)
     method = getattr(client, xform_name(operation_name))
     with pytest.raises(ClientError):
-        response = method(**kwargs)
+        method(**kwargs)
 
 
 @pytest.mark.parametrize("service_name, operation_name, kwargs", _smoke_tests())
@@ -300,7 +300,7 @@ def test_client_can_retry_request_properly(
     with ClientHTTPStubber(client, strict=False) as http_stubber:
         http_stubber.responses.append(exception)
         try:
-            response = operation(**kwargs)
+            operation(**kwargs)
         except ClientError as e:
             assert False, ('Request was not retried properly, '
                            'received error:\n%s' % pformat(e))

@@ -22,10 +22,9 @@ import copy
 
 import botocore
 from botocore import xform_name
-from botocore.compat import OrderedDict, json
+from botocore.compat import json
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
-from botocore.awsrequest import AWSResponse
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
@@ -38,7 +37,6 @@ from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
 from botocore.exceptions import UnsupportedOutpostResourceError
 from botocore.model import ServiceModel
 from botocore.model import OperationModel
-from botocore.regions import EndpointResolver
 from botocore.utils import ensure_boolean
 from botocore.utils import resolve_imds_endpoint_mode
 from botocore.utils import is_json_value_header
@@ -76,8 +74,6 @@ from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenLoader
 from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
 from botocore.exceptions import SSOTokenLoadError
-from botocore.utils import IMDSFetcher
-from botocore.utils import BadIMDSRequestError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
@@ -117,7 +113,7 @@ class TestResolveIMDSEndpointMode(unittest.TestCase):
         session = self.create_session_with_config('IPv6', None)
         self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv6')
 
-    def test_resolve_endpoint_mode_IPv6(self):
+    def test_resolve_endpoint_mode_IPv4(self):
         session = self.create_session_with_config('IPv4', None)
         self.assertEqual(resolve_imds_endpoint_mode(session), 'ipv4')
 
@@ -192,7 +188,6 @@ class TestIsJSONValueHeader(unittest.TestCase):
         self.assertTrue(is_json_value_header(shape))
 
 
-
 class TestURINormalization(unittest.TestCase):
     def test_remove_dot_segments(self):
         self.assertEqual(remove_dot_segments('../foo'), 'foo')
@@ -200,8 +195,7 @@ class TestURINormalization(unittest.TestCase):
         self.assertEqual(remove_dot_segments('./foo'), 'foo')
         self.assertEqual(remove_dot_segments('/./'), '/')
         self.assertEqual(remove_dot_segments('/../'), '/')
-        self.assertEqual(remove_dot_segments('/foo/bar/baz/../qux'),
-                         '/foo/bar/qux')
+        self.assertEqual(remove_dot_segments('/foo/bar/baz/../qux'), '/foo/bar/qux')
         self.assertEqual(remove_dot_segments('/foo/..'), '/')
         self.assertEqual(remove_dot_segments('foo/bar/baz'), 'foo/bar/baz')
         self.assertEqual(remove_dot_segments('..'), '')
@@ -637,7 +631,7 @@ class TestArgumentGenerator(unittest.TestCase):
                 'A': {
                     'type': 'map',
                     'key': {'type': 'string'},
-                    'value':  {'type': 'string'},
+                    'value': {'type': 'string'},
                 }
             },
             generated_skeleton={
@@ -1201,27 +1195,34 @@ class TestPercentEncodeSequence(unittest.TestCase):
             'k1=with%20spaces%2B%2B%2F')
 
     def test_percent_encode_string_string_tuples(self):
-        self.assertEqual(percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]),
-                         'k1=v1&k2=v2')
+        self.assertEqual(
+            percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]),
+            'k1=v1&k2=v2'
+        )
 
     def test_percent_encode_dict_single_pair(self):
         self.assertEqual(percent_encode_sequence({'k1': 'v1'}), 'k1=v1')
 
     def test_percent_encode_dict_string_string(self):
         self.assertEqual(
-            percent_encode_sequence(OrderedDict([('k1', 'v1'), ('k2', 'v2')])),
-                                    'k1=v1&k2=v2')
+            percent_encode_sequence({'k1': 'v1', 'k2': 'v2'}),
+            'k1=v1&k2=v2'
+        )
 
     def test_percent_encode_single_list_of_values(self):
-        self.assertEqual(percent_encode_sequence({'k1': ['a', 'b', 'c']}),
-                         'k1=a&k1=b&k1=c')
+        self.assertEqual(
+            percent_encode_sequence({'k1': ['a', 'b', 'c']}),
+            'k1=a&k1=b&k1=c'
+        )
 
     def test_percent_encode_list_values_of_string(self):
         self.assertEqual(
             percent_encode_sequence(
-                OrderedDict([('k1', ['a', 'list']),
-                             ('k2', ['another', 'list'])])),
-            'k1=a&k1=list&k2=another&k2=list')
+                {'k1': ['a', 'list'], 'k2': ['another', 'list']}
+            ),
+            'k1=a&k1=list&k2=another&k2=list'
+        )
+
 
 class TestPercentEncode(unittest.TestCase):
     def test_percent_encode_obj(self):
@@ -1244,6 +1245,7 @@ class TestPercentEncode(unittest.TestCase):
         self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
         # Arbitrary bytes (not valid UTF-8).
         self.assertEqual(percent_encode(b'\x80\x00'), '%80%00')
+
 
 class TestSwitchHostS3Accelerate(unittest.TestCase):
     def setUp(self):
@@ -2196,12 +2198,11 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         }
         self.set_http_responses_to({'foo': 'bar'})
         fetcher = self.create_fetcher()
-        response = fetcher.retrieve_full_uri(
-            'http://localhost', headers)
+        fetcher.retrieve_full_uri('http://localhost', headers)
         self.assert_request('GET', 'http://localhost', headers)
 
     def test_can_retrieve_uri(self):
-        json_body =  {
+        json_body = {
             "AccessKeyId" : "a",
             "SecretAccessKey" : "b",
             "Token" : "c",
@@ -2422,17 +2423,19 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(result, self._expected_creds)
 
     def test_ec2_metadata_endpoint_service_mode(self):
-        configs = [({'ec2_metadata_service_endpoint_mode': 'ipv6'},
-                    'http://[fd00:ec2::254]/'),
-                ({'ec2_metadata_service_endpoint_mode': 'ipv6'},
-                 'http://[fd00:ec2::254]/'),
-                ({'ec2_metadata_service_endpoint_mode': 'ipv4'},
-                 'http://169.254.169.254/'),
-                ({'ec2_metadata_service_endpoint_mode': 'foo'},
-                 'http://169.254.169.254/'),
-                ({'ec2_metadata_service_endpoint_mode': 'ipv6',
-                'ec2_metadata_service_endpoint': 'http://[fd00:ec2::010]/'},
-                'http://[fd00:ec2::010]/')]
+        configs = [
+            ({'ec2_metadata_service_endpoint_mode': 'ipv6'},
+             'http://[fd00:ec2::254]/'),
+            ({'ec2_metadata_service_endpoint_mode': 'ipv6'},
+             'http://[fd00:ec2::254]/'),
+            ({'ec2_metadata_service_endpoint_mode': 'ipv4'},
+             'http://169.254.169.254/'),
+            ({'ec2_metadata_service_endpoint_mode': 'foo'},
+             'http://169.254.169.254/'),
+            ({'ec2_metadata_service_endpoint_mode': 'ipv6',
+             'ec2_metadata_service_endpoint': 'http://[fd00:ec2::010]/'},
+             'http://[fd00:ec2::010]/')
+        ]
 
         for config, expected_url in configs:
             self._test_imds_base_url(config, expected_url)
@@ -2445,7 +2448,6 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_ipv6_endpoint_no_brackets_env_var_set(self):
         url = 'http://fd00:ec2::010/'
-        config = {'ec2_metadata_service_endpoint': url}
         self.assertFalse(is_valid_ipv6_endpoint_url(url))
 
     def test_ipv6_invalid_endpoint(self):
@@ -2479,10 +2481,12 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(result, {})
 
     def test_ipv6_imds_empty_config(self):
-        configs = [({'ec2_metadata_service_endpoint': ''},'http://169.254.169.254/'),
-                ({'ec2_metadata_service_endpoint_mode': ''}, 'http://169.254.169.254/'),
-                ({}, 'http://169.254.169.254/'),
-                (None, 'http://169.254.169.254/')]
+        configs = [
+            ({'ec2_metadata_service_endpoint': ''}, 'http://169.254.169.254/'),
+            ({'ec2_metadata_service_endpoint_mode': ''}, 'http://169.254.169.254/'),
+            ({}, 'http://169.254.169.254/'),
+            (None, 'http://169.254.169.254/')
+        ]
 
         for config, expected_url in configs:
             self._test_imds_base_url(config, expected_url)
@@ -2706,9 +2710,9 @@ class TestSSOTokenLoader(unittest.TestCase):
 
     def test_can_handle_does_not_exist(self):
         with self.assertRaises(SSOTokenLoadError):
-            access_token = self.loader(self.start_url)
+            self.loader(self.start_url)
 
     def test_can_handle_invalid_cache(self):
         self.cache[self.cache_key] = {}
         with self.assertRaises(SSOTokenLoadError):
-            access_token = self.loader(self.start_url)
+            self.loader(self.start_url)

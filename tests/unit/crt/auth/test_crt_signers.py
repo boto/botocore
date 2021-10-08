@@ -1,5 +1,3 @@
-import unittest
-
 import botocore
 from botocore.compat import HAS_CRT
 

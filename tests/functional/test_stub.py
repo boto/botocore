@@ -309,7 +309,8 @@ class TestStubber(unittest.TestCase):
                 }
             )
             self.assertEqual(
-                    url, 'https://s3.amazonaws.com/myotherbucket/myotherkey')
+                url, 'https://s3.amazonaws.com/myotherbucket/myotherkey'
+            )
             actual_response = self.client.list_objects(**expected_params)
             self.assertEqual(desired_response, actual_response)
         self.stubber.assert_no_pending_responses()
@@ -326,8 +327,7 @@ class TestStubber(unittest.TestCase):
 
     def test_parse_get_bucket_location_returns_response(self):
         service_response = {"LocationConstraint": "us-west-2"}
-        self.stubber.add_response('get_bucket_location',service_response)
+        self.stubber.add_response('get_bucket_location', service_response)
         self.stubber.activate()
         response = self.client.get_bucket_location(Bucket='foo')
         self.assertEqual(response, service_response)
-

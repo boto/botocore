@@ -129,8 +129,9 @@ class EndpointResolver(BaseEndpointResolver):
                     valid_partition = partition
 
             if valid_partition is not None:
-                result = self._endpoint_for_partition(valid_partition, service_name,
-                             region_name, True)
+                result = self._endpoint_for_partition(
+                    valid_partition, service_name, region_name, True
+                )
                 return result
             return None
 
@@ -141,8 +142,9 @@ class EndpointResolver(BaseEndpointResolver):
             if result:
                 return result
 
-    def _endpoint_for_partition(self, partition, service_name, region_name,
-            force_partition=False):
+    def _endpoint_for_partition(
+        self, partition, service_name, region_name, force_partition=False
+    ):
         # Get the service from the partition, or an empty template.
         service_data = partition['services'].get(
             service_name, DEFAULT_SERVICE_DATA)
@@ -187,7 +189,7 @@ class EndpointResolver(BaseEndpointResolver):
         self._merge_keys(partition.get('defaults', {}), result)
         hostname = result.get('hostname', DEFAULT_URI_TEMPLATE)
         result['hostname'] = self._expand_template(
-            partition, result['hostname'], service_name, endpoint_name)
+            partition, hostname, service_name, endpoint_name)
         if 'sslCommonName' in result:
             result['sslCommonName'] = self._expand_template(
                 partition, result['sslCommonName'], service_name,

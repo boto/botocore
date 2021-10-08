@@ -77,8 +77,9 @@ class TestAutoscalingPagination(BaseSessionTest):
         self.stubber = Stubber(self.client)
         self.stubber.activate()
 
-    def _setup_scaling_pagination(self, page_size=200, max_items=100,
-                                 total_items=600):
+    def _setup_scaling_pagination(
+        self, page_size=200, max_items=100, total_items=600
+    ):
         """
         Add to the stubber to test paginating describe_scaling_activities.
 

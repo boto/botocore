@@ -38,10 +38,10 @@ Assuming that you have Python and ``virtualenv`` installed, set up your environm
 .. code-block:: sh
 
     $ pip install botocore
-    
+
 Using Botocore
 ~~~~~~~~~~~~~~
-After installing botocore 
+After installing botocore
 
 Next, set up credentials (in e.g. ``~/.aws/credentials``):
 
@@ -57,7 +57,7 @@ Then, set up a default region (in e.g. ``~/.aws/config``):
 
    [default]
    region=us-east-1
-    
+
 Other credentials configuration method can be found `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`__
 
 Then, from a Python interpreter:
@@ -87,7 +87,7 @@ applicable for ``botocore``:
 Contributing
 ------------
 
-We value feedback and contributions from our community. Whether it's a bug report, new feature, correction, or additional documentation, we welcome your issues and pull requests. Please read through this `CONTRIBUTING <https://github.com/boto/botocore/blob/develop/CONTRIBUTING.rst>`__ document before submitting any issues or pull requests to ensure we have all the necessary information to effectively respond to your contribution. 
+We value feedback and contributions from our community. Whether it's a bug report, new feature, correction, or additional documentation, we welcome your issues and pull requests. Please read through this `CONTRIBUTING <https://github.com/boto/botocore/blob/develop/CONTRIBUTING.rst>`__ document before submitting any issues or pull requests to ensure we have all the necessary information to effectively respond to your contribution.
 
 
 Maintenance and Support for SDK Major Versions
@@ -107,4 +107,3 @@ More Resources
 * `NOTICE <https://github.com/boto/botocore/blob/develop/NOTICE>`__
 * `Changelog <https://github.com/boto/botocore/blob/develop/CHANGELOG.rst>`__
 * `License <https://github.com/boto/botocore/blob/develop/LICENSE.txt>`__
-

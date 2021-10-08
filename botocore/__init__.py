@@ -16,12 +16,13 @@ import os
 import re
 import logging
 
-__version__ = '1.21.55'
+__version__ = '1.21.57'
 
 
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
+
 
 # Configure default logger to do nothing
 log = logging.getLogger('botocore')

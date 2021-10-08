@@ -21,7 +21,7 @@ import botocore
 from botocore import response
 from botocore.compat import six
 from botocore.exceptions import IncompleteReadError, ReadTimeoutError
-from botocore.awsrequest import AWSRequest, AWSResponse
+from botocore.awsrequest import AWSResponse
 
 XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
             b'<Code>AccessDenied</Code>'
@@ -286,21 +286,29 @@ class TestGetResponse(BaseResponseTest):
 
         self.assert_response_with_subset_metadata(
             response.get_response(operation_model, http_response)[1],
-            {u'Contents': [{u'ETag': '"00000000000000000000000000000000"',
-                            u'Key': 'test.png',
-                            u'LastModified': datetime.datetime(2014, 3, 1, 17, 6, 40, tzinfo=tzutc()),
-                            u'Owner': {u'DisplayName': 'dummy',
-                                       u'ID': 'AAAAAAAAAAAAAAAAAAA'},
-                            u'Size': 6702,
-                            u'StorageClass': 'STANDARD'}],
-             u'IsTruncated': False,
-             u'Marker': "",
-             u'MaxKeys': 1000,
-             u'Name': 'mybucket',
-             u'Prefix': "",
-             'ResponseMetadata': {
-                 'RequestId': 'XXXXXXXXXXXXXXXX',
-                 'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                 'HTTPStatusCode': 200,
-             }}
+            {
+                'Contents': [
+                    {
+                        'ETag': '"00000000000000000000000000000000"',
+                        'Key': 'test.png',
+                        'LastModified': datetime.datetime(2014, 3, 1, 17, 6, 40, tzinfo=tzutc()),
+                        'Owner': {
+                            'DisplayName': 'dummy',
+                            'ID': 'AAAAAAAAAAAAAAAAAAA'
+                        },
+                        'Size': 6702,
+                        'StorageClass': 'STANDARD'
+                    }
+                ],
+                'IsTruncated': False,
+                'Marker': "",
+                'MaxKeys': 1000,
+                'Name': 'mybucket',
+                'Prefix': "",
+                'ResponseMetadata': {
+                    'RequestId': 'XXXXXXXXXXXXXXXX',
+                    'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                    'HTTPStatusCode': 200,
+                }
+            }
         )
