@@ -1,0 +1,5 @@
+{
+  "type": "enchancement",
+  "category": "AWSCRT",
+  "description": "Upgrade awscrt extra to 0.12.5"
+}
