@@ -25,7 +25,7 @@ import botocore.utils
 from botocore.compat import six
 from botocore.compat import (
     HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,
-    urlencode, MutableMapping
+    urlencode, urlparse, MutableMapping
 )
 from botocore.exceptions import UnseekableStreamError
 
@@ -349,8 +349,10 @@ class AWSRequestPreparer(object):
     def _prepare_url(self, original):
         url = original.url
         if original.params:
+            url_parts = urlparse(url)
+            delim = '&' if url_parts.query else '?'
             params = urlencode(list(original.params.items()), doseq=True)
-            url = '%s?%s' % (url, params)
+            url = delim.join((url, params))
         return url
 
     def _prepare_headers(self, original, prepared_body=None):

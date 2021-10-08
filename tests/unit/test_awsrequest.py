@@ -120,6 +120,15 @@ class TestAWSRequest(unittest.TestCase):
         prepared_request = request.prepare()
         self.assertEqual(prepared_request.url, 'http://example.com/?foo=bar')
 
+    def test_can_prepare_url_params_with_existing_query(self):
+        request = AWSRequest(
+            url='http://example.com/?bar=foo', params={'foo': 'bar'}
+        )
+        prepared_request = request.prepare()
+        self.assertEqual(
+            prepared_request.url, 'http://example.com/?bar=foo&foo=bar'
+        )
+
     def test_can_prepare_dict_body(self):
         body = {'dead': 'beef'}
         request = AWSRequest(url='http://example.com/', data=body)
