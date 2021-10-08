@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.21.58
+=======
+
+* api-change:``lexv2-runtime``: Update lexv2-runtime client to latest version
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``secretsmanager``: Documentation updates for Secrets Manager
+* api-change:``securityhub``: Added new resource details objects to ASFF, including resources for WAF rate-based rules, EC2 VPC endpoints, ECR repositories, EKS clusters, X-Ray encryption, and OpenSearch domains. Added additional details for CloudFront distributions, CodeBuild projects, ELB V2 load balancers, and S3 buckets.
+* api-change:``mediaconvert``: AWS Elemental MediaConvert has added the ability to set account policies which control access restrictions for HTTP, HTTPS, and S3 content sources.
+* api-change:``ec2``: This release removes a requirement for filters on SearchLocalGatewayRoutes operations.
+
+
 1.21.57
 =======
 
@@ -10098,3 +10109,4 @@ CHANGELOG
 * feature:``EMR``: Added support for adding EBS storage to EMR instances.
 * bugfix:pagination: Refactored pagination to handle non-string service tokens.
 * bugfix:credentials: Fix race condition in credential provider.
+
