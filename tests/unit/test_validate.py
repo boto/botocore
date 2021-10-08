@@ -32,7 +32,6 @@ class BaseTestValidate(unittest.TestCase):
         input_shape = s.get_shape_by_name('Input')
         validator = ParamValidator()
         errors_found = validator.validate(input_params, input_shape)
-        error_message = errors_found.generate_report()
         return errors_found
 
 
@@ -169,7 +168,6 @@ class TestValidateDocumentType(BaseTestValidate):
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
-
     def test_validate_document_type_string(self):
         self.shapes = {
             'Input': {
@@ -234,7 +232,6 @@ class TestValidateTaggedUnion(BaseTestValidate):
         )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
-
 
     def test_validate_one_member_is_set(self):
         self.shapes = {
@@ -387,7 +384,7 @@ class TestValidateTypes(BaseTestValidate):
     def test_datetime_type_accepts_datetime_obj(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={'Timestamp': datetime.now(),})
+            input_params={'Timestamp': datetime.now()})
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 

@@ -2,6 +2,7 @@ import unittest
 
 import botocore
 
+
 class TestCreateClients(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()

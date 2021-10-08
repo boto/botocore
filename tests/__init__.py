@@ -348,6 +348,7 @@ def _urlparse(url):
         url = url.decode('utf8')
     return urlparse(url)
 
+
 def assert_url_equal(url1, url2):
     parts1 = _urlparse(url1)
     parts2 = _urlparse(url2)

@@ -211,8 +211,9 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         # But any other exception should be raised even if
         # attempts < max_attempts.
         with self.assertRaises(ValueError):
-            sleep_time = handler(response=None, attempts=1,
-                                caught_exception=ValueError())
+            sleep_time = handler(
+                response=None, attempts=1, caught_exception=ValueError()
+            )
 
     def test_connection_timeouts_are_retried(self):
         # If a connection times out, we get a Timout exception
@@ -253,7 +254,7 @@ class TestRetryHandler(unittest.TestCase):
     def test_action_tied_to_policy(self):
         # When a retry rule matches we should return the
         # amount of time to sleep, otherwise we should return None.
-        delay_function = retryhandler.create_exponential_delay_function( 1, 2)
+        delay_function = retryhandler.create_exponential_delay_function(1, 2)
         checker = retryhandler.HTTPStatusCodeChecker(500)
         handler = retryhandler.RetryHandler(checker, delay_function)
         response = (HTTP_500_RESPONSE, {})
@@ -268,7 +269,7 @@ class TestRetryHandler(unittest.TestCase):
             handler(response=response, attempts=4, caught_exception=None), 8)
 
     def test_none_response_when_no_matches(self):
-        delay_function = retryhandler.create_exponential_delay_function( 1, 2)
+        delay_function = retryhandler.create_exponential_delay_function(1, 2)
         checker = retryhandler.HTTPStatusCodeChecker(500)
         handler = retryhandler.RetryHandler(checker, delay_function)
         response = (HTTP_200_RESPONSE, {})

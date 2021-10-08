@@ -23,7 +23,6 @@ import botocore.session
 from botocore.compat import OrderedDict
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
-from botocore.exceptions import MissingServiceIdError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.config import Config
@@ -31,10 +30,8 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 from botocore.hooks import HierarchicalEmitter
-from botocore.loaders import Loader
 from botocore.model import OperationModel, ServiceModel, ServiceId
 from botocore.model import DenormalizedStructureBuilder
-from botocore.session import Session
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
 from botocore.utils import conditionally_calculate_md5
@@ -1304,10 +1301,10 @@ class TestParameterAlias(unittest.TestCase):
             self.sample_section
         )
         contents = self.sample_section.flush_structure().decode('utf-8')
-        self.assertIn(':type ' + self.alias_name + ':',  contents)
-        self.assertIn(':param ' + self.alias_name + ':',  contents)
-        self.assertNotIn(':type ' + self.original_name + ':',  contents)
-        self.assertNotIn(':param ' + self.original_name + ':',  contents)
+        self.assertIn(':type ' + self.alias_name + ':', contents)
+        self.assertIn(':param ' + self.alias_name + ':', contents)
+        self.assertNotIn(':type ' + self.original_name + ':', contents)
+        self.assertNotIn(':param ' + self.original_name + ':', contents)
 
     def test_alias_parameter_in_documentation_request_example(self):
         RequestExampleDocumenter(
@@ -1318,7 +1315,7 @@ class TestParameterAlias(unittest.TestCase):
             self.sample_section
         )
         contents = self.sample_section.flush_structure().decode('utf-8')
-        self.assertIn(self.alias_name + '=',  contents)
+        self.assertIn(self.alias_name + '=', contents)
         self.assertNotIn(self.original_name + '=', contents)
 
 
@@ -1366,10 +1363,8 @@ class TestPrependToHost(unittest.TestCase):
 
     def test_does_validate_long_host(self):
         with self.assertRaises(ParamValidationError):
-           self._prepend_to_host(
-               'https://example.com/path', 'toolong'*100)
+            self._prepend_to_host('https://example.com/path', 'toolong' * 100)
 
     def test_does_validate_host_with_illegal_char(self):
         with self.assertRaises(ParamValidationError):
-           self._prepend_to_host(
-               'https://example.com/path', 'host#name')
+            self._prepend_to_host('https://example.com/path', 'host#name')

@@ -68,6 +68,7 @@ SERVICE_TO_CLASS_NAME = {
     'workspaces': 'WorkSpaces'
 }
 
+
 @pytest.mark.parametrize("service_name", SERVICE_TO_CLASS_NAME)
 def test_client_has_correct_class_name(service_name):
     session = botocore.session.get_session()

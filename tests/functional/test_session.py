@@ -33,9 +33,9 @@ class TestSession(unittest.TestCase):
 
     def test_credentials_with_profile_precedence(self):
         self.environ['AWS_PROFILE'] = 'from_env_var'
-        self.session.set_config_variable('profile',  'from_session_instance')
+        self.session.set_config_variable('profile', 'from_session_instance')
         try:
-            creds = self.session.get_credentials()
+            self.session.get_credentials()
         except ProfileNotFound as e:
             self.assertNotIn('from_env_var', str(e))
             self.assertIn('from_session_instance', str(e))

@@ -1,8 +1,6 @@
-import datetime
-
 import pytest
 
-from tests import mock, requires_crt, FreezeTime
+from tests import requires_crt, FreezeTime
 from tests.unit.auth.test_sigv4 import (
     DATE,
     SERVICE,

@@ -63,10 +63,13 @@ from botocore.awsrequest import HeadersDict
 from botocore.compat import json, OrderedDict, urlsplit
 from botocore.eventstream import EventStream
 from botocore.model import ServiceModel, OperationModel
-from botocore.serialize import EC2Serializer, QuerySerializer, \
-        JSONSerializer, RestJSONSerializer, RestXMLSerializer
-from botocore.parsers import QueryParser, JSONParser, \
-        RestJSONParser, RestXMLParser, EC2QueryParser
+from botocore.serialize import (
+    EC2Serializer, QuerySerializer, JSONSerializer, RestJSONSerializer,
+    RestXMLSerializer,
+)
+from botocore.parsers import (
+    QueryParser, JSONParser, RestJSONParser, RestXMLParser, EC2QueryParser,
+)
 from botocore.utils import parse_timestamp, percent_encode_sequence
 from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
@@ -167,6 +170,7 @@ class MockRawResponse(object):
 
     def stream(self):
         yield self._data
+
 
 @pytest.mark.parametrize(
     "json_description, case, basename",

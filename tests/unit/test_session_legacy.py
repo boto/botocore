@@ -659,10 +659,10 @@ class TestCreateClient(BaseSessionTest):
             self.environ['FOO_CONFIG_FILE'] = f.name
             self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n'
-                    '    myservice2 = %s\n' % (
-                        config_api_version, second_config_api_version)
+            f.write(
+                f'foo_api_versions =\n'
+                f'    myservice = {config_api_version}\n'
+                f'    myservice2 = {second_config_api_version}\n'
             )
             f.flush()
 

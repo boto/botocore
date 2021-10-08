@@ -41,7 +41,8 @@ class TestDocumentSharedExamples(BaseDocsTest):
         })
         self.add_shape_to_params('foo', 'foo')
         self.add_shape_to_params('aloha', 'aloha')
-        self._examples = [{
+        self._examples = [
+            {
                 "id": "sample-id",
                 "title": "sample-title",
                 "description": "Sample Description.",

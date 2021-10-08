@@ -15,6 +15,7 @@ from tests import unittest, BaseSessionTest, ClientHTTPStubber
 import botocore.session
 from botocore.stub import Stubber
 
+
 class TestRoute53Pagination(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
@@ -36,7 +37,7 @@ class TestRoute53Pagination(unittest.TestCase):
         self.stubber.add_response(self.operation_name, self.response)
         paginator = self.client.get_paginator('list_hosted_zones')
         with self.stubber:
-            config={'PageSize': 1}
+            config = {'PageSize': 1}
             results = list(paginator.paginate(PaginationConfig=config))
             self.assertTrue(len(results) >= 0)
 
@@ -46,9 +47,10 @@ class TestRoute53Pagination(unittest.TestCase):
         self.stubber.add_response(self.operation_name, self.response)
         paginator = self.client.get_paginator('list_hosted_zones')
         with self.stubber:
-            config={'PageSize': '1'}
+            config = {'PageSize': '1'}
             results = list(paginator.paginate(PaginationConfig=config))
             self.assertTrue(len(results) >= 0)
+
 
 class TestRoute53EndpointResolution(BaseSessionTest):
 

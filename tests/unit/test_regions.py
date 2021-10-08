@@ -43,13 +43,11 @@ class TestEndpointResolver(unittest.TestCase):
                         },
                         's3': {
                             'defaults': {
-                                'sslCommonName': \
-                                    '{service}.{region}.{dnsSuffix}'
+                                'sslCommonName': '{service}.{region}.{dnsSuffix}'
                             },
                             'endpoints': {
                                 'us-foo': {
-                                    'sslCommonName': \
-                                        '{region}.{service}.{dnsSuffix}'
+                                    'sslCommonName': '{region}.{service}.{dnsSuffix}'
                                 },
                                 'us-bar': {},
                                 'eu-baz': {'hostname': 'foo'}
@@ -154,8 +152,9 @@ class TestEndpointResolver(unittest.TestCase):
     def test_constructs_regionalized_endpoints_for_exact_matches(self):
         resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('not-regionalized', 'eu-baz')
-        self.assertEqual('not-regionalized.eu-baz.amazonaws.com',
-                          result['hostname'])
+        self.assertEqual(
+            'not-regionalized.eu-baz.amazonaws.com', result['hostname']
+        )
         self.assertEqual('aws', result['partition'])
         self.assertEqual('eu-baz', result['endpointName'])
 

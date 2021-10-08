@@ -322,10 +322,8 @@ class TestSigner(BaseSignerTest):
             ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         auth_cls = mock.Mock()
-        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
-                             {'v4': auth_cls}):
-            auth = self.signer.get_auth_instance(
-                'service_name', 'region_name', 'v4')
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, {'v4': auth_cls}):
+            self.signer.get_auth_instance('service_name', 'region_name', 'v4')
             auth_cls.assert_called_with(
                 service_name='service_name',
                 region_name='region_name',
@@ -1004,4 +1002,3 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         self.assertIn(region, result)
         # The hostname won't be changed even if a different region is specified
         self.assertIn(hostname, result)
-

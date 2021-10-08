@@ -95,7 +95,6 @@ class TestClientHTTPBehavior(unittest.TestCase):
         finally:
             self.environ_patch.stop()
 
-
     def _read_timeout_server(self):
         config = Config(
             read_timeout=0.1,

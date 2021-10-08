@@ -217,8 +217,9 @@ class QuerySerializer(Serializer):
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
 
-        serialized = self._prepare_additional_traits(serialized,
-                operation_model)
+        serialized = self._prepare_additional_traits(
+            serialized, operation_model
+        )
         return serialized
 
     def _serialize(self, serialized, value, shape, prefix=''):
@@ -352,8 +353,9 @@ class JSONSerializer(Serializer):
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
 
-        serialized = self._prepare_additional_traits(serialized,
-                operation_model)
+        serialized = self._prepare_additional_traits(
+            serialized, operation_model
+        )
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
@@ -474,8 +476,9 @@ class BaseRestSerializer(Serializer):
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
 
-        serialized = self._prepare_additional_traits(serialized,
-                operation_model)
+        serialized = self._prepare_additional_traits(
+            serialized, operation_model
+        )
         return serialized
 
     def _render_uri_template(self, uri_template, params):
@@ -542,15 +545,15 @@ class BaseRestSerializer(Serializer):
             if isinstance(param_value, dict):
                 partitioned['query_string_kwargs'].update(param_value)
             elif isinstance(param_value, bool):
-                partitioned['query_string_kwargs'][
-                    key_name] = str(param_value).lower()
+                bool_str = str(param_value).lower()
+                partitioned['query_string_kwargs'][key_name] = bool_str
             elif member.type_name == 'timestamp':
                 timestamp_format = member.serialization.get(
                     'timestampFormat', self.QUERY_STRING_TIMESTAMP_FORMAT)
-                partitioned['query_string_kwargs'][
-                    key_name] = self._convert_timestamp_to_str(
-                        param_value, timestamp_format
-                    )
+                timestamp = self._convert_timestamp_to_str(
+                    param_value, timestamp_format
+                )
+                partitioned['query_string_kwargs'][key_name] = timestamp
             else:
                 partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':

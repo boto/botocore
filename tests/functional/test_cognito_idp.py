@@ -80,6 +80,7 @@ OPERATION_PARAMS = {
     },
 }
 
+
 @pytest.mark.parametrize("operation_name, parameters", OPERATION_PARAMS.items())
 def test_unsigned_operations(operation_name, parameters):
     environ = {

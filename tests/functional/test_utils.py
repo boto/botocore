@@ -15,8 +15,9 @@ import tempfile
 import shutil
 from tests import unittest, mock
 
-from botocore.exceptions import (ConnectionClosedError, HTTPClientError,
-                                InvalidIMDSEndpointError)
+from botocore.exceptions import (
+    ConnectionClosedError, HTTPClientError, InvalidIMDSEndpointError
+)
 from botocore.utils import FileWebIdentityTokenLoader, InstanceMetadataFetcher
 from urllib3.exceptions import LocationParseError
 
