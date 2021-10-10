@@ -18,8 +18,7 @@ class TestMturk(BaseSessionTest):
     def setUp(self):
         super().setUp()
         self.region = 'us-west-2'
-        self.client = self.session.create_client(
-            'mturk', self.region)
+        self.client = self.session.create_client('mturk', self.region)
         self.stubber = Stubber(self.client)
         self.stubber.activate()
 

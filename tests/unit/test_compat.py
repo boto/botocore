@@ -129,12 +129,14 @@ def get_windows_test_cases():
         r'"abc" d e': [r'abc', r'd', r'e'],
         r'a\\b d"e f"g h': [r'a\\b', r'de fg', r'h'],
         r'a\\\"b c d': [r'a\"b', r'c', r'd'],
-        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
+        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e'],
     }
     return windows_cases.items()
 
 
-@pytest.mark.parametrize("input_string, expected_output", get_windows_test_cases())
+@pytest.mark.parametrize(
+    "input_string, expected_output", get_windows_test_cases()
+)
 def test_compat_shell_split_windows(
     shell_split_runner, input_string, expected_output
 ):
@@ -166,19 +168,23 @@ def get_unix_test_cases():
         r'"abc" d e': [r'abc', r'd', r'e'],
         r'a\\b d"e f"g h': [r'a\b', r'de fg', r'h'],
         r'a\\\"b c d': [r'a\"b', r'c', r'd'],
-        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
+        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e'],
     }
     return unix_cases.items()
 
 
-@pytest.mark.parametrize("input_string, expected_output", get_unix_test_cases())
+@pytest.mark.parametrize(
+    "input_string, expected_output", get_unix_test_cases()
+)
 def test_compat_shell_split_unix_linux2(
     shell_split_runner, input_string, expected_output
 ):
     shell_split_runner.assert_equal(input_string, expected_output, "linux2")
 
 
-@pytest.mark.parametrize("input_string, expected_output", get_unix_test_cases())
+@pytest.mark.parametrize(
+    "input_string, expected_output", get_unix_test_cases()
+)
 def test_compat_shell_split_unix_darwin(
     shell_split_runner, input_string, expected_output
 ):
@@ -215,6 +221,7 @@ class TestCRTIntegration(unittest.TestCase):
     def test_has_crt_global(self):
         try:
             import awscrt.auth  # noqa
+
             assert HAS_CRT
         except ImportError:
             assert not HAS_CRT

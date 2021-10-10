@@ -23,13 +23,11 @@ class TestEndpointResolver(unittest.TestCase):
                     'partition': 'aws',
                     'dnsSuffix': 'amazonaws.com',
                     'regionRegex': r'^(us|eu)\-\w+$',
-                    'defaults': {
-                        'hostname': '{service}.{region}.{dnsSuffix}'
-                    },
+                    'defaults': {'hostname': '{service}.{region}.{dnsSuffix}'},
                     'regions': {
                         'us-foo': {'regionName': 'a'},
                         'us-bar': {'regionName': 'b'},
-                        'eu-baz': {'regionName': 'd'}
+                        'eu-baz': {'regionName': 'd'},
                     },
                     'services': {
                         'ec2': {
@@ -37,7 +35,7 @@ class TestEndpointResolver(unittest.TestCase):
                                 'us-foo': {},
                                 'us-bar': {},
                                 'eu-baz': {},
-                                'd': {}
+                                'd': {},
                             }
                         },
                         's3': {
@@ -49,8 +47,8 @@ class TestEndpointResolver(unittest.TestCase):
                                     'sslCommonName': '{region}.{service}.{dnsSuffix}'
                                 },
                                 'us-bar': {},
-                                'eu-baz': {'hostname': 'foo'}
-                            }
+                                'eu-baz': {'hostname': 'foo'},
+                            },
                         },
                         'not-regionalized': {
                             'isRegionalized': False,
@@ -58,27 +56,27 @@ class TestEndpointResolver(unittest.TestCase):
                             'endpoints': {
                                 'aws': {'hostname': 'not-regionalized'},
                                 'us-foo': {},
-                                'eu-baz': {}
-                            }
+                                'eu-baz': {},
+                            },
                         },
                         'non-partition': {
                             'partitionEndpoint': 'aws',
                             'endpoints': {
                                 'aws': {'hostname': 'host'},
-                                'us-foo': {}
-                            }
+                                'us-foo': {},
+                            },
                         },
                         'merge': {
                             'defaults': {
                                 'signatureVersions': ['v2'],
-                                'protocols': ['http']
+                                'protocols': ['http'],
                             },
                             'endpoints': {
                                 'us-foo': {'signatureVersions': ['v4']},
-                                'us-bar': {'protocols': ['https']}
-                            }
-                        }
-                    }
+                                'us-bar': {'protocols': ['https']},
+                            },
+                        },
+                    },
                 },
                 {
                     'partition': 'foo',
@@ -87,25 +85,23 @@ class TestEndpointResolver(unittest.TestCase):
                     'defaults': {
                         'hostname': '{service}.{region}.{dnsSuffix}',
                         'protocols': ['http'],
-                        'foo': 'bar'
+                        'foo': 'bar',
                     },
                     'regions': {
                         'foo-1': {'regionName': '1'},
                         'foo-2': {'regionName': '2'},
-                        'foo-3': {'regionName': '3'}
+                        'foo-3': {'regionName': '3'},
                     },
                     'services': {
                         'ec2': {
                             'endpoints': {
-                                'foo-1': {
-                                    'foo': 'baz'
-                                },
+                                'foo-1': {'foo': 'baz'},
                                 'foo-2': {},
-                                'foo-3': {}
+                                'foo-3': {},
                             }
                         }
-                    }
-                }
+                    },
+                },
             ]
         }
 
@@ -129,19 +125,22 @@ class TestEndpointResolver(unittest.TestCase):
     def test_gets_endpoint_names(self):
         resolver = regions.EndpointResolver(self._template())
         result = resolver.get_available_endpoints(
-            'ec2', allow_non_regional=True)
+            'ec2', allow_non_regional=True
+        )
         self.assertEqual(['d', 'eu-baz', 'us-bar', 'us-foo'], sorted(result))
 
     def test_gets_endpoint_names_for_partition(self):
         resolver = regions.EndpointResolver(self._template())
         result = resolver.get_available_endpoints(
-            'ec2', allow_non_regional=True, partition_name='foo')
+            'ec2', allow_non_regional=True, partition_name='foo'
+        )
         self.assertEqual(['foo-1', 'foo-2', 'foo-3'], sorted(result))
 
     def test_list_regional_endpoints_only(self):
         resolver = regions.EndpointResolver(self._template())
         result = resolver.get_available_endpoints(
-            'ec2', allow_non_regional=False)
+            'ec2', allow_non_regional=False
+        )
         self.assertEqual(['eu-baz', 'us-bar', 'us-foo'], sorted(result))
 
     def test_returns_none_when_no_match(self):

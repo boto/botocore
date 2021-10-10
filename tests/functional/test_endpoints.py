@@ -142,8 +142,9 @@ def _computed_endpoint_prefixes():
         # Check for an override where we know that an entry
         # in the endpoints.json actually maps to a different endpoint
         # prefix.
-        endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(endpoint_prefix,
-                                                       endpoint_prefix)
+        endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(
+            endpoint_prefix, endpoint_prefix
+        )
         yield endpoint_prefix
 
 

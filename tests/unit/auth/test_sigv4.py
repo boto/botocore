@@ -43,7 +43,8 @@ SERVICE = 'service'
 REGION = 'us-east-1'
 
 TESTSUITE_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'aws4_testsuite')
+    os.path.dirname(os.path.abspath(__file__)), 'aws4_testsuite'
+)
 
 # The following tests are not run.  Each test has a comment as
 # to why the test is being ignored.
@@ -128,22 +129,35 @@ def _test_signature_version_4(test_case):
 
     auth = botocore.auth.SigV4Auth(test_case.credentials, SERVICE, REGION)
     actual_canonical_request = auth.canonical_request(request)
-    actual_string_to_sign = auth.string_to_sign(request,
-                                                actual_canonical_request)
+    actual_string_to_sign = auth.string_to_sign(
+        request, actual_canonical_request
+    )
     auth.add_auth(request)
     actual_auth_header = request.headers['Authorization']
 
     # Some stuff only works right when you go through auth.add_auth()
     # So don't assert the interim steps unless the end result was wrong.
     if actual_auth_header != test_case.authorization_header:
-        assert_equal(actual_canonical_request, test_case.canonical_request,
-                     test_case.raw_request, 'canonical_request')
+        assert_equal(
+            actual_canonical_request,
+            test_case.canonical_request,
+            test_case.raw_request,
+            'canonical_request',
+        )
 
-        assert_equal(actual_string_to_sign, test_case.string_to_sign,
-                     test_case.raw_request, 'string_to_sign')
+        assert_equal(
+            actual_string_to_sign,
+            test_case.string_to_sign,
+            test_case.raw_request,
+            'string_to_sign',
+        )
 
-        assert_equal(actual_auth_header, test_case.authorization_header,
-                     test_case.raw_request, 'authheader')
+        assert_equal(
+            actual_auth_header,
+            test_case.authorization_header,
+            test_case.raw_request,
+            'authheader',
+        )
 
 
 def assert_equal(actual, expected, raw_request, part):
@@ -156,27 +170,28 @@ def assert_equal(actual, expected, raw_request, part):
 
 class SignatureTestCase:
     def __init__(self, test_case):
-        filepath = os.path.join(TESTSUITE_DIR, test_case,
-                                os.path.basename(test_case))
+        filepath = os.path.join(
+            TESTSUITE_DIR, test_case, os.path.basename(test_case)
+        )
         # We're using io.open() because we need to open these files with
         # a specific encoding, and in 2.x io.open is the best way to do this.
         self.raw_request = open(filepath + '.req', encoding='utf-8').read()
-        self.canonical_request = open(
-            filepath + '.creq',
-            encoding='utf-8').read().replace('\r', '')
-        self.string_to_sign = open(
-            filepath + '.sts',
-            encoding='utf-8').read().replace('\r', '')
-        self.authorization_header = open(
-            filepath + '.authz',
-            encoding='utf-8').read().replace('\r', '')
+        self.canonical_request = (
+            open(filepath + '.creq', encoding='utf-8').read().replace('\r', '')
+        )
+        self.string_to_sign = (
+            open(filepath + '.sts', encoding='utf-8').read().replace('\r', '')
+        )
+        self.authorization_header = (
+            open(filepath + '.authz', encoding='utf-8')
+            .read()
+            .replace('\r', '')
+        )
         self.signed_request = open(filepath + '.sreq', encoding='utf-8').read()
 
         token_pattern = r'^x-amz-security-token:(.*)$'
         token_match = re.search(
-            token_pattern,
-            self.canonical_request,
-            re.MULTILINE
+            token_pattern, self.canonical_request, re.MULTILINE
         )
         token = token_match.group(1) if token_match else None
         self.credentials = Credentials(ACCESS_KEY, SECRET_KEY, token)

@@ -99,5 +99,7 @@ def then_should_contain_key(context, key):
 @then('I expect the response error to contain a message')
 def then_error_has_message(context):
     if 'Message' not in context.error_response.response['Error']:
-        raise AssertionError("Message key missing from error response: %s" %
-                             context.error_response.response)
+        raise AssertionError(
+            "Message key missing from error response: %s"
+            % context.error_response.response
+        )

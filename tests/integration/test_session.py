@@ -28,8 +28,10 @@ class TestCanChangeParsing(unittest.TestCase):
         s3 = self.session.create_client('s3', 'us-west-2')
         parsed = s3.list_buckets()
         dates = [bucket['CreationDate'] for bucket in parsed['Buckets']]
-        self.assertTrue(all(isinstance(date, str) for date in dates),
-                        "Expected all str types but instead got: %s" % dates)
+        self.assertTrue(
+            all(isinstance(date, str) for date in dates),
+            "Expected all str types but instead got: %s" % dates,
+        )
 
     def test_maps_service_name_when_overriden(self):
         ses = self.session.get_service_model('ses')

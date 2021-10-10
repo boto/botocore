@@ -56,7 +56,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
             b'  <ResponseMetadata>'
             b'    <RequestId>request-id</RequestId>'
             b'  </ResponseMetadata>'
-            b'</OperationNameResponse>')
+            b'</OperationNameResponse>'
+        )
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -68,27 +69,34 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     },
                     'Num': {
                         'shape': 'IntegerType',
-                    }
-                }
-            },
-            model.ShapeResolver({
-                'StringType': {
-                    'type': 'string',
+                    },
                 },
-                'IntegerType': {
-                    'type': 'integer',
+            },
+            model.ShapeResolver(
+                {
+                    'StringType': {
+                        'type': 'string',
+                    },
+                    'IntegerType': {
+                        'type': 'integer',
+                    },
                 }
-            })
+            ),
         )
         parsed = parser.parse(
-            {'body': response,
-             'headers': {},
-             'status_code': 200}, output_shape)
+            {'body': response, 'headers': {}, 'status_code': 200}, output_shape
+        )
         self.assertEqual(
-            parsed, {'Str': 'myname',
-                     'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200,
-                                          'HTTPHeaders': {}}})
+            parsed,
+            {
+                'Str': 'myname',
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': {},
+                },
+            },
+        )
 
     def test_metadata_always_exists_for_query(self):
         # ResponseMetadata is used for more than just the request id. It
@@ -98,7 +106,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         response = (
             b'<OperationNameResponse>'
             b'  <OperationNameResult><Str>myname</Str></OperationNameResult>'
-            b'</OperationNameResponse>')
+            b'</OperationNameResponse>'
+        )
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -110,27 +119,26 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     },
                     'Num': {
                         'shape': 'IntegerType',
-                    }
-                }
-            },
-            model.ShapeResolver({
-                'StringType': {
-                    'type': 'string',
+                    },
                 },
-                'IntegerType': {
-                    'type': 'integer',
+            },
+            model.ShapeResolver(
+                {
+                    'StringType': {
+                        'type': 'string',
+                    },
+                    'IntegerType': {
+                        'type': 'integer',
+                    },
                 }
-            })
+            ),
         )
         parsed = parser.parse(
-            {'body': response, 'headers': {}, 'status_code': 200},
-            output_shape)
+            {'body': response, 'headers': {}, 'status_code': 200}, output_shape
+        )
         expected = {
             'Str': 'myname',
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': {}
-            }
+            'ResponseMetadata': {'HTTPStatusCode': 200, 'HTTPHeaders': {}},
         }
         self.assertEqual(parsed, expected)
 
@@ -140,7 +148,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
             b'<OperationNameResponse>'
             b'  <Str>myname</Str>'
             b'  <requestId>request-id</requestId>'
-            b'</OperationNameResponse>')
+            b'</OperationNameResponse>'
+        )
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -149,20 +158,26 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
-        parsed = parser.parse({'headers': {},
-                               'body': response,
-                               'status_code': 200}, output_shape)
+        parsed = parser.parse(
+            {'headers': {}, 'body': response, 'status_code': 200}, output_shape
+        )
         # Note that the response metadata is normalized to match the query
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
-            parsed, {'Str': 'myname',
-                     'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200,
-                                          'HTTPHeaders': {}}})
+            parsed,
+            {
+                'Str': 'myname',
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': {},
+                },
+            },
+        )
 
     def test_metadata_always_exists_for_ec2(self):
         # ResponseMetadata is used for more than just the request id. It
@@ -172,7 +187,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         response = (
             b'<OperationNameResponse>'
             b'  <Str>myname</Str>'
-            b'</OperationNameResponse>')
+            b'</OperationNameResponse>'
+        )
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -181,22 +197,18 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
         parsed = parser.parse(
-            {'headers': {}, 'body': response, 'status_code': 200},
-            output_shape)
+            {'headers': {}, 'body': response, 'status_code': 200}, output_shape
+        )
         expected = {
             'Str': 'myname',
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': {}
-            }
+            'ResponseMetadata': {'HTTPStatusCode': 200, 'HTTPHeaders': {}},
         }
-        self.assertEqual(
-            parsed, expected)
+        self.assertEqual(parsed, expected)
 
     def test_response_metadata_on_json_request(self):
         parser = parsers.JSONParser()
@@ -210,19 +222,27 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
-        parsed = parser.parse({'body': response, 'headers': headers,
-                               'status_code': 200}, output_shape)
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 200},
+            output_shape,
+        )
         # Note that the response metadata is normalized to match the query
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
-            parsed, {'Str': 'mystring',
-                     'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200,
-                                          'HTTPHeaders': headers}})
+            parsed,
+            {
+                'Str': 'mystring',
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                },
+            },
+        )
 
     def test_response_no_initial_event_stream(self):
         parser = parsers.JSONParser()
@@ -230,26 +250,24 @@ class TestResponseMetadataParsed(unittest.TestCase):
             'OutputShape',
             {
                 'type': 'structure',
-                'members': {
-                    'Payload': {'shape': 'Payload'}
-                }
+                'members': {'Payload': {'shape': 'Payload'}},
             },
-            model.ShapeResolver({
-                'Payload': {
-                    'type': 'structure',
-                    'members': [],
-                    'eventstream': True
+            model.ShapeResolver(
+                {
+                    'Payload': {
+                        'type': 'structure',
+                        'members': [],
+                        'eventstream': True,
+                    }
                 }
-            })
+            ),
         )
         with self.assertRaises(parsers.ResponseParserError):
             response_dict = {
                 'status_code': 200,
                 'headers': {},
                 'body': RawResponse(b''),
-                'context': {
-                    'operation_name': 'TestOperation'
-                }
+                'context': {'operation_name': 'TestOperation'},
             }
             parser.parse(response_dict, output_shape)
 
@@ -268,19 +286,20 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
         parsed = parser.parse(
             {'body': response, 'headers': headers, 'status_code': 200},
-            output_shape)
+            output_shape,
+        )
         expected = {
             'Str': 'mystring',
             'ResponseMetadata': {
                 'HTTPStatusCode': 200,
-                'HTTPHeaders': headers
-            }
+                'HTTPHeaders': headers,
+            },
         }
         self.assertEqual(parsed, expected)
 
@@ -296,19 +315,27 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
-        parsed = parser.parse({'body': response, 'headers': headers,
-                               'status_code': 200}, output_shape)
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 200},
+            output_shape,
+        )
         # Note that the response metadata is normalized to match the query
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
-            parsed, {'Str': 'mystring',
-                     'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200,
-                                          'HTTPHeaders': headers}})
+            parsed,
+            {
+                'Str': 'mystring',
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                },
+            },
+        )
 
     def test_metadata_always_exists_on_rest_json_response(self):
         # ResponseMetadata is used for more than just the request id. It
@@ -325,19 +352,20 @@ class TestResponseMetadataParsed(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
         parsed = parser.parse(
             {'body': response, 'headers': headers, 'status_code': 200},
-            output_shape)
+            output_shape,
+        )
         expected = {
             'Str': 'mystring',
             'ResponseMetadata': {
                 'HTTPStatusCode': 200,
-                'HTTPHeaders': headers
-            }
+                'HTTPHeaders': headers,
+            },
         }
         self.assertEqual(parsed, expected)
 
@@ -346,19 +374,22 @@ class TestResponseMetadataParsed(unittest.TestCase):
         # is slightly different.  It has two request ids, both come from
         # the response headers, are both are named differently from other
         # rest-xml responses.
-        headers = {
-            'x-amz-id-2': 'second-id',
-            'x-amz-request-id': 'request-id'
-        }
+        headers = {'x-amz-id-2': 'second-id', 'x-amz-request-id': 'request-id'}
         parser = parsers.RestXMLParser()
         parsed = parser.parse(
-            {'body': '', 'headers': headers, 'status_code': 200}, None)
+            {'body': '', 'headers': headers, 'status_code': 200}, None
+        )
         self.assertEqual(
             parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HostId': 'second-id',
-                                  'HTTPStatusCode': 200,
-                                  'HTTPHeaders': headers}})
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HostId': 'second-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                }
+            },
+        )
 
     def test_metadata_always_exists_on_rest_xml_response(self):
         # ResponseMetadata is used for more than just the request id. It
@@ -367,30 +398,34 @@ class TestResponseMetadataParsed(unittest.TestCase):
         headers = {}
         parser = parsers.RestXMLParser()
         parsed = parser.parse(
-            {'body': '', 'headers': headers, 'status_code': 200}, None)
+            {'body': '', 'headers': headers, 'status_code': 200}, None
+        )
         expected = {
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': headers
-            }
+            'ResponseMetadata': {'HTTPStatusCode': 200, 'HTTPHeaders': headers}
         }
         self.assertEqual(parsed, expected)
 
 
 class TestTaggedUnions(unittest.TestCase):
-    def assert_tagged_union_response_with_unknown_member(self,
-                                                         parser,
-                                                         response,
-                                                         output_shape,
-                                                         expected_parsed_response,
-                                                         expected_log):
+    def assert_tagged_union_response_with_unknown_member(
+        self,
+        parser,
+        response,
+        output_shape,
+        expected_parsed_response,
+        expected_log,
+    ):
         with self.assertLogs() as captured_log:
             parsed = parser.parse(response, output_shape)
             self.assertEqual(parsed, expected_parsed_response)
             self.assertEqual(len(captured_log.records), 1)
-            self.assertIn(('Received a tagged union response with member '
-                           'unknown to client'),
-                          captured_log.records[0].getMessage())
+            self.assertIn(
+                (
+                    'Received a tagged union response with member '
+                    'unknown to client'
+                ),
+                captured_log.records[0].getMessage(),
+            )
 
     def test_base_json_parser_handles_unknown_member(self):
         parser = parsers.JSONParser()
@@ -405,28 +440,28 @@ class TestTaggedUnions(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
         response = {'body': response, 'headers': headers, 'status_code': 200}
         # Parsed response omits data from service since it is not
         # modeled in the client
         expected_parsed_response = {
-            'SDK_UNKNOWN_MEMBER': {
-                'name': 'Foo'
+            'SDK_UNKNOWN_MEMBER': {'name': 'Foo'},
+            'ResponseMetadata': {
+                'RequestId': 'request-id',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {'x-amzn-requestid': 'request-id'},
             },
-            'ResponseMetadata':
-            {'RequestId': 'request-id',
-             'HTTPStatusCode': 200,
-             'HTTPHeaders': {
-                 'x-amzn-requestid': 'request-id'}
-             }
         }
         expected_log = "Received a response with an unknown member Foo set"
         self.assert_tagged_union_response_with_unknown_member(
-            parser, response, output_shape, expected_parsed_response,
-            expected_log
+            parser,
+            response,
+            output_shape,
+            expected_parsed_response,
+            expected_log,
         )
 
     def test_base_xml_parser_handles_unknown_member(self):
@@ -437,7 +472,8 @@ class TestTaggedUnions(unittest.TestCase):
             b'  <ResponseMetadata>'
             b'    <RequestId>request-id</RequestId>'
             b'  </ResponseMetadata>'
-            b'</OperationNameResponse>')
+            b'</OperationNameResponse>'
+        )
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -448,31 +484,34 @@ class TestTaggedUnions(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     },
-                }
-            },
-            model.ShapeResolver({
-                'StringType': {
-                    'type': 'string',
                 },
-            })
+            },
+            model.ShapeResolver(
+                {
+                    'StringType': {
+                        'type': 'string',
+                    },
+                }
+            ),
         )
         response = {'body': response, 'headers': {}, 'status_code': 200}
         # Parsed response omits data from service since it is not
         # modeled in the client
         expected_parsed_response = {
-            'SDK_UNKNOWN_MEMBER': {
-                'name': 'Foo'
-            },
+            'SDK_UNKNOWN_MEMBER': {'name': 'Foo'},
             'ResponseMetadata': {
                 'RequestId': 'request-id',
                 'HTTPStatusCode': 200,
-                'HTTPHeaders': {}
-            }
+                'HTTPHeaders': {},
+            },
         }
         expected_log = "Received a response with an unknown member Foo set"
         self.assert_tagged_union_response_with_unknown_member(
-            parser, response, output_shape, expected_parsed_response,
-            expected_log
+            parser,
+            response,
+            output_shape,
+            expected_parsed_response,
+            expected_log,
         )
 
     def test_parser_errors_out_when_multiple_members_set(self):
@@ -490,10 +529,10 @@ class TestTaggedUnions(unittest.TestCase):
                     },
                     'Bar': {
                         'shape': 'StringType',
-                    }
-                }
+                    },
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
 
         response = {'body': response, 'headers': headers, 'status_code': 200}
@@ -514,9 +553,9 @@ class TestHeaderResponseInclusion(unittest.TestCase):
                     'Str': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
         return output_shape
 
@@ -529,8 +568,9 @@ class TestHeaderResponseInclusion(unittest.TestCase):
         }
         output_shape = self.create_arbitary_output_shape()
         parsed = parser.parse(
-            {'body': b'{}', 'headers': headers,
-             'status_code': 200}, output_shape)
+            {'body': b'{}', 'headers': headers, 'status_code': 200},
+            output_shape,
+        )
         # The mapped header's keys should all be lower cased
         parsed_headers = {
             'x-amzn-requestid': 'request-id',
@@ -539,7 +579,8 @@ class TestHeaderResponseInclusion(unittest.TestCase):
         }
         # Response headers should be mapped as HTTPHeaders.
         self.assertEqual(
-            parsed['ResponseMetadata']['HTTPHeaders'], parsed_headers)
+            parsed['ResponseMetadata']['HTTPHeaders'], parsed_headers
+        )
 
     def test_can_always_json_serialize_headers(self):
         parser = self.create_parser()
@@ -550,14 +591,16 @@ class TestHeaderResponseInclusion(unittest.TestCase):
         headers = CustomHeaderDict(original_headers)
         output_shape = self.create_arbitary_output_shape()
         parsed = parser.parse(
-            {'body': b'{}', 'headers': headers,
-             'status_code': 200}, output_shape)
+            {'body': b'{}', 'headers': headers, 'status_code': 200},
+            output_shape,
+        )
         metadata = parsed['ResponseMetadata']
         # We've had the contract that you can json serialize a
         # response.  So we want to ensure that despite using a CustomHeaderDict
         # we can always JSON dumps the response metadata.
         self.assertEqual(
-            json.loads(json.dumps(metadata))['HTTPHeaders']['header1'], 'foo')
+            json.loads(json.dumps(metadata))['HTTPHeaders']['header1'], 'foo'
+        )
 
 
 class TestResponseParsingDatetimes(unittest.TestCase):
@@ -565,16 +608,18 @@ class TestResponseParsingDatetimes(unittest.TestCase):
         # The type "timestamp" can come back as both an integer or as a float.
         # We need to make sure we handle the case where the timestamp comes
         # back as a float.  It might make sense to move this to protocol tests.
-        output_shape = model.Shape(shape_name='datetime',
-                                   shape_model={'type': 'timestamp'})
+        output_shape = model.Shape(
+            shape_name='datetime', shape_model={'type': 'timestamp'}
+        )
         parser = parsers.JSONParser()
         timestamp_as_float = b'1407538750.49'
         expected_parsed = datetime.datetime(
-            2014, 8, 8, 22, 59, 10, 490000, tzinfo=tzutc())
+            2014, 8, 8, 22, 59, 10, 490000, tzinfo=tzutc()
+        )
         parsed = parser.parse(
-            {'body': timestamp_as_float,
-             'headers': [],
-             'status_code': 200}, output_shape)
+            {'body': timestamp_as_float, 'headers': [], 'status_code': 200},
+            output_shape,
+        )
         self.assertEqual(parsed, expected_parsed)
 
 
@@ -597,53 +642,52 @@ class TestCanDecorateResponseParsing(unittest.TestCase):
         self.factory = parsers.ResponseParserFactory()
 
     def create_request_dict(self, with_body):
-        return {
-            'body': with_body, 'headers': [], 'status_code': 200
-        }
+        return {'body': with_body, 'headers': [], 'status_code': 200}
 
     def test_normal_blob_parsing(self):
-        output_shape = model.Shape(shape_name='BlobType',
-                                   shape_model={'type': 'blob'})
+        output_shape = model.Shape(
+            shape_name='BlobType', shape_model={'type': 'blob'}
+        )
         parser = self.factory.create_parser('json')
 
         hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
         expected_parsed = b'hello world'
         parsed = parser.parse(
-            self.create_request_dict(with_body=hello_world_b64),
-            output_shape)
+            self.create_request_dict(with_body=hello_world_b64), output_shape
+        )
         self.assertEqual(parsed, expected_parsed)
 
     def test_can_decorate_scalar_parsing(self):
-        output_shape = model.Shape(shape_name='BlobType',
-                                   shape_model={'type': 'blob'})
+        output_shape = model.Shape(
+            shape_name='BlobType', shape_model={'type': 'blob'}
+        )
         # Here we're overriding the blob parser so that
         # we can change it to a noop parser.
-        self.factory.set_parser_defaults(
-            blob_parser=lambda x: x)
+        self.factory.set_parser_defaults(blob_parser=lambda x: x)
         parser = self.factory.create_parser('json')
 
         hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
         expected_parsed = "aGVsbG8gd29ybGQ="
         parsed = parser.parse(
-            self.create_request_dict(with_body=hello_world_b64),
-            output_shape)
+            self.create_request_dict(with_body=hello_world_b64), output_shape
+        )
         self.assertEqual(parsed, expected_parsed)
 
     def test_can_decorate_timestamp_parser(self):
-        output_shape = model.Shape(shape_name='datetime',
-                                   shape_model={'type': 'timestamp'})
+        output_shape = model.Shape(
+            shape_name='datetime', shape_model={'type': 'timestamp'}
+        )
         # Here we're overriding the timestamp parser so that
         # we can change it to just convert a string to an integer
         # instead of converting to a datetime.
-        self.factory.set_parser_defaults(
-            timestamp_parser=lambda x: int(x))
+        self.factory.set_parser_defaults(timestamp_parser=lambda x: int(x))
         parser = self.factory.create_parser('json')
 
         timestamp_as_int = b'1407538750'
         expected_parsed = int(timestamp_as_int)
         parsed = parser.parse(
-            self.create_request_dict(with_body=timestamp_as_int),
-            output_shape)
+            self.create_request_dict(with_body=timestamp_as_int), output_shape
+        )
         self.assertEqual(parsed, expected_parsed)
 
 
@@ -655,13 +699,18 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         parser = parsers.RestJSONParser()
         output_shape = None
         parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200},
-            output_shape)
+            {'body': b'', 'headers': headers, 'status_code': 200}, output_shape
+        )
         self.assertEqual(
             parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200,
-                                  'HTTPHeaders': headers}})
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                }
+            },
+        )
 
     def test_empty_rest_xml_response(self):
         # This is the format used by cloudfront, route53.
@@ -669,13 +718,18 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         parser = parsers.RestXMLParser()
         output_shape = None
         parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200},
-            output_shape)
+            {'body': b'', 'headers': headers, 'status_code': 200}, output_shape
+        )
         self.assertEqual(
             parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200,
-                                  'HTTPHeaders': headers}})
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                }
+            },
+        )
 
     def test_empty_query_response(self):
         body = (
@@ -688,13 +742,18 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         parser = parsers.QueryParser()
         output_shape = None
         parsed = parser.parse(
-            {'body': body, 'headers': {}, 'status_code': 200},
-            output_shape)
+            {'body': body, 'headers': {}, 'status_code': 200}, output_shape
+        )
         self.assertEqual(
             parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200,
-                                  'HTTPHeaders': {}}})
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': {},
+                }
+            },
+        )
 
     def test_empty_json_response(self):
         headers = {'x-amzn-requestid': 'request-id'}
@@ -702,13 +761,18 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         output_shape = None
         parser = parsers.JSONParser()
         parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200},
-            output_shape)
+            {'body': b'', 'headers': headers, 'status_code': 200}, output_shape
+        )
         self.assertEqual(
             parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200,
-                                  'HTTPHeaders': headers}})
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'request-id',
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': headers,
+                }
+            },
+        )
 
 
 class TestHandlesInvalidXMLResponses(unittest.TestCase):
@@ -721,11 +785,13 @@ class TestHandlesInvalidXMLResponses(unittest.TestCase):
         parser = parsers.QueryParser()
         output_shape = None
         # The XML body should be in the error message.
-        with self.assertRaisesRegex(parsers.ResponseParserError,
-                                    '<DeleteTagsResponse'):
+        with self.assertRaisesRegex(
+            parsers.ResponseParserError, '<DeleteTagsResponse'
+        ):
             parser.parse(
                 {'body': invalid_xml, 'headers': {}, 'status_code': 200},
-                output_shape)
+                output_shape,
+            )
 
 
 class TestRESTXMLResponses(unittest.TestCase):
@@ -747,25 +813,27 @@ class TestRESTXMLResponses(unittest.TestCase):
             '</OperationName>'
         )
         builder = model.DenormalizedStructureBuilder()
-        output_shape = builder.with_members({
-            'Foo': {
-                'type': 'structure',
-                'members': {
-                    'Bar': {
-                        'type': 'string',
-                    }
+        output_shape = builder.with_members(
+            {
+                'Foo': {
+                    'type': 'structure',
+                    'members': {
+                        'Bar': {
+                            'type': 'string',
+                        }
+                    },
                 }
             }
-        }).build_model()
+        ).build_model()
         parsed = parser.parse(
             {'body': body, 'headers': headers, 'status_code': 200},
-            output_shape)
+            output_shape,
+        )
         # Ensure the first element is used out of the list.
         self.assertEqual(parsed['Foo'], {'Bar': 'first_value'})
 
 
 class TestEventStreamParsers(unittest.TestCase):
-
     def setUp(self):
         self.parser = parsers.EventStreamXMLParser()
         self.output_shape = model.StructureShape(
@@ -779,88 +847,85 @@ class TestEventStreamParsers(unittest.TestCase):
                     'EventC': {'shape': 'EventCStructure'},
                     'EventD': {'shape': 'EventDStructure'},
                     'EventException': {'shape': 'ExceptionShape'},
-                }
+                },
             },
-            model.ShapeResolver({
-                'EventAStructure': {
-                    'event': True,
-                    'type': 'structure',
-                    'members': {
-                        'Stats': {
-                            'shape': 'StatsStructure',
-                            'eventpayload': True
+            model.ShapeResolver(
+                {
+                    'EventAStructure': {
+                        'event': True,
+                        'type': 'structure',
+                        'members': {
+                            'Stats': {
+                                'shape': 'StatsStructure',
+                                'eventpayload': True,
+                            },
+                            'Header': {
+                                'shape': 'IntShape',
+                                'eventheader': True,
+                            },
                         },
-                        'Header': {
-                            'shape': 'IntShape',
-                            'eventheader': True
-                        }
-                    }
-                },
-                'EventBStructure': {
-                    'event': True,
-                    'type': 'structure',
-                    'members': {
-                        'Body': {
-                            'shape': 'BlobShape',
-                            'eventpayload': True
-                        }
-                    }
-                },
-                'EventCStructure': {
-                    'event': True,
-                    'type': 'structure',
-                    'members': {
-                        'Body': {
-                            'shape': 'StringShape',
-                            'eventpayload': True
-                        }
-                    }
-                },
-                'EventDStructure': {
-                    'event': True,
-                    'type': 'structure',
-                    'members': {
-                        'StringField': {'shape': 'StringShape'},
-                        'IntField': {'shape': 'IntShape'},
-                        'Header': {
-                            'shape': 'IntShape',
-                            'eventheader': True
-                        }
-                    }
-                },
-                'StatsStructure': {
-                    'type': 'structure',
-                    'members': {
-                        'StringField': {'shape': 'StringShape'},
-                        'IntField': {'shape': 'IntShape'}
-                    }
-                },
-                'BlobShape': {'type': 'blob'},
-                'StringShape': {'type': 'string'},
-                'IntShape': {'type': 'integer'},
-                'ExceptionShape': {
-                    'exception': True,
-                    'type': 'structure',
-                    'members': {
-                        'message': {'shape': 'StringShape'}
-                    }
-                },
-            })
+                    },
+                    'EventBStructure': {
+                        'event': True,
+                        'type': 'structure',
+                        'members': {
+                            'Body': {
+                                'shape': 'BlobShape',
+                                'eventpayload': True,
+                            }
+                        },
+                    },
+                    'EventCStructure': {
+                        'event': True,
+                        'type': 'structure',
+                        'members': {
+                            'Body': {
+                                'shape': 'StringShape',
+                                'eventpayload': True,
+                            }
+                        },
+                    },
+                    'EventDStructure': {
+                        'event': True,
+                        'type': 'structure',
+                        'members': {
+                            'StringField': {'shape': 'StringShape'},
+                            'IntField': {'shape': 'IntShape'},
+                            'Header': {
+                                'shape': 'IntShape',
+                                'eventheader': True,
+                            },
+                        },
+                    },
+                    'StatsStructure': {
+                        'type': 'structure',
+                        'members': {
+                            'StringField': {'shape': 'StringShape'},
+                            'IntField': {'shape': 'IntShape'},
+                        },
+                    },
+                    'BlobShape': {'type': 'blob'},
+                    'StringShape': {'type': 'string'},
+                    'IntShape': {'type': 'integer'},
+                    'ExceptionShape': {
+                        'exception': True,
+                        'type': 'structure',
+                        'members': {'message': {'shape': 'StringShape'}},
+                    },
+                }
+            ),
         )
 
     def parse_event(self, headers=None, body=None, status_code=200):
         response_dict = {
             'body': body,
             'headers': headers,
-            'status_code': status_code
+            'status_code': status_code,
         }
         return self.parser.parse(response_dict, self.output_shape)
 
     def test_parses_event_xml(self):
-        headers = {
-            'Header': 123,
-            ':event-type': 'EventA'
-        }
+        headers = {'Header': 123, ':event-type': 'EventA'}
         body = (
             b'<Stats xmlns="">'
             b'  <StringField>abcde</StringField>'
@@ -871,26 +936,15 @@ class TestEventStreamParsers(unittest.TestCase):
         expected = {
             'EventA': {
                 'Header': 123,
-                'Stats': {
-                    'StringField': 'abcde',
-                    'IntField': 1234
-                }
+                'Stats': {'StringField': 'abcde', 'IntField': 1234},
             }
         }
         self.assertEqual(parsed, expected)
 
     def test_parses_event_bad_xml(self):
-        headers = {
-            'Header': 123,
-            ':event-type': 'EventA'
-        }
+        headers = {'Header': 123, ':event-type': 'EventA'}
         parsed = self.parse_event(headers, b'')
-        expected = {
-            'EventA': {
-                'Header': 123,
-                'Stats': {}
-            }
-        }
+        expected = {'EventA': {'Header': 123, 'Stats': {}}}
         self.assertEqual(parsed, expected)
 
     def test_parses_event_blob(self):
@@ -906,10 +960,7 @@ class TestEventStreamParsers(unittest.TestCase):
         self.assertEqual(parsed, expected)
 
     def test_parses_payload_implicit(self):
-        headers = {
-            'Header': 123,
-            ':event-type': 'EventD'
-        }
+        headers = {'Header': 123, ':event-type': 'EventD'}
         body = (
             b'<EventD xmlns="">'
             b'  <StringField>abcde</StringField>'
@@ -918,11 +969,7 @@ class TestEventStreamParsers(unittest.TestCase):
         )
         parsed = self.parse_event(headers, body)
         expected = {
-            'EventD': {
-                'Header': 123,
-                'StringField': 'abcde',
-                'IntField': 1234
-            }
+            'EventD': {'Header': 123, 'StringField': 'abcde', 'IntField': 1234}
         }
         self.assertEqual(parsed, expected)
 
@@ -932,16 +979,11 @@ class TestEventStreamParsers(unittest.TestCase):
         headers = {
             ':message-type': 'error',
             ':error-code': error_code,
-            ':error-message': error_message
+            ':error-message': error_message,
         }
         body = b''
         parsed = self.parse_event(headers, body, status_code=400)
-        expected = {
-            'Error': {
-                'Code': error_code,
-                'Message': error_message
-            }
-        }
+        expected = {'Error': {'Code': error_code, 'Message': error_message}}
         self.assertEqual(parsed, expected)
 
     def test_parses_exception_event(self):
@@ -954,29 +996,16 @@ class TestEventStreamParsers(unittest.TestCase):
         body = b'{"message": "You did something wrong"}'
         parsed = self.parse_event(headers, body, status_code=400)
         expected = {
-            'Error': {
-                'Code': error_code,
-                'Message': 'You did something wrong'
-            }
+            'Error': {'Code': error_code, 'Message': 'You did something wrong'}
         }
         self.assertEqual(parsed, expected)
 
     def test_parses_event_json(self):
         self.parser = parsers.EventStreamJSONParser()
         headers = {':event-type': 'EventD'}
-        body = (
-            b'{'
-            b'  "StringField": "abcde",'
-            b'  "IntField": 1234'
-            b'}'
-        )
+        body = b'{' b'  "StringField": "abcde",' b'  "IntField": 1234' b'}'
         parsed = self.parse_event(headers, body)
-        expected = {
-            'EventD': {
-                'StringField': 'abcde',
-                'IntField': 1234
-            }
-        }
+        expected = {'EventD': {'StringField': 'abcde', 'IntField': 1234}}
         self.assertEqual(parsed, expected)
 
 
@@ -996,9 +1025,9 @@ class TestParseErrorResponses(unittest.TestCase):
                     'ModeledField': {
                         'shape': 'StringType',
                     }
-                }
+                },
             },
-            model.ShapeResolver({'StringType': {'type': 'string'}})
+            model.ShapeResolver({'StringType': {'type': 'string'}}),
         )
 
     def test_response_metadata_errors_for_json_protocol(self):
@@ -1009,9 +1038,7 @@ class TestParseErrorResponses(unittest.TestCase):
                  "message":"this is a message"}
                 """,
             "status_code": 400,
-            "headers": {
-                "x-amzn-requestid": "request-id"
-            }
+            "headers": {"x-amzn-requestid": "request-id"},
         }
         parsed = parser.parse(response, None)
         # Even (especially) on an error condition, the
@@ -1033,9 +1060,7 @@ class TestParseErrorResponses(unittest.TestCase):
                  "message":"this is a message"}
                 """,
             "status_code": 400,
-            "headers": {
-                "x-amzn-requestid": "request-id"
-            }
+            "headers": {"x-amzn-requestid": "request-id"},
         }
         parsed = parser.parse(response, None)
         self.assertIn('Error', parsed)
@@ -1054,14 +1079,18 @@ class TestParseErrorResponses(unittest.TestCase):
             b'</ErrorResponse>'
         )
         parser = parsers.QueryParser()
-        parsed = parser.parse({
-            'body': body, 'headers': {}, 'status_code': 400}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': 'InvalidInput',
-            'Message': 'ARN asdf is not valid.',
-            'Type': 'Sender',
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': 'InvalidInput',
+                'Message': 'ARN asdf is not valid.',
+                'Type': 'Sender',
+            },
+        )
 
     def test_can_parse_sdb_error_response_query_protocol(self):
         body = (
@@ -1076,18 +1105,15 @@ class TestParseErrorResponses(unittest.TestCase):
             b'</OperationNameResponse>'
         )
         parser = parsers.QueryParser()
-        parsed = parser.parse({
-            'body': body, 'headers': {}, 'status_code': 500}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 500}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': '1',
-            'Message': 'msg'
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'RequestId': 'abc-123',
-            'HTTPStatusCode': 500,
-            'HTTPHeaders': {}
-        })
+        self.assertEqual(parsed['Error'], {'Code': '1', 'Message': 'msg'})
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {'RequestId': 'abc-123', 'HTTPStatusCode': 500, 'HTTPHeaders': {}},
+        )
 
     def test_can_parser_ec2_errors(self):
         body = (
@@ -1102,13 +1128,17 @@ class TestParseErrorResponses(unittest.TestCase):
             b'</Response>'
         )
         parser = parsers.EC2QueryParser()
-        parsed = parser.parse({
-            'body': body, 'headers': {}, 'status_code': 400}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': 'InvalidInstanceID.NotFound',
-            'Message': 'The instance ID i-12345 does not exist',
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': 'InvalidInstanceID.NotFound',
+                'Message': 'The instance ID i-12345 does not exist',
+            },
+        )
 
     def test_can_parse_rest_xml_errors(self):
         body = (
@@ -1122,67 +1152,76 @@ class TestParseErrorResponses(unittest.TestCase):
             b'</ErrorResponse>'
         )
         parser = parsers.RestXMLParser()
-        parsed = parser.parse({
-            'body': body, 'headers': {}, 'status_code': 400}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': 'NoSuchHostedZone',
-            'Message': 'No hosted zone found with ID: foobar',
-            'Type': 'Sender',
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': 'NoSuchHostedZone',
+                'Message': 'No hosted zone found with ID: foobar',
+                'Type': 'Sender',
+            },
+        )
 
     def test_can_parse_rest_json_errors(self):
-        body = (
-            b'{"Message":"Function not found: foo","Type":"User"}'
-        )
+        body = b'{"Message":"Function not found: foo","Type":"User"}'
         headers = {
             'x-amzn-requestid': 'request-id',
             'x-amzn-errortype': 'ResourceNotFoundException:http://url/',
         }
         parser = parsers.RestJSONParser()
-        parsed = parser.parse({
-            'body': body, 'headers': headers, 'status_code': 400}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': 'ResourceNotFoundException',
-            'Message': 'Function not found: foo',
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': 'ResourceNotFoundException',
+                'Message': 'Function not found: foo',
+            },
+        )
 
     def test_error_response_with_no_body_rest_json(self):
         parser = parsers.RestJSONParser()
         response = b''
         headers = {'content-length': '0', 'connection': 'keep-alive'}
         output_shape = None
-        parsed = parser.parse({'body': response, 'headers': headers,
-                               'status_code': 504}, output_shape)
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 504},
+            output_shape,
+        )
 
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': '504',
-            'Message': 'Gateway Timeout'
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'HTTPStatusCode': 504,
-            'HTTPHeaders': headers
-        })
+        self.assertEqual(
+            parsed['Error'], {'Code': '504', 'Message': 'Gateway Timeout'}
+        )
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {'HTTPStatusCode': 504, 'HTTPHeaders': headers},
+        )
 
     def test_error_response_with_string_body_rest_json(self):
         parser = parsers.RestJSONParser()
         response = b'HTTP content length exceeded 1049600 bytes.'
         headers = {'content-length': '0', 'connection': 'keep-alive'}
         output_shape = None
-        parsed = parser.parse({'body': response, 'headers': headers,
-                               'status_code': 413}, output_shape)
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 413},
+            output_shape,
+        )
 
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': '413',
-            'Message': response.decode('utf-8')
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'HTTPStatusCode': 413,
-            'HTTPHeaders': headers
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {'Code': '413', 'Message': response.decode('utf-8')},
+        )
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {'HTTPStatusCode': 413, 'HTTPHeaders': headers},
+        )
 
     def test_error_response_with_xml_body_rest_json(self):
         parser = parsers.RestJSONParser()
@@ -1193,18 +1232,20 @@ class TestParseErrorResponses(unittest.TestCase):
         )
         headers = {'content-length': '0', 'connection': 'keep-alive'}
         output_shape = None
-        parsed = parser.parse({'body': response, 'headers': headers,
-                               'status_code': 403}, output_shape)
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 403},
+            output_shape,
+        )
 
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': '403',
-            'Message': response.decode('utf-8')
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'HTTPStatusCode': 403,
-            'HTTPHeaders': headers
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {'Code': '403', 'Message': response.decode('utf-8')},
+        )
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {'HTTPStatusCode': 403, 'HTTPHeaders': headers},
+        )
 
     def test_s3_error_response(self):
         body = (
@@ -1216,27 +1257,31 @@ class TestParseErrorResponses(unittest.TestCase):
             b'  <HostId>hostid</HostId>'
             b'</Error>'
         )
-        headers = {
-            'x-amz-id-2': 'second-id',
-            'x-amz-request-id': 'request-id'
-        }
+        headers = {'x-amz-id-2': 'second-id', 'x-amz-request-id': 'request-id'}
         parser = parsers.RestXMLParser()
         parsed = parser.parse(
-            {'body': body, 'headers': headers, 'status_code': 400}, None)
+            {'body': body, 'headers': headers, 'status_code': 400}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': 'NoSuchBucket',
-            'Message': 'error message',
-            'BucketName': 'asdf',
-            # We don't want the RequestId/HostId because they're already
-            # present in the ResponseMetadata key.
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'RequestId': 'request-id',
-            'HostId': 'second-id',
-            'HTTPStatusCode': 400,
-            'HTTPHeaders': headers
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': 'NoSuchBucket',
+                'Message': 'error message',
+                'BucketName': 'asdf',
+                # We don't want the RequestId/HostId because they're already
+                # present in the ResponseMetadata key.
+            },
+        )
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {
+                'RequestId': 'request-id',
+                'HostId': 'second-id',
+                'HTTPStatusCode': 400,
+                'HTTPHeaders': headers,
+            },
+        )
 
     def test_s3_error_response_with_no_body(self):
         # If you try to HeadObject a key that does not exist,
@@ -1244,36 +1289,43 @@ class TestParseErrorResponses(unittest.TestCase):
         # we expect that we will use Code/Message from the
         # HTTP status code.
         body = ''
-        headers = {
-            'x-amz-id-2': 'second-id',
-            'x-amz-request-id': 'request-id'
-        }
+        headers = {'x-amz-id-2': 'second-id', 'x-amz-request-id': 'request-id'}
         parser = parsers.RestXMLParser()
         parsed = parser.parse(
-            {'body': body, 'headers': headers, 'status_code': 404}, None)
+            {'body': body, 'headers': headers, 'status_code': 404}, None
+        )
         self.assertIn('Error', parsed)
-        self.assertEqual(parsed['Error'], {
-            'Code': '404',
-            'Message': 'Not Found',
-        })
-        self.assertEqual(parsed['ResponseMetadata'], {
-            'RequestId': 'request-id',
-            'HostId': 'second-id',
-            'HTTPStatusCode': 404,
-            'HTTPHeaders': headers
-        })
+        self.assertEqual(
+            parsed['Error'],
+            {
+                'Code': '404',
+                'Message': 'Not Found',
+            },
+        )
+        self.assertEqual(
+            parsed['ResponseMetadata'],
+            {
+                'RequestId': 'request-id',
+                'HostId': 'second-id',
+                'HTTPStatusCode': 404,
+                'HTTPHeaders': headers,
+            },
+        )
 
     def test_can_parse_glacier_error_response(self):
-        body = (b'{"code":"AccessDeniedException","type":"Client","message":'
-                b'"Access denied"}')
-        headers = {
-            'x-amzn-requestid': 'request-id'
-        }
+        body = (
+            b'{"code":"AccessDeniedException","type":"Client","message":'
+            b'"Access denied"}'
+        )
+        headers = {'x-amzn-requestid': 'request-id'}
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
-            {'body': body, 'headers': headers, 'status_code': 400}, None)
-        self.assertEqual(parsed['Error'], {'Message': 'Access denied',
-                                           'Code': 'AccessDeniedException'})
+            {'body': body, 'headers': headers, 'status_code': 400}, None
+        )
+        self.assertEqual(
+            parsed['Error'],
+            {'Message': 'Access denied', 'Code': 'AccessDeniedException'},
+        )
 
     def test_can_parse_restjson_error_code(self):
         body = b'''{
@@ -1283,26 +1335,30 @@ class TestParseErrorResponses(unittest.TestCase):
             "__type": "#WasUnableToParseThis",
             "message": "blah",
             "deletes": 0}'''
-        headers = {
-            'x-amzn-requestid': 'request-id'
-        }
+        headers = {'x-amzn-requestid': 'request-id'}
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
-            {'body': body, 'headers': headers, 'status_code': 400}, None)
-        self.assertEqual(parsed['Error'], {'Message': 'blah',
-                                           'Code': 'WasUnableToParseThis'})
+            {'body': body, 'headers': headers, 'status_code': 400}, None
+        )
+        self.assertEqual(
+            parsed['Error'],
+            {'Message': 'blah', 'Code': 'WasUnableToParseThis'},
+        )
 
     def test_can_parse_with_case_insensitive_keys(self):
-        body = (b'{"Code":"AccessDeniedException","type":"Client","Message":'
-                b'"Access denied"}')
-        headers = {
-            'x-amzn-requestid': 'request-id'
-        }
+        body = (
+            b'{"Code":"AccessDeniedException","type":"Client","Message":'
+            b'"Access denied"}'
+        )
+        headers = {'x-amzn-requestid': 'request-id'}
         parser = parsers.RestJSONParser()
         parsed = parser.parse(
-            {'body': body, 'headers': headers, 'status_code': 400}, None)
-        self.assertEqual(parsed['Error'], {'Message': 'Access denied',
-                                           'Code': 'AccessDeniedException'})
+            {'body': body, 'headers': headers, 'status_code': 400}, None
+        )
+        self.assertEqual(
+            parsed['Error'],
+            {'Message': 'Access denied', 'Code': 'AccessDeniedException'},
+        )
 
     def test_can_parse_rest_json_modeled_fields(self):
         body = (
@@ -1416,8 +1472,9 @@ class TestParseErrorResponses(unittest.TestCase):
             b'</ErrorResponse>'
         )
         parser = parsers.RestXMLParser()
-        parsed = parser.parse({
-            'body': body, 'headers': {}, 'status_code': 400}, None)
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
         error = parsed['Error']
         self.assertEqual(error['Code'], 'InvalidInput')
         # Even though there's no <Message /> we should
@@ -1438,8 +1495,7 @@ def _generic_test_bodies():
 @pytest.mark.parametrize(
     "parser, body",
     itertools.product(
-        parsers.PROTOCOL_PARSERS.values(),
-        _generic_test_bodies()
+        parsers.PROTOCOL_PARSERS.values(), _generic_test_bodies()
     ),
 )
 def test_can_handle_generic_error_message(parser, body):

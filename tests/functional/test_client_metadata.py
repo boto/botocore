@@ -23,8 +23,9 @@ class TestClientMeta(unittest.TestCase):
         self.assertEqual(client.meta.region_name, 'us-west-2')
 
     def test_endpoint_url_on_meta(self):
-        client = self.session.create_client('s3', 'us-west-2',
-                                            endpoint_url='https://foo')
+        client = self.session.create_client(
+            's3', 'us-west-2', endpoint_url='https://foo'
+        )
         self.assertEqual(client.meta.endpoint_url, 'https://foo')
 
     def test_client_has_standard_partition_on_meta(self):

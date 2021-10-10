@@ -16,7 +16,6 @@ from tests import BaseSessionTest, ClientHTTPStubber, unittest
 
 
 class TestRDSPresignUrlInjection(BaseSessionTest):
-
     def setUp(self):
         super().setUp()
         self.client = self.session.create_client('rds', 'us-west-2')
@@ -30,7 +29,7 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         params = {
             'SourceDBSnapshotIdentifier': 'source-db',
             'TargetDBSnapshotIdentifier': 'target-db',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CopyDBSnapshotResponse>'
@@ -47,7 +46,7 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         params = {
             'SourceDBInstanceIdentifier': 'source-db',
             'DBInstanceIdentifier': 'target-db',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CreateDBInstanceReadReplicaResponse>'
@@ -74,7 +73,9 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         )
         self.http_stubber.add_response(body=response_body)
         with self.http_stubber:
-            self.client.start_db_instance_automated_backups_replication(**params)
+            self.client.start_db_instance_automated_backups_replication(
+                **params
+            )
             sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
@@ -91,7 +92,8 @@ class TestRDS(unittest.TestCase):
         port = 3306
         username = 'mySQLUser'
         auth_token = self.client.generate_db_auth_token(
-            DBHostname=hostname, Port=port, DBUsername=username)
+            DBHostname=hostname, Port=port, DBUsername=username
+        )
 
         endpoint_url = 'host.us-east-1.rds.amazonaws.com:3306'
         self.assertIn(endpoint_url, auth_token)

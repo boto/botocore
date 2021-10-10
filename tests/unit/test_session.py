@@ -33,7 +33,6 @@ from tests import create_session, mock, requires_crt, temporary_file, unittest
 
 
 class BaseSessionTest(unittest.TestCase):
-
     def setUp(self):
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
@@ -42,8 +41,9 @@ class BaseSessionTest(unittest.TestCase):
         self.environ['FOO_REGION'] = 'us-west-11'
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['FOO_DATA_PATH'] = data_path
-        config_path = os.path.join(os.path.dirname(__file__), 'cfg',
-                                   'foo_config')
+        config_path = os.path.join(
+            os.path.dirname(__file__), 'cfg', 'foo_config'
+        )
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = create_session()
         config_chain_builder = ConfigChainFactory(
@@ -103,7 +103,6 @@ class BaseSessionTest(unittest.TestCase):
 
 
 class SessionTest(BaseSessionTest):
-
     def close_log_file_handler(self, tempdir, filename):
         logger = logging.getLogger('botocore')
         handlers = logger.handlers
@@ -178,13 +177,15 @@ class SessionTest(BaseSessionTest):
         self.environ['FOO_TIMEOUT'] = '10'
         # But we should type convert this to a string.
         self.assertEqual(
-            self.session.get_config_variable('metadata_service_timeout'), 10)
+            self.session.get_config_variable('metadata_service_timeout'), 10
+        )
 
     def test_default_profile_specified_raises_exception(self):
         # If you explicity set the default profile and you don't
         # have that in your config file, an exception is raised.
-        config_path = os.path.join(os.path.dirname(__file__), 'cfg',
-                                   'boto_config_empty')
+        config_path = os.path.join(
+            os.path.dirname(__file__), 'cfg', 'boto_config_empty'
+        )
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.environ['FOO_PROFILE'] = 'default'
         # In this case, even though we specified default, because
@@ -218,9 +219,13 @@ class SessionTest(BaseSessionTest):
             f.flush()
 
             full_config = self.session.full_config
-            self.assertEqual(full_config['profiles']['newprofile'],
-                             {'aws_access_key_id': 'FROM_CREDS_FILE_1',
-                              'aws_secret_access_key': 'FROM_CREDS_FILE_2'})
+            self.assertEqual(
+                full_config['profiles']['newprofile'],
+                {
+                    'aws_access_key_id': 'FROM_CREDS_FILE_1',
+                    'aws_secret_access_key': 'FROM_CREDS_FILE_2',
+                },
+            )
 
     def test_path_not_in_available_profiles(self):
         with temporary_file('w') as f:
@@ -231,9 +236,7 @@ class SessionTest(BaseSessionTest):
             f.flush()
 
             profiles = self.session.available_profiles
-            self.assertEqual(
-                set(profiles),
-                {'foo', 'default', 'newprofile'})
+            self.assertEqual(set(profiles), {'foo', 'default', 'newprofile'})
 
     def test_emit_delegates_to_emitter(self):
         calls = []
@@ -298,8 +301,9 @@ class TestBuiltinEventHandlers(BaseSessionTest):
             ('foo', self.on_foo),
         ]
         self.foo_called = False
-        self.handler_patch = mock.patch('botocore.handlers.BUILTIN_HANDLERS',
-                                        self.builtin_handlers)
+        self.handler_patch = mock.patch(
+            'botocore.handlers.BUILTIN_HANDLERS', self.builtin_handlers
+        )
         self.handler_patch.start()
 
     def on_foo(self, **kwargs):
@@ -331,8 +335,9 @@ class TestSessionConfigurationVars(BaseSessionTest):
 
         # Explicit override.
         self.session.set_config_variable('foobar', 'session-instance')
-        self.assertEqual(self.session.get_config_variable('foobar'),
-                         'session-instance')
+        self.assertEqual(
+            self.session.get_config_variable('foobar'), 'session-instance'
+        )
 
         # Back to default value.
         del self.environ['FOOBAR']
@@ -354,8 +359,7 @@ class TestSessionConfigurationVars(BaseSessionTest):
         value = self.session.get_config_variable('region')
         self.assertEqual(value, 'instance-var')
 
-        value = self.session.get_config_variable(
-            'region', methods=('env',))
+        value = self.session.get_config_variable('region', methods=('env',))
         self.assertEqual(value, 'env-var')
 
 
@@ -364,14 +368,16 @@ class TestSessionPartitionFiles(BaseSessionTest):
         mock_resolver = mock.Mock()
         mock_resolver.get_available_partitions.return_value = ['foo']
         self.session._register_internal_component(
-            'endpoint_resolver', mock_resolver)
+            'endpoint_resolver', mock_resolver
+        )
         self.assertEqual(['foo'], self.session.get_available_partitions())
 
     def test_proxies_list_endpoints_to_resolver(self):
         resolver = mock.Mock()
         resolver.get_available_endpoints.return_value = ['a', 'b']
         self.session._register_internal_component(
-            'endpoint_resolver', resolver)
+            'endpoint_resolver', resolver
+        )
         self.session.get_available_regions('foo', 'bar', True)
 
     def test_provides_empty_list_for_unknown_service_regions(self):
@@ -391,7 +397,8 @@ class TestSessionUserAgent(BaseSessionTest):
     def test_can_append_to_user_agent(self):
         self.session.user_agent_extra = 'custom-thing/other'
         self.assertTrue(
-            self.session.user_agent().endswith('custom-thing/other'))
+            self.session.user_agent().endswith('custom-thing/other')
+        )
 
     def test_execution_env_not_set(self):
         self.assertFalse(self.session.user_agent().endswith('FooEnv'))
@@ -434,9 +441,10 @@ class TestConfigLoaderObject(BaseSessionTest):
             session.set_config_variable('credentials_file', f.name)
             # Now trying to retrieve the scoped config should pull in
             # values from the shared credentials file.
-            self.assertEqual(session.get_scoped_config(),
-                             {'aws_access_key_id': 'a',
-                              'aws_secret_access_key': 'b'})
+            self.assertEqual(
+                session.get_scoped_config(),
+                {'aws_access_key_id': 'a', 'aws_secret_access_key': 'b'},
+            )
 
 
 class TestGetServiceModel(BaseSessionTest):
@@ -463,7 +471,8 @@ class TestGetPaginatorModel(BaseSessionTest):
         self.assertIsInstance(model, PaginatorModel)
         # Verify we called the loader correctly.
         loader.load_service_model.assert_called_with(
-            'foo', 'paginators-1', None)
+            'foo', 'paginators-1', None
+        )
 
 
 class TestGetWaiterModel(BaseSessionTest):
@@ -478,8 +487,7 @@ class TestGetWaiterModel(BaseSessionTest):
         self.assertIsInstance(model, WaiterModel)
         self.assertEqual(model.waiter_names, [])
         # and (2) call the loader correctly.
-        loader.load_service_model.assert_called_with(
-            'foo', 'waiters-2', None)
+        loader.load_service_model.assert_called_with('foo', 'waiters-2', None)
 
 
 class TestCreateClient(BaseSessionTest):
@@ -489,36 +497,40 @@ class TestCreateClient(BaseSessionTest):
 
     def test_credential_provider_not_called_when_creds_provided(self):
         cred_provider = mock.Mock()
-        self.session.register_component(
-            'credential_provider', cred_provider)
+        self.session.register_component('credential_provider', cred_provider)
         self.session.create_client(
-            'sts', 'us-west-2',
+            'sts',
+            'us-west-2',
             aws_access_key_id='foo',
             aws_secret_access_key='bar',
-            aws_session_token='baz')
-        self.assertFalse(cred_provider.load_credentials.called,
-                         "Credential provider was called even though "
-                         "explicit credentials were provided to the "
-                         "create_client call.")
+            aws_session_token='baz',
+        )
+        self.assertFalse(
+            cred_provider.load_credentials.called,
+            "Credential provider was called even though "
+            "explicit credentials were provided to the "
+            "create_client call.",
+        )
 
     def test_cred_provider_called_when_partial_creds_provided(self):
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             self.session.create_client(
-                'sts', 'us-west-2',
+                'sts',
+                'us-west-2',
                 aws_access_key_id='foo',
-                aws_secret_access_key=None
+                aws_secret_access_key=None,
             )
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             self.session.create_client(
-                'sts', 'us-west-2',
+                'sts',
+                'us-west-2',
                 aws_access_key_id=None,
                 aws_secret_access_key='foo',
             )
 
     def test_cred_provider_not_called_on_unsigned_client(self):
         cred_provider = mock.Mock()
-        self.session.register_component(
-            'credential_provider', cred_provider)
+        self.session.register_component('credential_provider', cred_provider)
         config = botocore.config.Config(signature_version=UNSIGNED)
         self.session.create_client('sts', 'us-west-2', config=config)
         self.assertFalse(cred_provider.load_credentials.called)
@@ -533,10 +545,16 @@ class TestCreateClient(BaseSessionTest):
         config = botocore.config.Config(region_name='us-west-2')
         self.session.create_client('sts', config=config)
         client_creator.return_value.create_client.assert_called_with(
-            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
-            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
-            scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            service_name=mock.ANY,
+            region_name=mock.ANY,
+            is_secure=mock.ANY,
+            endpoint_url=mock.ANY,
+            verify=mock.ANY,
+            credentials=mock.ANY,
+            scoped_config=mock.ANY,
+            client_config=config,
+            api_version=mock.ANY,
+        )
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
@@ -545,10 +563,16 @@ class TestCreateClient(BaseSessionTest):
         self.session.create_client('sts')
 
         client_creator.return_value.create_client.assert_called_with(
-            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
-            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
-            scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            service_name=mock.ANY,
+            region_name=mock.ANY,
+            is_secure=mock.ANY,
+            endpoint_url=mock.ANY,
+            verify=mock.ANY,
+            credentials=mock.ANY,
+            scoped_config=mock.ANY,
+            client_config=config,
+            api_version=mock.ANY,
+        )
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
@@ -560,7 +584,9 @@ class TestCreateClient(BaseSessionTest):
         # Grab the client config used in creating the client
         used_client_config = (
             client_creator.return_value.create_client.call_args[1][
-                'client_config'])
+                'client_config'
+            ]
+        )
         # Check that the client configs were merged
         self.assertEqual(used_client_config.region_name, 'us-east-1')
         # Make sure that the client config used is not the default client
@@ -569,15 +595,15 @@ class TestCreateClient(BaseSessionTest):
         self.assertIsNot(used_client_config, other_config)
 
     def test_create_client_with_region(self):
-        ec2_client = self.session.create_client(
-            'ec2', 'us-west-2')
+        ec2_client = self.session.create_client('ec2', 'us-west-2')
         self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
 
     def test_create_client_with_region_and_client_config(self):
         config = botocore.config.Config()
         # Use a client config with no region configured.
         ec2_client = self.session.create_client(
-            'ec2', region_name='us-west-2', config=config)
+            'ec2', region_name='us-west-2', config=config
+        )
         self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
 
         # If the region name is changed, it should not change the
@@ -586,8 +612,7 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
 
         # Now make a new client with the updated client config.
-        ec2_client = self.session.create_client(
-            'ec2', config=config)
+        ec2_client = self.session.create_client('ec2', config=config)
         self.assertEqual(ec2_client.meta.region_name, 'us-east-1')
 
     def test_create_client_no_region_and_no_client_config(self):
@@ -604,8 +629,9 @@ class TestCreateClient(BaseSessionTest):
             f.flush()
 
             self.session.create_client('ec2', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             self.assertEqual(call_kwargs['verify'], 'config-certs.pem')
 
     @mock.patch('botocore.client.ClientCreator')
@@ -618,7 +644,8 @@ class TestCreateClient(BaseSessionTest):
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_verify_param(self, client_creator):
         self.session.create_client(
-            'ec2', 'us-west-2', verify='verify-certs.pem')
+            'ec2', 'us-west-2', verify='verify-certs.pem'
+        )
         call_kwargs = client_creator.return_value.create_client.call_args[1]
         self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
 
@@ -637,9 +664,11 @@ class TestCreateClient(BaseSessionTest):
 
             # Set the ca cert using the verify parameter
             self.session.create_client(
-                'ec2', 'us-west-2', verify='verify-certs.pem')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+                'ec2', 'us-west-2', verify='verify-certs.pem'
+            )
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             # The verify parameter should override all the other
             # configurations
             self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
@@ -657,13 +686,16 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n' % config_api_version)
+            f.write(
+                'foo_api_versions =\n'
+                '    myservice = %s\n' % config_api_version
+            )
             f.flush()
 
             self.session.create_client('myservice', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             self.assertEqual(call_kwargs['api_version'], config_api_version)
 
     @mock.patch('botocore.client.ClientCreator')
@@ -682,15 +714,18 @@ class TestCreateClient(BaseSessionTest):
             f.flush()
 
             self.session.create_client('myservice', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             self.assertEqual(call_kwargs['api_version'], config_api_version)
 
             self.session.create_client('myservice2', 'us-west-2')
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             self.assertEqual(
-                call_kwargs['api_version'], second_config_api_version)
+                call_kwargs['api_version'], second_config_api_version
+            )
 
     @mock.patch('botocore.client.ClientCreator')
     def test_param_api_version_overrides_config_value(self, client_creator):
@@ -700,14 +735,18 @@ class TestCreateClient(BaseSessionTest):
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
             f.write('[default]\n')
-            f.write('foo_api_versions =\n'
-                    '    myservice = %s\n' % config_api_version)
+            f.write(
+                'foo_api_versions =\n'
+                '    myservice = %s\n' % config_api_version
+            )
             f.flush()
 
             self.session.create_client(
-                'myservice', 'us-west-2', api_version=override_api_version)
-            call_kwargs = client_creator.return_value.\
-                create_client.call_args[1]
+                'myservice', 'us-west-2', api_version=override_api_version
+            )
+            call_kwargs = client_creator.return_value.create_client.call_args[
+                1
+            ]
             self.assertEqual(call_kwargs['api_version'], override_api_version)
 
 
@@ -716,7 +755,8 @@ class TestSessionComponent(BaseSessionTest):
         component = object()
         self.session._register_internal_component('internal', component)
         self.assertIs(
-            self.session._get_internal_component('internal'), component)
+            self.session._get_internal_component('internal'), component
+        )
         with self.assertRaises(ValueError):
             # get_component has been deprecated to the public
             with pytest.warns(DeprecationWarning):
@@ -724,32 +764,36 @@ class TestSessionComponent(BaseSessionTest):
 
     def test_internal_endpoint_resolver_is_same_as_deprecated_public(self):
         endpoint_resolver = self.session._get_internal_component(
-            'endpoint_resolver')
+            'endpoint_resolver'
+        )
         # get_component has been deprecated to the public
         with pytest.warns(DeprecationWarning):
             self.assertIs(
                 self.session.get_component('endpoint_resolver'),
-                endpoint_resolver
+                endpoint_resolver,
             )
 
     def test_internal_exceptions_factory_is_same_as_deprecated_public(self):
         exceptions_factory = self.session._get_internal_component(
-            'exceptions_factory')
+            'exceptions_factory'
+        )
         # get_component has been deprecated to the public
         with pytest.warns(DeprecationWarning):
             self.assertIs(
                 self.session.get_component('exceptions_factory'),
-                exceptions_factory
+                exceptions_factory,
             )
 
 
 class TestClientMonitoring(BaseSessionTest):
     def assert_created_client_is_monitored(self, session):
-        with mock.patch('botocore.monitoring.Monitor',
-                        spec=True) as mock_monitor:
+        with mock.patch(
+            'botocore.monitoring.Monitor', spec=True
+        ) as mock_monitor:
             client = session.create_client('ec2', 'us-west-2')
         mock_monitor.return_value.register.assert_called_with(
-            client.meta.events)
+            client.meta.events
+        )
 
     def assert_monitoring_host_and_port(self, session, host, port):
         with mock.patch(
@@ -762,8 +806,9 @@ class TestClientMonitoring(BaseSessionTest):
         self.assertEqual(kwargs.get('port'), port)
 
     def assert_created_client_is_not_monitored(self, session):
-        with mock.patch('botocore.session.monitoring.Monitor',
-                        spec=True) as mock_monitor:
+        with mock.patch(
+            'botocore.session.monitoring.Monitor', spec=True
+        ) as mock_monitor:
             session.create_client('ec2', 'us-west-2')
             mock_monitor.return_value.register.assert_not_called()
 
@@ -855,7 +900,9 @@ class TestComponentLocator(unittest.TestCase):
         self.components.register_component('foo', second)
         self.assertIs(self.components.get_component('foo'), second)
 
-    def test_lazy_registration_factory_does_not_remove_from_list_on_error(self):
+    def test_lazy_registration_factory_does_not_remove_from_list_on_error(
+        self,
+    ):
         class ArbitraryError(Exception):
             pass
 

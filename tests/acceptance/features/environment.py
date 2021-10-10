@@ -39,8 +39,9 @@ def before_feature(context, feature):
             service_name = tag
             break
     else:
-        raise RuntimeError("Unable to create a client for "
-                           "feature: %s" % feature)
+        raise RuntimeError(
+            "Unable to create a client for " "feature: %s" % feature
+        )
 
     if service_name in SKIP_SERVICES:
         feature.mark_skipped()

@@ -32,7 +32,9 @@ def _all_test_cases():
 
     for service in services:
         service_model = session.get_service_model(service)
-        h2_config = service_model.metadata.get('protocolSettings', {}).get('h2')
+        h2_config = service_model.metadata.get('protocolSettings', {}).get(
+            'h2'
+        )
         if h2_config == 'required':
             h2_services.append(service)
         elif h2_config == 'eventstream':

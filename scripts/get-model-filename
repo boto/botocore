@@ -50,8 +50,10 @@ def determine_json_data_path(fileobj):
     if 'metadata' in parsed:
         return _determine_path_from_metadata(parsed)
     else:
-        raise ValueError("Could not determine file path for JSON model, model "
-                         "is missing required 'metadata' key.")
+        raise ValueError(
+            "Could not determine file path for JSON model, model "
+            "is missing required 'metadata' key."
+        )
 
 
 def _determine_path_from_metadata(parsed):
@@ -72,11 +74,15 @@ def _determine_path_from_metadata(parsed):
     api_version = metadata['apiVersion']
     return os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'botocore', 'data', 'aws', service_name, api_version + '.normal.json')
+        'botocore',
+        'data',
+        'aws',
+        service_name,
+        api_version + '.normal.json',
+    )
 
 
 class TestDeterminePath(unittest.TestCase):
-
     def given_metadata(self, metadata):
         self.metadata = {'metadata': metadata}
 
@@ -87,49 +93,74 @@ class TestDeterminePath(unittest.TestCase):
 
     def test_can_determine_path_from_metadata(self):
         self.given_metadata(
-            {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo'})
+            {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo'}
+        )
         self.assert_filename_is('botocore/data/aws/foo/2015-01-01.normal.json')
 
         self.given_metadata(
-            {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
-             'serviceAbbreviation': 'Amazon Bar'})
+            {
+                'apiVersion': '2015-01-01',
+                'endpointPrefix': 'foo',
+                'serviceAbbreviation': 'Amazon Bar',
+            }
+        )
         self.assert_filename_is('botocore/data/aws/bar/2015-01-01.normal.json')
 
         self.given_metadata(
-            {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
-             'serviceAbbreviation': 'AWS Baz'})
+            {
+                'apiVersion': '2015-01-01',
+                'endpointPrefix': 'foo',
+                'serviceAbbreviation': 'AWS Baz',
+            }
+        )
         self.assert_filename_is('botocore/data/aws/baz/2015-01-01.normal.json')
 
         self.given_metadata(
-            {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
-             'serviceAbbreviation': 'something else'})
+            {
+                'apiVersion': '2015-01-01',
+                'endpointPrefix': 'foo',
+                'serviceAbbreviation': 'something else',
+            }
+        )
         self.assert_filename_is(
-            'botocore/data/aws/somethingelse/2015-01-01.normal.json')
+            'botocore/data/aws/somethingelse/2015-01-01.normal.json'
+        )
 
         # The special casing of elasticloadbalancing -> elb.
         self.given_metadata(
-            {'apiVersion': '2015-01-01',
-             'endpointPrefix': 'elasticloadbalancing'}),
-        self.assert_filename_is(
-            'botocore/data/aws/elb/2015-01-01.normal.json')
+            {
+                'apiVersion': '2015-01-01',
+                'endpointPrefix': 'elasticloadbalancing',
+            }
+        ),
+        self.assert_filename_is('botocore/data/aws/elb/2015-01-01.normal.json')
 
 
 def main():
     parser = optparse.OptionParser(usage=__doc__)
     parser.add_option(
-        '-c', '--copy', action='store_true',
-        default=False, help='Copy the file to the appropriate location. ')
+        '-c',
+        '--copy',
+        action='store_true',
+        default=False,
+        help='Copy the file to the appropriate location. ',
+    )
     parser.add_option(
-        '-t', '--test', action='store_true',
-        default=False, help='Dev use only, run the unit tests.')
+        '-t',
+        '--test',
+        action='store_true',
+        default=False,
+        help='Dev use only, run the unit tests.',
+    )
     opts, args = parser.parse_args()
     if opts.test:
         sys.argv[:] = [sys.argv[0]]
         unittest.main()
         return 0
     if len(args) != 1:
-        sys.stderr.write("Must provide the filename of the JSON model "
-                         "as an argument.\n")
+        sys.stderr.write(
+            "Must provide the filename of the JSON model " "as an argument.\n"
+        )
         return 1
     source_filename = args[0]
     if not source_filename.endswith('.normal.json'):

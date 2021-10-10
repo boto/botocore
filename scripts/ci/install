@@ -29,7 +29,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        '-e', '--extras', help='Install extras_require along with normal install'
+        '-e',
+        '--extras',
+        help='Install extras_require along with normal install',
     )
     args = parser.parse_args()
     with cd(REPO_ROOT):

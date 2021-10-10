@@ -19,8 +19,13 @@ from jmespath.exceptions import JMESPathError
 import botocore.session
 
 KNOWN_PAGE_KEYS = {
-    'input_token', 'py_input_token', 'output_token', 'result_key',
-    'limit_key', 'more_results', 'non_aggregate_keys'
+    'input_token',
+    'py_input_token',
+    'output_token',
+    'result_key',
+    'limit_key',
+    'more_results',
+    'non_aggregate_keys',
 }
 MEMBER_NAME_CHARS = set(string.ascii_letters + string.digits)
 # The goal here should be to remove all of these by updating the paginators
@@ -137,20 +142,15 @@ def _pagination_configs():
     services = loader.list_available_services('paginators-1')
     for service_name in services:
         service_model = session.get_service_model(service_name)
-        page_config = loader.load_service_model(service_name,
-                                                'paginators-1',
-                                                service_model.api_version)
+        page_config = loader.load_service_model(
+            service_name, 'paginators-1', service_model.api_version
+        )
         for op_name, single_config in page_config['pagination'].items():
-            yield (
-                op_name,
-                single_config,
-                service_model
-            )
+            yield (op_name, single_config, service_model)
 
 
 @pytest.mark.parametrize(
-    "operation_name, page_config, service_model",
-    _pagination_configs()
+    "operation_name, page_config, service_model", _pagination_configs()
 )
 def test_lint_pagination_configs(operation_name, page_config, service_model):
     _validate_known_pagination_keys(page_config)
@@ -200,7 +200,8 @@ def _validate_input_keys_match(operation_name, page_config, service_model):
     if not isinstance(input_tokens, list):
         input_tokens = [input_tokens]
     valid_input_names = service_model.operation_model(
-        operation_name).input_shape.members
+        operation_name
+    ).input_shape.members
     for token in input_tokens:
         if token not in valid_input_names:
             raise AssertionError(

@@ -57,7 +57,7 @@ class TestModeledExceptions(BaseSessionTest):
                 template = {
                     'TemplateName': 'foobar',
                     'SubjectPart': 'foo',
-                    'TextPart': 'bar'
+                    'TextPart': 'bar',
                 }
                 ses.create_template(Template=template)
             self.assertEqual(assertion_context.exception.response, response)

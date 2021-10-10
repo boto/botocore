@@ -33,7 +33,7 @@ def request_dict(**kwargs):
         'query_string': '',
         'method': 'POST',
         'url': 'https://example.com',
-        'context': {}
+        'context': {},
     }
     base.update(kwargs)
     return base
@@ -50,7 +50,6 @@ class RecordStreamResets(six.StringIO):
 
 
 class TestEndpointBase(unittest.TestCase):
-
     def setUp(self):
         self.op = mock.Mock()
         self.op.has_streaming_output = False
@@ -59,15 +58,19 @@ class TestEndpointBase(unittest.TestCase):
         self.event_emitter = mock.Mock()
         self.event_emitter.emit.return_value = []
         self.factory_patch = mock.patch(
-            'botocore.parsers.ResponseParserFactory')
+            'botocore.parsers.ResponseParserFactory'
+        )
         self.factory = self.factory_patch.start()
         self.endpoint = Endpoint(
             'https://ec2.us-west-2.amazonaws.com/',
             endpoint_prefix='ec2',
-            event_emitter=self.event_emitter)
+            event_emitter=self.event_emitter,
+        )
         self.http_session = mock.Mock()
         self.http_session.send.return_value = mock.Mock(
-            status_code=200, headers={}, content=b'{"Foo": "bar"}',
+            status_code=200,
+            headers={},
+            content=b'{"Foo": "bar"}',
         )
         self.endpoint.http_session = self.http_session
 
@@ -97,7 +100,6 @@ class TestEndpointBase(unittest.TestCase):
 
 
 class TestEndpointFeatures(TestEndpointBase):
-
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
         self.endpoint.make_request(self.op, request_dict())
@@ -118,7 +120,9 @@ class TestEndpointFeatures(TestEndpointBase):
     def test_make_request_with_context(self):
         r = request_dict()
         r['context'] = {'signing': {'region': 'us-west-2'}}
-        with mock.patch('botocore.endpoint.Endpoint.prepare_request') as prepare:
+        with mock.patch(
+            'botocore.endpoint.Endpoint.prepare_request'
+        ) as prepare:
             self.endpoint.make_request(self.op, r)
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
@@ -133,7 +137,9 @@ class TestEndpointFeatures(TestEndpointBase):
 
         r = request_dict()
         self.http_session.send.return_value = mock.Mock(
-            status_code=400, headers={}, content=b'',
+            status_code=400,
+            headers={},
+            content=b'',
         )
         parser = mock.Mock()
         parser.parse.side_effect = [
@@ -176,17 +182,18 @@ class TestRetryInterface(TestEndpointBase):
 
     def assert_events_emitted(self, event_emitter, expected_events):
         self.assertEqual(
-            self.get_events_emitted(event_emitter), expected_events)
+            self.get_events_emitted(event_emitter), expected_events
+        )
 
     def test_retry_events_are_emitted(self):
         self.endpoint.make_request(self._operation, request_dict())
         call_args = self.event_emitter.emit.call_args
-        self.assertEqual(call_args[0][0],
-                         'needs-retry.ec2.DescribeInstances')
+        self.assertEqual(call_args[0][0], 'needs-retry.ec2.DescribeInstances')
 
     def test_retry_events_can_alter_behavior(self):
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
-            num_retries=1)
+            num_retries=1
+        )
         self.endpoint.make_request(self._operation, request_dict())
         self.assert_events_emitted(
             self.event_emitter,
@@ -195,12 +202,14 @@ class TestRetryInterface(TestEndpointBase):
                 'before-send.ec2.DescribeInstances',
                 'response-received.ec2.DescribeInstances',
                 'needs-retry.ec2.DescribeInstances',
-            ] * 2
+            ]
+            * 2,
         )
 
     def test_retry_on_socket_errors(self):
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
-            num_retries=1)
+            num_retries=1
+        )
         self.http_session.send.side_effect = HTTPClientError(error='wrapped')
         with self.assertRaises(HTTPClientError):
             self.endpoint.make_request(self._operation, request_dict())
@@ -211,12 +220,14 @@ class TestRetryInterface(TestEndpointBase):
                 'before-send.ec2.DescribeInstances',
                 'response-received.ec2.DescribeInstances',
                 'needs-retry.ec2.DescribeInstances',
-            ] * 2
+            ]
+            * 2,
         )
 
     def test_retry_attempts_added_to_response_metadata(self):
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
-            num_retries=1)
+            num_retries=1
+        )
         parser = mock.Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
@@ -225,7 +236,8 @@ class TestRetryInterface(TestEndpointBase):
 
     def test_retry_attempts_is_zero_when_not_retried(self):
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
-            num_retries=0)
+            num_retries=0
+        )
         parser = mock.Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
@@ -265,7 +277,6 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
 
 
 class TestEventStreamBody(TestEndpointBase):
-
     def test_event_stream_body_is_streaming(self):
         self.op.has_event_stream_output = True
         request = request_dict()
@@ -277,8 +288,8 @@ class TestEventStreamBody(TestEndpointBase):
 class TestEndpointCreator(unittest.TestCase):
     def setUp(self):
         self.service_model = mock.Mock(
-            endpoint_prefix='ec2', signature_version='v2',
-            signing_name='ec2')
+            endpoint_prefix='ec2', signature_version='v2', signing_name='ec2'
+        )
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
@@ -290,81 +301,105 @@ class TestEndpointCreator(unittest.TestCase):
 
     def test_creates_endpoint_with_configured_url(self):
         endpoint = self.creator.create_endpoint(
-            self.service_model, region_name='us-east-1',
-            endpoint_url='https://endpoint.url')
+            self.service_model,
+            region_name='us-east-1',
+            endpoint_url='https://endpoint.url',
+        )
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
     def test_create_endpoint_with_default_timeout(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
+            self.service_model,
+            region_name='us-west-2',
             endpoint_url='https://example.com',
-            http_session_cls=self.mock_session)
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('timeout'), DEFAULT_TIMEOUT)
 
     def test_create_endpoint_with_customized_timeout(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', timeout=123,
-            http_session_cls=self.mock_session)
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            timeout=123,
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('timeout'), 123)
 
     def test_get_endpoint_default_verify_ssl(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
+            self.service_model,
+            region_name='us-west-2',
             endpoint_url='https://example.com',
-            http_session_cls=self.mock_session)
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertTrue(session_args.get('verify'))
 
     def test_verify_ssl_can_be_disabled(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify=False,
-            http_session_cls=self.mock_session)
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            verify=False,
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertFalse(session_args.get('verify'))
 
     def test_verify_ssl_can_specify_cert_bundle(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify='/path/cacerts.pem',
-            http_session_cls=self.mock_session)
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            verify='/path/cacerts.pem',
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_client_cert_can_specify_path(self):
         client_cert = '/some/path/cert'
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', client_cert=client_cert,
-            http_session_cls=self.mock_session)
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            client_cert=client_cert,
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('client_cert'), '/some/path/cert')
 
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
+            self.service_model,
+            region_name='us-west-2',
             endpoint_url='https://example.com',
-            http_session_cls=self.mock_session)
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/env/cacerts.pem')
 
     def test_env_ignored_if_explicitly_passed(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify='/path/cacerts.pem',
-            http_session_cls=self.mock_session)
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            verify='/path/cacerts.pem',
+            http_session_cls=self.mock_session,
+        )
         session_args = self.mock_session.call_args[1]
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_can_specify_max_pool_conns(self):
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
+            self.service_model,
+            region_name='us-west-2',
             endpoint_url='https://example.com',
             max_pool_connections=100,
             http_session_cls=self.mock_session,
@@ -375,8 +410,11 @@ class TestEndpointCreator(unittest.TestCase):
     def test_socket_options(self):
         socket_options = [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
         self.creator.create_endpoint(
-            self.service_model, region_name='us-west-2',
+            self.service_model,
+            region_name='us-west-2',
             endpoint_url='https://example.com',
-            http_session_cls=self.mock_session, socket_options=socket_options)
+            http_session_cls=self.mock_session,
+            socket_options=socket_options,
+        )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('socket_options'), socket_options)

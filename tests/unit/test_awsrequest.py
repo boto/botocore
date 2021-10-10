@@ -86,6 +86,7 @@ class Seekable:
     requests will not calculate the content length even though it is still
     possible to calculate it.
     """
+
     def __init__(self, stream):
         self._stream = stream
 
@@ -251,7 +252,6 @@ class TestAWSRequest(unittest.TestCase):
         # be using duck type checks.
 
         class LooksLikeFile:
-
             def __init__(self):
                 self.seek_called = False
 
@@ -276,6 +276,7 @@ class TestAWSResponse(unittest.TestCase):
     def set_raw_stream(self, blobs):
         def stream(*args, **kwargs):
             yield from blobs
+
         self.response.raw.stream.return_value = stream()
 
     def test_content_property(self):
@@ -326,8 +327,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
 
         response_components = response.split(b' ')
         self.mock_response._read_status.return_value = (
-            response_components[0], int(response_components[1]),
-            response_components[2]
+            response_components[0],
+            int(response_components[1]),
+            response_components[2],
         )
         conn.response_class = mock.Mock()
         conn.response_class.return_value = self.mock_response
@@ -341,8 +343,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             wait_mock.return_value = True
-            conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             response = conn.getresponse()
             # Assert that we waited for the 100-continue response
             self.assertEqual(wait_mock.call_count, 1)
@@ -353,12 +356,18 @@ class TestAWSHTTPConnection(unittest.TestCase):
         with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
-            s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
+            s = FakeSocket(
+                b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n'
+            )
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             wait_mock.return_value = True
-            conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
-                         {'Expect': b'100-continue', 'Content-Length': b'4'})
+            conn.request(
+                'GET',
+                '/bucket/foo',
+                six.BytesIO(b'body'),
+                {'Expect': b'100-continue', 'Content-Length': b'4'},
+            )
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK.
             self.assertEqual(response.status, 200)
@@ -378,15 +387,18 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # actually parse the response instead of getting the
             # default status of 200 which happens when we can't parse
             # the response.
-            s = FakeSocket(b'HTTP/1.1 100 Continue\r\n'
-                           b'Connection: keep-alive\r\n'
-                           b'\r\n'
-                           b'HTTP/1.1 500 Internal Service Error\r\n')
+            s = FakeSocket(
+                b'HTTP/1.1 100 Continue\r\n'
+                b'Connection: keep-alive\r\n'
+                b'\r\n'
+                b'HTTP/1.1 500 Internal Service Error\r\n'
+            )
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             wait_mock.return_value = True
-            conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             # Assert that we waited for the 100-continue response
             self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
@@ -400,12 +412,14 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # then a 200 ok response.
             s = FakeSocket(
                 b'HTTP/1.1 307 Temporary Redirect\r\n'
-                b'Location: http://example.org\r\n')
+                b'Location: http://example.org\r\n'
+            )
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             wait_mock.return_value = True
-            conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             # Assert that we waited for the 100-continue response
             self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
@@ -418,15 +432,17 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # then a 200 ok response.
             s = FakeSocket(
                 b'HTTP/1.1 307 Temporary Redirect\r\n'
-                b'Location: http://example.org\r\n')
+                b'Location: http://example.org\r\n'
+            )
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             # By settings wait_mock to return False, this indicates
             # that the server did not send any response.  In this situation
             # we should just send the request anyways.
             wait_mock.return_value = False
-            conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': b'100-continue'})
+            conn.request(
+                'GET', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
             # Assert that we waited for the 100-continue response
             self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
@@ -494,7 +510,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with mock.patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
+        with mock.patch(
+            'urllib3.connection.HTTPConnection._tunnel'
+        ) as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
 
@@ -504,8 +522,12 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Note the combination of unicode 'GET' and
         # bytes 'Utf8-Header' value.
-        conn.request('GET', '/bucket/foo', b'body',
-                     headers={"Utf8-Header": b"\xe5\xb0\x8f"})
+        conn.request(
+            'GET',
+            '/bucket/foo',
+            b'body',
+            headers={"Utf8-Header": b"\xe5\xb0\x8f"},
+        )
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
 
@@ -536,7 +558,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
 
             # And then a new connection is established.
             new_conn = FakeSocket(
-                b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
+                b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n'
+            )
             conn.sock = new_conn
 
             # And we make a request, we should see the 200 response
@@ -573,41 +596,44 @@ class TestPrepareRequestDict(unittest.TestCase):
             'method': 'GET',
             'query_string': '',
             'url_path': '/',
-            'context': {}
+            'context': {},
         }
 
-    def prepare_base_request_dict(self, request_dict, endpoint_url=None,
-                                  user_agent=None, context=None):
+    def prepare_base_request_dict(
+        self, request_dict, endpoint_url=None, user_agent=None, context=None
+    ):
         self.base_request_dict.update(request_dict)
         context = context or {}
         if user_agent is None:
             user_agent = self.user_agent
         if endpoint_url is None:
             endpoint_url = self.endpoint_url
-        prepare_request_dict(self.base_request_dict, endpoint_url=endpoint_url,
-                             user_agent=user_agent, context=context)
+        prepare_request_dict(
+            self.base_request_dict,
+            endpoint_url=endpoint_url,
+            user_agent=user_agent,
+            context=context,
+        )
 
     def test_prepare_request_dict_for_get(self):
-        request_dict = {
-            'method': 'GET',
-            'url_path': '/'
-        }
+        request_dict = {'method': 'GET', 'url_path': '/'}
         self.prepare_base_request_dict(
-            request_dict, endpoint_url='https://s3.amazonaws.com')
+            request_dict, endpoint_url='https://s3.amazonaws.com'
+        )
         self.assertEqual(self.base_request_dict['method'], 'GET')
-        self.assertEqual(self.base_request_dict['url'],
-                         'https://s3.amazonaws.com/')
-        self.assertEqual(self.base_request_dict['headers']['User-Agent'],
-                         self.user_agent)
+        self.assertEqual(
+            self.base_request_dict['url'], 'https://s3.amazonaws.com/'
+        )
+        self.assertEqual(
+            self.base_request_dict['headers']['User-Agent'], self.user_agent
+        )
 
     def test_prepare_request_dict_for_get_no_user_agent(self):
         self.user_agent = None
-        request_dict = {
-            'method': 'GET',
-            'url_path': '/'
-        }
+        request_dict = {'method': 'GET', 'url_path': '/'}
         self.prepare_base_request_dict(
-            request_dict, endpoint_url='https://s3.amazonaws.com')
+            request_dict, endpoint_url='https://s3.amazonaws.com'
+        )
         self.assertNotIn('User-Agent', self.base_request_dict['headers'])
 
     def test_prepare_request_dict_with_context(self):
@@ -619,12 +645,13 @@ class TestPrepareRequestDict(unittest.TestCase):
         request_dict = {
             'method': 'GET',
             'query_string': {'prefix': 'foo'},
-            'url_path': '/mybucket'
+            'url_path': '/mybucket',
         }
         self.prepare_base_request_dict(request_dict)
         self.assertEqual(
             self.base_request_dict['url'],
-            'https://s3.amazonaws.com/mybucket?prefix=foo')
+            'https://s3.amazonaws.com/mybucket?prefix=foo',
+        )
 
     def test_url_path_combined_with_endpoint_url(self):
         # This checks the case where a user specifies and
@@ -633,49 +660,54 @@ class TestPrepareRequestDict(unittest.TestCase):
         # component as well (say from a rest-* service).
         request_dict = {
             'query_string': {'prefix': 'foo'},
-            'url_path': '/mybucket'
+            'url_path': '/mybucket',
         }
         endpoint_url = 'https://custom.endpoint/foo/bar'
         self.prepare_base_request_dict(request_dict, endpoint_url)
         self.assertEqual(
             self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/mybucket?prefix=foo')
+            'https://custom.endpoint/foo/bar/mybucket?prefix=foo',
+        )
 
     def test_url_path_with_trailing_slash(self):
         self.prepare_base_request_dict(
             {'url_path': '/mybucket'},
-            endpoint_url='https://custom.endpoint/foo/bar/')
+            endpoint_url='https://custom.endpoint/foo/bar/',
+        )
 
         self.assertEqual(
             self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/mybucket')
+            'https://custom.endpoint/foo/bar/mybucket',
+        )
 
     def test_url_path_is_slash(self):
         self.prepare_base_request_dict(
-            {'url_path': '/'},
-            endpoint_url='https://custom.endpoint/foo/bar/')
+            {'url_path': '/'}, endpoint_url='https://custom.endpoint/foo/bar/'
+        )
 
         self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/')
+            self.base_request_dict['url'], 'https://custom.endpoint/foo/bar/'
+        )
 
     def test_url_path_is_slash_with_endpoint_url_no_slash(self):
         self.prepare_base_request_dict(
-            {'url_path': '/'},
-            endpoint_url='https://custom.endpoint/foo/bar')
+            {'url_path': '/'}, endpoint_url='https://custom.endpoint/foo/bar'
+        )
 
         self.assertEqual(
-            self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar')
+            self.base_request_dict['url'], 'https://custom.endpoint/foo/bar'
+        )
 
     def test_custom_endpoint_with_query_string(self):
         self.prepare_base_request_dict(
             {'url_path': '/baz', 'query_string': {'x': 'y'}},
-            endpoint_url='https://custom.endpoint/foo/bar?foo=bar')
+            endpoint_url='https://custom.endpoint/foo/bar?foo=bar',
+        )
 
         self.assertEqual(
             self.base_request_dict['url'],
-            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')
+            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y',
+        )
 
 
 class TestCreateRequestObject(unittest.TestCase):
@@ -687,7 +719,7 @@ class TestCreateRequestObject(unittest.TestCase):
             'headers': {'User-Agent': 'my-agent'},
             'body': 'my body',
             'url': 'https://s3.amazonaws.com/mybucket?prefix=foo',
-            'context': {'signing': {'region': 'us-west-2'}}
+            'context': {'signing': {'region': 'us-west-2'}},
         }
 
     def test_create_request_object(self):

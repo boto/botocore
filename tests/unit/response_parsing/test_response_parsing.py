@@ -37,11 +37,7 @@ SPECIAL_CASES = [
 
 
 def _test_parsed_response(xmlfile, response_body, operation_model, expected):
-    response = {
-        'body': response_body,
-        'status_code': 200,
-        'headers': {}
-    }
+    response = {'body': response_body, 'status_code': 200, 'headers': {}}
     for case in SPECIAL_CASES:
         if case in xmlfile:
             print("SKIP: %s" % xmlfile)
@@ -82,7 +78,7 @@ def _test_parsed_response(xmlfile, response_body, operation_model, expected):
         print(d2)
         pretty_d1 = pprint.pformat(d1, width=1).splitlines()
         pretty_d2 = pprint.pformat(d2, width=1).splitlines()
-        diff = ('\n' + '\n'.join(difflib.ndiff(pretty_d1, pretty_d2)))
+        diff = '\n' + '\n'.join(difflib.ndiff(pretty_d1, pretty_d2))
         raise AssertionError("Dicts are not equal:\n%s" % diff)
 
 
@@ -123,8 +119,7 @@ def _xml_test_cases():
 
 
 @pytest.mark.parametrize(
-    "xmlfile, raw_response_body, operation_model, expected",
-    _xml_test_cases()
+    "xmlfile, raw_response_body, operation_model, expected", _xml_test_cases()
 )
 def test_xml_parsing(xmlfile, raw_response_body, operation_model, expected):
     _test_parsed_response(
@@ -171,12 +166,15 @@ def _json_test_cases():
     session = botocore.session.get_session()
     for json_response_file in os.listdir(json_responses_dir):
         # Files look like: 'datapipeline-create-pipeline.json'
-        service_name, operation_name = os.path.splitext(
-            json_response_file)[0].split('-', 1)
-        expected_parsed_response = os.path.join(expected_parsed_dir,
-                                                json_response_file)
-        raw_response_file = os.path.join(json_responses_dir,
-                                         json_response_file)
+        service_name, operation_name = os.path.splitext(json_response_file)[
+            0
+        ].split('-', 1)
+        expected_parsed_response = os.path.join(
+            expected_parsed_dir, json_response_file
+        )
+        raw_response_file = os.path.join(
+            json_responses_dir, json_response_file
+        )
         with open(expected_parsed_response) as f:
             expected = json.load(f)
         service_model = session.get_service_model(service_name)
@@ -192,7 +190,7 @@ def _json_test_cases():
 
 @pytest.mark.parametrize(
     "raw_response_file, raw_response_body, operation_model, expected",
-    _json_test_cases()
+    _json_test_cases(),
 )
 def test_json_errors_parsing(
     raw_response_file, raw_response_body, operation_model, expected

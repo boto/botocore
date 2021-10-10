@@ -60,9 +60,12 @@ def skip_if_windows(reason):
         def test_some_non_windows_stuff(self):
             self.assertEqual(...)
     """
+
     def decorator(func):
         return unittest.skipIf(
-            platform.system() not in ['Darwin', 'Linux'], reason)(func)
+            platform.system() not in ['Darwin', 'Linux'], reason
+        )(func)
+
     return decorator
 
 
@@ -72,6 +75,7 @@ def requires_crt(reason=None):
 
     def decorator(func):
         return unittest.skipIf(not HAS_CRT, reason)(func)
+
     return decorator
 
 
@@ -161,8 +165,7 @@ class BaseClientDriverTest(unittest.TestCase):
         self.driver = ClientDriver()
         env = None
         if self.INJECT_DUMMY_CREDS:
-            env = {'AWS_ACCESS_KEY_ID': 'foo',
-                   'AWS_SECRET_ACCESS_KEY': 'bar'}
+            env = {'AWS_ACCESS_KEY_ID': 'foo', 'AWS_SECRET_ACCESS_KEY': 'bar'}
         self.driver.start(env=env)
 
     def cmd(self, *args):
@@ -184,8 +187,7 @@ class BaseClientDriverTest(unittest.TestCase):
 
 class ClientDriver:
     CLIENT_SERVER = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'cmd-runner'
+        os.path.dirname(os.path.abspath(__file__)), 'cmd-runner'
     )
 
     def __init__(self):
@@ -213,8 +215,12 @@ class ClientDriver:
 
     def start(self, env=None):
         """Start up the command runner process."""
-        self._popen = Popen([sys.executable, self.CLIENT_SERVER],
-                            stdout=PIPE, stdin=PIPE, env=env)
+        self._popen = Popen(
+            [sys.executable, self.CLIENT_SERVER],
+            stdout=PIPE,
+            stdin=PIPE,
+            env=env,
+        )
 
     def stop(self):
         """Shutdown the command runner process."""
@@ -263,8 +269,7 @@ class ClientDriver:
         self.send_cmd(*cmd)
         result = self._popen.stdout.readline().strip()
         if result != b'OK':
-            raise RuntimeError(
-                f"Error from command '{cmd}': {result}")
+            raise RuntimeError(f"Error from command '{cmd}': {result}")
 
 
 # This is added to this file because it's used in both
@@ -290,18 +295,21 @@ class IntegerRefresher(credentials.RefreshableCredentials):
     _mandatory_refresh_timeout = 1
     _credentials_expire = 3
 
-    def __init__(self, creds_last_for=_credentials_expire,
-                 advisory_refresh=_advisory_refresh_timeout,
-                 mandatory_refresh=_mandatory_refresh_timeout,
-                 refresh_function=None):
-        expires_in = (
-            self._current_datetime() +
-            datetime.timedelta(seconds=creds_last_for))
+    def __init__(
+        self,
+        creds_last_for=_credentials_expire,
+        advisory_refresh=_advisory_refresh_timeout,
+        mandatory_refresh=_mandatory_refresh_timeout,
+        refresh_function=None,
+    ):
+        expires_in = self._current_datetime() + datetime.timedelta(
+            seconds=creds_last_for
+        )
         if refresh_function is None:
             refresh_function = self._do_refresh
         super().__init__(
-            '0', '0', '0', expires_in,
-            refresh_function, 'INTREFRESH')
+            '0', '0', '0', expires_in, refresh_function, 'INTREFRESH'
+        )
         self.creds_last_for = creds_last_for
         self.refresh_counter = 0
         self._advisory_refresh_timeout = advisory_refresh
@@ -387,8 +395,9 @@ class BaseHTTPStubber:
         self.requests = []
         self.responses = []
 
-    def add_response(self, url='https://example.com', status=200, headers=None,
-                     body=b''):
+    def add_response(
+        self, url='https://example.com', status=200, headers=None, body=b''
+    ):
         if headers is None:
             headers = {}
 
@@ -459,8 +468,14 @@ class ConsistencyWaiter:
     :param delay: The number of seconds to delay the next API call after a
     failed check call. Default of 5 seconds.
     """
-    def __init__(self, min_successes=1, max_attempts=20, delay=5,
-                 delay_initial_poll=False):
+
+    def __init__(
+        self,
+        min_successes=1,
+        max_attempts=20,
+        delay=5,
+        delay_initial_poll=False,
+    ):
         self.min_successes = min_successes
         self.max_attempts = max_attempts
         self.delay = delay
@@ -513,8 +528,7 @@ class StubbedSession(botocore.session.Session):
         return self._cached_clients[service_name]
 
     def _create_stubbed_client(self, service_name, *args, **kwargs):
-        client = super().create_client(
-            service_name, *args, **kwargs)
+        client = super().create_client(service_name, *args, **kwargs)
         stubber = Stubber(client)
         self._client_stubs[service_name] = stubber
         return client
@@ -550,8 +564,7 @@ class FreezeTime(ContextDecorator):
             date = datetime.datetime.utcnow()
         self.date = date
         self.datetime_patcher = mock.patch.object(
-            module, 'datetime',
-            mock.Mock(wraps=datetime.datetime)
+            module, 'datetime', mock.Mock(wraps=datetime.datetime)
         )
 
     def __enter__(self, *args, **kwargs):

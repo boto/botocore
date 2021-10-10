@@ -31,7 +31,8 @@ _CREDENTIAL_ENV_VARS = [
 ]
 
 TEST_MODELS_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'models',
+    os.path.dirname(os.path.abspath(__file__)),
+    'models',
 )
 
 
