@@ -59,7 +59,10 @@ class Monitor:
         except Exception as e:
             logger.debug(
                 'Exception %s raised by client monitor in handling event %s',
-                e, event_name, exc_info=True)
+                e,
+                event_name,
+                exc_info=True,
+            )
 
 
 class MonitorEventAdapter:
@@ -102,21 +105,24 @@ class MonitorEventAdapter:
     def _handle_request_created(self, request, **kwargs):
         context = request.context
         new_attempt_event = context[
-            'current_api_call_event'].new_api_call_attempt(
-                timestamp=self._get_current_time())
+            'current_api_call_event'
+        ].new_api_call_attempt(timestamp=self._get_current_time())
         new_attempt_event.request_headers = request.headers
         new_attempt_event.url = request.url
         context['current_api_call_attempt_event'] = new_attempt_event
 
-    def _handle_response_received(self, parsed_response, context, exception,
-                                  **kwargs):
+    def _handle_response_received(
+        self, parsed_response, context, exception, **kwargs
+    ):
         attempt_event = context.pop('current_api_call_attempt_event')
         attempt_event.latency = self._get_latency(attempt_event)
         if parsed_response is not None:
             attempt_event.http_status_code = parsed_response[
-                'ResponseMetadata']['HTTPStatusCode']
+                'ResponseMetadata'
+            ]['HTTPStatusCode']
             attempt_event.response_headers = parsed_response[
-                'ResponseMetadata']['HTTPHeaders']
+                'ResponseMetadata'
+            ]['HTTPHeaders']
             attempt_event.parsed_error = parsed_response.get('Error')
         else:
             attempt_event.wire_exception = exception
@@ -124,7 +130,8 @@ class MonitorEventAdapter:
 
     def _handle_after_call(self, context, parsed, **kwargs):
         context['current_api_call_event'].retries_exceeded = parsed[
-            'ResponseMetadata'].get('MaxAttemptsReached', False)
+            'ResponseMetadata'
+        ].get('MaxAttemptsReached', False)
         return self._complete_api_call(context)
 
     def _handle_after_call_error(self, context, exception, **kwargs):
@@ -132,13 +139,15 @@ class MonitorEventAdapter:
         # was a retryable connection error, then the retries must have exceeded
         # for that exception as this event gets emitted **after** retries
         # happen.
-        context['current_api_call_event'].retries_exceeded = \
-            self._is_retryable_exception(exception)
+        context[
+            'current_api_call_event'
+        ].retries_exceeded = self._is_retryable_exception(exception)
         return self._complete_api_call(context)
 
     def _is_retryable_exception(self, exception):
         return isinstance(
-            exception, tuple(RETRYABLE_EXCEPTIONS['GENERAL_CONNECTION_ERROR']))
+            exception, tuple(RETRYABLE_EXCEPTIONS['GENERAL_CONNECTION_ERROR'])
+        )
 
     def _complete_api_call(self, context):
         call_event = context.pop('current_api_call_event')
@@ -181,8 +190,15 @@ class BaseMonitorEvent:
 
 
 class APICallEvent(BaseMonitorEvent):
-    def __init__(self, service, operation, timestamp, latency=None,
-                 attempts=None, retries_exceeded=False):
+    def __init__(
+        self,
+        service,
+        operation,
+        timestamp,
+        latency=None,
+        attempts=None,
+        retries_exceeded=False,
+    ):
         """Monitor event for a single API call
 
         This event corresponds to a single client method call, which includes
@@ -211,7 +227,8 @@ class APICallEvent(BaseMonitorEvent):
             otherwise
         """
         super().__init__(
-            service=service, operation=operation, timestamp=timestamp)
+            service=service, operation=operation, timestamp=timestamp
+        )
         self.latency = latency
         self.attempts = attempts
         if attempts is None:
@@ -226,19 +243,26 @@ class APICallEvent(BaseMonitorEvent):
             APICallAttemptEvent
         """
         attempt_event = APICallAttemptEvent(
-            service=self.service,
-            operation=self.operation,
-            timestamp=timestamp
+            service=self.service, operation=self.operation, timestamp=timestamp
         )
         self.attempts.append(attempt_event)
         return attempt_event
 
 
 class APICallAttemptEvent(BaseMonitorEvent):
-    def __init__(self, service, operation, timestamp,
-                 latency=None, url=None, http_status_code=None,
-                 request_headers=None, response_headers=None,
-                 parsed_error=None, wire_exception=None):
+    def __init__(
+        self,
+        service,
+        operation,
+        timestamp,
+        latency=None,
+        url=None,
+        http_status_code=None,
+        request_headers=None,
+        response_headers=None,
+        parsed_error=None,
+        wire_exception=None,
+    ):
         """Monitor event for a single API call attempt
 
         This event corresponds to a single HTTP request attempt in completing
@@ -312,9 +336,7 @@ class CSMSerializer:
             r'Credential=(?P<access_key>\w+)/\d+/'
             r'(?P<signing_region>[a-z0-9-]+)/'
         ),
-        's3': re.compile(
-            r'AWS (?P<access_key>\w+):'
-        )
+        's3': re.compile(r'AWS (?P<access_key>\w+):'),
     }
     _SERIALIZEABLE_EVENT_PROPERTIES = [
         'service',
@@ -345,8 +367,8 @@ class CSMSerializer:
         if len(csm_client_id) > self._MAX_CLIENT_ID_LENGTH:
             raise ValueError(
                 'The value provided for csm_client_id: %s exceeds the '
-                'maximum length of %s characters' % (
-                    csm_client_id, self._MAX_CLIENT_ID_LENGTH)
+                'maximum length of %s characters'
+                % (csm_client_id, self._MAX_CLIENT_ID_LENGTH)
             )
 
     def serialize(self, event):
@@ -365,9 +387,9 @@ class CSMSerializer:
             value = getattr(event, attr, None)
             if value is not None:
                 getattr(self, '_serialize_' + attr)(
-                    value, event_dict, event_type=event_type)
-        return ensure_bytes(
-            json.dumps(event_dict, separators=(',', ':')))
+                    value, event_dict, event_type=event_type
+                )
+        return ensure_bytes(json.dumps(event_dict, separators=(',', ':')))
 
     def _get_base_event_dict(self, event):
         return {
@@ -397,15 +419,18 @@ class CSMSerializer:
             if region is not None:
                 event_dict['Region'] = region
             event_dict['UserAgent'] = self._get_user_agent(
-                last_attempt.request_headers)
+                last_attempt.request_headers
+            )
         if last_attempt.http_status_code is not None:
             event_dict['FinalHttpStatusCode'] = last_attempt.http_status_code
         if last_attempt.parsed_error is not None:
             self._serialize_parsed_error(
-                last_attempt.parsed_error, event_dict, 'ApiCall')
+                last_attempt.parsed_error, event_dict, 'ApiCall'
+            )
         if last_attempt.wire_exception is not None:
             self._serialize_wire_exception(
-                last_attempt.wire_exception, event_dict, 'ApiCall')
+                last_attempt.wire_exception, event_dict, 'ApiCall'
+            )
 
     def _serialize_latency(self, latency, event_dict, event_type):
         if event_type == 'ApiCall':
@@ -413,15 +438,17 @@ class CSMSerializer:
         elif event_type == 'ApiCallAttempt':
             event_dict['AttemptLatency'] = latency
 
-    def _serialize_retries_exceeded(self, retries_exceeded, event_dict,
-                                    **kwargs):
-        event_dict['MaxRetriesExceeded'] = (1 if retries_exceeded else 0)
+    def _serialize_retries_exceeded(
+        self, retries_exceeded, event_dict, **kwargs
+    ):
+        event_dict['MaxRetriesExceeded'] = 1 if retries_exceeded else 0
 
     def _serialize_url(self, url, event_dict, **kwargs):
         event_dict['Fqdn'] = urlparse(url).netloc
 
-    def _serialize_request_headers(self, request_headers, event_dict,
-                                   **kwargs):
+    def _serialize_request_headers(
+        self, request_headers, event_dict, **kwargs
+    ):
         event_dict['UserAgent'] = self._get_user_agent(request_headers)
         if self._is_signed(request_headers):
             event_dict['AccessKey'] = self._get_access_key(request_headers)
@@ -430,34 +457,42 @@ class CSMSerializer:
             event_dict['Region'] = region
         if 'X-Amz-Security-Token' in request_headers:
             event_dict['SessionToken'] = request_headers[
-                'X-Amz-Security-Token']
+                'X-Amz-Security-Token'
+            ]
 
-    def _serialize_http_status_code(self, http_status_code, event_dict,
-                                    **kwargs):
+    def _serialize_http_status_code(
+        self, http_status_code, event_dict, **kwargs
+    ):
         event_dict['HttpStatusCode'] = http_status_code
 
-    def _serialize_response_headers(self, response_headers, event_dict,
-                                    **kwargs):
+    def _serialize_response_headers(
+        self, response_headers, event_dict, **kwargs
+    ):
         for header, entry in self._RESPONSE_HEADERS_TO_EVENT_ENTRIES.items():
             if header in response_headers:
                 event_dict[entry] = response_headers[header]
 
-    def _serialize_parsed_error(self, parsed_error, event_dict, event_type,
-                                **kwargs):
+    def _serialize_parsed_error(
+        self, parsed_error, event_dict, event_type, **kwargs
+    ):
         field_prefix = 'Final' if event_type == 'ApiCall' else ''
         event_dict[field_prefix + 'AwsException'] = self._truncate(
-            parsed_error['Code'], self._MAX_ERROR_CODE_LENGTH)
+            parsed_error['Code'], self._MAX_ERROR_CODE_LENGTH
+        )
         event_dict[field_prefix + 'AwsExceptionMessage'] = self._truncate(
-            parsed_error['Message'], self._MAX_MESSAGE_LENGTH)
+            parsed_error['Message'], self._MAX_MESSAGE_LENGTH
+        )
 
-    def _serialize_wire_exception(self, wire_exception, event_dict, event_type,
-                                  **kwargs):
+    def _serialize_wire_exception(
+        self, wire_exception, event_dict, event_type, **kwargs
+    ):
         field_prefix = 'Final' if event_type == 'ApiCall' else ''
         event_dict[field_prefix + 'SdkException'] = self._truncate(
-            wire_exception.__class__.__name__,
-            self._MAX_EXCEPTION_CLASS_LENGTH)
+            wire_exception.__class__.__name__, self._MAX_EXCEPTION_CLASS_LENGTH
+        )
         event_dict[field_prefix + 'SdkExceptionMessage'] = self._truncate(
-            str(wire_exception), self._MAX_MESSAGE_LENGTH)
+            str(wire_exception), self._MAX_MESSAGE_LENGTH
+        )
 
     def _get_event_type(self, event):
         if isinstance(event, APICallEvent):
@@ -482,7 +517,7 @@ class CSMSerializer:
     def _get_user_agent(self, request_headers):
         return self._truncate(
             ensure_unicode(request_headers.get('User-Agent', '')),
-            self._MAX_USER_AGENT_LENGTH
+            self._MAX_USER_AGENT_LENGTH,
         )
 
     def _is_signed(self, request_headers):
@@ -501,8 +536,10 @@ class CSMSerializer:
     def _truncate(self, text, max_length):
         if len(text) > max_length:
             logger.debug(
-                'Truncating following value to maximum length of '
-                '%s: %s', text, max_length)
+                'Truncating following value to maximum length of ' '%s: %s',
+                text,
+                max_length,
+            )
             return text[:max_length]
         return text
 
@@ -543,7 +580,8 @@ class SocketPublisher:
             logger.debug(
                 'Serialized event of size %s exceeds the maximum length '
                 'allowed: %s. Not sending event to socket.',
-                len(serialized_event), self._MAX_MONITOR_EVENT_LENGTH
+                len(serialized_event),
+                self._MAX_MONITOR_EVENT_LENGTH,
             )
             return
         self._socket.sendto(serialized_event, self._address)

@@ -64,8 +64,16 @@ class RequestSigner:
     :type event_emitter: :py:class:`~botocore.hooks.BaseEventHooks`
     :param event_emitter: Extension mechanism to fire events.
     """
-    def __init__(self, service_id, region_name, signing_name,
-                 signature_version, credentials, event_emitter):
+
+    def __init__(
+        self,
+        service_id,
+        region_name,
+        signing_name,
+        signature_version,
+        credentials,
+        event_emitter,
+    ):
         self._region_name = region_name
         self._signing_name = signing_name
         self._signature_version = signature_version
@@ -94,8 +102,15 @@ class RequestSigner:
         # Don't call this method directly.
         return self.sign(operation_name, request)
 
-    def sign(self, operation_name, request, region_name=None,
-             signing_type='standard', expires_in=None, signing_name=None):
+    def sign(
+        self,
+        operation_name,
+        request,
+        region_name=None,
+        signing_type='standard',
+        expires_in=None,
+        signing_name=None,
+    ):
         """Sign a request before it goes out over the wire.
 
         :type operation_name: string
@@ -130,23 +145,27 @@ class RequestSigner:
             signing_name = self._signing_name
 
         signature_version = self._choose_signer(
-            operation_name, signing_type, request.context)
+            operation_name, signing_type, request.context
+        )
 
         # Allow mutating request before signing
         self._event_emitter.emit(
             'before-sign.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name),
-            request=request, signing_name=signing_name,
+                self._service_id.hyphenize(), operation_name
+            ),
+            request=request,
+            signing_name=signing_name,
             region_name=self._region_name,
-            signature_version=signature_version, request_signer=self,
-            operation_name=operation_name
+            signature_version=signature_version,
+            request_signer=self,
+            operation_name=operation_name,
         )
 
         if signature_version != botocore.UNSIGNED:
             kwargs = {
                 'signing_name': signing_name,
                 'region_name': region_name,
-                'signature_version': signature_version
+                'signature_version': signature_version,
             }
             if expires_in is not None:
                 kwargs['expires'] = expires_in
@@ -160,7 +179,8 @@ class RequestSigner:
             except UnknownSignatureVersionError as e:
                 if signing_type != 'standard':
                     raise UnsupportedSignatureVersionError(
-                        signature_version=signature_version)
+                        signature_version=signature_version
+                    )
                 else:
                     raise e
 
@@ -178,33 +198,42 @@ class RequestSigner:
         """
         signing_type_suffix_map = {
             'presign-post': '-presign-post',
-            'presign-url': '-query'
+            'presign-url': '-query',
         }
         suffix = signing_type_suffix_map.get(signing_type, '')
 
         signature_version = self._signature_version
-        if signature_version is not botocore.UNSIGNED and not \
-                signature_version.endswith(suffix):
+        if (
+            signature_version is not botocore.UNSIGNED
+            and not signature_version.endswith(suffix)
+        ):
             signature_version += suffix
 
         handler, response = self._event_emitter.emit_until_response(
             'choose-signer.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name),
-            signing_name=self._signing_name, region_name=self._region_name,
-            signature_version=signature_version, context=context)
+                self._service_id.hyphenize(), operation_name
+            ),
+            signing_name=self._signing_name,
+            region_name=self._region_name,
+            signature_version=signature_version,
+            context=context,
+        )
 
         if response is not None:
             signature_version = response
             # The suffix needs to be checked again in case we get an improper
             # signature version from choose-signer.
-            if signature_version is not botocore.UNSIGNED and not \
-                    signature_version.endswith(suffix):
+            if (
+                signature_version is not botocore.UNSIGNED
+                and not signature_version.endswith(suffix)
+            ):
                 signature_version += suffix
 
         return signature_version
 
-    def get_auth_instance(self, signing_name, region_name,
-                          signature_version=None, **kwargs):
+    def get_auth_instance(
+        self, signing_name, region_name, signature_version=None, **kwargs
+    ):
         """
         Get an auth instance which can be used to sign a request
         using the given signature version.
@@ -229,7 +258,8 @@ class RequestSigner:
         cls = botocore.auth.AUTH_TYPE_MAPS.get(signature_version)
         if cls is None:
             raise UnknownSignatureVersionError(
-                signature_version=signature_version)
+                signature_version=signature_version
+            )
         # If there's no credentials provided (i.e credentials is None),
         # then we'll pass a value of "None" over to the auth classes,
         # which already handle the cases where no credentials have
@@ -249,9 +279,14 @@ class RequestSigner:
     # Alias get_auth for backwards compatibility.
     get_auth = get_auth_instance
 
-    def generate_presigned_url(self, request_dict, operation_name,
-                               expires_in=3600, region_name=None,
-                               signing_name=None):
+    def generate_presigned_url(
+        self,
+        request_dict,
+        operation_name,
+        expires_in=3600,
+        region_name=None,
+        signing_name=None,
+    ):
         """Generates a presigned url
 
         :type request_dict: dict
@@ -274,8 +309,14 @@ class RequestSigner:
         :returns: The presigned url
         """
         request = create_request_object(request_dict)
-        self.sign(operation_name, request, region_name,
-                  'presign-url', expires_in, signing_name)
+        self.sign(
+            operation_name,
+            request,
+            region_name,
+            'presign-url',
+            expires_in,
+            signing_name,
+        )
 
         request.prepare()
         return request.url
@@ -350,18 +391,21 @@ class CloudFrontSigner:
         else:
             params = ['Policy=%s' % self._url_b64encode(policy).decode('utf8')]
         signature = self.rsa_signer(policy)
-        params.extend([
-            'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
-            'Key-Pair-Id=%s' % self.key_id,
-        ])
+        params.extend(
+            [
+                'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
+                'Key-Pair-Id=%s' % self.key_id,
+            ]
+        )
         return self._build_url(url, params)
 
     def _build_url(self, base_url, extra_params):
         separator = '&' if '?' in base_url else '?'
         return base_url + separator + '&'.join(extra_params)
 
-    def build_policy(self, resource, date_less_than,
-                     date_greater_than=None, ip_address=None):
+    def build_policy(
+        self, resource, date_less_than, date_greater_than=None, ip_address=None
+    ):
         """A helper to build policy.
 
         :type resource: str
@@ -404,8 +448,12 @@ class CloudFrontSigner:
     def _url_b64encode(self, data):
         # Required by CloudFront. See also:
         # http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-linux-openssl.html
-        return base64.b64encode(
-            data).replace(b'+', b'-').replace(b'=', b'_').replace(b'/', b'~')
+        return (
+            base64.b64encode(data)
+            .replace(b'+', b'-')
+            .replace(b'=', b'_')
+            .replace(b'/', b'~')
+        )
 
 
 def add_generate_db_auth_token(class_attributes, **kwargs):
@@ -444,7 +492,7 @@ def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
         'query_string': '',
         'headers': {},
         'body': params,
-        'method': 'GET'
+        'method': 'GET',
     }
 
     # RDS requires that the scheme not be set when sent over. This can cause
@@ -457,19 +505,27 @@ def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
     endpoint_url = f'{scheme}{DBHostname}:{Port}'
     prepare_request_dict(request_dict, endpoint_url)
     presigned_url = self._request_signer.generate_presigned_url(
-        operation_name='connect', request_dict=request_dict,
-        region_name=region, expires_in=900, signing_name='rds-db'
+        operation_name='connect',
+        request_dict=request_dict,
+        region_name=region,
+        expires_in=900,
+        signing_name='rds-db',
     )
-    return presigned_url[len(scheme):]
+    return presigned_url[len(scheme) :]
 
 
 class S3PostPresigner:
     def __init__(self, request_signer):
         self._request_signer = request_signer
 
-    def generate_presigned_post(self, request_dict, fields=None,
-                                conditions=None, expires_in=3600,
-                                region_name=None):
+    def generate_presigned_post(
+        self,
+        request_dict,
+        fields=None,
+        conditions=None,
+        expires_in=3600,
+        region_name=None,
+    ):
         """Generates the url and the form fields used for a presigned s3 post
 
         :type request_dict: dict
@@ -534,7 +590,8 @@ class S3PostPresigner:
         request.context['s3-presign-post-policy'] = policy
 
         self._request_signer.sign(
-            'PutObject', request, region_name, 'presign-post')
+            'PutObject', request, region_name, 'presign-post'
+        )
         # Return the url and the fields for th form to post.
         return {'url': request.url, 'fields': fields}
 
@@ -543,8 +600,9 @@ def add_generate_presigned_url(class_attributes, **kwargs):
     class_attributes['generate_presigned_url'] = generate_presigned_url
 
 
-def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
-                           HttpMethod=None):
+def generate_presigned_url(
+    self, ClientMethod, Params=None, ExpiresIn=3600, HttpMethod=None
+):
     """Generate a presigned url given a client, its method, and arguments
 
     :type ClientMethod: string
@@ -583,14 +641,12 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     except KeyError:
         raise UnknownClientMethodError(method_name=client_method)
 
-    operation_model = self.meta.service_model.operation_model(
-        operation_name)
+    operation_model = self.meta.service_model.operation_model(operation_name)
 
     params = self._emit_api_params(params, operation_model, context)
 
     # Create a request dict based on the params to serialize.
-    request_dict = serializer.serialize_to_request(
-        params, operation_model)
+    request_dict = serializer.serialize_to_request(params, operation_model)
 
     # Switch out the http method if user specified it.
     if http_method is not None:
@@ -598,20 +654,24 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
 
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
-        request_dict, endpoint_url=self.meta.endpoint_url, context=context)
+        request_dict, endpoint_url=self.meta.endpoint_url, context=context
+    )
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(
-        request_dict=request_dict, expires_in=expires_in,
-        operation_name=operation_name)
+        request_dict=request_dict,
+        expires_in=expires_in,
+        operation_name=operation_name,
+    )
 
 
 def add_generate_presigned_post(class_attributes, **kwargs):
     class_attributes['generate_presigned_post'] = generate_presigned_post
 
 
-def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
-                            ExpiresIn=3600):
+def generate_presigned_post(
+    self, Bucket, Key, Fields=None, Conditions=None, ExpiresIn=3600
+):
     """Builds the url and the form fields used for a presigned s3 post
 
     :type Bucket: string
@@ -693,16 +753,17 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
 
     # We choose the CreateBucket operation model because its url gets
     # serialized to what a presign post requires.
-    operation_model = self.meta.service_model.operation_model(
-        'CreateBucket')
+    operation_model = self.meta.service_model.operation_model('CreateBucket')
 
     # Create a request dict based on the params to serialize.
     request_dict = serializer.serialize_to_request(
-        {'Bucket': bucket}, operation_model)
+        {'Bucket': bucket}, operation_model
+    )
 
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
-        request_dict, endpoint_url=self.meta.endpoint_url,
+        request_dict,
+        endpoint_url=self.meta.endpoint_url,
         context={
             'is_presign_request': True,
             'use_global_endpoint': _should_use_global_endpoint(self),
@@ -715,7 +776,7 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
     # If the key ends with filename, the only constraint that can be
     # imposed is if it starts with the specified prefix.
     if key.endswith('${filename}'):
-        conditions.append(["starts-with", '$key', key[:-len('${filename}')]])
+        conditions.append(["starts-with", '$key', key[: -len('${filename}')]])
     else:
         conditions.append({'key': key})
 
@@ -723,8 +784,11 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
     fields['key'] = key
 
     return post_presigner.generate_presigned_post(
-        request_dict=request_dict, fields=fields, conditions=conditions,
-        expires_in=expires_in)
+        request_dict=request_dict,
+        fields=fields,
+        conditions=conditions,
+        expires_in=expires_in,
+    )
 
 
 def _should_use_global_endpoint(client):
@@ -734,7 +798,9 @@ def _should_use_global_endpoint(client):
     if s3_config:
         if s3_config.get('use_dualstack_endpoint', False):
             return False
-        if s3_config.get('us_east_1_regional_endpoint') == 'regional' and \
-                client.meta.config.region_name == 'us-east-1':
+        if (
+            s3_config.get('us_east_1_regional_endpoint') == 'regional'
+            and client.meta.config.region_name == 'us-east-1'
+        ):
             return False
     return True

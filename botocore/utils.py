@@ -81,7 +81,9 @@ METADATA_ENDPOINT_MODES = ('ipv4', 'ipv6')
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
 RETRYABLE_HTTP_ERRORS = (
-    ReadTimeoutError, EndpointConnectionError, ConnectionClosedError,
+    ReadTimeoutError,
+    EndpointConnectionError,
+    ConnectionClosedError,
     ConnectTimeoutError,
 )
 S3_ACCELERATE_WHITELIST = ['dualstack']
@@ -161,7 +163,7 @@ EVENT_ALIASES = {
     "stepfunctions": "sfn",
     "storagegateway": "storage-gateway",
     "streams.dynamodb": "dynamodb-streams",
-    "tagging": "resource-groups-tagging-api"
+    "tagging": "resource-groups-tagging-api",
 }
 
 # Vendoring IPv6 validation regex patterns from urllib3
@@ -191,7 +193,9 @@ _variations = [
     "(?:(?:%(hex)s:){0,6}%(hex)s)?::",
 ]
 
-UNRESERVED_PAT = r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._!\-~"
+UNRESERVED_PAT = (
+    r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._!\-~"
+)
 IPV6_PAT = "(?:" + "|".join([x % _subs for x in _variations]) + ")"
 ZONE_ID_PAT = "(?:%25|%)(?:[" + UNRESERVED_PAT + "]|%[a-fA-F0-9]{2})+"
 IPV6_ADDRZ_PAT = r"\[" + IPV6_PAT + r"(?:" + ZONE_ID_PAT + r")?\]"
@@ -218,13 +222,14 @@ def resolve_imds_endpoint_mode(session):
     ec2_metadata_service_endpoint_mode takes precedence over imds_use_ipv6.
     """
     endpoint_mode = session.get_config_variable(
-        'ec2_metadata_service_endpoint_mode')
+        'ec2_metadata_service_endpoint_mode'
+    )
     if endpoint_mode is not None:
         lendpoint_mode = endpoint_mode.lower()
         if lendpoint_mode not in METADATA_ENDPOINT_MODES:
             error_msg_kwargs = {
                 'mode': endpoint_mode,
-                'valid_modes': METADATA_ENDPOINT_MODES
+                'valid_modes': METADATA_ENDPOINT_MODES,
             }
             raise InvalidIMDSEndpointModeError(**error_msg_kwargs)
         return lendpoint_mode
@@ -243,10 +248,10 @@ def is_json_value_header(shape):
     :rtype: Bool
     """
     return (
-        hasattr(shape, 'serialization') and
-        shape.serialization.get('jsonvalue', False) and
-        shape.serialization.get('location') == 'header' and
-        shape.type_name == 'string'
+        hasattr(shape, 'serialization')
+        and shape.serialization.get('jsonvalue', False)
+        and shape.serialization.get('location') == 'header'
+        and shape.type_name == 'string'
     )
 
 
@@ -258,7 +263,9 @@ def get_service_module_name(service_model):
     name = service_model.metadata.get(
         'serviceAbbreviation',
         service_model.metadata.get(
-            'serviceFullName', service_model.service_name))
+            'serviceFullName', service_model.service_name
+        ),
+    )
     name = name.replace('Amazon', '')
     name = name.replace('AWS', '')
     name = re.sub(r'\W+', '', name)
@@ -341,10 +348,7 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
             source[current_key] = {}
 
         return set_value_from_jmespath(
-            source[current_key],
-            remainder,
-            value,
-            is_first=False
+            source[current_key], remainder, value, is_first=False
         )
 
     # If we're down to a single key, set it.
@@ -360,6 +364,7 @@ def is_global_accesspoint(context):
 
 class _RetriesExceededError(Exception):
     """Internal exception used when the number of retries are exceeded."""
+
     pass
 
 
@@ -374,9 +379,15 @@ class IMDSFetcher:
     _TOKEN_PATH = 'latest/api/token'
     _TOKEN_TTL = '21600'
 
-    def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
-                 num_attempts=1, base_url=METADATA_BASE_URL,
-                 env=None, user_agent=None, config=None):
+    def __init__(
+        self,
+        timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
+        num_attempts=1,
+        base_url=METADATA_BASE_URL,
+        env=None,
+        user_agent=None,
+        config=None,
+    ):
         self._timeout = timeout
         self._num_attempts = num_attempts
         self._base_url = self._select_base_url(base_url, config)
@@ -398,8 +409,9 @@ class IMDSFetcher:
         if config is None:
             config = {}
 
-        requires_ipv6 = config.get(
-            'ec2_metadata_service_endpoint_mode') == 'ipv6'
+        requires_ipv6 = (
+            config.get('ec2_metadata_service_endpoint_mode') == 'ipv6'
+        )
         custom_metadata_endpoint = config.get('ec2_metadata_service_endpoint')
 
         if requires_ipv6 and custom_metadata_endpoint:
@@ -432,7 +444,8 @@ class IMDSFetcher:
         }
         self._add_user_agent(headers)
         request = botocore.awsrequest.AWSRequest(
-            method='PUT', url=url, headers=headers)
+            method='PUT', url=url, headers=headers
+        )
         for i in range(self._num_attempts):
             try:
                 response = self._session.send(request.prepare())
@@ -447,7 +460,11 @@ class IMDSFetcher:
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
-                    "service request to %s: %s", url, e, exc_info=True)
+                    "service request to %s: %s",
+                    url,
+                    e,
+                    exc_info=True,
+                )
             except HTTPClientError as e:
                 if isinstance(e.kwargs.get('error'), LocationParseError):
                     raise InvalidIMDSEndpointError(endpoint=url, error=e)
@@ -482,14 +499,19 @@ class IMDSFetcher:
         for i in range(self._num_attempts):
             try:
                 request = botocore.awsrequest.AWSRequest(
-                    method='GET', url=url, headers=headers)
+                    method='GET', url=url, headers=headers
+                )
                 response = self._session.send(request.prepare())
                 if not retry_func(response):
                     return response
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
-                    "service request to %s: %s", url, e, exc_info=True)
+                    "service request to %s: %s",
+                    url,
+                    e,
+                    exc_info=True,
+                )
         raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _add_user_agent(self, headers):
@@ -502,10 +524,7 @@ class IMDSFetcher:
             raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _default_retry(self, response):
-        return (
-            self._is_non_ok_response(response) or
-            self._is_empty(response)
-        )
+        return self._is_non_ok_response(response) or self._is_empty(response)
 
     def _is_non_ok_response(self, response):
         if response.status_code != 200:
@@ -524,9 +543,7 @@ class IMDSFetcher:
             "Metadata service returned %s response "
             "with status code of %s for url: %s"
         )
-        logger_args = [
-            reason_to_log, response.status_code, response.url
-        ]
+        logger_args = [reason_to_log, response.status_code, response.url]
         if log_body:
             statement += ", content body: %s"
             logger_args.append(response.content)
@@ -536,7 +553,10 @@ class IMDSFetcher:
 class InstanceMetadataFetcher(IMDSFetcher):
     _URL_PATH = 'latest/meta-data/iam/security-credentials/'
     _REQUIRED_CREDENTIAL_FIELDS = [
-        'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
+        'AccessKeyId',
+        'SecretAccessKey',
+        'Token',
+        'Expiration',
     ]
 
     def retrieve_iam_role_credentials(self):
@@ -562,13 +582,18 @@ class InstanceMetadataFetcher(IMDSFetcher):
                 # retrieve credentials. These error will contain both a
                 # Code and Message key.
                 if 'Code' in credentials and 'Message' in credentials:
-                    logger.debug('Error response received when retrieving'
-                                 'credentials: %s.', credentials)
+                    logger.debug(
+                        'Error response received when retrieving'
+                        'credentials: %s.',
+                        credentials,
+                    )
                 return {}
         except self._RETRIES_EXCEEDED_ERROR_CLS:
-            logger.debug("Max number of attempts exceeded (%s) when "
-                         "attempting to retrieve data from metadata service.",
-                         self._num_attempts)
+            logger.debug(
+                "Max number of attempts exceeded (%s) when "
+                "attempting to retrieve data from metadata service.",
+                self._num_attempts,
+            )
         except BadIMDSRequestError as e:
             logger.debug("Bad IMDS request: %s", e.request)
         return {}
@@ -597,16 +622,13 @@ class InstanceMetadataFetcher(IMDSFetcher):
             return True
 
     def _needs_retry_for_role_name(self, response):
-        return (
-            self._is_non_ok_response(response) or
-            self._is_empty(response)
-        )
+        return self._is_non_ok_response(response) or self._is_empty(response)
 
     def _needs_retry_for_credentials(self, response):
         return (
-            self._is_non_ok_response(response) or
-            self._is_empty(response) or
-            self._is_invalid_json(response)
+            self._is_non_ok_response(response)
+            or self._is_empty(response)
+            or self._is_invalid_json(response)
         )
 
     def _contains_all_credential_fields(self, credentials):
@@ -614,7 +636,8 @@ class InstanceMetadataFetcher(IMDSFetcher):
             if field not in credentials:
                 logger.debug(
                     'Retrieved credentials is missing required field: %s',
-                    field)
+                    field,
+                )
                 return False
         return True
 
@@ -649,7 +672,7 @@ def merge_dicts(dict1, dict2, append_lists=False):
 
 
 def lowercase_dict(original):
-    """Copies the given dictionary ensuring all keys are lowercase strings. """
+    """Copies the given dictionary ensuring all keys are lowercase strings."""
     copy = {}
     for key in original:
         copy[key.lower()] = original[key]
@@ -775,10 +798,14 @@ def parse_timestamp(value):
         try:
             return _parse_timestamp_with_tzinfo(value, tzinfo)
         except OSError as e:
-            logger.debug('Unable to parse timestamp with "%s" timezone info.',
-                         tzinfo.__name__, exc_info=e)
-    raise RuntimeError('Unable to calculate correct timezone offset for '
-                       '"%s"' % value)
+            logger.debug(
+                'Unable to parse timestamp with "%s" timezone info.',
+                tzinfo.__name__,
+                exc_info=e,
+            )
+    raise RuntimeError(
+        'Unable to calculate correct timezone offset for ' '"%s"' % value
+    )
 
 
 def parse_to_aware_datetime(value):
@@ -844,7 +871,9 @@ def datetime2timestamp(dt, default_timezone=None):
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     if hasattr(d, "total_seconds"):
         return d.total_seconds()  # Works in Python 3.6+
-    return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
+    return (
+        d.microseconds + (d.seconds + d.days * 24 * 3600) * 10 ** 6
+    ) / 10 ** 6
 
 
 def calculate_sha256(body, as_hex=False):
@@ -970,6 +999,7 @@ class ArgumentGenerator:
         print("Sample input for dynamodb.CreateTable: %s" % sample_input)
 
     """
+
     def __init__(self, use_member_names=False):
         self._use_member_names = use_member_names
 
@@ -1018,7 +1048,8 @@ class ArgumentGenerator:
         skeleton = OrderedDict()
         for member_name, member_shape in shape.members.items():
             skeleton[member_name] = self._generate_skeleton(
-                member_shape, stack, name=member_name)
+                member_shape, stack, name=member_name
+            )
         return skeleton
 
     def _generate_type_list(self, shape, stack):
@@ -1035,9 +1066,11 @@ class ArgumentGenerator:
         key_shape = shape.key
         value_shape = shape.value
         assert key_shape.type_name == 'string'
-        return OrderedDict([
-            ('KeyName', self._generate_skeleton(value_shape, stack)),
-        ])
+        return OrderedDict(
+            [
+                ('KeyName', self._generate_skeleton(value_shape, stack)),
+            ]
+        )
 
 
 def is_valid_ipv6_endpoint_url(endpoint_url):
@@ -1071,12 +1104,15 @@ def is_valid_endpoint_url(endpoint_url):
         hostname = hostname[:-1]
     allowed = re.compile(
         r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
-        re.IGNORECASE)
+        re.IGNORECASE,
+    )
     return allowed.match(hostname)
 
 
 def is_valid_uri(endpoint_url):
-    return is_valid_endpoint_url(endpoint_url) or is_valid_ipv6_endpoint_url(endpoint_url)
+    return is_valid_endpoint_url(endpoint_url) or is_valid_ipv6_endpoint_url(
+        endpoint_url
+    )
 
 
 def validate_region_name(region_name):
@@ -1112,8 +1148,13 @@ def check_dns_name(bucket_name):
     return True
 
 
-def fix_s3_host(request, signature_version, region_name,
-                default_endpoint_url=None, **kwargs):
+def fix_s3_host(
+    request,
+    signature_version,
+    region_name,
+    default_endpoint_url=None,
+    **kwargs,
+):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
@@ -1127,15 +1168,18 @@ def fix_s3_host(request, signature_version, region_name,
         default_endpoint_url = 's3.amazonaws.com'
     try:
         switch_to_virtual_host_style(
-            request, signature_version, default_endpoint_url)
+            request, signature_version, default_endpoint_url
+        )
     except InvalidDNSNameError as e:
         bucket_name = e.kwargs['bucket_name']
-        logger.debug('Not changing URI, bucket is not DNS compatible: %s',
-                     bucket_name)
+        logger.debug(
+            'Not changing URI, bucket is not DNS compatible: %s', bucket_name
+        )
 
 
-def switch_to_virtual_host_style(request, signature_version,
-                                 default_endpoint_url=None, **kwargs):
+def switch_to_virtual_host_style(
+    request, signature_version, default_endpoint_url=None, **kwargs
+):
     """
     This is a handler to force virtual host style s3 addressing no matter
     the signature version (which is taken in consideration for the default
@@ -1156,8 +1200,10 @@ def switch_to_virtual_host_style(request, signature_version,
         # For the GetBucketLocation response, we should not be using
         # the virtual host style addressing so we can avoid any sigv4
         # issues.
-        logger.debug("Request is GetBucketLocation operation, not checking "
-                     "for DNS compatibility.")
+        logger.debug(
+            "Request is GetBucketLocation operation, not checking "
+            "for DNS compatibility."
+        )
         return
     parts = urlsplit(request.url)
     request.auth_path = parts.path
@@ -1173,8 +1219,7 @@ def switch_to_virtual_host_style(request, signature_version,
             # If the bucket name is empty we should not be checking for
             # dns compatibility.
             return
-        logger.debug('Checking for DNS compatible bucket for: %s',
-                     request.url)
+        logger.debug('Checking for DNS compatible bucket for: %s', request.url)
         if check_dns_name(bucket_name):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
@@ -1188,8 +1233,7 @@ def switch_to_virtual_host_style(request, signature_version,
             path = '/'.join(path_parts) or '/'
             global_endpoint = default_endpoint_url
             host = bucket_name + '.' + global_endpoint
-            new_tuple = (parts.scheme, host, path,
-                         parts.query, '')
+            new_tuple = (parts.scheme, host, path, parts.query, '')
             new_uri = urlunsplit(new_tuple)
             request.url = new_uri
             logger.debug('URI updated to: %s', new_uri)
@@ -1230,6 +1274,7 @@ def instance_cache(func):
         result = func(self, *args, **kwargs)
         self._instance_cache[cache_key] = result
         return result
+
     return _cache_guard
 
 
@@ -1262,7 +1307,8 @@ def switch_host_with_param(request, param_name):
 
 def _switch_hosts(request, new_endpoint, use_new_scheme=True):
     final_endpoint = _get_new_endpoint(
-        request.url, new_endpoint, use_new_scheme)
+        request.url, new_endpoint, use_new_scheme
+    )
     request.url = final_endpoint
 
 
@@ -1277,11 +1323,10 @@ def _get_new_endpoint(original_endpoint, new_endpoint, use_new_scheme=True):
         new_endpoint_components.netloc,
         original_endpoint_components.path,
         original_endpoint_components.query,
-        ''
+        '',
     )
     final_endpoint = urlunsplit(final_endpoint_components)
-    logger.debug('Updating URI from {} to {}'.format(
-        original_endpoint, final_endpoint))
+    logger.debug(f'Updating URI from {original_endpoint} to {final_endpoint}')
     return final_endpoint
 
 
@@ -1294,8 +1339,11 @@ def deep_merge(base, extra):
     """
     for key in extra:
         # If the key represents a dict on both given dicts, merge the sub-dicts
-        if key in base and isinstance(base[key], dict)\
-                and isinstance(extra[key], dict):
+        if (
+            key in base
+            and isinstance(base[key], dict)
+            and isinstance(extra[key], dict)
+        ):
             deep_merge(base[key], extra[key])
             continue
 
@@ -1326,8 +1374,7 @@ class S3RegionRedirector:
         emitter = event_emitter or self._client.meta.events
         emitter.register('needs-retry.s3', self.redirect_from_error)
         emitter.register('before-call.s3', self.set_request_url)
-        emitter.register('before-parameter-build.s3',
-                         self.redirect_from_cache)
+        emitter.register('before-parameter-build.s3', self.redirect_from_cache)
 
     def redirect_from_error(self, request_dict, response, operation, **kwargs):
         """
@@ -1349,7 +1396,8 @@ class S3RegionRedirector:
 
         if request_dict.get('context', {}).get('s3_redirected'):
             logger.debug(
-                'S3 request was previously redirected, not redirecting.')
+                'S3 request was previously redirected, not redirecting.'
+            )
             return
 
         error = response[1].get('Error', {})
@@ -1361,24 +1409,30 @@ class S3RegionRedirector:
         # we'll get a 400 Bad Request but we won't get a
         # body saying it's an "AuthorizationHeaderMalformed".
         is_special_head_object = (
-            error_code in ['301', '400'] and
-            operation.name == 'HeadObject'
+            error_code in ['301', '400'] and operation.name == 'HeadObject'
         )
         is_special_head_bucket = (
-            error_code in ['301', '400'] and
-            operation.name == 'HeadBucket' and
-            'x-amz-bucket-region' in response_metadata.get('HTTPHeaders', {})
+            error_code in ['301', '400']
+            and operation.name == 'HeadBucket'
+            and 'x-amz-bucket-region'
+            in response_metadata.get('HTTPHeaders', {})
         )
         is_wrong_signing_region = (
-            error_code == 'AuthorizationHeaderMalformed' and
-            'Region' in error
+            error_code == 'AuthorizationHeaderMalformed' and 'Region' in error
         )
-        is_redirect_status = response[0] is not None and \
-            response[0].status_code in [301, 302, 307]
+        is_redirect_status = response[0] is not None and response[
+            0
+        ].status_code in [301, 302, 307]
         is_permanent_redirect = error_code == 'PermanentRedirect'
-        if not any([is_special_head_object, is_wrong_signing_region,
-                    is_permanent_redirect, is_special_head_bucket,
-                    is_redirect_status]):
+        if not any(
+            [
+                is_special_head_object,
+                is_wrong_signing_region,
+                is_permanent_redirect,
+                is_special_head_bucket,
+                is_redirect_status,
+            ]
+        ):
             return
 
         bucket = request_dict['context']['signing']['bucket']
@@ -1389,21 +1443,23 @@ class S3RegionRedirector:
             logger.debug(
                 "S3 client configured for region %s but the bucket %s is not "
                 "in that region and the proper region could not be "
-                "automatically determined." % (client_region, bucket))
+                "automatically determined." % (client_region, bucket)
+            )
             return
 
         logger.debug(
             "S3 client configured for region %s but the bucket %s is in region"
             " %s; Please configure the proper region to avoid multiple "
-            "unnecessary redirects and signing attempts." % (
-                client_region, bucket, new_region))
+            "unnecessary redirects and signing attempts."
+            % (client_region, bucket, new_region)
+        )
         endpoint = self._endpoint_resolver.resolve('s3', new_region)
         endpoint = endpoint['endpoint_url']
 
         signing_context = {
             'region': new_region,
             'bucket': bucket,
-            'endpoint': endpoint
+            'endpoint': endpoint,
         }
         request_dict['context']['signing'] = signing_context
 
@@ -1500,9 +1556,7 @@ class S3ArnParamHandler:
         r'^(?P<outpost_name>[a-zA-Z0-9\-]{1,63})[/:]accesspoint[/:]'
         r'(?P<accesspoint_name>[a-zA-Z0-9\-]{1,63}$)'
     )
-    _BLACKLISTED_OPERATIONS = [
-        'CreateBucket'
-    ]
+    _BLACKLISTED_OPERATIONS = ['CreateBucket']
 
     def __init__(self, arn_parser=None):
         self._arn_parser = arn_parser
@@ -1583,8 +1637,14 @@ class S3EndpointSetter:
     _DEFAULT_PARTITION = 'aws'
     _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
 
-    def __init__(self, endpoint_resolver, region=None,
-                 s3_config=None, endpoint_url=None, partition=None):
+    def __init__(
+        self,
+        endpoint_resolver,
+        region=None,
+        s3_config=None,
+        endpoint_url=None,
+        partition=None,
+    ):
         self._endpoint_resolver = endpoint_resolver
         self._region = region
         self._s3_config = s3_config
@@ -1600,7 +1660,7 @@ class S3EndpointSetter:
         event_emitter.register('choose-signer.s3', self.set_signer)
         event_emitter.register(
             'before-call.s3.WriteGetObjectResponse',
-            self.update_endpoint_to_s3_object_lambda
+            self.update_endpoint_to_s3_object_lambda,
         )
 
     def update_endpoint_to_s3_object_lambda(self, params, context, **kwargs):
@@ -1615,7 +1675,9 @@ class S3EndpointSetter:
             return
 
         resolver = self._endpoint_resolver
-        resolved = resolver.construct_endpoint('s3-object-lambda', self._region)
+        resolved = resolver.construct_endpoint(
+            's3-object-lambda', self._region
+        )
 
         # Ideally we would be able to replace the endpoint before
         # serialization but there's no event to do that currently
@@ -1632,9 +1694,9 @@ class S3EndpointSetter:
             self._validate_fips_supported(request)
             self._validate_global_regions(request)
             region_name = self._resolve_region_for_accesspoint_endpoint(
-                request)
-            self._resolve_signing_name_for_accesspoint_endpoint(
-                request)
+                request
+            )
+            self._resolve_signing_name_for_accesspoint_endpoint(request)
             self._switch_to_accesspoint_endpoint(request, region_name)
             return
         if self._use_accelerate_endpoint:
@@ -1652,8 +1714,8 @@ class S3EndpointSetter:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client is configured to use the FIPS psuedo-region "%s", '
-                    'but outpost ARNs do not support FIPS endpoints.' % (
-                        self._region)
+                    'but outpost ARNs do not support FIPS endpoints.'
+                    % (self._region)
                 )
             )
         client_region = self._region.replace('fips-', '').replace('-fips', '')
@@ -1666,8 +1728,8 @@ class S3EndpointSetter:
                         '"%s", but the access-point ARN provided is for the '
                         '"%s" region. The use_arn_region configuration does '
                         'not allow for cross-region calls when a FIPS '
-                        'pseudo-region is configured.' % (
-                            self._region, accesspoint_region)
+                        'pseudo-region is configured.'
+                        % (self._region, accesspoint_region)
                     )
                 )
             else:
@@ -1707,12 +1769,14 @@ class S3EndpointSetter:
                 msg=(
                     'Client is configured for "%s" partition, but access-point'
                     ' ARN provided is for "%s" partition. The client and '
-                    ' access-point partition must be the same.' % (
-                        self._partition, request_partition)
+                    ' access-point partition must be the same.'
+                    % (self._partition, request_partition)
                 )
             )
         s3_service = request.context['s3_accesspoint'].get('service')
-        if s3_service == 's3-object-lambda' and self._s3_config.get('use_dualstack_endpoint'):
+        if s3_service == 's3-object-lambda' and self._s3_config.get(
+            'use_dualstack_endpoint'
+        ):
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client does not support s3 dualstack configuration '
@@ -1777,16 +1841,20 @@ class S3EndpointSetter:
 
     def _switch_to_accesspoint_endpoint(self, request, region_name):
         original_components = urlsplit(request.url)
-        accesspoint_endpoint = urlunsplit((
-            original_components.scheme,
-            self._get_netloc(request.context, region_name),
-            self._get_accesspoint_path(
-                original_components.path, request.context),
-            original_components.query,
-            ''
-        ))
+        accesspoint_endpoint = urlunsplit(
+            (
+                original_components.scheme,
+                self._get_netloc(request.context, region_name),
+                self._get_accesspoint_path(
+                    original_components.path, request.context
+                ),
+                original_components.query,
+                '',
+            )
+        )
         logger.debug(
-            f'Updating URI from {request.url} to {accesspoint_endpoint}')
+            f'Updating URI from {request.url} to {accesspoint_endpoint}'
+        )
         request.url = accesspoint_endpoint
 
     def _get_netloc(self, request_context, region_name):
@@ -1798,9 +1866,7 @@ class S3EndpointSetter:
     def _get_mrap_netloc(self, request_context):
         s3_accesspoint = request_context['s3_accesspoint']
         region_name = 's3-global'
-        mrap_netloc_components = [
-            s3_accesspoint['name']
-        ]
+        mrap_netloc_components = [s3_accesspoint['name']]
         if self._endpoint_url:
             endpoint_url_netloc = urlsplit(self._endpoint_url).netloc
             mrap_netloc_components.append(endpoint_url_netloc)
@@ -1810,7 +1876,7 @@ class S3EndpointSetter:
                 [
                     'accesspoint',
                     region_name,
-                    self._get_partition_dns_suffix(partition)
+                    self._get_partition_dns_suffix(partition),
                 ]
             )
         return '.'.join(mrap_netloc_components)
@@ -1832,19 +1898,18 @@ class S3EndpointSetter:
                 accesspoint_netloc_components.extend(outpost_host)
             elif s3_accesspoint['service'] == 's3-object-lambda':
                 component = self._inject_fips_if_needed(
-                    's3-object-lambda', request_context)
+                    's3-object-lambda', request_context
+                )
                 accesspoint_netloc_components.append(component)
             else:
                 component = self._inject_fips_if_needed(
-                    's3-accesspoint', request_context)
+                    's3-accesspoint', request_context
+                )
                 accesspoint_netloc_components.append(component)
             if self._s3_config.get('use_dualstack_endpoint'):
                 accesspoint_netloc_components.append('dualstack')
             accesspoint_netloc_components.extend(
-                [
-                    region_name,
-                    self._get_dns_suffix(region_name)
-                ]
+                [region_name, self._get_dns_suffix(region_name)]
             )
         return '.'.join(accesspoint_netloc_components)
 
@@ -1872,7 +1937,8 @@ class S3EndpointSetter:
 
     def _get_dns_suffix(self, region_name):
         resolved = self._endpoint_resolver.construct_endpoint(
-            's3', region_name)
+            's3', region_name
+        )
         dns_suffix = self._DEFAULT_DNS_SUFFIX
         if resolved and 'dnsSuffix' in resolved:
             dns_suffix = resolved['dnsSuffix']
@@ -1959,8 +2025,10 @@ class S3EndpointSetter:
             logger.debug("Using S3 path style addressing.")
             return None
 
-        logger.debug("Defaulting to S3 virtual host style addressing with "
-                     "path style addressing fallback.")
+        logger.debug(
+            "Defaulting to S3 virtual host style addressing with "
+            "path style addressing fallback."
+        )
 
         # By default, try to use virtual style with path fallback.
         return fix_s3_host
@@ -1971,8 +2039,14 @@ class S3ControlEndpointSetter:
     _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
     _HOST_LABEL_REGEX = re.compile(r'^[a-zA-Z0-9\-]{1,63}$')
 
-    def __init__(self, endpoint_resolver, region=None,
-                 s3_config=None, endpoint_url=None, partition=None):
+    def __init__(
+        self,
+        endpoint_resolver,
+        region=None,
+        s3_config=None,
+        endpoint_url=None,
+        partition=None,
+    ):
         self._endpoint_resolver = endpoint_resolver
         self._region = region
         self._s3_config = s3_config
@@ -2021,8 +2095,8 @@ class S3ControlEndpointSetter:
                 msg=(
                     'Client is configured for "%s" partition, but arn '
                     'provided is for "%s" partition. The client and '
-                    'arn partition must be the same.' % (
-                        self._partition, request_partion)
+                    'arn partition must be the same.'
+                    % (self._partition, request_partion)
                 )
             )
         if self._s3_config.get('use_accelerate_endpoint'):
@@ -2056,18 +2130,22 @@ class S3ControlEndpointSetter:
         return arn_service
 
     def _resolve_endpoint_from_arn_details(self, request, region_name):
-        new_netloc = self._resolve_netloc_from_arn_details(request, region_name)
+        new_netloc = self._resolve_netloc_from_arn_details(
+            request, region_name
+        )
         self._update_request_netloc(request, new_netloc)
 
     def _update_request_netloc(self, request, new_netloc):
         original_components = urlsplit(request.url)
-        arn_details_endpoint = urlunsplit((
-            original_components.scheme,
-            new_netloc,
-            original_components.path,
-            original_components.query,
-            ''
-        ))
+        arn_details_endpoint = urlunsplit(
+            (
+                original_components.scheme,
+                new_netloc,
+                original_components.path,
+                original_components.query,
+                '',
+            )
+        )
         logger.debug(
             f'Updating URI from {request.url} to {arn_details_endpoint}'
         )
@@ -2124,7 +2202,8 @@ class S3ControlEndpointSetter:
 
     def _get_dns_suffix(self, region_name):
         resolved = self._endpoint_resolver.construct_endpoint(
-            's3', region_name)
+            's3', region_name
+        )
         dns_suffix = self._DEFAULT_DNS_SUFFIX
         if resolved and 'dnsSuffix' in resolved:
             dns_suffix = resolved['dnsSuffix']
@@ -2311,13 +2390,13 @@ class ContainerMetadataFetcher:
 
     def _validate_allowed_url(self, full_url):
         parsed = botocore.compat.urlparse(full_url)
-        is_whitelisted_host = self._check_if_whitelisted_host(
-            parsed.hostname)
+        is_whitelisted_host = self._check_if_whitelisted_host(parsed.hostname)
         if not is_whitelisted_host:
             raise ValueError(
                 "Unsupported host '%s'.  Can only "
-                "retrieve metadata from these hosts: %s" %
-                (parsed.hostname, ', '.join(self._ALLOWED_HOSTS)))
+                "retrieve metadata from these hosts: %s"
+                % (parsed.hostname, ', '.join(self._ALLOWED_HOSTS))
+            )
 
     def _check_if_whitelisted_host(self, host):
         if host in self._ALLOWED_HOSTS:
@@ -2344,10 +2423,15 @@ class ContainerMetadataFetcher:
         while True:
             try:
                 return self._get_response(
-                    full_url, headers, self.TIMEOUT_SECONDS)
+                    full_url, headers, self.TIMEOUT_SECONDS
+                )
             except MetadataRetrievalError as e:
-                logger.debug("Received error when attempting to retrieve "
-                             "container metadata: %s", e, exc_info=True)
+                logger.debug(
+                    "Received error when attempting to retrieve "
+                    "container metadata: %s",
+                    e,
+                    exc_info=True,
+                )
                 self._sleep(self.SLEEP_TIME)
                 attempts += 1
                 if attempts >= self.RETRY_ATTEMPTS:
@@ -2363,7 +2447,9 @@ class ContainerMetadataFetcher:
                 raise MetadataRetrievalError(
                     error_msg=(
                         "Received non 200 response (%s) from ECS metadata: %s"
-                    ) % (response.status_code, response_text))
+                    )
+                    % (response.status_code, response_text)
+                )
             try:
                 return json.loads(response_text)
             except ValueError:
@@ -2373,8 +2459,10 @@ class ContainerMetadataFetcher:
                 logger.debug('%s:%s', error_msg, response_text)
                 raise MetadataRetrievalError(error_msg=error_msg)
         except RETRYABLE_HTTP_ERRORS as e:
-            error_msg = ("Received error when attempting to retrieve "
-                         "ECS metadata: %s" % e)
+            error_msg = (
+                "Received error when attempting to retrieve "
+                "ECS metadata: %s" % e
+            )
             raise MetadataRetrievalError(error_msg=error_msg)
 
     def full_url(self, relative_uri):

@@ -62,6 +62,7 @@ class AWSConnection:
     this against AWS services.
 
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_response_cls = self.response_class
@@ -91,7 +92,8 @@ class AWSConnection:
             self._expect_header_set = False
             self.response_class = self._original_response_cls
         rval = super()._send_request(
-            method, url, body, headers, *args, **kwargs)
+            method, url, body, headers, *args, **kwargs
+        )
         self._expect_header_set = False
         return rval
 
@@ -137,8 +139,10 @@ class AWSConnection:
                 # server (possibly via a proxy) from which it has never seen a
                 # 100 (Continue) status, the client SHOULD NOT wait for an
                 # indefinite period before sending the request body.
-                logger.debug("No response seen from server, continuing to "
-                             "send the response body.")
+                logger.debug(
+                    "No response seen from server, continuing to "
+                    "send the response body."
+                )
         if message_body is not None:
             # message_body was not a string (i.e. it is a file), and
             # we must run the risk of Nagle.
@@ -166,8 +170,9 @@ class AWSConnection:
             parts = maybe_status_line.split(None, 2)
             if self._is_100_continue_status(maybe_status_line):
                 self._consume_headers(fp)
-                logger.debug("100 Continue response seen, "
-                             "now sending request body.")
+                logger.debug(
+                    "100 Continue response seen, " "now sending request body."
+                )
                 self._send_message_body(message_body)
             elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
                 # From the RFC:
@@ -182,12 +187,18 @@ class AWSConnection:
                 # So if we don't get a 100 Continue response, then
                 # whatever the server has sent back is the final response
                 # and don't send the message_body.
-                logger.debug("Received a non 100 Continue response "
-                             "from the server, NOT sending request body.")
-                status_tuple = (parts[0].decode('ascii'),
-                                int(parts[1]), parts[2].decode('ascii'))
+                logger.debug(
+                    "Received a non 100 Continue response "
+                    "from the server, NOT sending request body."
+                )
+                status_tuple = (
+                    parts[0].decode('ascii'),
+                    int(parts[1]),
+                    parts[2].decode('ascii'),
+                )
                 response_class = functools.partial(
-                    AWSHTTPResponse, status_tuple=status_tuple)
+                    AWSHTTPResponse, status_tuple=status_tuple
+                )
                 self.response_class = response_class
                 self._response_received = True
         finally:
@@ -199,8 +210,10 @@ class AWSConnection:
 
     def send(self, str):
         if self._response_received:
-            logger.debug("send() called, but reseponse already received. "
-                         "Not sending data.")
+            logger.debug(
+                "send() called, but reseponse already received. "
+                "Not sending data."
+            )
             return
         return super().send(str)
 
@@ -215,11 +228,11 @@ class AWSConnection:
 
 
 class AWSHTTPConnection(AWSConnection, HTTPConnection):
-    """ An HTTPConnection that supports 100 Continue behavior. """
+    """An HTTPConnection that supports 100 Continue behavior."""
 
 
 class AWSHTTPSConnection(AWSConnection, VerifiedHTTPSConnection):
-    """ An HTTPSConnection that supports 100 Continue behavior. """
+    """An HTTPSConnection that supports 100 Continue behavior."""
 
 
 class AWSHTTPConnectionPool(HTTPConnectionPool):
@@ -230,8 +243,9 @@ class AWSHTTPSConnectionPool(HTTPSConnectionPool):
     ConnectionCls = AWSHTTPSConnection
 
 
-def prepare_request_dict(request_dict, endpoint_url, context=None,
-                         user_agent=None):
+def prepare_request_dict(
+    request_dict, endpoint_url, context=None, user_agent=None
+):
     """
     This method prepares a request dict to be created into an
     AWSRequestObject. This prepares the request dict by adding the
@@ -285,7 +299,8 @@ def create_request_object(request_dict):
     """
     r = request_dict
     request_object = AWSRequest(
-        method=r['method'], url=r['url'], data=r['body'], headers=r['headers'])
+        method=r['method'], url=r['url'], data=r['body'], headers=r['headers']
+    )
     request_object.context = r['context']
     return request_object
 
@@ -338,6 +353,7 @@ class AWSRequestPreparer:
 
         This class does not prepare the method, auth or cookies.
     """
+
     def prepare(self, original):
         method = original.method
         url = self._prepare_url(original)
@@ -436,14 +452,16 @@ class AWSRequest:
 
     _REQUEST_PREPARER_CLS = AWSRequestPreparer
 
-    def __init__(self,
-                 method=None,
-                 url=None,
-                 headers=None,
-                 data=None,
-                 params=None,
-                 auth_path=None,
-                 stream_output=False):
+    def __init__(
+        self,
+        method=None,
+        url=None,
+        headers=None,
+        data=None,
+        params=None,
+        auth_path=None,
+        stream_output=False,
+    ):
 
         self._request_preparer = self._REQUEST_PREPARER_CLS()
 
@@ -495,6 +513,7 @@ class AWSPreparedRequest:
     :ivar body: The HTTP body.
     :ivar stream_output: If the response for this request should be streamed.
     """
+
     def __init__(self, method, url, headers, body, stream_output):
         self.method = method
         self.url = url
@@ -601,7 +620,8 @@ class _HeaderKey:
 
 
 class HeadersDict(MutableMapping):
-    """A case-insenseitive dictionary to represent HTTP headers. """
+    """A case-insenseitive dictionary to represent HTTP headers."""
+
     def __init__(self, *args, **kwargs):
         self._dict = {}
         self.update(*args, **kwargs)

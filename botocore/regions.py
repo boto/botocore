@@ -28,6 +28,7 @@ DEFAULT_SERVICE_DATA = {'endpoints': {}}
 
 class BaseEndpointResolver:
     """Resolves regions and endpoints. Must be subclassed."""
+
     def construct_endpoint(self, service_name, region_name=None):
         """Resolves an endpoint for a service and region combination.
 
@@ -64,8 +65,9 @@ class BaseEndpointResolver:
         """
         raise NotImplementedError
 
-    def get_available_endpoints(self, service_name, partition_name='aws',
-                                allow_non_regional=False):
+    def get_available_endpoints(
+        self, service_name, partition_name='aws', allow_non_regional=False
+    ):
         """Lists the endpoint names of a particular partition.
 
         :type service_name: string
@@ -87,6 +89,7 @@ class BaseEndpointResolver:
 
 class EndpointResolver(BaseEndpointResolver):
     """Resolves endpoints based on partition endpoint metadata"""
+
     def __init__(self, endpoint_data):
         """
         :param endpoint_data: A dict of partition data.
@@ -101,8 +104,9 @@ class EndpointResolver(BaseEndpointResolver):
             result.append(partition['partition'])
         return result
 
-    def get_available_endpoints(self, service_name, partition_name='aws',
-                                allow_non_regional=False):
+    def get_available_endpoints(
+        self, service_name, partition_name='aws', allow_non_regional=False
+    ):
         result = []
         for partition in self._endpoint_data['partitions']:
             if partition['partition'] != partition_name:
@@ -121,7 +125,9 @@ class EndpointResolver(BaseEndpointResolver):
                 return partition['dnsSuffix']
         return None
 
-    def construct_endpoint(self, service_name, region_name=None, partition_name=None):
+    def construct_endpoint(
+        self, service_name, region_name=None, partition_name=None
+    ):
         if partition_name is not None:
             valid_partition = None
             for partition in self._endpoint_data['partitions']:
@@ -138,7 +144,8 @@ class EndpointResolver(BaseEndpointResolver):
         # Iterate over each partition until a match is found.
         for partition in self._endpoint_data['partitions']:
             result = self._endpoint_for_partition(
-                partition, service_name, region_name)
+                partition, service_name, region_name
+            )
             if result:
                 return result
 
@@ -147,7 +154,8 @@ class EndpointResolver(BaseEndpointResolver):
     ):
         # Get the service from the partition, or an empty template.
         service_data = partition['services'].get(
-            service_name, DEFAULT_SERVICE_DATA)
+            service_name, DEFAULT_SERVICE_DATA
+        )
         # Use the partition endpoint if no region is supplied.
         if region_name is None:
             if 'partitionEndpoint' in service_data:
@@ -157,21 +165,31 @@ class EndpointResolver(BaseEndpointResolver):
         # Attempt to resolve the exact region for this partition.
         if region_name in service_data['endpoints']:
             return self._resolve(
-                partition, service_name, service_data, region_name)
+                partition, service_name, service_data, region_name
+            )
         # Check to see if the endpoint provided is valid for the partition.
         if self._region_match(partition, region_name) or force_partition:
             # Use the partition endpoint if set and not regionalized.
             partition_endpoint = service_data.get('partitionEndpoint')
             is_regionalized = service_data.get('isRegionalized', True)
             if partition_endpoint and not is_regionalized:
-                LOG.debug('Using partition endpoint for %s, %s: %s',
-                          service_name, region_name, partition_endpoint)
+                LOG.debug(
+                    'Using partition endpoint for %s, %s: %s',
+                    service_name,
+                    region_name,
+                    partition_endpoint,
+                )
                 return self._resolve(
-                    partition, service_name, service_data, partition_endpoint)
-            LOG.debug('Creating a regex based endpoint for %s, %s',
-                      service_name, region_name)
+                    partition, service_name, service_data, partition_endpoint
+                )
+            LOG.debug(
+                'Creating a regex based endpoint for %s, %s',
+                service_name,
+                region_name,
+            )
             return self._resolve(
-                partition, service_name, service_data, region_name)
+                partition, service_name, service_data, region_name
+            )
 
     def _region_match(self, partition, region_name):
         if region_name in partition['regions']:
@@ -189,11 +207,12 @@ class EndpointResolver(BaseEndpointResolver):
         self._merge_keys(partition.get('defaults', {}), result)
         hostname = result.get('hostname', DEFAULT_URI_TEMPLATE)
         result['hostname'] = self._expand_template(
-            partition, hostname, service_name, endpoint_name)
+            partition, hostname, service_name, endpoint_name
+        )
         if 'sslCommonName' in result:
             result['sslCommonName'] = self._expand_template(
-                partition, result['sslCommonName'], service_name,
-                endpoint_name)
+                partition, result['sslCommonName'], service_name, endpoint_name
+            )
         result['dnsSuffix'] = partition['dnsSuffix']
         return result
 
@@ -202,8 +221,11 @@ class EndpointResolver(BaseEndpointResolver):
             if key not in result:
                 result[key] = from_data[key]
 
-    def _expand_template(self, partition, template, service_name,
-                         endpoint_name):
+    def _expand_template(
+        self, partition, template, service_name, endpoint_name
+    ):
         return template.format(
-            service=service_name, region=endpoint_name,
-            dnsSuffix=partition['dnsSuffix'])
+            service=service_name,
+            region=endpoint_name,
+            dnsSuffix=partition['dnsSuffix'],
+        )

@@ -43,8 +43,9 @@ class HistoryRecorder:
                 except Exception:
                     # Never let the process die because we had a failure in
                     # a record collection handler.
-                    logger.debug("Exception raised in %s.", handler,
-                                 exc_info=True)
+                    logger.debug(
+                        "Exception raised in %s.", handler, exc_info=True
+                    )
 
 
 def get_global_history_recorder():

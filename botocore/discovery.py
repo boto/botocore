@@ -27,12 +27,14 @@ class EndpointDiscoveryException(BotoCoreError):
 
 
 class EndpointDiscoveryRequired(EndpointDiscoveryException):
-    """ Endpoint Discovery is disabled but is required for this operation. """
+    """Endpoint Discovery is disabled but is required for this operation."""
+
     fmt = 'Endpoint Discovery is not enabled but this operation requires it.'
 
 
 class EndpointDiscoveryRefreshFailed(EndpointDiscoveryException):
-    """ Endpoint Discovery failed to the refresh the known endpoints. """
+    """Endpoint Discovery failed to the refresh the known endpoints."""
+
     fmt = 'Endpoint Discovery failed to refresh the required endpoints.'
 
 
@@ -61,7 +63,9 @@ class EndpointDiscoveryModel:
 
     def discovery_required_for(self, operation_name):
         try:
-            operation_model = self._service_model.operation_model(operation_name)
+            operation_model = self._service_model.operation_model(
+                operation_name
+            )
             return operation_model.endpoint_discovery.get('required', False)
         except OperationNotFoundError:
             return False
@@ -85,13 +89,17 @@ class EndpointDiscoveryModel:
         for member_name, member_shape in shape.members.items():
             if member_shape.metadata.get('endpointdiscoveryid'):
                 ids[member_name] = params[member_name]
-            elif member_shape.type_name == 'structure' and member_name in params:
+            elif (
+                member_shape.type_name == 'structure' and member_name in params
+            ):
                 self._gather_ids(member_shape, params[member_name], ids)
         return ids
 
 
 class EndpointDiscoveryManager:
-    def __init__(self, client, cache=None, current_time=None, always_discover=True):
+    def __init__(
+        self, client, cache=None, current_time=None, always_discover=True
+    ):
         if cache is None:
             cache = {}
         self._cache = cache

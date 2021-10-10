@@ -17,7 +17,6 @@ logger = logging.getLogger('bcdocs')
 
 
 class BaseStyle:
-
     def __init__(self, doc, indent_width=2):
         self.doc = doc
         self.indent_width = indent_width
@@ -65,7 +64,6 @@ class BaseStyle:
 
 
 class ReSTStyle(BaseStyle):
-
     def __init__(self, doc, indent_width=2):
         BaseStyle.__init__(self, doc, indent_width)
         self.do_p = True

@@ -45,12 +45,14 @@ class BaseClientExceptions:
 
     def __getattr__(self, name):
         exception_cls_names = [
-            exception_cls.__name__ for exception_cls
-            in self._code_to_exception.values()
+            exception_cls.__name__
+            for exception_cls in self._code_to_exception.values()
         ]
         raise AttributeError(
             '{!r} object has no attribute {!r}. Valid exceptions are: {}'.format(
-                self, name, ', '.join(exception_cls_names)))
+                self, name, ', '.join(exception_cls_names)
+            )
+        )
 
 
 class ClientExceptionsFactory:
@@ -84,5 +86,6 @@ class ClientExceptionsFactory:
             code_to_exception[code] = exception_cls
         cls_name = str(get_service_module_name(service_model) + 'Exceptions')
         client_exceptions_cls = type(
-            cls_name, (BaseClientExceptions,), cls_props)
+            cls_name, (BaseClientExceptions,), cls_props
+        )
         return client_exceptions_cls(code_to_exception)

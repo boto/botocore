@@ -50,6 +50,7 @@ DEFAULT_CA_BUNDLE = os.path.join(os.path.dirname(__file__), 'cacert.pem')
 try:
     from certifi import where
 except ImportError:
+
     def where():
         return DEFAULT_CA_BUNDLE
 
@@ -64,12 +65,13 @@ def get_cert_path(verify):
     return cert_path
 
 
-def create_urllib3_context(ssl_version=None, cert_reqs=None,
-                           options=None, ciphers=None):
-    """ This function is a vendored version of the same function in urllib3
+def create_urllib3_context(
+    ssl_version=None, cert_reqs=None, options=None, ciphers=None
+):
+    """This function is a vendored version of the same function in urllib3
 
-        We vendor this function to ensure that the SSL contexts we construct
-        always use the std lib SSLContext instead of pyopenssl.
+    We vendor this function to ensure that the SSL contexts we construct
+    always use the std lib SSLContext instead of pyopenssl.
     """
     context = SSLContext(ssl_version or ssl.PROTOCOL_SSLv23)
 
@@ -127,6 +129,7 @@ class ProxyConfiguration:
     functions to retreive well structured proxy urls and proxy headers from the
     proxy configuration dictionary.
     """
+
     def __init__(self, proxies=None, proxies_settings=None):
         if proxies is None:
             proxies = {}
@@ -137,7 +140,7 @@ class ProxyConfiguration:
         self._proxies_settings = proxies_settings
 
     def proxy_url_for(self, url):
-        """Retrieves the corresponding proxy url for a given url. """
+        """Retrieves the corresponding proxy url for a given url."""
         parsed_url = urlparse(url)
         proxy = self._proxies.get(parsed_url.scheme)
         if proxy:
@@ -145,7 +148,7 @@ class ProxyConfiguration:
         return proxy
 
     def proxy_headers_for(self, proxy_url):
-        """Retrieves the corresponding proxy headers for a given proxy url. """
+        """Retrieves the corresponding proxy headers for a given proxy url."""
         headers = {}
         username, password = self._get_auth_from_url(proxy_url)
         if username and password:
@@ -189,6 +192,7 @@ class URLLib3Session:
     v2.7.0 implemented this themselves, later version urllib3 support this
     directly via a flag to urlopen so enabling it if needed should be trivial.
     """
+
     def __init__(
         self,
         verify=True,
@@ -235,7 +239,8 @@ class URLLib3Session:
         proxies_kwargs = {
             'proxy_ssl_context': proxy_ssl_context,
             'use_forwarding_for_https': proxies_settings.get(
-                'proxy_use_forwarding_for_https'),
+                'proxy_use_forwarding_for_https'
+            ),
         }
         return {k: v for k, v in proxies_kwargs.items() if v is not None}
 
@@ -259,7 +264,8 @@ class URLLib3Session:
         if proxy_url not in self._proxy_managers:
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
             proxy_manager_kwargs = self._get_pool_manager_kwargs(
-                proxy_headers=proxy_headers)
+                proxy_headers=proxy_headers
+            )
             proxy_manager_kwargs.update(**self._proxies_kwargs)
             proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
@@ -325,8 +331,8 @@ class URLLib3Session:
         # forwarding for HTTPS through the 'use_forwarding_for_https' parameter.
         proxy_scheme = urlparse(proxy_url).scheme
         using_https_forwarding_proxy = (
-            proxy_scheme == 'https' and
-            self._proxies_kwargs.get('use_forwarding_for_https', False)
+            proxy_scheme == 'https'
+            and self._proxies_kwargs.get('use_forwarding_for_https', False)
         )
 
         if using_https_forwarding_proxy or url.startswith('http:'):
@@ -392,9 +398,7 @@ class URLLib3Session:
             raise ReadTimeoutError(endpoint_url=request.url, error=e)
         except ProtocolError as e:
             raise ConnectionClosedError(
-                error=e,
-                request=request,
-                endpoint_url=request.url
+                error=e, request=request, endpoint_url=request.url
             )
         except Exception as e:
             message = 'Exception received when sending urllib3 HTTP request'

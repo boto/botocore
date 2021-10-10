@@ -55,8 +55,15 @@ LEGACY_GLOBAL_STS_REGIONS = [
 
 
 class ClientArgsCreator:
-    def __init__(self, event_emitter, user_agent, response_parser_factory,
-                 loader, exceptions_factory, config_store):
+    def __init__(
+        self,
+        event_emitter,
+        user_agent,
+        response_parser_factory,
+        loader,
+        exceptions_factory,
+        config_store,
+    ):
         self._event_emitter = event_emitter
         self._user_agent = user_agent
         self._response_parser_factory = response_parser_factory
@@ -64,12 +71,27 @@ class ClientArgsCreator:
         self._exceptions_factory = exceptions_factory
         self._config_store = config_store
 
-    def get_client_args(self, service_model, region_name, is_secure,
-                        endpoint_url, verify, credentials, scoped_config,
-                        client_config, endpoint_bridge):
+    def get_client_args(
+        self,
+        service_model,
+        region_name,
+        is_secure,
+        endpoint_url,
+        verify,
+        credentials,
+        scoped_config,
+        client_config,
+        endpoint_bridge,
+    ):
         final_args = self.compute_client_args(
-            service_model, client_config, endpoint_bridge, region_name,
-            endpoint_url, is_secure, scoped_config)
+            service_model,
+            client_config,
+            endpoint_bridge,
+            region_name,
+            endpoint_url,
+            is_secure,
+            scoped_config,
+        )
 
         service_name = final_args['service_name']  # noqa: F841
         parameter_validation = final_args['parameter_validation']
@@ -85,10 +107,12 @@ class ClientArgsCreator:
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
-            service_model.service_id, signing_region,
+            service_model.service_id,
+            signing_region,
             endpoint_config['signing_name'],
             endpoint_config['signature_version'],
-            credentials, event_emitter
+            credentials,
+            event_emitter,
         )
 
         config_kwargs['s3'] = s3_config
@@ -96,18 +120,22 @@ class ClientArgsCreator:
         endpoint_creator = EndpointCreator(event_emitter)
 
         endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name=endpoint_region_name,
-            endpoint_url=endpoint_config['endpoint_url'], verify=verify,
+            service_model,
+            region_name=endpoint_region_name,
+            endpoint_url=endpoint_config['endpoint_url'],
+            verify=verify,
             response_parser_factory=self._response_parser_factory,
             max_pool_connections=new_config.max_pool_connections,
             proxies=new_config.proxies,
             timeout=(new_config.connect_timeout, new_config.read_timeout),
             socket_options=socket_options,
             client_cert=new_config.client_cert,
-            proxies_config=new_config.proxies_config)
+            proxies_config=new_config.proxies_config,
+        )
 
         serializer = botocore.serialize.create_serializer(
-            protocol, parameter_validation)
+            protocol, parameter_validation
+        )
         response_parser = botocore.parsers.create_parser(protocol)
         return {
             'serializer': serializer,
@@ -119,12 +147,19 @@ class ClientArgsCreator:
             'loader': self._loader,
             'client_config': new_config,
             'partition': partition,
-            'exceptions_factory': self._exceptions_factory
+            'exceptions_factory': self._exceptions_factory,
         }
 
-    def compute_client_args(self, service_model, client_config,
-                            endpoint_bridge, region_name, endpoint_url,
-                            is_secure, scoped_config):
+    def compute_client_args(
+        self,
+        service_model,
+        client_config,
+        endpoint_bridge,
+        region_name,
+        endpoint_url,
+        is_secure,
+        scoped_config,
+    ):
         service_name = service_model.endpoint_prefix
         protocol = service_model.metadata['protocol']
         parameter_validation = True
@@ -158,7 +193,8 @@ class ClientArgsCreator:
         config_kwargs = dict(
             region_name=endpoint_config['region_name'],
             signature_version=endpoint_config['signature_version'],
-            user_agent=user_agent)
+            user_agent=user_agent,
+        )
         if client_config is not None:
             config_kwargs.update(
                 connect_timeout=client_config.connect_timeout,
@@ -180,7 +216,7 @@ class ClientArgsCreator:
             'protocol': protocol,
             'config_kwargs': config_kwargs,
             's3_config': s3_config,
-            'socket_options': self._compute_socket_options(scoped_config)
+            'socket_options': self._compute_socket_options(scoped_config),
         }
 
     def compute_s3_config(self, client_config):
@@ -202,8 +238,15 @@ class ClientArgsCreator:
 
         return s3_configuration
 
-    def _compute_endpoint_config(self, service_name, region_name, endpoint_url,
-                                 is_secure, endpoint_bridge, s3_config):
+    def _compute_endpoint_config(
+        self,
+        service_name,
+        region_name,
+        endpoint_url,
+        is_secure,
+        endpoint_bridge,
+        s3_config,
+    ):
         resolve_endpoint_kwargs = {
             'service_name': service_name,
             'region_name': region_name,
@@ -213,20 +256,24 @@ class ClientArgsCreator:
         }
         if service_name == 's3':
             return self._compute_s3_endpoint_config(
-                s3_config=s3_config, **resolve_endpoint_kwargs)
+                s3_config=s3_config, **resolve_endpoint_kwargs
+            )
         if service_name == 'sts':
             return self._compute_sts_endpoint_config(**resolve_endpoint_kwargs)
         return self._resolve_endpoint(**resolve_endpoint_kwargs)
 
-    def _compute_s3_endpoint_config(self, s3_config,
-                                    **resolve_endpoint_kwargs):
+    def _compute_s3_endpoint_config(
+        self, s3_config, **resolve_endpoint_kwargs
+    ):
         force_s3_global = self._should_force_s3_global(
-            resolve_endpoint_kwargs['region_name'], s3_config)
+            resolve_endpoint_kwargs['region_name'], s3_config
+        )
         if force_s3_global:
             resolve_endpoint_kwargs['region_name'] = None
         endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
         self._set_region_if_custom_s3_endpoint(
-            endpoint_config, resolve_endpoint_kwargs['endpoint_bridge'])
+            endpoint_config, resolve_endpoint_kwargs['endpoint_bridge']
+        )
         # For backwards compatibility reasons, we want to make sure the
         # client.meta.region_name will remain us-east-1 if we forced the
         # endpoint to be the global region. Specifically, if this value
@@ -241,24 +288,27 @@ class ClientArgsCreator:
         if s3_config and 'us_east_1_regional_endpoint' in s3_config:
             s3_regional_config = s3_config['us_east_1_regional_endpoint']
             self._validate_s3_regional_config(s3_regional_config)
-        return (
-            s3_regional_config == 'legacy' and
-            region_name in ['us-east-1', None]
-        )
+        return s3_regional_config == 'legacy' and region_name in [
+            'us-east-1',
+            None,
+        ]
 
     def _validate_s3_regional_config(self, config_val):
         if config_val not in VALID_REGIONAL_ENDPOINTS_CONFIG:
-            raise botocore.exceptions.\
-                InvalidS3UsEast1RegionalEndpointConfigError(
-                    s3_us_east_1_regional_endpoint_config=config_val)
+            raise botocore.exceptions.InvalidS3UsEast1RegionalEndpointConfigError(
+                s3_us_east_1_regional_endpoint_config=config_val
+            )
 
-    def _set_region_if_custom_s3_endpoint(self, endpoint_config,
-                                          endpoint_bridge):
+    def _set_region_if_custom_s3_endpoint(
+        self, endpoint_config, endpoint_bridge
+    ):
         # If a user is providing a custom URL, the endpoint resolver will
         # refuse to infer a signing region. If we want to default to s3v4,
         # we have to account for this.
-        if endpoint_config['signing_region'] is None \
-                and endpoint_config['region_name'] is None:
+        if (
+            endpoint_config['signing_region'] is None
+            and endpoint_config['region_name'] is None
+        ):
             endpoint = endpoint_bridge.resolve('s3')
             endpoint_config['signing_region'] = endpoint['signing_region']
             endpoint_config['region_name'] = endpoint['region_name']
@@ -266,29 +316,35 @@ class ClientArgsCreator:
     def _compute_sts_endpoint_config(self, **resolve_endpoint_kwargs):
         endpoint_config = self._resolve_endpoint(**resolve_endpoint_kwargs)
         if self._should_set_global_sts_endpoint(
-                resolve_endpoint_kwargs['region_name'],
-                resolve_endpoint_kwargs['endpoint_url']):
+            resolve_endpoint_kwargs['region_name'],
+            resolve_endpoint_kwargs['endpoint_url'],
+        ):
             self._set_global_sts_endpoint(
-                endpoint_config, resolve_endpoint_kwargs['is_secure'])
+                endpoint_config, resolve_endpoint_kwargs['is_secure']
+            )
         return endpoint_config
 
     def _should_set_global_sts_endpoint(self, region_name, endpoint_url):
         if endpoint_url:
             return False
         return (
-            self._get_sts_regional_endpoints_config() == 'legacy' and
-            region_name in LEGACY_GLOBAL_STS_REGIONS
+            self._get_sts_regional_endpoints_config() == 'legacy'
+            and region_name in LEGACY_GLOBAL_STS_REGIONS
         )
 
     def _get_sts_regional_endpoints_config(self):
         sts_regional_endpoints_config = self._config_store.get_config_variable(
-            'sts_regional_endpoints')
+            'sts_regional_endpoints'
+        )
         if not sts_regional_endpoints_config:
             sts_regional_endpoints_config = 'legacy'
-        if sts_regional_endpoints_config not in \
-                VALID_REGIONAL_ENDPOINTS_CONFIG:
+        if (
+            sts_regional_endpoints_config
+            not in VALID_REGIONAL_ENDPOINTS_CONFIG
+        ):
             raise botocore.exceptions.InvalidSTSRegionalEndpointsConfigError(
-                sts_regional_endpoints_config=sts_regional_endpoints_config)
+                sts_regional_endpoints_config=sts_regional_endpoints_config
+            )
         return sts_regional_endpoints_config
 
     def _set_global_sts_endpoint(self, endpoint_config, is_secure):
@@ -296,10 +352,17 @@ class ClientArgsCreator:
         endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
         endpoint_config['signing_region'] = 'us-east-1'
 
-    def _resolve_endpoint(self, service_name, region_name,
-                          endpoint_url, is_secure, endpoint_bridge):
+    def _resolve_endpoint(
+        self,
+        service_name,
+        region_name,
+        endpoint_url,
+        is_secure,
+        endpoint_bridge,
+    ):
         return endpoint_bridge.resolve(
-            service_name, region_name, endpoint_url, is_secure)
+            service_name, region_name, endpoint_url, is_secure
+        )
 
     def _compute_socket_options(self, scoped_config):
         # This disables Nagle's algorithm and is the default socket options
@@ -309,7 +372,8 @@ class ClientArgsCreator:
             # Enables TCP Keepalive if specified in shared config file.
             if self._ensure_boolean(scoped_config.get('tcp_keepalive', False)):
                 socket_options.append(
-                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                )
         return socket_options
 
     def _compute_retry_config(self, config_kwargs):

@@ -47,8 +47,7 @@ class RetryQuota:
             return
         with self._lock:
             amount = min(
-                self._max_capacity - self._available_capacity,
-                capacity_amount
+                self._max_capacity - self._available_capacity, capacity_amount
             )
             self._available_capacity += amount
 

@@ -44,8 +44,9 @@ def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
 
     service_id = client.meta.service_model.service_id
     service_event_name = service_id.hyphenize()
-    client.meta.events.register('after-call.%s' % service_event_name,
-                                retry_quota.release_retry_quota)
+    client.meta.events.register(
+        'after-call.%s' % service_event_name, retry_quota.release_retry_quota
+    )
 
     handler = RetryHandler(
         retry_policy=RetryPolicy(
@@ -58,8 +59,9 @@ def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
 
     unique_id = 'retry-config-%s' % service_event_name
     client.meta.events.register(
-        'needs-retry.%s' % service_event_name, handler.needs_retry,
-        unique_id=unique_id
+        'needs-retry.%s' % service_event_name,
+        handler.needs_retry,
+        unique_id=unique_id,
     )
     return handler
 
@@ -70,6 +72,7 @@ class RetryHandler:
     This class is intended to be hooked to botocore's event system
     as an event handler.
     """
+
     def __init__(self, retry_policy, retry_event_adapter, retry_quota):
         self._retry_policy = retry_policy
         self._retry_event_adapter = retry_event_adapter
@@ -84,15 +87,18 @@ class RetryHandler:
             # capacity in our retry quota.
             if self._retry_quota.acquire_retry_quota(context):
                 retry_delay = self._retry_policy.compute_retry_delay(context)
-                logger.debug("Retry needed, retrying request after "
-                             "delay of: %s", retry_delay)
+                logger.debug(
+                    "Retry needed, retrying request after " "delay of: %s",
+                    retry_delay,
+                )
             else:
-                logger.debug("Retry needed but retry quota reached, "
-                             "not retrying request.")
+                logger.debug(
+                    "Retry needed but retry quota reached, "
+                    "not retrying request."
+                )
         else:
             logger.debug("Not retrying request.")
-        self._retry_event_adapter.adapt_retry_response_from_context(
-            context)
+        self._retry_event_adapter.adapt_retry_response_from_context(context)
         return retry_delay
 
 
@@ -106,6 +112,7 @@ class RetryEventAdapter:
     new retry strategies.
 
     """
+
     def create_retry_context(self, **kwargs):
         """Create context based on needs-retry kwargs."""
         response = kwargs['response']
@@ -138,8 +145,9 @@ class RetryEventAdapter:
         # don't mutate any input parameters from the needs-retry event.
         metadata = context.get_retry_metadata()
         if context.parsed_response is not None:
-            context.parsed_response.setdefault(
-                'ResponseMetadata', {}).update(metadata)
+            context.parsed_response.setdefault('ResponseMetadata', {}).update(
+                metadata
+            )
 
 
 # Implementation note: this is meant to encapsulate all the misc stuff
@@ -168,9 +176,16 @@ class RetryContext:
     are meant to be modified directly.
 
     """
-    def __init__(self, attempt_number, operation_model=None,
-                 parsed_response=None, http_response=None,
-                 caught_exception=None, request_context=None):
+
+    def __init__(
+        self,
+        attempt_number,
+        operation_model=None,
+        parsed_response=None,
+        http_response=None,
+        caught_exception=None,
+        request_context=None,
+    ):
         # 1-based attempt number.
         self.attempt_number = attempt_number
         self.operation_model = operation_model
@@ -259,7 +274,7 @@ class ExponentialBackoff(BaseRetryBackoff):
         # want the first delay to just be ``rand(0, 1)``.
         return min(
             self._random() * (self._base ** (context.attempt_number - 1)),
-            self._max_backoff
+            self._max_backoff,
         )
 
 
@@ -287,9 +302,12 @@ class TransientRetryableChecker(BaseRetryableChecker):
         HTTPClientError,
     )
 
-    def __init__(self, transient_error_codes=None,
-                 transient_status_codes=None,
-                 transient_exception_cls=None):
+    def __init__(
+        self,
+        transient_error_codes=None,
+        transient_status_codes=None,
+        transient_exception_cls=None,
+    ):
         if transient_error_codes is None:
             transient_error_codes = self._TRANSIENT_ERROR_CODES[:]
         if transient_status_codes is None:
@@ -304,12 +322,15 @@ class TransientRetryableChecker(BaseRetryableChecker):
         if context.get_error_code() in self._transient_error_codes:
             return True
         if context.http_response is not None:
-            if context.http_response.status_code in \
-                    self._transient_status_codes:
+            if (
+                context.http_response.status_code
+                in self._transient_status_codes
+            ):
                 return True
         if context.caught_exception is not None:
-            return isinstance(context.caught_exception,
-                              self._transient_exception_cls)
+            return isinstance(
+                context.caught_exception, self._transient_exception_cls
+            )
         return False
 
 
@@ -359,6 +380,7 @@ class ModeledRetryableChecker(BaseRetryableChecker):
 
 class ModeledRetryErrorDetector:
     """Checks whether or not an error is a modeled retryable error."""
+
     # There are return values from the detect_error_type() method.
     TRANSIENT_ERROR = 'TRANSIENT_ERROR'
     THROTTLING_ERROR = 'THROTTLING_ERROR'
@@ -421,21 +443,24 @@ class StandardRetryConditions(BaseRetryableChecker):
         # Note: This class is for convenience so you can have the
         # standard retry condition in a single class.
         self._max_attempts_checker = MaxAttemptsChecker(max_attempts)
-        self._additional_checkers = OrRetryChecker([
-            TransientRetryableChecker(),
-            ThrottledRetryableChecker(),
-            ModeledRetryableChecker(),
-            OrRetryChecker([
-                special.RetryIDPCommunicationError(),
-                special.RetryDDBChecksumError(),
-            ])
-        ])
+        self._additional_checkers = OrRetryChecker(
+            [
+                TransientRetryableChecker(),
+                ThrottledRetryableChecker(),
+                ModeledRetryableChecker(),
+                OrRetryChecker(
+                    [
+                        special.RetryIDPCommunicationError(),
+                        special.RetryDDBChecksumError(),
+                    ]
+                ),
+            ]
+        )
 
     def is_retryable(self, context):
-        return (
-            self._max_attempts_checker.is_retryable(context)
-            and self._additional_checkers.is_retryable(context)
-        )
+        return self._max_attempts_checker.is_retryable(
+            context
+        ) and self._additional_checkers.is_retryable(context)
 
 
 class OrRetryChecker(BaseRetryableChecker):
