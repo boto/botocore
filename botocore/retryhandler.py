@@ -157,7 +157,7 @@ def _extract_retryable_exception(config):
         return exceptions
 
 
-class RetryHandler(object):
+class RetryHandler:
     """Retry handler.
 
     The retry handler takes two params, ``checker`` object
@@ -189,7 +189,7 @@ class RetryHandler(object):
         logger.debug("No retry needed.")
 
 
-class BaseChecker(object):
+class BaseChecker:
     """Base class for retry checkers.
 
     Each class is responsible for checking a single criteria that determines

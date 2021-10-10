@@ -64,7 +64,7 @@ BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 # Used to specify anonymous (unsigned) request signature
-class UNSIGNED(object):
+class UNSIGNED:
     def __copy__(self):
         return self
 

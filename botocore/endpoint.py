@@ -25,7 +25,6 @@ from botocore.hooks import first_non_none_response
 from botocore.httpsession import URLLib3Session
 from botocore.response import StreamingBody
 from botocore.utils import get_environ_proxies, is_valid_endpoint_url
-from botocore.vendored import six
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
@@ -68,7 +67,7 @@ def convert_to_response_dict(http_response, operation_model):
     return response_dict
 
 
-class Endpoint(object):
+class Endpoint:
     """
     Represents an endpoint for a particular service in a specific
     region.  Only an endpoint can make requests.
@@ -92,7 +91,7 @@ class Endpoint(object):
             self.http_session = URLLib3Session()
 
     def __repr__(self):
-        return '%s(%s)' % (self._endpoint_prefix, self.host)
+        return f'{self._endpoint_prefix}({self.host})'
 
     def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s with params: %s",
@@ -118,7 +117,7 @@ class Endpoint(object):
     def _encode_headers(self, headers):
         # In place encoding of headers to utf-8 if they are unicode.
         for key, value in headers.items():
-            if isinstance(value, six.text_type):
+            if isinstance(value, str):
                 headers[key] = value.encode('utf-8')
 
     def prepare_request(self, request):
@@ -175,7 +174,7 @@ class Endpoint(object):
                 http_response, operation_model)
         service_id = operation_model.service_model.service_id.hyphenize()
         self._event_emitter.emit(
-            'response-received.%s.%s' % (
+            'response-received.{}.{}'.format(
                 service_id, operation_model.name), **kwargs_to_emit)
         return success_response, exception
 
@@ -190,7 +189,7 @@ class Endpoint(object):
                 'body': request.body
             })
             service_id = operation_model.service_model.service_id.hyphenize()
-            event_name = 'before-send.%s.%s' % (service_id, operation_model.name)
+            event_name = f'before-send.{service_id}.{operation_model.name}'
             responses = self._event_emitter.emit(event_name, request=request)
             http_response = first_non_none_response(responses)
             if http_response is None:
@@ -244,7 +243,7 @@ class Endpoint(object):
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):
         service_id = operation_model.service_model.service_id.hyphenize()
-        event_name = 'needs-retry.%s.%s' % (
+        event_name = 'needs-retry.{}.{}'.format(
             service_id,
             operation_model.name)
         responses = self._event_emitter.emit(
@@ -266,7 +265,7 @@ class Endpoint(object):
         return self.http_session.send(request)
 
 
-class EndpointCreator(object):
+class EndpointCreator:
     def __init__(self, event_emitter):
         self._event_emitter = event_emitter
 

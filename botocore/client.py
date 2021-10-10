@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
 
 
-class ClientCreator(object):
+class ClientCreator:
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  retry_handler_factory, retry_config_translator,
@@ -405,7 +405,7 @@ class ClientCreator(object):
         return _api_call
 
 
-class ClientEndpointBridge(object):
+class ClientEndpointBridge:
     """Bridges endpoint data and client creation
 
     This class handles taking out the relevant arguments from the endpoint
@@ -553,7 +553,7 @@ class ClientEndpointBridge(object):
             scheme = 'https'
         else:
             scheme = 'http'
-        return '%s://%s' % (scheme, hostname)
+        return f'{scheme}://{hostname}'
 
     def _resolve_signing_name(self, service_name, resolved):
         # CredentialScope overrides everything else.
@@ -608,7 +608,7 @@ class ClientEndpointBridge(object):
             signature_version=resolved.get('signatureVersions'))
 
 
-class BaseClient(object):
+class BaseClient:
 
     # This is actually reassigned with the py->op_name mapping
     # when the client creator creates the subclass.  This value is used
@@ -636,7 +636,7 @@ class BaseClient(object):
         self._register_handlers()
 
     def __getattr__(self, item):
-        event_name = 'getattr.%s.%s' % (
+        event_name = 'getattr.{}.{}'.format(
             self._service_model.service_id.hyphenize(), item
         )
         handler, event_response = self.meta.events.emit_until_response(
@@ -646,7 +646,7 @@ class BaseClient(object):
             return event_response
 
         raise AttributeError(
-            "'%s' object has no attribute '%s'" % (
+            "'{}' object has no attribute '{}'".format(
                 self.__class__.__name__, item)
         )
 
@@ -803,7 +803,7 @@ class BaseClient(object):
             )
 
             # Rename the paginator class based on the type of paginator.
-            paginator_class_name = str('%s.Paginator.%s' % (
+            paginator_class_name = str('{}.Paginator.{}'.format(
                 get_service_module_name(self.meta.service_model),
                 actual_operation_name))
 
@@ -902,7 +902,7 @@ class BaseClient(object):
             self._service_model)
 
 
-class ClientMeta(object):
+class ClientMeta:
     """Holds additional client methods.
 
     This class holds additional information for clients.  It exists for

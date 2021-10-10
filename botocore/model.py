@@ -44,7 +44,7 @@ class ServiceId(str):
         return hyphenize_service_id(self)
 
 
-class Shape(object):
+class Shape:
     """Object representing a shape from the service model."""
     # To simplify serialization logic, all shape params that are
     # related to serialization are moved from the top level hash into
@@ -168,8 +168,7 @@ class Shape(object):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
 
     def __repr__(self):
-        return "<%s(%s)>" % (self.__class__.__name__,
-                             self.name)
+        return f"<{self.__class__.__name__}({self.name})>"
 
     @property
     def event_stream_name(self):
@@ -240,7 +239,7 @@ class StringShape(Shape):
         return self.metadata.get('enum', [])
 
 
-class ServiceModel(object):
+class ServiceModel:
     """
 
     :ivar service_description: The parsed service description dictionary.
@@ -415,10 +414,10 @@ class ServiceModel(object):
         self._signature_version = value
 
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, self.service_name)
+        return f'{self.__class__.__name__}({self.service_name})'
 
 
-class OperationModel(object):
+class OperationModel:
     def __init__(self, operation_model, service_model, name=None):
         """
 
@@ -596,10 +595,10 @@ class OperationModel(object):
         return None
 
     def __repr__(self):
-        return '%s(name=%s)' % (self.__class__.__name__, self.name)
+        return f'{self.__class__.__name__}(name={self.name})'
 
 
-class ShapeResolver(object):
+class ShapeResolver:
     """Resolves shape references."""
 
     # Any type not in this mapping will default to the Shape class.
@@ -651,7 +650,7 @@ class ShapeResolver(object):
             return self.get_shape_by_name(shape_name, member_traits)
 
 
-class UnresolvableShapeMap(object):
+class UnresolvableShapeMap:
     """A ShapeResolver that will throw ValueErrors when shapes are resolved.
     """
     def get_shape_by_name(self, shape_name, member_traits=None):
@@ -663,7 +662,7 @@ class UnresolvableShapeMap(object):
                          "map was provided.")
 
 
-class DenormalizedStructureBuilder(object):
+class DenormalizedStructureBuilder:
     """Build a StructureShape from a denormalized model.
 
     This is a convenience builder class that makes it easy to construct
@@ -797,7 +796,7 @@ class DenormalizedStructureBuilder(object):
             return self._name_generator.new_shape_name(model['type'])
 
 
-class ShapeNameGenerator(object):
+class ShapeNameGenerator:
     """Generate unique shape names for a type.
 
     This class can be used in conjunction with the DenormalizedStructureBuilder
@@ -835,5 +834,4 @@ class ShapeNameGenerator(object):
         """
         self._name_cache[type_name] += 1
         current_index = self._name_cache[type_name]
-        return '%sType%s' % (type_name.capitalize(),
-                             current_index)
+        return f'{type_name.capitalize()}Type{current_index}'

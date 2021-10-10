@@ -22,7 +22,7 @@ from botocore.docs.sharedexample import document_shared_examples
 from botocore.docs.utils import DocumentedShape, get_official_service_name
 
 
-class ClientDocumenter(object):
+class ClientDocumenter:
     def __init__(self, client, shared_examples=None):
         self._client = client
         self._shared_examples = shared_examples
@@ -63,7 +63,7 @@ class ClientDocumenter(object):
         section.style.new_line()
         class_name = self._client.__class__.__name__
         for method_name in sorted(client_methods):
-            section.style.li(':py:meth:`~%s.Client.%s`' % (
+            section.style.li(':py:meth:`~{}.Client.{}`'.format(
                 class_name, method_name))
 
     def _add_class_signature(self, section):
@@ -105,7 +105,7 @@ class ClientDocumenter(object):
         error_section.style.new_line()
         client_name = self._client.__class__.__name__
         for error in operation_model.error_shapes:
-            class_name = '%s.Client.exceptions.%s' % (client_name, error.name)
+            class_name = f'{client_name}.Client.exceptions.{error.name}'
             error_section.style.li(':py:class:`%s`' % class_name)
 
     def _add_model_driven_method(self, section, method_name):
@@ -132,7 +132,7 @@ class ClientDocumenter(object):
                 section, operation_model, example_prefix, shared_examples)
 
 
-class ClientExceptionsDocumenter(object):
+class ClientExceptionsDocumenter:
     _USER_GUIDE_LINK = (
         'https://boto3.amazonaws.com/'
         'v1/documentation/api/latest/guide/error-handling.html'
@@ -192,7 +192,7 @@ class ClientExceptionsDocumenter(object):
 
     def _exception_class_name(self, shape):
         cls_name = self._client.__class__.__name__
-        return '%s.Client.exceptions.%s' % (cls_name, shape.name)
+        return f'{cls_name}.Client.exceptions.{shape.name}'
 
     def _add_exceptions_list(self, section):
         error_shapes = self._client.meta.service_model.error_shapes

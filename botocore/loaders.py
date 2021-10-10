@@ -133,7 +133,7 @@ def instance_cache(func):
     return _wrapper
 
 
-class JSONFileLoader(object):
+class JSONFileLoader:
     """Loader JSON files.
 
     This class can load the default format of models, which is a JSON file.
@@ -198,7 +198,7 @@ def create_loader(search_path_string=None):
     return Loader(extra_search_paths=paths)
 
 
-class Loader(object):
+class Loader:
     """Find and load data models.
 
     This class will handle searching for and loading data models.
@@ -390,7 +390,7 @@ class Loader(object):
     def _find_extras(self, service_name, type_name, api_version):
         """Creates an iterator over all the extras data."""
         for extras_type in self.extras_types:
-            extras_name = '%s.%s-extras' % (type_name, extras_type)
+            extras_name = f'{type_name}.{extras_type}-extras'
             full_path = os.path.join(service_name, api_version, extras_name)
 
             try:
@@ -440,7 +440,7 @@ class Loader(object):
                         yield full_path
 
 
-class ExtrasProcessor(object):
+class ExtrasProcessor:
     """Processes data from extras files into service models."""
     def process(self, original_model, extra_models):
         """Processes data from a list of loaded extras files into a model

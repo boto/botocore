@@ -64,7 +64,7 @@ def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
     return handler
 
 
-class RetryHandler(object):
+class RetryHandler:
     """Bridge between botocore's event system and this module.
 
     This class is intended to be hooked to botocore's event system
@@ -96,7 +96,7 @@ class RetryHandler(object):
         return retry_delay
 
 
-class RetryEventAdapter(object):
+class RetryEventAdapter:
     """Adapter to existing retry interface used in the endpoints layer.
 
     This existing interface for determining if a retry needs to happen
@@ -145,7 +145,7 @@ class RetryEventAdapter(object):
 # Implementation note: this is meant to encapsulate all the misc stuff
 # that gets sent in the needs-retry event.  This is mapped so that params
 # are more clear and explicit.
-class RetryContext(object):
+class RetryContext:
     """Normalize a response that we use to check if a retry should occur.
 
     This class smoothes over the different types of responses we may get
@@ -221,7 +221,7 @@ class RetryContext(object):
         return self._retry_metadata.copy()
 
 
-class RetryPolicy(object):
+class RetryPolicy:
     def __init__(self, retry_checker, retry_backoff):
         self._retry_checker = retry_checker
         self._retry_backoff = retry_backoff
@@ -357,7 +357,7 @@ class ModeledRetryableChecker(BaseRetryableChecker):
         return self._error_detector.detect_error_type(context) is not None
 
 
-class ModeledRetryErrorDetector(object):
+class ModeledRetryErrorDetector:
     """Checks whether or not an error is a modeled retryable error."""
     # There are return values from the detect_error_type() method.
     TRANSIENT_ERROR = 'TRANSIENT_ERROR'
@@ -393,7 +393,7 @@ class ModeledRetryErrorDetector(object):
                     return self.TRANSIENT_ERROR
 
 
-class ThrottlingErrorDetector(object):
+class ThrottlingErrorDetector:
     def __init__(self, retry_event_adapter):
         self._modeled_error_detector = ModeledRetryErrorDetector()
         self._fixed_error_code_detector = ThrottledRetryableChecker()
@@ -446,7 +446,7 @@ class OrRetryChecker(BaseRetryableChecker):
         return any(checker.is_retryable(context) for checker in self._checkers)
 
 
-class RetryQuotaChecker(object):
+class RetryQuotaChecker:
     _RETRY_COST = 5
     _NO_RETRY_INCREMENT = 1
     _TIMEOUT_RETRY_REQUEST = 10

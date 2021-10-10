@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger('bcdocs')
 
 
-class BaseStyle(object):
+class BaseStyle:
 
     def __init__(self, doc, indent_width=2):
         self.doc = doc
@@ -123,12 +123,12 @@ class ReSTStyle(BaseStyle):
     def ref(self, title, link=None):
         if link is None:
             link = title
-        self.doc.write(':doc:`%s <%s>`' % (title, link))
+        self.doc.write(f':doc:`{title} <{link}>`')
 
     def _heading(self, s, border_char):
         border = border_char * len(s)
         self.new_paragraph()
-        self.doc.write('%s\n%s\n%s' % (border, s, border))
+        self.doc.write(f'{border}\n{s}\n{border}')
         self.new_paragraph()
 
     def h1(self, s):
@@ -219,13 +219,13 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = True
 
     def link_target_definition(self, refname, link):
-        self.doc.writeln('.. _%s: %s' % (refname, link))
+        self.doc.writeln(f'.. _{refname}: {link}')
 
     def sphinx_reference_label(self, label, text=None):
         if text is None:
             text = label
         if self.doc.target == 'html':
-            self.doc.write(':ref:`%s <%s>`' % (text, label))
+            self.doc.write(f':ref:`{text} <{label}>`')
         else:
             self.doc.write(text)
 
@@ -407,12 +407,12 @@ class ReSTStyle(BaseStyle):
 
     def external_link(self, title, link):
         if self.doc.target == 'html':
-            self.doc.write('`%s <%s>`_' % (title, link))
+            self.doc.write(f'`{title} <{link}>`_')
         else:
             self.doc.write(title)
 
     def internal_link(self, title, page):
         if self.doc.target == 'html':
-            self.doc.write(':doc:`%s <%s>`' % (title, page))
+            self.doc.write(f':doc:`{title} <{page}>`')
         else:
             self.doc.write(title)

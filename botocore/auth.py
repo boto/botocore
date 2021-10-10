@@ -32,7 +32,6 @@ from botocore.compat import (
     json,
     parse_qs,
     quote,
-    six,
     unquote,
     urlsplit,
     urlunsplit,
@@ -82,14 +81,14 @@ def _get_body_as_dict(request):
     # string or bytes. In those cases we attempt to load the data as a
     # dict.
     data = request.data
-    if isinstance(data, six.binary_type):
+    if isinstance(data, bytes):
         data = json.loads(data.decode('utf-8'))
-    elif isinstance(data, six.string_types):
+    elif isinstance(data, str):
         data = json.loads(data)
     return data
 
 
-class BaseSigner(object):
+class BaseSigner:
     REQUIRES_REGION = False
 
     def add_auth(self, request):
@@ -110,11 +109,11 @@ class SigV2Auth(BaseSigner):
         path = split.path
         if len(path) == 0:
             path = '/'
-        string_to_sign = '%s\n%s\n%s\n' % (request.method,
-                                           split.netloc,
-                                           path)
-        lhmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
-                         digestmod=sha256)
+        string_to_sign = f'{request.method}\n{split.netloc}\n{path}\n'
+        lhmac = hmac.new(
+            self.credentials.secret_key.encode('utf-8'),
+            digestmod=sha256
+        )
         pairs = []
         for key in sorted(params):
             # Any previous signature should not be a part of this
@@ -122,7 +121,7 @@ class SigV2Auth(BaseSigner):
             # issues during retries.
             if key == 'Signature':
                 continue
-            value = six.text_type(params[key])
+            value = str(params[key])
             quoted_key = quote(key.encode('utf-8'), safe='')
             quoted_value = quote(value.encode('utf-8'), safe='-_~')
             pairs.append(f'{quoted_key}={quoted_value}')
@@ -242,7 +241,7 @@ class SigV4Auth(BaseSigner):
         # Sort by the URI-encoded key names, and in the case of
         # repeated keys, then sort by the value.
         for key, value in sorted(key_val_pairs):
-            sorted_key_vals.append('%s=%s' % (key, value))
+            sorted_key_vals.append(f'{key}={value}')
         canonical_query_string = '&'.join(sorted_key_vals)
         return canonical_query_string
 
@@ -258,7 +257,7 @@ class SigV4Auth(BaseSigner):
             # Sort by the URI-encoded key names, and in the case of
             # repeated keys, then sort by the value.
             for key, value in sorted(key_val_pairs):
-                sorted_key_vals.append('%s=%s' % (key, value))
+                sorted_key_vals.append(f'{key}={value}')
             canonical_query_string = '&'.join(sorted_key_vals)
         return canonical_query_string
 
@@ -274,7 +273,7 @@ class SigV4Auth(BaseSigner):
         for key in sorted_header_names:
             value = ','.join(self._header_value(v) for v in
                              headers_to_sign.get_all(key))
-            headers.append('%s:%s' % (key, ensure_unicode(value)))
+            headers.append(f'{key}:{ensure_unicode(value)}')
         return '\n'.join(headers)
 
     def _header_value(self, value):
@@ -287,7 +286,7 @@ class SigV4Auth(BaseSigner):
 
     def signed_headers(self, headers_to_sign):
         headers = sorted(
-            [n.lower().strip() for n in set(headers_to_sign)]
+            n.lower().strip() for n in set(headers_to_sign)
         )
         return ';'.join(headers)
 
@@ -440,7 +439,7 @@ class SigV4Auth(BaseSigner):
 
 class S3SigV4Auth(SigV4Auth):
     def _modify_request_before_signing(self, request):
-        super(S3SigV4Auth, self)._modify_request_before_signing(request)
+        super()._modify_request_before_signing(request)
         if 'X-Amz-Content-SHA256' in request.headers:
             del request.headers['X-Amz-Content-SHA256']
 
@@ -478,7 +477,7 @@ class S3SigV4Auth(SigV4Auth):
 
         # If the S3-specific checks had no results, delegate to the generic
         # checks.
-        return super(S3SigV4Auth, self)._should_sha256_sign_payload(request)
+        return super()._should_sha256_sign_payload(request)
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
@@ -490,8 +489,11 @@ class SigV4QueryAuth(SigV4Auth):
 
     def __init__(self, credentials, service_name, region_name,
                  expires=DEFAULT_EXPIRES):
-        super(SigV4QueryAuth, self).__init__(credentials, service_name,
-                                             region_name)
+        super().__init__(
+            credentials,
+            service_name,
+            region_name
+        )
         self._expires = expires
 
     def _modify_request_before_signing(self, request):
@@ -524,9 +526,10 @@ class SigV4QueryAuth(SigV4Auth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = dict(
-            [(k, v[0]) for k, v in
-             parse_qs(url_parts.query, keep_blank_values=True).items()])
+        query_dict = {
+            k: v[0] for k, v in
+            parse_qs(url_parts.query, keep_blank_values=True).items()
+        }
         if request.params:
             query_dict.update(request.params)
             request.params = {}
@@ -686,7 +689,7 @@ class HmacV1Auth(BaseSigner):
                                                   headers.get_all(key))
         sorted_header_keys = sorted(custom_headers.keys())
         for key in sorted_header_keys:
-            hoi.append("%s:%s" % (key, custom_headers[key]))
+            hoi.append(f"{key}:{custom_headers[key]}")
         return '\n'.join(hoi)
 
     def unquote_v(self, nv):
@@ -769,7 +772,7 @@ class HmacV1Auth(BaseSigner):
             # list(headers) will print ['foo', 'foo'].
             del request.headers['Authorization']
         request.headers['Authorization'] = (
-            "AWS %s:%s" % (self.credentials.access_key, signature))
+            f"AWS {self.credentials.access_key}:{signature}")
 
 
 class HmacV1QueryAuth(HmacV1Auth):
@@ -817,7 +820,7 @@ class HmacV1QueryAuth(HmacV1Auth):
         if p[3]:
             # If there was a pre-existing query string, we should
             # add that back before injecting the new query string.
-            new_query_string = '%s&%s' % (p[3], new_query_string)
+            new_query_string = f'{p[3]}&{new_query_string}'
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
 

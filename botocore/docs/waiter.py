@@ -17,7 +17,7 @@ from botocore.docs.utils import DocumentedShape
 from botocore.utils import get_service_module_name
 
 
-class WaiterDocumenter(object):
+class WaiterDocumenter:
     def __init__(self, client, service_waiter_model):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
@@ -33,14 +33,14 @@ class WaiterDocumenter(object):
         section.writeln('The available waiters are:')
         for waiter_name in self._service_waiter_model.waiter_names:
             section.style.li(
-                ':py:class:`%s.Waiter.%s`' % (
+                ':py:class:`{}.Waiter.{}`'.format(
                     self._client.__class__.__name__, waiter_name))
             self._add_single_waiter(section, waiter_name)
 
     def _add_single_waiter(self, section, waiter_name):
         section = section.add_new_section(waiter_name)
         section.style.start_sphinx_py_class(
-            class_name='%s.Waiter.%s' % (
+            class_name='{}.Waiter.{}'.format(
                 self._client.__class__.__name__, waiter_name))
 
         # Add example on how to instantiate waiter.
@@ -90,13 +90,13 @@ def document_wait_method(section, waiter_name, event_emitter,
         name='Delay', type_name='integer',
         documentation=(
             '<p>The amount of time in seconds to wait between '
-            'attempts. Default: {0}</p>'.format(waiter_model.delay)))
+            'attempts. Default: {}</p>'.format(waiter_model.delay)))
 
     waiter_config_members['MaxAttempts'] = DocumentedShape(
         name='MaxAttempts', type_name='integer',
         documentation=(
             '<p>The maximum number of attempts to be made. '
-            'Default: {0}</p>'.format(waiter_model.max_attempts)))
+            'Default: {}</p>'.format(waiter_model.max_attempts)))
 
     botocore_waiter_params = [
         DocumentedShape(
@@ -108,9 +108,9 @@ def document_wait_method(section, waiter_name, event_emitter,
     ]
 
     wait_description = (
-        'Polls :py:meth:`{0}.Client.{1}` every {2} '
+        'Polls :py:meth:`{}.Client.{}` every {} '
         'seconds until a successful state is reached. An error is '
-        'returned after {3} failed checks.'.format(
+        'returned after {} failed checks.'.format(
             get_service_module_name(service_model),
             xform_name(waiter_model.operation),
             waiter_model.delay, waiter_model.max_attempts)

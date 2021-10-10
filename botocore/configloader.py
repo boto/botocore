@@ -168,7 +168,7 @@ def raw_config_parse(config_filename, parse_subsections=True):
 
 
 def _unicode_path(path):
-    if isinstance(path, six.text_type):
+    if isinstance(path, str):
         return path
     # According to the documentation getfilesystemencoding can return None
     # on unix in which case the default encoding is used instead.

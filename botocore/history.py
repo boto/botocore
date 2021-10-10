@@ -16,12 +16,12 @@ HISTORY_RECORDER = None
 logger = logging.getLogger(__name__)
 
 
-class BaseHistoryHandler(object):
+class BaseHistoryHandler:
     def emit(self, event_type, payload, source):
         raise NotImplementedError('emit()')
 
 
-class HistoryRecorder(object):
+class HistoryRecorder:
     def __init__(self):
         self._enabled = False
         self._handlers = []

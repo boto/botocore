@@ -26,7 +26,7 @@ DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'
 DEFAULT_SERVICE_DATA = {'endpoints': {}}
 
 
-class BaseEndpointResolver(object):
+class BaseEndpointResolver:
     """Resolves regions and endpoints. Must be subclassed."""
     def construct_endpoint(self, service_name, region_name=None):
         """Resolves an endpoint for a service and region combination.

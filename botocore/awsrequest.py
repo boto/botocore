@@ -24,7 +24,6 @@ from botocore.compat import (
     HTTPHeaders,
     HTTPResponse,
     MutableMapping,
-    six,
     urlencode,
     urlparse,
     urlsplit,
@@ -51,7 +50,7 @@ class AWSHTTPResponse(HTTPResponse):
             return HTTPResponse._read_status(self)
 
 
-class AWSConnection(object):
+class AWSConnection:
     """Mixin for HTTPConnection that supports Expect 100-continue.
 
     This when mixed with a subclass of httplib.HTTPConnection (though
@@ -64,7 +63,7 @@ class AWSConnection(object):
 
     """
     def __init__(self, *args, **kwargs):
-        super(AWSConnection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._original_response_cls = self.response_class
         # We'd ideally hook into httplib's states, but they're all
         # __mangled_vars so we use our own state var.  This variable is set
@@ -78,7 +77,7 @@ class AWSConnection(object):
         self._expect_header_set = False
 
     def close(self):
-        super(AWSConnection, self).close()
+        super().close()
         # Reset all of our instance state we were tracking.
         self._response_received = False
         self._expect_header_set = False
@@ -91,7 +90,7 @@ class AWSConnection(object):
         else:
             self._expect_header_set = False
             self.response_class = self._original_response_cls
-        rval = super(AWSConnection, self)._send_request(
+        rval = super()._send_request(
             method, url, body, headers, *args, **kwargs)
         self._expect_header_set = False
         return rval
@@ -102,7 +101,7 @@ class AWSConnection(object):
         # Any six.text_types will be encoded as utf-8.
         bytes_buffer = []
         for chunk in mixed_buffer:
-            if isinstance(chunk, six.text_type):
+            if isinstance(chunk, str):
                 bytes_buffer.append(chunk.encode('utf-8'))
             else:
                 bytes_buffer.append(chunk)
@@ -203,7 +202,7 @@ class AWSConnection(object):
             logger.debug("send() called, but reseponse already received. "
                          "Not sending data.")
             return
-        return super(AWSConnection, self).send(str)
+        return super().send(str)
 
     def _is_100_continue_status(self, maybe_status_line):
         parts = maybe_status_line.split(None, 2)
@@ -319,7 +318,7 @@ def _urljoin(endpoint_url, url_path, host_prefix):
     return reconstructed
 
 
-class AWSRequestPreparer(object):
+class AWSRequestPreparer:
     """
     This class performs preparation on AWSRequest objects similar to that of
     the PreparedRequest class does in the requests library. However, the logic
@@ -380,9 +379,9 @@ class AWSRequestPreparer(object):
 
     def _to_utf8(self, item):
         key, value = item
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = key.encode('utf-8')
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode('utf-8')
         return key, value
 
@@ -427,7 +426,7 @@ class AWSRequestPreparer(object):
         return None
 
 
-class AWSRequest(object):
+class AWSRequest:
     """Represents the elements of an HTTP request.
 
     This class was originally inspired by requests.models.Request, but has been
@@ -479,12 +478,12 @@ class AWSRequest(object):
     @property
     def body(self):
         body = self.prepare().body
-        if isinstance(body, six.text_type):
+        if isinstance(body, str):
             body = body.encode('utf-8')
         return body
 
 
-class AWSPreparedRequest(object):
+class AWSPreparedRequest:
     """A data class representing a finalized request to be sent over the wire.
 
     Requests at this stage should be treated as final, and the properties of
@@ -523,7 +522,7 @@ class AWSPreparedRequest(object):
         # the entire body contents again if we need to).
         # Same case if the body is a string/bytes/bytearray type.
 
-        non_seekable_types = (six.binary_type, six.text_type, bytearray)
+        non_seekable_types = (bytes, str, bytearray)
         if self.body is None or isinstance(self.body, non_seekable_types):
             return
         try:
@@ -534,7 +533,7 @@ class AWSPreparedRequest(object):
             raise UnseekableStreamError(stream_object=self.body)
 
 
-class AWSResponse(object):
+class AWSResponse:
     """A data class representing an HTTP response.
 
     This class was originally inspired by requests.models.Response, but has
@@ -583,7 +582,7 @@ class AWSResponse(object):
             return self.content.decode('utf-8')
 
 
-class _HeaderKey(object):
+class _HeaderKey:
     def __init__(self, key):
         self._key = key
         self._lower = key.lower()

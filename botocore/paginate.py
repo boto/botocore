@@ -18,14 +18,14 @@ from itertools import tee
 
 import jmespath
 
-from botocore.compat import six, zip
+from botocore.compat import zip
 from botocore.exceptions import PaginationError
 from botocore.utils import merge_dicts, set_value_from_jmespath
 
 log = logging.getLogger(__name__)
 
 
-class TokenEncoder(object):
+class TokenEncoder:
     """Encodes dictionaries into opaque strings.
 
     This for the most part json dumps + base64 encoding, but also supports
@@ -71,7 +71,7 @@ class TokenEncoder(object):
             return self._encode_dict(data, path)
         elif isinstance(data, list):
             return self._encode_list(data, path)
-        elif isinstance(data, six.binary_type):
+        elif isinstance(data, bytes):
             return self._encode_bytes(data, path)
         else:
             return data, []
@@ -103,7 +103,7 @@ class TokenEncoder(object):
         return base64.b64encode(data).decode('utf-8'), [path]
 
 
-class TokenDecoder(object):
+class TokenDecoder:
     """Decodes token strings back into dictionaries.
 
     This performs the inverse operation to the TokenEncoder, accepting
@@ -171,7 +171,7 @@ class TokenDecoder(object):
         container[path[-1]] = value
 
 
-class PaginatorModel(object):
+class PaginatorModel:
     def __init__(self, paginator_config):
         self._paginator_config = paginator_config['pagination']
 
@@ -184,7 +184,7 @@ class PaginatorModel(object):
         return single_paginator_config
 
 
-class PageIterator(object):
+class PageIterator:
     def __init__(self, method, input_token, output_token, more_results,
                  result_keys, non_aggregate_keys, limit_key, max_items,
                  starting_token, page_size, op_kwargs):
@@ -236,7 +236,7 @@ class PageIterator(object):
     def __iter__(self):
         current_kwargs = self._op_kwargs
         previous_next_token = None
-        next_token = dict((key, None) for key in self._input_token)
+        next_token = {key: None for key in self._input_token}
         if self._starting_token is not None:
             # If the starting token exists, populate the next_token with the
             # values inside it. This ensures that we have the service's
@@ -322,8 +322,7 @@ class PageIterator(object):
         for page in self:
             results = compiled.search(page)
             if isinstance(results, list):
-                for element in results:
-                    yield element
+                yield from results
             else:
                 # Yield result directly if it is not a list.
                 yield results
@@ -369,7 +368,7 @@ class PageIterator(object):
         # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        if isinstance(all_data, (list, six.string_types)):
+        if isinstance(all_data, (list, (str,))):
             data = all_data[starting_truncation:]
         else:
             data = None
@@ -387,7 +386,7 @@ class PageIterator(object):
             sample = token.search(parsed)
             if isinstance(sample, list):
                 empty_value = []
-            elif isinstance(sample, six.string_types):
+            elif isinstance(sample, str):
                 empty_value = ''
             elif isinstance(sample, (int, float)):
                 empty_value = 0
@@ -479,7 +478,7 @@ class PageIterator(object):
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float, six.string_types)):
+                elif isinstance(result_value, (int, float, (str,))):
                     # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result, result_expression.expression,
@@ -550,7 +549,7 @@ class PageIterator(object):
         return dict(zip(self._input_token, deprecated_token))
 
 
-class Paginator(object):
+class Paginator:
     PAGE_ITERATOR_CLS = PageIterator
 
     def __init__(self, method, pagination_config, model):
@@ -639,7 +638,7 @@ class Paginator(object):
             input_members = self._model.input_shape.members
             limit_key_shape = input_members.get(self._limit_key)
             if limit_key_shape.type_name == 'string':
-                if not isinstance(page_size, six.string_types):
+                if not isinstance(page_size, str):
                     page_size = str(page_size)
             else:
                 page_size = int(page_size)
@@ -650,7 +649,7 @@ class Paginator(object):
         }
 
 
-class ResultKeyIterator(object):
+class ResultKeyIterator:
     """Iterates over the results of paginated responses.
 
     Each iterator is associated with a single result key.
@@ -673,5 +672,4 @@ class ResultKeyIterator(object):
             results = self.result_key.search(page)
             if results is None:
                 results = []
-            for result in results:
-                yield result
+            yield from results

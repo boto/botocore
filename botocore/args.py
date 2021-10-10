@@ -54,7 +54,7 @@ LEGACY_GLOBAL_STS_REGIONS = [
 ]
 
 
-class ClientArgsCreator(object):
+class ClientArgsCreator:
     def __init__(self, event_emitter, user_agent, response_parser_factory,
                  loader, exceptions_factory, config_store):
         self._event_emitter = event_emitter
@@ -71,7 +71,7 @@ class ClientArgsCreator(object):
             service_model, client_config, endpoint_bridge, region_name,
             endpoint_url, is_secure, scoped_config)
 
-        service_name = final_args['service_name'] # noqa: F841
+        service_name = final_args['service_name']  # noqa: F841
         parameter_validation = final_args['parameter_validation']
         endpoint_config = final_args['endpoint_config']
         protocol = final_args['protocol']

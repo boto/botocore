@@ -19,7 +19,7 @@
 from botocore.utils import is_json_value_header
 
 
-class ShapeDocumenter(object):
+class ShapeDocumenter:
     EVENT_NAME = ''
 
     def __init__(self, service_name, operation_name, event_emitter,
@@ -76,17 +76,22 @@ class ShapeDocumenter(object):
                         is_required=is_required)
             if is_top_level_param:
                 self._event_emitter.emit(
-                    'docs.%s.%s.%s.%s' % (self.EVENT_NAME,
-                                          self._service_name,
-                                          self._operation_name,
-                                          name),
-                    section=section)
+                    'docs.{}.{}.{}.{}'.format(
+                        self.EVENT_NAME,
+                        self._service_name,
+                        self._operation_name,
+                        name
+                    ),
+                    section=section
+                )
             at_overlying_method_section = (len(history) == 1)
             if at_overlying_method_section:
                 self._event_emitter.emit(
-                    'docs.%s.%s.%s.complete-section' % (self.EVENT_NAME,
-                                                        self._service_name,
-                                                        self._operation_name),
+                    'docs.{}.{}.{}.complete-section'.format(
+                        self.EVENT_NAME,
+                        self._service_name,
+                        self._operation_name
+                    ),
                     section=section)
             history.pop()
 

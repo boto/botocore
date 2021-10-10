@@ -14,7 +14,7 @@ import copy
 import logging
 from collections import deque, namedtuple
 
-from botocore.compat import accepts_kwargs, six
+from botocore.compat import accepts_kwargs
 from botocore.utils import EVENT_ALIASES
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def first_non_none_response(responses, default=None):
     return default
 
 
-class BaseEventHooks(object):
+class BaseEventHooks:
     def emit(self, event_name, **kwargs):
         """Call all handlers subscribed to an event.
 
@@ -144,7 +144,7 @@ class BaseEventHooks(object):
         pass
 
     def _verify_is_callable(self, func):
-        if not six.callable(func):
+        if not callable(func):
             raise ValueError("Event handler %s must be callable." % func)
 
     def _verify_accept_kwargs(self, func):
@@ -418,7 +418,7 @@ class EventAliaser(BaseEventHooks):
                 continue
 
             new_name = '.'.join(event_parts)
-            logger.debug("Changing event name from %s to %s" % (
+            logger.debug("Changing event name from {} to {}".format(
                 event_name, new_name
             ))
             self._alias_name_cache[event_name] = new_name
@@ -443,7 +443,7 @@ class EventAliaser(BaseEventHooks):
         )
 
 
-class _PrefixTrie(object):
+class _PrefixTrie:
     """Specialized prefix trie that handles wildcards.
 
     The prefixes in this case are based on dot separated

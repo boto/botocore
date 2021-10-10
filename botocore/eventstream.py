@@ -32,34 +32,34 @@ class DuplicateHeader(ParserError):
     """Duplicate header found in the event. """
     def __init__(self, header):
         message = 'Duplicate header present: "%s"' % header
-        super(DuplicateHeader, self).__init__(message)
+        super().__init__(message)
 
 
 class InvalidHeadersLength(ParserError):
     """Headers length is longer than the maximum. """
     def __init__(self, length):
-        message = 'Header length of %s exceeded the maximum of %s' % (
+        message = 'Header length of {} exceeded the maximum of {}'.format(
             length, _MAX_HEADERS_LENGTH
         )
-        super(InvalidHeadersLength, self).__init__(message)
+        super().__init__(message)
 
 
 class InvalidPayloadLength(ParserError):
     """Payload length is longer than the maximum. """
     def __init__(self, length):
-        message = 'Payload length of %s exceeded the maximum of %s' % (
+        message = 'Payload length of {} exceeded the maximum of {}'.format(
             length, _MAX_PAYLOAD_LENGTH
         )
-        super(InvalidPayloadLength, self).__init__(message)
+        super().__init__(message)
 
 
 class ChecksumMismatch(ParserError):
     """Calculated checksum did not match the expected checksum. """
     def __init__(self, expected, calculated):
-        message = 'Checksum mismatch: expected 0x%08x, calculated 0x%08x' % (
+        message = 'Checksum mismatch: expected 0x{:08x}, calculated 0x{:08x}'.format(
             expected, calculated
         )
-        super(ChecksumMismatch, self).__init__(message)
+        super().__init__(message)
 
 
 class NoInitialResponseError(ParserError):
@@ -70,10 +70,10 @@ class NoInitialResponseError(ParserError):
     """
     def __init__(self):
         message = 'First event was not of the initial-response type'
-        super(NoInitialResponseError, self).__init__(message)
+        super().__init__(message)
 
 
-class DecodeUtils(object):
+class DecodeUtils:
     """Unpacking utility functions used in the decoder.
 
     All methods on this class take raw bytes and return  a tuple containing
@@ -288,7 +288,7 @@ def _validate_checksum(data, checksum, crc=0):
         raise ChecksumMismatch(checksum, computed_checksum)
 
 
-class MessagePrelude(object):
+class MessagePrelude:
     """Represents the prelude of an event stream message. """
     def __init__(self, total_length, headers_length, crc):
         self.total_length = total_length
@@ -329,7 +329,7 @@ class MessagePrelude(object):
         return _PRELUDE_LENGTH + self.headers_length
 
 
-class EventStreamMessage(object):
+class EventStreamMessage:
     """Represents an event stream message. """
     def __init__(self, prelude, headers, payload, crc):
         self.prelude = prelude
@@ -348,7 +348,7 @@ class EventStreamMessage(object):
         }
 
 
-class EventStreamHeaderParser(object):
+class EventStreamHeaderParser:
     """ Parses the event headers from an event stream message.
 
     Expects all of the header data upfront and creates a dictionary of headers
@@ -432,7 +432,7 @@ class EventStreamHeaderParser(object):
         self._data = self._data[consumed:]
 
 
-class EventStreamBuffer(object):
+class EventStreamBuffer:
     """Streaming based event stream buffer
 
     A buffer class that wraps bytes from an event stream providing parsed
@@ -531,7 +531,7 @@ class EventStreamBuffer(object):
         return self
 
 
-class EventStream(object):
+class EventStream:
     """Wrapper class for an event stream body.
 
     This wraps the underlying streaming body, parsing it for individual events
@@ -591,8 +591,7 @@ class EventStream(object):
         event_stream_buffer = EventStreamBuffer()
         for chunk in self._raw_stream.stream():
             event_stream_buffer.add_data(chunk)
-            for event in event_stream_buffer:
-                yield event
+            yield from event_stream_buffer
 
     def _parse_event(self, event):
         response_dict = event.to_response_dict()

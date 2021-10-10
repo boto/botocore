@@ -59,7 +59,7 @@ def get_cert_path(verify):
         return verify
 
     cert_path = where()
-    logger.debug("Certificate path: {0}".format(cert_path))
+    logger.debug(f"Certificate path: {cert_path}")
 
     return cert_path
 
@@ -120,7 +120,7 @@ def ensure_boolean(val):
         return val.lower() == 'true'
 
 
-class ProxyConfiguration(object):
+class ProxyConfiguration:
     """Represents a proxy configuration dictionary and additional settings.
 
     This class represents a proxy configuration dictionary and provides utility
@@ -166,9 +166,9 @@ class ProxyConfiguration(object):
             return 'http://' + proxy_url
 
     def _construct_basic_auth(self, username, password):
-        auth_str = '{0}:{1}'.format(username, password)
+        auth_str = f'{username}:{password}'
         encoded_str = b64encode(auth_str.encode('ascii')).strip().decode()
-        return 'Basic {0}'.format(encoded_str)
+        return f'Basic {encoded_str}'
 
     def _get_auth_from_url(self, url):
         parsed_url = urlparse(url)
@@ -178,7 +178,7 @@ class ProxyConfiguration(object):
             return None, None
 
 
-class URLLib3Session(object):
+class URLLib3Session:
     """A basic HTTP client that supports connection pooling and proxies.
 
     This class is inspired by requests.adapters.HTTPAdapter, but has been
@@ -304,7 +304,7 @@ class URLLib3Session(object):
                 context.load_cert_chain(proxy_cert)
 
             return context
-        except (IOError, URLLib3SSLError) as e:
+        except (OSError, URLLib3SSLError) as e:
             raise InvalidProxiesConfigError(error=e)
 
     def _get_connection_manager(self, url, proxy_url=None):

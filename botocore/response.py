@@ -27,7 +27,7 @@ from botocore.hooks import first_non_none_response  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
-class StreamingBody(object):
+class StreamingBody:
     """Wrapper class for an http response body.
 
     This provides a few additional conveniences that do not exist

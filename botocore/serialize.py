@@ -44,7 +44,7 @@ import re
 from xml.etree import ElementTree
 
 from botocore import validate
-from botocore.compat import formatdate, json, six
+from botocore.compat import formatdate, json
 from botocore.utils import (
     conditionally_calculate_md5,
     is_json_value_header,
@@ -68,7 +68,7 @@ def create_serializer(protocol_name, include_validation=True):
     return serializer
 
 
-class Serializer(object):
+class Serializer:
     DEFAULT_METHOD = 'POST'
     # Clients can change this to a different MutableMapping
     # (i.e OrderedDict) if they want.  This is used in the
@@ -164,7 +164,7 @@ class Serializer(object):
         # Returns the base64-encoded version of value, handling
         # both strings and bytes. The returned value is a string
         # via the default encoding.
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode(self.DEFAULT_ENCODING)
         return base64.b64encode(value).strip().decode(
             self.DEFAULT_ENCODING)
@@ -180,7 +180,7 @@ class Serializer(object):
             member for member, shape in input_members.items()
             if shape.serialization.get('hostLabel')
         ]
-        format_kwargs = dict((name, parameters[name]) for name in host_labels)
+        format_kwargs = {name: parameters[name] for name in host_labels}
 
         return host_prefix_expression.format(**format_kwargs)
 
@@ -239,7 +239,7 @@ class QuerySerializer(Serializer):
             member_shape = members[key]
             member_prefix = self._get_serialized_name(member_shape, key)
             if prefix:
-                member_prefix = '%s.%s' % (prefix, member_prefix)
+                member_prefix = f'{prefix}.{member_prefix}'
             self._serialize(serialized, value, member_shape, member_prefix)
 
     def _serialize_type_list(self, serialized, value, shape, prefix=''):
@@ -255,9 +255,9 @@ class QuerySerializer(Serializer):
                 list_prefix = '.'.join(prefix.split('.')[:-1] + [name])
         else:
             list_name = shape.member.serialization.get('name', 'member')
-            list_prefix = '%s.%s' % (prefix, list_name)
+            list_prefix = f'{prefix}.{list_name}'
         for i, element in enumerate(value, 1):
-            element_prefix = '%s.%s' % (list_prefix, i)
+            element_prefix = f'{list_prefix}.{i}'
             element_shape = shape.member
             self._serialize(serialized, element, element_shape, element_prefix)
 
@@ -323,7 +323,7 @@ class EC2Serializer(QuerySerializer):
 
     def _serialize_type_list(self, serialized, value, shape, prefix=''):
         for i, element in enumerate(value, 1):
-            element_prefix = '%s.%s' % (prefix, i)
+            element_prefix = f'{prefix}.{i}'
             element_shape = shape.member
             self._serialize(serialized, element, element_shape, element_prefix)
 
@@ -332,8 +332,10 @@ class JSONSerializer(Serializer):
     TIMESTAMP_FORMAT = 'unixtimestamp'
 
     def serialize_to_request(self, parameters, operation_model):
-        target = '%s.%s' % (operation_model.metadata['targetPrefix'],
-                            operation_model.name)
+        target = '{}.{}'.format(
+            operation_model.metadata['targetPrefix'],
+            operation_model.name
+        )
         json_version = operation_model.metadata['jsonVersion']
         serialized = self._create_default_request()
         serialized['method'] = operation_model.http.get('method',
@@ -525,7 +527,7 @@ class BaseRestSerializer(Serializer):
                 partitioned['body_kwargs'], shape)
 
     def _encode_payload(self, body):
-        if isinstance(body, six.text_type):
+        if isinstance(body, str):
             return body.encode(self.DEFAULT_ENCODING)
         return body
 
@@ -697,7 +699,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = six.text_type(params)
+        node.text = str(params)
 
 
 SERIALIZERS = {

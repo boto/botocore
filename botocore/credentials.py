@@ -142,7 +142,7 @@ def create_credential_resolver(session, cache=None, region_name=None):
     return resolver
 
 
-class ProfileProviderBuilder(object):
+class ProfileProviderBuilder:
     """This class handles the creation of profile based providers.
 
     NOTE: This class is only intended for internal use.
@@ -261,7 +261,7 @@ def create_assume_role_refresher(client, params):
 
 def create_mfa_serial_refresher(actual_refresh):
 
-    class _Refresher(object):
+    class _Refresher:
         def __init__(self, refresh):
             self._refresh = refresh
             self._has_been_called = False
@@ -278,7 +278,7 @@ def create_mfa_serial_refresher(actual_refresh):
     return _Refresher(actual_refresh)
 
 
-class JSONFileCache(object):
+class JSONFileCache:
     """JSON file cache.
     This provides a dict like interface that stores JSON serializable
     objects.
@@ -307,7 +307,7 @@ class JSONFileCache(object):
         try:
             with open(actual_key) as f:
                 return json.load(f)
-        except (OSError, ValueError, IOError):
+        except (OSError, ValueError):
             raise KeyError(cache_key)
 
     def __setitem__(self, cache_key, value):
@@ -329,7 +329,7 @@ class JSONFileCache(object):
         return full_path
 
 
-class Credentials(object):
+class Credentials:
     """
     Holds the credentials needed to authenticate requests.
 
@@ -643,12 +643,12 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
     def refresh_needed(self, refresh_in=None):
         if self._frozen_credentials is None:
             return True
-        return super(DeferredRefreshableCredentials, self).refresh_needed(
+        return super().refresh_needed(
             refresh_in
         )
 
 
-class CachedCredentialFetcher(object):
+class CachedCredentialFetcher:
     DEFAULT_EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, cache=None, expiry_window_seconds=None):
@@ -734,7 +734,7 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
         if not self._role_session_name:
             self._generate_assume_role_name()
 
-        super(BaseAssumeRoleCredentialFetcher, self).__init__(
+        super().__init__(
             cache, expiry_window_seconds
         )
 
@@ -806,7 +806,7 @@ class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
         if self._mfa_prompter is None:
             self._mfa_prompter = getpass.getpass
 
-        super(AssumeRoleCredentialFetcher, self).__init__(
+        super().__init__(
             client_creator, role_arn, extra_args=extra_args,
             cache=cache, expiry_window_seconds=expiry_window_seconds
         )
@@ -880,7 +880,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
         """
         self._web_identity_token_loader = web_identity_token_loader
 
-        super(AssumeRoleWithWebIdentityCredentialFetcher, self).__init__(
+        super().__init__(
             client_creator, role_arn, extra_args=extra_args,
             cache=cache, expiry_window_seconds=expiry_window_seconds
         )
@@ -903,7 +903,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
         return assume_role_kwargs
 
 
-class CredentialProvider(object):
+class CredentialProvider:
     # A short name to identify the provider within botocore.
     METHOD = None
 
@@ -1733,7 +1733,7 @@ class AssumeRoleWithWebIdentityProvider(CredentialProvider):
         )
 
 
-class CanonicalNameCredentialSourcer(object):
+class CanonicalNameCredentialSourcer:
     def __init__(self, providers):
         self._providers = providers
 
@@ -1889,7 +1889,7 @@ class ContainerProvider(CredentialProvider):
         return self.ENV_VAR in self._environ
 
 
-class CredentialResolver(object):
+class CredentialResolver:
     def __init__(self, providers):
         """
 
@@ -2001,7 +2001,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
         self._account_id = account_id
         self._start_url = start_url
         self._token_loader = token_loader
-        super(SSOCredentialFetcher, self).__init__(
+        super().__init__(
             cache, expiry_window_seconds
         )
 

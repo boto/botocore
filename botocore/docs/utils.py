@@ -73,7 +73,7 @@ def get_official_service_name(service_model):
     if short_name.startswith('AWS'):
         short_name = short_name[4:]
     if short_name and short_name.lower() not in official_name.lower():
-        official_name += ' ({0})'.format(short_name)
+        official_name += f' ({short_name})'
     return official_name
 
 
@@ -92,12 +92,12 @@ class DocumentedShape (_DocumentedShape):
             members = []
         if required_members is None:
             required_members = []
-        return super(DocumentedShape, cls).__new__(
+        return super().__new__(
             cls, name, type_name, documentation, metadata, members,
             required_members)
 
 
-class AutoPopulatedParam(object):
+class AutoPopulatedParam:
     def __init__(self, name, param_description=None):
         self.name = name
         self.param_description = param_description
@@ -128,7 +128,7 @@ class AutoPopulatedParam(object):
                 section.delete_section(self.name)
 
 
-class HideParamFromOperations(object):
+class HideParamFromOperations:
     """Hides a single parameter from multiple operations.
 
     This method will remove a parameter from documentation and from
@@ -166,7 +166,7 @@ class HideParamFromOperations(object):
             section.delete_section(self._parameter_name)
 
 
-class AppendParamDocumentation(object):
+class AppendParamDocumentation:
     """Appends documentation to a specific parameter"""
     def __init__(self, parameter_name, doc_string):
         self._parameter_name = parameter_name

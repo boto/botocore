@@ -206,7 +206,7 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             py_type = py_type_name(shape.type_name)
         if is_top_level_param:
             type_section = section.add_new_section('param-type')
-            type_section.write(':type %s: %s' % (name, py_type))
+            type_section.write(f':type {name}: {py_type}')
             end_type_section = type_section.add_new_section('end-param-type')
             end_type_section.style.new_line()
             name_section = section.add_new_section('param-name')

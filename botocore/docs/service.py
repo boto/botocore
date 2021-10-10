@@ -17,7 +17,7 @@ from botocore.docs.waiter import WaiterDocumenter
 from botocore.exceptions import DataNotFoundError
 
 
-class ServiceDocumenter(object):
+class ServiceDocumenter:
     def __init__(self, service_name, session):
         self._session = session
         self._service_name = service_name
@@ -55,9 +55,7 @@ class ServiceDocumenter(object):
     def title(self, section):
         section.style.h1(self._client.__class__.__name__)
         self._event_emitter.emit(
-            'docs.%s.%s' % ('title',
-                            self._service_name),
-            section=section
+            f'docs.title.{self._service_name}', section=section
         )
 
     def table_of_contents(self, section):

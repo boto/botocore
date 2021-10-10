@@ -62,7 +62,7 @@ def create_waiter_with_client(waiter_name, waiter_model, client):
     )
 
     # Rename the waiter class based on the type of waiter.
-    waiter_class_name = str('%s.Waiter.%s' % (
+    waiter_class_name = str('{}.Waiter.{}'.format(
         get_service_module_name(client.meta.service_model),
         waiter_name))
 
@@ -83,7 +83,7 @@ def is_valid_waiter_error(response):
     return False
 
 
-class NormalizedOperationMethod(object):
+class NormalizedOperationMethod:
     def __init__(self, client_method):
         self._client_method = client_method
 
@@ -94,7 +94,7 @@ class NormalizedOperationMethod(object):
             return e.response
 
 
-class WaiterModel(object):
+class WaiterModel:
     SUPPORTED_VERSION = 2
 
     def __init__(self, waiter_config):
@@ -137,7 +137,7 @@ class WaiterModel(object):
         return SingleWaiterConfig(single_waiter_config)
 
 
-class SingleWaiterConfig(object):
+class SingleWaiterConfig:
     """Represents the waiter configuration for a single waiter.
 
     A single waiter is considered the configuration for a single
@@ -163,7 +163,7 @@ class SingleWaiterConfig(object):
         return acceptors
 
 
-class AcceptorConfig(object):
+class AcceptorConfig:
     def __init__(self, config):
         self.state = config['state']
         self.matcher = config['matcher']
@@ -174,11 +174,11 @@ class AcceptorConfig(object):
     @property
     def explanation(self):
         if self.matcher == 'path':
-            return 'For expression "%s" we matched expected path: "%s"' % (self.argument, self.expected)
+            return f'For expression "{self.argument}" we matched expected path: "{self.expected}"'
         elif self.matcher == 'pathAll':
-            return 'For expression "%s" all members matched excepted path: "%s"' % (self.argument, self.expected)
+            return f'For expression "{self.argument}" all members matched excepted path: "{self.expected}"'
         elif self.matcher == 'pathAny':
-            return 'For expression "%s" we matched expected path: "%s" at least once' % (self.argument, self.expected)
+            return f'For expression "{self.argument}" we matched expected path: "{self.expected}" at least once'
         elif self.matcher == 'status':
             return 'Matched expected HTTP status code: %s' % self.expected
         elif self.matcher == 'error':
@@ -285,7 +285,7 @@ class AcceptorConfig(object):
         return acceptor_matches
 
 
-class Waiter(object):
+class Waiter:
     def __init__(self, name, config, operation_method):
         """
 
@@ -334,7 +334,7 @@ class Waiter(object):
                     # can just handle here by raising an exception.
                     raise WaiterError(
                         name=self.name,
-                        reason='An error occurred (%s): %s' % (
+                        reason='An error occurred ({}): {}'.format(
                             response['Error'].get('Code', 'Unknown'),
                             response['Error'].get('Message', 'Unknown'),
                         ),

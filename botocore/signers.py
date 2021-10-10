@@ -18,7 +18,7 @@ import weakref
 import botocore
 import botocore.auth
 from botocore.awsrequest import create_request_object, prepare_request_dict
-from botocore.compat import OrderedDict, six
+from botocore.compat import OrderedDict
 from botocore.exceptions import (
     UnknownClientMethodError,
     UnknownSignatureVersionError,
@@ -30,7 +30,7 @@ from botocore.utils import fix_s3_host  # noqa: F401
 from botocore.utils import datetime2timestamp
 
 
-class RequestSigner(object):
+class RequestSigner:
     """
     An object to sign requests before they go out over the wire using
     one of the authentication mechanisms defined in ``auth.py``. This
@@ -134,7 +134,7 @@ class RequestSigner(object):
 
         # Allow mutating request before signing
         self._event_emitter.emit(
-            'before-sign.{0}.{1}'.format(
+            'before-sign.{}.{}'.format(
                 self._service_id.hyphenize(), operation_name),
             request=request, signing_name=signing_name,
             region_name=self._region_name,
@@ -188,7 +188,7 @@ class RequestSigner(object):
             signature_version += suffix
 
         handler, response = self._event_emitter.emit_until_response(
-            'choose-signer.{0}.{1}'.format(
+            'choose-signer.{}.{}'.format(
                 self._service_id.hyphenize(), operation_name),
             signing_name=self._signing_name, region_name=self._region_name,
             signature_version=signature_version, context=context)
@@ -281,7 +281,7 @@ class RequestSigner(object):
         return request.url
 
 
-class CloudFrontSigner(object):
+class CloudFrontSigner:
     '''A signer to create a signed CloudFront URL.
 
     First you create a cloudfront signer based on a normalized RSA signer::
@@ -343,7 +343,7 @@ class CloudFrontSigner(object):
         if date_less_than is not None:
             # We still need to build a canned policy for signing purpose
             policy = self.build_policy(url, date_less_than)
-        if isinstance(policy, six.text_type):
+        if isinstance(policy, str):
             policy = policy.encode('utf8')
         if date_less_than is not None:
             params = ['Expires=%s' % int(datetime2timestamp(date_less_than))]
@@ -454,7 +454,7 @@ def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
     # netloc would be treated as a path component. To work around this we
     # introduce https here and remove it once we're done processing it.
     scheme = 'https://'
-    endpoint_url = '%s%s:%s' % (scheme, DBHostname, Port)
+    endpoint_url = f'{scheme}{DBHostname}:{Port}'
     prepare_request_dict(request_dict, endpoint_url)
     presigned_url = self._request_signer.generate_presigned_url(
         operation_name='connect', request_dict=request_dict,
@@ -463,7 +463,7 @@ def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
     return presigned_url[len(scheme):]
 
 
-class S3PostPresigner(object):
+class S3PostPresigner:
     def __init__(self, request_signer):
         self._request_signer = request_signer
 

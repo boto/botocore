@@ -22,7 +22,7 @@ from botocore.exceptions import (
 )
 
 
-class Config(object):
+class Config:
     """Advanced configuration for Botocore clients.
 
     :type region_name: str
@@ -225,7 +225,7 @@ class Config(object):
         # options
         if len(args) > len(option_order):
             raise TypeError(
-                'Takes at most %s arguments (%s given)' % (
+                'Takes at most {} arguments ({} given)'.format(
                     len(option_order), len(args)))
 
         # Iterate through the args passed through to the constructor and map

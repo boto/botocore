@@ -64,7 +64,7 @@ from botocore.utils import EVENT_ALIASES, validate_region_name
 logger = logging.getLogger(__name__)
 
 
-class Session(object):
+class Session:
     """
     The Session object collects together useful functionality
     from `botocore` as well as important data such as configuration
@@ -468,17 +468,17 @@ class Session(object):
         appended to the end of the user agent string.
 
         """
-        base = '%s/%s Python/%s %s/%s' % (self.user_agent_name,
-                                          self.user_agent_version,
-                                          platform.python_version(),
-                                          platform.system(),
-                                          platform.release())
+        base = (
+            f'{self.user_agent_name}/{self.user_agent_version} '
+            f'Python/{platform.python_version()} '
+            f'{platform.system()}/{platform.release()}'
+        )
         if HAS_CRT:
-            base += ' awscrt/%s' % self._get_crt_version()
+            base += f' awscrt/{self._get_crt_version()}'
         if os.environ.get('AWS_EXECUTION_ENV') is not None:
-            base += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
+            base += f' exec-env/{os.environ.get("AWS_EXECUTION_ENV")}'
         if self.user_agent_extra:
-            base += ' %s' % self.user_agent_extra
+            base += f' {self.user_agent_extra}'
 
         return base
 
@@ -928,7 +928,7 @@ class Session(object):
         return results
 
 
-class ComponentLocator(object):
+class ComponentLocator:
     """Service locator for session components."""
     def __init__(self):
         self._components = {}
@@ -1007,7 +1007,7 @@ class SessionVarDict(MutableMapping):
         )
 
 
-class SubsetChainConfigFactory(object):
+class SubsetChainConfigFactory:
     """A class for creating backwards compatible configuration chains.
 
     This class can be used instead of

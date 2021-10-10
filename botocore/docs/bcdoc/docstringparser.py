@@ -51,7 +51,7 @@ class DocStringParser(six.moves.html_parser.HTMLParser):
         self.tree.add_data(data)
 
 
-class HTMLTree(object):
+class HTMLTree:
     """
     A tree which handles HTML nodes. Designed to work with a python HTML parser,
     meaning that the current_node will be the most recently opened tag. When
@@ -93,7 +93,7 @@ class HTMLTree(object):
         self.head.write(self.doc)
 
 
-class Node(object):
+class Node:
     def __init__(self, parent=None):
         self.parent = parent
 
@@ -103,7 +103,7 @@ class Node(object):
 
 class StemNode(Node):
     def __init__(self, parent=None):
-        super(StemNode, self).__init__(parent)
+        super().__init__(parent)
         self.children = []
 
     def add_child(self, child):
@@ -123,7 +123,7 @@ class TagNode(StemNode):
     A generic Tag node. It will verify that handlers exist before writing.
     """
     def __init__(self, tag, attrs=None, parent=None):
-        super(TagNode, self).__init__(parent)
+        super().__init__(parent)
         self.attrs = attrs
         self.tag = tag
 
@@ -145,11 +145,11 @@ class TagNode(StemNode):
 
 class LineItemNode(TagNode):
     def __init__(self, attrs=None, parent=None):
-        super(LineItemNode, self).__init__('li', attrs, parent)
+        super().__init__('li', attrs, parent)
 
     def write(self, doc):
         self._lstrip(self)
-        super(LineItemNode, self).write(doc)
+        super().write(doc)
 
     def _lstrip(self, node):
         """
@@ -175,8 +175,8 @@ class DataNode(Node):
     A Node that contains only string data.
     """
     def __init__(self, data, parent=None):
-        super(DataNode, self).__init__(parent)
-        if not isinstance(data, six.string_types):
+        super().__init__(parent)
+        if not isinstance(data, str):
             raise ValueError("Expecting string type, %s given." % type(data))
         self.data = data
 

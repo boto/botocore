@@ -5,7 +5,7 @@
 import threading
 
 
-class RetryQuota(object):
+class RetryQuota:
     INITIAL_CAPACITY = 500
 
     def __init__(self, initial_capacity=INITIAL_CAPACITY, lock=None):

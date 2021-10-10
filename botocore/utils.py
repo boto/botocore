@@ -39,7 +39,6 @@ from botocore.compat import (
     get_tzinfo_options,
     json,
     quote,
-    six,
     urlparse,
     urlsplit,
     urlunsplit,
@@ -369,7 +368,7 @@ class BadIMDSRequestError(Exception):
         self.request = request
 
 
-class IMDSFetcher(object):
+class IMDSFetcher:
 
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
     _TOKEN_PATH = 'latest/api/token'
@@ -709,11 +708,14 @@ def percent_encode_sequence(mapping, safe=SAFE_CHARS):
     for key, value in pairs:
         if isinstance(value, list):
             for element in value:
-                encoded_pairs.append('%s=%s' % (percent_encode(key),
-                                                percent_encode(element)))
+                encoded_pairs.append(
+                    f'{percent_encode(key)}={percent_encode(element)}'
+                )
         else:
-            encoded_pairs.append('%s=%s' % (percent_encode(key),
-                                            percent_encode(value)))
+            encoded_pairs.append(
+                f'{percent_encode(key)}={percent_encode(value)}'
+            )
+
     return '&'.join(encoded_pairs)
 
 
@@ -730,10 +732,10 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     first.
     """
     # If its not a binary or text string, make it a text string.
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
-        input_str = six.text_type(input_str)
+    if not isinstance(input_str, (bytes, str)):
+        input_str = str(input_str)
     # If it's not bytes, make it bytes by UTF-8 encoding it.
-    if not isinstance(input_str, six.binary_type):
+    if not isinstance(input_str, bytes):
         input_str = input_str.encode('utf-8')
     return quote(input_str, safe=safe)
 
@@ -754,7 +756,7 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
         # enforce that GMT == UTC.
         return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
-        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+        raise ValueError(f'Invalid timestamp "{value}": {e}')
 
 
 def parse_timestamp(value):
@@ -922,7 +924,7 @@ def _in_pairs(iterable):
     return zip_longest(shared_iter, shared_iter)
 
 
-class CachedProperty(object):
+class CachedProperty:
     """A read only property that caches the initially computed value.
 
     This descriptor will only call the provided ``fget`` function once.
@@ -942,7 +944,7 @@ class CachedProperty(object):
             return computed_value
 
 
-class ArgumentGenerator(object):
+class ArgumentGenerator:
     """Generate sample input based on a shape model.
 
     This class contains a ``generate_skeleton`` method that will take
@@ -1278,7 +1280,7 @@ def _get_new_endpoint(original_endpoint, new_endpoint, use_new_scheme=True):
         ''
     )
     final_endpoint = urlunsplit(final_endpoint_components)
-    logger.debug('Updating URI from %s to %s' % (
+    logger.debug('Updating URI from {} to {}'.format(
         original_endpoint, final_endpoint))
     return final_endpoint
 
@@ -1309,7 +1311,7 @@ def hyphenize_service_id(service_id):
     return service_id.replace(' ', '-').lower()
 
 
-class S3RegionRedirector(object):
+class S3RegionRedirector:
     def __init__(self, endpoint_bridge, client, cache=None):
         self._endpoint_resolver = endpoint_bridge
         self._cache = cache
@@ -1473,7 +1475,7 @@ class InvalidArnException(ValueError):
     pass
 
 
-class ArnParser(object):
+class ArnParser:
     def parse_arn(self, arn):
         arn_parts = arn.split(':', 5)
         if len(arn_parts) < 6:
@@ -1490,7 +1492,7 @@ class ArnParser(object):
         }
 
 
-class S3ArnParamHandler(object):
+class S3ArnParamHandler:
     _RESOURCE_REGEX = re.compile(
         r'^(?P<resource_type>accesspoint|outpost)[/:](?P<resource_name>.+)$'
     )
@@ -1577,7 +1579,7 @@ class S3ArnParamHandler(object):
         }
 
 
-class S3EndpointSetter(object):
+class S3EndpointSetter:
     _DEFAULT_PARTITION = 'aws'
     _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
 
@@ -1784,7 +1786,7 @@ class S3EndpointSetter(object):
             ''
         ))
         logger.debug(
-            'Updating URI from %s to %s' % (request.url, accesspoint_endpoint))
+            f'Updating URI from {request.url} to {accesspoint_endpoint}')
         request.url = accesspoint_endpoint
 
     def _get_netloc(self, request_context, region_name):
@@ -1816,7 +1818,7 @@ class S3EndpointSetter(object):
     def _get_accesspoint_netloc(self, request_context, region_name):
         s3_accesspoint = request_context['s3_accesspoint']
         accesspoint_netloc_components = [
-            '%s-%s' % (s3_accesspoint['name'], s3_accesspoint['account']),
+            '{}-{}'.format(s3_accesspoint['name'], s3_accesspoint['account']),
         ]
         outpost_name = s3_accesspoint.get('outpost_name')
         if self._endpoint_url:
@@ -1964,7 +1966,7 @@ class S3EndpointSetter(object):
         return fix_s3_host
 
 
-class S3ControlEndpointSetter(object):
+class S3ControlEndpointSetter:
     _DEFAULT_PARTITION = 'aws'
     _DEFAULT_DNS_SUFFIX = 'amazonaws.com'
     _HOST_LABEL_REGEX = re.compile(r'^[a-zA-Z0-9\-]{1,63}$')
@@ -2067,7 +2069,7 @@ class S3ControlEndpointSetter(object):
             ''
         ))
         logger.debug(
-            'Updating URI from %s to %s' % (request.url, arn_details_endpoint)
+            f'Updating URI from {request.url} to {arn_details_endpoint}'
         )
         request.url = arn_details_endpoint
 
@@ -2156,7 +2158,7 @@ class S3ControlEndpointSetter(object):
         request.headers['x-amz-outpost-id'] = outpost_name
 
 
-class S3ControlArnParamHandler(object):
+class S3ControlArnParamHandler:
     _RESOURCE_SPLIT_REGEX = re.compile(r'[/:]')
 
     def __init__(self, arn_parser=None):
@@ -2279,7 +2281,7 @@ class S3ControlArnParamHandler(object):
         context['arn_details'] = arn_details
 
 
-class ContainerMetadataFetcher(object):
+class ContainerMetadataFetcher:
 
     TIMEOUT_SECONDS = 2
     RETRY_ATTEMPTS = 3
@@ -2376,7 +2378,7 @@ class ContainerMetadataFetcher(object):
             raise MetadataRetrievalError(error_msg=error_msg)
 
     def full_url(self, relative_uri):
-        return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
+        return f'http://{self.IP_ADDRESS}{relative_uri}'
 
 
 def get_environ_proxies(url):
@@ -2459,7 +2461,7 @@ def conditionally_calculate_md5(params, **kwargs):
         params['headers']['Content-MD5'] = md5_digest
 
 
-class FileWebIdentityTokenLoader(object):
+class FileWebIdentityTokenLoader:
     def __init__(self, web_identity_token_path, _open=open):
         self._web_identity_token_path = web_identity_token_path
         self._open = _open
@@ -2469,7 +2471,7 @@ class FileWebIdentityTokenLoader(object):
             return token_file.read()
 
 
-class SSOTokenLoader(object):
+class SSOTokenLoader:
     def __init__(self, cache=None):
         if cache is None:
             cache = {}

@@ -191,10 +191,10 @@ def document_model_driven_method(section, method_name, operation_model,
     if service_uid is not None:
         method_intro_section.style.new_paragraph()
         method_intro_section.write("See also: ")
-        link = '%s/%s/%s' % (AWS_DOC_BASE, service_uid,
-                             operation_model.name)
-        method_intro_section.style.external_link(title="AWS API Documentation",
-                                                 link=link)
+        method_intro_section.style.external_link(
+            title="AWS API Documentation",
+            link=f'{AWS_DOC_BASE}/{service_uid}/{operation_model.name}'
+        )
         method_intro_section.writeln('')
 
     # Add the example section.

@@ -42,7 +42,7 @@ def block_endpoint_discovery_required_operations(model, **kwargs):
         raise EndpointDiscoveryRequired()
 
 
-class EndpointDiscoveryModel(object):
+class EndpointDiscoveryModel:
     def __init__(self, service_model):
         self._service_model = service_model
 
@@ -72,7 +72,7 @@ class EndpointDiscoveryModel(object):
         if not kwargs.get('Identifiers'):
             kwargs.pop('Operation', None)
             kwargs.pop('Identifiers', None)
-        return dict((k, v) for k, v in kwargs.items() if k in input_keys)
+        return {k: v for k, v in kwargs.items() if k in input_keys}
 
     def gather_identifiers(self, operation, params):
         return self._gather_ids(operation.input_shape, params)
@@ -90,7 +90,7 @@ class EndpointDiscoveryModel(object):
         return ids
 
 
-class EndpointDiscoveryManager(object):
+class EndpointDiscoveryManager:
     def __init__(self, client, cache=None, current_time=None, always_discover=True):
         if cache is None:
             cache = {}
@@ -214,7 +214,7 @@ class EndpointDiscoveryManager(object):
         return None
 
 
-class EndpointDiscoveryHandler(object):
+class EndpointDiscoveryHandler:
     def __init__(self, manager):
         self._manager = manager
 

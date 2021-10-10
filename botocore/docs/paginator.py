@@ -17,7 +17,7 @@ from botocore.docs.utils import DocumentedShape
 from botocore.utils import get_service_module_name
 
 
-class PaginatorDocumenter(object):
+class PaginatorDocumenter:
     def __init__(self, client, service_paginator_model):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
@@ -38,7 +38,7 @@ class PaginatorDocumenter(object):
         # List the available paginators and then document each paginator.
         for paginator_name in paginator_names:
             section.style.li(
-                ':py:class:`%s.Paginator.%s`' % (
+                ':py:class:`{}.Paginator.{}`'.format(
                     self._client.__class__.__name__, paginator_name))
             self._add_paginator(section, paginator_name)
 
@@ -47,7 +47,7 @@ class PaginatorDocumenter(object):
 
         # Docment the paginator class
         section.style.start_sphinx_py_class(
-            class_name='%s.Paginator.%s' % (
+            class_name='{}.Paginator.{}'.format(
                 self._client.__class__.__name__, paginator_name))
         section.style.start_codeblock()
         section.style.new_line()
@@ -160,7 +160,7 @@ def document_paginate_method(section, paginator_name, event_emitter,
 
     paginate_description = (
         'Creates an iterator that will paginate through responses '
-        'from :py:meth:`{0}.Client.{1}`.'.format(
+        'from :py:meth:`{}.Client.{}`.'.format(
             get_service_module_name(service_model), xform_name(paginator_name))
     )
 

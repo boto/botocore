@@ -32,7 +32,7 @@ def register_retry_handler(client):
     return limiter
 
 
-class ClientRateLimiter(object):
+class ClientRateLimiter:
 
     _MAX_RATE_ADJUST_SCALE = 2.0
 
@@ -73,7 +73,7 @@ class ClientRateLimiter(object):
                 new_rate, self._MAX_RATE_ADJUST_SCALE * measured_rate)
 
 
-class RateClocker(object):
+class RateClocker:
     """Tracks the rate at which a client is sending a request."""
 
     _DEFAULT_SMOOTHING = 0.8

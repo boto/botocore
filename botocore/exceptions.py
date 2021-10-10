@@ -11,7 +11,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from __future__ import unicode_literals
 
 from botocore.vendored import requests
 from botocore.vendored.requests.packages import urllib3
@@ -83,7 +82,7 @@ class HTTPClientError(BotoCoreError):
     def __init__(self, request=None, response=None, **kwargs):
         self.request = request
         self.response = response
-        super(HTTPClientError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def __reduce__(self):
         return _exception_from_packed_args, (
@@ -389,7 +388,7 @@ class WaiterError(BotoCoreError):
     fmt = 'Waiter {name} failed: {reason}'
 
     def __init__(self, name, reason, last_response):
-        super(WaiterError, self).__init__(name=name, reason=reason)
+        super().__init__(name=name, reason=reason)
         self.last_response = last_response
 
 
@@ -438,7 +437,7 @@ class ClientError(Exception):
             operation_name=operation_name,
             retry_info=retry_info,
         )
-        super(ClientError, self).__init__(msg)
+        super().__init__(msg)
         self.response = error_response
         self.operation_name = operation_name
 

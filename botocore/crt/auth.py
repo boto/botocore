@@ -90,10 +90,10 @@ class CrtSigV4Auth(BaseSigner):
             array = []
             for (param, value) in aws_request.params.items():
                 value = str(value)
-                array.append('%s=%s' % (param, value))
+                array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
-            crt_path = '%s?%s' % (crt_path, url_parts.query)
+            crt_path = f'{crt_path}?{url_parts.query}'
 
         crt_headers = awscrt.http.HttpHeaders(aws_request.headers.items())
 
@@ -273,10 +273,10 @@ class CrtSigV4AsymAuth(BaseSigner):
             array = []
             for (param, value) in aws_request.params.items():
                 value = str(value)
-                array.append('%s=%s' % (param, value))
+                array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
-            crt_path = '%s?%s' % (crt_path, url_parts.query)
+            crt_path = f'{crt_path}?{url_parts.query}'
 
         crt_headers = awscrt.http.HttpHeaders(aws_request.headers.items())
 
@@ -403,9 +403,10 @@ class CrtSigV4AsymQueryAuth(CrtSigV4AsymAuth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = dict(
-            [(k, v[0]) for k, v in
-             parse_qs(url_parts.query, keep_blank_values=True).items()])
+        query_dict = {
+            k: v[0] for k, v in
+            parse_qs(url_parts.query, keep_blank_values=True).items()
+        }
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing
@@ -493,9 +494,10 @@ class CrtSigV4QueryAuth(CrtSigV4Auth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = dict(
-            [(k, v[0]) for k, v in
-             parse_qs(url_parts.query, keep_blank_values=True).items()])
+        query_dict = {
+            k: v[0] for k, v in
+            parse_qs(url_parts.query, keep_blank_values=True).items()
+        }
         if request.params:
             query_dict.update(request.params)
             request.params = {}

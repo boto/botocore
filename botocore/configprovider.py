@@ -173,7 +173,7 @@ def _create_config_chain_mapping(chain_builder, config_variables):
     return mapping
 
 
-class ConfigChainFactory(object):
+class ConfigChainFactory:
     """Factory class to create our most common configuration chain case.
 
     This is a convenience class to construct configuration chains that follow
@@ -282,7 +282,7 @@ class ConfigChainFactory(object):
         return scoped_config_providers
 
 
-class ConfigValueStore(object):
+class ConfigValueStore:
     """The ConfigValueStore object stores configuration values."""
     def __init__(self, mapping=None):
         """Initialize a ConfigValueStore.
@@ -373,7 +373,7 @@ class ConfigValueStore(object):
         self._mapping[logical_name] = provider
 
 
-class BaseProvider(object):
+class BaseProvider:
     """Base class for configuration value providers.
 
     A configuration provider has some method of providing a configuration
@@ -451,7 +451,7 @@ class InstanceVarProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return 'InstanceVarProvider(instance_var=%s, session=%s)' % (
+        return 'InstanceVarProvider(instance_var={}, session={})'.format(
             self._instance_var,
             self._session,
         )
@@ -485,7 +485,7 @@ class ScopedConfigProvider(BaseProvider):
         return scoped_config.get(self._config_var_name)
 
     def __repr__(self):
-        return 'ScopedConfigProvider(config_var_name=%s, session=%s)' % (
+        return 'ScopedConfigProvider(config_var_name={}, session={})'.format(
             self._config_var_name,
             self._session,
         )
@@ -512,7 +512,7 @@ class EnvironmentProvider(BaseProvider):
         return None
 
     def __repr__(self):
-        return 'EnvironmentProvider(name=%s, env=%s)' % (self._name, self._env)
+        return f'EnvironmentProvider(name={self._name}, env={self._env})'
 
 
 class SectionConfigProvider(BaseProvider):

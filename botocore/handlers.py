@@ -285,7 +285,7 @@ def _sse_md5(params, sse_member_prefix='SSECustomer'):
     sse_key_member = sse_member_prefix + 'Key'
     sse_md5_member = sse_member_prefix + 'KeyMD5'
     key_as_bytes = params[sse_key_member]
-    if isinstance(key_as_bytes, six.text_type):
+    if isinstance(key_as_bytes, str):
         key_as_bytes = key_as_bytes.encode('utf-8')
     key_md5_str = base64.b64encode(
         get_md5(key_as_bytes).digest()).decode('utf-8')
@@ -321,7 +321,7 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
-class DeprecatedServiceDocumenter(object):
+class DeprecatedServiceDocumenter:
     def __init__(self, replacement_service_name):
         self._replacement_service_name = replacement_service_name
 
@@ -392,7 +392,7 @@ def handle_copy_source_param(params, **kwargs):
         # param validator take care of this.  It will
         # give a better error message.
         return
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         params['CopySource'] = _quote_source_header(source)
     elif isinstance(source, dict):
         params['CopySource'] = _quote_source_header_from_dict(source)
@@ -404,9 +404,9 @@ def _quote_source_header_from_dict(source_dict):
         key = source_dict['Key']
         version_id = source_dict.get('VersionId')
         if VALID_S3_ARN.search(bucket):
-            final = '%s/object/%s' % (bucket, key)
+            final = f'{bucket}/object/{key}'
         else:
-            final = '%s/%s' % (bucket, key)
+            final = f'{bucket}/{key}'
     except KeyError as e:
         raise ParamValidationError(
             report='Missing required parameter: %s' % str(e))
@@ -540,7 +540,7 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
 
 def base64_encode_user_data(params, **kwargs):
     if 'UserData' in params:
-        if isinstance(params['UserData'], six.text_type):
+        if isinstance(params['UserData'], str):
             # Encode it to bytes if it is text.
             params['UserData'] = params['UserData'].encode('utf-8')
         params['UserData'] = base64.b64encode(
@@ -644,7 +644,7 @@ def add_glacier_checksums(params, **kwargs):
     request_dict = params
     headers = request_dict['headers']
     body = request_dict['body']
-    if isinstance(body, six.binary_type):
+    if isinstance(body, bytes):
         # If the user provided a bytes type instead of a file
         # like object, we're temporarily create a BytesIO object
         # so we can use the util functions to calculate the
@@ -798,9 +798,9 @@ def _decode_list_object(top_level_keys, nested_keys, parsed, context):
 
 def convert_body_to_file_like_object(params, **kwargs):
     if 'Body' in params:
-        if isinstance(params['Body'], six.string_types):
+        if isinstance(params['Body'], str):
             params['Body'] = six.BytesIO(ensure_bytes(params['Body']))
-        elif isinstance(params['Body'], six.binary_type):
+        elif isinstance(params['Body'], bytes):
             params['Body'] = six.BytesIO(params['Body'])
 
 
@@ -836,7 +836,7 @@ def _add_parameter_aliases(handler_list):
         handler_list.append(docs_event_handler_tuple)
 
 
-class ParameterAlias(object):
+class ParameterAlias:
     def __init__(self, original_name, alias_name):
         self._original_name = original_name
         self._alias_name = alias_name
@@ -885,7 +885,7 @@ class ParameterAlias(object):
         section.write(updated_content)
 
 
-class ClientMethodAlias(object):
+class ClientMethodAlias:
     def __init__(self, actual_name):
         """ Aliases a non-extant method to an existing method.
 
@@ -899,7 +899,7 @@ class ClientMethodAlias(object):
 
 
 # TODO: Remove this class as it is no longer used
-class HeaderToHostHoister(object):
+class HeaderToHostHoister:
     """Takes a header and moves it to the front of the hoststring.
     """
     _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)$', re.IGNORECASE)

@@ -17,7 +17,6 @@ import decimal
 import json
 from datetime import datetime
 
-from botocore.compat import six
 from botocore.exceptions import ParamValidationError
 from botocore.utils import is_json_value_header, parse_to_aware_datetime
 
@@ -56,7 +55,7 @@ def type_check(valid_types):
 
         def _type_check(param, errors, name):
             if not isinstance(param, valid_types):
-                valid_type_names = [six.text_type(t) for t in valid_types]
+                valid_type_names = [str(t) for t in valid_types]
                 errors.report(name, 'invalid type', param=param,
                               valid_types=valid_type_names)
                 return False
@@ -83,7 +82,7 @@ def range_check(name, value, shape, error_type, errors):
         errors.report(name, error_type, param=value, min_allowed=min_allowed)
 
 
-class ValidationErrors(object):
+class ValidationErrors:
     def __init__(self):
         self._errors = []
 
@@ -103,13 +102,13 @@ class ValidationErrors(object):
         name = self._get_name(name)
         if error_type == 'missing required field':
             return (
-                'Missing required parameter in %s: "%s"' % (
+                'Missing required parameter in {}: "{}"'.format(
                     name, additional['required_name']
                 )
             )
         elif error_type == 'unknown field':
             return (
-                'Unknown parameter in %s: "%s", must be one of: %s' % (
+                'Unknown parameter in {}: "{}", must be one of: {}'.format(
                     name, additional['unknown_param'],
                     ', '.join(additional['valid_names'])
                 )
@@ -139,7 +138,7 @@ class ValidationErrors(object):
             )
         elif error_type == 'unable to encode to json':
             return (
-                'Invalid parameter %s must be json serializable: %s' % (
+                'Invalid parameter {} must be json serializable: {}'.format(
                     name, additional['type_error']
                 )
             )
@@ -177,7 +176,7 @@ class ValidationErrors(object):
         self._errors.append((reason, name, kwargs))
 
 
-class ParamValidator(object):
+class ParamValidator:
     """Validates parameters against a shape model."""
 
     def validate(self, params, shape):
@@ -231,9 +230,9 @@ class ParamValidator(object):
             for index, entity in enumerate(params):
                 self._validate_document(entity, shape, errors,
                                         '%s[%d]' % (name, index))
-        elif not isinstance(params, (six.string_types, int, bool, float)):
+        elif not isinstance(params, ((str,), int, bool, float)):
             valid_types = (str, int, bool, float, list, dict)
-            valid_type_names = [six.text_type(t) for t in valid_types]
+            valid_type_names = [str(t) for t in valid_types]
             errors.report(name, 'invalid type for document',
                           param=params,
                           param_type=type(params),
@@ -266,9 +265,9 @@ class ParamValidator(object):
         # Validate structure members.
         for param in known_params:
             self._validate(params[param], shape.members[param],
-                           errors, '%s.%s' % (name, param))
+                           errors, f'{name}.{param}')
 
-    @type_check(valid_types=six.string_types)
+    @type_check(valid_types=(str,))
     def _validate_string(self, param, shape, errors, name):
         # Validate range.  For a string, the min/max contraints
         # are of the string length.
@@ -285,7 +284,7 @@ class ParamValidator(object):
         member_shape = shape.member
         range_check(name, len(param), shape, 'invalid length', errors)
         for i, item in enumerate(param):
-            self._validate(item, member_shape, errors, '%s[%s]' % (name, i))
+            self._validate(item, member_shape, errors, f'{name}[{i}]')
 
     @type_check(valid_types=(dict,))
     def _validate_map(self, param, shape, errors, name):
@@ -294,14 +293,14 @@ class ParamValidator(object):
         for key, value in param.items():
             self._validate(key, key_shape, errors, "%s (key: %s)"
                            % (name, key))
-            self._validate(value, value_shape, errors, '%s.%s' % (name, key))
+            self._validate(value, value_shape, errors, f'{name}.{key}')
 
-    @type_check(valid_types=six.integer_types)
+    @type_check(valid_types=(int,))
     def _validate_integer(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
     def _validate_blob(self, param, shape, errors, name):
-        if isinstance(param, (bytes, bytearray, six.text_type)):
+        if isinstance(param, (bytes, bytearray, str)):
             return
         elif hasattr(param, 'read'):
             # File like objects are also allowed for blob types.
@@ -315,13 +314,13 @@ class ParamValidator(object):
     def _validate_boolean(self, param, shape, errors, name):
         pass
 
-    @type_check(valid_types=(float, decimal.Decimal) + six.integer_types)
+    @type_check(valid_types=(float, decimal.Decimal) + (int,))
     def _validate_double(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
     _validate_float = _validate_double
 
-    @type_check(valid_types=six.integer_types)
+    @type_check(valid_types=(int,))
     def _validate_long(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
@@ -331,7 +330,7 @@ class ParamValidator(object):
         # object, or a string that parses to a datetime.
         is_valid_type = self._type_check_datetime(param)
         if not is_valid_type:
-            valid_type_names = [six.text_type(datetime), 'timestamp-string']
+            valid_type_names = [str(datetime), 'timestamp-string']
             errors.report(name, 'invalid type', param=param,
                           valid_types=valid_type_names)
 
@@ -345,7 +344,7 @@ class ParamValidator(object):
             return False
 
 
-class ParamValidationDecorator(object):
+class ParamValidationDecorator:
     def __init__(self, param_validator, serializer):
         self._param_validator = param_validator
         self._serializer = serializer

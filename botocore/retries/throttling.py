@@ -3,7 +3,7 @@ from collections import namedtuple
 CubicParams = namedtuple('CubicParams', ['w_max', 'k', 'last_fail'])
 
 
-class CubicCalculator(object):
+class CubicCalculator:
     _SCALE_CONSTANT = 0.4
     _BETA = 0.7
 

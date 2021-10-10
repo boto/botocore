@@ -24,7 +24,7 @@ from botocore.exceptions import (
 from botocore.validate import validate_parameters
 
 
-class _ANY(object):
+class _ANY:
     """
     A helper object that compares equal to everything. Copied from
     unittest.mock
@@ -43,7 +43,7 @@ class _ANY(object):
 ANY = _ANY()
 
 
-class Stubber(object):
+class Stubber:
     """
     This class will allow you to stub out requests so you don't have to hit
     an endpoint to write tests. Responses are returned first in, first out.
@@ -361,14 +361,14 @@ class Stubber(object):
             if param not in params or expected_params[param] != params[param]:
                 raise StubAssertionError(
                     operation_name=model.name,
-                    reason='Expected parameters:\n%s,\nbut received:\n%s' % (
+                    reason='Expected parameters:\n{},\nbut received:\n{}'.format(
                         pformat(expected_params), pformat(params)))
 
         # Ensure there are no extra params hanging around
         if sorted(expected_params.keys()) != sorted(params.keys()):
             raise StubAssertionError(
                 operation_name=model.name,
-                reason='Expected parameters:\n%s,\nbut received:\n%s' % (
+                reason='Expected parameters:\n{},\nbut received:\n{}'.format(
                     pformat(expected_params), pformat(params)))
 
     def _should_not_stub(self, context):

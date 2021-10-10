@@ -21,7 +21,7 @@ from botocore.retryhandler import EXCEPTION_MAP as RETRYABLE_EXCEPTIONS
 logger = logging.getLogger(__name__)
 
 
-class Monitor(object):
+class Monitor:
     _EVENTS_TO_REGISTER = [
         'before-parameter-build',
         'request-created',
@@ -62,7 +62,7 @@ class Monitor(object):
                 e, event_name, exc_info=True)
 
 
-class MonitorEventAdapter(object):
+class MonitorEventAdapter:
     def __init__(self, time=time.time):
         """Adapts event emitter events to produce monitor events
 
@@ -152,7 +152,7 @@ class MonitorEventAdapter(object):
         return int(self._time() * 1000)
 
 
-class BaseMonitorEvent(object):
+class BaseMonitorEvent:
     def __init__(self, service, operation, timestamp):
         """Base monitor event
 
@@ -172,7 +172,7 @@ class BaseMonitorEvent(object):
         self.timestamp = timestamp
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.__dict__)
+        return f'{self.__class__.__name__}({self.__dict__!r})'
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -210,7 +210,7 @@ class APICallEvent(BaseMonitorEvent):
         :param retries_exceeded: True if API call exceeded retries. False
             otherwise
         """
-        super(APICallEvent, self).__init__(
+        super().__init__(
             service=service, operation=operation, timestamp=timestamp)
         self.latency = latency
         self.attempts = attempts
@@ -283,7 +283,7 @@ class APICallAttemptEvent(BaseMonitorEvent):
         :param wire_exception: The exception raised in sending the HTTP
             request (i.e. ConnectionError)
         """
-        super(APICallAttemptEvent, self).__init__(
+        super().__init__(
             service=service, operation=operation, timestamp=timestamp
         )
         self.latency = latency
@@ -295,7 +295,7 @@ class APICallAttemptEvent(BaseMonitorEvent):
         self.wire_exception = wire_exception
 
 
-class CSMSerializer(object):
+class CSMSerializer:
     _MAX_CLIENT_ID_LENGTH = 255
     _MAX_EXCEPTION_CLASS_LENGTH = 128
     _MAX_ERROR_CODE_LENGTH = 128
@@ -507,7 +507,7 @@ class CSMSerializer(object):
         return text
 
 
-class SocketPublisher(object):
+class SocketPublisher:
     _MAX_MONITOR_EVENT_LENGTH = 8 * 1024
 
     def __init__(self, socket, host, port, serializer):

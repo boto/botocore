@@ -5,7 +5,7 @@ import time
 from botocore.exceptions import CapacityNotAvailableError
 
 
-class Clock(object):
+class Clock:
     def __init__(self):
         pass
 
@@ -16,7 +16,7 @@ class Clock(object):
         return time.time()
 
 
-class TokenBucket(object):
+class TokenBucket:
 
     _MIN_RATE = 0.5
 
