@@ -22,21 +22,19 @@ placed in ./aws4_testsuite, and we're using those to dynamically
 generate testcases based on these files.
 
 """
-import os
-import logging
-import io
 import datetime
+import io
+import logging
+import os
 import re
 
 import pytest
 
-from tests import FreezeTime
-
 import botocore.auth
 from botocore.awsrequest import AWSRequest
-from botocore.compat import six, urlsplit, parse_qsl
+from botocore.compat import parse_qsl, six, urlsplit
 from botocore.credentials import Credentials
-
+from tests import FreezeTime
 
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY = 'AKIDEXAMPLE'

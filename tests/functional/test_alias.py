@@ -13,9 +13,8 @@
 import pytest
 
 import botocore.session
-from botocore.stub import Stubber
 from botocore.exceptions import ParamValidationError
-
+from botocore.stub import Stubber
 
 ALIAS_CASES = [
     {

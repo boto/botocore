@@ -12,19 +12,19 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from tests import mock
-from tests import unittest
-
 import botocore.session as session
-from botocore.configprovider import ConfigValueStore
-from botocore.configprovider import BaseProvider
-from botocore.configprovider import InstanceVarProvider
-from botocore.configprovider import EnvironmentProvider
-from botocore.configprovider import ScopedConfigProvider
-from botocore.configprovider import SectionConfigProvider
-from botocore.configprovider import ConstantProvider
-from botocore.configprovider import ChainProvider
-from botocore.configprovider import ConfigChainFactory
+from botocore.configprovider import (
+    BaseProvider,
+    ChainProvider,
+    ConfigChainFactory,
+    ConfigValueStore,
+    ConstantProvider,
+    EnvironmentProvider,
+    InstanceVarProvider,
+    ScopedConfigProvider,
+    SectionConfigProvider,
+)
+from tests import mock, unittest
 
 
 class TestConfigChainFactory(unittest.TestCase):

@@ -11,35 +11,31 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
-import sys
-import time
-import random
-import shutil
-import contextlib
-import tempfile
 import binascii
-import platform
-import select
+import contextlib
 import datetime
+import os
+import platform
+import random
+import select
+import shutil
+import sys
+import tempfile
+import time
 import unittest
 from contextlib import ContextDecorator
-from unittest import mock
 from io import BytesIO
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+from unittest import mock
 
 from dateutil.tz import tzlocal
 
 import botocore.loaders
 import botocore.session
+from botocore import credentials, utils
 from botocore.awsrequest import AWSResponse
-from botocore.compat import (
-    parse_qs, six, urlparse, HAS_CRT
-)
-from botocore import utils
-from botocore import credentials
+from botocore.compat import HAS_CRT, parse_qs, six, urlparse
 from botocore.stub import Stubber
-
 
 _LOADER = botocore.loaders.Loader()
 

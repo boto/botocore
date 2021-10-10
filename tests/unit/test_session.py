@@ -12,26 +12,24 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.config
-from tests import mock, unittest, create_session, temporary_file, requires_crt
-import os
 import logging
-import tempfile
+import os
 import shutil
+import tempfile
 
 import pytest
 
-
-import botocore.session
+import botocore.config
 import botocore.exceptions
-from botocore import UNSIGNED
-from botocore.model import ServiceModel
-from botocore import client
-from botocore.hooks import HierarchicalEmitter
-from botocore.waiter import WaiterModel
-from botocore.paginate import PaginatorModel
-from botocore.configprovider import ConfigChainFactory
 import botocore.loaders
+import botocore.session
+from botocore import UNSIGNED, client
+from botocore.configprovider import ConfigChainFactory
+from botocore.hooks import HierarchicalEmitter
+from botocore.model import ServiceModel
+from botocore.paginate import PaginatorModel
+from botocore.waiter import WaiterModel
+from tests import create_session, mock, requires_crt, temporary_file, unittest
 
 
 class BaseSessionTest(unittest.TestCase):

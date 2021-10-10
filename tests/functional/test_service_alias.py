@@ -15,7 +15,6 @@ import pytest
 import botocore.session
 from botocore.handlers import SERVICE_NAME_ALIASES
 
-
 CLIENT_KWARGS = {
     "region_name": "us-east-1",
     "aws_access_key_id": "foo",

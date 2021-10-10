@@ -12,23 +12,23 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.config
-from tests import mock, unittest, create_session, temporary_file
-import os
 import logging
-import tempfile
+import os
 import shutil
+import tempfile
 
 import pytest
 
-import botocore.session
+import botocore.config
 import botocore.exceptions
-from botocore.model import ServiceModel
+import botocore.loaders
+import botocore.session
 from botocore import client
 from botocore.hooks import HierarchicalEmitter
-from botocore.waiter import WaiterModel
+from botocore.model import ServiceModel
 from botocore.paginate import PaginatorModel
-import botocore.loaders
+from botocore.waiter import WaiterModel
+from tests import create_session, mock, temporary_file, unittest
 
 
 # This is an old version of the session tests to ensure backwards compatibility

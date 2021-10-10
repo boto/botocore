@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 import contextlib
 import json
-from tests import BaseSessionTest, mock, ClientHTTPStubber
 
-from botocore.exceptions import ClientError
 from botocore.config import Config
+from botocore.exceptions import ClientError
+from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 
 class BaseRetryTest(BaseSessionTest):

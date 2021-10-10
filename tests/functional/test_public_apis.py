@@ -14,11 +14,9 @@ from collections import defaultdict
 
 import pytest
 
-from tests import mock
-from tests import ClientHTTPStubber
-from botocore.session import Session
 from botocore import xform_name
-
+from botocore.session import Session
+from tests import ClientHTTPStubber, mock
 
 REGIONS = defaultdict(lambda: 'us-east-1')
 PUBLIC_API_TESTS = {

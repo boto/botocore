@@ -13,6 +13,7 @@
 import json
 from base64 import b64decode
 from uuid import uuid4
+
 from tests import BaseSessionTest, ClientHTTPStubber
 
 

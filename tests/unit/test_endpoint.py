@@ -12,16 +12,17 @@
 # language governing permissions and limitations under the License.
 import socket
 
-from tests import mock
-from tests import unittest
-
 from botocore.compat import six
-from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
-from botocore.endpoint import EndpointCreator
+from botocore.endpoint import DEFAULT_TIMEOUT, Endpoint, EndpointCreator
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
-from botocore.model import OperationModel, ServiceId
-from botocore.model import ServiceModel, StructureShape
+from botocore.model import (
+    OperationModel,
+    ServiceId,
+    ServiceModel,
+    StructureShape,
+)
+from tests import mock, unittest
 
 
 def request_dict(**kwargs):

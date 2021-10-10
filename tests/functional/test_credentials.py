@@ -10,35 +10,51 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import uuid
-import threading
-import os
 import math
-import time
-import tempfile
+import os
 import shutil
-from datetime import datetime, timedelta
 import sys
+import tempfile
+import threading
+import time
+import uuid
+from datetime import datetime, timedelta
 
 from dateutil.tz import tzlocal
-from botocore.exceptions import CredentialRetrievalError
 
-from tests import mock, unittest, IntegerRefresher, BaseEnvVar, random_chars
-from tests import temporary_file, StubbedSession, SessionHTTPStubber
 from botocore import UNSIGNED
-from botocore.credentials import EnvProvider, ContainerProvider
-from botocore.credentials import InstanceMetadataProvider
-from botocore.credentials import Credentials, ReadOnlyCredentials
-from botocore.credentials import AssumeRoleProvider, ProfileProviderBuilder
-from botocore.credentials import CanonicalNameCredentialSourcer
-from botocore.credentials import DeferredRefreshableCredentials
-from botocore.credentials import create_credential_resolver
-from botocore.credentials import JSONFileCache
 from botocore.config import Config
+from botocore.credentials import (
+    AssumeRoleProvider,
+    CanonicalNameCredentialSourcer,
+    ContainerProvider,
+    Credentials,
+    DeferredRefreshableCredentials,
+    EnvProvider,
+    InstanceMetadataProvider,
+    JSONFileCache,
+    ProfileProviderBuilder,
+    ReadOnlyCredentials,
+    create_credential_resolver,
+)
+from botocore.exceptions import (
+    CredentialRetrievalError,
+    InfiniteLoopConfigError,
+    InvalidConfigError,
+)
 from botocore.session import Session
-from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
 from botocore.stub import Stubber
 from botocore.utils import datetime2timestamp
+from tests import (
+    BaseEnvVar,
+    IntegerRefresher,
+    SessionHTTPStubber,
+    StubbedSession,
+    mock,
+    random_chars,
+    temporary_file,
+    unittest,
+)
 
 
 class TestCredentialRefreshRaces(unittest.TestCase):

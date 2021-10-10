@@ -11,30 +11,32 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import (
-    unittest, temporary_file, random_chars,
-    ClientHTTPStubber, ConsistencyWaiter,
-)
+import logging
 import os
+import shutil
+import tempfile
+import threading
 import time
 from collections import defaultdict
-import tempfile
-import shutil
-import threading
-import logging
-from tarfile import TarFile
 from contextlib import closing
+from tarfile import TarFile
 
 import pytest
 import urllib3
 
-from botocore.exceptions import ConnectionClosedError
-from botocore.compat import six, zip_longest, OrderedDict
-import botocore.session
 import botocore.auth
 import botocore.credentials
+import botocore.session
+from botocore.compat import OrderedDict, six, zip_longest
 from botocore.config import Config
-from botocore.exceptions import ClientError, WaiterError
+from botocore.exceptions import ClientError, ConnectionClosedError, WaiterError
+from tests import (
+    ClientHTTPStubber,
+    ConsistencyWaiter,
+    random_chars,
+    temporary_file,
+    unittest,
+)
 
 
 def random_bucketname():

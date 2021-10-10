@@ -11,9 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.session
-from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.stub import Stubber
-from tests import unittest
+from tests import BaseSessionTest, ClientHTTPStubber, unittest
 
 
 class TestRDSPresignUrlInjection(BaseSessionTest):
