@@ -3,8 +3,7 @@ import codecs
 import os.path
 import re
 
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 

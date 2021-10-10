@@ -17,42 +17,57 @@ This module contains builtin handlers for events emitted by botocore.
 """
 
 import base64
-import logging
 import copy
+import logging
 import re
-import warnings
 import uuid
+import warnings
 
-from botocore.compat import (
-    unquote, json, six, unquote_str, ensure_bytes, get_md5,
-    OrderedDict, urlsplit, urlunsplit, XMLParseError,
-    ETree,
-)
-from botocore.docs.utils import AutoPopulatedParam
-from botocore.docs.utils import HideParamFromOperations
-from botocore.docs.utils import AppendParamDocumentation
-from botocore.signers import add_generate_presigned_url
-from botocore.signers import add_generate_presigned_post
-from botocore.signers import add_generate_db_auth_token
-from botocore.exceptions import ParamValidationError
-from botocore.exceptions import AliasConflictParameterError
-from botocore.exceptions import UnsupportedTLSVersionWarning
-from botocore.utils import percent_encode, SAFE_CHARS
-from botocore.utils import switch_host_with_param
-from botocore.utils import conditionally_calculate_md5
-from botocore.utils import is_global_accesspoint
-
-from botocore import utils
 import botocore
 import botocore.auth
 
-# Keep these imported.  There's pre-existing code that uses them.
-from botocore import retryhandler # noqa
-from botocore import translate # noqa
-from botocore.compat import MD5_AVAILABLE # noqa
-from botocore.exceptions import MissingServiceIdError # noqa
-from botocore.utils import hyphenize_service_id # noqa
-
+# Keep noqa: F401 imports. They're needed for backwards compatibility.
+from botocore import retryhandler  # noqa: F401
+from botocore import translate  # noqa: F401
+from botocore import utils
+from botocore.compat import MD5_AVAILABLE  # noqa: F401
+from botocore.compat import (
+    ETree,
+    OrderedDict,
+    XMLParseError,
+    ensure_bytes,
+    get_md5,
+    json,
+    six,
+    unquote,
+    unquote_str,
+    urlsplit,
+    urlunsplit,
+)
+from botocore.docs.utils import (
+    AppendParamDocumentation,
+    AutoPopulatedParam,
+    HideParamFromOperations,
+)
+from botocore.exceptions import MissingServiceIdError  # noqa: F401
+from botocore.exceptions import (
+    AliasConflictParameterError,
+    ParamValidationError,
+    UnsupportedTLSVersionWarning,
+)
+from botocore.signers import (
+    add_generate_db_auth_token,
+    add_generate_presigned_post,
+    add_generate_presigned_url,
+)
+from botocore.utils import hyphenize_service_id  # noqa: F401
+from botocore.utils import (
+    SAFE_CHARS,
+    conditionally_calculate_md5,
+    is_global_accesspoint,
+    percent_encode,
+    switch_host_with_param,
+)
 
 logger = logging.getLogger(__name__)
 

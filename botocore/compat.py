@@ -13,19 +13,20 @@
 
 import copy
 import datetime
-import sys
-import inspect
-import warnings
 import hashlib
+import inspect
 import logging
-import shlex
 import os
+import shlex
+import sys
+import warnings
 from math import floor
 
-from botocore.vendored import six
-from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
+
+from botocore.exceptions import MD5UnavailableError
+from botocore.vendored import six
 
 logger = logging.getLogger(__name__)
 
@@ -36,21 +37,23 @@ if six.PY3:
     class HTTPHeaders(http_client.HTTPMessage):
         pass
 
-    from urllib.parse import quote
-    from urllib.parse import urlencode
-    from urllib.parse import unquote
-    from urllib.parse import unquote_plus
-    from urllib.parse import urlparse
-    from urllib.parse import urlsplit
-    from urllib.parse import urlunsplit
-    from urllib.parse import urljoin
-    from urllib.parse import parse_qsl
-    from urllib.parse import parse_qs
-    from http.client import HTTPResponse
-    from io import IOBase as _IOBase
     from base64 import encodebytes
     from email.utils import formatdate
+    from http.client import HTTPResponse
+    from io import IOBase as _IOBase
     from itertools import zip_longest
+    from urllib.parse import (
+        parse_qs,
+        parse_qsl,
+        quote,
+        unquote,
+        unquote_plus,
+        urlencode,
+        urljoin,
+        urlparse,
+        urlsplit,
+        urlunsplit,
+    )
     file_type = _IOBase
     zip = zip
 
@@ -84,23 +87,24 @@ if six.PY3:
         raise ValueError("Expected str or bytes, received %s." % type(s))
 
 else:
-    from urllib import quote
-    from urllib import urlencode
-    from urllib import unquote
-    from urllib import unquote_plus
-    from urlparse import urlparse
-    from urlparse import urlsplit
-    from urlparse import urlunsplit
-    from urlparse import urljoin
-    from urlparse import parse_qsl
-    from urlparse import parse_qs
     from email.message import Message
     from email.Utils import formatdate
+    from urllib import quote, unquote, unquote_plus, urlencode
+
+    from urlparse import (
+        parse_qs,
+        parse_qsl,
+        urljoin,
+        urlparse,
+        urlsplit,
+        urlunsplit,
+    )
     file_type = file
+    from base64 import encodestring as encodebytes
     from itertools import izip as zip
     from itertools import izip_longest as zip_longest
+
     from httplib import HTTPResponse
-    from base64 import encodestring as encodebytes
 
     class HTTPHeaders(Message):
 
@@ -145,7 +149,6 @@ else:
 
 
 from collections import OrderedDict
-
 
 try:
     import xml.etree.cElementTree as ETree
@@ -354,6 +357,7 @@ except ImportError:
 # Detect if CRT is available for use
 try:
     import awscrt.auth
+
     # Allow user opt-out if needed
     disabled = os.environ.get('BOTO_DISABLE_CRT', "false")
     HAS_CRT = not disabled.lower() == 'true'

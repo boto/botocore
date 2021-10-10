@@ -14,16 +14,15 @@
 
 import logging
 
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
+
+# Keep noqa: F401 imports. They're needed for backwards compatibility.
+from botocore import ScalarTypes  # noqa: F401
+from botocore import parsers
+from botocore.compat import XMLParseError  # noqa: F401
 from botocore.compat import set_socket_timeout
 from botocore.exceptions import IncompleteReadError, ReadTimeoutError
-from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
-from botocore import parsers
-
-# Keep these imported.  There's pre-existing code that uses them.
-from botocore import ScalarTypes # noqa
-from botocore.compat import XMLParseError # noqa
-from botocore.hooks import first_non_none_response # noqa
-
+from botocore.hooks import first_non_none_response  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

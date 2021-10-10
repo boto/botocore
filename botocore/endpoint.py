@@ -12,22 +12,20 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
 import logging
-import time
+import os
 import threading
+import time
 
-from botocore.vendored import six
-
+from botocore import parsers
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
-from botocore.httpsession import URLLib3Session
-from botocore.utils import is_valid_endpoint_url, get_environ_proxies
-from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
+from botocore.hooks import first_non_none_response
+from botocore.httpsession import URLLib3Session
 from botocore.response import StreamingBody
-from botocore import parsers
-
+from botocore.utils import get_environ_proxies, is_valid_endpoint_url
+from botocore.vendored import six
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()

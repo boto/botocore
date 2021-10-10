@@ -15,23 +15,30 @@ import base64
 import calendar
 import datetime
 import functools
-from email.utils import formatdate
-from hashlib import sha1, sha256
 import hmac
 import logging
-from operator import itemgetter
 import time
+from email.utils import formatdate
+from hashlib import sha1, sha256
+from operator import itemgetter
 
+# noqa: F401 imports for backwards compatibility
+from botocore.compat import MD5_AVAILABLE  # noqa: F401
 from botocore.compat import (
-    encodebytes, ensure_unicode, HTTPHeaders, json, parse_qs, quote,
-    six, unquote, urlsplit, urlunsplit, HAS_CRT
+    HAS_CRT,
+    HTTPHeaders,
+    encodebytes,
+    ensure_unicode,
+    json,
+    parse_qs,
+    quote,
+    six,
+    unquote,
+    urlsplit,
+    urlunsplit,
 )
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
-
-# Imports for backwards compatibility
-from botocore.compat import MD5_AVAILABLE # noqa
-
 
 logger = logging.getLogger(__name__)
 
