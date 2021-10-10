@@ -366,9 +366,8 @@ class CSMSerializer:
     def _validate_client_id(self, csm_client_id):
         if len(csm_client_id) > self._MAX_CLIENT_ID_LENGTH:
             raise ValueError(
-                'The value provided for csm_client_id: %s exceeds the '
-                'maximum length of %s characters'
-                % (csm_client_id, self._MAX_CLIENT_ID_LENGTH)
+                f'The value provided for csm_client_id: {csm_client_id} exceeds'
+                f'the maximum length of {self._MAX_CLIENT_ID_LENGTH} characters'
             )
 
     def serialize(self, event):

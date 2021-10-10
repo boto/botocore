@@ -151,7 +151,7 @@ class ClientCreator:
         bases = [BaseClient]
         service_id = service_model.service_id.hyphenize()
         self._event_emitter.emit(
-            'creating-client-class.%s' % service_id,
+            f'creating-client-class.{service_id}',
             class_attributes=class_attributes,
             base_classes=bases,
         )
@@ -212,9 +212,10 @@ class ClientCreator:
         handler = self._retry_handler_factory.create_retry_handler(
             retry_config, endpoint_prefix
         )
-        unique_id = 'retry-config-%s' % service_event_name
         client.meta.events.register(
-            'needs-retry.%s' % service_event_name, handler, unique_id=unique_id
+            f'needs-retry.{service_event_name}',
+            handler,
+            unique_id=f'retry-config-{service_event_name}',
         )
 
     def _transform_legacy_retries(self, retries):
@@ -477,7 +478,7 @@ class ClientCreator:
             # 1 argument.
             if args:
                 raise TypeError(
-                    "%s() only accepts keyword arguments." % py_operation_name
+                    f"{py_operation_name}() only accepts keyword arguments."
                 )
             # The "self" in this scope is referring to the BaseClient.
             return self._make_api_call(operation_name, kwargs)
@@ -491,7 +492,7 @@ class ClientCreator:
             method_name=operation_name,
             event_emitter=self._event_emitter,
             method_description=operation_model.documentation,
-            example_prefix='response = client.%s' % py_operation_name,
+            example_prefix=f'response = client.{py_operation_name}',
             include_signature=False,
         )
         _api_call.__doc__ = docstring
@@ -629,12 +630,14 @@ class ClientEndpointBridge:
             # us-east-1 instead of the modeled default aws-global. Dualstack
             # does not support aws-global
             region_name = 'us-east-1'
-        hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
-            service=service_name, region=region_name, dns_suffix=dns_suffix
-        )
+
         # Dualstack supports http and https so were hardcoding this value for
         # now.  This can potentially move into the endpoints.json file.
-        return self._make_url(hostname, is_secure, ['http', 'https'])
+        return self._make_url(
+            f'{service_name}.dualstack.{region_name}.{dns_suffix}',
+            is_secure,
+            ['http', 'https'],
+        )
 
     def _assume_endpoint(
         self, service_name, region_name, endpoint_url, is_secure
@@ -797,9 +800,8 @@ class BaseClient:
         self._register_handlers()
 
     def __getattr__(self, item):
-        event_name = 'getattr.{}.{}'.format(
-            self._service_model.service_id.hyphenize(), item
-        )
+        service_id = self._service_model.service_id.hyphenize()
+        event_name = f'getattr.{service_id}.{item}'
         handler, event_response = self.meta.events.emit_until_response(
             event_name, client=self
         )
@@ -808,16 +810,14 @@ class BaseClient:
             return event_response
 
         raise AttributeError(
-            "'{}' object has no attribute '{}'".format(
-                self.__class__.__name__, item
-            )
+            f"'{self.__class__.__name__}' object has no attribute '{item}'"
         )
 
     def _register_handlers(self):
         # Register the handler required to sign requests.
         service_id = self.meta.service_model.service_id.hyphenize()
         self.meta.events.register(
-            'request-created.%s' % service_id, self._request_signer.handler
+            f'request-created.{service_id}', self._request_signer.handler
         )
 
     @property
@@ -851,9 +851,7 @@ class BaseClient:
 
         service_id = self._service_model.service_id.hyphenize()
         handler, event_response = self.meta.events.emit_until_response(
-            'before-call.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'before-call.{service_id}.{operation_name}',
             model=operation_model,
             params=request_dict,
             request_signer=self._request_signer,
@@ -868,9 +866,7 @@ class BaseClient:
             )
 
         self.meta.events.emit(
-            'after-call.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'after-call.{service_id}.{operation_name}',
             http_response=http,
             parsed=parsed_response,
             model=operation_model,
@@ -927,20 +923,15 @@ class BaseClient:
         # parameters or return a new set of parameters to use.
         service_id = self._service_model.service_id.hyphenize()
         responses = self.meta.events.emit(
-            'provide-client-params.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'provide-client-params.{service_id}.{operation_name}',
             params=api_params,
             model=operation_model,
             context=context,
         )
         api_params = first_non_none_response(responses, default=api_params)
 
-        event_name = 'before-parameter-build.{service_id}.{operation_name}'
         self.meta.events.emit(
-            event_name.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'before-parameter-build.{service_id}.{operation_name}',
             params=api_params,
             model=operation_model,
             context=context,
@@ -990,11 +981,9 @@ class BaseClient:
             )
 
             # Rename the paginator class based on the type of paginator.
-            paginator_class_name = str(
-                '{}.Paginator.{}'.format(
-                    get_service_module_name(self.meta.service_model),
-                    actual_operation_name,
-                )
+            service_name = get_service_module_name(self.meta.service_model)
+            paginator_class_name = (
+                f'{service_name}.Paginator.{actual_operation_name}'
             )
 
             # Create the new paginator class
@@ -1065,13 +1054,13 @@ class BaseClient:
         """
         config = self._get_waiter_config()
         if not config:
-            raise ValueError("Waiter does not exist: %s" % waiter_name)
+            raise ValueError(f"Waiter does not exist: {waiter_name}")
         model = waiter.WaiterModel(config)
         mapping = {}
         for name in model.waiter_names:
             mapping[xform_name(name)] = name
         if waiter_name not in mapping:
-            raise ValueError("Waiter does not exist: %s" % waiter_name)
+            raise ValueError(f"Waiter does not exist: {waiter_name}")
 
         return waiter.create_waiter_with_client(
             mapping[waiter_name], model, self

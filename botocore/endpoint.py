@@ -290,11 +290,8 @@ class Endpoint:
         caught_exception=None,
     ):
         service_id = operation_model.service_model.service_id.hyphenize()
-        event_name = 'needs-retry.{}.{}'.format(
-            service_id, operation_model.name
-        )
         responses = self._event_emitter.emit(
-            event_name,
+            f'needs-retry.{service_id}.{operation_model.name}',
             response=response,
             endpoint=self,
             operation=operation_model,
@@ -340,7 +337,7 @@ class EndpointCreator:
     ):
         if not is_valid_endpoint_url(endpoint_url):
 
-            raise ValueError("Invalid endpoint: %s" % endpoint_url)
+            raise ValueError(f"Invalid endpoint: {endpoint_url}")
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)
         endpoint_prefix = service_model.endpoint_prefix

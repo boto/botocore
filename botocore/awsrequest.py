@@ -100,7 +100,7 @@ class AWSConnection:
     def _convert_to_bytes(self, mixed_buffer):
         # Take a list of mixed str/bytes and convert it
         # all into a single bytestring.
-        # Any six.text_types will be encoded as utf-8.
+        # Any strs will be encoded as utf-8.
         bytes_buffer = []
         for chunk in mixed_buffer:
             if isinstance(chunk, str):
@@ -275,9 +275,9 @@ def prepare_request_dict(
         percent_encode_sequence = botocore.utils.percent_encode_sequence
         encoded_query_string = percent_encode_sequence(r['query_string'])
         if '?' not in url:
-            url += '?%s' % encoded_query_string
+            url += f'?{encoded_query_string}'
         else:
-            url += '&%s' % encoded_query_string
+            url += f'&{encoded_query_string}'
     r['url'] = url
     r['context'] = context
     if context is None:
@@ -522,11 +522,10 @@ class AWSPreparedRequest:
         self.stream_output = stream_output
 
     def __repr__(self):
-        fmt = (
-            '<AWSPreparedRequest stream_output=%s, method=%s, url=%s, '
-            'headers=%s>'
+        return (
+            f'<AWSPreparedRequest stream_output={self.stream_output}, '
+            f'method={self.method}, url={self.url}, headers={self.headers}>'
         )
-        return fmt % (self.stream_output, self.method, self.url, self.headers)
 
     def reset_stream(self):
         """Resets the streaming body to it's initial position.

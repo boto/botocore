@@ -176,7 +176,7 @@ class ClientArgsCreator:
             if client_config.user_agent is not None:
                 user_agent = client_config.user_agent
             if client_config.user_agent_extra is not None:
-                user_agent += ' %s' % client_config.user_agent_extra
+                user_agent += f' {client_config.user_agent_extra}'
 
         s3_config = self.compute_s3_config(client_config)
         endpoint_config = self._compute_endpoint_config(
@@ -349,7 +349,7 @@ class ClientArgsCreator:
 
     def _set_global_sts_endpoint(self, endpoint_config, is_secure):
         scheme = 'https' if is_secure else 'http'
-        endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
+        endpoint_config['endpoint_url'] = f'{scheme}://sts.amazonaws.com'
         endpoint_config['signing_region'] = 'us-east-1'
 
     def _resolve_endpoint(

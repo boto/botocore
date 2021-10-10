@@ -33,7 +33,7 @@ class DuplicateHeader(ParserError):
     """Duplicate header found in the event."""
 
     def __init__(self, header):
-        message = 'Duplicate header present: "%s"' % header
+        message = f'Duplicate header present: "{header}"'
         super().__init__(message)
 
 

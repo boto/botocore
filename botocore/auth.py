@@ -69,7 +69,7 @@ def _host_from_url(url):
     default_ports = {'http': 80, 'https': 443}
     if url_parts.port is not None:
         if url_parts.port != default_ports.get(url_parts.scheme):
-            host = '%s:%d' % (host, url_parts.port)
+            host = f'{host}:{url_parts.port}'
     return host
 
 
@@ -174,12 +174,10 @@ class SigV3Auth(BaseSigner):
         new_hmac.update(request.headers['Date'].encode('utf-8'))
         encoded_signature = encodebytes(new_hmac.digest()).strip()
         signature = (
-            'AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=%s,Signature=%s'
-            % (
-                self.credentials.access_key,
-                'HmacSHA256',
-                encoded_signature.decode('utf-8'),
-            )
+            f'AWS3-HTTPS '
+            f'AWSAccessKeyId={self.credentials.access_key},'
+            f'Algorithm=HmacSHA256,'
+            f'Signature={encoded_signature.decode("utf-8")}'
         )
         if 'X-Amzn-Authorization' in request.headers:
             del request.headers['X-Amzn-Authorization']
@@ -404,13 +402,13 @@ class SigV4Auth(BaseSigner):
         self._inject_signature_to_request(request, signature)
 
     def _inject_signature_to_request(self, request, signature):
-        auth_str = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
         headers_to_sign = self.headers_to_sign(request)
-        auth_str.append(
-            'SignedHeaders=%s' % self.signed_headers(headers_to_sign)
+        auth_str = (
+            f'AWS4-HMAC-SHA256 Credential={self.scope(request)}, '
+            f'SignedHeaders={self.signed_headers(headers_to_sign)}, '
+            f'Signature={signature}'
         )
-        auth_str.append('Signature=%s' % signature)
-        request.headers['Authorization'] = ', '.join(auth_str)
+        request.headers['Authorization'] = auth_str
         return request
 
     def _modify_request_before_signing(self, request):
@@ -577,7 +575,7 @@ class SigV4QueryAuth(SigV4Auth):
         # Rather than calculating an "Authorization" header, for the query
         # param quth, we just append an 'X-Amz-Signature' param to the end
         # of the query string.
-        request.url += '&X-Amz-Signature=%s' % signature
+        request.url += f'&X-Amz-Signature={signature}'
 
 
 class S3SigV4QueryAuth(SigV4QueryAuth):

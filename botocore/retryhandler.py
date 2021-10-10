@@ -57,7 +57,7 @@ def delay_exponential(base, growth_factor, attempts):
         base = random.random()
     elif base <= 0:
         raise ValueError(
-            "The 'base' param must be greater than 0, " "got: %s" % base
+            f"The 'base' param must be greater than 0, got: {base}"
         )
     time_to_sleep = base * (growth_factor ** (attempts - 1))
     return time_to_sleep

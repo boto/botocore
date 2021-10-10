@@ -238,9 +238,9 @@ class Stubber:
 
     def _add_response(self, method, service_response, expected_params):
         if not hasattr(self.client, method):
+            service_name = self.client.meta.service_model.service_name
             raise ValueError(
-                "Client %s does not have method: %s"
-                % (self.client.meta.service_model.service_name, method)
+                f"Client {service_name} does not have method: {method}"
             )
 
         # Create a successful http response
@@ -332,9 +332,7 @@ class Stubber:
         """
         remaining = len(self._queue)
         if remaining != 0:
-            raise AssertionError(
-                "%d responses remaining in queue." % remaining
-            )
+            raise AssertionError(f"{remaining} responses remaining in queue.")
 
     def _assert_expected_call_order(self, model, params):
         if not self._queue:
@@ -351,7 +349,7 @@ class Stubber:
         if name != model.name:
             raise StubResponseError(
                 operation_name=model.name,
-                reason='Operation mismatch: found response for %s.' % name,
+                reason=f'Operation mismatch: found response for {name}.',
             )
 
     def _get_response_handler(self, model, params, context, **kwargs):

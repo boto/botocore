@@ -149,10 +149,9 @@ class RequestSigner:
         )
 
         # Allow mutating request before signing
+        service_id = self._service_id.hyphenize()
         self._event_emitter.emit(
-            'before-sign.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name
-            ),
+            f'before-sign.{service_id}.{operation_name}',
             request=request,
             signing_name=signing_name,
             region_name=self._region_name,
@@ -209,10 +208,9 @@ class RequestSigner:
         ):
             signature_version += suffix
 
+        service_id = self._service_id.hyphenize()
         handler, response = self._event_emitter.emit_until_response(
-            'choose-signer.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name
-            ),
+            f'choose-signer.{service_id}.{operation_name}',
             signing_name=self._signing_name,
             region_name=self._region_name,
             signature_version=signature_version,
@@ -379,22 +377,27 @@ class CloudFrontSigner:
         both_args_supplied = date_less_than is not None and policy is not None
         neither_arg_supplied = date_less_than is None and policy is None
         if both_args_supplied or neither_arg_supplied:
-            e = 'Need to provide either date_less_than or policy, but not both'
-            raise ValueError(e)
+            raise ValueError(
+                'Need to provide either date_less_than or policy, but not both'
+            )
         if date_less_than is not None:
             # We still need to build a canned policy for signing purpose
             policy = self.build_policy(url, date_less_than)
         if isinstance(policy, str):
             policy = policy.encode('utf8')
         if date_less_than is not None:
-            params = ['Expires=%s' % int(datetime2timestamp(date_less_than))]
+            expiration = int(datetime2timestamp(date_less_than))
+            params = [f'Expires={expiration}']
         else:
-            params = ['Policy=%s' % self._url_b64encode(policy).decode('utf8')]
+            encoded_policy = self._url_b64encode(policy).decode('utf8')
+            params = [f'Policy={encoded_policy}']
+
         signature = self.rsa_signer(policy)
+        encoded_signature = self._url_b64encode(signature).decode('utf8')
         params.extend(
             [
-                'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
-                'Key-Pair-Id=%s' % self.key_id,
+                f'Signature={encoded_signature}',
+                f'Key-Pair-Id={self.key_id}',
             ]
         )
         return self._build_url(url, params)

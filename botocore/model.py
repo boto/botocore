@@ -422,8 +422,7 @@ class ServiceModel:
             return self.metadata[name]
         except KeyError:
             raise UndefinedModelAttributeError(
-                '"%s" not defined in the metadata of the model: %s'
-                % (name, self)
+                f'"{name}" not defined in the metadata of the model: {self}'
             )
 
     # Signature version is one of the rare properties
@@ -652,7 +651,7 @@ class ShapeResolver:
             shape_cls = self.SHAPE_CLASSES.get(shape_model['type'], Shape)
         except KeyError:
             raise InvalidShapeError(
-                "Shape is missing required key 'type': %s" % shape_model
+                f"Shape is missing required key 'type': {shape_model}"
             )
         if member_traits:
             shape_model = shape_model.copy()
@@ -677,7 +676,7 @@ class ShapeResolver:
                 shape_name = member_traits.pop('shape')
             except KeyError:
                 raise InvalidShapeReferenceError(
-                    "Invalid model, missing shape reference: %s" % shape_ref
+                    f"Invalid model, missing shape reference: {shape_ref}"
                 )
             return self.get_shape_by_name(shape_name, member_traits)
 
@@ -792,7 +791,7 @@ class DenormalizedStructureBuilder:
         ]:
             shapes[shape_name] = self._build_scalar(model)
         else:
-            raise InvalidShapeError("Unknown shape type: %s" % model['type'])
+            raise InvalidShapeError(f"Unknown shape type: {model['type']}")
 
     def _build_structure(self, model, shapes):
         members = OrderedDict()

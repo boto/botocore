@@ -222,7 +222,7 @@ class Config:
                 user_provided_options[key] = value
             # The key must exist in the available options
             else:
-                raise TypeError('Got unexpected keyword argument \'%s\'' % key)
+                raise TypeError(f'Got unexpected keyword argument \'{key}\'')
 
         # The number of args should not be longer than the allowed
         # options

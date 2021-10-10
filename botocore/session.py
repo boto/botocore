@@ -549,7 +549,7 @@ class Session:
         )
         service_id = EVENT_ALIASES.get(service_name, service_name)
         self._events.emit(
-            'service-data-loaded.%s' % service_id,
+            f'service-data-loaded.{service_id}',
             service_data=service_data,
             service_name=service_name,
             session=self,
@@ -737,9 +737,9 @@ class Session:
         except ValueError:
             if name in ['endpoint_resolver', 'exceptions_factory']:
                 warnings.warn(
-                    'Fetching the %s component with the get_component() '
-                    'method is deprecated as the component has always been '
-                    'considered an internal interface of botocore' % name,
+                    f'Fetching the {name} component with the get_component() '
+                    f'method is deprecated as the component has always been '
+                    f'considered an internal interface of botocore',
                     DeprecationWarning,
                 )
                 return self._internal_components.get_component(name)
@@ -1011,7 +1011,7 @@ class ComponentLocator:
         try:
             return self._components[name]
         except KeyError:
-            raise ValueError("Unknown component: %s" % name)
+            raise ValueError(f"Unknown component: {name}")
 
     def register_component(self, name, component):
         self._components[name] = component

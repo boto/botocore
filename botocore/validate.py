@@ -106,64 +106,60 @@ class ValidationErrors:
         error_type, name, additional = error
         name = self._get_name(name)
         if error_type == 'missing required field':
-            return 'Missing required parameter in {}: "{}"'.format(
-                name, additional['required_name']
-            )
+            required = additional['required_name']
+            return f'Missing required parameter in {name}: "{required}"'
         elif error_type == 'unknown field':
-            return 'Unknown parameter in {}: "{}", must be one of: {}'.format(
-                name,
-                additional['unknown_param'],
-                ', '.join(additional['valid_names']),
+            unknown = additional['unknown_param']
+            options = ', '.join(additional['valid_names'])
+            return (
+                f'Unknown parameter in {name}: "{unknown}", '
+                f'must be one of: {options}'
             )
         elif error_type == 'invalid type':
+            param = additional['param']
+            options = additional['valid_types']
             return (
-                'Invalid type for parameter %s, value: %s, type: %s, '
-                'valid types: %s'
-                % (
-                    name,
-                    additional['param'],
-                    str(type(additional['param'])),
-                    ', '.join(additional['valid_types']),
-                )
+                f'Invalid type for parameter {name}, value: {param}, type: '
+                f'{type(param)}, valid types: {options}'
             )
         elif error_type == 'invalid range':
+            param = additional['param']
             min_allowed = additional['min_allowed']
             return (
-                'Invalid value for parameter %s, value: %s, valid min value: '
-                '%s' % (name, additional['param'], min_allowed)
+                f'Invalid value for parameter {name}, value: {param}, '
+                f'valid min value: {min_allowed}'
             )
         elif error_type == 'invalid length':
+            param = additional['param']
             min_allowed = additional['min_allowed']
             return (
-                'Invalid length for parameter %s, value: %s, '
-                'valid min length: %s'
-                % (name, additional['param'], min_allowed)
+                f'Invalid length for parameter {name}, value: {param}, '
+                f'valid min length: {min_allowed}'
             )
         elif error_type == 'unable to encode to json':
-            return 'Invalid parameter {} must be json serializable: {}'.format(
-                name, additional['type_error']
+            type_error = additional['type_error']
+            return (
+                f'Invalid parameter {name} must be json '
+                f'serializable: {type_error}'
             )
         elif error_type == 'invalid type for document':
+            param = additional['param']
+            options = ', '.join(additional['valid_types'])
             return (
-                'Invalid type for document parameter %s, value: %s, type: %s, '
-                'valid types: %s'
-                % (
-                    name,
-                    additional['param'],
-                    str(type(additional['param'])),
-                    ', '.join(additional['valid_types']),
-                )
+                f'Invalid type for document parameter {name}, value: {param}, '
+                f'type: {type(param)}, valid types: {options}'
             )
         elif error_type == 'more than one input':
+            options = '. '.join(additional['members'])
             return (
-                'Invalid number of parameters set for tagged union structure '
-                '%s. Can only set one of the following keys: '
-                '%s.' % (name, '. '.join(additional['members']))
+                f'Invalid number of parameters set for tagged union structure '
+                f'{name}. Can only set one of the following keys: {options}.'
             )
         elif error_type == 'empty input':
+            required = '. '.join(additional['members'])
             return (
-                'Must set one of the following keys for tagged union'
-                'structure %s: %s.' % (name, '. '.join(additional['members']))
+                f'Must set one of the following keys for tagged union'
+                f'structure {name}: {required}.'
             )
 
     def _get_name(self, name):
@@ -210,7 +206,7 @@ class ParamValidator:
         if special_validator:
             special_validator(params, shape, errors, name)
         else:
-            getattr(self, '_validate_%s' % shape.type_name)(
+            getattr(self, f'_validate_{shape.type_name}')(
                 params, shape, errors, name
             )
 
@@ -232,7 +228,7 @@ class ParamValidator:
         elif isinstance(params, list):
             for index, entity in enumerate(params):
                 self._validate_document(
-                    entity, shape, errors, '%s[%d]' % (name, index)
+                    entity, shape, errors, f'{name}[{index}]'
                 )
         elif not isinstance(params, ((str,), int, bool, float)):
             valid_types = (str, int, bool, float, list, dict)

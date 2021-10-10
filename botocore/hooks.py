@@ -170,7 +170,7 @@ class BaseEventHooks:
 
     def _verify_is_callable(self, func):
         if not callable(func):
-            raise ValueError("Event handler %s must be callable." % func)
+            raise ValueError(f"Event handler {func} must be callable.")
 
     def _verify_accept_kwargs(self, func):
         """Verifies a callable accepts kwargs
@@ -184,8 +184,8 @@ class BaseEventHooks:
         try:
             if not accepts_kwargs(func):
                 raise ValueError(
-                    "Event handler %s must accept keyword "
-                    "arguments (**kwargs)" % func
+                    f"Event handler {func} must accept keyword "
+                    f"arguments (**kwargs)"
                 )
         except TypeError:
             return False
@@ -314,20 +314,20 @@ class HierarchicalEmitter(BaseEventHooks):
                 if unique_id_uses_count:
                     if not count:
                         raise ValueError(
-                            "Initial registration of  unique id %s was "
-                            "specified to use a counter. Subsequent register "
-                            "calls to unique id must specify use of a counter "
-                            "as well." % unique_id
+                            f"Initial registration of unique id {unique_id} "
+                            f"was specified to use a counter. Subsequent "
+                            f"register calls to unique id must specify use "
+                            f"of a counter as well."
                         )
                     else:
                         self._unique_id_handlers[unique_id]['count'] += 1
                 else:
                     if count:
                         raise ValueError(
-                            "Initial registration of unique id %s was "
-                            "specified to not use a counter. Subsequent "
-                            "register calls to unique id must specify not to "
-                            "use a counter as well." % unique_id
+                            f"Initial registration of unique id {unique_id} "
+                            f"was specified to not use a counter. Subsequent "
+                            f"register calls to unique id must specify not to "
+                            f"use a counter as well."
                         )
                 return
             else:
@@ -364,9 +364,10 @@ class HierarchicalEmitter(BaseEventHooks):
             if unique_id_uses_count:
                 if count is None:
                     raise ValueError(
-                        "Initial registration of unique id %s was specified to "
-                        "use a counter. Subsequent unregister calls to unique "
-                        "id must specify use of a counter as well." % unique_id
+                        f"Initial registration of unique id {unique_id} was "
+                        f"specified to use a counter. Subsequent unregister "
+                        f"calls to unique id must specify use of a counter "
+                        f"as well."
                     )
                 elif count == 1:
                     handler = self._unique_id_handlers.pop(unique_id)[
@@ -378,10 +379,10 @@ class HierarchicalEmitter(BaseEventHooks):
             else:
                 if count:
                     raise ValueError(
-                        "Initial registration of unique id %s was specified "
-                        "to not use a counter. Subsequent unregister calls "
-                        "to unique id must specify not to use a counter as "
-                        "well." % unique_id
+                        f"Initial registration of unique id {unique_id} was "
+                        f"specified to not use a counter. Subsequent "
+                        f"unregister calls to unique id must specify not to "
+                        f"use a counter as well."
                     )
                 handler = self._unique_id_handlers.pop(unique_id)['handler']
         try:
@@ -636,9 +637,7 @@ class _PrefixTrie:
                     # where a key does not exist.
                     del current_node['children'][key_parts[index]]
             else:
-                raise ValueError(
-                    "key is not in trie: %s" % '.'.join(key_parts)
-                )
+                raise ValueError(f"key is not in trie: {'.'.join(key_parts)}")
 
     def __copy__(self):
         # The fact that we're using a nested dict under the covers

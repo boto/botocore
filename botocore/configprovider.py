@@ -480,7 +480,7 @@ class ChainProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return '[%s]' % ', '.join([str(p) for p in self._providers])
+        return '[{}]'.format(', '.join([str(p) for p in self._providers]))
 
 
 class InstanceVarProvider(BaseProvider):
@@ -608,13 +608,9 @@ class SectionConfigProvider(BaseProvider):
 
     def __repr__(self):
         return (
-            'SectionConfigProvider(section_name=%s, '
-            'session=%s, override_providers=%s)'
-            % (
-                self._section_name,
-                self._session,
-                self._override_providers,
-            )
+            f'SectionConfigProvider(section_name={self._section_name}, '
+            f'session={self._session}, '
+            f'override_providers={self._override_providers})'
         )
 
 
@@ -629,4 +625,4 @@ class ConstantProvider(BaseProvider):
         return self._value
 
     def __repr__(self):
-        return 'ConstantProvider(value=%s)' % self._value
+        return f'ConstantProvider(value={self._value})'

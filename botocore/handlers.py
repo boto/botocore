@@ -22,6 +22,7 @@ import logging
 import re
 import uuid
 import warnings
+from io import BytesIO
 
 import botocore
 import botocore.auth
@@ -38,7 +39,6 @@ from botocore.compat import (
     ensure_bytes,
     get_md5,
     json,
-    six,
     unquote,
     unquote_str,
     urlsplit,
@@ -214,9 +214,9 @@ def decode_console_output(parsed, **kwargs):
             # We're using 'replace' for errors because it is
             # possible that console output contains non string
             # chars we can't utf-8 decode.
-            value = base64.b64decode(six.b(parsed['Output'])).decode(
-                'utf-8', 'replace'
-            )
+            # We convert to latin-1 bytes first to match old six.b() behavior
+            output_bytes = bytes(parsed['Output'], 'latin-1')
+            value = base64.b64decode(output_bytes).decode('utf-8', 'replace')
             parsed['Output'] = value
         except (ValueError, TypeError, AttributeError):
             logger.debug('Error decoding base64', exc_info=True)
@@ -257,9 +257,9 @@ def validate_bucket_name(params, **kwargs):
     bucket = params['Bucket']
     if not VALID_BUCKET.search(bucket) and not VALID_S3_ARN.search(bucket):
         error_msg = (
-            'Invalid bucket name "%s": Bucket name must match '
-            'the regex "%s" or be an ARN matching the regex "%s"'
-            % (bucket, VALID_BUCKET.pattern, VALID_S3_ARN.pattern)
+            f'Invalid bucket name "{bucket}": Bucket name must match the regex '
+            f'"{VALID_BUCKET.pattern}" or be an ARN matching the regex '
+            f'"{VALID_S3_ARN.pattern}"'
         )
         raise ParamValidationError(report=error_msg)
 
@@ -417,12 +417,10 @@ def _quote_source_header_from_dict(source_dict):
         else:
             final = f'{bucket}/{key}'
     except KeyError as e:
-        raise ParamValidationError(
-            report='Missing required parameter: %s' % str(e)
-        )
+        raise ParamValidationError(report=f'Missing required parameter: {e}')
     final = percent_encode(final, safe=SAFE_CHARS + '/')
     if version_id is not None:
-        final += '?versionId=%s' % version_id
+        final += f'?versionId={version_id}'
     return final
 
 
@@ -599,9 +597,9 @@ def validate_ascii_metadata(params, **kwargs):
             value.encode('ascii')
         except UnicodeEncodeError:
             error_msg = (
-                'Non ascii characters found in S3 metadata '
-                'for key "%s", value: "%s".  \nS3 metadata can only '
-                'contain ASCII characters. ' % (key, value)
+                f'Non ascii characters found in S3 metadata '
+                f'for key "{key}", value: "{value}".  \n'
+                f'S3 metadata can only contain ASCII characters. '
             )
             raise ParamValidationError(report=error_msg)
 
@@ -673,7 +671,7 @@ def add_glacier_checksums(params, **kwargs):
         # so we can use the util functions to calculate the
         # checksums which assume file like objects.  Note that
         # we're not actually changing the body in the request_dict.
-        body = six.BytesIO(body)
+        body = BytesIO(body)
     starting_position = body.tell()
     if 'x-amz-content-sha256' not in headers:
         headers['x-amz-content-sha256'] = utils.calculate_sha256(
@@ -729,10 +727,10 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
         openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
         if openssl_version_tuple < (1, 0, 1):
             warnings.warn(
-                'Currently installed openssl version: %s does not '
-                'support TLS 1.2, which is required for use of iot-data. '
-                'Please use python installed with openssl version 1.0.1 or '
-                'higher.' % (ssl.OPENSSL_VERSION),
+                f'Currently installed openssl version: {ssl.OPENSSL_VERSION} '
+                f'does not support TLS 1.2, which is required for use of '
+                f'iot-data. Please use python installed with openssl version '
+                f'1.0.1 or higher.',
                 UnsupportedTLSVersionWarning,
             )
     # We cannot check the openssl version on python2.6, so we should just
@@ -828,9 +826,9 @@ def _decode_list_object(top_level_keys, nested_keys, parsed, context):
 def convert_body_to_file_like_object(params, **kwargs):
     if 'Body' in params:
         if isinstance(params['Body'], str):
-            params['Body'] = six.BytesIO(ensure_bytes(params['Body']))
+            params['Body'] = BytesIO(ensure_bytes(params['Body']))
         elif isinstance(params['Body'], bytes):
-            params['Body'] = six.BytesIO(params['Body'])
+            params['Body'] = BytesIO(params['Body'])
 
 
 def _add_parameter_aliases(handler_list):

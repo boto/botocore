@@ -307,21 +307,19 @@ class ResponseParser:
         }
 
     def _do_parse(self, response, shape):
-        raise NotImplementedError("%s._do_parse" % self.__class__.__name__)
+        raise NotImplementedError(f"{self.__class__.__name__}._do_parse")
 
     def _do_error_parse(self, response, shape):
-        raise NotImplementedError(
-            "%s._do_error_parse" % self.__class__.__name__
-        )
+        raise NotImplementedError(f"{self.__class__.__name__}._do_error_parse")
 
     def _do_modeled_error_parse(self, response, shape, parsed):
         raise NotImplementedError(
-            "%s._do_modeled_error_parse" % self.__class__.__name__
+            f"{self.__class__.__name__}._do_modeled_error_parse"
         )
 
     def _parse_shape(self, shape, node):
         handler = getattr(
-            self, '_handle_%s' % shape.type_name, self._default_handle
+            self, f'_handle_{shape.type_name}', self._default_handle
         )
         return handler(shape, node)
 
@@ -348,19 +346,17 @@ class ResponseParser:
     def _has_unknown_tagged_union_member(self, shape, value):
         if shape.is_tagged_union:
             if len(value) != 1:
-                error_msg = (
-                    "Invalid service response: %s must have one and only "
-                    "one member set."
+                raise ResponseParserError(
+                    f"Invalid service response: {shape.name} "
+                    f"must have one and only one member set."
                 )
-                raise ResponseParserError(error_msg % shape.name)
             tag = self._get_first_key(value)
             if tag not in shape.members:
-                msg = (
-                    "Received a tagged union response with member "
-                    "unknown to client: %s. Please upgrade SDK for full "
-                    "response support."
+                LOG.info(
+                    f"Received a tagged union response with member "
+                    f"unknown to client: {tag}. Please upgrade SDK for full "
+                    f"response support."
                 )
-                LOG.info(msg % tag)
                 return True
         return False
 
@@ -390,7 +386,7 @@ class BaseXMLResponseParser(ResponseParser):
                 elif tag_name == value_location_name:
                     val_name = self._parse_shape(value_shape, single_pair)
                 else:
-                    raise ResponseParserError("Unknown tag: %s" % tag_name)
+                    raise ResponseParserError(f"Unknown tag: {tag_name}")
             parsed[key_name] = val_name
         return parsed
 
@@ -498,9 +494,8 @@ class BaseXMLResponseParser(ResponseParser):
             root = parser.close()
         except XMLParseError as e:
             raise ResponseParserError(
-                "Unable to parse response (%s), "
-                "invalid XML received. Further retries may succeed:\n%s"
-                % (e, xml_string)
+                f"Unable to parse response ({e}), invalid XML received. "
+                f"Further retries may succeed:\n{xml_string}"
             )
         return root
 
