@@ -76,7 +76,7 @@ def assert_valid_values(service_name, operation_model, example_config):
                 output_shape, example_output, [output_shape.name])
     except AssertionError as e:
         raise AssertionError(
-            "Invalid value in example for %s from %s with id %s: %s" % (
+            "Invalid value in example for {} from {} with id {}: {}".format(
                 operation_model.name, service_name, example_id, e
             ))
 
@@ -98,7 +98,7 @@ def _assert_valid_structure_values(shape, example_dict, path):
     if invalid_members:
         dotted_path = '.'.join(path)
         raise AssertionError(
-            "Invalid members found for %s: %s" % (dotted_path, invalid_members)
+            f"Invalid members found for {dotted_path}: {invalid_members}"
         )
 
     for member_name, example_value in example_dict.items():
@@ -109,13 +109,13 @@ def _assert_valid_structure_values(shape, example_dict, path):
 def _assert_valid_list_values(shape, example_values, path):
     member = shape.member
     for i, value in enumerate(example_values):
-        name = "%s[%s]" % (path[-1], i)
+        name = f"{path[-1]}[{i}]"
         _assert_valid_values(member, value, path[:-1] + [name])
 
 
 def _assert_valid_map_values(shape, example_value, path):
     for key, value in example_value.items():
-        name = '%s["%s"]' % (path[-1], key)
+        name = f'{path[-1]}["{key}"]'
         _assert_valid_values(shape.value, value, path[:-1] + [name])
 
 
@@ -124,7 +124,7 @@ def _assert_valid_timestamp(timestamp, path):
         parse_timestamp(timestamp).timetuple()
     except Exception as e:
         dotted_path = '.'.join(path)
-        raise AssertionError('Failed to parse timestamp %s for %s: %s' % (
+        raise AssertionError('Failed to parse timestamp {} for {}: {}'.format(
             timestamp, dotted_path, e))
 
 
@@ -133,5 +133,5 @@ def assert_operation_exists(service_model, operation_name):
         service_model.operation_model(operation_name)
     except OperationNotFoundError:
         raise AssertionError(
-            "Examples found in %s for operation %s that does not exist." % (
+            "Examples found in {} for operation {} that does not exist.".format(
                 service_model.service_name, operation_name))

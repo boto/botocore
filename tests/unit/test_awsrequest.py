@@ -39,7 +39,7 @@ class IgnoreCloseBytesIO(io.BytesIO):
         pass
 
 
-class FakeSocket(object):
+class FakeSocket:
     def __init__(self, read_data, fileclass=IgnoreCloseBytesIO):
         self.sent_data = b''
         self.read_data = read_data
@@ -77,7 +77,7 @@ class Unseekable(file_type):
         raise ValueError("Underlying stream does not support seeking.")
 
 
-class Seekable(object):
+class Seekable:
     """This class represents a bare-bones,seekable file-like object
 
     Note it does not include some of the other attributes of other
@@ -141,14 +141,14 @@ class TestAWSRequest(unittest.TestCase):
         self.assertEqual(prepared_request.body, 'dead=beef')
 
     def test_can_prepare_dict_body_unicode_values(self):
-        body = {'Text': u'\u30c6\u30b9\u30c8 string'}
+        body = {'Text': '\u30c6\u30b9\u30c8 string'}
         expected_body = 'Text=%E3%83%86%E3%82%B9%E3%83%88+string'
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
         self.assertEqual(prepared_request.body, expected_body)
 
     def test_can_prepare_dict_body_unicode_keys(self):
-        body = {u'\u30c6\u30b9\u30c8': 'string'}
+        body = {'\u30c6\u30b9\u30c8': 'string'}
         expected_body = '%E3%83%86%E3%82%B9%E3%83%88=string'
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
@@ -250,7 +250,7 @@ class TestAWSRequest(unittest.TestCase):
         # We should not be using an isinstance check.  Instead, we should
         # be using duck type checks.
 
-        class LooksLikeFile(object):
+        class LooksLikeFile:
 
             def __init__(self):
                 self.seek_called = False
@@ -275,8 +275,7 @@ class TestAWSResponse(unittest.TestCase):
 
     def set_raw_stream(self, blobs):
         def stream(*args, **kwargs):
-            for blob in blobs:
-                yield blob
+            yield from blobs
         self.response.raw.stream.return_value = stream()
 
     def test_content_property(self):
@@ -289,11 +288,11 @@ class TestAWSResponse(unittest.TestCase):
     def test_text_property(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
         self.response.headers['content-type'] = 'text/plain; charset=utf-8'
-        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
+        self.assertEqual(self.response.text, '\u30b8\u30e7\u30b0')
 
     def test_text_property_defaults_utf8(self):
         self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
-        self.assertEqual(self.response.text, u'\u30b8\u30e7\u30b0')
+        self.assertEqual(self.response.text, '\u30b8\u30e7\u30b0')
 
 
 class TestAWSHTTPConnection(unittest.TestCase):
@@ -505,7 +504,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Note the combination of unicode 'GET' and
         # bytes 'Utf8-Header' value.
-        conn.request(u'GET', '/bucket/foo', b'body',
+        conn.request('GET', '/bucket/foo', b'body',
                      headers={"Utf8-Header": b"\xe5\xb0\x8f"})
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
@@ -571,7 +570,7 @@ class TestPrepareRequestDict(unittest.TestCase):
         self.base_request_dict = {
             'body': '',
             'headers': {},
-            'method': u'GET',
+            'method': 'GET',
             'query_string': '',
             'url_path': '/',
             'context': {}
@@ -590,7 +589,7 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_prepare_request_dict_for_get(self):
         request_dict = {
-            'method': u'GET',
+            'method': 'GET',
             'url_path': '/'
         }
         self.prepare_base_request_dict(
@@ -604,7 +603,7 @@ class TestPrepareRequestDict(unittest.TestCase):
     def test_prepare_request_dict_for_get_no_user_agent(self):
         self.user_agent = None
         request_dict = {
-            'method': u'GET',
+            'method': 'GET',
             'url_path': '/'
         }
         self.prepare_base_request_dict(
@@ -618,9 +617,9 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_query_string_serialized_to_url(self):
         request_dict = {
-            'method': u'GET',
-            'query_string': {u'prefix': u'foo'},
-            'url_path': u'/mybucket'
+            'method': 'GET',
+            'query_string': {'prefix': 'foo'},
+            'url_path': '/mybucket'
         }
         self.prepare_base_request_dict(request_dict)
         self.assertEqual(
@@ -633,8 +632,8 @@ class TestPrepareRequestDict(unittest.TestCase):
         # serializer gives us a request_dict that has a url
         # component as well (say from a rest-* service).
         request_dict = {
-            'query_string': {u'prefix': u'foo'},
-            'url_path': u'/mybucket'
+            'query_string': {'prefix': 'foo'},
+            'url_path': '/mybucket'
         }
         endpoint_url = 'https://custom.endpoint/foo/bar'
         self.prepare_base_request_dict(request_dict, endpoint_url)
@@ -644,7 +643,7 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_url_path_with_trailing_slash(self):
         self.prepare_base_request_dict(
-            {'url_path': u'/mybucket'},
+            {'url_path': '/mybucket'},
             endpoint_url='https://custom.endpoint/foo/bar/')
 
         self.assertEqual(
@@ -653,7 +652,7 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_url_path_is_slash(self):
         self.prepare_base_request_dict(
-            {'url_path': u'/'},
+            {'url_path': '/'},
             endpoint_url='https://custom.endpoint/foo/bar/')
 
         self.assertEqual(
@@ -662,7 +661,7 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_url_path_is_slash_with_endpoint_url_no_slash(self):
         self.prepare_base_request_dict(
-            {'url_path': u'/'},
+            {'url_path': '/'},
             endpoint_url='https://custom.endpoint/foo/bar')
 
         self.assertEqual(
@@ -671,7 +670,7 @@ class TestPrepareRequestDict(unittest.TestCase):
 
     def test_custom_endpoint_with_query_string(self):
         self.prepare_base_request_dict(
-            {'url_path': u'/baz', 'query_string': {'x': 'y'}},
+            {'url_path': '/baz', 'query_string': {'x': 'y'}},
             endpoint_url='https://custom.endpoint/foo/bar?foo=bar')
 
         self.assertEqual(
@@ -682,12 +681,12 @@ class TestPrepareRequestDict(unittest.TestCase):
 class TestCreateRequestObject(unittest.TestCase):
     def setUp(self):
         self.request_dict = {
-            'method': u'GET',
-            'query_string': {u'prefix': u'foo'},
-            'url_path': u'/mybucket',
-            'headers': {u'User-Agent': u'my-agent'},
-            'body': u'my body',
-            'url': u'https://s3.amazonaws.com/mybucket?prefix=foo',
+            'method': 'GET',
+            'query_string': {'prefix': 'foo'},
+            'url_path': '/mybucket',
+            'headers': {'User-Agent': 'my-agent'},
+            'body': 'my body',
+            'url': 'https://s3.amazonaws.com/mybucket?prefix=foo',
             'context': {'signing': {'region': 'us-west-2'}}
         }
 

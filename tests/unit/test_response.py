@@ -155,7 +155,7 @@ class TestStreamWrapper(unittest.TestCase):
         )
 
     def test_catches_urllib3_read_timeout(self):
-        class TimeoutBody(object):
+        class TimeoutBody:
             def read(*args, **kwargs):
                 raise URLLib3ReadTimeoutError(None, None, None)
 

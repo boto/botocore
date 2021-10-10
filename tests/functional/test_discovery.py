@@ -23,7 +23,7 @@ from tests.functional import FunctionalSessionTest
 
 class TestEndpointDiscovery(FunctionalSessionTest):
     def setUp(self):
-        super(TestEndpointDiscovery, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
 
     def create_client(

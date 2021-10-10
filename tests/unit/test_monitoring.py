@@ -16,7 +16,6 @@ import socket
 import time
 
 from botocore.awsrequest import AWSRequest
-from botocore.compat import six
 from botocore.exceptions import ConnectionError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import OperationModel, ServiceModel
@@ -551,7 +550,7 @@ class TestCSMSerializer(unittest.TestCase):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000)
         serialized_event = self.serializer.serialize(event)
-        self.assertIsInstance(serialized_event, six.binary_type)
+        self.assertIsInstance(serialized_event, bytes)
 
     def test_serialize_does_not_add_whitespace(self):
         event = APICallEvent(

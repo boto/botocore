@@ -28,7 +28,7 @@ from tests import BaseEnvVar, mock, unittest
 
 def path(filename):
     directory = os.path.join(os.path.dirname(__file__), 'cfg')
-    if isinstance(filename, six.binary_type):
+    if isinstance(filename, bytes):
         directory = six.b(directory)
     return os.path.join(directory, filename)
 
@@ -52,7 +52,7 @@ class TestConfigLoader(BaseEnvVar):
         )
 
         directory = self.tempdir
-        if isinstance(filename, six.binary_type):
+        if isinstance(filename, bytes):
             directory = six.b(directory)
         full_path = os.path.join(directory, filename)
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2012-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -212,7 +211,7 @@ class BaseS3ClientTest(unittest.TestCase):
 
 class TestS3BaseWithBucket(BaseS3ClientTest):
     def setUp(self):
-        super(TestS3BaseWithBucket, self).setUp()
+        super().setUp()
         self.caught_exceptions = []
 
     def create_multipart_upload(self, key_name):
@@ -264,7 +263,7 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
             else:
                 # Sleep and try again.
                 time.sleep(2)
-        self.fail("Expected to see %s uploads, instead saw: %s" % (
+        self.fail("Expected to see {} uploads, instead saw: {}".format(
             num_uploads, amount_seen))
 
     def create_client(self):
@@ -286,7 +285,7 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
 
 class TestS3Buckets(TestS3BaseWithBucket):
     def setUp(self):
-        super(TestS3Buckets, self).setUp()
+        super().setUp()
 
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to s3.
@@ -360,7 +359,7 @@ class TestS3Objects(TestS3BaseWithBucket):
     @pytest.mark.slow
     def test_result_key_iters(self):
         for i in range(5):
-            key_name = 'key/%s/%s' % (i, i)
+            key_name = f'key/{i}/{i}'
             self.create_object(key_name)
             key_name2 = 'key/%s' % i
             self.create_object(key_name2)
@@ -470,7 +469,7 @@ class TestS3Objects(TestS3BaseWithBucket):
 
     def test_unicode_key_put_list(self):
         # Verify we can upload a key with a unicode char and list it as well.
-        key_name = u'\u2713'
+        key_name = '\u2713'
         self.create_object(key_name)
         parsed = self.client.list_objects(Bucket=self.bucket_name)
         self.assertEqual(len(parsed['Contents']), 1)
@@ -565,7 +564,7 @@ class TestS3Objects(TestS3BaseWithBucket):
 
 class TestS3Regions(BaseS3ClientTest):
     def setUp(self):
-        super(TestS3Regions, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             's3', region_name=self.region)
@@ -596,7 +595,7 @@ class TestS3Copy(TestS3BaseWithBucket):
         key_name2 = key_name + 'bar'
         self.client.copy_object(
             Bucket=self.bucket_name, Key=key_name2,
-            CopySource='%s/%s' % (self.bucket_name, key_name))
+            CopySource=f'{self.bucket_name}/{key_name}')
 
         # Now verify we can retrieve the copied object.
         data = self.client.get_object(
@@ -610,7 +609,7 @@ class TestS3Copy(TestS3BaseWithBucket):
         key_name2 = key_name + 'bar'
         self.client.copy_object(
             Bucket=self.bucket_name, Key=key_name2,
-            CopySource='%s/%s' % (self.bucket_name, key_name))
+            CopySource=f'{self.bucket_name}/{key_name}')
 
         # Now verify we can retrieve the copied object.
         data = self.client.get_object(
@@ -638,7 +637,7 @@ class TestS3Copy(TestS3BaseWithBucket):
         copied_key = 'copied.txt'
         parsed = self.client.copy_object(
             Bucket=self.bucket_name, Key=copied_key,
-            CopySource='%s/%s' % (self.bucket_name, key_name),
+            CopySource=f'{self.bucket_name}/{key_name}',
             MetadataDirective='REPLACE',
             Metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
         self.assert_status_code(parsed, 200)
@@ -653,7 +652,7 @@ class BaseS3PresignTest(BaseS3ClientTest):
 
 class TestS3PresignUsStandard(BaseS3PresignTest):
     def setUp(self):
-        super(TestS3PresignUsStandard, self).setUp()
+        super().setUp()
         self.region = 'us-east-1'
         self.client_config = Config(
             region_name=self.region, signature_version='s3')
@@ -667,7 +666,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://{}.s3.amazonaws.com/{}'.format(
                     self.bucket_name, self.key)),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
@@ -693,7 +692,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://{}.s3.amazonaws.com/{}'.format(
                     self.bucket_name, self.key)),
             "Host was suppose to be the us-east-1 endpoint, instead "
             "got: %s" % presigned_url)
@@ -770,7 +769,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
 class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
     def setUp(self):
-        super(TestS3PresignNonUsStandard, self).setUp()
+        super().setUp()
         self.client_config = Config(
             region_name=self.region, signature_version='s3')
         self.client = self.session.create_client(
@@ -782,7 +781,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
-                'https://%s.s3.amazonaws.com/%s' % (
+                'https://{}.s3.amazonaws.com/{}'.format(
                     self.bucket_name, self.key)),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url)
@@ -805,7 +804,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
         self.assertTrue(
             presigned_url.startswith(
-                'https://s3.us-west-2.amazonaws.com/%s/%s' % (
+                'https://s3.us-west-2.amazonaws.com/{}/{}'.format(
                     self.bucket_name, self.key)),
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
@@ -907,7 +906,7 @@ class TestCreateBucketInOtherRegion(TestS3BaseWithBucket):
 
 class TestS3SigV4Client(BaseS3ClientTest):
     def setUp(self):
-        super(TestS3SigV4Client, self).setUp()
+        super().setUp()
         self.client = self.session.create_client(
             's3', self.region, config=Config(signature_version='s3v4'))
         self.http_stubber = ClientHTTPStubber(self.client)
@@ -935,10 +934,10 @@ class TestS3SigV4Client(BaseS3ClientTest):
     @pytest.mark.slow
     def test_paginate_list_objects_unicode(self):
         key_names = [
-            u'non-ascii-key-\xe4\xf6\xfc-01.txt',
-            u'non-ascii-key-\xe4\xf6\xfc-02.txt',
-            u'non-ascii-key-\xe4\xf6\xfc-03.txt',
-            u'non-ascii-key-\xe4\xf6\xfc-04.txt',
+            'non-ascii-key-\xe4\xf6\xfc-01.txt',
+            'non-ascii-key-\xe4\xf6\xfc-02.txt',
+            'non-ascii-key-\xe4\xf6\xfc-03.txt',
+            'non-ascii-key-\xe4\xf6\xfc-04.txt',
         ]
         for key in key_names:
             response = self.client.put_object(Bucket=self.bucket_name,
@@ -958,10 +957,10 @@ class TestS3SigV4Client(BaseS3ClientTest):
     @pytest.mark.slow
     def test_paginate_list_objects_safe_chars(self):
         key_names = [
-            u'-._~safe-chars-key-01.txt',
-            u'-._~safe-chars-key-02.txt',
-            u'-._~safe-chars-key-03.txt',
-            u'-._~safe-chars-key-04.txt',
+            '-._~safe-chars-key-01.txt',
+            '-._~safe-chars-key-02.txt',
+            '-._~safe-chars-key-03.txt',
+            '-._~safe-chars-key-04.txt',
         ]
         for key in key_names:
             response = self.client.put_object(Bucket=self.bucket_name,
@@ -1118,10 +1117,10 @@ class TestS3UTF8Headers(BaseS3ClientTest):
 
 class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
     def test_can_put_unicode_content(self):
-        self.assert_can_put_object(body=u'\u2713')
+        self.assert_can_put_object(body='\u2713')
 
     def test_can_put_non_ascii_bytes(self):
-        self.assert_can_put_object(body=u'\u2713'.encode('utf-8'))
+        self.assert_can_put_object(body='\u2713'.encode())
 
     def test_can_put_arbitrary_binary_data(self):
         body = os.urandom(5 * (1024 ** 2))
@@ -1131,7 +1130,7 @@ class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
         tempdir = self.make_tempdir()
         filename = os.path.join(tempdir, 'foo')
         with open(filename, 'wb') as f:
-            f.write(u'\u2713'.encode('utf-8'))
+            f.write('\u2713'.encode())
         with open(filename, 'rb') as binary_file:
             self.assert_can_put_object(body=binary_file)
 
@@ -1170,7 +1169,7 @@ class TestSupportedPutObjectBodyTypesSigv4(TestSupportedPutObjectBodyTypes):
 
 class TestAutoS3Addressing(BaseS3ClientTest):
     def setUp(self):
-        super(TestAutoS3Addressing, self).setUp()
+        super().setUp()
         self.addressing_style = 'auto'
         self.client = self.create_client()
 
@@ -1204,21 +1203,21 @@ class TestAutoS3Addressing(BaseS3ClientTest):
 
 class TestS3VirtualAddressing(TestAutoS3Addressing):
     def setUp(self):
-        super(TestS3VirtualAddressing, self).setUp()
+        super().setUp()
         self.addressing_style = 'virtual'
         self.client = self.create_client()
 
 
 class TestS3PathAddressing(TestAutoS3Addressing):
     def setUp(self):
-        super(TestS3PathAddressing, self).setUp()
+        super().setUp()
         self.addressing_style = 'path'
         self.client = self.create_client()
 
 
 class TestRegionRedirect(BaseS3ClientTest):
     def setUp(self):
-        super(TestRegionRedirect, self).setUp()
+        super().setUp()
         self.bucket_region = self.region
         self.client_region = 'eu-central-1'
 

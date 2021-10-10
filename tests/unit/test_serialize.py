@@ -79,13 +79,13 @@ class TestBinaryTypes(BaseModelWithBlob):
             request, blob_bytes=body)
 
     def test_blob_accepts_str_type(self):
-        body = u'ascii text'
+        body = 'ascii text'
         request = self.serialize_to_request(input_params={'Blob': body})
         self.assert_serialized_blob_equals(
             request, blob_bytes=body.encode('ascii'))
 
     def test_blob_handles_unicode_chars(self):
-        body = u'\u2713'
+        body = '\u2713'
         request = self.serialize_to_request(input_params={'Blob': body})
         self.assert_serialized_blob_equals(
             request, blob_bytes=body.encode('utf-8'))
@@ -94,7 +94,7 @@ class TestBinaryTypes(BaseModelWithBlob):
 class TestBinaryTypesJSON(BaseModelWithBlob):
 
     def setUp(self):
-        super(TestBinaryTypesJSON, self).setUp()
+        super().setUp()
         self.model['metadata'] = {
             'protocol': 'json',
             'apiVersion': '2014-01-01',
@@ -114,7 +114,7 @@ class TestBinaryTypesJSON(BaseModelWithBlob):
 class TestBinaryTypesWithRestXML(BaseModelWithBlob):
 
     def setUp(self):
-        super(TestBinaryTypesWithRestXML, self).setUp()
+        super().setUp()
         self.model['metadata'] = {
             'protocol': 'rest-xml',
             'apiVersion': '2014-01-01',
@@ -133,7 +133,7 @@ class TestBinaryTypesWithRestXML(BaseModelWithBlob):
     def test_blob_serialization_when_payload_is_unicode(self):
         # When the body is a text type, we should encode the
         # text to bytes.
-        body = u'\u2713'
+        body = '\u2713'
         request = self.serialize_to_request(input_params={'Blob': body})
         self.assertEqual(request['body'], body.encode('utf-8'))
 
@@ -506,7 +506,7 @@ class TestRestXMLUnicodeSerialization(unittest.TestCase):
 
     def test_restxml_serializes_unicode(self):
         params = {
-            'Foo': [u'\u65e5\u672c\u8a9e\u3067\u304a\uff4b']
+            'Foo': ['\u65e5\u672c\u8a9e\u3067\u304a\uff4b']
         }
         try:
             self.serialize_to_request(params)

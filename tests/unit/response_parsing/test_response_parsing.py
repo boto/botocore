@@ -114,8 +114,7 @@ def _xml_test_cases():
             service_names.add(os.path.split(fn)[1].split('-')[0])
         for service_name in service_names:
             service_model = session.get_service_model(service_name)
-            service_xml_files = glob.glob('%s/%s-*.xml' % (data_path,
-                                                           service_name))
+            service_xml_files = glob.glob(f'{data_path}/{service_name}-*.xml')
             for xmlfile in service_xml_files:
                 expected = _get_expected_parsed_result(xmlfile)
                 operation_model = _get_operation_model(service_model, xmlfile)

@@ -126,7 +126,7 @@ def _computed_endpoint_prefixes():
     endpoints = loader.load_data('endpoints')
     # A service can be in multiple partitions so we're using
     # a set here to remove dupes.
-    services_in_endpoints_file = set([])
+    services_in_endpoints_file = set()
     for partition in endpoints['partitions']:
         for service in partition['services']:
             # There are some services we don't support in the SDK

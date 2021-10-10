@@ -16,7 +16,7 @@ from tests.unit.docs import BaseDocsTest
 
 class TestClientDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestClientDocumenter, self).setUp()
+        super().setUp()
         exception_shape = {
             'SomeException': {
                 'exception': True,

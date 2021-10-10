@@ -17,7 +17,7 @@ from tests import BaseSessionTest, mock
 
 class S3ControlOperationTest(BaseSessionTest):
     def setUp(self):
-        super(S3ControlOperationTest, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             's3control', self.region)

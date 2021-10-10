@@ -717,7 +717,7 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
     waiters for a specific service.
     """
     def setUp(self):
-        super(ServiceWaiterFunctionalTest, self).setUp()
+        super().setUp()
         self.data_path = os.path.join(
             os.path.dirname(botocore.__file__), 'data')
         self.environ['AWS_DATA_PATH'] = self.data_path
@@ -743,7 +743,7 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
 
 class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
     def setUp(self):
-        super(CloudFrontWaitersTest, self).setUp()
+        super().setUp()
         self.client = mock.Mock()
         self.service = 'cloudfront'
         self.old_api_versions = ['2014-05-31']

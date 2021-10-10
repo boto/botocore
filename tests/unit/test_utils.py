@@ -280,7 +280,7 @@ class TestTransformName(unittest.TestCase):
 
 class TestValidateJMESPathForSet(unittest.TestCase):
     def setUp(self):
-        super(TestValidateJMESPathForSet, self).setUp()
+        super().setUp()
         self.data = {
             'Response': {
                 'Thing': {
@@ -307,7 +307,7 @@ class TestValidateJMESPathForSet(unittest.TestCase):
 
 class TestSetValueFromJMESPath(unittest.TestCase):
     def setUp(self):
-        super(TestSetValueFromJMESPath, self).setUp()
+        super().setUp()
         self.data = {
             'Response': {
                 'Thing': {
@@ -476,7 +476,7 @@ class TestParseToUTCDatetime(unittest.TestCase):
 
 class TestCachedProperty(unittest.TestCase):
     def test_cached_property_same_value(self):
-        class CacheMe(object):
+        class CacheMe:
             @CachedProperty
             def foo(self):
                 return 'foo'
@@ -490,7 +490,7 @@ class TestCachedProperty(unittest.TestCase):
         # a property that returns a new value each time,
         # but this is done to demonstrate the caching behavior.
 
-        class NoIncrement(object):
+        class NoIncrement:
             def __init__(self):
                 self.counter = 0
 
@@ -992,7 +992,7 @@ class TestSwitchToChunkedEncodingForNonSeekableObjects(unittest.TestCase):
 
 
 class TestInstanceCache(unittest.TestCase):
-    class DummyClass(object):
+    class DummyClass:
         def __init__(self, cache):
             self._instance_cache = cache
 
@@ -1235,18 +1235,18 @@ class TestPercentEncode(unittest.TestCase):
         self.assertEqual(percent_encode(1), '1')
 
     def test_percent_encode_text(self):
-        self.assertEqual(percent_encode(u''), '')
-        self.assertEqual(percent_encode(u'a'), 'a')
-        self.assertEqual(percent_encode(u'\u0000'), '%00')
+        self.assertEqual(percent_encode(''), '')
+        self.assertEqual(percent_encode('a'), 'a')
+        self.assertEqual(percent_encode('\u0000'), '%00')
         # Codepoint > 0x7f
-        self.assertEqual(percent_encode(u'\u2603'), '%E2%98%83')
+        self.assertEqual(percent_encode('\u2603'), '%E2%98%83')
         # Codepoint > 0xffff
-        self.assertEqual(percent_encode(u'\U0001f32e'), '%F0%9F%8C%AE')
+        self.assertEqual(percent_encode('\U0001f32e'), '%F0%9F%8C%AE')
 
     def test_percent_encode_bytes(self):
         self.assertEqual(percent_encode(b''), '')
-        self.assertEqual(percent_encode(b'a'), u'a')
-        self.assertEqual(percent_encode(b'\x00'), u'%00')
+        self.assertEqual(percent_encode(b'a'), 'a')
+        self.assertEqual(percent_encode(b'\x00'), '%00')
         # UTF-8 Snowman
         self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
         # Arbitrary bytes (not valid UTF-8).
@@ -2004,7 +2004,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_outpost_endpoint(self):
         request = self.get_s3_outpost_request()
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.%s.s3-outposts.%s.amazonaws.com/' % (
+        expected_url = 'https://{}-{}.{}.s3-outposts.{}.amazonaws.com/'.format(
             self.accesspoint_name, self.account, self.outpost_name,
             self.region_name,
         )
@@ -2013,7 +2013,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_outpost_endpoint_preserves_key_in_path(self):
         request = self.get_s3_outpost_request(key=self.key)
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.%s.s3-outposts.%s.amazonaws.com/%s' % (
+        expected_url = 'https://{}-{}.{}.s3-outposts.{}.amazonaws.com/{}'.format(
             self.accesspoint_name, self.account, self.outpost_name,
             self.region_name, self.key
         )
@@ -2022,7 +2022,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_accesspoint_endpoint(self):
         request = self.get_s3_accesspoint_request()
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+        expected_url = 'https://{}-{}.s3-accesspoint.{}.amazonaws.com/'.format(
             self.accesspoint_name, self.account, self.region_name
         )
         self.assertEqual(request.url, expected_url)
@@ -2030,7 +2030,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_accesspoint_preserves_key_in_path(self):
         request = self.get_s3_accesspoint_request(key=self.key)
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/%s' % (
+        expected_url = 'https://{}-{}.s3-accesspoint.{}.amazonaws.com/{}'.format(
             self.accesspoint_name, self.account, self.region_name,
             self.key
         )
@@ -2039,7 +2039,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_accesspoint_preserves_scheme(self):
         request = self.get_s3_accesspoint_request(scheme='http://')
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'http://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+        expected_url = 'http://{}-{}.s3-accesspoint.{}.amazonaws.com/'.format(
             self.accesspoint_name, self.account, self.region_name,
         )
         self.assertEqual(request.url, expected_url)
@@ -2047,7 +2047,7 @@ class TestS3EndpointSetter(unittest.TestCase):
     def test_accesspoint_preserves_query_string(self):
         request = self.get_s3_accesspoint_request(querystring='acl')
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/?acl' % (
+        expected_url = 'https://{}-{}.s3-accesspoint.{}.amazonaws.com/?acl'.format(
             self.accesspoint_name, self.account, self.region_name,
         )
         self.assertEqual(request.url, expected_url)
@@ -2058,7 +2058,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         }
         request = self.get_s3_accesspoint_request()
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.s3-accesspoint.%s.mysuffix.com/' % (
+        expected_url = 'https://{}-{}.s3-accesspoint.{}.mysuffix.com/'.format(
             self.accesspoint_name, self.account, self.region_name,
         )
         self.assertEqual(request.url, expected_url)
@@ -2069,7 +2069,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             region=client_region, s3_config={'use_arn_region': False})
         request = self.get_s3_accesspoint_request()
         self.call_set_endpoint(self.endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.s3-accesspoint.%s.amazonaws.com/' % (
+        expected_url = 'https://{}-{}.s3-accesspoint.{}.amazonaws.com/'.format(
             self.accesspoint_name, self.account, client_region,
         )
         self.assertEqual(request.url, expected_url)
@@ -2079,7 +2079,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             endpoint_url='https://custom.com')
         request = self.get_s3_accesspoint_request()
         self.call_set_endpoint(endpoint_setter, request=request)
-        expected_url = 'https://%s-%s.custom.com/' % (
+        expected_url = 'https://{}-{}.custom.com/'.format(
             self.accesspoint_name, self.account,
         )
         self.assertEqual(request.url, expected_url)
@@ -2107,7 +2107,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             s3_config={'addressing_style': 'auto'})
         request = self.get_s3_request(self.bucket, self.key)
         self.call_set_endpoint(endpoint_setter, request)
-        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+        expected_url = 'https://{}.s3.us-west-2.amazonaws.com/{}'.format(
             self.bucket, self.key
         )
         self.assertEqual(request.url, expected_url)
@@ -2117,7 +2117,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             s3_config={'addressing_style': 'virtual'})
         request = self.get_s3_request(self.bucket, self.key)
         self.call_set_endpoint(endpoint_setter, request)
-        expected_url = 'https://%s.s3.us-west-2.amazonaws.com/%s' % (
+        expected_url = 'https://{}.s3.us-west-2.amazonaws.com/{}'.format(
             self.bucket, self.key
         )
         self.assertEqual(request.url, expected_url)
@@ -2127,7 +2127,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             s3_config={'addressing_style': 'path'})
         request = self.get_s3_request(self.bucket, self.key)
         self.call_set_endpoint(endpoint_setter, request)
-        expected_url = 'https://s3.us-west-2.amazonaws.com/%s/%s' % (
+        expected_url = 'https://s3.us-west-2.amazonaws.com/{}/{}'.format(
             self.bucket, self.key
         )
         self.assertEqual(request.url, expected_url)
@@ -2137,7 +2137,7 @@ class TestS3EndpointSetter(unittest.TestCase):
             s3_config={'use_accelerate_endpoint': True})
         request = self.get_s3_request(self.bucket, self.key)
         self.call_set_endpoint(endpoint_setter, request)
-        expected_url = 'https://%s.s3-accelerate.amazonaws.com/%s' % (
+        expected_url = 'https://{}.s3-accelerate.amazonaws.com/{}'.format(
             self.bucket, self.key
         )
         self.assertEqual(request.url, expected_url)
@@ -2698,7 +2698,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
 class TestSSOTokenLoader(unittest.TestCase):
     def setUp(self):
-        super(TestSSOTokenLoader, self).setUp()
+        super().setUp()
         self.start_url = 'https://d-abc123.awsapps.com/start'
         self.cache_key = '40a89917e3175433e361b710a9d43528d7f1890a'
         self.access_token = 'totally.a.token'

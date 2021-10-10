@@ -216,7 +216,7 @@ class SessionTest(BaseSessionTest):
             profiles = self.session.available_profiles
             self.assertEqual(
                 set(profiles),
-                set(['foo', 'default', 'newprofile']))
+                {'foo', 'default', 'newprofile'})
 
     def test_emit_delegates_to_emitter(self):
         calls = []
@@ -278,7 +278,7 @@ class SessionTest(BaseSessionTest):
 
 class TestBuiltinEventHandlers(BaseSessionTest):
     def setUp(self):
-        super(TestBuiltinEventHandlers, self).setUp()
+        super().setUp()
         self.builtin_handlers = [
             ('foo', self.on_foo),
         ]
@@ -291,7 +291,7 @@ class TestBuiltinEventHandlers(BaseSessionTest):
         self.foo_called = True
 
     def tearDown(self):
-        super(TestBuiltinEventHandlers, self).setUp()
+        super().setUp()
         self.handler_patch.stop()
 
     def test_registered_builtin_handlers(self):

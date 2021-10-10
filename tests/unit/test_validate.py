@@ -111,7 +111,7 @@ class TestValidateJSONValueTrait(BaseTestValidate):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
-                'json': {'data': [1, 2.3, '3'], 'unicode': u'\u2713'}
+                'json': {'data': [1, 2.3, '3'], 'unicode': '\u2713'}
             })
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
@@ -163,7 +163,7 @@ class TestValidateDocumentType(BaseTestValidate):
             input_params={
                 'inlineDocument': {'data': [1, 2.3, '3',
                                             {'foo': None}],
-                                   'unicode': u'\u2713'}
+                                   'unicode': '\u2713'}
             })
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')

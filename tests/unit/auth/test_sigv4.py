@@ -23,10 +23,10 @@ generate testcases based on these files.
 
 """
 import datetime
-import io
 import logging
 import os
 import re
+from io import BytesIO
 
 import pytest
 
@@ -55,21 +55,16 @@ TESTS_TO_IGNORE = [
     'get-vanilla-query-order-key',
     'get-vanilla-query-order-value',
 ]
-if not six.PY3:
-    TESTS_TO_IGNORE += [
-        # NO support
-        'get-header-key-duplicate',
-        'get-header-value-order',
-    ]
+
 
 log = logging.getLogger(__name__)
 
 
 class RawHTTPRequest(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
     def __init__(self, raw_request):
-        if isinstance(raw_request, six.text_type):
+        if isinstance(raw_request, str):
             raw_request = raw_request.encode('utf-8')
-        self.rfile = six.BytesIO(raw_request)
+        self.rfile = BytesIO(raw_request)
         self.raw_requestline = self.rfile.readline()
         self.error_code = None
         self.error_message = None
@@ -114,9 +109,9 @@ def create_request_from_raw_request(raw_request):
     # For whatever reason, the BaseHTTPRequestHandler encodes
     # the first line of the response as 'iso-8859-1',
     # so we need decode this into utf-8.
-    if isinstance(raw.path, six.text_type):
+    if isinstance(raw.path, str):
         raw.path = raw.path.encode('iso-8859-1').decode('utf-8')
-    url = 'https://%s%s' % (host, raw.path)
+    url = f'https://{host}{raw.path}'
     if '?' in url:
         split_url = urlsplit(url)
         params = dict(parse_qsl(split_url.query))
@@ -154,33 +149,34 @@ def _test_signature_version_4(test_case):
 def assert_equal(actual, expected, raw_request, part):
     if actual != expected:
         message = "The %s did not match" % part
-        message += "\nACTUAL:%r !=\nEXPECT:%r" % (actual, expected)
+        message += f"\nACTUAL:{actual!r} !=\nEXPECT:{expected!r}"
         message += '\nThe raw request was:\n%s' % raw_request
         raise AssertionError(message)
 
 
-class SignatureTestCase(object):
+class SignatureTestCase:
     def __init__(self, test_case):
         filepath = os.path.join(TESTSUITE_DIR, test_case,
                                 os.path.basename(test_case))
         # We're using io.open() because we need to open these files with
         # a specific encoding, and in 2.x io.open is the best way to do this.
-        self.raw_request = io.open(filepath + '.req',
-                                   encoding='utf-8').read()
-        self.canonical_request = io.open(
+        self.raw_request = open(filepath + '.req', encoding='utf-8').read()
+        self.canonical_request = open(
             filepath + '.creq',
             encoding='utf-8').read().replace('\r', '')
-        self.string_to_sign = io.open(
+        self.string_to_sign = open(
             filepath + '.sts',
             encoding='utf-8').read().replace('\r', '')
-        self.authorization_header = io.open(
+        self.authorization_header = open(
             filepath + '.authz',
             encoding='utf-8').read().replace('\r', '')
-        self.signed_request = io.open(filepath + '.sreq',
-                                      encoding='utf-8').read()
+        self.signed_request = open(filepath + '.sreq', encoding='utf-8').read()
 
         token_pattern = r'^x-amz-security-token:(.*)$'
-        token_match = re.search(token_pattern, self.canonical_request,
-                                re.MULTILINE)
+        token_match = re.search(
+            token_pattern,
+            self.canonical_request,
+            re.MULTILINE
+        )
         token = token_match.group(1) if token_match else None
         self.credentials = Credentials(ACCESS_KEY, SECRET_KEY, token)

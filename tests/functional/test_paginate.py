@@ -15,7 +15,6 @@ from math import ceil
 
 import pytest
 
-from botocore.compat import six
 from botocore.paginate import TokenDecoder, TokenEncoder
 from botocore.stub import StubAssertionError, Stubber
 from tests import BaseSessionTest, random_chars
@@ -23,7 +22,7 @@ from tests import BaseSessionTest, random_chars
 
 class TestRDSPagination(BaseSessionTest):
     def setUp(self):
-        super(TestRDSPagination, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'rds', self.region)
@@ -67,7 +66,7 @@ class TestRDSPagination(BaseSessionTest):
 
 class TestAutoscalingPagination(BaseSessionTest):
     def setUp(self):
-        super(TestAutoscalingPagination, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'autoscaling', self.region, aws_secret_access_key='foo',
@@ -174,7 +173,7 @@ class TestAutoscalingPagination(BaseSessionTest):
 
 class TestCloudwatchLogsPagination(BaseSessionTest):
     def setUp(self):
-        super(TestCloudwatchLogsPagination, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'logs', self.region, aws_secret_access_key='foo',
@@ -229,6 +228,6 @@ class TestCloudwatchLogsPagination(BaseSessionTest):
 )
 def test_token_encoding(token_dict):
     encoded = TokenEncoder().encode(token_dict)
-    assert isinstance(encoded, six.string_types)
+    assert isinstance(encoded, str)
     decoded = TokenDecoder().decode(encoded)
     assert decoded == token_dict

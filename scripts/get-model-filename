@@ -146,7 +146,7 @@ def main():
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
         shutil.copy(source_filename, filename)
-        sys.stdout.write("Copied: %s -> %s\n" % (source_filename, filename))
+        sys.stdout.write(f"Copied: {source_filename} -> {filename}\n")
     return 0
 
 

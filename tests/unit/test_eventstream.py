@@ -162,7 +162,7 @@ ALL_HEADERS_TYPES = (
             '4': 0x04,
             '5': 0x05,
             '6': b'bytes',
-            '7': u'utf8',
+            '7': 'utf8',
             '8': 0x08,
             '9': b'0123456789abcdef',
         },
@@ -322,7 +322,7 @@ def test_header_parser():
         '4': 0x04,
         '5': 0x05,
         '6': b'bytes',
-        '7': u'utf8',
+        '7': 'utf8',
         '8': 0x08,
         '9': b'0123456789abcdef',
     }
@@ -432,8 +432,7 @@ def create_mock_raw_stream(*data):
     raw_stream = mock.Mock()
 
     def generator():
-        for chunk in data:
-            yield chunk
+        yield from data
     raw_stream.stream = generator
     return raw_stream
 

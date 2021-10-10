@@ -20,7 +20,7 @@ from tests.unit.docs import BaseDocsTest
 
 class TestServiceDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestServiceDocumenter, self).setUp()
+        super().setUp()
         self.add_shape_to_params('Biz', 'String')
         self.setup_client()
         with mock.patch('botocore.session.create_loader',

@@ -34,7 +34,7 @@ import botocore.loaders
 import botocore.session
 from botocore import credentials, utils
 from botocore.awsrequest import AWSResponse
-from botocore.compat import HAS_CRT, parse_qs, six, urlparse
+from botocore.compat import HAS_CRT, parse_qs, urlparse
 from botocore.stub import Stubber
 
 _LOADER = botocore.loaders.Loader()
@@ -107,7 +107,7 @@ def temporary_file(mode):
 
     """
     temporary_directory = tempfile.mkdtemp()
-    basename = 'tmpfile-%s-%s' % (int(time.time()), random.randint(1, 1000))
+    basename = f'tmpfile-{int(time.time())}-{random.randint(1, 1000)}'
     full_filename = os.path.join(temporary_directory, basename)
     open(full_filename, 'w').close()
     try:
@@ -144,7 +144,7 @@ class BaseSessionTest(BaseEnvVar):
     """
 
     def setUp(self, **environ):
-        super(BaseSessionTest, self).setUp()
+        super().setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
@@ -182,7 +182,7 @@ class BaseClientDriverTest(unittest.TestCase):
         self.driver.stop()
 
 
-class ClientDriver(object):
+class ClientDriver:
     CLIENT_SERVER = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'cmd-runner'
@@ -264,7 +264,7 @@ class ClientDriver(object):
         result = self._popen.stdout.readline().strip()
         if result != b'OK':
             raise RuntimeError(
-                "Error from command '%s': %s" % (cmd, result))
+                f"Error from command '{cmd}': {result}")
 
 
 # This is added to this file because it's used in both
@@ -299,7 +299,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
             datetime.timedelta(seconds=creds_last_for))
         if refresh_function is None:
             refresh_function = self._do_refresh
-        super(IntegerRefresher, self).__init__(
+        super().__init__(
             '0', '0', '0', expires_in,
             refresh_function, 'INTREFRESH')
         self.creds_last_for = creds_last_for
@@ -339,7 +339,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
 
 def _urlparse(url):
-    if isinstance(url, six.binary_type):
+    if isinstance(url, bytes):
         # Not really necessary, but it helps to reduce noise on Python 2.x
         url = url.decode('utf8')
     return urlparse(url)
@@ -377,7 +377,7 @@ class RawResponse(BytesIO):
             contents = self.read()
 
 
-class BaseHTTPStubber(object):
+class BaseHTTPStubber:
     def __init__(self, obj_with_event_emitter, strict=True):
         self.reset()
         self._strict = strict
@@ -443,7 +443,7 @@ class ConsistencyWaiterException(Exception):
     pass
 
 
-class ConsistencyWaiter(object):
+class ConsistencyWaiter:
     """
     A waiter class for some check to reach a consistent state.
 
@@ -502,7 +502,7 @@ class ConsistencyWaiter(object):
 
 class StubbedSession(botocore.session.Session):
     def __init__(self, *args, **kwargs):
-        super(StubbedSession, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._cached_clients = {}
         self._client_stubs = {}
 
@@ -513,7 +513,7 @@ class StubbedSession(botocore.session.Session):
         return self._cached_clients[service_name]
 
     def _create_stubbed_client(self, service_name, *args, **kwargs):
-        client = super(StubbedSession, self).create_client(
+        client = super().create_client(
             service_name, *args, **kwargs)
         stubber = Stubber(client)
         self._client_stubs[service_name] = stubber

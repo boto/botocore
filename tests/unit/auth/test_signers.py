@@ -189,23 +189,23 @@ class TestSigV2(unittest.TestCase):
         request = mock.Mock()
         request.url = '/'
         request.method = 'POST'
-        params = {'Foo': u'\u2713'}
+        params = {'Foo': '\u2713'}
         result = self.signer.calc_signature(request, params)
         self.assertEqual(
             result, ('Foo=%E2%9C%93',
-                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+                     'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
     def test_fields(self):
         request = AWSRequest()
         request.url = '/'
         request.method = 'POST'
-        request.data = {'Foo': u'\u2713'}
+        request.data = {'Foo': '\u2713'}
         self.signer.add_auth(request)
         self.assertEqual(request.data['AWSAccessKeyId'], 'foo')
-        self.assertEqual(request.data['Foo'], u'\u2713')
+        self.assertEqual(request.data['Foo'], '\u2713')
         self.assertEqual(request.data['Timestamp'], '2014-06-20T08:40:23Z')
         self.assertEqual(request.data['Signature'],
-                         u'Tiecw+t51tok4dTT8B4bg47zxHEM/KcD55f2/x6K22o=')
+                         'Tiecw+t51tok4dTT8B4bg47zxHEM/KcD55f2/x6K22o=')
         self.assertEqual(request.data['SignatureMethod'], 'HmacSHA256')
         self.assertEqual(request.data['SignatureVersion'], '2')
 
@@ -215,25 +215,25 @@ class TestSigV2(unittest.TestCase):
         request.url = '/'
         request.method = 'POST'
         params = {
-            'Foo': u'\u2713',
-            'Signature': u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='
+            'Foo': '\u2713',
+            'Signature': 'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='
         }
         result = self.signer.calc_signature(request, params)
         self.assertEqual(
             result, ('Foo=%E2%9C%93',
-                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+                     'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
     def test_get(self):
         request = AWSRequest()
         request.url = '/'
         request.method = 'GET'
-        request.params = {'Foo': u'\u2713'}
+        request.params = {'Foo': '\u2713'}
         self.signer.add_auth(request)
         self.assertEqual(request.params['AWSAccessKeyId'], 'foo')
-        self.assertEqual(request.params['Foo'], u'\u2713')
+        self.assertEqual(request.params['Foo'], '\u2713')
         self.assertEqual(request.params['Timestamp'], '2014-06-20T08:40:23Z')
         self.assertEqual(request.params['Signature'],
-                         u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
+                         'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
         self.assertEqual(request.params['SignatureMethod'], 'HmacSHA256')
         self.assertEqual(request.params['SignatureVersion'], '2')
 
@@ -288,7 +288,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     maxDiff = None
 
     def setUp(self):
-        super(TestS3SigV4Auth, self).setUp()
+        super().setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
         self.auth = self.AuthClass(
@@ -496,7 +496,7 @@ class TestSigV4(unittest.TestCase):
 
     def test_payload_is_binary_file(self):
         request = AWSRequest()
-        request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.data = six.BytesIO('\u2713'.encode())
         request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
@@ -506,7 +506,7 @@ class TestSigV4(unittest.TestCase):
 
     def test_payload_is_bytes_type(self):
         request = AWSRequest()
-        request.data = u'\u2713'.encode('utf-8')
+        request.data = '\u2713'.encode()
         request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
@@ -516,7 +516,7 @@ class TestSigV4(unittest.TestCase):
 
     def test_payload_not_signed_if_disabled_in_context(self):
         request = AWSRequest()
-        request.data = u'\u2713'.encode('utf-8')
+        request.data = '\u2713'.encode()
         request.url = 'https://amazonaws.com'
         request.context['payload_signing_enabled'] = False
         auth = self.create_signer()
@@ -525,7 +525,7 @@ class TestSigV4(unittest.TestCase):
 
     def test_content_sha256_set_if_payload_signing_disabled(self):
         request = AWSRequest()
-        request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.data = six.BytesIO('\u2713'.encode())
         request.url = 'https://amazonaws.com'
         request.context['payload_signing_enabled'] = False
         request.method = 'PUT'
@@ -591,7 +591,7 @@ class TestSigV4Resign(BaseTestWithFixedDate):
     AuthClass = botocore.auth.SigV4Auth
 
     def setUp(self):
-        super(TestSigV4Resign, self).setUp()
+        super().setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
         self.auth = self.AuthClass(self.credentials, 'ec2', 'us-west-2')
@@ -647,7 +647,7 @@ class TestS3SigV2Presign(BasePresignTest):
         self.request = AWSRequest()
         self.bucket = 'mybucket'
         self.key = 'myobject'
-        self.path = 'https://s3.amazonaws.com/%s/%s' % (
+        self.path = 'https://s3.amazonaws.com/{}/{}'.format(
             self.bucket, self.key)
         self.request.url = self.path
         self.request.method = 'GET'
@@ -657,8 +657,8 @@ class TestS3SigV2Presign(BasePresignTest):
 
     def test_presign_with_query_string(self):
         self.request.url = (
-            u'https://foo-bucket.s3.amazonaws.com/image.jpg'
-            u'?response-content-disposition='
+            'https://foo-bucket.s3.amazonaws.com/image.jpg'
+            '?response-content-disposition='
             'attachment%3B%20filename%3D%22download.jpg%22')
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
@@ -938,7 +938,7 @@ class BaseS3PresignPostTest(unittest.TestCase):
 
 class TestS3SigV2Post(BaseS3PresignPostTest):
     def setUp(self):
-        super(TestS3SigV2Post, self).setUp()
+        super().setUp()
         self.auth = botocore.auth.HmacV1PostAuth(self.credentials)
 
         self.current_epoch_time = 1427427247.465591
@@ -990,7 +990,7 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
 
 class TestS3SigV4Post(BaseS3PresignPostTest):
     def setUp(self):
-        super(TestS3SigV4Post, self).setUp()
+        super().setUp()
         self.auth = botocore.auth.S3SigV4PostAuth(
             self.credentials, self.service_name, self.region_name)
         self.datetime_patcher = mock.patch.object(

@@ -51,12 +51,12 @@ class TestResponseMetadataParsed(unittest.TestCase):
     def test_response_metadata_parsed_for_query_service(self):
         parser = parsers.QueryParser()
         response = (
-            '<OperationNameResponse>'
-            '  <OperationNameResult><Str>myname</Str></OperationNameResult>'
-            '  <ResponseMetadata>'
-            '    <RequestId>request-id</RequestId>'
-            '  </ResponseMetadata>'
-            '</OperationNameResponse>').encode('utf-8')
+            b'<OperationNameResponse>'
+            b'  <OperationNameResult><Str>myname</Str></OperationNameResult>'
+            b'  <ResponseMetadata>'
+            b'    <RequestId>request-id</RequestId>'
+            b'  </ResponseMetadata>'
+            b'</OperationNameResponse>')
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -96,9 +96,9 @@ class TestResponseMetadataParsed(unittest.TestCase):
         # have an id.
         parser = parsers.QueryParser()
         response = (
-            '<OperationNameResponse>'
-            '  <OperationNameResult><Str>myname</Str></OperationNameResult>'
-            '</OperationNameResponse>').encode('utf-8')
+            b'<OperationNameResponse>'
+            b'  <OperationNameResult><Str>myname</Str></OperationNameResult>'
+            b'</OperationNameResponse>')
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -137,10 +137,10 @@ class TestResponseMetadataParsed(unittest.TestCase):
     def test_response_metadata_parsed_for_ec2(self):
         parser = parsers.EC2QueryParser()
         response = (
-            '<OperationNameResponse>'
-            '  <Str>myname</Str>'
-            '  <requestId>request-id</requestId>'
-            '</OperationNameResponse>').encode('utf-8')
+            b'<OperationNameResponse>'
+            b'  <Str>myname</Str>'
+            b'  <requestId>request-id</requestId>'
+            b'</OperationNameResponse>')
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -170,9 +170,9 @@ class TestResponseMetadataParsed(unittest.TestCase):
         # have an id.
         parser = parsers.EC2QueryParser()
         response = (
-            '<OperationNameResponse>'
-            '  <Str>myname</Str>'
-            '</OperationNameResponse>').encode('utf-8')
+            b'<OperationNameResponse>'
+            b'  <Str>myname</Str>'
+            b'</OperationNameResponse>')
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -432,12 +432,12 @@ class TestTaggedUnions(unittest.TestCase):
     def test_base_xml_parser_handles_unknown_member(self):
         parser = parsers.QueryParser()
         response = (
-            '<OperationNameResponse>'
-            '  <OperationNameResult><Foo>mystring</Foo></OperationNameResult>'
-            '  <ResponseMetadata>'
-            '    <RequestId>request-id</RequestId>'
-            '  </ResponseMetadata>'
-            '</OperationNameResponse>').encode('utf-8')
+            b'<OperationNameResponse>'
+            b'  <OperationNameResult><Foo>mystring</Foo></OperationNameResult>'
+            b'  <ResponseMetadata>'
+            b'    <RequestId>request-id</RequestId>'
+            b'  </ResponseMetadata>'
+            b'</OperationNameResponse>')
         output_shape = model.StructureShape(
             'OutputShape',
             {
@@ -902,7 +902,7 @@ class TestEventStreamParsers(unittest.TestCase):
     def test_parses_event_string(self):
         headers = {':event-type': 'EventC'}
         parsed = self.parse_event(headers, b'blob')
-        expected = {'EventC': {'Body': u'blob'}}
+        expected = {'EventC': {'Body': 'blob'}}
         self.assertEqual(parsed, expected)
 
     def test_parses_payload_implicit(self):
@@ -1044,15 +1044,15 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_parse_error_response_for_query_protocol(self):
         body = (
-            '<ErrorResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">'
-            '  <Error>'
-            '    <Type>Sender</Type>'
-            '    <Code>InvalidInput</Code>'
-            '    <Message>ARN asdf is not valid.</Message>'
-            '  </Error>'
-            '  <RequestId>request-id</RequestId>'
-            '</ErrorResponse>'
-        ).encode('utf-8')
+            b'<ErrorResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">'
+            b'  <Error>'
+            b'    <Type>Sender</Type>'
+            b'    <Code>InvalidInput</Code>'
+            b'    <Message>ARN asdf is not valid.</Message>'
+            b'  </Error>'
+            b'  <RequestId>request-id</RequestId>'
+            b'</ErrorResponse>'
+        )
         parser = parsers.QueryParser()
         parsed = parser.parse({
             'body': body, 'headers': {}, 'status_code': 400}, None)
@@ -1065,16 +1065,16 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_can_parse_sdb_error_response_query_protocol(self):
         body = (
-            '<OperationNameResponse>'
-            '    <Errors>'
-            '        <Error>'
-            '            <Code>1</Code>'
-            '            <Message>msg</Message>'
-            '        </Error>'
-            '    </Errors>'
-            '    <RequestId>abc-123</RequestId>'
-            '</OperationNameResponse>'
-        ).encode('utf-8')
+            b'<OperationNameResponse>'
+            b'    <Errors>'
+            b'        <Error>'
+            b'            <Code>1</Code>'
+            b'            <Message>msg</Message>'
+            b'        </Error>'
+            b'    </Errors>'
+            b'    <RequestId>abc-123</RequestId>'
+            b'</OperationNameResponse>'
+        )
         parser = parsers.QueryParser()
         parsed = parser.parse({
             'body': body, 'headers': {}, 'status_code': 500}, None)
@@ -1091,16 +1091,16 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_can_parser_ec2_errors(self):
         body = (
-            '<Response>'
-            '  <Errors>'
-            '    <Error>'
-            '      <Code>InvalidInstanceID.NotFound</Code>'
-            '      <Message>The instance ID i-12345 does not exist</Message>'
-            '    </Error>'
-            '  </Errors>'
-            '  <RequestID>06f382b0-d521-4bb6-988c-ca49d5ae6070</RequestID>'
-            '</Response>'
-        ).encode('utf-8')
+            b'<Response>'
+            b'  <Errors>'
+            b'    <Error>'
+            b'      <Code>InvalidInstanceID.NotFound</Code>'
+            b'      <Message>The instance ID i-12345 does not exist</Message>'
+            b'    </Error>'
+            b'  </Errors>'
+            b'  <RequestID>06f382b0-d521-4bb6-988c-ca49d5ae6070</RequestID>'
+            b'</Response>'
+        )
         parser = parsers.EC2QueryParser()
         parsed = parser.parse({
             'body': body, 'headers': {}, 'status_code': 400}, None)
@@ -1112,15 +1112,15 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_can_parse_rest_xml_errors(self):
         body = (
-            '<ErrorResponse xmlns="https://route53.amazonaws.com/doc/2013-04-01/">'
-            '  <Error>'
-            '    <Type>Sender</Type>'
-            '    <Code>NoSuchHostedZone</Code>'
-            '    <Message>No hosted zone found with ID: foobar</Message>'
-            '  </Error>'
-            '  <RequestId>bc269cf3-d44f-11e5-8779-2d21c30eb3f1</RequestId>'
-            '</ErrorResponse>'
-        ).encode('utf-8')
+            b'<ErrorResponse xmlns="https://route53.amazonaws.com/doc/2013-04-01/">'
+            b'  <Error>'
+            b'    <Type>Sender</Type>'
+            b'    <Code>NoSuchHostedZone</Code>'
+            b'    <Message>No hosted zone found with ID: foobar</Message>'
+            b'  </Error>'
+            b'  <RequestId>bc269cf3-d44f-11e5-8779-2d21c30eb3f1</RequestId>'
+            b'</ErrorResponse>'
+        )
         parser = parsers.RestXMLParser()
         parsed = parser.parse({
             'body': body, 'headers': {}, 'status_code': 400}, None)
@@ -1133,8 +1133,8 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_can_parse_rest_json_errors(self):
         body = (
-            '{"Message":"Function not found: foo","Type":"User"}'
-        ).encode('utf-8')
+            b'{"Message":"Function not found: foo","Type":"User"}'
+        )
         headers = {
             'x-amzn-requestid': 'request-id',
             'x-amzn-errortype': 'ResourceNotFoundException:http://url/',
@@ -1187,10 +1187,10 @@ class TestParseErrorResponses(unittest.TestCase):
     def test_error_response_with_xml_body_rest_json(self):
         parser = parsers.RestJSONParser()
         response = (
-            '<AccessDeniedException>'
-            '   <Message>Unable to determine service/operation name to be authorized</Message>'
-            '</AccessDeniedException>'
-        ).encode('utf-8')
+            b'<AccessDeniedException>'
+            b'   <Message>Unable to determine service/operation name to be authorized</Message>'
+            b'</AccessDeniedException>'
+        )
         headers = {'content-length': '0', 'connection': 'keep-alive'}
         output_shape = None
         parsed = parser.parse({'body': response, 'headers': headers,
@@ -1208,14 +1208,14 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_s3_error_response(self):
         body = (
-            '<Error>'
-            '  <Code>NoSuchBucket</Code>'
-            '  <Message>error message</Message>'
-            '  <BucketName>asdf</BucketName>'
-            '  <RequestId>EF1EF43A74415102</RequestId>'
-            '  <HostId>hostid</HostId>'
-            '</Error>'
-        ).encode('utf-8')
+            b'<Error>'
+            b'  <Code>NoSuchBucket</Code>'
+            b'  <Message>error message</Message>'
+            b'  <BucketName>asdf</BucketName>'
+            b'  <RequestId>EF1EF43A74415102</RequestId>'
+            b'  <HostId>hostid</HostId>'
+            b'</Error>'
+        )
         headers = {
             'x-amz-id-2': 'second-id',
             'x-amz-request-id': 'request-id'
@@ -1407,14 +1407,14 @@ class TestParseErrorResponses(unittest.TestCase):
         # populate a "Message" key so that consumers don't have to
         # conditionally check for this.
         body = (
-            '<ErrorResponse>'
-            '  <Error>'
-            '    <Type>Sender</Type>'
-            '    <Code>InvalidInput</Code>'
-            '  </Error>'
-            '  <RequestId>id</RequestId>'
-            '</ErrorResponse>'
-        ).encode('utf-8')
+            b'<ErrorResponse>'
+            b'  <Error>'
+            b'    <Type>Sender</Type>'
+            b'    <Code>InvalidInput</Code>'
+            b'  </Error>'
+            b'  <RequestId>id</RequestId>'
+            b'</ErrorResponse>'
+        )
         parser = parsers.RestXMLParser()
         parsed = parser.parse({
             'body': body, 'headers': {}, 'status_code': 400}, None)
@@ -1427,8 +1427,8 @@ class TestParseErrorResponses(unittest.TestCase):
 
 def _generic_test_bodies():
     generic_html_body = (
-        '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
-    ).encode('utf-8')
+        b'<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+    )
     empty_body = b''
     none_body = None
 

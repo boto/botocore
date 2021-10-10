@@ -168,7 +168,7 @@ def _assert_endpoints_equal(actual, expected, endpoint):
     assert_equal(actual_host, expected['host'], 'Host')
 
 
-class MockRawResponse(object):
+class MockRawResponse:
     def __init__(self, data):
         self._data = b64decode(data)
 
@@ -352,12 +352,12 @@ def assert_equal(first, second, prefix):
         assert first == second
     except Exception:
         try:
-            better = "%s (actual != expected)\n%s !=\n%s" % (
+            better = "{} (actual != expected)\n{} !=\n{}".format(
                 prefix,
                 json.dumps(first, indent=2),
                 json.dumps(second, indent=2))
         except (ValueError, TypeError):
-            better = "%s (actual != expected)\n%s !=\n%s" % (
+            better = "{} (actual != expected)\n{} !=\n{}".format(
                 prefix, first, second)
         raise AssertionError(better)
 

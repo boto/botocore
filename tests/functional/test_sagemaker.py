@@ -4,7 +4,7 @@ from tests import BaseSessionTest
 
 class TestSagemaker(BaseSessionTest):
     def setUp(self):
-        super(TestSagemaker, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'sagemaker', self.region)

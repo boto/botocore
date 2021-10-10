@@ -13,7 +13,7 @@
 from tests import BaseSessionTest, mock
 
 
-class RecordingHandler(object):
+class RecordingHandler:
     def __init__(self):
         self.recorded_events = []
 
@@ -23,7 +23,7 @@ class RecordingHandler(object):
 
 class TestClientEvents(BaseSessionTest):
     def setUp(self):
-        super(TestClientEvents, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'ec2', self.region)

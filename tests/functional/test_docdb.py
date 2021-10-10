@@ -16,7 +16,7 @@ from tests import BaseSessionTest, ClientHTTPStubber
 class TestDocDBPresignUrlInjection(BaseSessionTest):
 
     def setUp(self):
-        super(TestDocDBPresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('docdb', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 

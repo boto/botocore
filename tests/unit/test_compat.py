@@ -20,7 +20,6 @@ from botocore.compat import (
     ensure_bytes,
     get_md5,
     get_tzinfo_options,
-    six,
     total_seconds,
     unquote_str,
 )
@@ -41,19 +40,19 @@ class TotalSecondsTest(BaseEnvVar):
 
 class TestUnquoteStr(unittest.TestCase):
     def test_unquote_str(self):
-        value = u'%E2%9C%93'
+        value = '%E2%9C%93'
         # Note: decoded to unicode and utf-8 decoded as well.
         # This would work in python2 and python3.
-        self.assertEqual(unquote_str(value), u'\u2713')
+        self.assertEqual(unquote_str(value), '\u2713')
 
     def test_unquote_normal(self):
-        value = u'foo'
+        value = 'foo'
         # Note: decoded to unicode and utf-8 decoded as well.
         # This would work in python2 and python3.
-        self.assertEqual(unquote_str(value), u'foo')
+        self.assertEqual(unquote_str(value), 'foo')
 
     def test_unquote_with_spaces(self):
-        value = u'foo+bar'
+        value = 'foo+bar'
         # Note: decoded to unicode and utf-8 decoded as well.
         # This would work in python2 and python3.
         self.assertEqual(unquote_str(value), 'foo bar')
@@ -63,25 +62,25 @@ class TestEnsureBytes(unittest.TestCase):
     def test_string(self):
         value = 'foo'
         response = ensure_bytes(value)
-        self.assertIsInstance(response, six.binary_type)
+        self.assertIsInstance(response, bytes)
         self.assertEqual(response, b'foo')
 
     def test_binary(self):
         value = b'bar'
         response = ensure_bytes(value)
-        self.assertIsInstance(response, six.binary_type)
+        self.assertIsInstance(response, bytes)
         self.assertEqual(response, b'bar')
 
     def test_unicode(self):
-        value = u'baz'
+        value = 'baz'
         response = ensure_bytes(value)
-        self.assertIsInstance(response, six.binary_type)
+        self.assertIsInstance(response, bytes)
         self.assertEqual(response, b'baz')
 
     def test_non_ascii(self):
-        value = u'\u2713'
+        value = '\u2713'
         response = ensure_bytes(value)
-        self.assertIsInstance(response, six.binary_type)
+        self.assertIsInstance(response, bytes)
         self.assertEqual(response, b'\xe2\x9c\x93')
 
     def test_non_string_or_bytes_raises_error(self):
@@ -194,7 +193,7 @@ def test_compat_shell_split_unix_darwin_raises_error(shell_split_runner):
     shell_split_runner.assert_raises(r'"', ValueError, "darwin")
 
 
-class ShellSplitTestRunner(object):
+class ShellSplitTestRunner:
     def assert_equal(self, s, expected, platform):
         assert compat_shell_split(s, platform) == expected
 

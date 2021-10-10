@@ -20,7 +20,7 @@ from tests.unit.docs import BaseDocsTest
 
 class TestDocumentSharedExamples(BaseDocsTest):
     def setUp(self):
-        super(TestDocumentSharedExamples, self).setUp()
+        super().setUp()
         self.add_shape({
             "foo": {
                 "type": "string"
@@ -104,7 +104,7 @@ class TestDocumentSharedExamples(BaseDocsTest):
 
 class TestSharedExampleDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestSharedExampleDocumenter, self).setUp()
+        super().setUp()
         self.documenter = SharedExampleDocumenter()
 
     def test_is_input(self):
@@ -197,7 +197,7 @@ class TestSharedExampleDocumenter(BaseDocsTest):
         self.documenter.document_shared_example(
             example={
                 'input': {
-                    'foo': u'bar'
+                    'foo': 'bar'
                 }
             },
             prefix='foo.bar',
@@ -290,7 +290,7 @@ class TestSharedExampleDocumenter(BaseDocsTest):
         self.documenter.document_shared_example(
             example={
                 'input': {
-                    'foo': u'\u2713'
+                    'foo': '\u2713'
                 }
             },
             prefix='foo.bar',
@@ -298,9 +298,9 @@ class TestSharedExampleDocumenter(BaseDocsTest):
             operation_model=self.operation_model
         )
         self.assert_contains_lines_in_order([
-            u"foo.bar(",
-            u"    foo='\u2713'",
-            u")"
+            "foo.bar(",
+            "    foo='\u2713'",
+            ")"
         ])
 
     def test_escape_character_example(self):

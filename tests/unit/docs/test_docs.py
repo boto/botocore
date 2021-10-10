@@ -22,7 +22,7 @@ from tests.unit.docs import BaseDocsTest
 
 class TestGenerateDocs(BaseDocsTest):
     def setUp(self):
-        super(TestGenerateDocs, self).setUp()
+        super().setUp()
         self.docs_root = tempfile.mkdtemp()
         self.loader_patch = mock.patch(
             'botocore.session.create_loader', return_value=self.loader)
@@ -33,7 +33,7 @@ class TestGenerateDocs(BaseDocsTest):
         self.available_service_patch.start()
 
     def tearDown(self):
-        super(TestGenerateDocs, self).tearDown()
+        super().tearDown()
         shutil.rmtree(self.docs_root)
         self.loader_patch.stop()
         self.available_service_patch.stop()
@@ -50,7 +50,7 @@ class TestGenerateDocs(BaseDocsTest):
         self.assertTrue(os.path.exists(reference_service_path))
 
         # Make sure the rst file has some the expected contents.
-        with open(reference_service_path, 'r') as f:
+        with open(reference_service_path) as f:
             contents = f.read()
             self.assertIn('AWS MyService', contents)
             self.assertIn('Client', contents)

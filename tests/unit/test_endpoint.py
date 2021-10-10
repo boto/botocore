@@ -165,7 +165,7 @@ class TestEndpointFeatures(TestEndpointBase):
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
-        super(TestRetryInterface, self).setUp()
+        super().setUp()
         self.retried_on_exception = None
         self._operation = mock.Mock(spec=OperationModel)
         self._operation.name = 'DescribeInstances'
@@ -235,7 +235,7 @@ class TestRetryInterface(TestEndpointBase):
 
 class TestS3ResetStreamOnRetry(TestEndpointBase):
     def setUp(self):
-        super(TestS3ResetStreamOnRetry, self).setUp()
+        super().setUp()
 
     def max_attempts_retry_handler(self, attempts, **kwargs):
         # Simulate a max requests of 3.

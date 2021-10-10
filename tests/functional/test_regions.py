@@ -499,7 +499,7 @@ def test_non_partition_endpoint_requires_region():
 class TestEndpointResolution(BaseSessionTest):
 
     def setUp(self):
-        super(TestEndpointResolution, self).setUp()
+        super().setUp()
         self.xml_response = (
             b'<?xml version="1.0" encoding="UTF-8"?>\n\n'
             b'<ListRolesResponse '

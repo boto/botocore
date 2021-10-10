@@ -16,7 +16,7 @@ from tests import BaseSessionTest, ClientHTTPStubber
 class TestNeptunePresignUrlInjection(BaseSessionTest):
 
     def setUp(self):
-        super(TestNeptunePresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 

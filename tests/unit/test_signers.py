@@ -530,7 +530,7 @@ class TestSigner(BaseSignerTest):
 
 class TestCloudfrontSigner(BaseSignerTest):
     def setUp(self):
-        super(TestCloudfrontSigner, self).setUp()
+        super().setUp()
         self.signer = CloudFrontSigner("MY_KEY_ID", lambda message: b'signed')
         # It helps but the long string diff will still be slightly different on
         # Python 2.6/2.7/3.x. We won't soly rely on that anyway, so it's fine.
@@ -590,7 +590,7 @@ class TestCloudfrontSigner(BaseSignerTest):
 
 class TestS3PostPresigner(BaseSignerTest):
     def setUp(self):
-        super(TestS3PostPresigner, self).setUp()
+        super().setUp()
         self.request_signer = RequestSigner(
             ServiceId('service_name'), 'region_name', 'signing_name',
             's3v4', self.credentials, self.emitter)
@@ -617,7 +617,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.datetime_mock.timedelta.return_value = self.fixed_delta
 
     def tearDown(self):
-        super(TestS3PostPresigner, self).tearDown()
+        super().tearDown()
         self.datetime_patch.stop()
 
     def test_generate_presigned_post(self):
@@ -758,11 +758,11 @@ class TestGenerateUrl(unittest.TestCase):
 
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': 'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
-            'url_path': u'/mybucket/mykey',
-            'method': u'GET',
+            'url_path': '/mybucket/mykey',
+            'method': 'GET',
             # mock.ANY is used because client parameter related events
             # inject values into the context. So using the context's exact
             # value for these tests will be a maintenance burden if
@@ -781,13 +781,13 @@ class TestGenerateUrl(unittest.TestCase):
                 'ResponseContentDisposition': disposition})
         ref_request_dict = {
             'body': b'',
-            'url': (u'https://s3.amazonaws.com/mybucket/mykey'
+            'url': ('https://s3.amazonaws.com/mybucket/mykey'
                     '?response-content-disposition='
                     'attachment%3B%20filename%3D%22download.jpg%22'),
             'headers': {},
-            'query_string': {u'response-content-disposition': disposition},
-            'url_path': u'/mybucket/mykey',
-            'method': u'GET',
+            'query_string': {'response-content-disposition': disposition},
+            'url_path': '/mybucket/mykey',
+            'method': 'GET',
             'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
@@ -807,11 +807,11 @@ class TestGenerateUrl(unittest.TestCase):
             ExpiresIn=20)
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': 'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
-            'url_path': u'/mybucket/mykey',
-            'method': u'GET',
+            'url_path': '/mybucket/mykey',
+            'method': 'GET',
             'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=20,
@@ -823,11 +823,11 @@ class TestGenerateUrl(unittest.TestCase):
             HttpMethod='PUT')
         ref_request_dict = {
             'body': b'',
-            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'url': 'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
-            'url_path': u'/mybucket/mykey',
-            'method': u'PUT',
+            'url_path': '/mybucket/mykey',
+            'method': 'PUT',
             'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,

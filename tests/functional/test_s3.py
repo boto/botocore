@@ -52,7 +52,7 @@ class TestS3BucketValidation(unittest.TestCase):
 
 class BaseS3OperationTest(BaseSessionTest):
     def setUp(self):
-        super(BaseS3OperationTest, self).setUp()
+        super().setUp()
         self.region = "us-west-2"
         self.client = self.session.create_client("s3", self.region)
         self.http_stubber = ClientHTTPStubber(self.client)
@@ -67,7 +67,7 @@ class BaseS3ClientConfigurationTest(BaseSessionTest):
     )
 
     def setUp(self):
-        super(BaseS3ClientConfigurationTest, self).setUp()
+        super().setUp()
         self.region = "us-west-2"
 
     def assert_signing_region(self, request, expected_region):
@@ -423,7 +423,7 @@ class TestS3Copy(BaseS3OperationTest):
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
     def setUp(self):
-        super(TestAccesspointArn, self).setUp()
+        super().setUp()
         self.client, self.http_stubber = self.create_stubbed_s3_client()
 
     def create_stubbed_s3_client(self, **kwargs):
@@ -1138,44 +1138,44 @@ class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
                 self.client.put_object(
                     Bucket="foo",
                     Key="bar",
-                    Metadata={"goodkey": "good", "non-ascii": u"\u2713"},
+                    Metadata={"goodkey": "good", "non-ascii": "\u2713"},
                 )
 
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
     def test_multiple_transitions_returns_one(self):
         response_body = (
-            '<?xml version="1.0" ?>'
-            '<LifecycleConfiguration xmlns="http://s3.amazonaws.'
-            'com/doc/2006-03-01/">'
-            "	<Rule>"
-            "		<ID>transitionRule</ID>"
-            "		<Prefix>foo</Prefix>"
-            "		<Status>Enabled</Status>"
-            "		<Transition>"
-            "			<Days>40</Days>"
-            "			<StorageClass>STANDARD_IA</StorageClass>"
-            "		</Transition>"
-            "		<Transition>"
-            "			<Days>70</Days>"
-            "			<StorageClass>GLACIER</StorageClass>"
-            "		</Transition>"
-            "	</Rule>"
-            "	<Rule>"
-            "		<ID>noncurrentVersionRule</ID>"
-            "		<Prefix>bar</Prefix>"
-            "		<Status>Enabled</Status>"
-            "		<NoncurrentVersionTransition>"
-            "			<NoncurrentDays>40</NoncurrentDays>"
-            "			<StorageClass>STANDARD_IA</StorageClass>"
-            "		</NoncurrentVersionTransition>"
-            "		<NoncurrentVersionTransition>"
-            "			<NoncurrentDays>70</NoncurrentDays>"
-            "			<StorageClass>GLACIER</StorageClass>"
-            "		</NoncurrentVersionTransition>"
-            "	</Rule>"
-            "</LifecycleConfiguration>"
-        ).encode("utf-8")
+            b'<?xml version="1.0" ?>'
+            b'<LifecycleConfiguration xmlns="http://s3.amazonaws.'
+            b'com/doc/2006-03-01/">'
+            b"	<Rule>"
+            b"		<ID>transitionRule</ID>"
+            b"		<Prefix>foo</Prefix>"
+            b"		<Status>Enabled</Status>"
+            b"		<Transition>"
+            b"			<Days>40</Days>"
+            b"			<StorageClass>STANDARD_IA</StorageClass>"
+            b"		</Transition>"
+            b"		<Transition>"
+            b"			<Days>70</Days>"
+            b"			<StorageClass>GLACIER</StorageClass>"
+            b"		</Transition>"
+            b"	</Rule>"
+            b"	<Rule>"
+            b"		<ID>noncurrentVersionRule</ID>"
+            b"		<Prefix>bar</Prefix>"
+            b"		<Status>Enabled</Status>"
+            b"		<NoncurrentVersionTransition>"
+            b"			<NoncurrentDays>40</NoncurrentDays>"
+            b"			<StorageClass>STANDARD_IA</StorageClass>"
+            b"		</NoncurrentVersionTransition>"
+            b"		<NoncurrentVersionTransition>"
+            b"			<NoncurrentDays>70</NoncurrentDays>"
+            b"			<StorageClass>GLACIER</StorageClass>"
+            b"		</NoncurrentVersionTransition>"
+            b"	</Rule>"
+            b"</LifecycleConfiguration>"
+        )
         s3 = self.session.create_client("s3")
         with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.add_response(body=response_body)
@@ -1209,13 +1209,13 @@ class TestS3PutObject(BaseS3OperationTest):
         # We are unsure of what exactly causes the response to be mangled
         # but we expect it to be how 100 continues are handled.
         non_xml_content = (
-            "x-amz-id-2: foo\r\n"
-            "x-amz-request-id: bar\n"
-            "Date: Tue, 06 Oct 2015 03:20:38 GMT\r\n"
-            'ETag: "a6d856bc171fc6aa1b236680856094e2"\r\n'
-            "Content-Length: 0\r\n"
-            "Server: AmazonS3\r\n"
-        ).encode("utf-8")
+            b"x-amz-id-2: foo\r\n"
+            b"x-amz-request-id: bar\n"
+            b"Date: Tue, 06 Oct 2015 03:20:38 GMT\r\n"
+            b'ETag: "a6d856bc171fc6aa1b236680856094e2"\r\n'
+            b"Content-Length: 0\r\n"
+            b"Server: AmazonS3\r\n"
+        )
         s3 = self.session.create_client("s3")
         with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.add_response(status=500, body=non_xml_content)
@@ -1283,7 +1283,7 @@ class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
 
 class TestS3SigV4(BaseS3OperationTest):
     def setUp(self):
-        super(TestS3SigV4, self).setUp()
+        super().setUp()
         self.client = self.session.create_client(
             "s3", self.region, config=Config(signature_version="s3v4")
         )
@@ -1365,7 +1365,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
 
 class TestRegionRedirect(BaseS3OperationTest):
     def setUp(self):
-        super(TestRegionRedirect, self).setUp()
+        super().setUp()
         self.client = self.session.create_client(
             "s3",
             "us-west-2",

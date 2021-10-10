@@ -18,7 +18,7 @@ from tests import BaseSessionTest, ClientHTTPStubber, unittest
 class TestRDSPresignUrlInjection(BaseSessionTest):
 
     def setUp(self):
-        super(TestRDSPresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('rds', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 

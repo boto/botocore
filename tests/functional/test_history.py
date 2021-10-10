@@ -13,24 +13,24 @@ class RecordingHandler(BaseHistoryHandler):
 class TestRecordStatementsInjections(BaseSessionTest):
 
     def setUp(self):
-        super(TestRecordStatementsInjections, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('s3', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
         self.s3_response_body = (
-            '<ListAllMyBucketsResult '
-            '    xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
-            '  <Owner>'
-            '    <ID>d41d8cd98f00b204e9800998ecf8427e</ID>'
-            '    <DisplayName>foo</DisplayName>'
-            '  </Owner>'
-            '  <Buckets>'
-            '    <Bucket>'
-            '      <Name>bar</Name>'
-            '      <CreationDate>1912-06-23T22:57:02.000Z</CreationDate>'
-            '    </Bucket>'
-            '  </Buckets>'
-            '</ListAllMyBucketsResult>'
-        ).encode('utf-8')
+            b'<ListAllMyBucketsResult '
+            b'    xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            b'  <Owner>'
+            b'    <ID>d41d8cd98f00b204e9800998ecf8427e</ID>'
+            b'    <DisplayName>foo</DisplayName>'
+            b'  </Owner>'
+            b'  <Buckets>'
+            b'    <Bucket>'
+            b'      <Name>bar</Name>'
+            b'      <CreationDate>1912-06-23T22:57:02.000Z</CreationDate>'
+            b'    </Bucket>'
+            b'  </Buckets>'
+            b'</ListAllMyBucketsResult>'
+        )
         self.recording_handler = RecordingHandler()
         history_recorder = get_global_history_recorder()
         history_recorder.enable()
@@ -52,7 +52,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         event = api_call_events[0]
         event_type, payload, source = event
         self.assertEqual(payload, {
-            'operation': u'ListBuckets',
+            'operation': 'ListBuckets',
             'params': {},
             'service': 's3'
         })
@@ -69,7 +69,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         event_type, payload, source = event
 
         method = payload['method']
-        self.assertEqual(method, u'GET')
+        self.assertEqual(method, 'GET')
 
         # The header values vary too much per request to verify them here.
         # Instead just check the presense of each expected header.
