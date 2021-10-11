@@ -15,6 +15,7 @@ import pytest
 from tests import mock
 from tests import unittest
 
+import botocore
 import botocore.session as session
 from botocore.configprovider import ConfigValueStore
 from botocore.configprovider import BaseProvider

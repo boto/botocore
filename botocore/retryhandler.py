@@ -140,7 +140,7 @@ def _create_single_response_checker(response):
         checker = CRC32Checker(header=response['crc32body'])
     else:
         # TODO: send a signal.
-        raise ValueError("Unknown retry policy")
+        raise ValueError("Unknown retry policy: %s" % config)
     return checker
 
 

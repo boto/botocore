@@ -351,6 +351,7 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
             with mock.patch('os.path.isdir', mock.Mock(return_value=True)):
                 yield loader
 
+
     def fake_listdir(self, dirname):
         parts = dirname.split(os.path.sep)
         result = self.fake_directories
@@ -425,7 +426,7 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
             },
         }
         with self.loader_with_fake_dirs() as loader:
-            loader.determine_latest_version('ec2', 'service-2')
+            latest = loader.determine_latest_version('ec2', 'service-2')
             self.assertEqual(loader.determine_latest_version('ec2', 'service-2'),
                              '2014-10-01')
             self.assertEqual(loader.determine_latest_version('ec2', 'service-1'),

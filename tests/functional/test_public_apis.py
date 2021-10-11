@@ -17,6 +17,7 @@ import pytest
 from tests import mock
 from tests import ClientHTTPStubber
 from botocore.session import Session
+from botocore.exceptions import NoCredentialsError
 from botocore import xform_name
 
 

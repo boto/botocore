@@ -15,3 +15,4 @@ Feature: AWS Directory Service
     | Password  |   |
     | Size      |   |
     Then I expect the response error code to be "ValidationException"
+

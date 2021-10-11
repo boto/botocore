@@ -10,8 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from contextlib import contextmanager
+
 import botocore.session
-from tests import BaseSessionTest, ClientHTTPStubber
+from tests import mock, BaseSessionTest, ClientHTTPStubber
 from botocore.stub import Stubber
 from tests import unittest
 
@@ -34,9 +36,9 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             'SourceRegion': 'us-east-1'
         }
         response_body = (
-            b'<CopyDBSnapshotResponse>'
-            b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
-            b'</CopyDBSnapshotResponse>'
+                    b'<CopyDBSnapshotResponse>'
+                    b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
+                    b'</CopyDBSnapshotResponse>'
         )
         self.http_stubber.add_response(body=response_body)
         with self.http_stubber:

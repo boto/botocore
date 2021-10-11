@@ -23,7 +23,6 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
-
 # Configure default logger to do nothing
 log = logging.getLogger('botocore')
 log.addHandler(NullHandler())

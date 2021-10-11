@@ -567,12 +567,10 @@ class TestWildcardHandlers(unittest.TestCase):
         # Here we're not testing copy directly, we're testing
         # the observable behavior from copying an event emitter.
         first = []
-
         def first_handler(id_name, **kwargs):
             first.append(id_name)
 
         second = []
-
         def second_handler(id_name, **kwargs):
             second.append(id_name)
 
@@ -611,12 +609,10 @@ class TestWildcardHandlers(unittest.TestCase):
         # Here we're not testing copy directly, we're testing
         # the observable behavior from copying an event emitter.
         first = []
-
         def first_handler(id_name, **kwargs):
             first.append(id_name)
 
         second = []
-
         def second_handler(id_name, **kwargs):
             second.append(id_name)
 

@@ -21,7 +21,6 @@ _KNOWN_SERVICES = {
     'lexv2-runtime': ['StartConversation'],
 }
 
-
 def _all_test_cases():
     session = get_session()
     loader = session.get_component('data_loader')

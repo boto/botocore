@@ -4,6 +4,7 @@ from tests import unittest
 
 from botocore import model
 from botocore.compat import OrderedDict
+from botocore.exceptions import MissingServiceIdError
 
 
 @pytest.mark.parametrize("property_name", ['api_version', 'protocol'])
@@ -572,15 +573,11 @@ class TestDeepMerge(unittest.TestCase):
         # map_merged has a serialization as a member trait as well as
         # in the StrToStrMap.
         # The member trait should have precedence.
-        self.assertEqual(
-            map_merged.serialization,
-            # member beats the definition.
-            {
-                'name': 'Attribute',
-                # From the definition.
-                'flattened': True,
-            }
-        )
+        self.assertEqual(map_merged.serialization,
+                         # member beats the definition.
+                         {'name': 'Attribute',
+                          # From the definition.
+                          'flattened': True,})
         # Ensure we don't merge/mutate the original dicts.
         self.assertEqual(map_merged.key.serialization['name'], 'Name')
         self.assertEqual(map_merged.value.serialization['name'], 'Value')
@@ -699,7 +696,7 @@ class TestShapeResolver(unittest.TestCase):
                 }
             },
             'passwordType': {
-                "type": "string",
+                "type":"string",
             }
         }
         resolver = model.ShapeResolver(shapes)
@@ -743,10 +740,10 @@ class TestShapeResolver(unittest.TestCase):
                 }
             },
             'passwordType': {
-                "type": "string",
-                "min": 1,
-                "max": 128,
-                "sensitive": True
+                "type":"string",
+                "min":1,
+                "max":128,
+                "sensitive":True
             }
         }
         resolver = model.ShapeResolver(shapes)
@@ -781,7 +778,7 @@ class TestShapeResolver(unittest.TestCase):
     def test_shape_list(self):
         shapes = {
             'mfaDeviceListType': {
-                "type": "list",
+                "type":"list",
                 "member": {"shape": "MFADevice"},
             },
             'MFADevice': {

@@ -25,7 +25,7 @@ import uuid
 
 from botocore.compat import (
     unquote, json, six, unquote_str, ensure_bytes, get_md5,
-    OrderedDict, urlsplit, urlunsplit, XMLParseError,
+    MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit, XMLParseError,
     ETree,
 )
 from botocore.docs.utils import AutoPopulatedParam
@@ -37,21 +37,18 @@ from botocore.signers import add_generate_db_auth_token
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.exceptions import MissingServiceIdError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
+from botocore.utils import hyphenize_service_id
 from botocore.utils import conditionally_calculate_md5
 from botocore.utils import is_global_accesspoint
 
+from botocore import retryhandler
 from botocore import utils
+from botocore import translate
 import botocore
 import botocore.auth
-
-# Keep these imported.  There's pre-existing code that uses them.
-from botocore import retryhandler # noqa
-from botocore import translate # noqa
-from botocore.compat import MD5_AVAILABLE # noqa
-from botocore.exceptions import MissingServiceIdError # noqa
-from botocore.utils import hyphenize_service_id # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -280,10 +277,8 @@ def _sse_md5(params, sse_member_prefix='SSECustomer'):
 
 
 def _needs_s3_sse_customization(params, sse_member_prefix):
-    return (
-        params.get(sse_member_prefix + 'Key') is not None
-        and sse_member_prefix + 'KeyMD5' not in params
-    )
+    return (params.get(sse_member_prefix + 'Key') is not None and
+            sse_member_prefix + 'KeyMD5' not in params)
 
 
 def disable_signing(**kwargs):
@@ -562,7 +557,7 @@ def validate_ascii_metadata(params, **kwargs):
         try:
             key.encode('ascii')
             value.encode('ascii')
-        except UnicodeEncodeError:
+        except UnicodeEncodeError as e:
             error_msg = (
                 'Non ascii characters found in S3 metadata '
                 'for key "%s", value: "%s".  \nS3 metadata can only '
@@ -769,7 +764,8 @@ def decode_list_object_versions(parsed, context, **kwargs):
 
 
 def _decode_list_object(top_level_keys, nested_keys, parsed, context):
-    if parsed.get('EncodingType') == 'url' and context.get('encoding_type_auto_set'):
+    if parsed.get('EncodingType') == 'url' and \
+                    context.get('encoding_type_auto_set'):
         # URL decode top-level keys in the response if present.
         for key in top_level_keys:
             if key in parsed:
@@ -1061,7 +1057,8 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('SSECustomerKeyMD5').document_auto_populated_param),
     # S3 SSE Copy Source documentation modifications
     ('docs.*.s3.*.complete-section',
-     AutoPopulatedParam('CopySourceSSECustomerKeyMD5').document_auto_populated_param),
+     AutoPopulatedParam(
+        'CopySourceSSECustomerKeyMD5').document_auto_populated_param),
     # Add base64 information to Lambda
     ('docs.*.lambda.UpdateFunctionCode.complete-section',
      document_base64_encoding('ZipFile')),
@@ -1133,9 +1130,10 @@ BUILTIN_HANDLERS = [
 
     ###########
     # SMS Voice
-    ###########
+     ##########
     ('docs.title.sms-voice',
-     DeprecatedServiceDocumenter('pinpoint-sms-voice').inject_deprecation_notice),
+     DeprecatedServiceDocumenter(
+         'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),
 
 ]

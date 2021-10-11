@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import mock, BaseSessionTest
+import sys
+from tests import unittest, mock, BaseSessionTest
 
 from botocore.exceptions import UnsupportedTLSVersionWarning
 

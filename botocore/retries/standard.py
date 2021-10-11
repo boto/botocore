@@ -382,7 +382,8 @@ class ModeledRetryErrorDetector(object):
                 # Check if this error code matches the shape.  This can
                 # be either by name or by a modeled error code.
                 error_code_to_check = (
-                    shape.metadata.get('error', {}).get('code') or shape.name
+                    shape.metadata.get('error', {}).get('code')
+                    or shape.name
                 )
                 if error_code == error_code_to_check:
                     if shape.metadata['retryable'].get('throttling'):
@@ -429,10 +430,8 @@ class StandardRetryConditions(BaseRetryableChecker):
         ])
 
     def is_retryable(self, context):
-        return (
-            self._max_attempts_checker.is_retryable(context)
-            and self._additional_checkers.is_retryable(context)
-        )
+        return (self._max_attempts_checker.is_retryable(context) and
+                self._additional_checkers.is_retryable(context))
 
 
 class OrRetryChecker(BaseRetryableChecker):

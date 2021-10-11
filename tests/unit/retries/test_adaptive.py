@@ -87,7 +87,6 @@ class TestClientRateLimiter(unittest.TestCase):
         rate_limiter.on_receiving_response()
         self.assertEqual(self.token_bucket.max_rate, 2.0 * 20)
 
-
 class TestRateClocker(unittest.TestCase):
 
     def setUp(self):

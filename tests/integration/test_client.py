@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import logging
 import datetime
-from tests import unittest
+from tests import unittest, random_chars
 
 import botocore.session
 from botocore.client import ClientError

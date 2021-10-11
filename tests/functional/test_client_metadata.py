@@ -14,7 +14,6 @@ from tests import unittest
 
 import botocore.session
 
-
 class TestClientMeta(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()

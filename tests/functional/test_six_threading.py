@@ -24,8 +24,11 @@ def _reload_six():
     # Issue #98 is caused by a race condition in six._LazyDescr.__get__
     # which is only called once per moved module. Reload six so all the
     # moved modules are reset.
-    import importlib
-    importlib.reload(six)
+    if sys.version_info < (3, 0):
+        reload(six)
+    else:
+        import importlib
+        importlib.reload(six)
 
 
 class _ExampleThread(threading.Thread):

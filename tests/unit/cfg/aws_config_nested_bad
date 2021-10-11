@@ -6,3 +6,4 @@ s3 =
 cloudwatch =
     signature_version = v4
 region=us-west-2
+

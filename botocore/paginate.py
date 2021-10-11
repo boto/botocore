@@ -274,14 +274,12 @@ class PageIterator(object):
             num_current_response = len(current_response)
             truncate_amount = 0
             if self._max_items is not None:
-                truncate_amount = (
-                    total_items + num_current_response - self._max_items
-                )
+                truncate_amount = (total_items + num_current_response) \
+                                  - self._max_items
             if truncate_amount > 0:
-                self._truncate_response(
-                    parsed, primary_result_key, truncate_amount,
-                    starting_truncation, next_token
-                )
+                self._truncate_response(parsed, primary_result_key,
+                                        truncate_amount, starting_truncation,
+                                        next_token)
                 yield response
                 break
             else:

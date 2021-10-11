@@ -34,6 +34,7 @@ from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
 from botocore.credentials import create_credential_resolver
 from botocore.credentials import JSONFileCache
+from botocore.credentials import SSOProvider
 from botocore.config import Config
 from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
@@ -90,7 +91,6 @@ class TestCredentialRefreshRaces(unittest.TestCase):
             advisory_refresh=1,
             mandatory_refresh=0
         )
-
         def _run_in_thread(collected):
             for _ in range(4000):
                 frozen = creds.get_frozen_credentials()
@@ -116,7 +116,6 @@ class TestCredentialRefreshRaces(unittest.TestCase):
             advisory_refresh=1,
             mandatory_refresh=0
         )
-
         def _run_in_thread(collected):
             for _ in range(100):
                 frozen = creds.get_frozen_credentials()

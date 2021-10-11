@@ -24,7 +24,7 @@ def test_no_bare_six_imports(filename):
     with open(filename) as f:
         contents = f.read()
         parsed = ast.parse(contents, filename)
-        SixImportChecker(filename).visit(parsed)
+        checker = SixImportChecker(filename).visit(parsed)
 
 
 class SixImportChecker(ast.NodeVisitor):

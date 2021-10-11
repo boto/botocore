@@ -12,8 +12,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import io
+import sys
 import logging
 import functools
+import socket
 
 import urllib3.util
 from urllib3.connection import VerifiedHTTPSConnection
@@ -23,10 +25,8 @@ from urllib3.connectionpool import HTTPSConnectionPool
 
 import botocore.utils
 from botocore.compat import six
-from botocore.compat import (
-    HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,
-    urlencode, urlparse, MutableMapping
-)
+from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
+     urlencode, MutableMapping
 from botocore.exceptions import UnseekableStreamError
 
 
@@ -207,10 +207,8 @@ class AWSConnection(object):
         parts = maybe_status_line.split(None, 2)
         # Check for HTTP/<version> 100 Continue\r\n
         return (
-            len(parts) >= 3
-            and parts[0].startswith(b'HTTP/')
-            and parts[1] == b'100'
-        )
+            len(parts) >= 3 and parts[0].startswith(b'HTTP/') and
+            parts[1] == b'100')
 
 
 class AWSHTTPConnection(AWSConnection, HTTPConnection):
@@ -349,10 +347,8 @@ class AWSRequestPreparer(object):
     def _prepare_url(self, original):
         url = original.url
         if original.params:
-            url_parts = urlparse(url)
-            delim = '&' if url_parts.query else '?'
             params = urlencode(list(original.params.items()), doseq=True)
-            url = delim.join((url, params))
+            url = '%s?%s' % (url, params)
         return url
 
     def _prepare_headers(self, original, prepared_body=None):
@@ -404,7 +400,7 @@ class AWSRequestPreparer(object):
         # Try asking the body for it's length
         try:
             return len(body)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError) as e:
             pass
 
         # Try getting the length from a seekable stream

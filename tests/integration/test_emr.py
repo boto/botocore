@@ -23,7 +23,6 @@ from botocore.exceptions import OperationNotPageableError
 def botocore_session():
     return botocore.session.get_session()
 
-
 @pytest.mark.parametrize(
     "region",
     [
