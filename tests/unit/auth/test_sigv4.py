@@ -32,6 +32,7 @@ from botocore.compat import six, urlsplit, parse_qsl
 import mock
 import pytest
 
+from tests import FreezeTime
 import botocore.auth
 import botocore.crt.auth
 from botocore.awsrequest import AWSRequest
@@ -96,31 +97,15 @@ def generate_test_cases():
 
 
 @pytest.mark.parametrize("test_case", generate_test_cases())
+@FreezeTime(module=botocore.auth.datetime, date=DATE)
 def test_signature_version_4(test_case):
-    datetime_patcher = mock.patch.object(
-        botocore.auth.datetime, 'datetime',
-        mock.Mock(wraps=datetime.datetime)
-    )
-    mocked_datetime = datetime_patcher.start()
-    mocked_datetime.utcnow.return_value = DATE
-
     _test_signature_version_4(test_case)
-
-    datetime_patcher.stop()
 
 
 @pytest.mark.parametrize("test_case", generate_test_cases())
+@FreezeTime(module=botocore.auth.datetime, date=DATE)
 def test_crt_signature_version_4(test_case):
-    datetime_patcher = mock.patch.object(
-        botocore.auth.datetime, 'datetime',
-        mock.Mock(wraps=datetime.datetime)
-    )
-    mocked_datetime = datetime_patcher.start()
-    mocked_datetime.utcnow.return_value = DATE
-
     _test_crt_signature_version_4(test_case)
-
-    datetime_patcher.stop()
 
 
 def create_request_from_raw_request(raw_request):
