@@ -759,8 +759,7 @@ class TestSigV4Presign(BasePresignTest):
         request.url = 'https://ec2.us-east-1.amazonaws.com/?Action=MyOperation'
         self.auth.add_auth(request)
         # Verify auth params come after the existing params.
-        self.assertIn(
-            '?Action=MyOperation&X-Amz', request.url)
+        self.assertIn('?Action=MyOperation&X-Amz', request.url)
 
     def test_operation_params_before_auth_params_in_body(self):
         request = AWSRequest()
@@ -770,8 +769,32 @@ class TestSigV4Presign(BasePresignTest):
         self.auth.add_auth(request)
         # Same situation, the params from request.data come before the auth
         # params in the query string.
-        self.assertIn(
-            '?Action=MyOperation&X-Amz', request.url)
+        self.assertIn('?Action=MyOperation&X-Amz', request.url)
+
+    def test_operation_params_before_auth_params_in_params(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        request.params = {'Action': 'MyOperation'}
+        self.auth.add_auth(request)
+        # Same situation, the params from request.param come before the
+        # auth params in the query string.
+        self.assertIn('?Action=MyOperation&X-Amz', request.url)
+
+    def test_request_params_not_duplicated_in_prepare(self):
+        """
+        params should be moved to query string in add_auth
+        and not rewritten at the end with request.prepare()
+        """
+        request = AWSRequest(
+            method='GET',
+            url='https://ec2.us-east-1.amazonaws.com/',
+            params={'Action': 'MyOperation'}
+        )
+        self.auth.add_auth(request)
+        self.assertIn('?Action=MyOperation&X-Amz', request.url)
+        prep = request.prepare()
+        assert not prep.url.endswith('Action=MyOperation')
 
     def test_presign_with_spaces_in_param(self):
         request = AWSRequest()

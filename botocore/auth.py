@@ -520,6 +520,9 @@ class SigV4QueryAuth(SigV4Auth):
         query_dict = dict(
             [(k, v[0]) for k, v in
              parse_qs(url_parts.query, keep_blank_values=True).items()])
+        if request.params:
+            query_dict.update(request.params)
+            request.params = {}
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing
