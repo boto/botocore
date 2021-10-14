@@ -40,11 +40,9 @@ contributions as well:
 
   If you identify an issue with these files, such as a missing paginator or waiter, please submit an
   `issue <https://github.com/boto/botocore/issues>`__ so we can get it fixed upstream.
-*  We do accept, and encourage, changes to the ``botocore/data/_retry.json`` file.
-* Code should follow `pep 8 <https://www.python.org/dev/peps/pep-0008/>`__,
-  although if you are modifying an existing module, it is more important
-  for the code to be consistent if there are any discrepancies.
-* Code must work on ``python3.6`` and higher.
+* We do accept, and encourage, changes to the ``botocore/data/_retry.json`` file.
+* Code should follow the guidelines listed in the Codestyle section below.
+* Code must work on all versions of Python supported by Botocore.
 * Botocore is cross platform and code must work on at least linux, Windows,
   and Mac OS X.
 * If you would like to implement support for a significant feature that is not
@@ -52,7 +50,6 @@ contributions as well:
   of effort.  You can file an
   `issue <https://github.com/boto/botocore/issues>`__
   to discuss the feature request further.
-
 
 Reporting An Issue/Feature
 --------------------------
@@ -72,3 +69,26 @@ Reporting An Issue/Feature
      * OS
      * botocore (accessible via ``botocore.__version__``)
      * optionally any other python dependencies involved
+
+Codestyle
+---------
+This project uses flake8 to enforce codstyle requirements. We've codified this
+process using a tool called `pre-commit <https://pre-commit.com/>`__. pre-commit
+allows us to specify a config file with all tools required for code linting,
+and surfaces either a git commit hook, or single command, for enforcing these.
+
+To validate your PR prior to publishing, you can use the following
+`installation guide <https://pre-commit.com/#install>`__ to setup pre-commit.
+
+If you don't want to use the git commit hook, you can run the below command
+to automatically perform the codestyle validation:
+
+.. code-block:: bash
+
+    $ pre-commit run
+
+This will automatically perform simple updates (such as white space clean up)
+and provide a list of any failing flake8 checks. After these are addressed,
+you can commit the changes prior to publishing the PR.
+These checks are also included in our CI setup under the "Lint" workflow which
+will provide output on Github for anything missed locally.
