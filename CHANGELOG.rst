@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.21.63
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``glue``: Enable S3 event base crawler API.
+
+
 1.21.62
 =======
 
