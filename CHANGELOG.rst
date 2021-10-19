@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.21.65
+=======
+
+* api-change:``dataexchange``: This release adds support for our public preview of AWS Data Exchange for Amazon Redshift. This enables data providers to list products including AWS Data Exchange datashares for Amazon Redshift, giving subscribers read-only access to provider data in Amazon Redshift.
+* api-change:``chime-sdk-messaging``: The Amazon Chime SDK now allows developers to execute business logic on in-flight messages before they are delivered to members of a messaging channel with channel flows.
+
+
+1.21.64
+=======
+
+* api-change:``quicksight``: AWS QuickSight Service  Features    - Add IP Restriction UI and public APIs support.
+* enchancement:AWSCRT: Upgrade awscrt extra to 0.12.5
+* api-change:``ivs``: Bug fix: remove unsupported maxResults and nextToken pagination parameters from ListTagsForResource
+
+
+1.21.63
+=======
+
+* api-change:``efs``: Update efs client to latest version
+* api-change:``glue``: Enable S3 event base crawler API.
+
+
 1.21.62
 =======
 
