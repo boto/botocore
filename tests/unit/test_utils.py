@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 import io
 
+import pytest
+
 from tests import create_session
 from tests import mock
 from tests import unittest
@@ -24,7 +26,7 @@ import botocore
 from botocore import xform_name
 from botocore.compat import json
 from botocore.compat import six
-from botocore.awsrequest import AWSRequest
+from botocore.awsrequest import AWSRequest, HeadersDict
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
@@ -73,6 +75,7 @@ from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
 from botocore.utils import SSOTokenLoader
 from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
+from botocore.utils import has_header
 from botocore.exceptions import SSOTokenLoadError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
@@ -2716,3 +2719,22 @@ class TestSSOTokenLoader(unittest.TestCase):
         self.cache[self.cache_key] = {}
         with self.assertRaises(SSOTokenLoadError):
             self.loader(self.start_url)
+
+
+@pytest.mark.parametrize(
+    'header_name, headers, expected',
+    (
+        ('test_header', {'test_header': 'foo'}, True),
+        ('Test_Header', {'test_header': 'foo'}, True),
+        ('test_header', {'Test_Header': 'foo'}, True),
+        ('missing_header', {'Test_Header': 'foo'}, False),
+        (None, {'Test_Header': 'foo'}, False),
+        ('test_header', HeadersDict({'test_header': 'foo'}), True),
+        ('Test_Header', HeadersDict({'test_header': 'foo'}), True),
+        ('test_header', HeadersDict({'Test_Header': 'foo'}), True),
+        ('missing_header', HeadersDict({'Test_Header': 'foo'}), False),
+        (None, HeadersDict({'Test_Header': 'foo'}), False),
+    )
+)
+def test_has_header(header_name, headers, expected):
+    assert has_header(header_name, headers) is expected

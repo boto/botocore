@@ -163,6 +163,36 @@ class TestOperationModelFromService(unittest.TestCase):
                     },
                     'errors': [{'shape': 'NoSuchResourceException'}],
                     'documentation': 'Docs for OperationTwo',
+                },
+                'PayloadOperation': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'PayloadOperation',
+                    'input': {
+                        'shape': 'PayloadOperationRequest'
+                    },
+                    'output': {
+                        'shape': 'PayloadOperationResponse',
+                    },
+                    'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for PayloadOperation',
+                },
+                'NoBodyOperation': {
+                    'http': {
+                        'method': 'GET',
+                        'requestUri': '/',
+                    },
+                    'name': 'NoBodyOperation',
+                    'input': {
+                        'shape': 'NoBodyOperationRequest'
+                    },
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                    'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for NoBodyOperation',
                 }
             },
             'shapes': {
@@ -181,13 +211,48 @@ class TestOperationModelFromService(unittest.TestCase):
                         }
                     }
                 },
+                'PayloadOperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'Arg1': {'shape': 'TestConfig'},
+                        'Arg2': {'shape': 'stringType'},
+                    },
+                    'payload': 'Arg1'
+                },
+                'PayloadOperationResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        }
+                    },
+                    'payload': 'String'
+                },
+                'NoBodyOperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'data': {
+                            'location': 'header',
+                            'locationName': 'x-amz-data',
+                            'shape': 'stringType'
+                        }
+                    }
+                },
                 'NoSuchResourceException': {
                     'type': 'structure',
                     'members': {}
                 },
                 'stringType': {
                     'type': 'string',
-                }
+                },
+                'TestConfig': {
+                    'type': 'structure',
+                    'members': {
+                        'timeout': {
+                            'shape': 'stringType'
+                        }
+                    }
+                },
             }
         }
         self.service_model = model.ServiceModel(self.model)
