@@ -211,6 +211,51 @@ class TestCreateClientArgs(unittest.TestCase):
                 ]
             )
 
+    def test_client_config_has_use_dualstack_endpoint_flag(self):
+        self._set_endpoint_bridge_resolve(
+            metadata={
+                'tags': ['dualstack']
+            }
+        )
+        client_args = self.call_get_client_args(
+            service_model=self._get_service_model('ec2'),
+        )
+        self.assertTrue(client_args['client_config'].use_dualstack_endpoint)
+
+    def test_client_config_has_use_fips_endpoint_flag(self):
+        self._set_endpoint_bridge_resolve(
+            metadata={
+                'tags': ['fips']
+            }
+        )
+        client_args = self.call_get_client_args(
+            service_model=self._get_service_model('ec2'),
+        )
+        self.assertTrue(client_args['client_config'].use_fips_endpoint)
+
+    def test_client_config_has_both_use_fips_and_use_dualstack__endpoint_flags(self):
+        self._set_endpoint_bridge_resolve(
+            metadata={
+                'tags': ['fips', 'dualstack']
+            }
+        )
+        client_args = self.call_get_client_args(
+            service_model=self._get_service_model('ec2'),
+        )
+        self.assertTrue(client_args['client_config'].use_fips_endpoint)
+        self.assertTrue(client_args['client_config'].use_dualstack_endpoint)
+
+    def test_s3_override_use_dualstack_endpoint_flag(self):
+        self._set_endpoint_bridge_resolve(
+            metadata={
+                'tags': ['dualstack']
+            }
+        )
+        client_args = self.call_get_client_args(
+            service_model=self._get_service_model('s3'),
+        )
+        self.assertTrue(client_args['client_config'].s3['use_dualstack_endpoint'])
+
     def test_sts_override_resolved_endpoint_for_legacy_region(self):
         self.config_store.set_config_variable(
             'sts_regional_endpoints', 'legacy')
