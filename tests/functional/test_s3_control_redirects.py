@@ -94,7 +94,12 @@ ACCESSPOINT_ARN_TEST_CASES = [
         'region': 'us-gov-east-1-fips',
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
         }
     },
     # {
@@ -111,7 +116,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'signing_name': 's3-outposts',
-            'netloc': 's3-outposts.us-gov-east-1.amazonaws.com',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
             'headers': {
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
@@ -215,7 +220,12 @@ BUCKET_ARN_TEST_CASES = [
         'region': 'us-gov-east-1-fips',
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
         }
     },
     {
@@ -223,7 +233,7 @@ BUCKET_ARN_TEST_CASES = [
         'region': 'fips-us-gov-east-1',
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
+            'exception': 'UnsupportedS3ControlArnError',
         }
     },
     {
@@ -232,7 +242,7 @@ BUCKET_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'signing_name': 's3-outposts',
-            'netloc': 's3-outposts.us-gov-east-1.amazonaws.com',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
             'headers': {
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
