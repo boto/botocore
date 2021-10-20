@@ -378,12 +378,23 @@ def _serialize_request_description(request_dict):
 def _assert_requests_equal(actual, expected):
     assert_equal(actual['body'], expected.get('body', '').encode('utf-8'),
                  'Body value')
-    actual_headers = dict(actual['headers'])
-    expected_headers = expected.get('headers', {})
-    assert_equal(actual_headers, expected_headers, "Header values")
+    actual_headers = HeadersDict(actual['headers'])
+    expected_headers = HeadersDict(expected.get('headers', {}))
+    excluded_headers = expected.get('forbidHeaders', [])
+    _assert_expected_headers_in_request(
+        actual_headers, expected_headers, excluded_headers
+    )
     assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
     if 'method' in expected:
         assert_equal(actual['method'], expected['method'], "Method")
+
+
+def _assert_expected_headers_in_request(actual, expected, excluded_headers):
+    for header, value in expected.items():
+        assert header in actual
+        assert actual[header] == value
+    for header in excluded_headers:
+        assert header not in actual
 
 
 def _walk_files():
