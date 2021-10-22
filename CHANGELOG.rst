@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.22.2
+======
+
+* api-change:``quicksight``: Added QSearchBar option for GenerateEmbedUrlForRegisteredUser ExperienceConfiguration to support Q search bar embedding
+* api-change:``auditmanager``: This release introduces character restrictions for ControlSet names. We updated regex patterns for the following attributes: ControlSet, CreateAssessmentFrameworkControlSet, and UpdateAssessmentFrameworkControlSet.
+* api-change:``chime``: Chime VoiceConnector and VoiceConnectorGroup APIs will now return an ARN.
+
+
 1.22.1
 ======
 
