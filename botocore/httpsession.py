@@ -22,11 +22,15 @@ except ImportError:
 
 import botocore.awsrequest
 from botocore.vendored.six.moves.urllib_parse import unquote
-from botocore.compat import filter_ssl_warnings, urlparse
+from botocore.compat import filter_ssl_warnings, urlparse, HAS_SOCKS
+
+if HAS_SOCKS:
+    from urllib3.contrib.socks import SOCKSProxyManager
+
 from botocore.exceptions import (
     ConnectionClosedError, EndpointConnectionError, HTTPClientError,
     ReadTimeoutError, ProxyConnectionError, ConnectTimeoutError, SSLError,
-    InvalidProxiesConfigError
+    InvalidProxiesConfigError, MissingDependencyException
 )
 
 filter_ssl_warnings()
@@ -127,9 +131,7 @@ class ProxyConfiguration(object):
     def proxy_url_for(self, url):
         """Retrieves the corresponding proxy url for a given url. """
         parsed_url = urlparse(url)
-        proxy = self._proxies.get(parsed_url.scheme)
-        if proxy:
-            proxy = self._fix_proxy_url(proxy)
+        proxy = self.proxy_url_for_scheme(parsed_url.scheme)
         return proxy
 
     def proxy_headers_for(self, proxy_url):
@@ -141,17 +143,30 @@ class ProxyConfiguration(object):
             headers['Proxy-Authorization'] = basic_auth
         return headers
 
+    def proxy_url_for_scheme(self, scheme):
+        proxy = self._proxies.get(scheme)
+        if proxy:
+            proxy = self._fix_proxy_url(proxy)
+        return proxy
+
     @property
     def settings(self):
         return self._proxies_settings
 
     def _fix_proxy_url(self, proxy_url):
-        if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
+        if proxy_url.startswith('http:') or proxy_url.startswith('https:') or self.is_socks_proxy(proxy_url):
             return proxy_url
         elif proxy_url.startswith('//'):
             return 'http:' + proxy_url
         else:
             return 'http://' + proxy_url
+
+    @staticmethod
+    def is_socks_proxy(proxy_url):
+        if proxy_url:
+            parsed_proxy_url = urlparse(proxy_url)
+            return parsed_proxy_url.scheme in ['socks5', 'socks5h', 'socks4', 'socks4a']
+        return False
 
     def _construct_basic_auth(self, username, password):
         auth_str = '{0}:{1}'.format(username, password)
@@ -191,10 +206,8 @@ class URLLib3Session(object):
         self._proxy_config = ProxyConfiguration(
             proxies=proxies, proxies_settings=proxies_config
         )
-        self._pool_classes_by_scheme = {
-            'http': botocore.awsrequest.AWSHTTPConnectionPool,
-            'https': botocore.awsrequest.AWSHTTPSConnectionPool,
-        }
+        self._pool_classes_by_scheme = self._get_pool_classes_by_scheme()
+
         if timeout is None:
             timeout = DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
@@ -243,13 +256,45 @@ class URLLib3Session(object):
     def _get_ssl_context(self):
         return create_urllib3_context()
 
+    def _get_pool_classes_by_scheme(self):
+        http_proxy = self._proxy_config.proxy_url_for_scheme('http')
+        https_proxy = self._proxy_config.proxy_url_for_scheme('https')
+
+        if self._proxy_config.is_socks_proxy(http_proxy):
+            http_proxy_class = botocore.awsrequest.AWSSOCKSHTTPConnectionPool
+        else:
+            http_proxy_class = botocore.awsrequest.AWSHTTPConnectionPool
+
+        if self._proxy_config.is_socks_proxy(https_proxy):
+            https_proxy_class = botocore.awsrequest.AWSSOCKSHTTPSConnectionPool
+        else:
+            https_proxy_class = botocore.awsrequest.AWSHTTPSConnectionPool
+
+        pool_classes_by_scheme = {
+            'http': http_proxy_class,
+            'https': https_proxy_class,
+        }
+
+        return pool_classes_by_scheme
+
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
             proxy_manager_kwargs = self._get_pool_manager_kwargs(
                 proxy_headers=proxy_headers)
             proxy_manager_kwargs.update(**self._proxies_kwargs)
-            proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
+            if self._proxy_config.is_socks_proxy(proxy_url):
+                if HAS_SOCKS:
+                    proxy_manager_kwargs['_proxy_headers'] = proxy_manager_kwargs.pop('proxy_headers')
+                    proxy_manager = SOCKSProxyManager(proxy_url, **proxy_manager_kwargs)
+                else:
+                    raise MissingDependencyException(
+                        msg="Using socks proxy requires an additional "
+                            "dependency. You will need to pip install "
+                            "botocore[socks] before proceeding."
+                    )
+            else:
+                proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
 

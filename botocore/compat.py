@@ -359,3 +359,9 @@ try:
     HAS_CRT = not disabled.lower() == 'true'
 except ImportError:
     HAS_CRT = False
+
+try:
+    import socks
+    HAS_SOCKS = True
+except ImportError:
+    HAS_SOCKS = False

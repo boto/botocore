@@ -34,7 +34,7 @@ import botocore.loaders
 import botocore.session
 from botocore.awsrequest import AWSResponse
 from botocore.compat import (
-    parse_qs, six, urlparse, HAS_CRT
+    parse_qs, six, urlparse, HAS_CRT, HAS_SOCKS
 )
 from botocore import utils
 from botocore import credentials
@@ -76,6 +76,15 @@ def requires_crt(reason=None):
 
     def decorator(func):
         return unittest.skipIf(not HAS_CRT, reason)(func)
+    return decorator
+
+
+def requires_socks(reason=None):
+    if reason is None:
+        reason = "Test requires PySocks to be installed"
+
+    def decorator(func):
+        return unittest.skipIf(not HAS_SOCKS, reason)(func)
     return decorator
 
 

@@ -4,9 +4,11 @@ import pytest
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from tests import mock, unittest
+from tests import requires_socks
 
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
+from botocore.compat import HAS_SOCKS
 from botocore.httpsession import get_cert_path
 from botocore.httpsession import URLLib3Session, ProxyConfiguration
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
@@ -44,6 +46,11 @@ class TestProxyConfiguration(unittest.TestCase):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
         self.assertEqual('http://localhost:8081/', proxy_url)
 
+    def test_proxy_for_socks5(self):
+        self.update_http_proxy('socks5://localhost:8081/')
+        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        self.assertEqual('socks5://localhost:8081/', proxy_url)
+
     def test_fix_proxy_url_has_protocol_http(self):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
         self.assertEqual('http://localhost:8081/', proxy_url)
@@ -61,6 +68,20 @@ class TestHttpSessionUtils(unittest.TestCase):
             where.return_value = path
             cert_path = get_cert_path(True)
             self.assertEqual(path, cert_path)
+
+
+def _assert_manager_call(manager, *assert_args, **assert_kwargs):
+    call_kwargs = {
+        'strict': True,
+        'maxsize': mock.ANY,
+        'timeout': mock.ANY,
+        'ssl_context': mock.ANY,
+        'socket_options': [],
+        'cert_file': None,
+        'key_file': None,
+    }
+    call_kwargs.update(assert_kwargs)
+    manager.assert_called_with(*assert_args, **call_kwargs)
 
 
 class TestURLLib3Session(unittest.TestCase):
@@ -108,24 +129,11 @@ class TestURLLib3Session(unittest.TestCase):
             chunked=chunked,
         )
 
-    def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
-        call_kwargs = {
-            'strict': True,
-            'maxsize': mock.ANY,
-            'timeout': mock.ANY,
-            'ssl_context': mock.ANY,
-            'socket_options': [],
-            'cert_file': None,
-            'key_file': None,
-        }
-        call_kwargs.update(assert_kwargs)
-        manager.assert_called_with(*assert_args, **call_kwargs)
-
     def assert_pool_manager_call(self, *args, **kwargs):
-        self._assert_manager_call(self.pool_manager_cls, *args, **kwargs)
+        _assert_manager_call(self.pool_manager_cls, *args, **kwargs)
 
     def assert_proxy_manager_call(self, *args, **kwargs):
-        self._assert_manager_call(self.proxy_manager_fun, *args, **kwargs)
+        _assert_manager_call(self.proxy_manager_fun, *args, **kwargs)
 
     def test_forwards_max_pool_size(self):
         URLLib3Session(max_pool_connections=22)
@@ -326,14 +334,6 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         self.assert_request_sent()
 
-    def test_basic_https_proxy_request(self):
-        proxies = {'https': 'http://proxy.com'}
-        session = URLLib3Session(proxies=proxies)
-        self.request.url = 'https://example.com/'
-        session.send(self.request.prepare())
-        self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
-        self.assert_request_sent()
-
     def test_basic_proxy_request_caches_manager(self):
         proxies = {'https': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
@@ -344,13 +344,6 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         # assert that we did not create another proxy manager
         self.assertEqual(self.proxy_manager_fun.call_count, 1)
-
-    def test_basic_http_proxy_request(self):
-        proxies = {'http': 'http://proxy.com'}
-        session = URLLib3Session(proxies=proxies)
-        session.send(self.request.prepare())
-        self.assert_proxy_manager_call(proxies['http'], proxy_headers={})
-        self.assert_request_sent(url=self.request.url)
 
     def test_ssl_context_is_explicit(self):
         session = URLLib3Session()
@@ -422,3 +415,85 @@ class TestURLLib3Session(unittest.TestCase):
 
         session.send(self.request.prepare())
         self.assert_request_sent(chunked=False)
+
+
+@requires_socks()
+class TestURLLib3SessionSocks(unittest.TestCase):
+    def setUp(self):
+        self.socks_proxy_url = 'socks5://proxy.com:7890'
+        self.request_http_url = 'http://example.com/'
+        self.request_https_url = 'https://example.com/'
+
+        self.request_http = AWSRequest(
+            method='GET',
+            url=self.request_http_url,
+            headers={},
+            data=b'',
+        )
+
+        self.request_https = AWSRequest(
+            method='GET',
+            url=self.request_https_url,
+            headers={},
+            data=b'',
+        )
+
+        self.session_with_http_proxy = URLLib3Session(proxies={'http': self.socks_proxy_url})
+        self.session_with_https_proxy = URLLib3Session(proxies={'https': self.socks_proxy_url})
+
+        self.response = mock.Mock()
+        self.response.headers = {}
+        self.response.stream.return_value = b''
+
+        self.connection = mock.Mock()
+        self.connection.urlopen.return_value = self.response
+        self.pool_manager = mock.Mock()
+        self.pool_manager.connection_from_url.return_value = self.connection
+
+        if HAS_SOCKS:
+            self.proxy_patch = mock.patch('botocore.httpsession.SOCKSProxyManager')
+
+        self.proxy_manager_fun = self.proxy_patch.start()
+        self.proxy_manager_fun.return_value = self.pool_manager
+
+    def tearDown(self):
+        self.proxy_patch.stop()
+
+    def assert_proxy_manager_call(self, *args, **kwargs):
+        _assert_manager_call(self.proxy_manager_fun, *args, **kwargs)
+
+    def test_socks_proxy_scheme_with_http_url(self):
+        self.session_with_http_proxy.send(self.request_http.prepare())
+        self.assert_proxy_manager_call(
+            self.socks_proxy_url,
+            proxy_headers={},
+        )
+        self.connection.urlopen.assert_called_once_with(
+            method=self.request_http.method,
+            url=self.request_http.url,
+            body=None,
+            headers={},
+            retries=mock.ANY,
+            assert_same_host=False,
+            preload_content=False,
+            decode_content=False,
+            chunked=False,
+        )
+
+    def test_socks_proxy_scheme_with_https_url(self):
+        self.session_with_https_proxy.send(self.request_https.prepare())
+        self.assert_proxy_manager_call(
+            self.socks_proxy_url,
+            proxy_headers={},
+        )
+        self.connection.urlopen.assert_called_once_with(
+            method=self.request_https.method,
+            url='/',
+            body=None,
+            headers={},
+            retries=mock.ANY,
+            assert_same_host=False,
+            preload_content=False,
+            decode_content=False,
+            chunked=False,
+        )
