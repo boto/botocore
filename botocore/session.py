@@ -886,7 +886,7 @@ class Session(object):
         resolver = self._get_internal_component('endpoint_resolver')
         return resolver.get_available_partitions()
 
-    def get_partition_for_region(self, region_name=None):
+    def get_partition_for_region(self, region_name):
         """Lists the partition name of a particular region.
 
         :type region_name: string
