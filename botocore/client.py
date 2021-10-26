@@ -37,6 +37,10 @@ from botocore.discovery import (
 )
 from botocore.retries import standard
 from botocore.retries import adaptive
+from botocore.httpchecksum import (
+    apply_request_checksum,
+    resolve_checksum_context,
+)
 
 # Keep these imported.  There's pre-existing code that uses:
 # "from botocore.client import Config"
@@ -690,6 +694,7 @@ class BaseClient(object):
         }
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
+        resolve_checksum_context(request_dict, operation_model, api_params)
 
         service_id = self._service_model.service_id.hyphenize()
         handler, event_response = self.meta.events.emit_until_response(
@@ -702,6 +707,7 @@ class BaseClient(object):
         if event_response is not None:
             http, parsed_response = event_response
         else:
+            apply_request_checksum(request_dict)
             http, parsed_response = self._make_request(
                 operation_model, request_dict, request_context)
 
