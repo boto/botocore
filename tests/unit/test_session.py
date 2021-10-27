@@ -380,6 +380,22 @@ class TestSessionPartitionFiles(BaseSessionTest):
         regions = self.session.get_available_regions('__foo__')
         self.assertEqual([], regions)
 
+    def test_provides_correct_partition_for_region(self):
+        partition = self.session.get_partition_for_region('us-west-2')
+        self.assertEqual(partition, 'aws')
+
+    def test_provides_correct_partition_for_region_regex(self):
+        partition = self.session.get_partition_for_region('af-south-99')
+        self.assertEqual(partition, 'aws')
+
+    def test_provides_correct_partition_for_region_non_default(self):
+        partition = self.session.get_partition_for_region('cn-north-1')
+        self.assertEqual(partition, 'aws-cn')
+
+    def test_raises_exception_for_invalid_region(self):
+        with self.assertRaises(botocore.exceptions.UnknownRegionError):
+            self.session.get_partition_for_region('no-good-1')
+
 
 class TestSessionUserAgent(BaseSessionTest):
     def test_can_change_user_agent_name(self):
