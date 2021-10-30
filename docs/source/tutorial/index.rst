@@ -28,7 +28,9 @@ Using Botocore
 ==============
 
 The first step in using botocore is to create a ``Session`` object.
-``Session`` objects then allow you to create individual clients::
+``Session`` objects then allow you to create individual clients:
+
+.. code:: python
 
     import botocore.session
     session = botocore.session.get_session()
@@ -37,7 +39,9 @@ The first step in using botocore is to create a ``Session`` object.
 Once you have that client created, each operation provided by the service is
 mapped to a method.  Each method takes ``**kwargs`` that maps to the parameter
 names exposed by the service.  For example, using the ``client`` object created
-above::
+above:
+
+.. code:: python
 
     for reservation in client.describe_instances()['Reservations']:
         for instance in reservation['Instances']:
