@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.22.10
+=======
+
+* api-change:``finspace``: Adds superuser and data-bundle parameters to CreateEnvironment API
+* api-change:``connectparticipant``: This release adds a new boolean attribute - Connect Participant - to the CreateParticipantConnection API, which can be used to mark the participant as connected.
+* api-change:``datasync``: AWS DataSync now supports Hadoop Distributed File System (HDFS) Locations
+* api-change:``macie2``: This release adds support for specifying the severity of findings that a custom data identifier produces, based on the number of occurrences of text that matches the detection criteria.
+
+
 1.22.9
 ======
 
