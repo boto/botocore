@@ -43,6 +43,10 @@ class TestS3Docs(BaseDocsFunctionalTest):
             self.assertNotIn('ContentMD5=\'string\'',
                              method_contents.decode('utf-8'))
 
+    def test_generate_presigned_url_documented(self):
+        content = self.get_docstring_for_method('s3', 'generate_presigned_url')
+        self.assert_contains_line('generate_presigned_url', content)
+
     def test_copy_source_documented_as_union_type(self):
         content = self.get_docstring_for_method('s3', 'copy_object')
         dict_form = (
