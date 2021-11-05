@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.22.12
+=======
+
+* api-change:``ec2``: DescribeInstances now returns customer-owned IP addresses for instances running on an AWS Outpost.
+* api-change:``translate``: This release enable customers to use their own KMS keys to encrypt output files when they submit a batch transform job.
+* api-change:``resourcegroupstaggingapi``: Documentation updates and improvements.
+
+
 1.22.11
 =======
 
