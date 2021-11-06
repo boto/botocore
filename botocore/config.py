@@ -171,13 +171,13 @@ class Config(object):
         custom endpoints that should not have their host prefix modified.
 
     :type use_dualstack_endpoint: bool
-    :param use_dualstack_endpoint: Setting to True enables fips
+    :param use_dualstack_endpoint: Setting to True enables dualstack
         endpoint resolution.
 
         Defaults to None.
 
     :type use_fips_endpoint: bool
-    :param use_dualstack_endpoint: Setting to True enables dualstack
+    :param use_fips_endpoint: Setting to True enables fips
         endpoint resolution.
 
         Defaults to None.
