@@ -209,8 +209,8 @@ class EndpointVariantError(BaseEndpointResolverError):
     """
     Could not construct modeled endpoint variant.
 
-    :ivar error_msg: The msg explaining why dualstack endpoint is
-        unable to be constructed.
+    :ivar error_msg: The message explaining why the modeled endpoint variant
+        is unable to be constructed.
 
     """
 
