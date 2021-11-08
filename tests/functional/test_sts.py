@@ -20,6 +20,7 @@ from tests import temporary_file
 from tests import assert_url_equal
 from tests import ClientHTTPStubber
 from botocore.stub import Stubber
+from botocore.config import Config
 
 
 _V4_SIGNING_REGION_REGEX = re.compile(
@@ -55,10 +56,11 @@ class TestSTSPresignedUrl(BaseSessionTest):
 
 
 class TestSTSEndpoints(BaseSessionTest):
-    def create_sts_client(self, region, endpoint_url=None, use_ssl=True):
+    def create_sts_client(self, region, endpoint_url=None, use_ssl=True,
+                          config=None):
         return self.session.create_client(
             'sts', region_name=region, endpoint_url=endpoint_url,
-            use_ssl=use_ssl,
+            use_ssl=use_ssl, config=config
         )
 
     def set_sts_regional_for_config_file(self, fileobj, config_val):
@@ -132,6 +134,26 @@ class TestSTSEndpoints(BaseSessionTest):
         self.assert_request_sent(
             sts,
             expected_url='https://sts-fips.us-west-2.amazonaws.com/',
+            expected_signing_region='us-west-2'
+        )
+
+    def test_dualstack_endpoint_with_legacy_configured(self):
+        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'legacy'
+        dualstack_config = Config(use_dualstack_endpoint=True)
+        sts = self.create_sts_client('us-west-2', config=dualstack_config)
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.us-west-2.api.aws/',
+            expected_signing_region='us-west-2'
+        )
+
+    def test_dualstack_endpoint_with_regional_configured(self):
+        dualstack_config = Config(use_dualstack_endpoint=True)
+        self.environ['AWS_STS_REGIONAL_ENDPOINTS'] = 'regional'
+        sts = self.create_sts_client('us-west-2', config=dualstack_config)
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.us-west-2.api.aws/',
             expected_signing_region='us-west-2'
         )
 
