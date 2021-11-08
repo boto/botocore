@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "EndpointResolver",
+  "description": "Adding support for resolving modeled FIPS and Dualstack endpoints."
+}
