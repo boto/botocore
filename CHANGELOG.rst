@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.23.1
+======
+
+* bugfix:urllib3: Fix NO_OP_TICKET import bug in older versions of urllib3
+
+
 1.23.0
 ======
 
