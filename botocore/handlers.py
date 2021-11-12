@@ -943,6 +943,21 @@ def remove_lex_v2_start_conversation(class_attributes, **kwargs):
         del class_attributes['start_conversation']
 
 
+def add_retry_headers(request, **kwargs):
+    retries_context = request.context.get('retries')
+    if not retries_context:
+        return
+    headers = request.headers
+    headers['amz-sdk-invocation-id'] = retries_context['invocation-id']
+    sdk_retry_keys = ('ttl', 'attempt', 'max')
+    sdk_request_headers = [
+        f'{key}={retries_context[key]}'
+        for key in sdk_retry_keys
+        if key in retries_context
+    ]
+    headers['amz-sdk-request'] = '; '.join(sdk_request_headers)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -996,6 +1011,7 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
+    ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
