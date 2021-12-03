@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.23.20
+=======
+
+* api-change:``rekognition``: This release added new KnownGender types for Celebrity Recognition.
+
+
 1.23.19
 =======
 
