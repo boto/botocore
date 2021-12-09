@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.23.23
+=======
+
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``network-firewall``: This release adds support for managed rule groups.
+* api-change:``route53-recovery-control-config``: This release adds tagging supports to Route53 Recovery Control Configuration. New APIs: TagResource, UntagResource and ListTagsForResource. Updates: add optional field `tags` to support tagging while calling CreateCluster, CreateControlPanel and CreateSafetyRule.
+* api-change:``ec2``: Adds waiters support for internet gateways.
+* api-change:``sms``: This release adds SMS discontinuation information to the API and CLI references.
+* api-change:``route53domains``: Amazon Route 53 domain registration APIs now support filtering and sorting in the ListDomains API, deleting a domain by using the DeleteDomain API and getting domain pricing information by using the ListPrices API.
+* api-change:``savingsplans``: Adds the ability to specify Savings Plans hourly commitments using five digits after the decimal point.
+
+
 1.23.22
 =======
 
