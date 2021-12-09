@@ -2160,10 +2160,11 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
         )
         client = self._client_creator('sso', config=config)
 
+        token_dict = self._token_loader(self._start_url)
         kwargs = {
             'roleName': self._role_name,
             'accountId': self._account_id,
-            'accessToken': self._token_loader(self._start_url),
+            'accessToken': token_dict['accessToken'],
         }
         try:
             response = client.get_role_credentials(**kwargs)

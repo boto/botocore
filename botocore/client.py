@@ -103,6 +103,7 @@ class ClientCreator:
         scoped_config=None,
         api_version=None,
         client_config=None,
+        auth_token=None,
     ):
         responses = self._event_emitter.emit(
             'choose-service-name', service_name=service_name
@@ -130,6 +131,7 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            auth_token,
         )
         service_client = cls(**client_args)
         self._register_retries(service_client)
@@ -454,6 +456,7 @@ class ClientCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
+        auth_token,
     ):
         args_creator = ClientArgsCreator(
             self._event_emitter,
@@ -473,6 +476,7 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            auth_token,
         )
 
     def _create_methods(self, service_model):

@@ -3161,7 +3161,7 @@ class TestSSOTokenLoader(unittest.TestCase):
     def test_can_load_token_exists(self):
         self.cache[self.cache_key] = self.cached_token
         access_token = self.loader(self.start_url)
-        self.assertEqual(self.access_token, access_token)
+        self.assertEqual(self.cached_token, access_token)
 
     def test_can_handle_does_not_exist(self):
         with self.assertRaises(SSOTokenLoadError):
