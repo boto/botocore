@@ -1032,8 +1032,8 @@ class ArgumentGenerator(object):
 def is_valid_ipv6_endpoint_url(endpoint_url):
     if UNSAFE_URL_CHARS.intersection(endpoint_url):
         return False
-    netloc = urlparse(endpoint_url).netloc
-    return IPV6_ADDRZ_RE.match(netloc) is not None
+    hostname = '[{}]'.format(urlparse(endpoint_url).hostname)
+    return IPV6_ADDRZ_RE.match(hostname) is not None
 
 
 def is_valid_endpoint_url(endpoint_url):

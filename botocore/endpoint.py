@@ -22,7 +22,9 @@ from botocore.vendored import six
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
-from botocore.utils import is_valid_endpoint_url, get_environ_proxies
+from botocore.utils import (
+    is_valid_endpoint_url, is_valid_ipv6_endpoint_url, get_environ_proxies
+)
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
 from botocore.response import StreamingBody
@@ -272,18 +274,19 @@ class EndpointCreator(object):
     def __init__(self, event_emitter):
         self._event_emitter = event_emitter
 
-    def create_endpoint(self, service_model, region_name, endpoint_url,
-                        verify=None, response_parser_factory=None,
-                        timeout=DEFAULT_TIMEOUT,
-                        max_pool_connections=MAX_POOL_CONNECTIONS,
-                        http_session_cls=URLLib3Session,
-                        proxies=None,
-                        socket_options=None,
-                        client_cert=None,
-                        proxies_config=None):
-        if not is_valid_endpoint_url(endpoint_url):
-
+    def create_endpoint(
+        self, service_model, region_name, endpoint_url,
+        verify=None, response_parser_factory=None,
+        timeout=DEFAULT_TIMEOUT, max_pool_connections=MAX_POOL_CONNECTIONS,
+        http_session_cls=URLLib3Session, proxies=None, socket_options=None,
+        client_cert=None, proxies_config=None
+    ):
+        if (
+            not is_valid_endpoint_url(endpoint_url)
+            and not is_valid_ipv6_endpoint_url(endpoint_url)
+        ):
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
+
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)
         endpoint_prefix = service_model.endpoint_prefix
