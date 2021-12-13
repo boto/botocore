@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.23.24
+=======
+
+* api-change:``secretsmanager``: Documentation updates for Secrets Manager
+
+
 1.23.23
 =======
 
