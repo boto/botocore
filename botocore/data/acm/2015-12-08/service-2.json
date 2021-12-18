@@ -794,7 +794,7 @@
       "members":{
         "message":{"shape":"String"}
       },
-      "documentation":"<p>One or more of of request parameters specified is not valid.</p>",
+      "documentation":"<p>One or more request parameters specified is not valid.</p>",
       "exception":true
     },
     "InvalidArnException":{
