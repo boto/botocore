@@ -2220,7 +2220,9 @@ class SSOProvider(CredentialProvider):
         profile_name = self._profile_name
         profile_config = profiles.get(self._profile_name, {})
 
-        if all(c not in profile_config for c in self._SSO_CONFIG_VARS):
+        # Role name & Account ID indicate the cred provider should be used
+        sso_cred_vars = ('sso_role_name', 'sso_account_id')
+        if all(c not in profile_config for c in sso_cred_vars):
             return None
 
         config = {}
