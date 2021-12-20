@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.23.25
+=======
+
+* api-change:``customer-profiles``: This release adds an optional parameter, ObjectTypeNames to the PutIntegration API to support multiple object types per integration option. Besides, this release introduces Standard Order Objects which contain data from third party systems and each order object belongs to a specific profile.
+* api-change:``sagemaker``: This release adds a new ContentType field in AutoMLChannel for SageMaker CreateAutoMLJob InputDataConfig.
+* api-change:``forecast``: Adds ForecastDimensions field to the DescribeAutoPredictorResponse
+* api-change:``securityhub``: Added new resource details objects to ASFF, including resources for Firewall, and RuleGroup, FirewallPolicy Added additional details for AutoScalingGroup, LaunchConfiguration, and S3 buckets.
+* api-change:``location``: Making PricingPlan optional as part of create resource API.
+* api-change:``redshift``: This release adds API support for managed Redshift datashares. Customers can now interact with a Redshift datashare that is managed by a different service, such as AWS Data Exchange.
+* api-change:``apigateway``: Documentation updates for Amazon API Gateway
+* api-change:``devops-guru``: Adds Tags support to DescribeOrganizationResourceCollectionHealth
+* api-change:``imagebuilder``: This release adds support for importing and exporting VM Images as part of the Image Creation workflow via EC2 VM Import/Export.
+* api-change:``datasync``: AWS DataSync now supports FSx Lustre Locations.
+* api-change:``finspace-data``: Make dataset description optional and allow s3 export for dataviews
+
+
 1.23.24
 =======
 
