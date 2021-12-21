@@ -17,7 +17,9 @@ import os
 import tempfile
 import shutil
 
+import pytest
 from dateutil.tz import tzlocal, tzutc
+from pathlib import Path
 
 from botocore import credentials
 from botocore.utils import ContainerMetadataFetcher
@@ -2662,6 +2664,29 @@ class TestJSONCache(unittest.TestCase):
         self.cache['mykey'] = {'foo': 'bar'}
         self.cache['mykey'] = {'baz': 'newvalue'}
         self.assertEqual(self.cache['mykey'], {'baz': 'newvalue'})
+
+    def test_can_delete_existing_values(self):
+        key_path = Path(os.path.join(self.tempdir, 'deleteme.json'))
+        self.cache['deleteme'] = {'foo': 'bar'}
+        assert self.cache['deleteme'] == {'foo': 'bar'}
+        assert key_path.exists()
+
+        del self.cache['deleteme']
+        # Validate key removed
+        with pytest.raises(KeyError):
+            self.cache['deleteme']
+        # Validate file removed
+        assert not key_path.exists()
+
+        self.cache['deleteme'] = {'bar': 'baz'}
+        assert self.cache['deleteme'] == {'bar': 'baz'}
+
+    def test_can_delete_missing_values(self):
+        key_path = Path(os.path.join(self.tempdir, 'deleteme.json'))
+        assert not key_path.exists()
+
+        with pytest.raises(KeyError):
+            del self.cache['deleteme']
 
     def test_can_add_multiple_keys(self):
         self.cache['mykey'] = {'foo': 'bar'}
