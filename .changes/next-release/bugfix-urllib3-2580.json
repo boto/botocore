@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "urllib3",
+  "description": "Fix PROTOCOL_TLS import bug in older versions of urllib3"
+}
