@@ -409,6 +409,23 @@ class TestCreateClientArgs(unittest.TestCase):
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
 
+    def test_connect_timeout_set_on_config_store(self):
+        self.config_store.set_config_variable('connect_timeout', 10)
+        config = self.call_get_client_args(
+            client_config=Config(defaults_mode='standard')
+        )['client_config']
+        self.assertEqual(config.connect_timeout, 10)
+
+    def test_connnect_timeout_set_on_client_config(self):
+        config = self.call_get_client_args(
+            client_config=Config(connect_timeout=10)
+        )['client_config']
+        self.assertEqual(config.connect_timeout, 10)
+
+    def test_connnect_timeout_set_to_client_config_default(self):
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.connect_timeout, 60)
+
     def test_client_config_beats_config_store(self):
         self.config_store.set_config_variable('retry_mode', 'adaptive')
         config = self.call_get_client_args(

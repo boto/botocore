@@ -200,7 +200,12 @@ class Config(object):
         ('endpoint_discovery_enabled', None),
         ('use_dualstack_endpoint', None),
         ('use_fips_endpoint', None),
+        ('defaults_mode', None)
     ])
+
+    NON_LEGACY_OPTION_DEFAULTS = {
+        'connect_timeout': None,
+    }
 
     def __init__(self, *args, **kwargs):
         self._user_provided_options = self._record_user_provided_options(
@@ -208,6 +213,10 @@ class Config(object):
 
         # Merge the user_provided options onto the default options
         config_vars = copy.copy(self.OPTION_DEFAULTS)
+        defaults_mode = self._user_provided_options.get(
+            'defaults_mode', 'legacy')
+        if defaults_mode != 'legacy':
+            config_vars.update(self.NON_LEGACY_OPTION_DEFAULTS)
         config_vars.update(self._user_provided_options)
 
         # Set the attributes based on the config_vars
