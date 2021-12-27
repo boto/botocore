@@ -702,3 +702,10 @@ class InvalidProxiesConfigError(BotoCoreError):
     fmt = (
         'Invalid configuration value(s) provided for proxies_config.'
     )
+
+
+class InvalidDefaultsMode(BotoCoreError):
+    fmt = (
+        'Client configured with invalid defaults mode: {mode}. '
+        'Valid defaults modes include: {valid_modes}.'
+    )
