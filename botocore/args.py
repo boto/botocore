@@ -177,6 +177,7 @@ class ClientArgsCreator(object):
                 inject_host_prefix=client_config.inject_host_prefix,
             )
         self._compute_retry_config(config_kwargs)
+        self._compute_connect_timeout(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = service_name in ['s3', 's3-control']
@@ -379,6 +380,18 @@ class ClientArgsCreator(object):
         if retry_mode is None:
             retry_mode = 'legacy'
         retries['mode'] = retry_mode
+
+    def _compute_connect_timeout(self, config_kwargs):
+        # Checking if connect_timeout is set on the client config.
+        # If it is not, we check the config_store in case a
+        # non legacy default mode has been configured.
+        connect_timeout = config_kwargs.get('connect_timeout')
+        if connect_timeout is not None:
+            return
+        connect_timeout = self._config_store.get_config_variable(
+            'connect_timeout')
+        if connect_timeout:
+            config_kwargs['connect_timeout'] = connect_timeout
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):

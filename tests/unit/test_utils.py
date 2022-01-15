@@ -73,6 +73,8 @@ from botocore.utils import S3ArnParamHandler
 from botocore.utils import S3EndpointSetter
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
+from botocore.utils import InstanceMetadataRegionFetcher
+from botocore.utils import IMDSRegionProvider
 from botocore.utils import SSOTokenLoader
 from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
 from botocore.utils import has_header
@@ -80,6 +82,7 @@ from botocore.exceptions import SSOTokenLoadError
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
+from botocore.session import Session
 
 
 class TestEnsureBoolean(unittest.TestCase):
@@ -2694,6 +2697,106 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
+
+
+class TestIMDSRegionProvider(unittest.TestCase):
+    def setUp(self):
+        self.environ = {}
+        self.environ_patch = mock.patch('os.environ', self.environ)
+        self.environ_patch.start()
+
+    def tearDown(self):
+        self.environ_patch.stop()
+
+    def assert_does_provide_expected_value(self, fetcher_region=None,
+                                           expected_result=None,):
+        fake_session = mock.Mock(spec=Session)
+        fake_fetcher = mock.Mock(spec=InstanceMetadataRegionFetcher)
+        fake_fetcher.retrieve_region.return_value = fetcher_region
+        provider = IMDSRegionProvider(fake_session, fetcher=fake_fetcher)
+        value = provider.provide()
+        self.assertEqual(value, expected_result)
+
+    def test_does_provide_region_when_present(self):
+        self.assert_does_provide_expected_value(
+            fetcher_region='us-mars-2',
+            expected_result='us-mars-2',
+        )
+
+    def test_does_provide_none(self):
+        self.assert_does_provide_expected_value(
+            fetcher_region=None,
+            expected_result=None,
+        )
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_use_truncated_user_agent(self, send):
+        session = Session()
+        session = Session()
+        session.user_agent_version = '3.0'
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('Botocore/3.0', args[0].headers['User-Agent'])
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_can_use_ipv6(self, send):
+        session = Session()
+        session.set_config_variable('imds_use_ipv6', True)
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('[fd00:ec2::254]', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_use_ipv4_by_default(self, send):
+        session = Session()
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('169.254.169.254', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_can_set_imds_endpoint_mode_to_ipv4(self, send):
+        session = Session()
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint_mode', 'ipv4')
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('169.254.169.254', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_can_set_imds_endpoint_mode_to_ipv6(self, send):
+        session = Session()
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint_mode', 'ipv6')
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('[fd00:ec2::254]', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_can_set_imds_service_endpoint(self, send):
+        session = Session()
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint', 'http://myendpoint/')
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('http://myendpoint/', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_imds_service_endpoint_overrides_ipv6_endpoint(self, send):
+        session = Session()
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint_mode', 'ipv6')
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint', 'http://myendpoint/')
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('http://myendpoint/', args[0].url)
 
 
 class TestSSOTokenLoader(unittest.TestCase):
