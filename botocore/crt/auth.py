@@ -243,7 +243,9 @@ class CrtSigV4AsymAuth(BaseSigner):
             secret_access_key=self.credentials.secret_key,
             session_token=self.credentials.token)
 
-        if self._should_sha256_sign_payload(request):
+        if self._is_streaming_checksum_payload(request):
+            explicit_payload = STREAMING_UNSIGNED_PAYLOAD_TRAILER
+        elif self._should_sha256_sign_payload(request):
             if existing_sha256:
                 explicit_payload = existing_sha256
             else:
@@ -325,6 +327,11 @@ class CrtSigV4AsymAuth(BaseSigner):
 
     def _get_existing_sha256(self, request):
         return request.headers.get('X-Amz-Content-SHA256')
+
+    def _is_streaming_checksum_payload(self, request):
+        checksum_context = request.context.get('checksum', {})
+        algorithm = checksum_context.get('request_algorithm')
+        return isinstance(algorithm, dict) and algorithm.get('in') == 'trailer'
 
     def _should_sha256_sign_payload(self, request):
         # Payloads will always be signed over insecure connections.
