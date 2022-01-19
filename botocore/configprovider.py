@@ -149,10 +149,10 @@ DEFAULT_S3_CONFIG_VARS = {
 # used to configure how botocore interacts with proxy setups while
 # sending requests.
 DEFAULT_PROXIES_CONFIG_VARS = {
-    'proxy_ca_bundle': ('proxy_ca_bundle', None, None, None),
-    'proxy_client_cert': ('proxy_client_cert', None, None, None),
+    'proxy_ca_bundle': ('proxy_ca_bundle', 'AWS_S3_PROXY_CA_BUNDLE', None, None),
+    'proxy_client_cert': ('proxy_client_cert', 'AWS_S3_PROXY_CLIENT_CERT', None, None),
     'proxy_use_forwarding_for_https': (
-        'proxy_use_forwarding_for_https', None, None, utils.normalize_boolean),
+        'proxy_use_forwarding_for_https', 'AWS_S3_PROXY_USE_FORWARDING_FOR_HTTPS', None, utils.normalize_boolean),
 }
 
 
