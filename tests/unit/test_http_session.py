@@ -1,15 +1,30 @@
 import socket
 
 import pytest
-from urllib3.exceptions import NewConnectionError, ProtocolError
+from urllib3.exceptions import (
+    NewConnectionError,
+    ProtocolError,
+    ProxyError,
+)
 
 from tests import mock, unittest
 
-from botocore.awsrequest import AWSRequest
-from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
-from botocore.httpsession import get_cert_path
-from botocore.httpsession import URLLib3Session, ProxyConfiguration
-from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
+from botocore.awsrequest import (
+    AWSRequest,
+    AWSHTTPConnectionPool,
+    AWSHTTPSConnectionPool,
+)
+from botocore.httpsession import (
+    get_cert_path,
+    mask_proxy_url,
+    URLLib3Session,
+    ProxyConfiguration,
+)
+from botocore.exceptions import (
+    ConnectionClosedError,
+    EndpointConnectionError,
+    ProxyConnectionError,
+)
 
 
 class TestProxyConfiguration(unittest.TestCase):
@@ -61,6 +76,56 @@ class TestHttpSessionUtils(unittest.TestCase):
             where.return_value = path
             cert_path = get_cert_path(True)
             self.assertEqual(path, cert_path)
+
+
+@pytest.mark.parametrize(
+    'proxy_url, expected_mask_url',
+    (
+
+        (
+            'http://myproxy.amazonaws.com',
+            'http://myproxy.amazonaws.com'
+        ),
+        (
+            'http://user@myproxy.amazonaws.com',
+            'http://***@myproxy.amazonaws.com'
+        ),
+        (
+            'http://user:pass@myproxy.amazonaws.com',
+            'http://***:***@myproxy.amazonaws.com'
+        ),
+        (
+            'https://user:pass@myproxy.amazonaws.com',
+            'https://***:***@myproxy.amazonaws.com'
+        ),
+        (
+            'http://user:pass@localhost',
+            'http://***:***@localhost'
+        ),
+        (
+            'http://user:pass@localhost:80',
+            'http://***:***@localhost:80'
+        ),
+        (
+            'http://user:pass@userpass.com',
+            'http://***:***@userpass.com'
+        ),
+        (
+            'http://user:pass@192.168.1.1',
+            'http://***:***@192.168.1.1'
+        ),
+        (
+            'http://user:pass@[::1]',
+            'http://***:***@[::1]'
+        ),
+        (
+            'http://user:pass@[::1]:80',
+            'http://***:***@[::1]:80'
+        ),
+    )
+)
+def test_mask_proxy_url(proxy_url, expected_mask_url):
+    assert mask_proxy_url(proxy_url) == expected_mask_url
 
 
 class TestURLLib3Session(unittest.TestCase):
@@ -398,6 +463,14 @@ class TestURLLib3Session(unittest.TestCase):
         error = ProtocolError(None)
         with pytest.raises(ConnectionClosedError):
             self.make_request_with_error(error)
+
+    def test_catches_proxy_error(self):
+        self.connection.urlopen.side_effect = ProxyError('test', None)
+        session = URLLib3Session(proxies={'http': 'http://user:pass@proxy.com'})
+        with pytest.raises(ProxyConnectionError) as e:
+            session.send(self.request.prepare())
+        assert 'user:pass' not in str(e.value)
+        assert 'http://***:***@proxy.com' in str(e.value)
 
     def test_aws_connection_classes_are_used(self):
         session = URLLib3Session() # noqa
