@@ -110,19 +110,20 @@ def ensure_boolean(val):
 
 def mask_proxy_url(proxy_url):
     """
-    Mask proxy url credentials
+    Mask proxy url credentials.
 
     :type proxy_url: str
     :param proxy_url: The proxy url, i.e. https://username:password@proxy.com
 
-    :return: Masked proxy url
+    :return: Masked proxy url, i.e. https://***:***@proxy.com
     """
-    mask = '*' * 6
+    mask = '*' * 3
     parsed_url = urlparse(proxy_url)
-    if parsed_url.username and parsed_url.password:
-        return proxy_url.replace(parsed_url.username, mask, 1).replace(parsed_url.password, mask, 1)
-    else:
-        return proxy_url
+    if parsed_url.username:
+        proxy_url = proxy_url.replace(parsed_url.username, mask, 1)
+    if parsed_url.password:
+        proxy_url = proxy_url.replace(parsed_url.password, mask, 1)
+    return proxy_url
 
 
 class ProxyConfiguration(object):
