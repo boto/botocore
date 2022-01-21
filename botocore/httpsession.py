@@ -148,6 +148,24 @@ def ensure_boolean(val):
         return val.lower() == 'true'
 
 
+def mask_proxy_url(proxy_url):
+    """
+    Mask proxy url credentials.
+
+    :type proxy_url: str
+    :param proxy_url: The proxy url, i.e. https://username:password@proxy.com
+
+    :return: Masked proxy url, i.e. https://***:***@proxy.com
+    """
+    mask = '*' * 3
+    parsed_url = urlparse(proxy_url)
+    if parsed_url.username:
+        proxy_url = proxy_url.replace(parsed_url.username, mask, 1)
+    if parsed_url.password:
+        proxy_url = proxy_url.replace(parsed_url.password, mask, 1)
+    return proxy_url
+
+
 class ProxyConfiguration(object):
     """Represents a proxy configuration dictionary and additional settings.
 
@@ -413,7 +431,7 @@ class URLLib3Session(object):
         except (NewConnectionError, socket.gaierror) as e:
             raise EndpointConnectionError(endpoint_url=request.url, error=e)
         except ProxyError as e:
-            raise ProxyConnectionError(proxy_url=proxy_url, error=e)
+            raise ProxyConnectionError(proxy_url=mask_proxy_url(proxy_url), error=e)
         except URLLib3ConnectTimeoutError as e:
             raise ConnectTimeoutError(endpoint_url=request.url, error=e)
         except URLLib3ReadTimeoutError as e:
