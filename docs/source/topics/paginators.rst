@@ -112,5 +112,5 @@ expression returns a single value that is not an array, that value is yielded
 directly. If the result of applying the JMESPath expression to a page of
 results is a list, then each value of the list is yielded individually
 (essentially implementing a flat map). For example, in the above expression,
-each key that has a ``Size`` greater than `100` is yielded by the
+each key that has a ``Size`` greater than ``100`` is yielded by the
 ``filtered_iterator``.
