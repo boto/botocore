@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.23.43
+=======
+
+* api-change:``fsx``: This release adds support for growing SSD storage capacity and growing/shrinking SSD IOPS for FSx for ONTAP file systems.
+* api-change:``efs``: Update efs client to latest version
+* api-change:``connect``: This release adds support for custom vocabularies to be used with Contact Lens. Custom vocabularies improve transcription accuracy for one or more specific words.
+* api-change:``guardduty``: Amazon GuardDuty expands threat detection coverage to protect Amazon Elastic Kubernetes Service (EKS) workloads.
+
+
 1.23.42
 =======
 
