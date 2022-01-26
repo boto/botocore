@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.23.44
+=======
+
+* api-change:``frauddetector``: Added new APIs for viewing past predictions and obtaining prediction metadata including prediction explanations: ListEventPredictions and GetEventPredictionMetadata
+* api-change:``ebs``: Documentation updates for Amazon EBS Direct APIs.
+* api-change:``codeguru-reviewer``: Added failure state and adjusted timeout in waiter
+* api-change:``securityhub``: Adding top level Sample boolean field
+* api-change:``sagemaker``: API changes relating to Fail steps in model building pipeline and add PipelineExecutionFailureReason in PipelineExecutionSummary.
+
+
 1.23.43
 =======
 
