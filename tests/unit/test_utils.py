@@ -2787,6 +2787,16 @@ class TestIMDSRegionProvider(unittest.TestCase):
         self.assertIn('http://myendpoint/', args[0].url)
 
     @mock.patch('botocore.httpsession.URLLib3Session.send')
+    def test_can_set_imds_service_endpoint_custom(self, send):
+        session = Session()
+        session.set_config_variable(
+            'ec2_metadata_service_endpoint', 'http://myendpoint')
+        provider = IMDSRegionProvider(session)
+        provider.provide()
+        args, _ = send.call_args
+        self.assertIn('http://myendpoint/latest/meta-data', args[0].url)
+
+    @mock.patch('botocore.httpsession.URLLib3Session.send')
     def test_imds_service_endpoint_overrides_ipv6_endpoint(self, send):
         session = Session()
         session.set_config_variable(
