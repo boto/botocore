@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.23.46
+=======
+
+* api-change:``appconfigdata``: Documentation updates for AWS AppConfig Data.
+* api-change:``athena``: This release adds a field, AthenaError, to the GetQueryExecution response object when a query fails.
+* api-change:``appconfig``: Documentation updates for AWS AppConfig
+* api-change:``cognito-idp``: Doc updates for Cognito user pools API Reference.
+* api-change:``secretsmanager``: Feature are ready to release on Jan 28th
+* api-change:``sagemaker``: This release added a new NNA accelerator compilation support for Sagemaker Neo.
+
+
 1.23.45
 =======
 
