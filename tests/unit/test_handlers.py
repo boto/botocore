@@ -17,6 +17,7 @@ import base64
 import copy
 import os
 import json
+import pytest
 
 import botocore
 import botocore.session
@@ -1368,3 +1369,24 @@ class TestPrependToHost(unittest.TestCase):
     def test_does_validate_host_with_illegal_char(self):
         with self.assertRaises(ParamValidationError):
             self._prepend_to_host('https://example.com/path', 'host#name')
+
+
+@pytest.mark.parametrize(
+    'environ, header_before, header_after',
+    [
+        ({'AWS_LAMBDA_FUNCTION_NAME': 'foo'}, {}, {}),
+        ({'_X_AMZ_TRACE_ID': 'bar'}, {}, {}),
+        ({'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
+         {}, {'X-Amzn-Trace-Id': 'bar'}),
+        ({'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
+         {'X-Amzn-Trace-Id': 'fizz'}, {'X-Amzn-Trace-Id': 'fizz'}),
+        ({'AWS_LAMBDA_FUNCTION_NAME': 'foo',
+          '_X_AMZ_TRACE_ID': 'first\nsecond'},
+         {}, {'X-Amzn-Trace-Id': 'first%0Asecond'})
+    ]
+)
+def test_add_recursion_detection_header(environ, header_before, header_after):
+    request_dict = {'headers': header_before}
+    with mock.patch('os.environ', environ):
+        handlers.add_recursion_detection_header(request_dict)
+        assert request_dict['headers'] == header_after
