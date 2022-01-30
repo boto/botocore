@@ -10656,7 +10656,7 @@ CHANGELOG
 * feature:``acm``: Update acm client to latest version
 * feature:``ec2``: Update ec2 client to latest version
 * feature:``sts``: Update sts client to latest version
-* bugfix:Serializer: In the rest xml parser, we were converting the input we recieve into a `str`, which was causing failures on python 2 when multibyte unicode strings were passed in. The fix is to simply use `six.text_type`, which is `unicode` on 2 and `str` on 3. The string will be encoded into the default encoding later on in the serializer. Fixes `#868 <https://github.com/boto/botocore/issues/868>`__
+* bugfix:Serializer: In the rest xml parser, we were converting the input we receive into a `str`, which was causing failures on python 2 when multibyte unicode strings were passed in. The fix is to simply use `six.text_type`, which is `unicode` on 2 and `str` on 3. The string will be encoded into the default encoding later on in the serializer. Fixes `#868 <https://github.com/boto/botocore/issues/868>`__
 * feature:``cognito-idp``: Update cognito-idp client to latest version
 
 

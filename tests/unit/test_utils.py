@@ -1528,7 +1528,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation)
         self.assertIsNone(redirect_response)
 
-    def test_does_not_redirect_unless_permanentredirect_recieved(self):
+    def test_does_not_redirect_unless_permanentredirect_received(self):
         request_dict = {}
         response = (None, {})
         redirect_response = self.redirector.redirect_from_error(
