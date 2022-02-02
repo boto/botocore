@@ -454,16 +454,18 @@ class UnsupportedSignatureVersionError(BotoCoreError):
 class ClientError(Exception):
     MSG_TEMPLATE = (
         'An error occurred ({error_code}) when calling the {operation_name} '
-        'operation{retry_info}: {error_message}')
+        'operation{retry_info}: {error_message}{request_id_info}')
 
     def __init__(self, error_response, operation_name):
         retry_info = self._get_retry_info(error_response)
+        request_id_info = self._get_request_id_info(error_response)
         error = error_response.get('Error', {})
         msg = self.MSG_TEMPLATE.format(
             error_code=error.get('Code', 'Unknown'),
             error_message=error.get('Message', 'Unknown'),
             operation_name=operation_name,
             retry_info=retry_info,
+            request_id_info=request_id_info,
         )
         super(ClientError, self).__init__(msg)
         self.response = error_response
@@ -478,6 +480,14 @@ class ClientError(Exception):
                     retry_info = (' (reached max retries: %s)' %
                                   metadata['RetryAttempts'])
         return retry_info
+
+    def _get_request_id_info(self, response):
+        request_id_info = ''
+        if 'ResponseMetadata' in response:
+            metadata = response['ResponseMetadata']
+            if 'RequestId' in metadata:
+                request_id_info = ' (RequestId: %s)' % metadata['RequestId']
+        return request_id_info
 
     def __reduce__(self):
         # Subclasses of ClientError's are dynamically generated and
