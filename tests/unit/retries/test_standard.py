@@ -217,6 +217,7 @@ def _verify_retryable(checker, operation_model,
         parsed_response=parsed_response,
         http_response=http_response,
         caught_exception=caught_exception,
+        request_context={'retries': {}}
     )
     assert checker.is_retryable(context) == is_retryable
 
@@ -231,6 +232,7 @@ def arbitrary_retry_context():
         http_response=AWSResponse(status_code=500,
                                   raw=None, headers={}, url='https://foo'),
         caught_exception=None,
+        request_context={'retries': {}}
     )
 
 
