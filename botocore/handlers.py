@@ -16,6 +16,7 @@
 This module contains builtin handlers for events emitted by botocore.
 """
 
+import os
 import base64
 import logging
 import copy
@@ -26,7 +27,7 @@ import uuid
 from botocore.compat import (
     unquote, json, six, unquote_str, ensure_bytes, get_md5,
     OrderedDict, urlsplit, urlunsplit, XMLParseError,
-    ETree,
+    ETree, quote,
 )
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
@@ -82,6 +83,15 @@ SERVICE_NAME_ALIASES = {
 
 def handle_service_name_alias(service_name, **kwargs):
     return SERVICE_NAME_ALIASES.get(service_name, service_name)
+
+
+def add_recursion_detection_header(params, **kwargs):
+    has_lambda_name = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ
+    trace_id = os.environ.get('_X_AMZ_TRACE_ID')
+    if has_lambda_name and trace_id:
+        headers = params['headers']
+        if 'X-Amzn-Trace-Id' not in headers:
+            headers['X-Amzn-Trace-Id'] = quote(trace_id)
 
 
 def escape_xml_payload(params, **kwargs):
@@ -1001,6 +1011,7 @@ BUILTIN_HANDLERS = [
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
     ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
 
+    ('before-call', add_recursion_detection_header),
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
