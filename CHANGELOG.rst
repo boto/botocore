@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.23.50
+=======
+
+* api-change:``auditmanager``: This release updates 3 API parameters. UpdateAssessmentFrameworkControlSet now requires the controls attribute, and CreateAssessmentFrameworkControl requires the id attribute. Additionally, UpdateAssessmentFramework now has a minimum length constraint for the controlSets attribute.
+* api-change:``synthetics``: Adding names parameters to the Describe APIs.
+* api-change:``ssm-incidents``: Update RelatedItem enum to support SSM Automation
+* api-change:``events``: Update events client to latest version
+* enhancement:Lambda Request Header: Adding request header for Lambda recursion detection.
+
+
 1.23.49
 =======
 
