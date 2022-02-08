@@ -266,11 +266,11 @@ class MaxAttemptsChecker(BaseRetryableChecker):
 
     def is_retryable(self, context):
         under_max_attempts = context.attempt_number < self._max_attempts
-        retries_context = context.request_context['retries']
-        retries_max_attempts = retries_context.setdefault(
-            'max', self._max_attempts)
-        if self._max_attempts > retries_max_attempts:
-            retries_context['max'] = self._max_attempts
+        retries_context = context.request_context.get('retries')
+        if retries_context:
+            retries_context['max'] = max(
+                retries_context.get('max', 0), self._max_attempts
+            )
         if not under_max_attempts:
             logger.debug("Max attempts of %s reached.", self._max_attempts)
             context.add_retry_metadata(MaxAttemptsReached=True)

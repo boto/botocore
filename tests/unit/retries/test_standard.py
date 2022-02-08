@@ -217,7 +217,6 @@ def _verify_retryable(checker, operation_model,
         parsed_response=parsed_response,
         http_response=http_response,
         caught_exception=caught_exception,
-        request_context={'retries': {}}
     )
     assert checker.is_retryable(context) == is_retryable
 
@@ -232,7 +231,6 @@ def arbitrary_retry_context():
         http_response=AWSResponse(status_code=500,
                                   raw=None, headers={}, url='https://foo'),
         caught_exception=None,
-        request_context={'retries': {}}
     )
 
 
@@ -255,6 +253,14 @@ def test_max_attempts_adds_metadata_key_when_reached():
     context.attempt_number = 3
     assert checker.is_retryable(context) is False
     assert context.get_retry_metadata() == {'MaxAttemptsReached': True}
+
+
+def test_retries_context_not_on_request_context():
+    checker = standard.MaxAttemptsChecker(max_attempts=3)
+    context = arbitrary_retry_context()
+    context.attempt_number = 3
+    assert checker.is_retryable(context) is False
+    assert context.request_context == {}
 
 
 def test_can_create_default_retry_handler():

@@ -32,7 +32,6 @@ HTTP_200_RESPONSE.status_code = 200
 
 REQUEST_DICT = {
     'context': {
-        'retries': {}
     }
 }
 
