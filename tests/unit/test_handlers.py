@@ -1024,7 +1024,7 @@ class TestRetryHandlerOrder(BaseSessionTest):
         operation = service_model.operation_model('CopyObject')
         responses = client.meta.events.emit(
             'needs-retry.s3.CopyObject',
-            request_dict={'context': {'retries': {}}},
+            request_dict={'context': {}},
             response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
             operation=operation, attempts=1, caught_exception=None)
         # This is implementation specific, but we're trying to verify that
