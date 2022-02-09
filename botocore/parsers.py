@@ -975,6 +975,11 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
             error['Error']['Code'] = body.get(
                 'code', body.get('Code', ''))
 
+    def _handle_integer(self, shape, value):
+        return int(value)
+
+    _handle_long = _handle_integer
+
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
 
