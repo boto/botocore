@@ -1257,5 +1257,56 @@
         }
       }
     ]
+  },
+  {
+    "description": "Number in header",
+    "metadata": {
+      "protocol": "rest-json"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+          "IntegerMember": {
+            "shape": "IntegerShape",
+            "location": "header",
+            "locationName": "x-amz-integer-member"
+          },
+          "LongMember": {
+            "shape": "LongShape",
+            "location": "header",
+            "locationName": "x-amz-long-member"
+          }
+        }
+      },
+      "IntegerShape": {
+        "type": "integer"
+      },
+      "LongShape": {
+        "type": "long"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "IntegerMember": 123,
+          "LongMember": 200
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {
+              "x-amz-integer-member": "123",
+              "x-amz-long-member": "200"
+          },
+          "body": ""
+        }
+      }
+    ]
   }
 ]
