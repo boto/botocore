@@ -186,7 +186,7 @@ class RetryHandler(object):
             'caught_exception': caught_exception
         }
         if isinstance(self._checker, MaxAttemptsDecorator):
-            retries_context = kwargs['request_dict']['context']['retries']
+            retries_context = kwargs['request_dict']['context'].get('retries')
             checker_kwargs.update({'retries_context': retries_context})
 
         if self._checker(**checker_kwargs):
@@ -257,10 +257,10 @@ class MaxAttemptsDecorator(BaseChecker):
 
     def __call__(self, attempt_number, response, caught_exception,
                  retries_context):
-        retries_max_attempts = retries_context.setdefault(
-            'max', self._max_attempts)
-        if self._max_attempts > retries_max_attempts:
-            retries_context['max'] = self._max_attempts
+        if retries_context:
+            retries_context['max'] = max(
+                retries_context.get('max', 0), self._max_attempts
+            )
 
         should_retry = self._should_retry(attempt_number, response,
                                           caught_exception)
