@@ -124,7 +124,7 @@ class StreamingBody(IOBase):
 
     next = __next__
 
-    def iter_lines(self, chunk_size=1024, keepends=False):
+    def iter_lines(self, chunk_size=_DEFAULT_CHUNK_SIZE, keepends=False):
         """Return an iterator to yield lines from the raw stream.
 
         This is achieved by reading chunk of bytes (of size chunk_size) at a
