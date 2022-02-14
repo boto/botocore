@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.24.0
+======
+
+* api-change:``appflow``: Launching Amazon AppFlow SAP as a destination connector SDK.
+* feature:Parser: Adding support for parsing int/long types in rest-json response headers.
+* api-change:``rds``: Adds support for determining which Aurora PostgreSQL versions support Babelfish.
+* api-change:``athena``: This release adds a subfield, ErrorType, to the AthenaError response object in the GetQueryExecution API when a query fails.
+
+
 1.23.54
 =======
 
