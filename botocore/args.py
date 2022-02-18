@@ -23,6 +23,7 @@ import socket
 import botocore.exceptions
 import botocore.serialize
 import botocore.utils
+import botocore.parsers
 from botocore.signers import RequestSigner
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
