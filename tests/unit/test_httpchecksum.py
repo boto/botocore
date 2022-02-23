@@ -96,18 +96,19 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         self.assertNotIn("checksum", request["context"])
 
     def test_request_checksum_algorithm_model_opt_in(self):
-        request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"}
         )
 
         # Param is not present, no checksum will be set
         params = {}
+        request = self._build_request(b"")
         resolve_request_checksum_algorithm(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
         # Param is present, crc32 checksum will be set
         params = {"Algorithm": "crc32"}
+        request = self._build_request(b"")
         resolve_request_checksum_algorithm(request, operation_model, params)
         expected_algorithm = {
             "algorithm": "crc32",
@@ -116,6 +117,13 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
+
+        # Param present but header already set, checksum should be skipped
+        params = {"Algorithm": "crc32"}
+        request = self._build_request(b"")
+        request["headers"]["x-amz-checksum-crc32"] = "foo"
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        self.assertNotIn("checksum", request["context"])
 
     def test_request_checksum_algorithm_model_opt_in_streaming(self):
         request = self._build_request(b"")

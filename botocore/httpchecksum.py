@@ -265,6 +265,10 @@ def resolve_request_checksum_algorithm(
             "name": "x-amz-checksum-%s" % algorithm_name,
         }
 
+        if algorithm["name"] in request["headers"]:
+            # If the header is already set by the customer, skip calculation
+            return
+
         checksum_context = request["context"].get("checksum", {})
         checksum_context["request_algorithm"] = algorithm
         request["context"]["checksum"] = checksum_context
