@@ -709,3 +709,11 @@ class InvalidDefaultsMode(BotoCoreError):
         'Client configured with invalid defaults mode: {mode}. '
         'Valid defaults modes include: {valid_modes}.'
     )
+
+
+class AwsChunkedWrapperError(BotoCoreError):
+    fmt = '{error_msg}'
+
+
+class FlexibleChecksumError(BotoCoreError):
+    fmt = '{error_msg}'
