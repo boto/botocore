@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.24.12
+=======
+
+* api-change:``greengrassv2``: Doc only update that clarifies Create Deployment section.
+* api-change:``fsx``: This release adds support for data repository associations to use root ("/") as the file system path
+* api-change:``kendra``: Amazon Kendra now suggests spell corrections for a query. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/query-spell-check.html
+* api-change:``appflow``: Launching Amazon AppFlow Marketo as a destination connector SDK.
+* api-change:``timestream-query``: Documentation only update for SDK and CLI
+
+
 1.24.11
 =======
 
