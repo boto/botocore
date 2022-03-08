@@ -134,6 +134,7 @@ class Shape(object):
 
             * min
             * max
+            * pattern
             * enum
             * sensitive
             * required
