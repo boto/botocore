@@ -54,7 +54,7 @@ class Shape(object):
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute',
                         'eventstream', 'event', 'eventheader', 'eventpayload',
                         'jsonvalue', 'timestampFormat', 'hostLabel']
-    METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
+    METADATA_ATTRS = ['required', 'min', 'max', 'pattern', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception',
                       'endpointdiscoveryid', 'retryable', 'document', 'union']
     MAP_TYPE = OrderedDict
