@@ -843,6 +843,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type": "string",
                 "min": 1,
                 "max": 128,
+                "pattern": ".*",
                 "sensitive": True
             }
         }
@@ -853,6 +854,7 @@ class TestShapeResolver(unittest.TestCase):
         member = shape.members['OldPassword']
         self.assertEqual(member.metadata['min'], 1)
         self.assertEqual(member.metadata['max'], 128)
+        self.assertEqual(member.metadata['pattern'], '.*')
         self.assertEqual(member.metadata['sensitive'], True)
 
     def test_error_shape_metadata(self):
