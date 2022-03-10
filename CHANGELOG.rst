@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.24.17
+=======
+
+* api-change:``transcribe``: Documentation fix for API `StartMedicalTranscriptionJobRequest`, now showing min sample rate as 16khz
+* api-change:``transfer``: Adding more descriptive error types for managed workflows
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+
+
 1.24.16
 =======
 
