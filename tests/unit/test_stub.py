@@ -190,6 +190,21 @@ class TestStubber(unittest.TestCase):
         self.assertIn('RequestId', actual_response_meta)
         self.assertEqual(actual_response_meta['RequestId'], "79104EXAMPLEB723")
 
+    def test_get_client_error_with_modeled_fields(self):
+        error_code = 'foo'
+        error_message = 'bar'
+        modeled_fields = {
+            'Extra': 'foobar'
+        }
+        self.stubber.add_client_error(
+            'foo', error_code, error_message,
+            http_status_code=301,
+            modeled_fields=modeled_fields)
+        with self.stubber:
+            response = self.emit_get_response_event()
+        self.assertIn('Extra', response[1])
+        self.assertEqual(response[1]['Extra'], 'foobar')
+
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()
         with self.assertRaises(UnStubbedResponseError):
