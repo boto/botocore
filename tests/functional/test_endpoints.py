@@ -92,6 +92,7 @@ ENDPOINT_PREFIX_OVERRIDE = {
     'ioteventsdata': 'data.iotevents',
     'iotsecuredtunneling': 'api.tunneling.iot',
     'iotwireless': 'api.iotwireless',
+    'data.iot': 'data-ats.iot',
 }
 
 NOT_SUPPORTED_IN_SDK = [
