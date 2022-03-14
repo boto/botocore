@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.24.19
+=======
+
+* api-change:``kendra``: Amazon Kendra now provides a data source connector for Slack. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-slack.html
+* api-change:``timestream-query``: Amazon Timestream Scheduled Queries now support Timestamp datatype in a multi-measure record.
+* enhancement:Stubber: Added support for modeled exception fields when adding errors to a client stub. Implements boto/boto3`#3178 <https://github.com/boto/botocore/issues/3178>`__.
+* api-change:``elasticache``: Doc only update for ElastiCache
+* api-change:``config``: Add resourceType enums for AWS::ECR::PublicRepository and AWS::EC2::LaunchTemplate
+
+
 1.24.18
 =======
 
