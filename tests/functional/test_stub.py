@@ -80,6 +80,59 @@ class TestStubber(unittest.TestCase):
         with self.assertRaises(ClientError):
             self.client.list_objects(Bucket='foo')
 
+    def test_modeled_client_error_response(self):
+        error_code = "InvalidObjectState"
+        error_message = "Object is in invalid state"
+        modeled_fields = {
+            'StorageClass': 'foo',
+            'AccessTier': 'bar',
+        }
+        self.stubber.add_client_error(
+            'get_object',
+            error_code,
+            error_message,
+            modeled_fields=modeled_fields,
+        )
+        self.stubber.activate()
+
+        actual_exception = None
+        try:
+            self.client.get_object(Bucket='foo', Key='bar')
+        except self.client.exceptions.InvalidObjectState as e:
+            actual_exception = e
+        self.assertIsNotNone(actual_exception)
+        response = actual_exception.response
+        self.assertEqual(response['StorageClass'], 'foo')
+        self.assertEqual(response['AccessTier'], 'bar')
+
+    def test_modeled_client_error_response_validation_error(self):
+        error_code = "InvalidObjectState"
+        error_message = "Object is in invalid state"
+        modeled_fields = {
+            'BadField': 'fail please',
+        }
+        with self.assertRaises(ParamValidationError):
+            self.stubber.add_client_error(
+                'get_object',
+                error_code,
+                error_message,
+                modeled_fields=modeled_fields,
+            )
+
+    def test_modeled_client_unknown_code_validation_error(self):
+        error_code = "NotARealError"
+        error_message = "Message"
+        modeled_fields = {
+            'BadField': 'fail please',
+        }
+        with self.assertRaises(ParamValidationError):
+            self.stubber.add_client_error(
+                'get_object',
+                error_code,
+                error_message,
+                modeled_fields=modeled_fields,
+            )
+
     def test_can_add_expected_params_to_client_error(self):
         self.stubber.add_client_error(
             'list_objects', 'Error', 'error',
