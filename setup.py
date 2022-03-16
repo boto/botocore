@@ -2,6 +2,7 @@
 import codecs
 import os.path
 import re
+import sys
 
 from setuptools import setup, find_packages
 
@@ -23,11 +24,14 @@ def find_version(*file_paths):
 
 
 requires = [
-    'jmespath>=0.7.1,<2.0.0',
     'python-dateutil>=2.1,<3.0.0',
     'urllib3>=1.25.4,<1.27',
 ]
-
+if sys.version_info[:2] == (3, 6):
+    # jmespath dropped support for python 3.6 in release 1.0.0
+    requires.append('jmespath>=0.7.1,<1.0.0',)
+else:
+    requires.append('jmespath>=0.7.1,<2.0.0',)
 
 setup(
     name='botocore',
