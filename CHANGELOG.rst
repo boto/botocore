@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.24.22
+=======
+
+* enhancement:jmespath: Add env markers to get working version of jmespath for python 3.6
+* api-change:``glue``: Added 9 new APIs for AWS Glue Interactive Sessions: ListSessions, StopSession, CreateSession, GetSession, DeleteSession, RunStatement, GetStatement, ListStatements, CancelStatement
+
+
 1.24.21
 =======
 
