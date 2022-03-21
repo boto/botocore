@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.24.23
+=======
+
+* api-change:``ram``: Document improvements to the RAM API operations and parameter descriptions.
+* api-change:``ecr``: This release includes a fix in the DescribeImageScanFindings paginated output.
+* api-change:``quicksight``: AWS QuickSight Service Features - Expand public API support for group management.
+* api-change:``chime-sdk-meetings``: Add support for media replication to link multiple WebRTC media sessions together to reach larger and global audiences. Participants connected to a replica session can be granted access to join the primary session and can switch sessions with their existing WebRTC connection
+* api-change:``mediaconnect``: This release adds support for selecting a maintenance window.
+
+
 1.24.22
 =======
 
