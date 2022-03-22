@@ -10,13 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.compat import json
+from botocore.config import Config
+from botocore.discovery import EndpointDiscoveryRequired
+from botocore.exceptions import (
+    ClientError,
+    InvalidEndpointDiscoveryConfigurationError,
+)
 from tests import ClientHTTPStubber, temporary_file
 from tests.functional import FunctionalSessionTest
-
-from botocore.config import Config
-from botocore.compat import json
-from botocore.discovery import EndpointDiscoveryRequired
-from botocore.exceptions import ClientError, InvalidEndpointDiscoveryConfigurationError
 
 
 class TestEndpointDiscovery(FunctionalSessionTest):

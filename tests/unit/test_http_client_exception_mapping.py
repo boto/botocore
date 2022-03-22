@@ -2,7 +2,9 @@ import pytest
 
 from botocore import exceptions as botocore_exceptions
 from botocore.vendored.requests import exceptions as requests_exceptions
-from botocore.vendored.requests.packages.urllib3 import exceptions as urllib3_exceptions
+from botocore.vendored.requests.packages.urllib3 import (
+    exceptions as urllib3_exceptions,
+)
 
 
 @pytest.mark.parametrize(

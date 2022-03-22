@@ -12,12 +12,11 @@
 # language governing permissions and limitations under the License.
 import string
 
-import pytest
 import jmespath
+import pytest
 from jmespath.exceptions import JMESPathError
 
 import botocore.session
-
 
 KNOWN_PAGE_KEYS = set(
     ['input_token', 'py_input_token', 'output_token', 'result_key',

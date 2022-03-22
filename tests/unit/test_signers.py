@@ -16,23 +16,27 @@ import json
 from dateutil.tz import tzutc
 
 import botocore
-import botocore.session
 import botocore.auth
 import botocore.awsrequest
+import botocore.session
 from botocore.config import Config
-from botocore.credentials import Credentials
-from botocore.credentials import ReadOnlyCredentials
+from botocore.credentials import Credentials, ReadOnlyCredentials
+from botocore.exceptions import (
+    NoRegionError,
+    ParamValidationError,
+    UnknownClientMethodError,
+    UnknownSignatureVersionError,
+    UnsupportedSignatureVersionError,
+)
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceId
-from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
-from botocore.exceptions import UnknownClientMethodError, ParamValidationError
-from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.signers import RequestSigner, S3PostPresigner, CloudFrontSigner
-from botocore.signers import generate_db_auth_token
-
-from tests import mock
-from tests import unittest
-from tests import assert_url_equal
+from botocore.signers import (
+    CloudFrontSigner,
+    RequestSigner,
+    S3PostPresigner,
+    generate_db_auth_token,
+)
+from tests import assert_url_equal, mock, unittest
 
 
 class BaseSignerTest(unittest.TestCase):

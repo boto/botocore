@@ -14,9 +14,7 @@ import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
-
-from tests import create_session, mock, BaseSessionTest, ClientHTTPStubber
-
+from tests import BaseSessionTest, ClientHTTPStubber, create_session, mock
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
 # a bug in python2.6 prevents subjectAltNames from being parsed

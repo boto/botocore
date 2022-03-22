@@ -10,10 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import mock, unittest, temporary_file
-
 import botocore.session
 from botocore.exceptions import ProfileNotFound
+from tests import mock, temporary_file, unittest
 
 
 class TestSession(unittest.TestCase):

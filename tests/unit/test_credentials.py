@@ -11,35 +11,44 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from datetime import datetime, timedelta
-import subprocess
 import os
-import tempfile
 import shutil
+import subprocess
+import tempfile
+from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 from dateutil.tz import tzlocal, tzutc
-from pathlib import Path
 
-from botocore import credentials
-from botocore.utils import ContainerMetadataFetcher
-from botocore.compat import json, six
-from botocore.session import Session
-from botocore.stub import Stubber
-from botocore.utils import datetime2timestamp
-from botocore.utils import FileWebIdentityTokenLoader, SSOTokenLoader
-from botocore.credentials import EnvProvider, create_assume_role_refresher
-from botocore.credentials import CredentialProvider, AssumeRoleProvider
-from botocore.credentials import ConfigProvider, SharedCredentialProvider
-from botocore.credentials import ProcessProvider
-from botocore.credentials import AssumeRoleWithWebIdentityProvider
-from botocore.credentials import Credentials, ProfileProviderBuilder
-from botocore.credentials import SSOCredentialFetcher, SSOProvider
-from botocore.configprovider import ConfigValueStore
 import botocore.exceptions
 import botocore.session
-from tests import mock, unittest, BaseEnvVar, IntegerRefresher, skip_if_windows
-
+from botocore import credentials
+from botocore.compat import json, six
+from botocore.configprovider import ConfigValueStore
+from botocore.credentials import (
+    AssumeRoleProvider,
+    AssumeRoleWithWebIdentityProvider,
+    ConfigProvider,
+    CredentialProvider,
+    Credentials,
+    EnvProvider,
+    ProcessProvider,
+    ProfileProviderBuilder,
+    SharedCredentialProvider,
+    SSOCredentialFetcher,
+    SSOProvider,
+    create_assume_role_refresher,
+)
+from botocore.session import Session
+from botocore.stub import Stubber
+from botocore.utils import (
+    ContainerMetadataFetcher,
+    FileWebIdentityTokenLoader,
+    SSOTokenLoader,
+    datetime2timestamp,
+)
+from tests import BaseEnvVar, IntegerRefresher, mock, skip_if_windows, unittest
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}

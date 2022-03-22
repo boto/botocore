@@ -10,12 +10,14 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.docs.params import (
+    RequestParamsDocumenter,
+    ResponseParamsDocumenter,
+)
+from botocore.docs.utils import DocumentedShape
+from botocore.hooks import HierarchicalEmitter
 from tests import mock
 from tests.unit.docs import BaseDocsTest
-from botocore.hooks import HierarchicalEmitter
-from botocore.docs.params import RequestParamsDocumenter
-from botocore.docs.params import ResponseParamsDocumenter
-from botocore.docs.utils import DocumentedShape
 
 
 class BaseParamsDocumenterTest(BaseDocsTest):

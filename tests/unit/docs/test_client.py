@@ -10,9 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.docs.client import ClientDocumenter, ClientExceptionsDocumenter
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.client import ClientDocumenter
-from botocore.docs.client import ClientExceptionsDocumenter
 
 
 class TestClientDocumenter(BaseDocsTest):

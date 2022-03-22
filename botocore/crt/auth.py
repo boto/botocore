@@ -2,13 +2,16 @@ import datetime
 from io import BytesIO
 
 from botocore.auth import (
-    _host_from_url, _get_body_as_dict, BaseSigner,
-    SIGNED_HEADERS_BLACKLIST, UNSIGNED_PAYLOAD,
+    SIGNED_HEADERS_BLACKLIST,
     STREAMING_UNSIGNED_PAYLOAD_TRAILER,
+    UNSIGNED_PAYLOAD,
+    BaseSigner,
+    _get_body_as_dict,
+    _host_from_url,
 )
-from botocore.compat import awscrt, HTTPHeaders, parse_qs, urlsplit, urlunsplit
-from botocore.utils import percent_encode_sequence
+from botocore.compat import HTTPHeaders, awscrt, parse_qs, urlsplit, urlunsplit
 from botocore.exceptions import NoCredentialsError
+from botocore.utils import percent_encode_sequence
 
 
 class CrtSigV4Auth(BaseSigner):

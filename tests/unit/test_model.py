@@ -1,9 +1,8 @@
 import pytest
 
-from tests import unittest
-
 from botocore import model
 from botocore.compat import OrderedDict
+from tests import unittest
 
 
 @pytest.mark.parametrize("property_name", ['api_version', 'protocol'])

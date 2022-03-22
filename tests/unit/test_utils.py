@@ -10,80 +10,85 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
+import datetime
 import io
 
 import pytest
-
-from tests import create_session
-from tests import mock
-from tests import unittest
-from tests import RawResponse
-from dateutil.tz import tzutc, tzoffset
-import datetime
-import copy
+from dateutil.tz import tzoffset, tzutc
 
 import botocore
 from botocore import xform_name
-from botocore.compat import json
-from botocore.compat import six
 from botocore.awsrequest import AWSRequest, HeadersDict
-from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import ClientError, ConnectionClosedError
-from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
-from botocore.exceptions import InvalidIMDSEndpointError
-from botocore.exceptions import InvalidIMDSEndpointModeError
-from botocore.exceptions import ReadTimeoutError
-from botocore.exceptions import ConnectTimeoutError
-from botocore.exceptions import UnsupportedS3ArnError
-from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
-from botocore.exceptions import UnsupportedOutpostResourceError
-from botocore.model import ServiceModel
-from botocore.model import OperationModel
-from botocore.utils import ensure_boolean
-from botocore.utils import resolve_imds_endpoint_mode
-from botocore.utils import is_json_value_header
-from botocore.utils import remove_dot_segments
-from botocore.utils import normalize_url_path
-from botocore.utils import validate_jmespath_for_set
-from botocore.utils import set_value_from_jmespath
-from botocore.utils import parse_key_val_file_contents
-from botocore.utils import parse_key_val_file
-from botocore.utils import parse_timestamp
-from botocore.utils import parse_to_aware_datetime
-from botocore.utils import datetime2timestamp
-from botocore.utils import CachedProperty
-from botocore.utils import ArgumentGenerator
-from botocore.utils import calculate_tree_hash
-from botocore.utils import calculate_sha256
-from botocore.utils import is_valid_endpoint_url
-from botocore.utils import fix_s3_host
-from botocore.utils import switch_to_virtual_host_style
-from botocore.utils import instance_cache
-from botocore.utils import merge_dicts
-from botocore.utils import lowercase_dict
-from botocore.utils import get_service_module_name
-from botocore.utils import percent_encode_sequence
-from botocore.utils import percent_encode
-from botocore.utils import switch_host_s3_accelerate
-from botocore.utils import deep_merge
-from botocore.utils import S3RegionRedirector
-from botocore.utils import InvalidArnException
-from botocore.utils import ArnParser
-from botocore.utils import S3ArnParamHandler
-from botocore.utils import S3EndpointSetter
-from botocore.utils import ContainerMetadataFetcher
-from botocore.utils import InstanceMetadataFetcher
-from botocore.utils import InstanceMetadataRegionFetcher
-from botocore.utils import IMDSRegionProvider
-from botocore.utils import SSOTokenLoader
-from botocore.utils import is_valid_uri, is_valid_ipv6_endpoint_url
-from botocore.utils import has_header
-from botocore.utils import determine_content_length
-from botocore.exceptions import SSOTokenLoadError
-from botocore.model import DenormalizedStructureBuilder
-from botocore.model import ShapeResolver
+from botocore.compat import json, six
 from botocore.config import Config
+from botocore.exceptions import (
+    ClientError,
+    ConfigNotFound,
+    ConnectionClosedError,
+    ConnectTimeoutError,
+    InvalidDNSNameError,
+    InvalidExpressionError,
+    InvalidIMDSEndpointError,
+    InvalidIMDSEndpointModeError,
+    MetadataRetrievalError,
+    ReadTimeoutError,
+    SSOTokenLoadError,
+    UnsupportedOutpostResourceError,
+    UnsupportedS3AccesspointConfigurationError,
+    UnsupportedS3ArnError,
+)
+from botocore.model import (
+    DenormalizedStructureBuilder,
+    OperationModel,
+    ServiceModel,
+    ShapeResolver,
+)
 from botocore.session import Session
+from botocore.utils import (
+    ArgumentGenerator,
+    ArnParser,
+    CachedProperty,
+    ContainerMetadataFetcher,
+    IMDSRegionProvider,
+    InstanceMetadataFetcher,
+    InstanceMetadataRegionFetcher,
+    InvalidArnException,
+    S3ArnParamHandler,
+    S3EndpointSetter,
+    S3RegionRedirector,
+    SSOTokenLoader,
+    calculate_sha256,
+    calculate_tree_hash,
+    datetime2timestamp,
+    deep_merge,
+    determine_content_length,
+    ensure_boolean,
+    fix_s3_host,
+    get_service_module_name,
+    has_header,
+    instance_cache,
+    is_json_value_header,
+    is_valid_endpoint_url,
+    is_valid_ipv6_endpoint_url,
+    is_valid_uri,
+    lowercase_dict,
+    merge_dicts,
+    normalize_url_path,
+    parse_key_val_file,
+    parse_key_val_file_contents,
+    parse_timestamp,
+    parse_to_aware_datetime,
+    percent_encode,
+    percent_encode_sequence,
+    remove_dot_segments,
+    resolve_imds_endpoint_mode,
+    set_value_from_jmespath,
+    switch_host_s3_accelerate,
+    switch_to_virtual_host_style,
+    validate_jmespath_for_set,
+)
+from tests import RawResponse, create_session, mock, unittest
 
 
 class TestEnsureBoolean(unittest.TestCase):

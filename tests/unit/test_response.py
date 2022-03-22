@@ -10,22 +10,24 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
-from tests.unit import BaseResponseTest
 import datetime
-
 from io import BytesIO
+
 from dateutil.tz import tzutc
-from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 from urllib3.exceptions import ProtocolError as URLLib3ProtocolError
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
 import botocore
 from botocore import response
+from botocore.awsrequest import AWSResponse
 from botocore.compat import six
 from botocore.exceptions import (
-    IncompleteReadError, ReadTimeoutError, ResponseStreamingError
+    IncompleteReadError,
+    ReadTimeoutError,
+    ResponseStreamingError,
 )
-from botocore.awsrequest import AWSResponse
+from tests import unittest
+from tests.unit import BaseResponseTest
 
 XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
             b'<Code>AccessDenied</Code>'

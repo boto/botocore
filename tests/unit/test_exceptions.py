@@ -12,11 +12,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import pickle
-from tests import unittest
 
 import botocore.awsrequest
 import botocore.session
 from botocore import exceptions
+from tests import unittest
 
 
 def test_client_error_can_handle_missing_code_or_message():

@@ -12,21 +12,26 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import mock
-from tests import unittest
-import os
-import tempfile
-import shutil
 import io
+import os
+import shutil
 import socket
+import tempfile
 
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
-from botocore.exceptions import UnseekableStreamError
-from botocore.awsrequest import AWSRequest, AWSResponse
-from botocore.awsrequest import AWSHTTPConnection, AWSHTTPSConnection, HeadersDict
-from botocore.awsrequest import prepare_request_dict, create_request_object
+from botocore.awsrequest import (
+    AWSHTTPConnection,
+    AWSHTTPSConnection,
+    AWSRequest,
+    AWSResponse,
+    HeadersDict,
+    create_request_object,
+    prepare_request_dict,
+)
 from botocore.compat import file_type, six
+from botocore.exceptions import UnseekableStreamError
+from tests import mock, unittest
 
 
 class IgnoreCloseBytesIO(io.BytesIO):

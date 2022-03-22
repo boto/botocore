@@ -10,14 +10,14 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.endpoint
-import datetime
 import contextlib
+import datetime
 import json
-from tests import BaseSessionTest, mock, ClientHTTPStubber
 
-from botocore.exceptions import ClientError
+import botocore.endpoint
 from botocore.config import Config
+from botocore.exceptions import ClientError
+from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 RETRY_MODES = ('legacy', 'standard', 'adaptive')
 

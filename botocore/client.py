@@ -16,30 +16,36 @@ from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
-from botocore.docs.docstring import ClientMethodDocstring
-from botocore.docs.docstring import PaginatorDocstring
-from botocore.exceptions import (
-    DataNotFoundError, OperationNotPageableError, UnknownSignatureVersionError,
-    InvalidEndpointDiscoveryConfigurationError
+from botocore.discovery import (
+    EndpointDiscoveryHandler,
+    EndpointDiscoveryManager,
+    block_endpoint_discovery_required_operations,
 )
-from botocore.hooks import first_non_none_response
-from botocore.model import ServiceModel
-from botocore.paginate import Paginator
-from botocore.utils import (
-    CachedProperty, get_service_module_name, S3RegionRedirector,
-    S3ArnParamHandler, S3EndpointSetter, ensure_boolean,
-    S3ControlArnParamHandler, S3ControlEndpointSetter,
+from botocore.docs.docstring import ClientMethodDocstring, PaginatorDocstring
+from botocore.exceptions import (
+    DataNotFoundError,
+    InvalidEndpointDiscoveryConfigurationError,
+    OperationNotPageableError,
+    UnknownSignatureVersionError,
 )
 from botocore.history import get_global_history_recorder
-from botocore.discovery import (
-    EndpointDiscoveryHandler, EndpointDiscoveryManager,
-    block_endpoint_discovery_required_operations
-)
-from botocore.retries import standard
-from botocore.retries import adaptive
+from botocore.hooks import first_non_none_response
 from botocore.httpchecksum import (
     apply_request_checksum,
     resolve_checksum_context,
+)
+from botocore.model import ServiceModel
+from botocore.paginate import Paginator
+from botocore.retries import adaptive, standard
+from botocore.utils import (
+    CachedProperty,
+    S3ArnParamHandler,
+    S3ControlArnParamHandler,
+    S3ControlEndpointSetter,
+    S3EndpointSetter,
+    S3RegionRedirector,
+    ensure_boolean,
+    get_service_module_name,
 )
 
 # Keep these imported.  There's pre-existing code that uses:

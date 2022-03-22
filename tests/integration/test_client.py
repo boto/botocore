@@ -10,14 +10,14 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import logging
 import datetime
-from tests import unittest
+import logging
 
 import botocore.session
 from botocore.client import ClientError
 from botocore.compat import six
 from botocore.exceptions import EndpointConnectionError
+from tests import unittest
 
 
 # This is really a combination of testing the debug logging mechanism

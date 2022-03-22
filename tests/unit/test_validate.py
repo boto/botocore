@@ -1,10 +1,10 @@
-from tests import unittest
-from datetime import datetime
 import decimal
+from datetime import datetime
 
 from botocore.compat import six
 from botocore.model import ShapeResolver
 from botocore.validate import ParamValidator
+from tests import unittest
 
 BOILER_PLATE_SHAPES = {
     'StringType': {
