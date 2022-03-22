@@ -5,10 +5,8 @@ import sys
 import threading
 import time
 
-from tests import mock
-
 from botocore.vendored import six
-
+from tests import mock
 
 _original_setattr = six.moves.__class__.__setattr__
 

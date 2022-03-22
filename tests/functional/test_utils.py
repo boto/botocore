@@ -11,15 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
-import tempfile
 import shutil
-from tests import unittest, mock
+import tempfile
+
+from urllib3.exceptions import LocationParseError
 
 from botocore.exceptions import (
-    ConnectionClosedError, HTTPClientError, InvalidIMDSEndpointError
+    ConnectionClosedError,
+    HTTPClientError,
+    InvalidIMDSEndpointError,
 )
 from botocore.utils import FileWebIdentityTokenLoader, InstanceMetadataFetcher
-from urllib3.exceptions import LocationParseError
+from tests import mock, unittest
 
 
 class TestFileWebIdentityTokenLoader(unittest.TestCase):

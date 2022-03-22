@@ -1,9 +1,9 @@
-import os
-import botocore
 import ast
+import os
 
 import pytest
 
+import botocore
 
 ROOTDIR = os.path.dirname(botocore.__file__)
 

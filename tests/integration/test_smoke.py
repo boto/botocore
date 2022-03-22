@@ -10,19 +10,18 @@ Otherwise, the ``REGION`` variable specifies the default region
 to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
 
 """
-import os
-from pprint import pformat
-import warnings
 import logging
+import os
+import warnings
+from pprint import pformat
 
 import pytest
 
-from tests import ClientHTTPStubber
-from botocore import xform_name
 import botocore.session
+from botocore import xform_name
 from botocore.client import ClientError
 from botocore.exceptions import ConnectionClosedError
-
+from tests import ClientHTTPStubber
 
 # Mapping of service -> api calls to try.
 # Each api call is a dict of OperationName->params.

@@ -14,11 +14,17 @@ import datetime
 
 import pytest
 
-from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
-    total_seconds, unquote_str, six, ensure_bytes, get_md5,
-    compat_shell_split, get_tzinfo_options, HAS_CRT
+    HAS_CRT,
+    compat_shell_split,
+    ensure_bytes,
+    get_md5,
+    get_tzinfo_options,
+    six,
+    total_seconds,
+    unquote_str,
 )
+from botocore.exceptions import MD5UnavailableError
 from tests import BaseEnvVar, mock, unittest
 
 

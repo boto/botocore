@@ -12,8 +12,8 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from botocore.session import get_session
 from botocore.config import Config
+from botocore.session import get_session
 
 _SDK_DEFAULT_CONFIGURATION_VALUES_ALLOWLIST = (
     'retryMode', 'stsRegionalEndpoints', 's3UsEast1RegionalEndpoints',

@@ -1,30 +1,25 @@
 import socket
 
 import pytest
-from urllib3.exceptions import (
-    NewConnectionError,
-    ProtocolError,
-    ProxyError,
-)
-
-from tests import mock, unittest
+from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
 
 from botocore.awsrequest import (
-    AWSRequest,
     AWSHTTPConnectionPool,
     AWSHTTPSConnectionPool,
-)
-from botocore.httpsession import (
-    get_cert_path,
-    mask_proxy_url,
-    URLLib3Session,
-    ProxyConfiguration,
+    AWSRequest,
 )
 from botocore.exceptions import (
     ConnectionClosedError,
     EndpointConnectionError,
     ProxyConnectionError,
 )
+from botocore.httpsession import (
+    ProxyConfiguration,
+    URLLib3Session,
+    get_cert_path,
+    mask_proxy_url,
+)
+from tests import mock, unittest
 
 
 class TestProxyConfiguration(unittest.TestCase):

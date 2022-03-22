@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 from datetime import datetime
 
-from tests import mock, BaseSessionTest, ClientHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 
 class TestLex(BaseSessionTest):

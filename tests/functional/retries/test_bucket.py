@@ -1,9 +1,9 @@
 import random
-import time
 import threading
-from tests import unittest
+import time
 
 from botocore.retries import bucket
+from tests import unittest
 
 
 class InstrumentedTokenBucket(bucket.TokenBucket):

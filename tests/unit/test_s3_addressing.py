@@ -15,10 +15,9 @@
 
 import os
 
-from tests import BaseSessionTest, ClientHTTPStubber
-
 from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestS3Addressing(BaseSessionTest):

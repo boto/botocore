@@ -1,9 +1,10 @@
 import botocore
 from botocore.compat import HAS_CRT
-
 from tests import requires_crt
 from tests.unit.auth.test_signers import (
-    TestS3SigV4Auth, TestSigV4Presign, TestSigV4Resign
+    TestS3SigV4Auth,
+    TestSigV4Presign,
+    TestSigV4Resign,
 )
 
 

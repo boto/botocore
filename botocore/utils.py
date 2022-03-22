@@ -11,43 +11,66 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import base64
-import re
-import time
-import logging
-import datetime
-import hashlib
 import binascii
-import functools
-import weakref
-import random
-import os
-import socket
 import cgi
+import datetime
+import functools
+import hashlib
 import io
+import logging
+import os
+import random
+import re
+import socket
+import time
+import weakref
 
 import dateutil.parser
 from dateutil.tz import tzutc
+from urllib3.exceptions import LocationParseError
 
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
 from botocore.compat import (
-    json, quote, zip_longest, urlsplit, urlunsplit, OrderedDict,
-    six, urlparse, get_tzinfo_options, get_md5, MD5_AVAILABLE,
-    HAS_CRT
+    HAS_CRT,
+    MD5_AVAILABLE,
+    OrderedDict,
+    get_md5,
+    get_tzinfo_options,
+    json,
+    quote,
+    six,
+    urlparse,
+    urlsplit,
+    urlunsplit,
+    zip_longest,
+)
+from botocore.exceptions import (
+    ClientError,
+    ConfigNotFound,
+    ConnectionClosedError,
+    ConnectTimeoutError,
+    EndpointConnectionError,
+    HTTPClientError,
+    InvalidDNSNameError,
+    InvalidExpressionError,
+    InvalidHostLabelError,
+    InvalidIMDSEndpointError,
+    InvalidIMDSEndpointModeError,
+    InvalidRegionError,
+    MetadataRetrievalError,
+    MissingDependencyException,
+    ReadTimeoutError,
+    SSOTokenLoadError,
+    UnsupportedOutpostResourceError,
+    UnsupportedS3AccesspointConfigurationError,
+    UnsupportedS3ArnError,
+    UnsupportedS3ConfigurationError,
+    UnsupportedS3ControlArnError,
+    UnsupportedS3ControlConfigurationError,
 )
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
-from botocore.exceptions import (
-    InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
-    MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
-    ConnectionClosedError, ConnectTimeoutError, UnsupportedS3ArnError,
-    UnsupportedS3AccesspointConfigurationError, SSOTokenLoadError,
-    InvalidRegionError, InvalidIMDSEndpointError, InvalidIMDSEndpointModeError,
-    UnsupportedOutpostResourceError, UnsupportedS3ControlConfigurationError,
-    UnsupportedS3ControlArnError, InvalidHostLabelError, HTTPClientError,
-    UnsupportedS3ConfigurationError, MissingDependencyException
-)
-from urllib3.exceptions import LocationParseError
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1

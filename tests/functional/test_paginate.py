@@ -10,16 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from math import ceil
 from datetime import datetime
+from math import ceil
 
 import pytest
 
-from tests import random_chars
-from tests import BaseSessionTest
-from botocore.stub import Stubber, StubAssertionError
-from botocore.paginate import TokenDecoder, TokenEncoder
 from botocore.compat import six
+from botocore.paginate import TokenDecoder, TokenEncoder
+from botocore.stub import StubAssertionError, Stubber
+from tests import BaseSessionTest, random_chars
 
 
 class TestRDSPagination(BaseSessionTest):

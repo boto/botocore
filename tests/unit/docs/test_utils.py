@@ -10,15 +10,17 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.docs.utils import (
+    AppendParamDocumentation,
+    AutoPopulatedParam,
+    HideParamFromOperations,
+    escape_controls,
+    get_official_service_name,
+    py_default,
+    py_type_name,
+)
 from tests import unittest
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.utils import py_type_name
-from botocore.docs.utils import py_default
-from botocore.docs.utils import get_official_service_name
-from botocore.docs.utils import AutoPopulatedParam
-from botocore.docs.utils import HideParamFromOperations
-from botocore.docs.utils import AppendParamDocumentation
-from botocore.docs.utils import escape_controls
 
 
 class TestPythonTypeName(unittest.TestCase):

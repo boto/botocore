@@ -12,11 +12,10 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from tests import unittest
-
 import botocore.session
-from botocore.paginate import PageIterator
 from botocore.exceptions import OperationNotPageableError
+from botocore.paginate import PageIterator
+from tests import unittest
 
 
 @pytest.fixture()

@@ -10,21 +10,19 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import os
 import json
-import tempfile
+import os
 import shutil
+import tempfile
 
-from botocore.docs.bcdoc.restdoc import DocumentStructure
-
-from tests import mock
-from tests import unittest
-from botocore.compat import OrderedDict
-from botocore.hooks import HierarchicalEmitter
-from botocore.model import ServiceModel, OperationModel
 from botocore.client import ClientCreator
+from botocore.compat import OrderedDict
 from botocore.configprovider import ConfigValueStore
+from botocore.docs.bcdoc.restdoc import DocumentStructure
+from botocore.hooks import HierarchicalEmitter
 from botocore.loaders import Loader
+from botocore.model import OperationModel, ServiceModel
+from tests import mock, unittest
 
 
 class BaseDocsTest(unittest.TestCase):

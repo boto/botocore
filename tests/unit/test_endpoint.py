@@ -10,23 +10,24 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import socket
 import datetime
+import socket
 
 import pytest
+
 import botocore.endpoint
-
-from tests import mock
-from tests import unittest
-
 from botocore.compat import six
 from botocore.config import Config
-from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
-from botocore.endpoint import EndpointCreator
+from botocore.endpoint import DEFAULT_TIMEOUT, Endpoint, EndpointCreator
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
-from botocore.model import OperationModel, ServiceId
-from botocore.model import ServiceModel, StructureShape
+from botocore.model import (
+    OperationModel,
+    ServiceId,
+    ServiceModel,
+    StructureShape,
+)
+from tests import mock, unittest
 
 
 def request_dict(**kwargs):
