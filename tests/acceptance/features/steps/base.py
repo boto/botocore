@@ -1,9 +1,9 @@
 import json
 
+from behave import then, when
+
 from botocore import xform_name
 from botocore.exceptions import ClientError
-
-from behave import when, then
 
 
 def _params_from_table(table):

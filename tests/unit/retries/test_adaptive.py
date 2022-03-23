@@ -1,10 +1,5 @@
-from tests import mock
-from tests import unittest
-
-from botocore.retries import adaptive
-from botocore.retries import standard
-from botocore.retries import bucket
-from botocore.retries import throttling
+from botocore.retries import adaptive, bucket, standard, throttling
+from tests import mock, unittest
 
 
 class FakeClock(bucket.Clock):

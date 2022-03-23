@@ -12,9 +12,9 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from botocore.session import Session
-from botocore.loaders import Loader
 from botocore.exceptions import DataNotFoundError
+from botocore.loaders import Loader
+from botocore.session import Session
 
 
 def _paginators_and_waiters_test_cases():

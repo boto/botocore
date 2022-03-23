@@ -21,15 +21,17 @@ will be created if it does not exist.
   Copied: /tmp/myfile.json -> /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.normal.json
 
 """
+import json
+
 # Note we're using optparse for 2.6 compat.
 # We don't have particularly complicated command line
 # parsing requirements so we'll deal with it.
 import optparse
-import unittest
-import sys
-import json
-import shutil
 import os
+import shutil
+import sys
+import unittest
+
 try:
     from StringIO import StringIO
 except ImportError:

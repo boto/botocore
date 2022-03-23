@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 import os
 
+from botocore.docs.service import ServiceDocumenter
+from botocore.session import get_session
 from tests import mock
 from tests.unit.docs import BaseDocsTest
-from botocore.session import get_session
-from botocore.docs.service import ServiceDocumenter
 
 
 class TestServiceDocumenter(BaseDocsTest):

@@ -10,16 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, RawResponse
 import datetime
 import itertools
 
-from dateutil.tz import tzutc
 import pytest
+from dateutil.tz import tzutc
 
-from botocore import parsers
-from botocore import model
-from botocore.compat import json, MutableMapping
+from botocore import model, parsers
+from botocore.compat import MutableMapping, json
+from tests import RawResponse, unittest
 
 
 # HTTP responses will typically return a custom HTTP

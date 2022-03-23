@@ -2,7 +2,6 @@ import pytest
 
 from botocore.session import Session
 
-
 # The list of services which were available when we switched over from using
 # endpoint prefix in event to using service id. These should all accept
 # either.

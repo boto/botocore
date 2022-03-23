@@ -50,30 +50,34 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
     BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
 
 """
-import os
 import copy
+import os
+from base64 import b64decode
+from calendar import timegm
 from enum import Enum
 
-from base64 import b64decode
+import pytest
 from dateutil.tz import tzutc
 
-import pytest
-
-from botocore.awsrequest import HeadersDict
-from botocore.compat import json, OrderedDict, urlsplit
+from botocore.awsrequest import HeadersDict, prepare_request_dict
+from botocore.compat import OrderedDict, json, urlsplit
 from botocore.eventstream import EventStream
-from botocore.model import ServiceModel, OperationModel
+from botocore.model import NoShapeFoundError, OperationModel, ServiceModel
+from botocore.parsers import (
+    EC2QueryParser,
+    JSONParser,
+    QueryParser,
+    RestJSONParser,
+    RestXMLParser,
+)
 from botocore.serialize import (
-    EC2Serializer, QuerySerializer, JSONSerializer, RestJSONSerializer,
+    EC2Serializer,
+    JSONSerializer,
+    QuerySerializer,
+    RestJSONSerializer,
     RestXMLSerializer,
 )
-from botocore.parsers import (
-    QueryParser, JSONParser, RestJSONParser, RestXMLParser, EC2QueryParser,
-)
 from botocore.utils import parse_timestamp, percent_encode_sequence
-from botocore.awsrequest import prepare_request_dict
-from calendar import timegm
-from botocore.model import NoShapeFoundError
 
 TEST_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),

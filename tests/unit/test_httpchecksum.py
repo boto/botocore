@@ -13,28 +13,24 @@
 import unittest
 from io import BytesIO
 
-from tests import requires_crt, mock
-
 from botocore.awsrequest import AWSResponse
-from botocore.model import OperationModel
-from botocore.exceptions import AwsChunkedWrapperError
-from botocore.exceptions import FlexibleChecksumError
-from botocore.httpchecksum import AwsChunkedWrapper
-from botocore.httpchecksum import StreamingChecksumBody
+from botocore.exceptions import AwsChunkedWrapperError, FlexibleChecksumError
 from botocore.httpchecksum import (
+    _CHECKSUM_CLS,
+    AwsChunkedWrapper,
     Crc32Checksum,
-    Sha256Checksum,
-    Sha1Checksum,
-    CrtCrc32Checksum,
     CrtCrc32cChecksum,
-)
-from botocore.httpchecksum import _CHECKSUM_CLS
-from botocore.httpchecksum import (
+    CrtCrc32Checksum,
+    Sha1Checksum,
+    Sha256Checksum,
+    StreamingChecksumBody,
     apply_request_checksum,
+    handle_checksum_body,
     resolve_request_checksum_algorithm,
     resolve_response_checksum_algorithms,
-    handle_checksum_body,
 )
+from botocore.model import OperationModel
+from tests import mock, requires_crt
 
 
 class TestHttpChecksumHandlers(unittest.TestCase):

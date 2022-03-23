@@ -11,10 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import pytest
-from tests import unittest
 
 from botocore import regions
-from botocore.exceptions import NoRegionError, EndpointVariantError
+from botocore.exceptions import EndpointVariantError, NoRegionError
+from tests import unittest
 
 
 class TestEndpointResolver(unittest.TestCase):

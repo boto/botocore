@@ -11,27 +11,28 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
-import pytest
 import os
 
-from tests import mock
-from tests import unittest
+import pytest
 
-import botocore.session as session
 import botocore.configprovider
-from botocore.configprovider import ConfigValueStore
-from botocore.configprovider import BaseProvider
-from botocore.configprovider import InstanceVarProvider
-from botocore.configprovider import EnvironmentProvider
-from botocore.configprovider import ScopedConfigProvider
-from botocore.configprovider import SectionConfigProvider
-from botocore.configprovider import ConstantProvider
-from botocore.configprovider import ChainProvider
-from botocore.configprovider import ConfigChainFactory
-from botocore.configprovider import SmartDefaultsConfigStoreFactory
-from botocore.configprovider import DefaultConfigResolver
-from botocore.utils import IMDSRegionProvider
+import botocore.session as session
+from botocore.configprovider import (
+    BaseProvider,
+    ChainProvider,
+    ConfigChainFactory,
+    ConfigValueStore,
+    ConstantProvider,
+    DefaultConfigResolver,
+    EnvironmentProvider,
+    InstanceVarProvider,
+    ScopedConfigProvider,
+    SectionConfigProvider,
+    SmartDefaultsConfigStoreFactory,
+)
 from botocore.exceptions import ConnectTimeoutError
+from botocore.utils import IMDSRegionProvider
+from tests import mock, unittest
 
 
 class TestConfigChainFactory(unittest.TestCase):

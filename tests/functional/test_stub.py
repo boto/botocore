@@ -10,19 +10,22 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.config
-from tests import unittest
-
 import botocore
+import botocore.client
+import botocore.config
+import botocore.retryhandler
 import botocore.session
 import botocore.stub as stub
-from botocore.stub import Stubber
-from botocore.exceptions import StubResponseError, ClientError, \
-    StubAssertionError, UnStubbedResponseError
-from botocore.exceptions import ParamValidationError
-import botocore.client
-import botocore.retryhandler
 import botocore.translate
+from botocore.exceptions import (
+    ClientError,
+    ParamValidationError,
+    StubAssertionError,
+    StubResponseError,
+    UnStubbedResponseError,
+)
+from botocore.stub import Stubber
+from tests import unittest
 
 
 class TestStubber(unittest.TestCase):

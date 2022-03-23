@@ -14,7 +14,6 @@ import pytest
 
 from botocore.session import get_session
 
-
 SERVICE_RENAMES = {
     # Actual service name we use -> Allowed computed service name.
     'alexaforbusiness': 'alexa-for-business',

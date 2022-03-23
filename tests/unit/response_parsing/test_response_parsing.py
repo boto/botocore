@@ -11,20 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
+import difflib
 import glob
 import json
-import pprint
 import logging
-import difflib
+import os
+import pprint
 
 import pytest
 
-from tests import create_session
-
 import botocore.session
-from botocore import xform_name
-from botocore import parsers
+from botocore import parsers, xform_name
+from tests import create_session
 
 log = logging.getLogger(__name__)
 

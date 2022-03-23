@@ -1,8 +1,6 @@
-from tests import mock
-from tests import unittest
-
 from botocore.awsrequest import AWSResponse
-from botocore.retries import standard, special
+from botocore.retries import special, standard
+from tests import mock, unittest
 
 
 def create_fake_op_model(service_name):

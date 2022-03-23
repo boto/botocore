@@ -14,16 +14,13 @@
 import socket
 
 import botocore.config
-from tests import mock
-from tests import unittest
-
-from botocore import args
-from botocore import exceptions
+from botocore import args, exceptions
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
+from tests import mock, unittest
 
 
 class TestCreateClientArgs(unittest.TestCase):

@@ -12,10 +12,9 @@
 # language governing permissions and limitations under the License.
 import time
 
-from tests import unittest
-
 import botocore.session
 from botocore import exceptions
+from tests import unittest
 
 
 class TestApigateway(unittest.TestCase):

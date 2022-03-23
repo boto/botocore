@@ -12,10 +12,9 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from tests import unittest, random_chars
-
 import botocore.session
 from botocore.exceptions import WaiterError
+from tests import random_chars, unittest
 
 
 @pytest.mark.slow

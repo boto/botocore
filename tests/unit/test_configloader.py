@@ -12,15 +12,18 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import mock, unittest, BaseEnvVar
 import os
-import tempfile
 import shutil
+import tempfile
 
 import botocore.exceptions
-from botocore.configloader import raw_config_parse, load_config, \
-    multi_file_load_config
 from botocore.compat import six
+from botocore.configloader import (
+    load_config,
+    multi_file_load_config,
+    raw_config_parse,
+)
+from tests import BaseEnvVar, mock, unittest
 
 
 def path(filename):

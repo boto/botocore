@@ -11,14 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import jmespath
-from jsonschema import Draft4Validator
-
 import pytest
+from jsonschema import Draft4Validator
 
 import botocore.session
 from botocore.exceptions import UnknownServiceError
 from botocore.utils import ArgumentGenerator
-
 
 WAITER_SCHEMA = {
     "type": "object",

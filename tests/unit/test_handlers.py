@@ -11,32 +11,38 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import mock, unittest, BaseSessionTest
-
 import base64
 import copy
-import os
 import json
+import os
+
 import pytest
 
 import botocore
 import botocore.session
-from botocore.compat import OrderedDict
-from botocore.exceptions import ParamValidationError, MD5UnavailableError
-from botocore.exceptions import AliasConflictParameterError
-from botocore.awsrequest import AWSRequest
-from botocore.compat import quote, six
-from botocore.config import Config
-from botocore.docs.bcdoc.restdoc import DocumentStructure
-from botocore.docs.params import RequestParamsDocumenter
-from botocore.docs.example import RequestExampleDocumenter
-from botocore.hooks import HierarchicalEmitter
-from botocore.model import OperationModel, ServiceModel, ServiceId
-from botocore.model import DenormalizedStructureBuilder
-from botocore.signers import RequestSigner
-from botocore.credentials import Credentials
-from botocore.utils import conditionally_calculate_md5
 from botocore import handlers
+from botocore.awsrequest import AWSRequest
+from botocore.compat import OrderedDict, quote, six
+from botocore.config import Config
+from botocore.credentials import Credentials
+from botocore.docs.bcdoc.restdoc import DocumentStructure
+from botocore.docs.example import RequestExampleDocumenter
+from botocore.docs.params import RequestParamsDocumenter
+from botocore.exceptions import (
+    AliasConflictParameterError,
+    MD5UnavailableError,
+    ParamValidationError,
+)
+from botocore.hooks import HierarchicalEmitter
+from botocore.model import (
+    DenormalizedStructureBuilder,
+    OperationModel,
+    ServiceId,
+    ServiceModel,
+)
+from botocore.signers import RequestSigner
+from botocore.utils import conditionally_calculate_md5
+from tests import BaseSessionTest, mock, unittest
 
 
 class TestHandlers(BaseSessionTest):

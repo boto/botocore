@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-from tests import unittest
 from botocore.compat import six
-from botocore.docs.bcdoc.restdoc import ReSTDocument, DocumentStructure
+from botocore.docs.bcdoc.restdoc import DocumentStructure, ReSTDocument
+from tests import unittest
 
 
 class TestReSTDocument(unittest.TestCase):

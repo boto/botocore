@@ -1,7 +1,5 @@
-from tests import unittest
-
-
 from botocore.retries import throttling
+from tests import unittest
 
 
 class TestCubicCalculator(unittest.TestCase):

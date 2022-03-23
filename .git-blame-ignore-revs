@@ -1,0 +1,5 @@
+# You can configure git to automatically use this file with the following config:
+# git config --global blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Reformat using isort
+e34b6a36ae0c1571bcb5fd7034e817d3b397e283

@@ -11,9 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore.compat import OrderedDict
+from botocore.docs.sharedexample import (
+    SharedExampleDocumenter,
+    document_shared_examples,
+)
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.sharedexample import SharedExampleDocumenter, \
-    document_shared_examples
 
 
 class TestDocumentSharedExamples(BaseDocsTest):

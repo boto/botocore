@@ -10,18 +10,18 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from datetime import datetime
 import re
+from datetime import datetime
 
-
-from tests import BaseSessionTest
-from tests import mock
-from tests import temporary_file
-from tests import assert_url_equal
-from tests import ClientHTTPStubber
-from botocore.stub import Stubber
 from botocore.config import Config
-
+from botocore.stub import Stubber
+from tests import (
+    BaseSessionTest,
+    ClientHTTPStubber,
+    assert_url_equal,
+    mock,
+    temporary_file,
+)
 
 _V4_SIGNING_REGION_REGEX = re.compile(
     r'AWS4-HMAC-SHA256 '

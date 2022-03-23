@@ -12,10 +12,8 @@
 # language governing permissions and limitations under the License.
 import os
 
-from tests import mock
-from tests import unittest
-
 import botocore.session
+from tests import mock, unittest
 
 
 # Basic sanity checks for loader functionality.

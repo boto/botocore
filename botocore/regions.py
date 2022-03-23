@@ -20,7 +20,9 @@ import logging
 import re
 
 from botocore.exceptions import (
-    NoRegionError, UnknownRegionError, EndpointVariantError
+    EndpointVariantError,
+    NoRegionError,
+    UnknownRegionError,
 )
 
 LOG = logging.getLogger(__name__)

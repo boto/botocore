@@ -2,3 +2,9 @@
 markers = [
     "slow: marks tests as slow",
 ]
+
+[tool.isort]
+profile = "black"
+line_length = 79
+honor_noqa = true
+src_paths = ["botocore", "tests"]
