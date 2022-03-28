@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.24.28
+=======
+
+* api-change:``medialive``: This release adds support for selecting a maintenance window.
+* api-change:``acm-pca``: Updating service name entities
+
+
 1.24.27
 =======
 
