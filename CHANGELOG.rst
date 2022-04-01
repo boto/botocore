@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.24.29
+=======
+
+* api-change:``organizations``: This release provides the new CloseAccount API that enables principals in the management account to close any member account within an organization.
+
+
+1.24.28
+=======
+
+* api-change:``medialive``: This release adds support for selecting a maintenance window.
+* api-change:``acm-pca``: Updating service name entities
+
+
 1.24.27
 =======
 
