@@ -9,7 +9,12 @@ from urllib3 import PoolManager, Timeout, proxy_from_url
 from urllib3.exceptions import (
     ConnectTimeoutError as URLLib3ConnectTimeoutError,
 )
-from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
+from urllib3.exceptions import (
+    LocationParseError,
+    NewConnectionError,
+    ProtocolError,
+    ProxyError,
+)
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 from urllib3.exceptions import SSLError as URLLib3SSLError
 from urllib3.util.retry import Retry
@@ -20,9 +25,10 @@ from urllib3.util.ssl_ import (
     OP_NO_SSLv2,
     OP_NO_SSLv3,
     ssl,
-    is_ipaddress,
 )
-from urllib3.util.url import parse_url
+from urllib3.util.url import IPV4_RE, IPV6_ADDRZ_RE, parse_url
+
+from botocore.vendored import six
 
 try:
     from urllib3.util.ssl_ import OP_NO_TICKET, PROTOCOL_TLS_CLIENT
@@ -179,6 +185,21 @@ def mask_proxy_url(proxy_url):
     return proxy_url
 
 
+def _is_ipaddress(host):
+    """Detects whether the hostname given is an IPv4 or IPv6 address.
+    Also detects IPv6 addresses with Zone IDs. This method is taken from urllib3
+    and uses the regex patterns from urllib3. The only change is we match
+    IPv6 address with braces, as hostname at this point will have square braces around it.
+
+    :param str host: Hostname to examine.
+    :return: True if the hostname is an IP address, False otherwise.
+    """
+    if not six.PY2 and isinstance(host, bytes):
+        # IDN A-label bytes are ASCII compatible.
+        host = host.decode("ascii")
+    return bool(IPV4_RE.match(host) or IPV6_ADDRZ_RE.match(host))
+
+
 class ProxyConfiguration(object):
     """Represents a proxy configuration dictionary and additional settings.
 
@@ -287,11 +308,10 @@ class URLLib3Session(object):
         self._manager = PoolManager(**self._get_pool_manager_kwargs())
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
 
-    def _proxies_kwargs(self, proxy_url):
+    @property
+    def _proxies_kwargs(self):
         proxies_settings = self._proxy_config.settings
-        proxy_ssl_context = self._setup_proxy_ssl_context(proxies_settings, proxy_url)
         proxies_kwargs = {
-            'proxy_ssl_context': proxy_ssl_context,
             'use_forwarding_for_https': proxies_settings.get(
                 'proxy_use_forwarding_for_https'),
         }
@@ -318,7 +338,11 @@ class URLLib3Session(object):
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
             proxy_manager_kwargs = self._get_pool_manager_kwargs(
                 proxy_headers=proxy_headers)
-            proxy_manager_kwargs.update(**self._proxies_kwargs(proxy_url))
+            proxy_manager_kwargs.update(**self._proxies_kwargs)
+            proxy_ssl_context = self._setup_proxy_ssl_context(self._proxy_config.settings, proxy_url)
+            proxy_manager_kwargs.update({
+                'proxy_ssl_context': proxy_ssl_context
+            })
             proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
@@ -353,7 +377,7 @@ class URLLib3Session(object):
             u = parse_url(proxy_url)
             # urllib3 disables this by default but we need
             # it for proper proxy tls negotiation when proxy_url is not an Ip Address
-            if not is_ipaddress(u.host):
+            if not _is_ipaddress(u.host):
                 context.check_hostname = True
             if proxy_ca_bundle is not None:
                 context.load_verify_locations(cafile=proxy_ca_bundle)
@@ -364,7 +388,7 @@ class URLLib3Session(object):
                 context.load_cert_chain(proxy_cert)
 
             return context
-        except (IOError, URLLib3SSLError) as e:
+        except (IOError, URLLib3SSLError, LocationParseError) as e:
             raise InvalidProxiesConfigError(error=e)
 
     def _get_connection_manager(self, url, proxy_url=None):
@@ -386,7 +410,7 @@ class URLLib3Session(object):
         proxy_scheme = urlparse(proxy_url).scheme
         using_https_forwarding_proxy = (
             proxy_scheme == 'https' and
-            self._proxies_kwargs(proxy_url).get('use_forwarding_for_https', False)
+            self._proxies_kwargs.get('use_forwarding_for_https', False)
         )
 
         if using_https_forwarding_proxy or url.startswith('http:'):

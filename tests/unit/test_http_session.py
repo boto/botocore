@@ -353,7 +353,7 @@ class TestURLLib3Session(unittest.TestCase):
             )
             self.assert_request_sent()
 
-    def test_proxy_ssl_context_use_check_hostname_if_not_ip_address(self):
+    def test_proxy_ssl_context_uses_check_hostname(self):
         cert = ('/some/cert', '/some/key')
         proxies = {'https': 'https://proxy.com'}
         proxies_config = {'proxy_client_cert': "path/to/cert"}
@@ -369,17 +369,23 @@ class TestURLLib3Session(unittest.TestCase):
 
     def test_proxy_ssl_context_does_not_use_check_hostname_if_ip_address(self):
         cert = ('/some/cert', '/some/key')
-        proxies = {'https': 'https://1.2.3.4:5678'}
         proxies_config = {'proxy_client_cert': "path/to/cert"}
-        with mock.patch('botocore.httpsession.SSLContext'):
-            session = URLLib3Session(
-                proxies=proxies, client_cert=cert,
-                proxies_config=proxies_config
-            )
-            self.request.url = 'https://example.com/'
-            session.send(self.request.prepare())
-            last_call = self.proxy_manager_fun.call_args[-1]
-            self.assertIs(last_call['ssl_context'].check_hostname, False)
+        urls = ['https://1.2.3.4:5678',
+                'https://4.6.0.0',
+                'https://[FE80::8939:7684:D84b:a5A4%251]:1234',
+                'https://[FE80::8939:7684:D84b:a5A4%251]',
+                'https://[::1]:789']
+        for proxy_url in urls:
+            with mock.patch('botocore.httpsession.SSLContext'):
+                proxies = {'https': proxy_url}
+                session = URLLib3Session(
+                    proxies=proxies, client_cert=cert,
+                    proxies_config=proxies_config
+                )
+                self.request.url = 'https://example.com/'
+                session.send(self.request.prepare())
+                last_call = self.proxy_manager_fun.call_args[-1]
+                self.assertIs(last_call['ssl_context'].check_hostname, False)
 
     def test_basic_request(self):
         session = URLLib3Session()
