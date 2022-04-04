@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.24.33
+=======
+
+* api-change:``iot``: AWS IoT - AWS IoT Device Defender adds support to list metric datapoints collected for IoT devices through the ListMetricValues API
+* api-change:``servicecatalog``: This release adds ProvisioningArtifictOutputKeys to DescribeProvisioningParameters to reference the outputs of a Provisioned Product and deprecates ProvisioningArtifactOutputs.
+* api-change:``sms``: Revised product update notice for SMS console deprecation.
+* api-change:``proton``: SDK release to support tagging for AWS Proton Repository resource
+* enhancement:AWSCRT: Upgrade awscrt version to 0.13.8
+
+
 1.24.32
 =======
 
