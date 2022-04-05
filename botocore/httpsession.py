@@ -371,7 +371,7 @@ class URLLib3Session(object):
         try:
             u = parse_url(proxy_url)
             # urllib3 disables this by default but we need
-            # it for proper proxy tls negotiation when proxy_url is not an Ip Address
+            # it for proper proxy tls negotiation when proxy_url is not an IP Address
             if not _is_ipaddress(u.host):
                 context.check_hostname = True
             if proxy_ca_bundle is not None:
