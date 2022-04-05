@@ -33,26 +33,64 @@ def parametrize(cases):
 sso_provider_resolution_cases = [
     {
         "documentation": "Full valid profile",
-        "profile": {
-            "sso_region": "us-east-1",
-            "sso_start_url": "https://d-abc123.awsapps.com/start",
+        "config": {
+            "profiles": {"test": {"sso_session": "admin"}},
+            "sso_sessions": {
+                "admin": {
+                    "sso_region": "us-east-1",
+                    "sso_start_url": "https://d-abc123.awsapps.com/start",
+                }
+            },
         },
         "resolves": True,
     },
     {
         "documentation": "Non-SSO profiles are skipped",
-        "profile": {"region": "us-west-2"},
+        "config": {"profiles": {"test": {"region": "us-west-2"}}},
         "resolves": False,
     },
     {
         "documentation": "Only start URL is invalid",
-        "profile": {"sso_start_url": "https://d-abc123.awsapps.com/start"},
+        "config": {
+            "profiles": {"test": {"sso_session": "admin"}},
+            "sso_sessions": {
+                "admin": {
+                    "sso_start_url": "https://d-abc123.awsapps.com/start"
+                }
+            },
+        },
         "resolves": False,
         "expectedException": InvalidConfigError,
     },
     {
-        "documentation": "SSO Region only is skipped",
-        "profile": {"sso_region": "us-east-1"},
+        "documentation": "Only sso_region is invalid",
+        "config": {
+            "profiles": {"test": {"sso_session": "admin"}},
+            "sso_sessions": {"admin": {"sso_region": "us-east-1"}},
+        },
+        "resolves": False,
+        "expectedException": InvalidConfigError,
+    },
+    {
+        "documentation": "Specified sso-session must exist",
+        "config": {
+            "profiles": {"test": {"sso_session": "dev"}},
+            "sso_sessions": {"admin": {"sso_region": "us-east-1"}},
+        },
+        "resolves": False,
+        "expectedException": InvalidConfigError,
+    },
+    {
+        "documentation": "The sso_session must be specified",
+        "config": {
+            "profiles": {"test": {"region": "us-west-2"}},
+            "sso_sessions": {
+                "admin": {
+                    "sso_region": "us-east-1",
+                    "sso_start_url": "https://d-abc123.awsapps.com/start",
+                }
+            },
+        },
         "resolves": False,
     },
 ]
@@ -60,15 +98,14 @@ sso_provider_resolution_cases = [
 
 def _create_mock_session(config):
     mock_session = mock.Mock(spec=Session)
-    mock_session.get_config_variable.return_value = "default"
-    mock_session.full_config = {"profiles": {"default": config}}
+    mock_session.get_config_variable.return_value = "test"
+    mock_session.full_config = config
     return mock_session
 
 
 @parametrize(sso_provider_resolution_cases)
 def test_sso_token_provider_resolution(test_case):
-    config = test_case["profile"]
-    mock_session = _create_mock_session(config)
+    mock_session = _create_mock_session(test_case["config"])
     resolver = SSOTokenProvider(mock_session)
 
     expected_exception = test_case.get("expectedException")
@@ -196,8 +233,6 @@ sso_provider_refresh_cases = [
             "clientId": "clientid",
             "clientSecret": "YSBzZWNyZXQ=",
             "registrationExpiresAt": "2022-12-25T13:30:00Z",
-            # TODO: Verify if we should preserve old refresh token
-            "refreshToken": "cachedrefreshtoken",
         },
         "expectedToken": {
             "token": "newtoken",
@@ -225,10 +260,15 @@ sso_provider_refresh_cases = [
 @parametrize(sso_provider_refresh_cases)
 def test_sso_token_provider_refresh(test_case):
     config = {
-        "sso_region": "us-west-2",
-        "sso_start_url": "https://d-123.awsapps.com/start",
+        "profiles": {"test": {"sso_session": "admin"}},
+        "sso_sessions": {
+            "admin": {
+                "sso_region": "us-west-2",
+                "sso_start_url": "https://d-123.awsapps.com/start",
+            }
+        },
     }
-    cache_key = "2b829a45f04c9828cb45b7d092d8e4aa30818393"
+    cache_key = "d033e22ae348aeb5660fc2140aec35850c4da997"
     token_cache = {}
 
     # Prepopulate the token cache

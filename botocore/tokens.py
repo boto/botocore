@@ -198,24 +198,43 @@ class SSOTokenProvider:
     def _load_sso_config(self):
         loaded_config = self._session.full_config
         profiles = loaded_config.get("profiles", {})
+        sso_sessions = loaded_config.get("sso_sessions", {})
         profile_name = self._session.get_config_variable("profile")
         if not profile_name:
             profile_name = "default"
         profile_config = profiles.get(profile_name, {})
 
-        if "sso_start_url" not in profile_config:
-            return None
+        if "sso_session" not in profile_config:
+            return
 
-        if "sso_region" not in profile_config:
+        sso_session_name = profile_config["sso_session"]
+        sso_config = sso_sessions.get(sso_session_name, None)
+
+        if not sso_config:
             error_msg = (
                 f'The profile "{profile_name}" is configured to use the SSO '
-                f"token provider but is missing the sso_region configuration"
+                f'token provider but the "{sso_session_name}" sso_session '
+                f"configuration does not exist."
+            )
+            raise InvalidConfigError(error_msg=error_msg)
+
+        missing_configs = []
+        for var in self._SSO_CONFIG_VARS:
+            if var not in sso_config:
+                missing_configs.append(var)
+
+        if missing_configs:
+            error_msg = (
+                f'The profile "{profile_name}" is configured to use the SSO '
+                f"token provider but is missing the following configuration: "
+                f"{missing_configs}."
             )
             raise InvalidConfigError(error_msg=error_msg)
 
         return {
-            "sso_region": profile_config["sso_region"],
-            "sso_start_url": profile_config["sso_start_url"],
+            "session_name": sso_session_name,
+            "sso_region": sso_config["sso_region"],
+            "sso_start_url": sso_config["sso_start_url"],
         }
 
     @CachedProperty
@@ -250,9 +269,6 @@ class SSOTokenProvider:
         }
         if "refreshToken" in response:
             new_token["refreshToken"] = response["refreshToken"]
-        elif "refreshToken" in token:
-            # TODO: Verify if we should preserve the old refresh token
-            new_token["refreshToken"] = token["refreshToken"]
         logger.info("SSO Token refresh succeeded")
         return new_token
 
@@ -282,8 +298,9 @@ class SSOTokenProvider:
 
     def _refresher(self):
         start_url = self._sso_config["sso_start_url"]
-        logger.info(f"Loading cached SSO token for {start_url}")
-        token_dict = self._token_loader(start_url)
+        session_name = self._sso_config["session_name"]
+        logger.info(f"Loading cached SSO token for {session_name}")
+        token_dict = self._token_loader(start_url, session_name=session_name)
         expiration = dateutil.parser.parse(token_dict["expiresAt"])
         logger.debug(f"Cached SSO token expires at {expiration}")
 
@@ -293,7 +310,9 @@ class SSOTokenProvider:
             if new_token_dict is not None:
                 token_dict = new_token_dict
                 expiration = token_dict["expiresAt"]
-                self._token_loader.save_token(start_url, token_dict)
+                self._token_loader.save_token(
+                    start_url, token_dict, session_name=session_name
+                )
 
         return FrozenAuthToken(
             token_dict["accessToken"], expiration=expiration

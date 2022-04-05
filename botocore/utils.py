@@ -2764,17 +2764,24 @@ class SSOTokenLoader:
             cache = {}
         self._cache = cache
 
-    def _generate_cache_key(self, start_url):
-        return hashlib.sha1(start_url.encode('utf-8')).hexdigest()
+    def _generate_cache_key(self, start_url, session_name):
+        input_str = start_url
+        if session_name is not None:
+            input_str = session_name
+        return hashlib.sha1(input_str.encode('utf-8')).hexdigest()
 
-    def save_token(self, start_url, token):
-        cache_key = self._generate_cache_key(start_url)
+    def save_token(self, start_url, token, session_name=None):
+        cache_key = self._generate_cache_key(start_url, session_name)
         self._cache[cache_key] = token
 
-    def __call__(self, start_url):
-        cache_key = self._generate_cache_key(start_url)
+    def __call__(self, start_url, session_name=None):
+        cache_key = self._generate_cache_key(start_url, session_name)
+        logger.debug(f'Checking for cached token at: {cache_key}')
         if cache_key not in self._cache:
-            error_msg = f'Token for {start_url} does not exist'
+            name = start_url
+            if session_name is not None:
+                name = session_name
+            error_msg = f'Token for {name} does not exist'
             raise SSOTokenLoadError(error_msg=error_msg)
 
         token = self._cache[cache_key]
