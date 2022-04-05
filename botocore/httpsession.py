@@ -24,11 +24,12 @@ from urllib3.util.ssl_ import (
     PROTOCOL_TLS,
     OP_NO_SSLv2,
     OP_NO_SSLv3,
+    is_ipaddress,
     ssl,
 )
-from urllib3.util.url import IPV4_RE, IPV6_ADDRZ_RE, parse_url
+from urllib3.util.url import parse_url
 
-from botocore.vendored import six
+from botocore.utils import IPV6_ADDRZ_RE
 
 try:
     from urllib3.util.ssl_ import OP_NO_TICKET, PROTOCOL_TLS_CLIENT
@@ -186,18 +187,11 @@ def mask_proxy_url(proxy_url):
 
 
 def _is_ipaddress(host):
-    """Detects whether the hostname given is an IPv4 or IPv6 address.
-    Also detects IPv6 addresses with Zone IDs. This method is taken from urllib3
-    and uses the regex patterns from urllib3. The only change is we match
-    IPv6 address with braces, as hostname at this point will have square braces around it.
-
+    """Wrapper for urllib3's is_ipaddress to provide support for bracketed IPv6 addresses.
     :param str host: Hostname to examine.
     :return: True if the hostname is an IP address, False otherwise.
     """
-    if not six.PY2 and isinstance(host, bytes):
-        # IDN A-label bytes are ASCII compatible.
-        host = host.decode("ascii")
-    return bool(IPV4_RE.match(host) or IPV6_ADDRZ_RE.match(host))
+    return is_ipaddress(host) or bool(IPV6_ADDRZ_RE.match(host))
 
 
 class ProxyConfiguration(object):
@@ -340,9 +334,10 @@ class URLLib3Session(object):
                 proxy_headers=proxy_headers)
             proxy_manager_kwargs.update(**self._proxies_kwargs)
             proxy_ssl_context = self._setup_proxy_ssl_context(self._proxy_config.settings, proxy_url)
-            proxy_manager_kwargs.update({
-                'proxy_ssl_context': proxy_ssl_context
-            })
+            if proxy_ssl_context:
+                proxy_manager_kwargs.update({
+                    'proxy_ssl_context': proxy_ssl_context
+                })
             proxy_manager = proxy_from_url(proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager

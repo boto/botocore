@@ -374,6 +374,8 @@ class TestURLLib3Session(unittest.TestCase):
                 'https://4.6.0.0',
                 'https://[FE80::8939:7684:D84b:a5A4%251]:1234',
                 'https://[FE80::8939:7684:D84b:a5A4%251]',
+                'https://[FE80::8939:7684:D84b:a5A4]:999',
+                'https://[FE80::8939:7684:D84b:a5A4]',
                 'https://[::1]:789']
         for proxy_url in urls:
             with mock.patch('botocore.httpsession.SSLContext'):
