@@ -29,8 +29,6 @@ from urllib3.util.ssl_ import (
 )
 from urllib3.util.url import parse_url
 
-from botocore import utils
-
 try:
     from urllib3.util.ssl_ import OP_NO_TICKET, PROTOCOL_TLS_CLIENT
 except ImportError:
@@ -45,7 +43,12 @@ except ImportError:
     from urllib3.util.ssl_ import SSLContext
 
 import botocore.awsrequest
-from botocore.compat import ensure_bytes, filter_ssl_warnings, urlparse
+from botocore.compat import (
+    IPV6_ADDRZ_RE,
+    ensure_bytes,
+    filter_ssl_warnings,
+    urlparse,
+)
 from botocore.exceptions import (
     ConnectionClosedError,
     ConnectTimeoutError,
@@ -191,7 +194,7 @@ def _is_ipaddress(host):
     :param str host: Hostname to examine.
     :return: True if the hostname is an IP address, False otherwise.
     """
-    return is_ipaddress(host) or bool(utils.IPV6_ADDRZ_RE.match(host))
+    return is_ipaddress(host) or bool(IPV6_ADDRZ_RE.match(host))
 
 
 class ProxyConfiguration(object):
@@ -334,7 +337,7 @@ class URLLib3Session(object):
                 proxy_headers=proxy_headers)
             proxy_manager_kwargs.update(**self._proxies_kwargs)
             proxy_ssl_context = self._setup_proxy_ssl_context(self._proxy_config.settings, proxy_url)
-            if proxy_ssl_context:
+            if proxy_ssl_context is not None:
                 proxy_manager_kwargs.update({
                     'proxy_ssl_context': proxy_ssl_context
                 })
