@@ -29,7 +29,7 @@ from urllib3.util.ssl_ import (
 )
 from urllib3.util.url import parse_url
 
-from botocore.utils import IPV6_ADDRZ_RE
+from botocore import utils
 
 try:
     from urllib3.util.ssl_ import OP_NO_TICKET, PROTOCOL_TLS_CLIENT
@@ -191,7 +191,7 @@ def _is_ipaddress(host):
     :param str host: Hostname to examine.
     :return: True if the hostname is an IP address, False otherwise.
     """
-    return is_ipaddress(host) or bool(IPV6_ADDRZ_RE.match(host))
+    return is_ipaddress(host) or bool(utils.IPV6_ADDRZ_RE.match(host))
 
 
 class ProxyConfiguration(object):
