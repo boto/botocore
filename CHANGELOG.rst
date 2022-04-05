@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.24.34
+=======
+
+* api-change:``securityhub``: Added additional ASFF details for RdsSecurityGroup AutoScalingGroup, ElbLoadBalancer, CodeBuildProject and RedshiftCluster.
+* api-change:``fsx``: Provide customers more visibility into file system status by adding new "Misconfigured Unavailable" status for Amazon FSx for Windows File Server.
+* api-change:``s3control``: Documentation-only update for doc bug fixes for the S3 Control API docs.
+* api-change:``datasync``: AWS DataSync now supports Amazon FSx for OpenZFS locations.
+
+
 1.24.33
 =======
 
