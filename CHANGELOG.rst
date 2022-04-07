@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.24.36
+=======
+
+* api-change:``apigateway``: ApiGateway CLI command get-usage now includes usagePlanId, startDate, and endDate fields in the output to match documentation.
+* api-change:``personalize``: This release provides tagging support in AWS Personalize.
+* api-change:``pi``: Adds support for DocumentDB to the Performance Insights API.
+* api-change:``events``: Update events client to latest version
+* api-change:``docdb``: Added support to enable/disable performance insights when creating or modifying db instances
+* api-change:``sagemaker``: Amazon Sagemaker Notebook Instances now supports G5 instance types
+
+
 1.24.35
 =======
 
