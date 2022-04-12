@@ -17,7 +17,6 @@ from botocore.awsrequest import AWSRequest
 from botocore.exceptions import NoAuthTokenError
 from botocore.tokens import FrozenAuthToken
 
-
 cases = [
     {
         "documentation": "Minimal bearer auth case",

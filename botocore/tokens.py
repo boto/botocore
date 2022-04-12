@@ -10,27 +10,27 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import dateutil.parser
 import json
 import logging
-import threading
 import os
-
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from dateutil.tz import tzutc
 from typing import Optional
+
+import dateutil.parser
+from dateutil.tz import tzutc
 
 from botocore import UNSIGNED
 from botocore.compat import total_seconds
 from botocore.config import Config
 from botocore.credentials import JSONFileCache
 from botocore.exceptions import (
-    InvalidConfigError,
     ClientError,
+    InvalidConfigError,
     TokenRetrievalError,
 )
-from botocore.utils import SSOTokenLoader, CachedProperty
+from botocore.utils import CachedProperty, SSOTokenLoader
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +189,8 @@ class SSOTokenProvider:
         self._session = session
         if cache is None:
             cache = JSONFileCache(
-                self._SSO_TOKEN_CACHE_DIR, dumps_func=_sso_json_dumps,
+                self._SSO_TOKEN_CACHE_DIR,
+                dumps_func=_sso_json_dumps,
             )
         self._now = time_fetcher
         self._cache = cache

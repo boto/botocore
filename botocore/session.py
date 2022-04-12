@@ -25,8 +25,8 @@ import warnings
 
 import botocore.client
 import botocore.configloader
-import botocore.tokens
 import botocore.credentials
+import botocore.tokens
 from botocore import (
     UNSIGNED,
     __version__,
@@ -171,7 +171,8 @@ class Session:
 
     def _register_token_provider(self):
         self._components.lazy_register_component(
-            'token_provider', self._create_token_resolver)
+            'token_provider', self._create_token_resolver
+        )
 
     def _create_token_resolver(self):
         return botocore.tokens.create_token_resolver(self)

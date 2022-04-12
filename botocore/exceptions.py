@@ -169,6 +169,7 @@ class NoAuthTokenError(BotoCoreError):
     """
     No authorization token could be found.
     """
+
     fmt = 'Unable to locate authorization token'
 
 
@@ -180,6 +181,7 @@ class TokenRetrievalError(BotoCoreError):
     :ivar error_msg: The msg explaining why the token could not be retrieved.
 
     """
+
     fmt = 'Error when retrieving token from {provider}: {error_msg}'
 
 

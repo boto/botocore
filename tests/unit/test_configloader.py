@@ -189,5 +189,6 @@ class TestConfigLoader(BaseEnvVar):
         self.assertEqual(sso_config['sso_region'], 'us-east-1')
         self.assertEqual(sso_config['sso_start_url'], 'https://example.com')
 
+
 if __name__ == "__main__":
     unittest.main()

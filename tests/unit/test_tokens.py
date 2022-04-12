@@ -10,23 +10,24 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import pytest
 import dateutil.parser
-
-from tests import mock
+import pytest
 
 from botocore.exceptions import (
     InvalidConfigError,
-    TokenRetrievalError,
     SSOTokenLoadError,
+    TokenRetrievalError,
 )
 from botocore.session import Session
 from botocore.tokens import SSOTokenProvider
+from tests import mock
 
 
 def parametrize(cases):
     return pytest.mark.parametrize(
-        "test_case", cases, ids=[c["documentation"] for c in cases],
+        "test_case",
+        cases,
+        ids=[c["documentation"] for c in cases],
     )
 
 
@@ -289,7 +290,9 @@ def test_sso_token_provider_refresh(test_case):
         return current_time
 
     resolver = SSOTokenProvider(
-        mock_session, token_cache, time_fetcher=_time_fetcher,
+        mock_session,
+        token_cache,
+        time_fetcher=_time_fetcher,
     )
 
     auth_token = resolver.load_token()

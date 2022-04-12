@@ -35,7 +35,7 @@ from botocore.compat import (
     urlsplit,
     urlunsplit,
 )
-from botocore.exceptions import NoCredentialsError, NoAuthTokenError
+from botocore.exceptions import NoAuthTokenError, NoCredentialsError
 from botocore.utils import (
     is_valid_ipv6_endpoint_url,
     normalize_url_path,

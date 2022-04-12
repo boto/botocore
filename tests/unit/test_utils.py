@@ -3181,17 +3181,21 @@ class TestSSOTokenLoader(unittest.TestCase):
 
     def test_can_save_token_sso_session(self):
         self.loader.save_token(
-            self.start_url, self.cached_token, session_name=self.session_name,
+            self.start_url,
+            self.cached_token,
+            session_name=self.session_name,
         )
         access_token = self.loader(
-            self.start_url, session_name=self.session_name,
+            self.start_url,
+            session_name=self.session_name,
         )
         self.assertEqual(self.cached_token, access_token)
 
     def test_can_load_token_exists_sso_session_name(self):
         self.cache[self.session_cache_key] = self.cached_token
         access_token = self.loader(
-            self.start_url, session_name=self.session_name,
+            self.start_url,
+            session_name=self.session_name,
         )
         self.assertEqual(self.cached_token, access_token)
 
