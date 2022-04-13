@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.24.40
+=======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``fsx``: This release adds support for deploying FSx for ONTAP file systems in a single Availability Zone.
+
+
 1.24.39
 =======
 
