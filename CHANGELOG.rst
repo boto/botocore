@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.24.41
+=======
+
+* api-change:``batch``: Enables configuration updates for compute environments with BEST_FIT_PROGRESSIVE and SPOT_CAPACITY_OPTIMIZED allocation strategies.
+* api-change:``ec2``: Documentation updates for Amazon EC2.
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``appstream``: Includes updates for create and update fleet APIs to manage the session scripts locations for Elastic fleets.
+* api-change:``glue``: Auto Scaling for Glue version 3.0 and later jobs to dynamically scale compute resources. This SDK change provides customers with the auto-scaled DPU usage
+* api-change:``appflow``: Enables users to pass custom token URL parameters for Oauth2 authentication during create connector profile
+
+
 1.24.40
 =======
 
