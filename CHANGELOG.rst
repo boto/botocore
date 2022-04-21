@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.24.45
+=======
+
+* api-change:``wisdom``: This release updates the GetRecommendations API to include a trigger event list for classifying and grouping recommendations.
+* api-change:``elasticache``: Doc only update for ElastiCache
+* api-change:``iottwinmaker``: General availability (GA) for AWS IoT TwinMaker. For more information, see https://docs.aws.amazon.com/iot-twinmaker/latest/apireference/Welcome.html
+* api-change:``secretsmanager``: Documentation updates for Secrets Manager
+* api-change:``mediatailor``: This release introduces tiered channels and adds support for live sources. Customers using a STANDARD channel can now create programs using live sources.
+* api-change:``storagegateway``: This release adds support for minimum of 5 character length virtual tape barcodes.
+* api-change:``lookoutmetrics``: Added DetectMetricSetConfig API for detecting configuration required for creating metric set from provided S3 data source.
+* api-change:``iotsitewise``: This release adds 3 new batch data query APIs : BatchGetAssetPropertyValue, BatchGetAssetPropertyValueHistory and BatchGetAssetPropertyAggregates
+* api-change:``glue``: This release adds APIs to create, read, delete, list, and batch read of Glue custom entity types
+
+
 1.24.44
 =======
 
