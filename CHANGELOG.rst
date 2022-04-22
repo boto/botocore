@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.24.46
+=======
+
+* api-change:``chime-sdk-meetings``: Include additional exceptions types.
+* api-change:``ec2``: Adds support for waiters that automatically poll for a deleted NAT Gateway until it reaches the deleted state.
+
+
 1.24.45
 =======
 
