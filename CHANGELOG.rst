@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.25.1
+======
+
+* api-change:``lightsail``: This release adds support for Lightsail load balancer HTTP to HTTPS redirect and TLS policy configuration.
+* api-change:``sagemaker``: SageMaker Inference Recommender now accepts customer KMS key ID for encryption of endpoints and compilation outputs created during inference recommendation.
+* api-change:``pricing``: Documentation updates for Price List API
+* api-change:``glue``: This release adds documentation for the APIs to create, read, delete, list, and batch read of AWS Glue custom patterns, and for Lake Formation configuration settings in the AWS Glue crawler.
+* api-change:``cloudfront``: CloudFront now supports the Server-Timing header in HTTP responses sent from CloudFront. You can use this header to view metrics that help you gain insights about the behavior and performance of CloudFront. To use this header, enable it in a response headers policy.
+* api-change:``ivschat``: Adds new APIs for IVS Chat, a feature for building interactive chat experiences alongside an IVS broadcast.
+* api-change:``network-firewall``: AWS Network Firewall now enables customers to use a customer managed AWS KMS key for the encryption of their firewall resources.
+
+
 1.25.0
 ======
 
