@@ -158,3 +158,28 @@ class TestPickleExceptions(unittest.TestCase):
             unpickled_exception.request, botocore.awsrequest.AWSRequest)
         self.assertIsInstance(
             unpickled_exception.response, botocore.awsrequest.AWSResponse)
+
+
+def test_request_id_info_added_when_present():
+    response = {
+        'Error': {},
+        'ResponseMetadata': {
+            'RequestId': 'F9724212F07F14A2'
+        }
+    }
+    error_msg = str(exceptions.ClientError(response, 'operation'))
+    if '(RequestId: F9724212F07F14A2)' not in error_msg:
+        raise AssertionError("request id information not injected into error "
+                             "message: %s" % error_msg)
+
+
+def test_request_id_not_added_if_request_id_not_present():
+    response = {
+        'Error': {},
+        'ResponseMetadata': {}
+    }
+    error_msg = str(exceptions.ClientError(response, 'operation'))
+    if 'RequestId' in error_msg:
+        raise AssertionError("RequestId information should not be in exception "
+                             "message when RequestId not in response "
+                             "metadata: %s" % error_msg)
