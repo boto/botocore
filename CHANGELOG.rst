@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.25.3
+======
+
+* api-change:``auditmanager``: This release adds documentation updates for Audit Manager. We provided examples of how to use the Custom_ prefix for the keywordValue attribute. We also provided more details about the DeleteAssessmentReport operation.
+* api-change:``network-firewall``: AWS Network Firewall adds support for stateful threat signature AWS managed rule groups.
+* api-change:``ec2``: This release adds support to query the public key and creation date of EC2 Key Pairs. Additionally, the format (pem or ppk) of a key pair can be specified when creating a new key pair.
+* api-change:``braket``: This release enables Braket Hybrid Jobs with Embedded Simulators to have multiple instances.
+* api-change:``guardduty``: Documentation update for API description.
+* api-change:``connect``: This release introduces an API for changing the current agent status of a user in Connect.
+
+
 1.25.2
 ======
 
