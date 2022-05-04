@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.25.7
+======
+
+* api-change:``ssm``: This release adds the TargetMaps parameter in SSM State Manager API.
+* api-change:``backup``: Adds support to 2 new filters about job complete time for 3 list jobs APIs in AWS Backup
+* api-change:``lightsail``: Documentation updates for Lightsail
+* api-change:``iotsecuretunneling``: This release introduces a new API RotateTunnelAccessToken that allow revoking the existing tokens and generate new tokens
+
+
 1.25.6
 ======
 
