@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.25.9
+======
+
+* api-change:``rds``: Various documentation improvements.
+* api-change:``redshift``: Introduces new field 'LoadSampleData' in CreateCluster operation. Customers can now specify 'LoadSampleData' option during creation of a cluster, which results in loading of sample data in the cluster that is created.
+* api-change:``ec2``: Add new state values for IPAMs, IPAM Scopes, and IPAM Pools.
+* api-change:``mediapackage``: This release adds Dvb Dash 2014 as an available profile option for Dash Origin Endpoints.
+* api-change:``securityhub``: Documentation updates for Security Hub API reference
+* api-change:``location``: Amazon Location Service now includes a MaxResults parameter for ListGeofences requests.
+
+
 1.25.8
 ======
 
