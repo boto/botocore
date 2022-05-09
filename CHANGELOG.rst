@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.25.10
+=======
+
+* api-change:``evidently``: Add detail message inside GetExperimentResults API response to indicate experiment result availability
+* api-change:``ssm-contacts``: Fixed an error in the DescribeEngagement example for AWS Incident Manager.
+* api-change:``cloudcontrol``: SDK release for Cloud Control API to include paginators for Python SDK.
+
+
 1.25.9
 ======
 
