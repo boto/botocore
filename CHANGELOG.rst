@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.25.11
+=======
+
+* api-change:``migration-hub-refactor-spaces``: AWS Migration Hub Refactor Spaces documentation only update to fix a formatting issue.
+* api-change:``ec2``: Added support for using NitroTPM and UEFI Secure Boot on EC2 instances.
+* api-change:``emr``: Update emr client to latest version
+* api-change:``compute-optimizer``: Documentation updates for Compute Optimizer
+* api-change:``eks``: Adds BOTTLEROCKET_ARM_64_NVIDIA and BOTTLEROCKET_x86_64_NVIDIA AMI types to EKS managed nodegroups
+
+
 1.25.10
 =======
 
