@@ -679,10 +679,7 @@ class ClientEndpointBridge:
                 hostname, is_secure, ['http', 'https']
             )
         logger.debug(
-            'Assuming an endpoint for %s, %s: %s',
-            service_name,
-            region_name,
-            endpoint_url,
+            f'Assuming an endpoint for {service_name}, {region_name}: {endpoint_url}'
         )
         # We still want to allow the user to provide an explicit version.
         signature_version = self._resolve_signature_version(
@@ -828,10 +825,9 @@ class BaseClient:
         self._register_handlers()
 
     def __getattr__(self, item):
-        event_name = 'getattr.{}.{}'.format(
-            self._service_model.service_id.hyphenize(),
-            item,
-        )
+        service_id = self._service_model.service_id.hyphenize()
+        event_name = f'getattr.{service_id}.{item}'
+
         handler, event_response = self.meta.events.emit_until_response(
             event_name, client=self
         )
@@ -959,20 +955,15 @@ class BaseClient:
         # parameters or return a new set of parameters to use.
         service_id = self._service_model.service_id.hyphenize()
         responses = self.meta.events.emit(
-            'provide-client-params.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'provide-client-params.{service_id}.{operation_name}',
             params=api_params,
             model=operation_model,
             context=context,
         )
         api_params = first_non_none_response(responses, default=api_params)
 
-        event_name = 'before-parameter-build.{service_id}.{operation_name}'
         self.meta.events.emit(
-            event_name.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'before-parameter-build.{service_id}.{operation_name}',
             params=api_params,
             model=operation_model,
             context=context,

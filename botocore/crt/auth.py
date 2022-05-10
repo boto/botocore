@@ -438,12 +438,9 @@ class CrtSigV4AsymQueryAuth(CrtSigV4AsymAuth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = {
-            k: v[0]
-            for k, v in parse_qs(
-                url_parts.query, keep_blank_values=True
-            ).items()
-        }
+        query_string_parts = parse_qs(url_parts.query, keep_blank_values=True)
+        query_dict = {k: v[0] for k, v in query_string_parts.items()}
+
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing

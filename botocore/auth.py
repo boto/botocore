@@ -555,12 +555,9 @@ class SigV4QueryAuth(SigV4Auth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = {
-            k: v[0]
-            for k, v in parse_qs(
-                url_parts.query, keep_blank_values=True
-            ).items()
-        }
+        query_string_parts = parse_qs(url_parts.query, keep_blank_values=True)
+        query_dict = {k: v[0] for k, v in query_string_parts.items()}
+
         if request.params:
             query_dict.update(request.params)
             request.params = {}
@@ -837,9 +834,9 @@ class HmacV1Auth(BaseSigner):
             # headers['foo'] = 'a'; headers['foo'] = 'b'
             # list(headers) will print ['foo', 'foo'].
             del request.headers['Authorization']
-        request.headers[
-            'Authorization'
-        ] = f"AWS {self.credentials.access_key}:{signature}"
+
+        auth_header = f"AWS {self.credentials.access_key}:{signature}"
+        request.headers['Authorization'] = auth_header
 
 
 class HmacV1QueryAuth(HmacV1Auth):

@@ -390,7 +390,7 @@ class PageIterator:
         # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        if isinstance(all_data, (list, (str,))):
+        if isinstance(all_data, (list, str)):
             data = all_data[starting_truncation:]
         else:
             data = None
@@ -506,7 +506,7 @@ class PageIterator:
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float, (str,))):
+                elif isinstance(result_value, (int, float, str)):
                     # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result,

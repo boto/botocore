@@ -739,6 +739,18 @@ class DenormalizedStructureBuilder:
 
     """
 
+    SCALAR_TYPES = (
+        'string',
+        'integer',
+        'boolean',
+        'blob',
+        'float',
+        'timestamp',
+        'long',
+        'double',
+        'char',
+    )
+
     def __init__(self, name=None):
         self.members = OrderedDict()
         self._name_generator = ShapeNameGenerator()
@@ -784,20 +796,10 @@ class DenormalizedStructureBuilder:
             shapes[shape_name] = self._build_list(model, shapes)
         elif model['type'] == 'map':
             shapes[shape_name] = self._build_map(model, shapes)
-        elif model['type'] in (
-            'string',
-            'integer',
-            'boolean',
-            'blob',
-            'float',
-            'timestamp',
-            'long',
-            'double',
-            'char',
-        ):
+        elif model['type'] in self.SCALAR_TYPES:
             shapes[shape_name] = self._build_scalar(model)
         else:
-            raise InvalidShapeError("Unknown shape type: %s" % model['type'])
+            raise InvalidShapeError(f"Unknown shape type: {model['type']}")
 
     def _build_structure(self, model, shapes):
         members = OrderedDict()

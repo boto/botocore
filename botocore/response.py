@@ -74,9 +74,6 @@ class StreamingBody(IOBase):
         # putting in a check here so in case this interface goes away, we'll
         # know.
         try:
-            # To further complicate things, the way to grab the
-            # underlying socket object from an HTTPResponse is different
-            # in py2 and py3.  So this code has been pushed to botocore.compat.
             set_socket_timeout(self._raw_stream, timeout)
         except AttributeError:
             logger.error(

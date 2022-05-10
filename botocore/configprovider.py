@@ -815,13 +815,9 @@ class SectionConfigProvider(BaseProvider):
 
     def __repr__(self):
         return (
-            'SectionConfigProvider(section_name=%s, '
-            'session=%s, override_providers=%s)'
-            % (
-                self._section_name,
-                self._session,
-                self._override_providers,
-            )
+            f'SectionConfigProvider(section_name={self._section_name}, '
+            f'session={self._session}, '
+            f'override_providers={self._override_providers})'
         )
 
 

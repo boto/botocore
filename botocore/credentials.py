@@ -1077,7 +1077,7 @@ class ProcessProvider(CredentialProvider):
         except KeyError as e:
             raise CredentialRetrievalError(
                 provider=self.METHOD,
-                error_msg="Missing required key in response: %s" % e,
+                error_msg=f"Missing required key in response: {e}",
             )
 
     @property

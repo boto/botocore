@@ -2232,7 +2232,7 @@ class S3ControlEndpointSetter:
         if 'fips' in request.context['arn_details']['region']:
             raise UnsupportedS3ControlArnError(
                 arn=request.context['arn_details']['original'],
-                msg={'Invalid ARN, FIPS region not allowed in ARN.'},
+                msg='Invalid ARN, FIPS region not allowed in ARN.',
             )
         if not self._s3_config.get('use_arn_region', False):
             arn_region = request.context['arn_details']['region']

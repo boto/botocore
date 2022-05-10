@@ -303,10 +303,9 @@ class ClientArgsCreator:
         if s3_config and 'us_east_1_regional_endpoint' in s3_config:
             s3_regional_config = s3_config['us_east_1_regional_endpoint']
             self._validate_s3_regional_config(s3_regional_config)
-        return s3_regional_config == 'legacy' and region_name in (
-            'us-east-1',
-            None,
-        )
+
+        is_global_region = region_name in ('us-east-1', None)
+        return s3_regional_config == 'legacy' and is_global_region
 
     def _validate_s3_regional_config(self, config_val):
         if config_val not in VALID_REGIONAL_ENDPOINTS_CONFIG:
