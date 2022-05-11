@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.25.12
+=======
+
+* api-change:``secretsmanager``: Doc only update for Secrets Manager that fixes several customer-reported issues.
+* api-change:``ec2``: This release updates AWS PrivateLink APIs to support IPv6 for PrivateLink Services and Endpoints of type 'Interface'.
+
+
 1.25.11
 =======
 
