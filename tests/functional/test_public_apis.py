@@ -24,15 +24,20 @@ PUBLIC_API_TESTS = {
         "GetId": {"IdentityPoolId": "region:1234"},
         "GetOpenIdToken": {"IdentityId": "region:1234"},
         "UnlinkIdentity": {
-            "IdentityId": "region:1234", "Logins": {}, "LoginsToRemove": []},
+            "IdentityId": "region:1234",
+            "Logins": {},
+            "LoginsToRemove": [],
+        },
         "GetCredentialsForIdentity": {"IdentityId": "region:1234"},
     },
     "sts": {
         "AssumeRoleWithSaml": {
-            "PrincipalArn": "a"*20, "RoleArn": "a"*20, "SAMLAssertion": "abcd",
+            "PrincipalArn": "a" * 20,
+            "RoleArn": "a" * 20,
+            "SAMLAssertion": "abcd",
         },
         "AssumeRoleWithWebIdentity": {
-            "RoleArn": "a"*20,
+            "RoleArn": "a" * 20,
             "RoleSessionName": "foo",
             "WebIdentityToken": "abcd",
         },

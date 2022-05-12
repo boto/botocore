@@ -51,7 +51,11 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         return operation
 
     def _make_http_response(
-        self, body, headers=None, context=None, streaming=False,
+        self,
+        body,
+        headers=None,
+        context=None,
+        streaming=False,
     ):
         if context is None:
             context = {}
@@ -337,11 +341,16 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         context = {"checksum": {"response_algorithms": ["sha1", "crc32"]}}
         headers = {"x-amz-checksum-crc32": "DUoRhQ=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context,
+            b"hello world",
+            headers=headers,
+            context=context,
         )
         operation_model = self._make_operation_model()
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body, b"hello world")
@@ -350,21 +359,31 @@ class TestHttpChecksumHandlers(unittest.TestCase):
 
         headers = {"x-amz-checksum-crc32": "WrOonG=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context,
+            b"hello world",
+            headers=headers,
+            context=context,
         )
         with self.assertRaises(FlexibleChecksumError):
             handle_checksum_body(
-                http_response, response_dict, context, operation_model,
+                http_response,
+                response_dict,
+                context,
+                operation_model,
             )
 
         # This header should not be checked, we won't calculate a checksum
         # but a proper body should still come out at the end
         headers = {"x-amz-checksum-foo": "FOO=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context,
+            b"hello world",
+            headers=headers,
+            context=context,
         )
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body, b"hello world")
@@ -375,11 +394,17 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         context = {"checksum": {"response_algorithms": ["sha1", "crc32"]}}
         headers = {"x-amz-checksum-crc32": "DUoRhQ=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context, streaming=True,
+            b"hello world",
+            headers=headers,
+            context=context,
+            streaming=True,
         )
         operation_model = self._make_operation_model(streaming_output=True)
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body.read(), b"hello world")
@@ -388,10 +413,16 @@ class TestHttpChecksumHandlers(unittest.TestCase):
 
         headers = {"x-amz-checksum-crc32": "WrOonG=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context, streaming=True,
+            b"hello world",
+            headers=headers,
+            context=context,
+            streaming=True,
         )
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         with self.assertRaises(FlexibleChecksumError):
@@ -401,10 +432,16 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         # but a proper body should still come out at the end
         headers = {"x-amz-checksum-foo": "FOOO=="}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context, streaming=True,
+            b"hello world",
+            headers=headers,
+            context=context,
+            streaming=True,
         )
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body.read(), b"hello world")
@@ -418,11 +455,16 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         # instead skipped
         headers = {"x-amz-checksum-crc32": "FOOO==-123"}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context,
+            b"hello world",
+            headers=headers,
+            context=context,
         )
         operation_model = self._make_operation_model()
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body, b"hello world")
@@ -434,11 +476,17 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         # instead skipped
         headers = {"x-amz-checksum-crc32": "FOOO==-123"}
         http_response, response_dict = self._make_http_response(
-            b"hello world", headers=headers, context=context, streaming=True,
+            b"hello world",
+            headers=headers,
+            context=context,
+            streaming=True,
         )
         operation_model = self._make_operation_model(streaming_output=True)
         handle_checksum_body(
-            http_response, response_dict, context, operation_model,
+            http_response,
+            response_dict,
+            context,
+            operation_model,
         )
         body = response_dict["body"]
         self.assertEqual(body.read(), b"hello world")
@@ -473,7 +521,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
         class OneLessBytesIO(BytesIO):
             def read(self, size=-1):
                 # Return 1 less byte than was asked for
-                return super(OneLessBytesIO, self).read(size - 1)
+                return super().read(size - 1)
 
         bytes = OneLessBytesIO(b"abcdefghijklmnopqrstuvwxyz")
         wrapper = AwsChunkedWrapper(bytes, chunk_size=10)
@@ -576,12 +624,14 @@ class TestChecksumImplementations(unittest.TestCase):
 
     def test_sha1(self):
         self.assert_base64_checksum(
-            Sha1Checksum, "Kq5sNclPz7QV2+lfQIuc6R7oRu0=",
+            Sha1Checksum,
+            "Kq5sNclPz7QV2+lfQIuc6R7oRu0=",
         )
 
     def test_sha256(self):
         self.assert_base64_checksum(
-            Sha256Checksum, "uU0nuZNNPgilLlLX2n2r+sSE7+N6U4DukIj3rOLvzek=",
+            Sha256Checksum,
+            "uU0nuZNNPgilLlLX2n2r+sSE7+N6U4DukIj3rOLvzek=",
         )
 
     @requires_crt()
@@ -613,7 +663,10 @@ class TestStreamingChecksumBody(unittest.TestCase):
 
     def _make_wrapper(self, checksum):
         self.wrapper = StreamingChecksumBody(
-            self.fake_body, None, Crc32Checksum(), checksum,
+            self.fake_body,
+            None,
+            Crc32Checksum(),
+            checksum,
         )
 
     def test_basic_read_good(self):

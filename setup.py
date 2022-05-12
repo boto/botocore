@@ -15,8 +15,9 @@ def read(*parts):
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
+    )
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
@@ -28,9 +29,13 @@ requires = [
 ]
 if sys.version_info[:2] == (3, 6):
     # jmespath dropped support for python 3.6 in release 1.0.0
-    requires.append('jmespath>=0.7.1,<1.0.0',)
+    requires.append(
+        'jmespath>=0.7.1,<1.0.0',
+    )
 else:
-    requires.append('jmespath>=0.7.1,<2.0.0',)
+    requires.append(
+        'jmespath>=0.7.1,<2.0.0',
+    )
 
 setup(
     name='botocore',
@@ -41,8 +46,10 @@ setup(
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
-                  'botocore.vendored.requests': ['*.pem']},
+    package_data={
+        'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
+        'botocore.vendored.requests': ['*.pem'],
+    },
     include_package_data=True,
     install_requires=requires,
     license="Apache License 2.0",

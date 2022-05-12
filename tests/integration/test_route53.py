@@ -34,13 +34,15 @@ class TestRoute53Pagination(unittest.TestCase):
         # a ClientError is acceptable. In this case, the Hosted Zone specified
         # does not exist.
         with self.assertRaises(ClientError):
-            results = list(paginator.paginate(
-                PaginationConfig={
-                    'MaxItems': '1',
-                    'StartingToken': 'my.domain.name.'
-                },
-                HostedZoneId="foo"
-            ))
+            results = list(
+                paginator.paginate(
+                    PaginationConfig={
+                        'MaxItems': '1',
+                        'StartingToken': 'my.domain.name.',
+                    },
+                    HostedZoneId="foo",
+                )
+            )
             self.assertTrue(len(results) >= 0)
 
 

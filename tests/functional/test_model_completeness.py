@@ -27,7 +27,7 @@ def _paginators_and_waiters_test_cases():
 
 @pytest.mark.parametrize(
     "service_name, type_name, previous_version, latest_version",
-    _paginators_and_waiters_test_cases()
+    _paginators_and_waiters_test_cases(),
 )
 def test_paginators_and_waiters_are_not_lost_in_new_version(
     service_name, type_name, previous_version, latest_version
@@ -36,16 +36,12 @@ def test_paginators_and_waiters_are_not_lost_in_new_version(
     # there will be a successor existing in latest version.
     loader = Loader()
     try:
-        loader.load_service_model(
-            service_name, type_name, previous_version
-        )
+        loader.load_service_model(service_name, type_name, previous_version)
     except DataNotFoundError:
         pass
     else:
         try:
-            loader.load_service_model(
-                service_name, type_name, latest_version
-            )
+            loader.load_service_model(service_name, type_name, latest_version)
         except DataNotFoundError as e:
             raise AssertionError(
                 f"{type_name} must exist for {service_name}: {e}"

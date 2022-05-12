@@ -110,10 +110,10 @@ def _known_endpoint_prefixes():
     # prefix.  We don't directly have that data, so we have to load
     # every service model and look up its endpoint prefix in its
     # ``metadata`` section.
-    return set([
+    return {
         SESSION.get_service_model(service_name).endpoint_prefix
         for service_name in AVAILABLE_SERVICES
-    ])
+    }
 
 
 def _computed_endpoint_prefixes():
@@ -126,7 +126,7 @@ def _computed_endpoint_prefixes():
     endpoints = LOADER.load_data('endpoints')
     # A service can be in multiple partitions so we're using
     # a set here to remove dupes.
-    services_in_endpoints_file = set([])
+    services_in_endpoints_file = set()
     for partition in endpoints['partitions']:
         for service in partition['services']:
             # There are some services we don't support in the SDK
@@ -143,8 +143,9 @@ def _computed_endpoint_prefixes():
         # Check for an override where we know that an entry
         # in the endpoints.json actually maps to a different endpoint
         # prefix.
-        endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(endpoint_prefix,
-                                                       endpoint_prefix)
+        endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(
+            endpoint_prefix, endpoint_prefix
+        )
         endpoint_prefixes.append(endpoint_prefix)
     return sorted(endpoint_prefixes)
 

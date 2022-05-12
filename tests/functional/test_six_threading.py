@@ -23,12 +23,13 @@ def _reload_six():
     # which is only called once per moved module. Reload six so all the
     # moved modules are reset.
     import importlib
+
     importlib.reload(six)
 
 
 class _ExampleThread(threading.Thread):
     def __init__(self):
-        super(_ExampleThread, self).__init__()
+        super().__init__()
         self.daemon = False
         self.exc_info = None
 
@@ -46,7 +47,7 @@ def test_six_thread_safety():
     _reload_six()
     with mock.patch(
         'botocore.vendored.six.moves.__class__.__setattr__',
-        wraps=_wrapped_setattr
+        wraps=_wrapped_setattr,
     ):
         threads = []
         for i in range(2):

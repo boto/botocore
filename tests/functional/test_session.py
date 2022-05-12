@@ -57,8 +57,9 @@ class TestSession(unittest.TestCase):
                 'aws_secret_access_key=shared_creds_sak\n'
             )
             f.flush()
-            self.session.set_config_variable('profile',
-                                             'from_session_instance')
+            self.session.set_config_variable(
+                'profile', 'from_session_instance'
+            )
             creds = self.session.get_credentials()
             self.assertEqual(creds.access_key, 'shared_creds_akid')
             self.assertEqual(creds.secret_key, 'shared_creds_sak')
@@ -76,9 +77,7 @@ class TestSession(unittest.TestCase):
             # (env vars, set when creating a session, etc.) that profile
             # must exist.  So we need to create an empty profile
             # matching the value from AWS_PROFILE.
-            f.write(
-                '[myprofile]\n'
-            )
+            f.write('[myprofile]\n')
             f.flush()
             self.environ['AWS_ACCESS_KEY_ID'] = 'env_var_akid'
             self.environ['AWS_SECRET_ACCESS_KEY'] = 'env_var_sak'

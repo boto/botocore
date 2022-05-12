@@ -17,7 +17,7 @@ from tests import BaseSessionTest, ClientHTTPStubber
 
 class TestDynamoDBEndpointDiscovery(BaseSessionTest):
     def setUp(self):
-        super(TestDynamoDBEndpointDiscovery, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.config = Config(endpoint_discovery_enabled=True)
         self.create_client()
@@ -31,10 +31,12 @@ class TestDynamoDBEndpointDiscovery(BaseSessionTest):
     def test_dynamodb_endpoint_discovery_enabled(self):
         discovered_endpoint = 'https://discovered.domain'
         response = {
-            'Endpoints': [{
-                'Address': discovered_endpoint,
-                'CachePeriodInMinutes': 1,
-            }]
+            'Endpoints': [
+                {
+                    'Address': discovered_endpoint,
+                    'CachePeriodInMinutes': 1,
+                }
+            ]
         }
         response_body = json.dumps(response).encode()
         with self.http_stubber as stubber:

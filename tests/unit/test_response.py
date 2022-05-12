@@ -29,26 +29,29 @@ from botocore.exceptions import (
 from tests import unittest
 from tests.unit import BaseResponseTest
 
-XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
-            b'<Code>AccessDenied</Code>'
-            b'<Message>Access Denied</Message>'
-            b'<RequestId>XXXXXXXXXXXXXXXX</RequestId>'
-            b'<HostId>AAAAAAAAAAAAAAAAAAA</HostId>'
-            b'</Error>')
+XMLBODY1 = (
+    b'<?xml version="1.0" encoding="UTF-8"?><Error>'
+    b'<Code>AccessDenied</Code>'
+    b'<Message>Access Denied</Message>'
+    b'<RequestId>XXXXXXXXXXXXXXXX</RequestId>'
+    b'<HostId>AAAAAAAAAAAAAAAAAAA</HostId>'
+    b'</Error>'
+)
 
-XMLBODY2 = (b'<?xml version="1.0" encoding="UTF-8"?>'
-            b'<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
-            b'<Name>mybucket</Name><Prefix></Prefix><Marker></Marker>'
-            b'<MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated>'
-            b'<Contents><Key>test.png</Key><LastModified>2014-03-01T17:06:40.000Z</LastModified>'
-            b'<ETag>&quot;00000000000000000000000000000000&quot;</ETag><Size>6702</Size>'
-            b'<Owner><ID>AAAAAAAAAAAAAAAAAAA</ID>'
-            b'<DisplayName>dummy</DisplayName></Owner>'
-            b'<StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>')
+XMLBODY2 = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+    b'<Name>mybucket</Name><Prefix></Prefix><Marker></Marker>'
+    b'<MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated>'
+    b'<Contents><Key>test.png</Key><LastModified>2014-03-01T17:06:40.000Z</LastModified>'
+    b'<ETag>&quot;00000000000000000000000000000000&quot;</ETag><Size>6702</Size>'
+    b'<Owner><ID>AAAAAAAAAAAAAAAAAAA</ID>'
+    b'<DisplayName>dummy</DisplayName></Owner>'
+    b'<StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>'
+)
 
 
 class TestStreamWrapper(unittest.TestCase):
-
     def assert_lines(self, line_iterator, expected_lines):
         for expected_line in expected_lines:
             self.assertEqual(
@@ -190,7 +193,7 @@ class TestStreamWrapper(unittest.TestCase):
         )
 
     def test_catches_urllib3_read_timeout(self):
-        class TimeoutBody(object):
+        class TimeoutBody:
             def read(*args, **kwargs):
                 raise URLLib3ReadTimeoutError(None, None, None)
 
@@ -226,7 +229,8 @@ class TestStreamWrapper(unittest.TestCase):
 
     def test_streaming_line_empty_body(self):
         stream = response.StreamingBody(
-            BytesIO(b''), content_length=0,
+            BytesIO(b''),
+            content_length=0,
         )
         self.assert_lines(stream.iter_lines(), [])
 
@@ -261,8 +265,7 @@ class TestGetResponse(BaseResponseTest):
 
         res = response.get_response(operation_model, http_response)
         self.assertTrue(isinstance(res[1]['Body'], response.StreamingBody))
-        self.assertEqual(res[1]['ETag'],
-                         '"00000000000000000000000000000000"')
+        self.assertEqual(res[1]['ETag'], '"00000000000000000000000000000000"')
 
     def test_get_response_streaming_ng(self):
         headers = {
@@ -271,7 +274,8 @@ class TestGetResponse(BaseResponseTest):
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
-            'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
+            'x-amz-request-id': 'XXXXXXXXXXXXXXXX',
+        }
         raw = FakeRawResponse(XMLBODY1)
         http_response = AWSResponse(None, 403, headers, raw)
 
@@ -281,12 +285,14 @@ class TestGetResponse(BaseResponseTest):
 
         self.assert_response_with_subset_metadata(
             response.get_response(operation_model, http_response)[1],
-            {'Error': {'Message': 'Access Denied',
-                       'Code': 'AccessDenied'},
-             'ResponseMetadata': {'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                                  'RequestId': 'XXXXXXXXXXXXXXXX',
-                                  'HTTPStatusCode': 403},
-             }
+            {
+                'Error': {'Message': 'Access Denied', 'Code': 'AccessDenied'},
+                'ResponseMetadata': {
+                    'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                    'RequestId': 'XXXXXXXXXXXXXXXX',
+                    'HTTPStatusCode': 403,
+                },
+            },
         )
 
     def test_get_response_nonstreaming_ok(self):
@@ -296,7 +302,8 @@ class TestGetResponse(BaseResponseTest):
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
-            'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
+            'x-amz-request-id': 'XXXXXXXXXXXXXXXX',
+        }
         raw = FakeRawResponse(XMLBODY1)
         http_response = AWSResponse(None, 403, headers, raw)
 
@@ -310,13 +317,11 @@ class TestGetResponse(BaseResponseTest):
                 'ResponseMetadata': {
                     'RequestId': 'XXXXXXXXXXXXXXXX',
                     'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                    'HTTPStatusCode': 403
+                    'HTTPStatusCode': 403,
                 },
-                'Error': {
-                    'Message': 'Access Denied',
-                    'Code': 'AccessDenied'
-                }
-            })
+                'Error': {'Message': 'Access Denied', 'Code': 'AccessDenied'},
+            },
+        )
 
     def test_get_response_nonstreaming_ng(self):
         headers = {
@@ -325,7 +330,8 @@ class TestGetResponse(BaseResponseTest):
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
-            'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
+            'x-amz-request-id': 'XXXXXXXXXXXXXXXX',
+        }
         raw = FakeRawResponse(XMLBODY2)
         http_response = AWSResponse(None, 200, headers, raw)
 
@@ -340,13 +346,15 @@ class TestGetResponse(BaseResponseTest):
                     {
                         'ETag': '"00000000000000000000000000000000"',
                         'Key': 'test.png',
-                        'LastModified': datetime.datetime(2014, 3, 1, 17, 6, 40, tzinfo=tzutc()),
+                        'LastModified': datetime.datetime(
+                            2014, 3, 1, 17, 6, 40, tzinfo=tzutc()
+                        ),
                         'Owner': {
                             'DisplayName': 'dummy',
-                            'ID': 'AAAAAAAAAAAAAAAAAAA'
+                            'ID': 'AAAAAAAAAAAAAAAAAAA',
                         },
                         'Size': 6702,
-                        'StorageClass': 'STANDARD'
+                        'StorageClass': 'STANDARD',
                     }
                 ],
                 'IsTruncated': False,
@@ -358,6 +366,6 @@ class TestGetResponse(BaseResponseTest):
                     'RequestId': 'XXXXXXXXXXXXXXXX',
                     'HostId': 'AAAAAAAAAAAAAAAAAAA',
                     'HTTPStatusCode': 200,
-                }
-            }
+                },
+            },
         )

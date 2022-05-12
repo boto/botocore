@@ -25,7 +25,7 @@ class TestRoute53Pagination(unittest.TestCase):
             'HostedZones': [],
             'Marker': '',
             'IsTruncated': True,
-            'MaxItems': '1'
+            'MaxItems': '1',
         }
         self.operation_name = 'list_hosted_zones'
 
@@ -52,9 +52,10 @@ class TestRoute53Pagination(unittest.TestCase):
 
 
 class TestRoute53EndpointResolution(BaseSessionTest):
-
     def create_stubbed_client(self, service_name, region_name, **kwargs):
-        client = self.session.create_client(service_name, region_name, **kwargs)
+        client = self.session.create_client(
+            service_name, region_name, **kwargs
+        )
         http_stubber = ClientHTTPStubber(client)
         http_stubber.start()
         http_stubber.add_response()

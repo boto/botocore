@@ -15,7 +15,7 @@ from tests import BaseSessionTest, ClientHTTPStubber
 
 class TestModeledExceptions(BaseSessionTest):
     def setUp(self):
-        super(TestModeledExceptions, self).setUp()
+        super().setUp()
         self.region = "us-east-1"
 
     def _create_client(self, service):
@@ -57,7 +57,7 @@ class TestModeledExceptions(BaseSessionTest):
                 template = {
                     'TemplateName': 'foobar',
                     'SubjectPart': 'foo',
-                    'TextPart': 'bar'
+                    'TextPart': 'bar',
                 }
                 ses.create_template(Template=template)
             self.assertEqual(assertion_context.exception.response, response)

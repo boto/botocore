@@ -10,10 +10,22 @@ from botocore.vendored.requests.packages.urllib3 import (
 @pytest.mark.parametrize(
     "new_exception, old_exception",
     (
-        (botocore_exceptions.ReadTimeoutError, requests_exceptions.ReadTimeout),
-        (botocore_exceptions.ReadTimeoutError, urllib3_exceptions.ReadTimeoutError),
-        (botocore_exceptions.ConnectTimeoutError, requests_exceptions.ConnectTimeout),
-        (botocore_exceptions.ProxyConnectionError, requests_exceptions.ProxyError),
+        (
+            botocore_exceptions.ReadTimeoutError,
+            requests_exceptions.ReadTimeout,
+        ),
+        (
+            botocore_exceptions.ReadTimeoutError,
+            urllib3_exceptions.ReadTimeoutError,
+        ),
+        (
+            botocore_exceptions.ConnectTimeoutError,
+            requests_exceptions.ConnectTimeout,
+        ),
+        (
+            botocore_exceptions.ProxyConnectionError,
+            requests_exceptions.ProxyError,
+        ),
         (botocore_exceptions.SSLError, requests_exceptions.SSLError),
     ),
 )

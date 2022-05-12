@@ -67,11 +67,7 @@ def _get_operation_model(service_model, filename):
 
 def _test_parsed_response(xmlfile, operation_model, expected):
     response_body = _get_raw_response_body(xmlfile)
-    response = {
-        'body': response_body,
-        'status_code': 200,
-        'headers': {}
-    }
+    response = {'body': response_body, 'status_code': 200, 'headers': {}}
     for case in SPECIAL_CASES:
         if case in xmlfile:
             print("SKIP: %s" % xmlfile)
@@ -112,7 +108,7 @@ def _test_parsed_response(xmlfile, operation_model, expected):
         print(d2)
         pretty_d1 = pprint.pformat(d1, width=1).splitlines()
         pretty_d2 = pprint.pformat(d2, width=1).splitlines()
-        diff = ('\n' + '\n'.join(difflib.ndiff(pretty_d1, pretty_d2)))
+        diff = '\n' + '\n'.join(difflib.ndiff(pretty_d1, pretty_d2))
         raise AssertionError("Dicts are not equal:\n%s" % diff)
 
 
@@ -145,25 +141,19 @@ def _xml_test_cases():
             service_names.add(os.path.split(fn)[1].split('-')[0])
         for service_name in service_names:
             service_model = session.get_service_model(service_name)
-            service_xml_files = glob.glob('%s/%s-*.xml' % (data_path,
-                                                           service_name))
+            service_xml_files = glob.glob(f'{data_path}/{service_name}-*.xml')
             for xmlfile in service_xml_files:
                 expected = _get_expected_parsed_result(xmlfile)
                 operation_model = _get_operation_model(service_model, xmlfile)
-                test_cases.append(
-                    (xmlfile, operation_model, expected)
-                )
+                test_cases.append((xmlfile, operation_model, expected))
     return sorted(test_cases)
 
 
 @pytest.mark.parametrize(
-    "xmlfile, operation_model, expected",
-    _xml_test_cases()
+    "xmlfile, operation_model, expected", _xml_test_cases()
 )
 def test_xml_parsing(xmlfile, operation_model, expected):
-    _test_parsed_response(
-        xmlfile, operation_model, expected
-    )
+    _test_parsed_response(xmlfile, operation_model, expected)
 
 
 def _json_test_cases():
@@ -177,12 +167,15 @@ def _json_test_cases():
     json_test_cases = []
     for json_response_file in os.listdir(json_responses_dir):
         # Files look like: 'datapipeline-create-pipeline.json'
-        service_name, operation_name = os.path.splitext(
-            json_response_file)[0].split('-', 1)
-        expected_parsed_response = os.path.join(expected_parsed_dir,
-                                                json_response_file)
-        raw_response_file = os.path.join(json_responses_dir,
-                                         json_response_file)
+        service_name, operation_name = os.path.splitext(json_response_file)[
+            0
+        ].split('-', 1)
+        expected_parsed_response = os.path.join(
+            expected_parsed_dir, json_response_file
+        )
+        raw_response_file = os.path.join(
+            json_responses_dir, json_response_file
+        )
         with open(expected_parsed_response) as f:
             expected = json.load(f)
         service_model = session.get_service_model(service_name)
@@ -191,19 +184,12 @@ def _json_test_cases():
         for op_name in operation_names:
             if xform_name(op_name) == operation_name.replace('-', '_'):
                 operation_model = service_model.operation_model(op_name)
-        json_test_cases.append(
-            (raw_response_file, operation_model, expected)
-        )
+        json_test_cases.append((raw_response_file, operation_model, expected))
     return sorted(json_test_cases)
 
 
 @pytest.mark.parametrize(
-    "raw_response_file, operation_model, expected",
-    _json_test_cases()
+    "raw_response_file, operation_model, expected", _json_test_cases()
 )
-def test_json_errors_parsing(
-    raw_response_file, operation_model, expected
-):
-    _test_parsed_response(
-        raw_response_file, operation_model, expected
-    )
+def test_json_errors_parsing(raw_response_file, operation_model, expected):
+    _test_parsed_response(raw_response_file, operation_model, expected)

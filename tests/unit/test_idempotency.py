@@ -22,8 +22,8 @@ class TestIdempotencyInjection(unittest.TestCase):
         self.mock_model = mock.MagicMock()
         self.mock_model.idempotent_members = ['RequiredKey']
         self.uuid_pattern = re.compile(
-            '^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$',
-            re.I)
+            '^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$', re.I
+        )
 
     def test_injection(self):
         # No parameters are provided, RequiredKey should be autofilled
