@@ -105,9 +105,20 @@ import logging
 import os
 
 from botocore import BOTOCORE_ROOT
-from botocore.compat import OrderedDict, json
+from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
+
+_JSON_OPEN_METHODS = {
+    '.json': open,
+}
+
+
+if HAS_GZIP:
+    from gzip import open as gzip_open
+
+    _JSON_OPEN_METHODS['.json.gz'] = gzip_open
+
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +163,22 @@ class JSONFileLoader:
         :return: True if file path exists, False otherwise.
 
         """
-        return os.path.isfile(file_path + '.json')
+        for ext in _JSON_OPEN_METHODS:
+            if os.path.isfile(file_path + ext):
+                return True
+        return False
+
+    def _load_file(self, full_path, open_method):
+        if not os.path.isfile(full_path):
+            return
+
+        # By default the file will be opened with locale encoding on Python 3.
+        # We specify "utf8" here to ensure the correct behavior.
+        with open_method(full_path, 'rb') as fp:
+            payload = fp.read().decode('utf-8')
+
+        logger.debug("Loading JSON file: %s", full_path)
+        return json.loads(payload, object_pairs_hook=OrderedDict)
 
     def load_file(self, file_path):
         """Attempt to load the file path.
@@ -164,17 +190,11 @@ class JSONFileLoader:
         :return: The loaded data if it exists, otherwise None.
 
         """
-        full_path = file_path + '.json'
-        if not os.path.isfile(full_path):
-            return
-
-        # By default the file will be opened with locale encoding on Python 3.
-        # We specify "utf8" here to ensure the correct behavior.
-        with open(full_path, 'rb') as fp:
-            payload = fp.read().decode('utf-8')
-
-        logger.debug("Loading JSON file: %s", full_path)
-        return json.loads(payload, object_pairs_hook=OrderedDict)
+        for (ext, open_method) in _JSON_OPEN_METHODS.items():
+            data = self._load_file(file_path + ext, open_method)
+            if data is not None:
+                return data
+        return None
 
 
 def create_loader(search_path_string=None):
