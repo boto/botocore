@@ -39,11 +39,20 @@ class TestJSONFileLoader(BaseEnvVar):
         self.data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.file_loader = JSONFileLoader()
         self.valid_file_path = os.path.join(self.data_path, 'foo')
+        self.compressed_file_path = os.path.join(self.data_path, 'compressed')
 
     def test_load_file(self):
         data = self.file_loader.load_file(self.valid_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
+
+    def test_load_compressed_file(self):
+        data = self.file_loader.load_file(self.compressed_file_path)
+        self.assertEqual(len(data), 3)
+        self.assertTrue('test_key_1' in data)
+
+    def test_load_compressed_file_exists_check(self):
+        self.assertTrue(self.file_loader.exists(self.compressed_file_path))
 
     def test_load_json_file_does_not_exist_returns_none(self):
         # None is used to indicate that the loader could not find a

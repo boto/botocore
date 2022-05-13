@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.26.0
+======
+
+* feature:Loaders: Support for loading gzip compressed model files.
+* api-change:``grafana``: This release adds APIs for creating and deleting API keys in an Amazon Managed Grafana workspace.
+
+
 1.25.13
 =======
 
