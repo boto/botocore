@@ -276,30 +276,29 @@ class TestAWSRequest(unittest.TestCase):
         ([(None, None)], 'http://example.com/?None=None'),
         (
             [('foo', 'bar'), ('foo', 'baz'), ('fizz', 'buzz')],
-            'http://example.com/?foo=bar&foo=baz&fizz=buzz'
+            'http://example.com/?foo=bar&foo=baz&fizz=buzz',
         ),
-        ([('foo', 'bar'), ('foo', None)], 'http://example.com/?foo=bar&foo=None'),
+        (
+            [('foo', 'bar'), ('foo', None)],
+            'http://example.com/?foo=bar&foo=None',
+        ),
         ([('foo', 'bar')], 'http://example.com/?foo=bar'),
         (
             [('foo', 'bar'), ('foo', 'bar'), ('fizz', 'buzz')],
-            'http://example.com/?foo=bar&foo=bar&fizz=buzz'
+            'http://example.com/?foo=bar&foo=bar&fizz=buzz',
         ),
         ([('', 'bar')], 'http://example.com/?=bar'),
         ([(1, 'bar')], 'http://example.com/?1=bar'),
-    ]
+    ],
 )
 def test_can_use_list_tuples_for_params(test_input, expected_output):
-    request = AWSRequest(
-        url='http://example.com/', params=test_input
-    )
+    request = AWSRequest(url='http://example.com/', params=test_input)
     prepared_request = request.prepare()
     assert prepared_request.url == expected_output
 
 
 def test_empty_list_tuples_value_error_for_params():
-    request = AWSRequest(
-        url='http://example.com/', params=[()]
-    )
+    request = AWSRequest(url='http://example.com/', params=[()])
     with pytest.raises(ValueError):
         request.prepare()
 
