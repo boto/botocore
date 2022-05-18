@@ -134,6 +134,26 @@ class TestAWSRequest(unittest.TestCase):
             prepared_request.url, 'http://example.com/?bar=foo&foo=bar'
         )
 
+    def test_can_use_list_tuples_for_params(self):
+        request = AWSRequest(
+            url='http://example.com/', params=[('foo', 'bar')]
+        )
+        prepared_request = request.prepare()
+        self.assertEqual(
+            prepared_request.url, 'http://example.com/?foo=bar'
+        )
+
+    def test_can_use_list_duplicate_tuples_for_params(self):
+        request = AWSRequest(
+            url='http://example.com/', params=[
+                ('foo', 'bar'), ('foo', 'bar'), ('hello', 'world')
+            ]
+        )
+        prepared_request = request.prepare()
+        self.assertEqual(
+            prepared_request.url, 'http://example.com/?foo=bar&foo=bar&hello=world'
+        )
+
     def test_can_prepare_dict_body(self):
         body = {'dead': 'beef'}
         request = AWSRequest(url='http://example.com/', data=body)
