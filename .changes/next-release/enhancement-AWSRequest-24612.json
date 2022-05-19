@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "AWSRequest",
-  "description": "Allows AWSRequest to accept list of tuples in params attribute"
-}
