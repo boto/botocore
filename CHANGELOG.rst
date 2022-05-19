@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.26.4
+======
+
+* api-change:``gamesparks``: This release adds an optional DeploymentResult field in the responses of GetStageDeploymentIntegrationTests and ListStageDeploymentIntegrationTests APIs.
+* enhancement:StreamingBody: Allow StreamingBody to be used as a context manager
+* api-change:``lookoutmetrics``: In this release we added SnsFormat to SNSConfiguration to support human readable alert.
+
+
 1.26.3
 ======
 
