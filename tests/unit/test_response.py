@@ -230,6 +230,13 @@ class TestStreamWrapper(unittest.TestCase):
         )
         self.assert_lines(stream.iter_lines(), [])
 
+    def test_streaming_body_as_context_manager(self):
+        body = BytesIO(b'1234567890')
+        with response.StreamingBody(body, content_length=10) as stream:
+            self.assertEqual(stream.read(), b'1234567890')
+            self.assertFalse(body.closed)
+        self.assertTrue(body.closed)
+
 
 class FakeRawResponse(BytesIO):
     def stream(self, amt=1024, decode_content=None):
