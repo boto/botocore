@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.26.5
+======
+
+* api-change:``comprehend``: Comprehend releases 14 new entity types for DetectPiiEntities and ContainsPiiEntities APIs.
+* api-change:``logs``: Doc-only update to publish the new valid values for log retention
+
+
 1.26.4
 ======
 
