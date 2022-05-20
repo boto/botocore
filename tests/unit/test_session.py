@@ -23,7 +23,12 @@ import botocore.config
 import botocore.exceptions
 import botocore.loaders
 import botocore.session
-from botocore import UNSIGNED, client
+from botocore import (
+    UNSIGNED,
+    client,
+    register_initializer,
+    unregister_initializer,
+)
 from botocore.configprovider import ConfigChainFactory
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
@@ -993,3 +998,32 @@ class TestSessionRegionSetup(BaseSessionTest):
         s3_client = self.session.create_client('s3', region_name=None)
         self.assertIsInstance(s3_client, client.BaseClient)
         self.assertTrue(s3_client.meta.region_name is not None)
+
+
+class TestInitializationHooks(BaseSessionTest):
+    def test_can_register_init_hook(self):
+        call_args = []
+
+        def init_hook(session):
+            call_args.append(session)
+
+        register_initializer(init_hook)
+        self.addCleanup(unregister_initializer, init_hook)
+        session = create_session()
+        self.assertEqual(call_args, [session])
+
+    def test_can_unregister_hook(self):
+        call_args = []
+
+        def init_hook(session):
+            call_args.append(session)
+
+        register_initializer(init_hook)
+        unregister_initializer(init_hook)
+        create_session()
+        self.assertEqual(call_args, [])
+
+    def test_unregister_hook_raises_value_error(self):
+        not_registered = lambda session: None
+        with self.assertRaises(ValueError):
+            self.assertRaises(unregister_initializer(not_registered))
