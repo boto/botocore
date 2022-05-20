@@ -25,7 +25,8 @@ class TestCloudformation(unittest.TestCase):
         # it handles the case when a stack does not exist.
         with self.assertRaises(ClientError):
             self.client.get_template(
-                StackName='does-not-exist-%s' % random_chars(10))
+                StackName='does-not-exist-%s' % random_chars(10)
+            )
 
 
 if __name__ == '__main__':

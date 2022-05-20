@@ -28,7 +28,8 @@ class TestCreateClientArgs(unittest.TestCase):
         self.event_emitter = mock.Mock(HierarchicalEmitter)
         self.config_store = ConfigValueStore()
         self.args_create = args.ClientArgsCreator(
-            self.event_emitter, None, None, None, None, self.config_store)
+            self.event_emitter, None, None, None, None, self.config_store
+        )
         self.service_name = 'ec2'
         self.region = 'us-west-2'
         self.endpoint_url = 'https://ec2/'
@@ -47,7 +48,7 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model.endpoint_prefix = service_name
         service_model.metadata = {
             'serviceFullName': 'MyService',
-            'protocol': 'query'
+            'protocol': 'query',
         }
         service_model.operation_names = []
         return service_model
@@ -59,7 +60,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'endpoint_url': self.endpoint_url,
             'signing_name': self.service_name,
             'signing_region': self.region,
-            'metadata': {}
+            'metadata': {},
         }
         ret_val.update(**override_kwargs)
         self.bridge.resolve.return_value = ret_val
@@ -74,7 +75,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'credentials': None,
             'scoped_config': {},
             'client_config': None,
-            'endpoint_bridge': self.bridge
+            'endpoint_bridge': self.bridge,
         }
         call_kwargs.update(**override_kwargs)
         return self.args_create.get_client_args(**call_kwargs)
@@ -102,10 +103,11 @@ class TestCreateClientArgs(unittest.TestCase):
 
     def test_compute_s3_config_only_config_store(self):
         self.config_store.set_config_variable(
-            's3', {'use_accelerate_endpoint': True})
+            's3', {'use_accelerate_endpoint': True}
+        )
         self.assertEqual(
             self.args_create.compute_s3_config(None),
-            {'use_accelerate_endpoint': True}
+            {'use_accelerate_endpoint': True},
         )
 
     def test_client_s3_accelerate_from_client_config(self):
@@ -113,18 +115,19 @@ class TestCreateClientArgs(unittest.TestCase):
             self.args_create.compute_s3_config(
                 client_config=Config(s3={'use_accelerate_endpoint': True})
             ),
-            {'use_accelerate_endpoint': True}
+            {'use_accelerate_endpoint': True},
         )
 
     def test_client_s3_accelerate_client_config_overrides_config_store(self):
         self.config_store.set_config_variable(
-            's3', {'use_accelerate_endpoint': False})
+            's3', {'use_accelerate_endpoint': False}
+        )
         self.assertEqual(
             self.args_create.compute_s3_config(
                 client_config=Config(s3={'use_accelerate_endpoint': True})
             ),
             # client_config beats scoped_config
-            {'use_accelerate_endpoint': True}
+            {'use_accelerate_endpoint': True},
         )
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
@@ -134,8 +137,10 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(m, max_pool_connections=20)
 
     def test_proxies_from_client_config_forwarded_to_endpoint_creator(self):
-        proxies = {'http': 'http://foo.bar:1234',
-                   'https': 'https://foo.bar:4321'}
+        proxies = {
+            'http': 'http://foo.bar:1234',
+            'https': 'https://foo.bar:4321',
+        }
         config = botocore.config.Config(proxies=proxies)
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(client_config=config)
@@ -146,32 +151,43 @@ class TestCreateClientArgs(unittest.TestCase):
         self.service_model.metadata = {'protocol': 'rest-xml'}
         self.bridge.resolve.side_effect = [
             {
-                'region_name': None, 'signature_version': 's3v4',
-                'endpoint_url': 'http://other.com/', 'signing_name': 's3',
-                'signing_region': None, 'metadata': {}
+                'region_name': None,
+                'signature_version': 's3v4',
+                'endpoint_url': 'http://other.com/',
+                'signing_name': 's3',
+                'signing_region': None,
+                'metadata': {},
             },
             {
-                'region_name': 'us-west-2', 'signature_version': 's3v4',
+                'region_name': 'us-west-2',
+                'signature_version': 's3v4',
                 'enpoint_url': 'https://s3-us-west-2.amazonaws.com',
-                'signing_name': 's3', 'signing_region': 'us-west-2',
-                'metadata': {}
-            }
+                'signing_name': 's3',
+                'signing_region': 'us-west-2',
+                'metadata': {},
+            },
         ]
         client_args = self.call_get_client_args(
-            endpoint_url='http://other.com/')
-        self.assertEqual(
-            client_args['client_config'].region_name, 'us-west-2')
+            endpoint_url='http://other.com/'
+        )
+        self.assertEqual(client_args['client_config'].region_name, 'us-west-2')
 
     def test_region_does_not_resolve_if_not_s3_and_endpoint_url_provided(self):
         self.service_model.endpoint_prefix = 'ec2'
         self.service_model.metadata = {'protocol': 'query'}
-        self.bridge.resolve.side_effect = [{
-            'region_name': None, 'signature_version': 'v4',
-            'endpoint_url': 'http://other.com/', 'signing_name': 'ec2',
-            'signing_region': None, 'metadata': {}
-        }]
+        self.bridge.resolve.side_effect = [
+            {
+                'region_name': None,
+                'signature_version': 'v4',
+                'endpoint_url': 'http://other.com/',
+                'signing_name': 'ec2',
+                'signing_region': None,
+                'metadata': {},
+            }
+        ]
         client_args = self.call_get_client_args(
-            endpoint_url='http://other.com/')
+            endpoint_url='http://other.com/'
+        )
         self.assertEqual(client_args['client_config'].region_name, None)
 
     def test_tcp_keepalive_enabled(self):
@@ -179,9 +195,9 @@ class TestCreateClientArgs(unittest.TestCase):
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(scoped_config=scoped_config)
             self.assert_create_endpoint_call(
-                m, socket_options=self.default_socket_options + [
-                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                ]
+                m,
+                socket_options=self.default_socket_options
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_tcp_keepalive_not_specified(self):
@@ -189,52 +205,46 @@ class TestCreateClientArgs(unittest.TestCase):
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(scoped_config=scoped_config)
             self.assert_create_endpoint_call(
-                m, socket_options=self.default_socket_options)
+                m, socket_options=self.default_socket_options
+            )
 
     def test_tcp_keepalive_explicitly_disabled(self):
         scoped_config = {'tcp_keepalive': 'false'}
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(scoped_config=scoped_config)
             self.assert_create_endpoint_call(
-                m, socket_options=self.default_socket_options)
+                m, socket_options=self.default_socket_options
+            )
 
     def test_tcp_keepalive_enabled_case_insensitive(self):
         scoped_config = {'tcp_keepalive': 'True'}
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(scoped_config=scoped_config)
             self.assert_create_endpoint_call(
-                m, socket_options=self.default_socket_options + [
-                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                ]
+                m,
+                socket_options=self.default_socket_options
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_client_config_has_use_dualstack_endpoint_flag(self):
-        self._set_endpoint_bridge_resolve(
-            metadata={
-                'tags': ['dualstack']
-            }
-        )
+        self._set_endpoint_bridge_resolve(metadata={'tags': ['dualstack']})
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('ec2'),
         )
         self.assertTrue(client_args['client_config'].use_dualstack_endpoint)
 
     def test_client_config_has_use_fips_endpoint_flag(self):
-        self._set_endpoint_bridge_resolve(
-            metadata={
-                'tags': ['fips']
-            }
-        )
+        self._set_endpoint_bridge_resolve(metadata={'tags': ['fips']})
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('ec2'),
         )
         self.assertTrue(client_args['client_config'].use_fips_endpoint)
 
-    def test_client_config_has_both_use_fips_and_use_dualstack__endpoint_flags(self):
+    def test_client_config_has_both_use_fips_and_use_dualstack__endpoint_flags(
+        self,
+    ):
         self._set_endpoint_bridge_resolve(
-            metadata={
-                'tags': ['fips', 'dualstack']
-            }
+            metadata={'tags': ['fips', 'dualstack']}
         )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('ec2'),
@@ -243,125 +253,145 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertTrue(client_args['client_config'].use_dualstack_endpoint)
 
     def test_s3_override_use_dualstack_endpoint_flag(self):
-        self._set_endpoint_bridge_resolve(
-            metadata={
-                'tags': ['dualstack']
-            }
-        )
+        self._set_endpoint_bridge_resolve(metadata={'tags': ['dualstack']})
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('s3'),
         )
-        self.assertTrue(client_args['client_config'].s3['use_dualstack_endpoint'])
+        self.assertTrue(
+            client_args['client_config'].s3['use_dualstack_endpoint']
+        )
 
     def test_sts_override_resolved_endpoint_for_legacy_region(self):
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
+            'sts_regional_endpoints', 'legacy'
+        )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None
+            region_name='us-west-2',
+            endpoint_url=None,
         )
         self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
+            client_args['endpoint'].host, 'https://sts.amazonaws.com'
+        )
         self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
+            client_args['request_signer'].region_name, 'us-east-1'
+        )
 
     def test_sts_use_resolved_endpoint_for_nonlegacy_region(self):
         resolved_endpoint = 'https://resolved-endpoint'
         resolved_region = 'resolved-region'
         self._set_endpoint_bridge_resolve(
-            endpoint_url=resolved_endpoint,
-            signing_region=resolved_region
+            endpoint_url=resolved_endpoint, signing_region=resolved_region
         )
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
+            'sts_regional_endpoints', 'legacy'
+        )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='ap-east-1', endpoint_url=None
+            region_name='ap-east-1',
+            endpoint_url=None,
         )
         self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
-            client_args['request_signer'].region_name, resolved_region)
+            client_args['request_signer'].region_name, resolved_region
+        )
 
     def test_sts_use_resolved_endpoint_for_regional_configuration(self):
         resolved_endpoint = 'https://resolved-endpoint'
         resolved_region = 'resolved-region'
         self._set_endpoint_bridge_resolve(
-            endpoint_url=resolved_endpoint,
-            signing_region=resolved_region
+            endpoint_url=resolved_endpoint, signing_region=resolved_region
         )
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'regional')
+            'sts_regional_endpoints', 'regional'
+        )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None
+            region_name='us-west-2',
+            endpoint_url=None,
         )
         self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
-            client_args['request_signer'].region_name, resolved_region)
+            client_args['request_signer'].region_name, resolved_region
+        )
 
     def test_sts_with_endpoint_override_and_legacy_configured(self):
         override_endpoint = 'https://override-endpoint'
         self._set_endpoint_bridge_resolve(endpoint_url=override_endpoint)
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
+            'sts_regional_endpoints', 'legacy'
+        )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=override_endpoint
+            region_name='us-west-2',
+            endpoint_url=override_endpoint,
         )
         self.assertEqual(client_args['endpoint'].host, override_endpoint)
 
     def test_sts_http_scheme_for_override_endpoint(self):
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'legacy')
+            'sts_regional_endpoints', 'legacy'
+        )
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None, is_secure=False,
-
+            region_name='us-west-2',
+            endpoint_url=None,
+            is_secure=False,
         )
         self.assertEqual(
-            client_args['endpoint'].host, 'http://sts.amazonaws.com')
+            client_args['endpoint'].host, 'http://sts.amazonaws.com'
+        )
 
     def test_sts_regional_endpoints_defaults_to_legacy_if_not_set(self):
-        self.config_store.set_config_variable(
-            'sts_regional_endpoints', None)
+        self.config_store.set_config_variable('sts_regional_endpoints', None)
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
-            region_name='us-west-2', endpoint_url=None
+            region_name='us-west-2',
+            endpoint_url=None,
         )
         self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com')
+            client_args['endpoint'].host, 'https://sts.amazonaws.com'
+        )
         self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1')
+            client_args['request_signer'].region_name, 'us-east-1'
+        )
 
     def test_invalid_sts_regional_endpoints(self):
         self.config_store.set_config_variable(
-            'sts_regional_endpoints', 'invalid')
+            'sts_regional_endpoints', 'invalid'
+        )
         with self.assertRaises(
-                exceptions.InvalidSTSRegionalEndpointsConfigError):
+            exceptions.InvalidSTSRegionalEndpointsConfigError
+        ):
             self.call_get_client_args(
                 service_model=self._get_service_model('sts'),
-                region_name='us-west-2', endpoint_url=None
+                region_name='us-west-2',
+                endpoint_url=None,
             )
 
     def test_provides_total_max_attempts(self):
         config = botocore.config.Config(retries={'total_max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 10)
+            client_args['client_config'].retries['total_max_attempts'], 10
+        )
 
     def test_provides_total_max_attempts_has_precedence(self):
-        config = botocore.config.Config(retries={'total_max_attempts': 10,
-                                                 'max_attempts': 5})
+        config = botocore.config.Config(
+            retries={'total_max_attempts': 10, 'max_attempts': 5}
+        )
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 10)
+            client_args['client_config'].retries['total_max_attempts'], 10
+        )
         self.assertNotIn('max_attempts', client_args['client_config'].retries)
 
     def test_provide_retry_config_maps_total_max_attempts(self):
         config = botocore.config.Config(retries={'max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
-            client_args['client_config'].retries['total_max_attempts'], 11)
+            client_args['client_config'].retries['total_max_attempts'], 11
+        )
         self.assertNotIn('max_attempts', client_args['client_config'].retries)
 
     def test_can_merge_max_attempts(self):
@@ -390,9 +420,9 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(config.retries['total_max_attempts'], 2)
 
     def test_max_attempts_unset_if_retries_is_none(self):
-        config = self.call_get_client_args(
-            client_config=Config(retries=None)
-        )['client_config']
+        config = self.call_get_client_args(client_config=Config(retries=None))[
+            'client_config'
+        ]
         self.assertEqual(config.retries, {'mode': 'legacy'})
 
     def test_retry_mode_set_on_config_store(self):

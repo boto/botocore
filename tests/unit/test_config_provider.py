@@ -36,16 +36,19 @@ from tests import mock, unittest
 
 
 class TestConfigChainFactory(unittest.TestCase):
-    def assert_chain_does_provide(self, instance_map, environ_map,
-                                  scoped_config_map, create_config_chain_args,
-                                  expected_value):
+    def assert_chain_does_provide(
+        self,
+        instance_map,
+        environ_map,
+        scoped_config_map,
+        create_config_chain_args,
+        expected_value,
+    ):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = scoped_config_map
         fake_session.instance_variables.return_value = instance_map
         builder = ConfigChainFactory(fake_session, environ=environ_map)
-        chain = builder.create_config_chain(
-            **create_config_chain_args
-        )
+        chain = builder.create_config_chain(**create_config_chain_args)
         value = chain.provide()
         self.assertEqual(value, expected_value)
 
@@ -197,10 +200,7 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={},
             environ_map={},
-            scoped_config_map={
-                'first': 'first_val',
-                'second': 'second_val'
-            },
+            scoped_config_map={'first': 'first_val', 'second': 'second_val'},
             create_config_chain_args={
                 'config_property_names': ['first', 'second'],
             },
@@ -234,9 +234,7 @@ class TestConfigChainFactory(unittest.TestCase):
             instance_map={},
             environ_map={},
             scoped_config_map={},
-            create_config_chain_args={
-                'default': 'from-default'
-            },
+            create_config_chain_args={'default': 'from-default'},
             expected_value='from-default',
         )
 
@@ -306,9 +304,11 @@ class TestConfigValueStore(unittest.TestCase):
     def test_does_provide_value_if_variable_exists(self):
         mock_value_provider = mock.Mock(spec=BaseProvider)
         mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigValueStore(mapping={
-            'fake_variable': mock_value_provider,
-        })
+        provider = ConfigValueStore(
+            mapping={
+                'fake_variable': mock_value_provider,
+            }
+        )
         value = provider.get_config_variable('fake_variable')
         self.assertEqual(value, 'foo')
 
@@ -321,9 +321,11 @@ class TestConfigValueStore(unittest.TestCase):
     def test_can_set_config_provider(self):
         foo_value_provider = mock.Mock(spec=BaseProvider)
         foo_value_provider.provide.return_value = 'foo'
-        provider = ConfigValueStore(mapping={
-            'fake_variable': foo_value_provider,
-        })
+        provider = ConfigValueStore(
+            mapping={
+                'fake_variable': foo_value_provider,
+            }
+        )
 
         value = provider.get_config_variable('fake_variable')
         self.assertEqual(value, 'foo')
@@ -339,9 +341,11 @@ class TestConfigValueStore(unittest.TestCase):
         chain_provider = ChainProvider(
             providers=[ConstantProvider(value='bar')]
         )
-        config_value_store = ConfigValueStore(mapping={
-            'fake_variable': chain_provider,
-        })
+        config_value_store = ConfigValueStore(
+            mapping={
+                'fake_variable': chain_provider,
+            }
+        )
         provider = config_value_store.get_config_provider('fake_variable')
         value = config_value_store.get_config_variable('fake_variable')
         self.assertIsInstance(provider, ChainProvider)
@@ -349,9 +353,11 @@ class TestConfigValueStore(unittest.TestCase):
 
     def test_can_get_config_provider_non_chain_provider(self):
         constant_provider = ConstantProvider(value='bar')
-        config_value_store = ConfigValueStore(mapping={
-            'fake_variable': constant_provider,
-        })
+        config_value_store = ConfigValueStore(
+            mapping={
+                'fake_variable': constant_provider,
+            }
+        )
         provider = config_value_store.get_config_provider('fake_variable')
         value = config_value_store.get_config_variable('fake_variable')
         self.assertIsInstance(provider, ConstantProvider)
@@ -409,8 +415,9 @@ class TestEnvironmentProvider(unittest.TestCase):
 
 
 class TestScopedConfigProvider(unittest.TestCase):
-    def assert_provides_value(self, config_file_values, config_var_name,
-                              expected_value):
+    def assert_provides_value(
+        self, config_file_values, config_var_name, expected_value
+    ):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = config_file_values
         property_provider = ScopedConfigProvider(
@@ -422,38 +429,28 @@ class TestScopedConfigProvider(unittest.TestCase):
 
     def test_can_provide_value(self):
         self.assert_provides_value(
-            config_file_values={
-                'foo': 'bar'
-            },
+            config_file_values={'foo': 'bar'},
             config_var_name='foo',
             expected_value='bar',
         )
 
     def test_does_provide_none_if_var_not_in_config(self):
         self.assert_provides_value(
-            config_file_values={
-                'foo': 'bar'
-            },
+            config_file_values={'foo': 'bar'},
             config_var_name='no_such_var',
             expected_value=None,
         )
 
     def test_provide_nested_value(self):
         self.assert_provides_value(
-            config_file_values={
-                'section': {
-                    'nested_var': 'nested_val'
-                }
-            },
+            config_file_values={'section': {'nested_var': 'nested_val'}},
             config_var_name=('section', 'nested_var'),
             expected_value='nested_val',
         )
 
     def test_provide_nested_value_but_not_section(self):
         self.assert_provides_value(
-            config_file_values={
-                'section': 'not-nested'
-            },
+            config_file_values={'section': 'not-nested'},
             config_var_name=('section', 'nested_var'),
             expected_value=None,
         )
@@ -493,16 +490,13 @@ def assert_chain_does_provide(providers, expected_value):
         ('bar', [None, 'bar', None]),
         ('foo', ['foo', 'bar', None]),
         ('foo', ['foo', 'bar', 'baz']),
-    )
+    ),
 )
 def test_chain_provider(case):
     # Each case is a tuple with the first element being the expected return
     # value from the ChainProvider. The second value being a list of return
     # values from the individual providers that are in the chain.
-    assert_chain_does_provide(
-        _make_providers_that_return(case[1]),
-        case[0]
-    )
+    assert_chain_does_provide(_make_providers_that_return(case[1]), case[0])
 
 
 class TestChainProvider(unittest.TestCase):
@@ -524,25 +518,26 @@ class TestConstantProvider(unittest.TestCase):
 
 
 class TestSectionConfigProvider(unittest.TestCase):
-    def assert_provides_value(self, config_file_values, section_name,
-                              expected_value, override_providers=None):
+    def assert_provides_value(
+        self,
+        config_file_values,
+        section_name,
+        expected_value,
+        override_providers=None,
+    ):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = config_file_values
         provider = SectionConfigProvider(
             section_name=section_name,
             session=fake_session,
-            override_providers=override_providers
+            override_providers=override_providers,
         )
         value = provider.provide()
         self.assertEqual(value, expected_value)
 
     def test_provide_section_config(self):
         self.assert_provides_value(
-            config_file_values={
-                'mysection': {
-                    'section_var': 'section_val'
-                }
-            },
+            config_file_values={'mysection': {'section_var': 'section_val'}},
             section_name='mysection',
             expected_value={'section_var': 'section_val'},
         )
@@ -566,15 +561,15 @@ class TestSectionConfigProvider(unittest.TestCase):
             config_file_values={
                 'mysection': {
                     'override_var': 'from_config_file',
-                    'no_override_var': 'from_config_file'
+                    'no_override_var': 'from_config_file',
                 }
             },
             section_name='mysection',
             override_providers={'override_var': ConstantProvider('override')},
             expected_value={
                 'override_var': 'override',
-                'no_override_var': 'from_config_file'
-            }
+                'no_override_var': 'from_config_file',
+            },
         )
 
     def test_provide_section_config_with_only_overrides(self):
@@ -584,12 +579,11 @@ class TestSectionConfigProvider(unittest.TestCase):
             override_providers={'override_var': ConstantProvider('override')},
             expected_value={
                 'override_var': 'override',
-            }
+            },
         )
 
 
 class TestSmartDefaults:
-
     def _template(self):
         return {
             "base": {
@@ -597,45 +591,27 @@ class TestSmartDefaults:
                 "stsRegionalEndpoints": "regional",
                 "s3UsEast1RegionalEndpoints": "regional",
                 "connectTimeoutInMillis": 1000,
-                "tlsNegotiationTimeoutInMillis": 1000
+                "tlsNegotiationTimeoutInMillis": 1000,
             },
             "modes": {
                 "standard": {
-                    "connectTimeoutInMillis": {
-                        "multiply": 2
-                    },
-                    "tlsNegotiationTimeoutInMillis": {
-                        "multiply": 2
-                    }
+                    "connectTimeoutInMillis": {"multiply": 2},
+                    "tlsNegotiationTimeoutInMillis": {"multiply": 2},
                 },
                 "in-region": {
-                    "connectTimeoutInMillis": {
-                        "multiply": 1
-                    },
-                    "tlsNegotiationTimeoutInMillis": {
-                        "multiply": 1
-                    }
+                    "connectTimeoutInMillis": {"multiply": 1},
+                    "tlsNegotiationTimeoutInMillis": {"multiply": 1},
                 },
                 "cross-region": {
-                    "connectTimeoutInMillis": {
-                        "multiply": 2.8
-                    },
-                    "tlsNegotiationTimeoutInMillis": {
-                        "multiply": 2.8
-                    }
+                    "connectTimeoutInMillis": {"multiply": 2.8},
+                    "tlsNegotiationTimeoutInMillis": {"multiply": 2.8},
                 },
                 "mobile": {
-                    "connectTimeoutInMillis": {
-                        "override": 10000
-                    },
-                    "tlsNegotiationTimeoutInMillis": {
-                        "add": 10000
-                    },
-                    "retryMode": {
-                        "override": "adaptive"
-                    }
-                }
-            }
+                    "connectTimeoutInMillis": {"override": 10000},
+                    "tlsNegotiationTimeoutInMillis": {"add": 10000},
+                    "retryMode": {"override": "adaptive"},
+                },
+            },
         }
 
     def _create_default_config_resolver(self):
@@ -659,8 +635,7 @@ class TestSmartDefaults:
     def _create_config_value_store(self, s3_mapping={}, **override_kwargs):
         provider_foo = ConstantProvider(value='foo')
         environment_provider_foo = EnvironmentProvider(
-            name='AWS_RETRY_MODE',
-            env={'AWS_RETRY_MODE': None}
+            name='AWS_RETRY_MODE', env={'AWS_RETRY_MODE': None}
         )
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = {}
@@ -669,7 +644,7 @@ class TestSmartDefaults:
         mapping = {
             'sts_regional_endpoints': ChainProvider(providers=[provider_foo]),
             'retry_mode': ChainProvider(providers=[environment_provider_foo]),
-            's3': SectionConfigProvider('s3', fake_session, s3_mapping)
+            's3': SectionConfigProvider('s3', fake_session, s3_mapping),
         }
         mapping.update(**override_kwargs)
         config_store = ConfigValueStore(mapping=mapping)
@@ -677,8 +652,7 @@ class TestSmartDefaults:
 
     def _create_os_environ_patcher(self):
         return mock.patch.object(
-            botocore.configprovider.os, 'environ',
-            mock.Mock(wraps=os.environ)
+            botocore.configprovider.os, 'environ', mock.Mock(wraps=os.environ)
         )
 
     def test_config_store_deepcopy(self):
@@ -697,113 +671,161 @@ class TestSmartDefaults:
             ('in-region', 'standard', 'regional', 'regional', 1000),
             ('cross-region', 'standard', 'regional', 'regional', 2800),
             ('mobile', 'adaptive', 'regional', 'regional', 10000),
-        ]
+        ],
     )
-    def test_get_defualt_config_values(self, defaults_mode, retry_mode,
-                                       sts_regional_endpoints,
-                                       us_east_1_regional_endpoint,
-                                       connect_timeout):
+    def test_get_defualt_config_values(
+        self,
+        defaults_mode,
+        retry_mode,
+        sts_regional_endpoints,
+        us_east_1_regional_endpoint,
+        connect_timeout,
+    ):
         default_config_resolver = self._create_default_config_resolver()
         default_values = default_config_resolver.get_default_config_values(
             defaults_mode
         )
         assert default_values['retryMode'] == retry_mode
         assert default_values['stsRegionalEndpoints'] == sts_regional_endpoints
-        assert default_values['s3UsEast1RegionalEndpoints'] == us_east_1_regional_endpoint
+        assert (
+            default_values['s3UsEast1RegionalEndpoints']
+            == us_east_1_regional_endpoint
+        )
         assert default_values['connectTimeoutInMillis'] == connect_timeout
 
-    def test_resolve_default_values_on_config(self, smart_defaults_factory,
-                                              fake_session):
+    def test_resolve_default_values_on_config(
+        self, smart_defaults_factory, fake_session
+    ):
         config_store = self._create_config_value_store()
         smart_defaults_factory.merge_smart_defaults(
-            config_store, 'standard', 'foo')
+            config_store, 'standard', 'foo'
+        )
         s3_config = config_store.get_config_variable('s3')
         assert s3_config['us_east_1_regional_endpoint'] == 'regional'
         assert config_store.get_config_variable('retry_mode') == 'standard'
-        assert config_store.get_config_variable('sts_regional_endpoints') == 'regional'
+        assert (
+            config_store.get_config_variable('sts_regional_endpoints')
+            == 'regional'
+        )
         assert config_store.get_config_variable('connect_timeout') == 2
 
-    def test_no_resolve_default_s3_values_on_config(self,
-                                                    smart_defaults_factory,
-                                                    fake_session):
+    def test_no_resolve_default_s3_values_on_config(
+        self, smart_defaults_factory, fake_session
+    ):
         environment_provider = EnvironmentProvider(
             name='AWS_S3_US_EAST_1_REGIONAL_ENDPOINT',
-            env={'AWS_S3_US_EAST_1_REGIONAL_ENDPOINT': 'legacy'}
+            env={'AWS_S3_US_EAST_1_REGIONAL_ENDPOINT': 'legacy'},
         )
         s3_mapping = {
             'us_east_1_regional_endpoint': ChainProvider(
-                providers=[environment_provider])
+                providers=[environment_provider]
+            )
         }
         config_store = self._create_config_value_store(s3_mapping=s3_mapping)
         smart_defaults_factory.merge_smart_defaults(
-            config_store, 'standard', 'foo')
+            config_store, 'standard', 'foo'
+        )
         s3_config = config_store.get_config_variable('s3')
         assert s3_config['us_east_1_regional_endpoint'] == 'legacy'
         assert config_store.get_config_variable('retry_mode') == 'standard'
-        assert config_store.get_config_variable('sts_regional_endpoints') == 'regional'
+        assert (
+            config_store.get_config_variable('sts_regional_endpoints')
+            == 'regional'
+        )
         assert config_store.get_config_variable('connect_timeout') == 2
 
-    def test_resolve_default_s3_values_on_config(self, smart_defaults_factory,
-                                                 fake_session):
+    def test_resolve_default_s3_values_on_config(
+        self, smart_defaults_factory, fake_session
+    ):
         s3_mapping = {
             'use_arn_region': ChainProvider(
-                providers=[ConstantProvider(value=False)])
+                providers=[ConstantProvider(value=False)]
+            )
         }
         config_store = self._create_config_value_store(s3_mapping=s3_mapping)
         smart_defaults_factory.merge_smart_defaults(
-            config_store, 'standard', 'foo')
+            config_store, 'standard', 'foo'
+        )
         s3_config = config_store.get_config_variable('s3')
         assert s3_config['us_east_1_regional_endpoint'] == 'regional'
         assert config_store.get_config_variable('retry_mode') == 'standard'
-        assert config_store.get_config_variable('sts_regional_endpoints') == 'regional'
+        assert (
+            config_store.get_config_variable('sts_regional_endpoints')
+            == 'regional'
+        )
         assert config_store.get_config_variable('connect_timeout') == 2
 
     @pytest.mark.parametrize(
         'execution_env_var, region_env_var, default_region_env_var, '
         'imds_region, client_region, resolved_mode',
         [
-            ('AWS_Lambda_python3.6', 'us-east-1', None,
-             None, 'us-east-1', 'in-region'),
-            ('AWS_Lambda_python3.6', 'us-west-2', 'us-west-2',
-             None, 'us-east-1', 'cross-region'),
-            ('AWS_Lambda_python3.6', None, None,
-             'us-west-2', 'us-east-1', 'cross-region'),
-            (None, None, 'us-east-1',
-             'us-east-1', 'us-east-1', 'in-region'),
-            (None, None, None,
-             'us-west-2', 'us-east-1', 'cross-region'),
-            (None, None, None,
-             None, 'us-west-2', 'standard'),
-        ]
+            (
+                'AWS_Lambda_python3.6',
+                'us-east-1',
+                None,
+                None,
+                'us-east-1',
+                'in-region',
+            ),
+            (
+                'AWS_Lambda_python3.6',
+                'us-west-2',
+                'us-west-2',
+                None,
+                'us-east-1',
+                'cross-region',
+            ),
+            (
+                'AWS_Lambda_python3.6',
+                None,
+                None,
+                'us-west-2',
+                'us-east-1',
+                'cross-region',
+            ),
+            (None, None, 'us-east-1', 'us-east-1', 'us-east-1', 'in-region'),
+            (None, None, None, 'us-west-2', 'us-east-1', 'cross-region'),
+            (None, None, None, None, 'us-west-2', 'standard'),
+        ],
     )
-    def test_resolve_auto_mode(self, execution_env_var, region_env_var,
-                               default_region_env_var,
-                               imds_region, client_region, resolved_mode):
+    def test_resolve_auto_mode(
+        self,
+        execution_env_var,
+        region_env_var,
+        default_region_env_var,
+        imds_region,
+        client_region,
+        resolved_mode,
+    ):
         imds_region_provider = mock.Mock(spec=IMDSRegionProvider)
         imds_region_provider.provide.return_value = imds_region
         default_config_resolver = mock.Mock()
         with mock.patch.object(
-            botocore.configprovider.os, 'environ',
-            mock.Mock(wraps=os.environ)
+            botocore.configprovider.os, 'environ', mock.Mock(wraps=os.environ)
         ) as os_environ_patcher:
             os_environ_patcher.get.side_effect = [
-                execution_env_var, default_region_env_var, region_env_var]
+                execution_env_var,
+                default_region_env_var,
+                region_env_var,
+            ]
             smart_defaults_factory = SmartDefaultsConfigStoreFactory(
-                default_config_resolver, imds_region_provider)
+                default_config_resolver, imds_region_provider
+            )
             mode = smart_defaults_factory.resolve_auto_mode(client_region)
             assert mode == resolved_mode
 
     def test_resolve_auto_mode_imds_region_provider_connect_timeout(self):
         imds_region_provider = mock.Mock(spec=IMDSRegionProvider)
         imds_region_provider.provide.side_effect = ConnectTimeoutError(
-            endpoint_url='foo')
+            endpoint_url='foo'
+        )
         default_config_resolver = mock.Mock()
         with mock.patch.object(
-            botocore.configprovider.os, 'environ',
-            mock.Mock(wraps=os.environ)
+            botocore.configprovider.os, 'environ', mock.Mock(wraps=os.environ)
         ) as os_environ_patcher:
             os_environ_patcher.get.side_effect = [None] * 3
             smart_defaults_factory = SmartDefaultsConfigStoreFactory(
-                default_config_resolver, imds_region_provider)
+                default_config_resolver, imds_region_provider
+            )
             mode = smart_defaults_factory.resolve_auto_mode('us-west-2')
             assert mode == 'standard'

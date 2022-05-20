@@ -32,8 +32,12 @@ def _all_inputs():
                 yield input_shape, service_name, operation_name
 
 
-@pytest.mark.parametrize("input_shape, service_name, operation_name", _all_inputs())
-def test_can_generate_all_inputs(generator, input_shape, service_name, operation_name):
+@pytest.mark.parametrize(
+    "input_shape, service_name, operation_name", _all_inputs()
+)
+def test_can_generate_all_inputs(
+    generator, input_shape, service_name, operation_name
+):
     generated = generator.generate_skeleton(input_shape)
     # Do some basic sanity checks to make sure the generated shape
     # looks right.  We're mostly just ensuring that the generate_skeleton

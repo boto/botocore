@@ -20,7 +20,9 @@ def _test_crt_signature_version_4(test_case):
     # Use CRT logging to diagnose interim steps (canonical request, etc)
     # import awscrt.io
     # awscrt.io.init_logging(awscrt.io.LogLevel.Trace, 'stdout')
-    auth = botocore.crt.auth.CrtSigV4Auth(test_case.credentials, SERVICE, REGION)
+    auth = botocore.crt.auth.CrtSigV4Auth(
+        test_case.credentials, SERVICE, REGION
+    )
     auth.add_auth(request)
     actual_auth_header = request.headers["Authorization"]
     assert_equal(

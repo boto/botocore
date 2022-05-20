@@ -64,7 +64,7 @@ SERVICE_TO_CLASS_NAME = {
     'sts': 'STS',
     'support': 'Support',
     'swf': 'SWF',
-    'workspaces': 'WorkSpaces'
+    'workspaces': 'WorkSpaces',
 }
 
 

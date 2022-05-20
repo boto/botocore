@@ -45,23 +45,29 @@ class TestGlacier(unittest.TestCase):
 
     def test_can_upload_archive(self):
         body = six.BytesIO(b"bytes content")
-        response = self.client.upload_archive(vaultName=self.VAULT_NAME,
-                                              archiveDescription='test upload',
-                                              body=body)
+        response = self.client.upload_archive(
+            vaultName=self.VAULT_NAME,
+            archiveDescription='test upload',
+            body=body,
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
         archive_id = response['archiveId']
-        response = self.client.delete_archive(vaultName=self.VAULT_NAME,
-                                              archiveId=archive_id)
+        response = self.client.delete_archive(
+            vaultName=self.VAULT_NAME, archiveId=archive_id
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
     def test_can_upload_archive_from_bytes(self):
-        response = self.client.upload_archive(vaultName=self.VAULT_NAME,
-                                              archiveDescription='test upload',
-                                              body=b'bytes body')
+        response = self.client.upload_archive(
+            vaultName=self.VAULT_NAME,
+            archiveDescription='test upload',
+            body=b'bytes body',
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
         archive_id = response['archiveId']
-        response = self.client.delete_archive(vaultName=self.VAULT_NAME,
-                                              archiveId=archive_id)
+        response = self.client.delete_archive(
+            vaultName=self.VAULT_NAME, archiveId=archive_id
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
 

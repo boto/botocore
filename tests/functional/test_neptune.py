@@ -14,9 +14,8 @@ from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestNeptunePresignUrlInjection(BaseSessionTest):
-
     def setUp(self):
-        super(TestNeptunePresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 
@@ -28,7 +27,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
         params = {
             'DBClusterIdentifier': 'my-cluster',
             'Engine': 'neptune',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CreateDBClusterResponse>'
@@ -46,7 +45,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
         params = {
             'SourceDBClusterSnapshotIdentifier': 'source-db',
             'TargetDBClusterSnapshotIdentifier': 'target-db',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CopyDBClusterSnapshotResponse>'

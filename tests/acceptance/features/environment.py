@@ -19,7 +19,7 @@ REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
     'efs': 'us-west-2',
 }
-SKIP_SERVICES = set([
+SKIP_SERVICES = {
     # efs/support require subscriptions and may not work on every machine.
     'efs',
     'support',
@@ -27,7 +27,7 @@ SKIP_SERVICES = set([
     # work when using temporary credentials.
     'sts',
     'importexport',
-])
+}
 
 
 def before_feature(context, feature):
@@ -39,8 +39,9 @@ def before_feature(context, feature):
             service_name = tag
             break
     else:
-        raise RuntimeError("Unable to create a client for "
-                           "feature: %s" % feature)
+        raise RuntimeError(
+            "Unable to create a client for " "feature: %s" % feature
+        )
 
     if service_name in SKIP_SERVICES:
         feature.mark_skipped()

@@ -20,14 +20,14 @@ from tests.unit.docs import BaseDocsTest
 
 class TestServiceDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestServiceDocumenter, self).setUp()
+        super().setUp()
         self.add_shape_to_params('Biz', 'String')
         self.setup_client()
-        with mock.patch('botocore.session.create_loader',
-                        return_value=self.loader):
+        with mock.patch(
+            'botocore.session.create_loader', return_value=self.loader
+        ):
             session = get_session()
-            self.service_documenter = ServiceDocumenter(
-                'myservice', session)
+            self.service_documenter = ServiceDocumenter('myservice', session)
 
     def test_document_service(self):
         # Note that not everything will be included as it is just
@@ -66,7 +66,7 @@ class TestServiceDocumenter(BaseDocsTest):
             'Waiters',
             '=======',
             '.. py:class:: MyService.Waiter.SampleOperationComplete',
-            '  .. py:method:: wait(**kwargs)'
+            '  .. py:method:: wait(**kwargs)',
         ]
         for line in lines:
             self.assertIn(line, contents)
