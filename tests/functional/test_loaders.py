@@ -31,7 +31,8 @@ class TestLoaderAllowsDataPathOverride(unittest.TestCase):
             # We're going to override _retry.json in
             # botocore/data by setting our own data directory.
             override_name = self.create_file(
-                f, contents='{"foo": "bar"}', name='_retry.json')
+                f, contents='{"foo": "bar"}', name='_retry.json'
+            )
             new_data_path = os.path.dirname(override_name)
             loader = loaders.create_loader(search_path_string=new_data_path)
 

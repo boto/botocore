@@ -80,8 +80,8 @@ from botocore.serialize import (
 from botocore.utils import parse_timestamp, percent_encode_sequence
 
 TEST_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'protocols')
+    os.path.dirname(os.path.abspath(__file__)), 'protocols'
+)
 NOT_SPECIFIED = object()
 PROTOCOL_SERIALIZERS = {
     'ec2': EC2Serializer,
@@ -97,9 +97,7 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLACKLIST = [
-    'Idempotency token auto fill'
-]
+PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
 
 
 class TestType(Enum):
@@ -126,8 +124,7 @@ def _compliance_tests(test_type=None):
 
 
 @pytest.mark.parametrize(
-    "json_description, case, basename",
-    _compliance_tests(TestType.INPUT)
+    "json_description, case, basename", _compliance_tests(TestType.INPUT)
 )
 def test_input_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
@@ -156,8 +153,10 @@ def test_input_compliance(json_description, case, basename):
 
 def _assert_request_body_is_bytes(body):
     if not isinstance(body, bytes):
-        raise AssertionError("Expected body to be serialized as type "
-                             "bytes(), instead got: %s" % type(body))
+        raise AssertionError(
+            "Expected body to be serialized as type "
+            "bytes(), instead got: %s" % type(body)
+        )
 
 
 def _assert_endpoints_equal(actual, expected, endpoint):
@@ -168,7 +167,7 @@ def _assert_endpoints_equal(actual, expected, endpoint):
     assert_equal(actual_host, expected['host'], 'Host')
 
 
-class MockRawResponse(object):
+class MockRawResponse:
     def __init__(self, data):
         self._data = b64decode(data)
 
@@ -177,8 +176,7 @@ class MockRawResponse(object):
 
 
 @pytest.mark.parametrize(
-    "json_description, case, basename",
-    _compliance_tests(TestType.OUTPUT)
+    "json_description, case, basename", _compliance_tests(TestType.OUTPUT)
 )
 def test_output_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
@@ -191,7 +189,8 @@ def test_output_compliance(json_description, case, basename):
         model = ServiceModel(service_description)
         operation_model = OperationModel(case['given'], model)
         parser = PROTOCOL_PARSERS[model.metadata['protocol']](
-            timestamp_parser=_compliance_timestamp_parser)
+            timestamp_parser=_compliance_timestamp_parser
+        )
         # We load the json as utf-8, but the response parser is at the
         # botocore boundary, so it expects to work with bytes.
         body_bytes = case['response']['body'].encode('utf-8')
@@ -220,9 +219,15 @@ def test_output_compliance(json_description, case, basename):
         msg = (
             "\nFailed to run test  : %s\n"
             "Protocol            : %s\n"
-            "Description         : %s (%s:%s)\n" % (
-                e, model.metadata['protocol'],
-                case['description'], case['suite_id'], case['test_id']))
+            "Description         : %s (%s:%s)\n"
+            % (
+                e,
+                model.metadata['protocol'],
+                case['description'],
+                case['suite_id'],
+                case['test_id'],
+            )
+        )
         raise AssertionError(msg)
     try:
         if 'error' in case:
@@ -237,8 +242,9 @@ def test_output_compliance(json_description, case, basename):
             expected_result = case['result']
         assert_equal(parsed, expected_result, "Body")
     except Exception as e:
-        _output_failure_message(model.metadata['protocol'],
-                                case, parsed, expected_result, e)
+        _output_failure_message(
+            model.metadata['protocol'], case, parsed, expected_result, e
+        )
 
 
 def _fixup_parsed_result(parsed):
@@ -302,8 +308,7 @@ def _compliance_timestamp_parser(value):
 
 
 def _output_failure_message(
-    protocol_type, case, actual_parsed,
-    expected_result, error
+    protocol_type, case, actual_parsed, expected_result, error
 ):
     j = _try_json_dump
     error_message = (
@@ -313,11 +318,19 @@ def _output_failure_message(
         "Response              : %s\n"
         "Expected serialization: %s\n"
         "Actual serialization  : %s\n"
-        "Assertion message     : %s\n" % (
-            case['description'], case['suite_id'],
-            case['test_id'], protocol_type,
-            j(case['given']), j(case['response']),
-            j(expected_result), j(actual_parsed), error))
+        "Assertion message     : %s\n"
+        % (
+            case['description'],
+            case['suite_id'],
+            case['test_id'],
+            protocol_type,
+            j(case['given']),
+            j(case['response']),
+            j(expected_result),
+            j(actual_parsed),
+            error,
+        )
+    )
     raise AssertionError(error_message)
 
 
@@ -330,11 +343,19 @@ def _input_failure_message(protocol_type, case, actual_request, error):
         "Params                : %s\n"
         "Expected serialization: %s\n"
         "Actual serialization  : %s\n"
-        "Assertion message     : %s\n" % (
-            case['description'], case['suite_id'],
-            case['test_id'], protocol_type,
-            j(case['given']), j(case['params']),
-            j(case['serialized']), j(actual_request), error))
+        "Assertion message     : %s\n"
+        % (
+            case['description'],
+            case['suite_id'],
+            case['test_id'],
+            protocol_type,
+            j(case['given']),
+            j(case['params']),
+            j(case['serialized']),
+            j(actual_request),
+            error,
+        )
+    )
     raise AssertionError(error_message)
 
 
@@ -352,13 +373,15 @@ def assert_equal(first, second, prefix):
         assert first == second
     except Exception:
         try:
-            better = "%s (actual != expected)\n%s !=\n%s" % (
+            better = "{} (actual != expected)\n{} !=\n{}".format(
                 prefix,
                 json.dumps(first, indent=2),
-                json.dumps(second, indent=2))
+                json.dumps(second, indent=2),
+            )
         except (ValueError, TypeError):
-            better = "%s (actual != expected)\n%s !=\n%s" % (
-                prefix, first, second)
+            better = "{} (actual != expected)\n{} !=\n{}".format(
+                prefix, first, second
+            )
         raise AssertionError(better)
 
 
@@ -380,8 +403,9 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected):
-    assert_equal(actual['body'], expected.get('body', '').encode('utf-8'),
-                 'Body value')
+    assert_equal(
+        actual['body'], expected.get('body', '').encode('utf-8'), 'Body value'
+    )
     actual_headers = HeadersDict(actual['headers'])
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
@@ -449,7 +473,9 @@ def _get_suite_test_id():
             suite_id = int(split([0]))
     except TypeError:
         # Same exception, just give a better error message.
-        raise TypeError("Invalid format for BOTOCORE_TEST_ID, should be "
-                        "suite_id[:test_id], and both values should be "
-                        "integers.")
+        raise TypeError(
+            "Invalid format for BOTOCORE_TEST_ID, should be "
+            "suite_id[:test_id], and both values should be "
+            "integers."
+        )
     return suite_id, test_id

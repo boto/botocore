@@ -9,3 +9,6 @@ e34b6a36ae0c1571bcb5fd7034e817d3b397e283
 
 # Cleanup pyupgrade misses
 a2c2fe68a2f9ae259dd1d72b172d41c7c81808cd
+
+# Run Black and PyUpgrade over tests directory
+10747e5e2f2f97a9493b91b5c886bda71678e3be

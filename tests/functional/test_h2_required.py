@@ -32,7 +32,9 @@ def _all_test_cases():
 
     for service in services:
         service_model = session.get_service_model(service)
-        h2_config = service_model.metadata.get('protocolSettings', {}).get('h2')
+        h2_config = service_model.metadata.get('protocolSettings', {}).get(
+            'h2'
+        )
         if h2_config == 'required':
             h2_services.append(service)
         elif h2_config == 'eventstream':
@@ -58,5 +60,7 @@ def test_all_uses_of_h2_are_known(h2_service):
 def test_all_h2_operations_are_known(h2_service, operation):
     # Validates that an operation that requires HTTP 2 is known
     known_operations = _KNOWN_SERVICES.get(h2_service, [])
-    message = 'Found unknown HTTP 2 operation: %s.%s' % (h2_service, operation)
+    message = 'Found unknown HTTP 2 operation: {}.{}'.format(
+        h2_service, operation
+    )
     assert operation in known_operations, message

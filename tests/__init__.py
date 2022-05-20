@@ -34,7 +34,7 @@ import botocore.loaders
 import botocore.session
 from botocore import credentials, utils
 from botocore.awsrequest import AWSResponse
-from botocore.compat import HAS_CRT, parse_qs, six, urlparse
+from botocore.compat import HAS_CRT, parse_qs, urlparse
 from botocore.stub import Stubber
 
 _LOADER = botocore.loaders.Loader()
@@ -60,9 +60,12 @@ def skip_if_windows(reason):
         def test_some_non_windows_stuff(self):
             self.assertEqual(...)
     """
+
     def decorator(func):
         return unittest.skipIf(
-            platform.system() not in ['Darwin', 'Linux'], reason)(func)
+            platform.system() not in ['Darwin', 'Linux'], reason
+        )(func)
+
     return decorator
 
 
@@ -72,6 +75,7 @@ def requires_crt(reason=None):
 
     def decorator(func):
         return unittest.skipIf(not HAS_CRT, reason)(func)
+
     return decorator
 
 
@@ -107,7 +111,9 @@ def temporary_file(mode):
 
     """
     temporary_directory = tempfile.mkdtemp()
-    basename = 'tmpfile-%s-%s' % (int(time.time()), random.randint(1, 1000))
+    basename = 'tmpfile-{}-{}'.format(
+        int(time.time()), random.randint(1, 1000)
+    )
     full_filename = os.path.join(temporary_directory, basename)
     open(full_filename, 'w').close()
     try:
@@ -144,7 +150,7 @@ class BaseSessionTest(BaseEnvVar):
     """
 
     def setUp(self, **environ):
-        super(BaseSessionTest, self).setUp()
+        super().setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
@@ -161,8 +167,7 @@ class BaseClientDriverTest(unittest.TestCase):
         self.driver = ClientDriver()
         env = None
         if self.INJECT_DUMMY_CREDS:
-            env = {'AWS_ACCESS_KEY_ID': 'foo',
-                   'AWS_SECRET_ACCESS_KEY': 'bar'}
+            env = {'AWS_ACCESS_KEY_ID': 'foo', 'AWS_SECRET_ACCESS_KEY': 'bar'}
         self.driver.start(env=env)
 
     def cmd(self, *args):
@@ -182,10 +187,9 @@ class BaseClientDriverTest(unittest.TestCase):
         self.driver.stop()
 
 
-class ClientDriver(object):
+class ClientDriver:
     CLIENT_SERVER = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'cmd-runner'
+        os.path.dirname(os.path.abspath(__file__)), 'cmd-runner'
     )
 
     def __init__(self):
@@ -213,8 +217,12 @@ class ClientDriver(object):
 
     def start(self, env=None):
         """Start up the command runner process."""
-        self._popen = Popen([sys.executable, self.CLIENT_SERVER],
-                            stdout=PIPE, stdin=PIPE, env=env)
+        self._popen = Popen(
+            [sys.executable, self.CLIENT_SERVER],
+            stdout=PIPE,
+            stdin=PIPE,
+            env=env,
+        )
 
     def stop(self):
         """Shutdown the command runner process."""
@@ -263,8 +271,7 @@ class ClientDriver(object):
         self.send_cmd(*cmd)
         result = self._popen.stdout.readline().strip()
         if result != b'OK':
-            raise RuntimeError(
-                "Error from command '%s': %s" % (cmd, result))
+            raise RuntimeError(f"Error from command '{cmd}': {result}")
 
 
 # This is added to this file because it's used in both
@@ -290,18 +297,21 @@ class IntegerRefresher(credentials.RefreshableCredentials):
     _mandatory_refresh_timeout = 1
     _credentials_expire = 3
 
-    def __init__(self, creds_last_for=_credentials_expire,
-                 advisory_refresh=_advisory_refresh_timeout,
-                 mandatory_refresh=_mandatory_refresh_timeout,
-                 refresh_function=None):
-        expires_in = (
-            self._current_datetime() +
-            datetime.timedelta(seconds=creds_last_for))
+    def __init__(
+        self,
+        creds_last_for=_credentials_expire,
+        advisory_refresh=_advisory_refresh_timeout,
+        mandatory_refresh=_mandatory_refresh_timeout,
+        refresh_function=None,
+    ):
+        expires_in = self._current_datetime() + datetime.timedelta(
+            seconds=creds_last_for
+        )
         if refresh_function is None:
             refresh_function = self._do_refresh
-        super(IntegerRefresher, self).__init__(
-            '0', '0', '0', expires_in,
-            refresh_function, 'INTREFRESH')
+        super().__init__(
+            '0', '0', '0', expires_in, refresh_function, 'INTREFRESH'
+        )
         self.creds_last_for = creds_last_for
         self.refresh_counter = 0
         self._advisory_refresh_timeout = advisory_refresh
@@ -339,7 +349,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
 
 def _urlparse(url):
-    if isinstance(url, six.binary_type):
+    if isinstance(url, bytes):
         # Not really necessary, but it helps to reduce noise on Python 2.x
         url = url.decode('utf8')
     return urlparse(url)
@@ -377,7 +387,7 @@ class RawResponse(BytesIO):
             contents = self.read()
 
 
-class BaseHTTPStubber(object):
+class BaseHTTPStubber:
     def __init__(self, obj_with_event_emitter, strict=True):
         self.reset()
         self._strict = strict
@@ -387,8 +397,9 @@ class BaseHTTPStubber(object):
         self.requests = []
         self.responses = []
 
-    def add_response(self, url='https://example.com', status=200, headers=None,
-                     body=b''):
+    def add_response(
+        self, url='https://example.com', status=200, headers=None, body=b''
+    ):
         if headers is None:
             headers = {}
 
@@ -443,7 +454,7 @@ class ConsistencyWaiterException(Exception):
     pass
 
 
-class ConsistencyWaiter(object):
+class ConsistencyWaiter:
     """
     A waiter class for some check to reach a consistent state.
 
@@ -459,8 +470,14 @@ class ConsistencyWaiter(object):
     :param delay: The number of seconds to delay the next API call after a
     failed check call. Default of 5 seconds.
     """
-    def __init__(self, min_successes=1, max_attempts=20, delay=5,
-                 delay_initial_poll=False):
+
+    def __init__(
+        self,
+        min_successes=1,
+        max_attempts=20,
+        delay=5,
+        delay_initial_poll=False,
+    ):
         self.min_successes = min_successes
         self.max_attempts = max_attempts
         self.delay = delay
@@ -502,7 +519,7 @@ class ConsistencyWaiter(object):
 
 class StubbedSession(botocore.session.Session):
     def __init__(self, *args, **kwargs):
-        super(StubbedSession, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._cached_clients = {}
         self._client_stubs = {}
 
@@ -513,8 +530,7 @@ class StubbedSession(botocore.session.Session):
         return self._cached_clients[service_name]
 
     def _create_stubbed_client(self, service_name, *args, **kwargs):
-        client = super(StubbedSession, self).create_client(
-            service_name, *args, **kwargs)
+        client = super().create_client(service_name, *args, **kwargs)
         stubber = Stubber(client)
         self._client_stubs[service_name] = stubber
         return client
@@ -550,8 +566,7 @@ class FreezeTime(ContextDecorator):
             date = datetime.datetime.utcnow()
         self.date = date
         self.datetime_patcher = mock.patch.object(
-            module, 'datetime',
-            mock.Mock(wraps=datetime.datetime)
+            module, 'datetime', mock.Mock(wraps=datetime.datetime)
         )
 
     def __enter__(self, *args, **kwargs):

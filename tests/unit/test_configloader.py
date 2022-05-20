@@ -28,7 +28,7 @@ from tests import BaseEnvVar, mock, unittest
 
 def path(filename):
     directory = os.path.join(os.path.dirname(__file__), 'cfg')
-    if isinstance(filename, six.binary_type):
+    if isinstance(filename, bytes):
         directory = six.b(directory)
     return os.path.join(directory, filename)
 
@@ -52,7 +52,7 @@ class TestConfigLoader(BaseEnvVar):
         )
 
         directory = self.tempdir
-        if isinstance(filename, six.binary_type):
+        if isinstance(filename, bytes):
             directory = six.b(directory)
         full_path = os.path.join(directory, filename)
 
@@ -89,8 +89,9 @@ class TestConfigLoader(BaseEnvVar):
     def test_profile_map_conversion(self):
         loaded_config = load_config(path('aws_config'))
         self.assertIn('profiles', loaded_config)
-        self.assertEqual(sorted(loaded_config['profiles'].keys()),
-                         ['default', 'personal'])
+        self.assertEqual(
+            sorted(loaded_config['profiles'].keys()), ['default', 'personal']
+        )
 
     def test_bad_profiles_are_ignored(self):
         filename = path('aws_bad_profile')
@@ -119,12 +120,10 @@ class TestConfigLoader(BaseEnvVar):
         # will make sure that indented sections such as singature_version
         # will not be treated as another subsection but rather
         # its literal value.
-        self.assertEqual(
-            raw_config['cloudwatch'], '\nsignature_version = v4')
+        self.assertEqual(raw_config['cloudwatch'], '\nsignature_version = v4')
         self.assertEqual(
             raw_config['s3'],
-            '\nsignature_version = s3v4'
-            '\naddressing_style = path'
+            '\nsignature_version = s3v4' '\naddressing_style = path',
         )
 
     def test_nested_bad_config(self):
@@ -140,10 +139,12 @@ class TestConfigLoader(BaseEnvVar):
                 load_config(filename)
 
     def test_multi_file_load(self):
-        filenames = [path('aws_config_other'),
-                     path('aws_config'),
-                     path('aws_third_config'),
-                     path('aws_config_notfound')]
+        filenames = [
+            path('aws_config_other'),
+            path('aws_config'),
+            path('aws_third_config'),
+            path('aws_config_notfound'),
+        ]
         loaded_config = multi_file_load_config(*filenames)
         config = loaded_config['profiles']['default']
         self.assertEqual(config['aws_access_key_id'], 'other_foo')

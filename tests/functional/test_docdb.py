@@ -14,9 +14,8 @@ from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestDocDBPresignUrlInjection(BaseSessionTest):
-
     def setUp(self):
-        super(TestDocDBPresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('docdb', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 
@@ -30,7 +29,7 @@ class TestDocDBPresignUrlInjection(BaseSessionTest):
             'Engine': 'docdb',
             'SourceRegion': 'us-east-1',
             'MasterUsername': 'master',
-            'MasterUserPassword': 'mypassword'
+            'MasterUserPassword': 'mypassword',
         }
         response_body = (
             b'<CreateDBClusterResponse>'
@@ -48,7 +47,7 @@ class TestDocDBPresignUrlInjection(BaseSessionTest):
         params = {
             'SourceDBClusterSnapshotIdentifier': 'source-db',
             'TargetDBClusterSnapshotIdentifier': 'target-db',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CopyDBClusterSnapshotResponse>'
