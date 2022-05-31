@@ -333,9 +333,11 @@ def add_expect_header(model, params, **kwargs):
         return
     if 'body' in params:
         body = params['body']
-        if hasattr(body, 'read'):
+        size = getattr(body, "_size", None)
+        if size:
             # Any file like object will use an expect 100-continue
-            # header regardless of size.
+            # except when size equals zero.
+            # https://tools.ietf.org/html/rfc7231#section-5.1.1
             logger.debug("Adding expect 100 continue header to request.")
             params['headers']['Expect'] = '100-continue'
 
