@@ -533,6 +533,7 @@ class TestHandlers(BaseSessionTest):
             'HostedZoneId': '/hostedzone/ABC123',
             'ResourceId': '/hostedzone/DEF456',
             'DelegationSetId': '/hostedzone/GHI789',
+            'ChangeId': '/hostedzone/JKL012',
             'Other': '/hostedzone/foo',
         }
         operation_def = {
@@ -549,11 +550,13 @@ class TestHandlers(BaseSessionTest):
                         'HostedZoneId': {'shape': 'ResourceId'},
                         'ResourceId': {'shape': 'ResourceId'},
                         'DelegationSetId': {'shape': 'DelegationSetId'},
+                        'ChangeId': {'shape': 'ChangeId'},
                         'Other': {'shape': 'String'},
                     },
                 },
                 'ResourceId': {'type': 'string'},
                 'DelegationSetId': {'type': 'string'},
+                'ChangeId': {'type': 'string'},
                 'String': {'type': 'string'},
             },
         }
@@ -564,6 +567,7 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['HostedZoneId'], 'ABC123')
         self.assertEqual(params['ResourceId'], 'DEF456')
         self.assertEqual(params['DelegationSetId'], 'GHI789')
+        self.assertEqual(params['ChangeId'], 'JKL012')
 
         # This one should have been left alone
         self.assertEqual(params['Other'], '/hostedzone/foo')
