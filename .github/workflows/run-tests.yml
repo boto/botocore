@@ -27,6 +27,13 @@ jobs:
       - name: Run tests
         run: |
           python scripts/ci/run-tests --with-cov --with-xdist
+      - name: Run tests in zipped context
+        env:
+          PYTHONPATH: ${{ env.GITHUB_WORKSPACE }}/botocore.zip
+        run: |
+          zip -r botocore.zip botocore/
+          python scripts/ci/run-tests --with-cov --with-xdist --zipped
+          rm botocore.zip
       - name: Run codecov
         run: |
           rm tests/coverage.xml

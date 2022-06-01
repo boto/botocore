@@ -27,7 +27,7 @@ Loading a module is broken down into several steps:
     * The mechanics of loading the file
     * Searching for extras and applying them to the loaded file
 
-The last item is used so that other faster loading mechanism
+The last item is used so that other faster loading mechanisms
 besides the default JSON loader can be used.
 
 The Search Path
@@ -103,21 +103,20 @@ which don't represent the actual service api.
 """
 import logging
 import os
+import pathlib
+import zipfile
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 
-_JSON_OPEN_METHODS = {
-    '.json': open,
-}
-
+_JSON_EXTENSIONS = ['.json']
 
 if HAS_GZIP:
-    from gzip import open as gzip_open
+    from gzip import decompress
 
-    _JSON_OPEN_METHODS['.json.gz'] = gzip_open
+    _JSON_EXTENSIONS.append('.json.gz')
 
 
 logger = logging.getLogger(__name__)
@@ -156,42 +155,48 @@ class JSONFileLoader:
     def exists(self, file_path):
         """Checks if the file exists.
 
-        :type file_path: str
+        :type file_path: zipfile.Path / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
         :return: True if file path exists, False otherwise.
 
         """
-        for ext in _JSON_OPEN_METHODS:
-            if os.path.isfile(file_path + ext):
+        for ext in _JSON_EXTENSIONS:
+            # pathlib.Path.with_suffix would be useful here
+            # but zipfile.Path does not have anything comparable
+            path = file_path.parent.joinpath(file_path.name + ext)
+            if path.is_file():
                 return True
         return False
 
-    def _load_file(self, full_path, open_method):
-        if not os.path.isfile(full_path):
+    def _load_file(self, full_path, ext):
+        if not full_path.is_file():
             return
 
-        # By default the file will be opened with locale encoding on Python 3.
-        # We specify "utf8" here to ensure the correct behavior.
-        with open_method(full_path, 'rb') as fp:
-            payload = fp.read().decode('utf-8')
+        with full_path.open('rb') as fp:
+            payload = fp.read()
+            if ext == '.json.gz':
+                payload = decompress(payload)
 
         logger.debug("Loading JSON file: %s", full_path)
         return json.loads(payload, object_pairs_hook=OrderedDict)
 
-    def load_file(self, file_path):
+    def load_file(self, path_obj):
         """Attempt to load the file path.
 
-        :type file_path: str
+        :type file_path: zipfile.Path / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
         :return: The loaded data if it exists, otherwise None.
 
         """
-        for (ext, open_method) in _JSON_OPEN_METHODS.items():
-            data = self._load_file(file_path + ext, open_method)
+        for ext in _JSON_EXTENSIONS:
+            # pathlib.Path.with_suffix would be useful here
+            # but zipfile.Path does not have anything comparable
+            with_ext = path_obj.parent.joinpath(path_obj.name + ext)
+            data = self._load_file(with_ext, ext)
             if data is not None:
                 return data
         return None
@@ -221,6 +226,75 @@ def create_loader(search_path_string=None):
     return Loader(extra_search_paths=paths)
 
 
+def _create_path(path):
+    """Construct a zipfile.Path object by splitting the root (path to the zip)
+    and the path to the subdirectory/file e.g.
+    '/Users/user123/Documents/Archive.zip/data' -->
+    zipfile.Path('/Users/user123/Documents/Archive.zip', '/data')
+    If the zipped path doesn't exist, return a pathlib.Path object instead
+
+    :type path: str
+    :param path: Full path to construct a zipfile.Path.pathlib.Path object
+
+    :return: A zipfile.Path/pathlib.Path object consisting of the root and
+    the path to a file or subdirectory
+
+    """
+    parts = path.split(os.sep)
+    new_path = os.sep
+    while len(parts) > 0:
+        new_path = os.path.join(new_path, parts.pop(0))
+        if zipfile.is_zipfile(new_path):
+            return zipfile.Path(new_path).joinpath(*parts)
+    return pathlib.Path(path)
+
+
+class SearchPathList(list):
+    """A simple wrapper for a list. Used to mutate objects that are appended
+    to Loader.search_paths to be pathlib.Path or zipfile.Path objects
+
+    """
+
+    ALLOWED_TYPES = (str, zipfile.Path, pathlib.Path)
+
+    def _mutate_path_string(self, __object):
+        """Update a string path to zipfile.Path or pathlib.Path and return it.
+        If its already one of those two types, do nothing to it and return it.
+        If its not one of those three, raise a TypeError.
+
+        :type __object: object
+        :param __object: An object reperesting a path to a directory in botocore
+
+        :raises: TypeError if __object is not one of the types in ALLOWED_TYPES
+
+        :return: A zipfile.Path or pathlib.Path object
+
+        """
+        if isinstance(__object, str):
+            return _create_path(__object)
+
+        if not any(
+            isinstance(__object, _type) for _type in self.ALLOWED_TYPES
+        ):
+            repr_types = ', '.join(repr(_type) for _type in self.ALLOWED_TYPES)
+            raise TypeError(
+                f"Object {__object} of type {type(__object)} cannot be added "
+                f"to a search path. Please use one of {repr_types} instead."
+            )
+
+        return __object
+
+    def append(self, __object):
+        super().append(self._mutate_path_string(__object))
+
+    def extend(self, __iterable):
+        for __object in __iterable:
+            self.append(self._mutate_path_string(__object))
+
+    def insert(self, __index, __object):
+        super().insert(__index, self._mutate_path_string(__object))
+
+
 class Loader:
     """Find and load data models.
 
@@ -233,18 +307,17 @@ class Loader:
 
     FILE_LOADER_CLASS = JSONFileLoader
     # The included models in botocore/data/ that we ship with botocore.
-    BUILTIN_DATA_PATH = os.path.join(BOTOCORE_ROOT, 'data')
+    BUILTIN_DATA_PATH = BOTOCORE_ROOT.joinpath('data')
     # For convenience we automatically add ~/.aws/models to the data path.
-    CUSTOMER_DATA_PATH = os.path.join(
-        os.path.expanduser('~'), '.aws', 'models'
-    )
+    # this filepath can never be zipped and will always be on disk
+    CUSTOMER_DATA_PATH = pathlib.Path('~', '.aws', 'models').expanduser()
+
     BUILTIN_EXTRAS_TYPES = ['sdk']
 
     def __init__(
         self,
         extra_search_paths=None,
         file_loader=None,
-        cache=None,
         include_default_search_paths=True,
         include_default_extras=True,
     ):
@@ -252,10 +325,9 @@ class Loader:
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
         self.file_loader = file_loader
+        self._search_paths = SearchPathList()
         if extra_search_paths is not None:
-            self._search_paths = extra_search_paths
-        else:
-            self._search_paths = []
+            self._search_paths.extend(extra_search_paths)
         if include_default_search_paths:
             self._search_paths.extend(
                 [self.CUSTOMER_DATA_PATH, self.BUILTIN_DATA_PATH]
@@ -302,19 +374,18 @@ class Loader:
             # by searching for the corresponding type_name in each
             # potential directory.
             possible_services = [
-                d
-                for d in os.listdir(possible_path)
-                if os.path.isdir(os.path.join(possible_path, d))
+                path_obj
+                for path_obj in possible_path.iterdir()
+                if path_obj.is_dir()
             ]
-            for service_name in possible_services:
-                full_dirname = os.path.join(possible_path, service_name)
-                api_versions = os.listdir(full_dirname)
-                for api_version in api_versions:
-                    full_load_path = os.path.join(
-                        full_dirname, api_version, type_name
-                    )
-                    if self.file_loader.exists(full_load_path):
-                        services.add(service_name)
+            for service_name_path in possible_services:
+                full_load_paths = [
+                    path_obj.joinpath(type_name)
+                    for path_obj in service_name_path.iterdir()
+                ]
+                for path in full_load_paths:
+                    if self.file_loader.exists(path):
+                        services.add(service_name_path.name)
                         break
         return sorted(services)
 
@@ -360,13 +431,13 @@ class Loader:
         for possible_path in self._potential_locations(
             service_name, must_exist=True, is_dir=True
         ):
-            for dirname in os.listdir(possible_path):
-                full_path = os.path.join(possible_path, dirname, type_name)
+            for subpath in possible_path.iterdir():
+                full_path = subpath.joinpath(type_name)
                 # Only add to the known_api_versions if the directory
                 # contains a service-2, paginators-1, etc. file corresponding
                 # to the type_name passed in.
                 if self.file_loader.exists(full_path):
-                    known_api_versions.add(dirname)
+                    known_api_versions.add(subpath.name)
         if not known_api_versions:
             raise DataNotFoundError(data_path=service_name)
         return sorted(known_api_versions)
@@ -461,16 +532,16 @@ class Loader:
         # Will give an iterator over the full path of potential locations
         # according to the search path.
         for path in self.search_paths:
-            if os.path.isdir(path):
+            if path.is_dir():
                 full_path = path
                 if name is not None:
-                    full_path = os.path.join(path, name)
+                    full_path = path.joinpath(name)
                 if not must_exist:
                     yield full_path
                 else:
-                    if is_dir and os.path.isdir(full_path):
+                    if is_dir and full_path.is_dir():
                         yield full_path
-                    elif os.path.exists(full_path):
+                    elif full_path.exists():
                         yield full_path
 
 

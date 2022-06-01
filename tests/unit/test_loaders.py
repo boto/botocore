@@ -22,12 +22,15 @@
 import contextlib
 import copy
 import os
+import pathlib
+import zipfile
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import (
     ExtrasProcessor,
     JSONFileLoader,
     Loader,
+    SearchPathList,
     create_loader,
 )
 from tests import BaseEnvVar, mock
@@ -36,42 +39,82 @@ from tests import BaseEnvVar, mock
 class TestJSONFileLoader(BaseEnvVar):
     def setUp(self):
         super().setUp()
-        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_path = pathlib.Path(__file__).parent.joinpath('data')
+        self.zip_data_path = zipfile.Path(
+            self.data_path.joinpath('Archive.zip')
+        )
         self.file_loader = JSONFileLoader()
-        self.valid_file_path = os.path.join(self.data_path, 'foo')
-        self.compressed_file_path = os.path.join(self.data_path, 'compressed')
+        self.valid_file_path = self.data_path.joinpath('foo')
+        self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
+        self.compressed_file_path = self.data_path.joinpath('compressed')
+        self.zip_compressed_file_path = self.zip_data_path.joinpath(
+            'compressed'
+        )
 
     def test_load_file(self):
         data = self.file_loader.load_file(self.valid_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+        zip_data = self.file_loader.load_file(self.zip_valid_file_path)
+        self.assertEqual(len(zip_data), 3)
+        self.assertTrue('test_key_1' in zip_data)
+
+        self.assertEqual(data, zip_data)
+
     def test_load_compressed_file(self):
         data = self.file_loader.load_file(self.compressed_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+        zip_data = self.file_loader.load_file(self.zip_compressed_file_path)
+        self.assertEqual(len(zip_data), 3)
+        self.assertTrue('test_key_1' in data)
+
+        self.assertEqual(data, zip_data)
+
     def test_load_compressed_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.compressed_file_path))
+        self.assertTrue(self.file_loader.exists(self.zip_compressed_file_path))
 
     def test_load_json_file_does_not_exist_returns_none(self):
         # None is used to indicate that the loader could not find a
         # file to load.
-        self.assertIsNone(self.file_loader.load_file('fooasdfasdfasdf'))
+        self.assertIsNone(
+            self.file_loader.load_file(pathlib.Path('fooasdfasdfasdf'))
+        )
+        # can't instantiate a zipfile.Path object if the path doesn't exist
+        self.assertIsNone(
+            self.file_loader.load_file(
+                self.zip_data_path.joinpath('fooasdfasdfasdf')
+            )
+        )
 
     def test_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.valid_file_path))
+        self.assertTrue(self.file_loader.exists(self.zip_valid_file_path))
 
     def test_file_does_not_exist_returns_false(self):
         self.assertFalse(
             self.file_loader.exists(
-                os.path.join(self.data_path, 'does', 'not', 'exist')
+                self.data_path.joinpath('does', 'not', 'exist')
+            )
+        )
+        self.assertFalse(
+            self.file_loader.exists(
+                self.zip_data_path.joinpath('does', 'not', 'exist')
             )
         )
 
     def test_file_with_non_ascii(self):
         try:
-            filename = os.path.join(self.data_path, 'non_ascii')
+            filename = self.data_path.joinpath('non_ascii')
+            self.assertTrue(self.file_loader.load_file(filename) is not None)
+        except UnicodeDecodeError:
+            self.fail('Fail to handle data file with non-ascii characters')
+
+        try:
+            filename = self.zip_data_path.joinpath('non_ascii')
             self.assertTrue(self.file_loader.load_file(filename) is not None)
         except UnicodeDecodeError:
             self.fail('Fail to handle data file with non-ascii characters')
@@ -87,39 +130,63 @@ class TestLoader(BaseEnvVar):
         # with .aws/models.
         home_dir_path = os.path.join('.aws', 'models')
         self.assertTrue(
-            any(p.endswith(home_dir_path) for p in loader.search_paths)
+            any(str(p).endswith(home_dir_path) for p in loader.search_paths)
         )
+        self.assertIsInstance(loader.search_paths, SearchPathList)
 
     def test_can_add_to_search_path(self):
         loader = Loader()
         loader.search_paths.append('mypath')
-        self.assertIn('mypath', loader.search_paths)
+        self.assertIn(pathlib.Path('mypath'), loader.search_paths)
+        self.assertIsInstance(loader.search_paths, SearchPathList)
 
     def test_can_initialize_with_search_paths(self):
         loader = Loader(extra_search_paths=['foo', 'bar'])
         # Note that the extra search paths are before
         # the customer/builtin data paths.
+
+        self.assertIsInstance(loader.search_paths, SearchPathList)
         self.assertEqual(
             loader.search_paths,
             [
-                'foo',
-                'bar',
+                pathlib.Path('foo'),
+                pathlib.Path('bar'),
                 loader.CUSTOMER_DATA_PATH,
                 loader.BUILTIN_DATA_PATH,
             ],
         )
 
+    def test_cant_add_wrong_type_to_search_path(self):
+
+        bad_types = (
+            None,
+            [1],
+            1,
+            1.5,
+            {'bad': 'type'},
+            b'bad_type',
+            False,
+            {'bad_type'},
+        )
+        for _type in bad_types:
+            with self.assertRaises(TypeError):
+                Loader(extra_search_paths=[_type])
+
+            loader = Loader()
+            with self.assertRaises(TypeError):
+                loader.search_paths.append(_type)
+
     # The file loader isn't consulted unless the current
     # search path exists, so we're patching isdir to always
     # say that a directory exists.
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    @mock.patch('pathlib.Path.is_dir', mock.Mock(return_value=True))
     def test_load_data_uses_loader(self):
         search_paths = ['foo', 'bar', 'baz']
 
         class FakeLoader:
             def load_file(self, name):
                 expected_ending = os.path.join('bar', 'baz')
-                if name.endswith(expected_ending):
+                if str(name).endswith(expected_ending):
                     return ['loaded data']
 
         loader = Loader(
@@ -139,7 +206,7 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.load_data('baz')
 
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    @mock.patch('pathlib.Path.is_dir', mock.Mock(return_value=True))
     def test_error_raised_if_service_does_not_exist(self):
         loader = Loader(
             extra_search_paths=[], include_default_search_paths=False
@@ -147,7 +214,7 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.determine_latest_version('unknownservice', 'service-2')
 
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    @mock.patch('pathlib.Path.is_dir', mock.Mock(return_value=True))
     def test_load_service_model(self):
         class FakeLoader:
             def load_file(self, name):
@@ -164,7 +231,7 @@ class TestLoader(BaseEnvVar):
         loaded = loader.load_service_model('baz', type_name='service-2')
         self.assertEqual(loaded, ['loaded data'])
 
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    @mock.patch('pathlib.Path.is_dir', mock.Mock(return_value=True))
     def test_load_service_model_enforces_case(self):
         class FakeLoader:
             def load_file(self, name):
@@ -206,9 +273,85 @@ class TestLoader(BaseEnvVar):
     def test_create_loader_parses_data_path(self):
         search_path = os.pathsep.join(['foo', 'bar', 'baz'])
         loader = create_loader(search_path)
-        self.assertIn('foo', loader.search_paths)
-        self.assertIn('bar', loader.search_paths)
-        self.assertIn('baz', loader.search_paths)
+        self.assertIn(pathlib.Path('foo'), loader.search_paths)
+        self.assertIn(pathlib.Path('bar'), loader.search_paths)
+        self.assertIn(pathlib.Path('baz'), loader.search_paths)
+
+    def test_zip_path_created(self):
+        search_path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
+        )
+        loader = create_loader(search_path)
+        self.assertIn(
+            search_path + os.sep, [str(path) for path in loader.search_paths]
+        )
+        zip_path = zipfile.Path(os.path.dirname(search_path)).joinpath('foo')
+        # two identical zipfile.Path objects do not 'equal' each other
+        self.assertIn(
+            str(zip_path), (str(path) for path in loader.search_paths)
+        )
+        # sanity check that one of the paths is a zipfile.Path
+        # since it can't be checked directly
+        self.assertTrue(
+            any(isinstance(path, zipfile.Path) for path in loader.search_paths)
+        )
+
+    def test_zipped_load_data(self):
+        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        data = loader.load_data('foo')
+        self.assertEqual(len(data), 3)
+        self.assertTrue('test_key_1' in data)
+
+    def test_zipped_data_not_found_raises_exception(self):
+        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        with self.assertRaises(DataNotFoundError):
+            loader.load_data('cheese')
+
+    def test_zipped_model_not_found_raises_exception(self):
+        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        with self.assertRaises(DataNotFoundError):
+            loader.load_service_model('bestServiceEver', 'service-2')
+
+    def test_load_zipped_service_model(self):
+        path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
+        )
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        model = loader.load_service_model('myCoolService', 'service-2')
+        self.assertIn("foo", model)
+
+    def test_zipped_list_available_services(self):
+        path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
+        )
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        available_services = loader.list_available_services('service-2')
+        self.assertEqual(
+            available_services, ['dynamodb', 'ec2', 'myCoolService']
+        )
+
+    def test_zipped_list_api_versions(self):
+        path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
+        )
+        loader = Loader(
+            extra_search_paths=[path], include_default_search_paths=False
+        )
+        api_versions = loader.list_api_versions('ec2', 'service-2')
+        self.assertEqual(api_versions, ['2010-01-01', '2014-10-01'])
 
 
 class TestMergeExtras(BaseEnvVar):
@@ -228,7 +371,7 @@ class TestMergeExtras(BaseEnvVar):
         )
 
         isdir_mock = mock.Mock(return_value=True)
-        self.isdir_patch = mock.patch('os.path.isdir', isdir_mock)
+        self.isdir_patch = mock.patch('pathlib.Path.is_dir', isdir_mock)
         self.isdir_patch.start()
 
     def tearDown(self):
@@ -246,10 +389,10 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
-        base_path = os.path.join('datapath', 'myservice', '2015-03-01')
+        base_path = pathlib.Path('datapath', 'myservice', '2015-03-01')
         expected_call_args = [
-            os.path.join(base_path, 'service-2'),
-            os.path.join(base_path, 'service-2.sdk-extras'),
+            base_path.joinpath('service-2'),
+            base_path.joinpath('service-2.sdk-extras'),
         ]
         self.assertEqual(call_args, expected_call_args)
 
@@ -309,11 +452,11 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
-        base_path = os.path.join('datapath', 'myservice', '2015-03-01')
+        base_path = pathlib.Path('datapath', 'myservice', '2015-03-01')
         expected_call_args = [
-            os.path.join(base_path, 'service-2'),
-            os.path.join(base_path, 'service-2.sdk-extras'),
-            os.path.join(base_path, 'service-2.cli-extras'),
+            base_path.joinpath('service-2'),
+            base_path.joinpath('service-2.sdk-extras'),
+            base_path.joinpath('service-2.cli-extras'),
         ]
         self.assertEqual(call_args, expected_call_args)
 
@@ -327,7 +470,6 @@ class TestMergeExtras(BaseEnvVar):
         ]
 
         self.data_loader.extras_types.append('cli')
-
         loaded = self.data_loader.load_service_model('myservice', 'service-2')
         expected = {'foo': 'cli', 'bar': 'service'}
         self.assertEqual(loaded, expected)
@@ -382,94 +524,31 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
 
     @contextlib.contextmanager
     def loader_with_fake_dirs(self):
-        mock_file_loader = mock.Mock()
-        mock_file_loader.exists = self.fake_exists
-        search_paths = list(self.fake_directories)
+        _parent = os.path.dirname(__file__)
+        search_paths = [
+            os.path.join(_parent, 'data', 'foo'),
+            os.path.join(_parent, 'data', 'bar'),
+        ]
         loader = Loader(
             extra_search_paths=search_paths,
             include_default_search_paths=False,
-            file_loader=mock_file_loader,
         )
-        with mock.patch('os.listdir', self.fake_listdir):
-            with mock.patch('os.path.isdir', mock.Mock(return_value=True)):
-                yield loader
-
-    def fake_listdir(self, dirname):
-        parts = dirname.split(os.path.sep)
-        result = self.fake_directories
-        while parts:
-            current = parts.pop(0)
-            result = result[current]
-        return list(result)
-
-    def fake_exists(self, path):
-        parts = path.split(os.sep)
-        result = self.fake_directories
-        while len(parts) > 1:
-            current = parts.pop(0)
-            result = result[current]
-        return parts[0] in result
+        yield loader
 
     def test_list_available_services(self):
-        self.fake_directories = {
-            'foo': {
-                'ec2': {
-                    '2010-01-01': ['service-2'],
-                    '2014-10-01': ['service-1'],
-                },
-                'dynamodb': {
-                    '2010-01-01': ['service-2'],
-                },
-            },
-            'bar': {
-                'ec2': {
-                    '2015-03-01': ['service-1'],
-                },
-                'rds': {
-                    # This will not show up in
-                    # list_available_services() for type
-                    # service-2 because it does not contains
-                    # a service-2.
-                    '2012-01-01': ['resource-1'],
-                },
-            },
-        }
+
         with self.loader_with_fake_dirs() as loader:
             self.assertEqual(
                 loader.list_available_services(type_name='service-2'),
-                ['dynamodb', 'ec2'],
+                ['dynamodb', 'ec2', 'myCoolService'],
             )
             self.assertEqual(
                 loader.list_available_services(type_name='resource-1'), ['rds']
             )
 
     def test_determine_latest(self):
-        # Fake mapping of directories to subdirectories.
-        # In this example, we can see that the 'bar' directory
-        # contains the latest EC2 API version, 2015-03-01,
-        # so loader.determine_latest('ec2') should return
-        # this value 2015-03-01.
-        self.fake_directories = {
-            'foo': {
-                'ec2': {
-                    '2010-01-01': ['service-2'],
-                    # This directory contains the latest API version
-                    # for EC2 because its the highest API directory
-                    # that contains a service-2.
-                    '2014-10-01': ['service-2'],
-                },
-            },
-            'bar': {
-                'ec2': {
-                    '2012-01-01': ['service-2'],
-                    # 2015-03-1 is *not* the latest for service-2,
-                    # because its directory only has service-1.json.
-                    '2015-03-01': ['service-1'],
-                },
-            },
-        }
+
         with self.loader_with_fake_dirs() as loader:
-            loader.determine_latest_version('ec2', 'service-2')
             self.assertEqual(
                 loader.determine_latest_version('ec2', 'service-2'),
                 '2014-10-01',
