@@ -201,6 +201,10 @@ class TestEndpointFeatures(TestEndpointBase):
         }
         self.assertEqual(response, expected_response)
 
+    def test_close(self):
+        self.endpoint.close()
+        self.endpoint.http_session.close.assert_called_once_with()
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
