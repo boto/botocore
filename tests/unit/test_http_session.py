@@ -512,4 +512,7 @@ class TestURLLib3Session(unittest.TestCase):
         session.close()
         self.proxy_manager_fun.return_value.clear.assert_called_with()
         # One call for pool manager, one call for each of the proxies
-        self.assertEqual(self.proxy_manager_fun.return_value.clear.call_count, 1 + len(proxies))
+        self.assertEqual(
+            self.proxy_manager_fun.return_value.clear.call_count,
+            1 + len(proxies),
+        )
