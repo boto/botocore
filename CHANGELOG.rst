@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.7
+======
+
+* api-change:``frauddetector``: Documentation updates for Amazon Fraud Detector (AWSHawksNest)
+
+
 1.27.6
 ======
 
@@ -15,7 +21,6 @@ CHANGELOG
 * api-change:``iam``: Documentation updates for AWS Identity and Access Management (IAM).
 * api-change:``m2``: AWS Mainframe Modernization service is a managed mainframe service and set of tools for planning, migrating, modernizing, and running mainframe workloads on AWS
 * api-change:``neptune``: This release adds support for Neptune to be configured as a global database, with a primary DB cluster in one region, and up to five secondary DB clusters in other regions.
-* api-change:``redshift-serverless``: Add new API operations for Amazon Redshift Serverless, a new way of using Amazon Redshift without needing to manually manage provisioned clusters. The new operations let you interact with Redshift Serverless resources, such as create snapshots, list VPC endpoints, delete resource policies, and more.
 * api-change:``redshift``: Adds new API GetClusterCredentialsWithIAM to return temporary credentials.
 
 
