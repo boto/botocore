@@ -10,15 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import mock, BaseSessionTest, ClientHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestCloudsearchdomain(BaseSessionTest):
     def setUp(self):
-        super(TestCloudsearchdomain, self).setUp()
+        super().setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client(
-            'cloudsearchdomain', self.region)
+            'cloudsearchdomain', self.region
+        )
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_search(self):

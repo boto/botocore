@@ -10,11 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
-
+import botocore.session
 from botocore.exceptions import ClientError
 from botocore.vendored import six
-import botocore.session
+from tests import unittest
 
 
 class TestGlacier(unittest.TestCase):
@@ -46,26 +45,31 @@ class TestGlacier(unittest.TestCase):
 
     def test_can_upload_archive(self):
         body = six.BytesIO(b"bytes content")
-        response = self.client.upload_archive(vaultName=self.VAULT_NAME,
-                                              archiveDescription='test upload',
-                                              body=body)
+        response = self.client.upload_archive(
+            vaultName=self.VAULT_NAME,
+            archiveDescription='test upload',
+            body=body,
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
         archive_id = response['archiveId']
-        response = self.client.delete_archive(vaultName=self.VAULT_NAME,
-                                              archiveId=archive_id)
+        response = self.client.delete_archive(
+            vaultName=self.VAULT_NAME, archiveId=archive_id
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
     def test_can_upload_archive_from_bytes(self):
-        response = self.client.upload_archive(vaultName=self.VAULT_NAME,
-                                              archiveDescription='test upload',
-                                              body=b'bytes body')
+        response = self.client.upload_archive(
+            vaultName=self.VAULT_NAME,
+            archiveDescription='test upload',
+            body=b'bytes body',
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 201)
         archive_id = response['archiveId']
-        response = self.client.delete_archive(vaultName=self.VAULT_NAME,
-                                              archiveId=archive_id)
+        response = self.client.delete_archive(
+            vaultName=self.VAULT_NAME, archiveId=archive_id
+        )
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
 
 if __name__ == '__main__':
     unittest.main()
-

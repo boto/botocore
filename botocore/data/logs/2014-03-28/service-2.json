@@ -58,7 +58,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"ResourceAlreadyExistsException"}
       ],
-      "documentation":"<p>Creates an export task, which allows you to efficiently export data from a log group to an Amazon S3 bucket. When you perform a <code>CreateExportTask</code> operation, you must use credentials that have permission to write to the S3 bucket that you specify as the destination.</p> <p>This is an asynchronous call. If all the required information is provided, this operation initiates an export task and responds with the ID of the task. After the task has started, you can use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeExportTasks.html\">DescribeExportTasks</a> to get the status of the export task. Each account can only have one active (<code>RUNNING</code> or <code>PENDING</code>) export task at a time. To cancel an export task, use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CancelExportTask.html\">CancelExportTask</a>.</p> <p>You can export logs from multiple log groups or multiple time ranges to the same S3 bucket. To separate out log data for each export task, you can specify a prefix to be used as the Amazon S3 key prefix for all exported objects.</p> <p>Exporting to S3 buckets that are encrypted with AES-256 is supported. Exporting to S3 buckets encrypted with SSE-KMS is not supported. </p>"
+      "documentation":"<p>Creates an export task, which allows you to efficiently export data from a log group to an Amazon S3 bucket. When you perform a <code>CreateExportTask</code> operation, you must use credentials that have permission to write to the S3 bucket that you specify as the destination.</p> <important> <p>Exporting log data to Amazon S3 buckets that are encrypted by KMS is not supported. Exporting log data to Amazon S3 buckets that have S3 Object Lock enabled with a retention period is not supported.</p> <p>Exporting to S3 buckets that are encrypted with AES-256 is supported. </p> </important> <p>This is an asynchronous call. If all the required information is provided, this operation initiates an export task and responds with the ID of the task. After the task has started, you can use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeExportTasks.html\">DescribeExportTasks</a> to get the status of the export task. Each account can only have one active (<code>RUNNING</code> or <code>PENDING</code>) export task at a time. To cancel an export task, use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CancelExportTask.html\">CancelExportTask</a>.</p> <p>You can export logs from multiple log groups or multiple time ranges to the same S3 bucket. To separate out log data for each export task, you can specify a prefix to be used as the Amazon S3 key prefix for all exported objects.</p> <note> <p>Time-based sorting on chunks of log data inside an exported file is not guaranteed. You can sort the exported log fild data by using Linux utilities.</p> </note>"
     },
     "CreateLogGroup":{
       "name":"CreateLogGroup",
@@ -519,6 +519,7 @@
       "output":{"shape":"PutQueryDefinitionResponse"},
       "errors":[
         {"shape":"InvalidParameterException"},
+        {"shape":"LimitExceededException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"ServiceUnavailableException"}
       ],
@@ -702,7 +703,7 @@
         },
         "to":{
           "shape":"Timestamp",
-          "documentation":"<p>The end time of the range for the request, expreswatchlogsdocused as the number of milliseconds after Jan 1, 1970 00:00:00 UTC. Events with a timestamp later than this time are not exported.</p>"
+          "documentation":"<p>The end time of the range for the request, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC. Events with a timestamp later than this time are not exported.</p>"
         },
         "destination":{
           "shape":"ExportDestinationBucket",
@@ -768,7 +769,7 @@
     },
     "Days":{
       "type":"integer",
-      "documentation":"<p>The number of days to retain the log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, and 3653.</p> <p>To set a log group to never have log events expire, use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteRetentionPolicy.html\">DeleteRetentionPolicy</a>. </p>"
+      "documentation":"<p>The number of days to retain the log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653.</p> <p>To set a log group to never have log events expire, use <a href=\"https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteRetentionPolicy.html\">DeleteRetentionPolicy</a>. </p>"
     },
     "DefaultValue":{"type":"double"},
     "DeleteDestinationRequest":{
@@ -966,7 +967,7 @@
       "members":{
         "logGroups":{
           "shape":"LogGroups",
-          "documentation":"<p>The log groups.</p> <p>If the <code>retentionInDays</code> value if not included for a log group, then that log group is set to have its events never expire.</p>"
+          "documentation":"<p>The log groups.</p> <p>If the <code>retentionInDays</code> value is not included for a log group, then that log group is set to have its events never expire.</p>"
         },
         "nextToken":{"shape":"NextToken"}
       }
@@ -1457,6 +1458,7 @@
       "type":"list",
       "member":{"shape":"FilteredLogEvent"}
     },
+    "ForceUpdate":{"type":"boolean"},
     "GetLogEventsRequest":{
       "type":"structure",
       "required":[
@@ -1908,7 +1910,7 @@
       "type":"structure",
       "members":{
       },
-      "documentation":"<p>Multiple requests to update the same resource were in conflict.</p>",
+      "documentation":"<p>Multiple concurrent requests to update the same resource were in conflict.</p>",
       "exception":true
     },
     "OrderBy":{
@@ -1965,6 +1967,10 @@
         "accessPolicy":{
           "shape":"AccessPolicy",
           "documentation":"<p>An IAM policy document that authorizes cross-account users to deliver their log events to the associated destination. This can be up to 5120 bytes.</p>"
+        },
+        "forceUpdate":{
+          "shape":"ForceUpdate",
+          "documentation":"<p>Specify true if you are updating an existing destination policy to grant permission to an organization ID instead of granting permission to individual AWS accounts. Before you update a destination policy this way, you must first update the subscription filters in the accounts that send logs to this destination. If you do not, the subscription filters might stop working. By specifying <code>true</code> for <code>forceUpdate</code>, you are affirming that you have already updated the subscription filters. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Cross-Account-Log_Subscription-Update.html\"> Updating an existing cross-account subscription</a> </p> <p>If you omit this parameter, the default of <code>false</code> is used.</p>"
         }
       }
     },
@@ -2108,7 +2114,7 @@
         },
         "policyDocument":{
           "shape":"PolicyDocument",
-          "documentation":"<p>Details of the new policy, including the identity of the principal that is enabled to put logs to this account. This is formatted as a JSON string. This parameter is required.</p> <p>The following example creates a resource policy enabling the Route 53 service to put DNS query logs in to the specified log group. Replace <code>\"logArn\"</code> with the ARN of your CloudWatch Logs resource, such as a log group or log stream.</p> <p>CloudWatch Logs also supports <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourcearn\">aws:SourceArn</a> and <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourceaccount\">aws:SourceAccount</a> condition context keys.</p> <p>In the example resource policy, you would replace the value of <code>SourceArn</code> with the resource making the call from Route 53 to CloudWatch Logs and replace the value of <code>SourceAccount</code> with the Amazon Web Services account ID making that call.</p> <p/> <p> <code>{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Sid\": \"Route53LogsToCloudWatchLogs\", \"Effect\": \"Allow\", \"Principal\": { \"Service\": [ \"route53.amazonaws.com\" ] }, \"Action\": \"logs:PutLogEvents\", \"Resource\": \"logArn\", \"Condition\": { \"ArnLike\": { \"aws:SourceArn\": \"myRoute53ResourceArn\" }, \"StringEquals\": { \"aws:SourceAccount\": \"myAwsAccountId\" } } } ] }</code> </p>"
+          "documentation":"<p>Details of the new policy, including the identity of the principal that is enabled to put logs to this account. This is formatted as a JSON string. This parameter is required.</p> <p>The following example creates a resource policy enabling the Route 53 service to put DNS query logs in to the specified log group. Replace <code>\"logArn\"</code> with the ARN of your CloudWatch Logs resource, such as a log group or log stream.</p> <p>CloudWatch Logs also supports <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourcearn\">aws:SourceArn</a> and <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourceaccount\">aws:SourceAccount</a> condition context keys.</p> <p>In the example resource policy, you would replace the value of <code>SourceArn</code> with the resource making the call from Route 53 to CloudWatch Logs and replace the value of <code>SourceAccount</code> with the Amazon Web Services account ID making that call.</p> <p/> <p> <code>{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Sid\": \"Route53LogsToCloudWatchLogs\", \"Effect\": \"Allow\", \"Principal\": { \"Service\": [ \"route53.amazonaws.com\" ] }, \"Action\": \"logs:PutLogEvents\", \"Resource\": \"logArn\", \"Condition\": { \"ArnLike\": { \"aws:SourceArn\": \"myRoute53ResourceArn\" }, \"StringEquals\": { \"aws:SourceAccount\": \"myAwsAccountId\" } } } ] }</code> </p>"
         }
       }
     },

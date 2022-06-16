@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import os
-
 from botocore.session import Session
 from tests import ClientHTTPStubber
 from tests.functional import TEST_MODELS_DIR
@@ -43,17 +41,22 @@ def test_old_model_continues_to_work():
     # to ensure we're loading our version of the model and not
     # the built in one.
     client = session.create_client(
-        'custom-acm', region_name='us-west-2',
-        aws_access_key_id='foo', aws_secret_access_key='bar',
+        'custom-acm',
+        region_name='us-west-2',
+        aws_access_key_id='foo',
+        aws_secret_access_key='bar',
     )
     with ClientHTTPStubber(client) as stubber:
         stubber.add_response(
             url='https://acm.us-west-2.amazonaws.com/',
-            headers={'x-amzn-RequestId': 'abcd',
-                     'Date': 'Fri, 26 Oct 2018 01:46:30 GMT',
-                     'Content-Length': '29',
-                     'Content-Type': 'application/x-amz-json-1.1'},
-            body=b'{"CertificateSummaryList":[]}')
+            headers={
+                'x-amzn-RequestId': 'abcd',
+                'Date': 'Fri, 26 Oct 2018 01:46:30 GMT',
+                'Content-Length': '29',
+                'Content-Type': 'application/x-amz-json-1.1',
+            },
+            body=b'{"CertificateSummaryList":[]}',
+        )
         response = client.list_certificates()
         assert response == {
             'CertificateSummaryList': [],
@@ -62,10 +65,12 @@ def test_old_model_continues_to_work():
                     'content-length': '29',
                     'content-type': 'application/x-amz-json-1.1',
                     'date': 'Fri, 26 Oct 2018 01:46:30 GMT',
-                    'x-amzn-requestid': 'abcd'},
+                    'x-amzn-requestid': 'abcd',
+                },
                 'HTTPStatusCode': 200,
                 'RequestId': 'abcd',
-                'RetryAttempts': 0}
+                'RetryAttempts': 0,
+            },
         }
 
     # Also verify we can use the paginators as well.

@@ -1,9 +1,9 @@
-import os
-import botocore
 import ast
+import os
 
 import pytest
 
+import botocore
 
 ROOTDIR = os.path.dirname(botocore.__file__)
 
@@ -24,7 +24,7 @@ def test_no_bare_six_imports(filename):
     with open(filename) as f:
         contents = f.read()
         parsed = ast.parse(contents, filename)
-        checker = SixImportChecker(filename).visit(parsed)
+        SixImportChecker(filename).visit(parsed)
 
 
 class SixImportChecker(ast.NodeVisitor):
@@ -38,8 +38,9 @@ class SixImportChecker(ast.NodeVisitor):
                 raise AssertionError(
                     "A bare 'import six' was found in %s:\n"
                     "\n%s: %s\n"
-                    "Please use 'from botocore.compat import six' instead" %
-                    (self.filename, node.lineno, line))
+                    "Please use 'from botocore.compat import six' instead"
+                    % (self.filename, node.lineno, line)
+                )
 
     def visit_ImportFrom(self, node):
         if node.module == 'six':
@@ -47,8 +48,9 @@ class SixImportChecker(ast.NodeVisitor):
             raise AssertionError(
                 "A bare 'from six import ...' was found in %s:\n"
                 "\n%s:%s\n"
-                "Please use 'from botocore.compat import six' instead" %
-                (self.filename, node.lineno, line))
+                "Please use 'from botocore.compat import six' instead"
+                % (self.filename, node.lineno, line)
+            )
 
     def _get_line_content(self, filename, lineno):
         with open(filename) as f:

@@ -29,7 +29,10 @@
         "imageScanFindings"
       ],
       "output_token": "nextToken",
-      "result_key": "imageScanFindings.findings"
+      "result_key": [
+        "imageScanFindings.findings",
+        "imageScanFindings.enhancedFindings"
+      ]
     },
     "GetLifecyclePolicyPreview": {
       "input_token": "nextToken",
@@ -43,6 +46,12 @@
       ],
       "output_token": "nextToken",
       "result_key": "previewResults"
+    },
+    "DescribePullThroughCacheRules": {
+      "input_token": "nextToken",
+      "limit_key": "maxResults",
+      "output_token": "nextToken",
+      "result_key": "pullThroughCacheRules"
     }
   }
 }

@@ -10,11 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
-
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
+from tests import unittest
 
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY = 'AKIDEXAMPLE'
@@ -28,6 +27,27 @@ class TestSigV4Auth(unittest.TestCase):
     def test_signed_host_is_lowercase(self):
         endpoint = 'https://S5.Us-WeAsT-2.AmAZonAwS.com'
         expected_host = 's5.us-weast-2.amazonaws.com'
+        request = AWSRequest(method='GET', url=endpoint)
+        headers_to_sign = self.sigv4.headers_to_sign(request)
+        self.assertEqual(expected_host, headers_to_sign.get('host'))
+
+    def test_signed_host_is_ipv6_without_port(self):
+        endpoint = 'http://[::1]'
+        expected_host = '[::1]'
+        request = AWSRequest(method='GET', url=endpoint)
+        headers_to_sign = self.sigv4.headers_to_sign(request)
+        self.assertEqual(expected_host, headers_to_sign.get('host'))
+
+    def test_signed_host_is_ipv6_with_default_port(self):
+        endpoint = 'http://[::1]:80'
+        expected_host = '[::1]'
+        request = AWSRequest(method='GET', url=endpoint)
+        headers_to_sign = self.sigv4.headers_to_sign(request)
+        self.assertEqual(expected_host, headers_to_sign.get('host'))
+
+    def test_signed_host_is_ipv6_with_explicit_port(self):
+        endpoint = 'http://[::1]:6789'
+        expected_host = '[::1]:6789'
         request = AWSRequest(method='GET', url=endpoint)
         headers_to_sign = self.sigv4.headers_to_sign(request)
         self.assertEqual(expected_host, headers_to_sign.get('host'))

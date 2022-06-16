@@ -14,7 +14,6 @@ import pytest
 
 import botocore.session
 
-
 REGION = 'us-east-1'
 
 SERVICE_TO_CLASS_NAME = {
@@ -65,8 +64,9 @@ SERVICE_TO_CLASS_NAME = {
     'sts': 'STS',
     'support': 'Support',
     'swf': 'SWF',
-    'workspaces': 'WorkSpaces'
+    'workspaces': 'WorkSpaces',
 }
+
 
 @pytest.mark.parametrize("service_name", SERVICE_TO_CLASS_NAME)
 def test_client_has_correct_class_name(service_name):

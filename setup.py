@@ -2,10 +2,8 @@
 import codecs
 import os.path
 import re
-import sys
 
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -16,19 +14,19 @@ def read(*parts):
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
+    )
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
 
 requires = [
-    'jmespath>=0.7.1,<1.0.0',
+    'jmespath>=0.7.1,<2.0.0',
     'python-dateutil>=2.1,<3.0.0',
     'urllib3>=1.25.4,<1.27',
 ]
-
 
 setup(
     name='botocore',
@@ -39,12 +37,14 @@ setup(
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
-                  'botocore.vendored.requests': ['*.pem']},
+    package_data={
+        'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
+        'botocore.vendored.requests': ['*.pem'],
+    },
     include_package_data=True,
     install_requires=requires,
     license="Apache License 2.0",
-    python_requires=">= 3.6",
+    python_requires=">= 3.7",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -53,7 +53,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

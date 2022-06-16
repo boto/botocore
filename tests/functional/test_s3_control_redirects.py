@@ -15,20 +15,17 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests import unittest, mock, BaseSessionTest, ClientHTTPStubber
-
 from botocore import exceptions
-from botocore.exceptions import (
-    UnsupportedS3ControlArnError,
-    UnsupportedS3ControlConfigurationError,
-    InvalidHostLabelError,
-    ParamValidationError,
-)
-from botocore.session import Session
 from botocore.compat import urlsplit
 from botocore.config import Config
-from botocore.awsrequest import AWSResponse
-
+from botocore.exceptions import (
+    InvalidHostLabelError,
+    ParamValidationError,
+    UnsupportedS3ControlArnError,
+    UnsupportedS3ControlConfigurationError,
+)
+from botocore.session import Session
+from tests import ClientHTTPStubber, unittest
 
 ACCESSPOINT_ARN_TEST_CASES = [
     # Outpost accesspoint arn test cases
@@ -46,7 +43,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -59,7 +56,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -67,7 +64,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws-cn:s3-outposts:cn-north-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -75,7 +72,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -88,68 +85,73 @@ ACCESSPOINT_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'region': 'us-gov-east-1-fips',
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
+        },
     },
-    #{
+    # {
     #    'arn': 'arn:aws-us-gov:s3-outposts:fips-us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
     #    'region': 'fips-us-gov-east-1',
     #    'config': {'s3': {'use_arn_region': True}},
     #    'assertions': {
     #        'exception': 'UnsupportedS3ArnError',
     #    }
-    #},
+    # },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'region': 'us-gov-east-1-fips',
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'signing_name': 's3-outposts',
-            'netloc': 's3-outposts.us-gov-east-1.amazonaws.com',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
             'headers': {
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'config': {'s3': {'use_dualstack_endpoint': True}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'config': {'s3': {'use_accelerate_endpoint': True}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:myaccesspoint',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
 ]
 
@@ -167,7 +169,7 @@ BUCKET_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -180,7 +182,7 @@ BUCKET_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -188,7 +190,7 @@ BUCKET_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws-cn:s3-outposts:cn-north-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -196,7 +198,7 @@ BUCKET_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -209,23 +211,28 @@ BUCKET_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
         'region': 'us-gov-east-1-fips',
         'config': {'s3': {'use_arn_region': False}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:fips-us-gov-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
         'region': 'fips-us-gov-east-1',
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+            'exception': 'UnsupportedS3ControlArnError',
+        },
     },
     {
         'arn': 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -233,12 +240,12 @@ BUCKET_ARN_TEST_CASES = [
         'config': {'s3': {'use_arn_region': True}},
         'assertions': {
             'signing_name': 's3-outposts',
-            'netloc': 's3-outposts.us-gov-east-1.amazonaws.com',
+            'netloc': 's3-outposts-fips.us-gov-east-1.amazonaws.com',
             'headers': {
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:bucket:mybucket',
@@ -246,31 +253,31 @@ BUCKET_ARN_TEST_CASES = [
         'config': {'s3': {'use_dualstack_endpoint': True}},
         'assertions': {
             'exception': 'UnsupportedS3ControlConfigurationError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:bucket',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:bucket',
         'assertions': {
             'exception': 'UnsupportedS3ControlArnError',
-        }
+        },
     },
 ]
 
@@ -361,9 +368,10 @@ def _assert_test_case(test_case, client, stubber):
             raise RuntimeError(
                 'Expected exception "%s" was not raised' % exception_cls
             )
-        error_msg = (
-            'Expected exception "%s", got "%s"'
-        ) % (exception_cls, type(exception_raised))
+        error_msg = ('Expected exception "%s", got "%s"') % (
+            exception_cls,
+            type(exception_raised),
+        )
         assert isinstance(exception_raised, exception_cls), error_msg
     else:
         assert len(stubber.requests) == 1

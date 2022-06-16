@@ -1,27 +1,23 @@
-from tests import unittest
-from datetime import datetime
 import decimal
+from datetime import datetime
 
 from botocore.compat import six
 from botocore.model import ShapeResolver
 from botocore.validate import ParamValidator
+from tests import unittest
 
-BOILER_PLATE_SHAPES = {
-    'StringType': {
-        'type': 'string'
-    }
-}
+BOILER_PLATE_SHAPES = {'StringType': {'type': 'string'}}
 
 
 class BaseTestValidate(unittest.TestCase):
-
     def assert_has_validation_errors(self, given_shapes, input_params, errors):
         # Given the shape definitions ``given_shape`` and the user input
         # parameters ``input_params``, verify that the validation has
         # validation errors containing the list of ``errors``.
         # Also, this assumes the input shape name is "Input".
         errors_found = self.get_validation_error_message(
-            given_shapes, input_params)
+            given_shapes, input_params
+        )
         self.assertTrue(errors_found.has_errors())
         error_message = errors_found.generate_report()
         for error in errors:
@@ -32,7 +28,6 @@ class BaseTestValidate(unittest.TestCase):
         input_shape = s.get_shape_by_name('Input')
         validator = ParamValidator()
         errors_found = validator.validate(input_params, input_shape)
-        error_message = errors_found.generate_report()
         return errors_found
 
 
@@ -45,22 +40,21 @@ class TestValidateRequiredParams(BaseTestValidate):
                     'required': ['A', 'B'],
                     'members': {
                         'A': {'shape': 'StringType'},
-                        'B': {'shape': 'StringType'}
-                    }
+                        'B': {'shape': 'StringType'},
+                    },
                 },
-                'StringType': {'type': 'string'}
+                'StringType': {'type': 'string'},
             },
             input_params={'A': 'foo'},
-            errors=['Missing required parameter'])
+            errors=['Missing required parameter'],
+        )
 
     def test_validate_nested_required_param(self):
         self.assert_has_validation_errors(
             given_shapes={
                 'Input': {
                     'type': 'structure',
-                    'members': {
-                        'A': {'shape': 'SubStruct'}
-                    }
+                    'members': {'A': {'shape': 'SubStruct'}},
                 },
                 'SubStruct': {
                     'type': 'structure',
@@ -68,14 +62,15 @@ class TestValidateRequiredParams(BaseTestValidate):
                     'members': {
                         'B': {'shape': 'StringType'},
                         'C': {'shape': 'StringType'},
-                    }
+                    },
                 },
                 'StringType': {
                     'type': 'string',
-                }
+                },
             },
             input_params={'A': {'B': 'foo'}},
-            errors=['Missing required parameter'])
+            errors=['Missing required parameter'],
+        )
 
     def test_validate_unknown_param(self):
         self.assert_has_validation_errors(
@@ -85,12 +80,13 @@ class TestValidateRequiredParams(BaseTestValidate):
                     'required': ['A'],
                     'members': {
                         'A': {'shape': 'StringType'},
-                    }
+                    },
                 },
-                'StringType': {'type': 'string'}
+                'StringType': {'type': 'string'},
             },
             input_params={'A': 'foo', 'B': 'bar'},
-            errors=['Unknown parameter'])
+            errors=['Unknown parameter'],
+        )
 
 
 class TestValidateJSONValueTrait(BaseTestValidate):
@@ -103,17 +99,18 @@ class TestValidateJSONValueTrait(BaseTestValidate):
                         'shape': 'StrType',
                         'jsonvalue': True,
                         'location': 'header',
-                        'locationName': 'header-name'
+                        'locationName': 'header-name',
                     }
-                }
+                },
             },
-            'StrType': {'type': 'string'}
+            'StrType': {'type': 'string'},
         }
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
-                'json': {'data': [1, 2.3, '3'], 'unicode': u'\u2713'}
-            })
+                'json': {'data': [1, 2.3, '3'], 'unicode': '\u2713'}
+            },
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
@@ -126,21 +123,18 @@ class TestValidateJSONValueTrait(BaseTestValidate):
                         'shape': 'StrType',
                         'jsonvalue': True,
                         'location': 'header',
-                        'locationName': 'header-name'
+                        'locationName': 'header-name',
                     }
-                }
+                },
             },
-            'StrType': {'type': 'string'}
+            'StrType': {'type': 'string'},
         }
 
         self.assert_has_validation_errors(
             given_shapes=self.shapes,
-            input_params={
-                'json': {'date': datetime(2017, 4, 27, 0, 0)}
-            },
-            errors=[
-                ('Invalid parameter json must be json serializable: ')
-            ])
+            input_params={'json': {'date': datetime(2017, 4, 27, 0, 0)}},
+            errors=[('Invalid parameter json must be json serializable: ')],
+        )
 
 
 class TestValidateDocumentType(BaseTestValidate):
@@ -152,23 +146,21 @@ class TestValidateDocumentType(BaseTestValidate):
                     'inlineDocument': {
                         'shape': 'DocumentType',
                     }
-                }
+                },
             },
-            'DocumentType': {
-                'type': 'structure',
-                'document': True
-            }
+            'DocumentType': {'type': 'structure', 'document': True},
         }
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
-                'inlineDocument': {'data': [1, 2.3, '3',
-                                            {'foo': None}],
-                                   'unicode': u'\u2713'}
-            })
+                'inlineDocument': {
+                    'data': [1, 2.3, '3', {'foo': None}],
+                    'unicode': '\u2713',
+                }
+            },
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
-
 
     def test_validate_document_type_string(self):
         self.shapes = {
@@ -178,12 +170,9 @@ class TestValidateDocumentType(BaseTestValidate):
                     'inlineDocument': {
                         'shape': 'DocumentType',
                     }
-                }
+                },
             },
-            'DocumentType': {
-                'type': 'structure',
-                'document': True
-            }
+            'DocumentType': {'type': 'structure', 'document': True},
         }
 
         invalid_document = object()
@@ -194,7 +183,7 @@ class TestValidateDocumentType(BaseTestValidate):
                     'number': complex(1j),
                     'date': datetime(2017, 4, 27, 0, 0),
                     'list': [invalid_document],
-                    'dict': {'foo': (1, 2, 3)}
+                    'dict': {'foo': (1, 2, 3)},
                 }
             },
             errors=[
@@ -202,7 +191,8 @@ class TestValidateDocumentType(BaseTestValidate):
                 ('Invalid type for document parameter date'),
                 ('Invalid type for document parameter list[0]'),
                 ('Invalid type for document parameter foo'),
-            ])
+            ],
+        )
 
 
 class TestValidateTaggedUnion(BaseTestValidate):
@@ -214,7 +204,7 @@ class TestValidateTaggedUnion(BaseTestValidate):
                     'taggedUnion': {
                         'shape': 'TaggedUnionType',
                     }
-                }
+                },
             },
             'TaggedUnionType': {
                 'type': 'structure',
@@ -222,19 +212,16 @@ class TestValidateTaggedUnion(BaseTestValidate):
                 'members': {
                     'Foo': {'shape': 'StringType'},
                     'Bar': {'shape': 'StringType'},
-                }
+                },
             },
-            'StringType': {'type': 'string'}
+            'StringType': {'type': 'string'},
         }
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={
-                'taggedUnion': {'Foo': "mystring"}
-            }
+            input_params={'taggedUnion': {'Foo': "mystring"}},
         )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
-
 
     def test_validate_one_member_is_set(self):
         self.shapes = {
@@ -244,7 +231,7 @@ class TestValidateTaggedUnion(BaseTestValidate):
                     'taggedUnion': {
                         'shape': 'TaggedUnionType',
                     }
-                }
+                },
             },
             'TaggedUnionType': {
                 'type': 'structure',
@@ -252,22 +239,20 @@ class TestValidateTaggedUnion(BaseTestValidate):
                 'members': {
                     'Foo': {'shape': 'StringType'},
                     'Bar': {'shape': 'StringType'},
-                }
+                },
             },
-            'StringType': {'type': 'string'}
+            'StringType': {'type': 'string'},
         }
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
-                'taggedUnion': {'Foo': "mystring",
-                                'Bar': "mystring2"
-                                }
-            }
+                'taggedUnion': {'Foo': "mystring", 'Bar': "mystring2"}
+            },
         )
         error_msg = errors.generate_report()
         self.assertIn(
             'Invalid number of parameters set for tagged union structure',
-            error_msg
+            error_msg,
         )
 
     def test_validate_known_member_is_set(self):
@@ -278,7 +263,7 @@ class TestValidateTaggedUnion(BaseTestValidate):
                     'taggedUnion': {
                         'shape': 'TaggedUnionType',
                     }
-                }
+                },
             },
             'TaggedUnionType': {
                 'type': 'structure',
@@ -286,15 +271,13 @@ class TestValidateTaggedUnion(BaseTestValidate):
                 'members': {
                     'Foo': {'shape': 'StringType'},
                     'Bar': {'shape': 'StringType'},
-                }
+                },
             },
-            'StringType': {'type': 'string'}
+            'StringType': {'type': 'string'},
         }
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={
-                'taggedUnion': {'unknown': "mystring"}
-            }
+            input_params={'taggedUnion': {'unknown': "mystring"}},
         )
         error_msg = errors.generate_report()
         self.assertIn('Unknown parameter in taggedUnion', error_msg)
@@ -307,7 +290,7 @@ class TestValidateTaggedUnion(BaseTestValidate):
                     'taggedUnion': {
                         'shape': 'TaggedUnionType',
                     }
-                }
+                },
             },
             'TaggedUnionType': {
                 'type': 'structure',
@@ -315,15 +298,12 @@ class TestValidateTaggedUnion(BaseTestValidate):
                 'members': {
                     'Foo': {'shape': 'StringType'},
                     'Bar': {'shape': 'StringType'},
-                }
+                },
             },
-            'StringType': {'type': 'string'}
+            'StringType': {'type': 'string'},
         }
         errors = self.get_validation_error_message(
-            given_shapes=self.shapes,
-            input_params={
-                'taggedUnion': {}
-            }
+            given_shapes=self.shapes, input_params={'taggedUnion': {}}
         )
         error_msg = errors.generate_report()
         self.assertIn('Must set one of the following keys', error_msg)
@@ -344,7 +324,7 @@ class TestValidateTypes(BaseTestValidate):
                     'Long': {'shape': 'LongType'},
                     'Map': {'shape': 'MapType'},
                     'Timestamp': {'shape': 'TimeType'},
-                }
+                },
             },
             'StrType': {'type': 'string'},
             'IntType': {'type': 'integer'},
@@ -381,20 +361,22 @@ class TestValidateTypes(BaseTestValidate):
                 'Invalid type for parameter Long',
                 'Invalid type for parameter Map',
                 'Invalid type for parameter Timestamp',
-            ]
+            ],
         )
 
     def test_datetime_type_accepts_datetime_obj(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={'Timestamp': datetime.now(),})
+            input_params={'Timestamp': datetime.now()},
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
     def test_datetime_accepts_string_timestamp(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={'Timestamp': '2014-01-01 12:00:00'})
+            input_params={'Timestamp': '2014-01-01 12:00:00'},
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
@@ -403,8 +385,8 @@ class TestValidateTypes(BaseTestValidate):
         # where low level exceptions can propogate back up to
         # us.
         errors = self.get_validation_error_message(
-            given_shapes=self.shapes,
-            input_params={'Timestamp': None})
+            given_shapes=self.shapes, input_params={'Timestamp': None}
+        )
         error_msg = errors.generate_report()
         self.assertIn('Invalid type for parameter Timestamp', error_msg)
 
@@ -421,7 +403,7 @@ class TestValidateRanges(BaseTestValidate):
                     'List': {'shape': 'ListType'},
                     'OnlyMin': {'shape': 'MinStrOnly'},
                     'OnlyMax': {'shape': 'MaxStrOnly'},
-                }
+                },
             },
             'IntType': {
                 'type': 'integer',
@@ -438,21 +420,13 @@ class TestValidateRanges(BaseTestValidate):
                 'min': 1,
                 'max': 10,
             },
-            'MinStrOnly': {
-                'type': 'string',
-                'min': 1
-            },
-            'MaxStrOnly': {
-                'type': 'string',
-                'max': 10
-            },
+            'MinStrOnly': {'type': 'string', 'min': 1},
+            'MaxStrOnly': {'type': 'string', 'max': 10},
             'ListType': {
                 'type': 'list',
                 'min': 1,
                 'max': 5,
-                'member': {
-                    'shape': 'StringType'
-                }
+                'member': {'shape': 'StringType'},
             },
         }
 
@@ -466,7 +440,7 @@ class TestValidateRanges(BaseTestValidate):
             errors=[
                 'Invalid value for parameter Int',
                 'Invalid value for parameter Long',
-            ]
+            ],
         )
 
     def test_does_not_validate_greater_than_range(self):
@@ -482,8 +456,8 @@ class TestValidateRanges(BaseTestValidate):
 
     def test_within_range(self):
         errors = self.get_validation_error_message(
-            given_shapes=self.shapes,
-            input_params={'Int': 10})
+            given_shapes=self.shapes, input_params={'Int': 10}
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
@@ -495,7 +469,7 @@ class TestValidateRanges(BaseTestValidate):
             },
             errors=[
                 'Invalid length for parameter String',
-            ]
+            ],
         )
 
     def test_does_not_validate_string_max_length_contraint(self):
@@ -516,7 +490,7 @@ class TestValidateRanges(BaseTestValidate):
             },
             errors=[
                 'Invalid length for parameter List',
-            ]
+            ],
         )
 
     def test_does_not_validate_list_max_length_constraint(self):
@@ -540,7 +514,7 @@ class TestValidateRanges(BaseTestValidate):
             },
             errors=[
                 'Invalid length for parameter OnlyMin',
-            ]
+            ],
         )
 
     def test_does_not_validate_max_when_only_max_value_specified(self):
@@ -561,7 +535,7 @@ class TestValidateMapType(BaseTestValidate):
                 'type': 'structure',
                 'members': {
                     'Map': {'shape': 'MapType'},
-                }
+                },
             },
             'MapType': {
                 'type': 'map',
@@ -577,12 +551,10 @@ class TestValidateMapType(BaseTestValidate):
     def test_validate_keys_and_values(self):
         self.assert_has_validation_errors(
             given_shapes=self.shapes,
-            input_params={
-                'Map': {'foo': '', 'a': 'foobar'}
-            },
+            input_params={'Map': {'foo': '', 'a': 'foobar'}},
             errors=[
                 'Invalid length for parameter Map',
-            ]
+            ],
         )
 
 
@@ -593,7 +565,7 @@ class TestValidationFloatType(BaseTestValidate):
                 'type': 'structure',
                 'members': {
                     'Float': {'shape': 'FloatType'},
-                }
+                },
             },
             'FloatType': {
                 'type': 'float',
@@ -610,13 +582,14 @@ class TestValidationFloatType(BaseTestValidate):
             },
             errors=[
                 'Invalid value for parameter Float',
-            ]
+            ],
         )
 
     def test_decimal_allowed(self):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
-            input_params={'Float': decimal.Decimal('2.12345')})
+            input_params={'Float': decimal.Decimal('2.12345')},
+        )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
@@ -628,7 +601,7 @@ class TestValidationFloatType(BaseTestValidate):
             },
             errors=[
                 'Invalid value for parameter Float',
-            ]
+            ],
         )
 
 
@@ -639,7 +612,7 @@ class TestValidateTypeBlob(BaseTestValidate):
                 'type': 'structure',
                 'members': {
                     'Blob': {'shape': 'BlobType'},
-                }
+                },
             },
             'BlobType': {
                 'type': 'blob',
@@ -650,8 +623,7 @@ class TestValidateTypeBlob(BaseTestValidate):
 
     def test_validates_bytes(self):
         errors = self.get_validation_error_message(
-            given_shapes=self.shapes,
-            input_params={'Blob': b'12345'}
+            given_shapes=self.shapes, input_params={'Blob': b'12345'}
         )
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
@@ -682,5 +654,5 @@ class TestValidateTypeBlob(BaseTestValidate):
             },
             errors=[
                 'Invalid type for parameter Blob',
-            ]
+            ],
         )

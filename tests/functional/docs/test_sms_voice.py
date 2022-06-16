@@ -14,11 +14,15 @@ from tests.functional.docs import BaseDocsFunctionalTest
 
 
 class TestSMSVoiceDocs(BaseDocsFunctionalTest):
-
     def test_warning_at_top(self):
         docs = self.get_title_section_for('sms-voice')
-        self.assert_contains_lines_in_order([
-            '.. warning:',
-            ('This service client is deprecated. Please use '
-             ':doc:`pinpoint-sms-voice <pinpoint-sms-voice>` instead.'),
-        ], docs)
+        self.assert_contains_lines_in_order(
+            [
+                '.. warning:',
+                (
+                    'This service client is deprecated. Please use '
+                    ':doc:`pinpoint-sms-voice <pinpoint-sms-voice>` instead.'
+                ),
+            ],
+            docs,
+        )

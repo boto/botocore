@@ -12,16 +12,16 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from tests import unittest
-
 import botocore.session
-from botocore.paginate import PageIterator
 from botocore.exceptions import OperationNotPageableError
+from botocore.paginate import PageIterator
+from tests import unittest
 
 
 @pytest.fixture()
 def botocore_session():
     return botocore.session.get_session()
+
 
 @pytest.mark.parametrize(
     "region",
@@ -34,8 +34,8 @@ def botocore_session():
         'ap-southeast-2',
         'sa-east-1',
         'eu-west-1',
-        'eu-central-1'
-    ]
+        'eu-central-1',
+    ],
 )
 def test_emr_endpoints_work_with_py26(botocore_session, region):
     # Verify that we can talk to all currently supported EMR endpoints.

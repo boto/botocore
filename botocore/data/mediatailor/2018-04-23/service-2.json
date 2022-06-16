@@ -47,6 +47,40 @@
         "shape": "CreateChannelResponse"
       }
     },
+    "CreateLiveSource": {
+      "documentation": "<p>Creates name for a specific live source in a source location.</p>",
+      "errors": [],
+      "http": {
+        "method": "POST",
+        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "CreateLiveSourceRequest"
+      },
+      "name": "CreateLiveSource",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "CreateLiveSourceResponse"
+      }
+    },
+    "CreatePrefetchSchedule": {
+      "documentation": "<p>Creates a new prefetch schedule for the specified playback configuration.</p>",
+      "errors": [],
+      "http": {
+        "method": "POST",
+        "requestUri": "/prefetchSchedule/{PlaybackConfigurationName}/{Name}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "CreatePrefetchScheduleRequest"
+      },
+      "name": "CreatePrefetchSchedule",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "CreatePrefetchScheduleResponse"
+      }
+    },
     "CreateProgram": {
       "documentation": "<p>Creates a program.</p>",
       "errors": [],
@@ -132,6 +166,23 @@
         "shape": "DeleteChannelPolicyResponse"
       }
     },
+    "DeleteLiveSource": {
+      "documentation": "<p>Deletes a specific live source in a specific source location.</p>",
+      "errors": [],
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "DeleteLiveSourceRequest"
+      },
+      "name": "DeleteLiveSource",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "DeleteLiveSourceResponse"
+      }
+    },
     "DeletePlaybackConfiguration": {
       "documentation": "<p>Deletes the playback configuration for the specified name.</p>  ",
       "errors": [],
@@ -147,6 +198,23 @@
       "output": {
         "documentation": "<p>The request was successful and there is no content in the response.</p>",
         "shape": "DeletePlaybackConfigurationResponse"
+      }
+    },
+    "DeletePrefetchSchedule": {
+      "documentation": "<p>Deletes a prefetch schedule for a specific playback configuration. If you call DeletePrefetchSchedule on an expired prefetch schedule, MediaTailor returns an HTTP 404 status code.</p>",
+      "errors": [],
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/prefetchSchedule/{PlaybackConfigurationName}/{Name}",
+        "responseCode": 204
+      },
+      "input": {
+        "shape": "DeletePrefetchScheduleRequest"
+      },
+      "name": "DeletePrefetchSchedule",
+      "output": {
+        "documentation": "<p>The request was successful and there is no content in the response.</p>",
+        "shape": "DeletePrefetchScheduleResponse"
       }
     },
     "DeleteProgram": {
@@ -215,6 +283,23 @@
       "output": {
         "documentation": "<p>Success.</p>",
         "shape": "DescribeChannelResponse"
+      }
+    },
+    "DescribeLiveSource": {
+      "documentation": "<p>Provides details about a specific live source in a specific source location.</p>",
+      "errors": [],
+      "http": {
+        "method": "GET",
+        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "DescribeLiveSourceRequest"
+      },
+      "name": "DescribeLiveSource",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "DescribeLiveSourceResponse"
       }
     },
     "DescribeProgram": {
@@ -319,6 +404,23 @@
         "shape": "GetPlaybackConfigurationResponse"
       }
     },
+    "GetPrefetchSchedule": {
+      "documentation": "<p>Returns information about the prefetch schedule for a specific playback configuration. If you call GetPrefetchSchedule on an expired prefetch schedule, MediaTailor returns an HTTP 404 status code.</p>",
+      "errors": [],
+      "http": {
+        "method": "GET",
+        "requestUri": "/prefetchSchedule/{PlaybackConfigurationName}/{Name}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "GetPrefetchScheduleRequest"
+      },
+      "name": "GetPrefetchSchedule",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "GetPrefetchScheduleResponse"
+      }
+    },
     "ListAlerts": {
       "documentation": "<p>Returns a list of alerts for the given resource.</p>",
       "errors": [],
@@ -353,6 +455,23 @@
         "shape": "ListChannelsResponse"
       }
     },
+    "ListLiveSources": {
+      "documentation": "<p>lists all the live sources in a source location.</p>",
+      "errors": [],
+      "http": {
+        "method": "GET",
+        "requestUri": "/sourceLocation/{sourceLocationName}/liveSources",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "ListLiveSourcesRequest"
+      },
+      "name": "ListLiveSources",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "ListLiveSourcesResponse"
+      }
+    },
     "ListPlaybackConfigurations": {
       "documentation": "<p>Returns a list of the playback configurations defined in AWS Elemental MediaTailor. You can specify a maximum number of configurations to return at a time. The default maximum is 50. Results are returned in pagefuls. If MediaTailor has more configurations than the specified maximum, it provides parameters in the response that you can use to retrieve the next pageful.</p>  ",
       "errors": [],
@@ -368,6 +487,23 @@
       "output": {
         "documentation": "<p>Success.</p>",
         "shape": "ListPlaybackConfigurationsResponse"
+      }
+    },
+    "ListPrefetchSchedules": {
+      "documentation": "<p>Creates a new prefetch schedule.</p>",
+      "errors": [],
+      "http": {
+        "method": "POST",
+        "requestUri": "/prefetchSchedule/{PlaybackConfigurationName}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "ListPrefetchSchedulesRequest"
+      },
+      "name": "ListPrefetchSchedules",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "ListPrefetchSchedulesResponse"
       }
     },
     "ListSourceLocations": {
@@ -547,6 +683,23 @@
         "shape": "UpdateChannelResponse"
       }
     },
+    "UpdateLiveSource": {
+      "documentation": "<p>Updates a specific live source in a specific source location.</p>",
+      "errors": [],
+      "http": {
+        "method": "PUT",
+        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
+        "responseCode": 200
+      },
+      "input": {
+        "shape": "UpdateLiveSourceRequest"
+      },
+      "name": "UpdateLiveSource",
+      "output": {
+        "documentation": "<p>Success.</p>",
+        "shape": "UpdateLiveSourceResponse"
+      }
+    },
     "UpdateSourceLocation": {
       "documentation": "<p>Updates a source location on a specific channel.</p>",
       "errors": [],
@@ -669,6 +822,24 @@
       ],
       "type": "structure"
     },
+    "AvailMatchingCriteria": {
+      "documentation": "<p>MediaTailor only places (consumes) prefetched ads if the ad break meets the criteria defined by the dynamic variables. This gives you granular control over which ad break to place the prefetched ads into.</p> <p>As an example, let's say that you set DynamicVariable to scte.event_id and Operator to EQUALS, and your playback configuration has an ADS URL of https://my.ads.server.com/path?&amp;podId=[scte.avail_num]&amp;event=[scte.event_id]&amp;duration=[session.avail_duration_secs]. And the prefetch request to the ADS contains these values https://my.ads.server.com/path?&amp;podId=3&amp;event=my-awesome-event&amp;duration=30. MediaTailor will only insert the prefetched ads into the ad break if has a SCTE marker with an event id of my-awesome-event, since it must match the event id that MediaTailor uses to query the ADS.</p> <p>You can specify up to five AvailMatchingCriteria. If you specify multiple AvailMatchingCriteria, MediaTailor combines them to match using a logical AND. You can model logical OR combinations by creating multiple prefetch schedules.</p>",
+      "members": {
+        "DynamicVariable": {
+          "documentation": "<p>The dynamic variable(s) that MediaTailor should use as avail matching criteria. MediaTailor only places the prefetched ads into the avail if the avail matches the criteria defined by the dynamic variable. For information about dynamic variables, see <a href=\"https://docs.aws.amazon.com/mediatailor/latest/ug/variables.html\">Using dynamic ad variables</a> in the <i>MediaTailor User Guide</i>.</p> <p>You can include up to 100 dynamic variables.</p>",
+          "shape": "__string"
+        },
+        "Operator": {
+          "documentation": "<p>For the DynamicVariable specified in AvailMatchingCriteria, the Operator that is used for the comparison.</p>",
+          "shape": "Operator"
+        }
+      },
+      "required": [
+        "Operator",
+        "DynamicVariable"
+      ],
+      "type": "structure"
+    },
     "AvailSuppression": {
       "documentation": "<p>The configuration for avail suppression, also known as ad suppression. For more information about ad suppression, see <a href=\"https://docs.aws.amazon.com/mediatailor/latest/ug/ad-behavior.html\">Ad Suppression</a>.</p>",
       "members": {
@@ -714,7 +885,7 @@
       "documentation": "<p>The configuration for using a content delivery network (CDN), like Amazon CloudFront, for content and ad segment management.</p>",
       "members": {
         "AdSegmentUrlPrefix": {
-          "documentation": "<p>A non-default content delivery network (CDN) to serve ad segments. By default, AWS Elemental MediaTailor uses Amazon CloudFront with default cache settings as its CDN for ad segments. To set up an alternate CDN, create a rule in your CDN for the origin ads.mediatailor.&amp;lt;region&gt;.amazonaws.com. Then specify the rule's name in this AdSegmentUrlPrefix. When AWS Elemental MediaTailor serves a manifest, it reports your CDN as the source for ad segments.</p>",
+          "documentation": "<p>A non-default content delivery network (CDN) to serve ad segments. By default, AWS Elemental MediaTailor uses Amazon CloudFront with default cache settings as its CDN for ad segments. To set up an alternate CDN, create a rule in your CDN for the origin ads.mediatailor.&amp;lt;region>.amazonaws.com. Then specify the rule's name in this AdSegmentUrlPrefix. When AWS Elemental MediaTailor serves a manifest, it reports your CDN as the source for ad segments.</p>",
           "shape": "__string"
         },
         "ContentSegmentUrlPrefix": {
@@ -744,7 +915,7 @@
           "shape": "__timestampUnix"
         },
         "FillerSlate": {
-          "documentation": "<p>Contains information about the slate used to fill gaps between programs in the schedule. You must configure FillerSlate if your channel uses an LINEAR PlaybackMode.</p>",
+          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
           "shape": "SlateSource"
         },
         "LastModifiedTime": {
@@ -763,11 +934,16 @@
           "documentation": "<p>The tags to assign to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
+        },
+        "Tier": {
+          "documentation": "<p>The tier for this channel. STANDARD tier channels can contain live programs.</p>",
+          "shape": "__string"
         }
       },
       "required": [
         "ChannelState",
         "ChannelName",
+        "Tier",
         "Outputs",
         "Arn",
         "PlaybackMode"
@@ -845,7 +1021,7 @@
           "shape": "__string"
         },
         "FillerSlate": {
-          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses a LINEAR PlaybackMode.</p>",
+          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
           "shape": "SlateSource"
         },
         "Outputs": {
@@ -860,6 +1036,10 @@
           "documentation": "<p>The tags to assign to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
+        },
+        "Tier": {
+          "documentation": "<p>The tier of the channel.</p>",
+          "shape": "Tier"
         }
       },
       "required": [
@@ -907,6 +1087,139 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
+        },
+        "Tier": {
+          "documentation": "<p>The channel's tier.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
+    "CreateLiveSourceRequest": {
+      "members": {
+        "HttpPackageConfigurations": {
+          "documentation": "<p>A list of HTTP package configuration parameters for this live source.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The identifier for the live source you are working on.</p>",
+          "location": "uri",
+          "locationName": "liveSourceName",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The identifier for the source location you are working on.</p>",
+          "location": "uri",
+          "locationName": "sourceLocationName",
+          "shape": "__string"
+        },
+        "Tags": {
+          "documentation": "<p>The tags to assign to the live source.</p>",
+          "locationName": "tags",
+          "shape": "__mapOf__string"
+        }
+      },
+      "required": [
+        "SourceLocationName",
+        "LiveSourceName",
+        "HttpPackageConfigurations"
+      ],
+      "type": "structure"
+    },
+    "CreateLiveSourceResponse": {
+      "members": {
+        "Arn": {
+          "documentation": "<p>The ARN of the live source.</p>",
+          "shape": "__string"
+        },
+        "CreationTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
+          "shape": "__timestampUnix"
+        },
+        "HttpPackageConfigurations": {
+          "documentation": "<p>The HTTP package configurations.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LastModifiedTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
+          "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the live source.</p>",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
+          "shape": "__string"
+        },
+        "Tags": {
+          "documentation": "<p>The tags assigned to the live source.</p>",
+          "locationName": "tags",
+          "shape": "__mapOf__string"
+        }
+      },
+      "type": "structure"
+    },
+    "CreatePrefetchScheduleRequest": {
+      "members": {
+        "Consumption": {
+          "documentation": "<p>The configuration settings for MediaTailor's <i>consumption</i> of the prefetched ads from the ad decision server. Each consumption configuration contains an end time and an optional start time that define the <i>consumption window</i>. Prefetch schedules automatically expire no earlier than seven days after the end time.</p>",
+          "shape": "PrefetchConsumption"
+        },
+        "Name": {
+          "documentation": "<p>The identifier for the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "Name",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "PlaybackConfigurationName",
+          "shape": "__string"
+        },
+        "Retrieval": {
+          "documentation": "<p>The configuration settings for retrieval of prefetched ads from the ad decision server. Only one set of prefetched ads will be retrieved and subsequently consumed for each ad break.</p>",
+          "shape": "PrefetchRetrieval"
+        },
+        "StreamId": {
+          "documentation": "<p>An optional stream identifier that MediaTailor uses to prefetch ads for multiple streams that use the same playback configuration. If StreamId is specified, MediaTailor returns all of the prefetch schedules with an exact match on StreamId. If not specified, MediaTailor returns all of the prefetch schedules for the playback configuration, regardless of StreamId.</p>",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "Name",
+        "PlaybackConfigurationName",
+        "Retrieval",
+        "Consumption"
+      ],
+      "type": "structure"
+    },
+    "CreatePrefetchScheduleResponse": {
+      "members": {
+        "Arn": {
+          "documentation": "<p>The Amazon Resource Name (ARN) of the prefetch schedule.</p>",
+          "shape": "__string"
+        },
+        "Consumption": {
+          "documentation": "<p>Consumption settings determine how, and when, MediaTailor places the prefetched ads into ad breaks. Ad consumption occurs within a span of time that you define, called a <i>consumption window</i>. You can designate which ad breaks that MediaTailor fills with prefetch ads by setting avail matching criteria.</p>",
+          "shape": "PrefetchConsumption"
+        },
+        "Name": {
+          "documentation": "<p>The name of the prefetch schedule. The name must be unique among all prefetch schedules that are associated with the specified playback configuration.</p>",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration to create the prefetch schedule for.</p>",
+          "shape": "__string"
+        },
+        "Retrieval": {
+          "documentation": "<p>A complex type that contains settings for prefetch retrieval from the ad decision server (ADS).</p>",
+          "shape": "PrefetchRetrieval"
+        },
+        "StreamId": {
+          "documentation": "<p>An optional stream identifier that you can specify in order to prefetch for multiple streams that use the same playback configuration.</p>",
+          "shape": "__string"
         }
       },
       "type": "structure"
@@ -921,6 +1234,10 @@
           "documentation": "<p>The identifier for the channel you are working on.</p>",
           "location": "uri",
           "locationName": "channelName",
+          "shape": "__string"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the LiveSource for this Program.</p>",
           "shape": "__string"
         },
         "ProgramName": {
@@ -945,9 +1262,8 @@
       "required": [
         "ChannelName",
         "ProgramName",
-        "VodSourceName",
-        "ScheduleConfiguration",
-        "SourceLocationName"
+        "SourceLocationName",
+        "ScheduleConfiguration"
       ],
       "type": "structure"
     },
@@ -968,6 +1284,10 @@
         "CreationTime": {
           "documentation": "<p>The timestamp of when the program was created.</p>",
           "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the LiveSource for this Program.</p>",
+          "shape": "__string"
         },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
@@ -1001,6 +1321,10 @@
         "HttpConfiguration": {
           "documentation": "<p>The source's HTTP package configurations.</p>",
           "shape": "HttpConfiguration"
+        },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The identifier for the source location you are working on.</p>",
@@ -1046,6 +1370,10 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
+        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -1061,7 +1389,7 @@
     "CreateVodSourceRequest": {
       "members": {
         "HttpPackageConfigurations": {
-          "documentation": "<p>An array of HTTP package configuration parameters for this VOD source.</p>",
+          "documentation": "<p>A list of HTTP package configuration parameters for this VOD source.</p>",
           "shape": "HttpPackageConfigurations"
         },
         "SourceLocationName": {
@@ -1104,7 +1432,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The ARN for the VOD source.</p>",
+          "documentation": "<p>The last modified time of the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -1223,6 +1551,31 @@
       "members": {},
       "type": "structure"
     },
+    "DeleteLiveSourceRequest": {
+      "members": {
+        "LiveSourceName": {
+          "documentation": "<p>The identifier for the live source you are working on.</p>",
+          "location": "uri",
+          "locationName": "liveSourceName",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The identifier for the source location you are working on.</p>",
+          "location": "uri",
+          "locationName": "sourceLocationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "SourceLocationName",
+        "LiveSourceName"
+      ],
+      "type": "structure"
+    },
+    "DeleteLiveSourceResponse": {
+      "members": {},
+      "type": "structure"
+    },
     "DeletePlaybackConfigurationRequest": {
       "members": {
         "Name": {
@@ -1238,6 +1591,31 @@
       "type": "structure"
     },
     "DeletePlaybackConfigurationResponse": {
+      "members": {},
+      "type": "structure"
+    },
+    "DeletePrefetchScheduleRequest": {
+      "members": {
+        "Name": {
+          "documentation": "<p>The identifier for the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "Name",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "PlaybackConfigurationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "Name",
+        "PlaybackConfigurationName"
+      ],
+      "type": "structure"
+    },
+    "DeletePrefetchScheduleResponse": {
       "members": {},
       "type": "structure"
     },
@@ -1361,6 +1739,65 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
+        },
+        "Tier": {
+          "documentation": "<p>The channel's tier.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
+    "DescribeLiveSourceRequest": {
+      "members": {
+        "LiveSourceName": {
+          "documentation": "<p>The identifier for the live source you are working on.</p>",
+          "location": "uri",
+          "locationName": "liveSourceName",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The identifier for the source location you are working on.</p>",
+          "location": "uri",
+          "locationName": "sourceLocationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "SourceLocationName",
+        "LiveSourceName"
+      ],
+      "type": "structure"
+    },
+    "DescribeLiveSourceResponse": {
+      "members": {
+        "Arn": {
+          "documentation": "<p>The ARN of the live source.</p>",
+          "shape": "__string"
+        },
+        "CreationTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
+          "shape": "__timestampUnix"
+        },
+        "HttpPackageConfigurations": {
+          "documentation": "<p>The HTTP package configurations.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LastModifiedTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
+          "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the live source.</p>",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
+          "shape": "__string"
+        },
+        "Tags": {
+          "documentation": "<p>The tags assigned to the live source.</p>",
+          "locationName": "tags",
+          "shape": "__mapOf__string"
         }
       },
       "type": "structure"
@@ -1403,6 +1840,10 @@
         "CreationTime": {
           "documentation": "<p>The timestamp of when the program was created.</p>",
           "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the LiveSource for this Program.</p>",
+          "shape": "__string"
         },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
@@ -1463,6 +1904,10 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
+        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -1511,7 +1956,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The ARN for the VOD source.</p>",
+          "documentation": "<p>The last modified time of the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -1588,7 +2033,7 @@
     "GetChannelScheduleResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>An array of schedule entries for the channel.</p>",
+          "documentation": "<p>A list of schedule entries for the channel.</p>",
           "shape": "__listOfScheduleEntry"
         },
         "NextToken": {
@@ -1694,6 +2139,56 @@
       },
       "type": "structure"
     },
+    "GetPrefetchScheduleRequest": {
+      "members": {
+        "Name": {
+          "documentation": "<p>The identifier for the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "Name",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "PlaybackConfigurationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "Name",
+        "PlaybackConfigurationName"
+      ],
+      "type": "structure"
+    },
+    "GetPrefetchScheduleResponse": {
+      "members": {
+        "Arn": {
+          "documentation": "<p>The Amazon Resource Name (ARN) of the prefetch schedule.</p>",
+          "shape": "__string"
+        },
+        "Consumption": {
+          "documentation": "<p>Consumption settings determine how, and when, MediaTailor places the prefetched ads into ad breaks. Ad consumption occurs within a span of time that you define, called a <i>consumption window</i>. You can designate which ad breaks that MediaTailor fills with prefetch ads by setting avail matching criteria.</p>",
+          "shape": "PrefetchConsumption"
+        },
+        "Name": {
+          "documentation": "<p>The name of the prefetch schedule. The name must be unique among all prefetch schedules that are associated with the specified playback configuration.</p>",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration to create the prefetch schedule for.</p>",
+          "shape": "__string"
+        },
+        "Retrieval": {
+          "documentation": "<p>A complex type that contains settings for prefetch retrieval from the ad decision server (ADS).</p>",
+          "shape": "PrefetchRetrieval"
+        },
+        "StreamId": {
+          "documentation": "<p>An optional stream identifier that you can specify in order to prefetch for multiple streams that use the same playback configuration.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
     "HlsConfiguration": {
       "documentation": "<p>The configuration for HLS content.</p>",
       "members": {
@@ -1786,7 +2281,7 @@
     "ListAlertsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>An array of alerts that are associated with this resource.</p>",
+          "documentation": "<p>A list of alerts that are associated with this resource.</p>",
           "shape": "__listOfAlert"
         },
         "NextToken": {
@@ -1816,11 +2311,50 @@
     "ListChannelsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>An array of channels that are associated with this account.</p>",
+          "documentation": "<p>A list of channels that are associated with this account.</p>",
           "shape": "__listOfChannel"
         },
         "NextToken": {
           "documentation": "<p>Pagination token returned by the list request when results exceed the maximum allowed. Use the token to fetch the next page of results.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
+    "ListLiveSourcesRequest": {
+      "members": {
+        "MaxResults": {
+          "documentation": "<p>Upper bound on number of records to return. The maximum number of results is 100.</p>",
+          "location": "querystring",
+          "locationName": "maxResults",
+          "shape": "MaxResults"
+        },
+        "NextToken": {
+          "documentation": "<p>Pagination token from the GET list request. Use the token to fetch the next page of results.</p>",
+          "location": "querystring",
+          "locationName": "nextToken",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The identifier for the source location you are working on.</p>",
+          "location": "uri",
+          "locationName": "sourceLocationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "SourceLocationName"
+      ],
+      "type": "structure"
+    },
+    "ListLiveSourcesResponse": {
+      "members": {
+        "Items": {
+          "documentation": "<p>Lists the live sources.</p>",
+          "shape": "__listOfLiveSource"
+        },
+        "NextToken": {
+          "documentation": "<p>Pagination token from the list request. Use the token to fetch the next page of results.</p>",
           "shape": "__string"
         }
       },
@@ -1856,6 +2390,45 @@
       },
       "type": "structure"
     },
+    "ListPrefetchSchedulesRequest": {
+      "members": {
+        "MaxResults": {
+          "documentation": "<p>The maximum number of prefetch schedules that you want MediaTailor to return in response to the current request. If the playback configuration has more than MaxResults prefetch schedules, use the value of NextToken in the response to get the next page of results.</p>",
+          "shape": "__integerMin1Max100"
+        },
+        "NextToken": {
+          "documentation": "<p>(Optional) If the playback configuration has more than MaxResults prefetch schedules, use NextToken to get the second and subsequent pages of results.</p> <p>For the first ListPrefetchSchedulesRequest request, omit this value.</p> <p>For the second and subsequent requests, get the value of NextToken from the previous response and specify that value for NextToken in the request.</p> <p>If the previous response didn't include a NextToken element, there are no more prefetch schedules to get.</p>",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration.</p>",
+          "location": "uri",
+          "locationName": "PlaybackConfigurationName",
+          "shape": "__string"
+        },
+        "StreamId": {
+          "documentation": "<p>An optional filtering parameter whereby MediaTailor filters the prefetch schedules to include only specific streams.</p>",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "PlaybackConfigurationName"
+      ],
+      "type": "structure"
+    },
+    "ListPrefetchSchedulesResponse": {
+      "members": {
+        "Items": {
+          "documentation": "<p>Lists the prefetch schedules. An empty Items list doesn't mean there aren't more items to fetch, just that that page was empty.</p>",
+          "shape": "__listOfPrefetchSchedule"
+        },
+        "NextToken": {
+          "documentation": "<p>The value that you will use forNextToken in the next ListPrefetchSchedulesRequest request.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
     "ListSourceLocationsRequest": {
       "members": {
         "MaxResults": {
@@ -1876,7 +2449,7 @@
     "ListSourceLocationsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>An array of source locations.</p>",
+          "documentation": "<p>A list of source locations.</p>",
           "shape": "__listOfSourceLocation"
         },
         "NextToken": {
@@ -1963,6 +2536,47 @@
       },
       "type": "structure"
     },
+    "LiveSource": {
+      "documentation": "<p>Live source configuration parameters.</p>",
+      "members": {
+        "Arn": {
+          "documentation": "<p>The ARN for the live source.</p>",
+          "shape": "__string"
+        },
+        "CreationTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
+          "shape": "__timestampUnix"
+        },
+        "HttpPackageConfigurations": {
+          "documentation": "<p>The HTTP package configurations for the live source.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LastModifiedTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was last modified.</p>",
+          "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name that's used to refer to a live source.</p>",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The name of the source location.</p>",
+          "shape": "__string"
+        },
+        "Tags": {
+          "documentation": "<p>The tags assigned to the live source.</p>",
+          "locationName": "tags",
+          "shape": "__mapOf__string"
+        }
+      },
+      "required": [
+        "SourceLocationName",
+        "LiveSourceName",
+        "HttpPackageConfigurations",
+        "Arn"
+      ],
+      "type": "structure"
+    },
     "LogConfiguration": {
       "documentation": "<p>Returns Amazon CloudWatch log settings for a playback configuration.</p>",
       "members": {
@@ -2001,6 +2615,12 @@
       "enum": [
         "OFF",
         "BEHIND_LIVE_EDGE"
+      ],
+      "type": "string"
+    },
+    "Operator": {
+      "enum": [
+        "EQUALS"
       ],
       "type": "string"
     },
@@ -2100,6 +2720,85 @@
         "LINEAR"
       ],
       "type": "string"
+    },
+    "PrefetchConsumption": {
+      "documentation": "<p>A complex type that contains settings that determine how and when that MediaTailor places prefetched ads into upcoming ad breaks.</p>",
+      "members": {
+        "AvailMatchingCriteria": {
+          "documentation": "<p>If you only want MediaTailor to insert prefetched ads into avails (ad breaks) that match specific dynamic variables, such as scte.event_id, set the avail matching criteria.</p>",
+          "shape": "__listOfAvailMatchingCriteria"
+        },
+        "EndTime": {
+          "documentation": "<p>The time when MediaTailor no longer considers the prefetched ads for use in an ad break. MediaTailor automatically deletes prefetch schedules no less than seven days after the end time. If you'd like to manually delete the prefetch schedule, you can call DeletePrefetchSchedule.</p>",
+          "shape": "__timestampUnix"
+        },
+        "StartTime": {
+          "documentation": "<p>The time when prefetched ads are considered for use in an ad break. If you don't specify StartTime, the prefetched ads are available after MediaTailor retrives them from the ad decision server.</p>",
+          "shape": "__timestampUnix"
+        }
+      },
+      "required": [
+        "EndTime"
+      ],
+      "type": "structure"
+    },
+    "PrefetchRetrieval": {
+      "documentation": "<p>A complex type that contains settings governing when MediaTailor prefetches ads, and which dynamic variables that MediaTailor includes in the request to the ad decision server.</p>",
+      "members": {
+        "DynamicVariables": {
+          "documentation": "<p>The dynamic variables to use for substitution during prefetch requests to the ad decision server (ADS).</p> <p>You intially configure <a href=\"https://docs.aws.amazon.com/mediatailor/latest/ug/variables.html\">dynamic variables</a> for the ADS URL when you set up your playback configuration. When you specify DynamicVariables for prefetch retrieval, MediaTailor includes the dynamic variables in the request to the ADS.</p>",
+          "shape": "__mapOf__string"
+        },
+        "EndTime": {
+          "documentation": "<p>The time when prefetch retrieval ends for the ad break. Prefetching will be attempted for manifest requests that occur at or before this time.</p>",
+          "shape": "__timestampUnix"
+        },
+        "StartTime": {
+          "documentation": "<p>The time when prefetch retrievals can start for this break. Ad prefetching will be attempted for manifest requests that occur at or after this time. Defaults to the current time. If not specified, the prefetch retrieval starts as soon as possible.</p>",
+          "shape": "__timestampUnix"
+        }
+      },
+      "required": [
+        "EndTime"
+      ],
+      "type": "structure"
+    },
+    "PrefetchSchedule": {
+      "documentation": "<p>A complex type that contains prefetch schedule information.</p>",
+      "members": {
+        "Arn": {
+          "documentation": "<p>The Amazon Resource Name (ARN) of the prefetch schedule.</p>",
+          "shape": "__string"
+        },
+        "Consumption": {
+          "documentation": "<p>Consumption settings determine how, and when, MediaTailor places the prefetched ads into ad breaks. Ad consumption occurs within a span of time that you define, called a <i>consumption window</i>. You can designate which ad breaks that MediaTailor fills with prefetch ads by setting avail matching criteria.</p>",
+          "shape": "PrefetchConsumption"
+        },
+        "Name": {
+          "documentation": "<p>The name of the prefetch schedule. The name must be unique among all prefetch schedules that are associated with the specified playback configuration.</p>",
+          "shape": "__string"
+        },
+        "PlaybackConfigurationName": {
+          "documentation": "<p>The name of the playback configuration to create the prefetch schedule for.</p>",
+          "shape": "__string"
+        },
+        "Retrieval": {
+          "documentation": "<p>A complex type that contains settings for prefetch retrieval from the ad decision server (ADS).</p>",
+          "shape": "PrefetchRetrieval"
+        },
+        "StreamId": {
+          "documentation": "<p>An optional stream identifier that you can specify in order to prefetch for multiple streams that use the same playback configuration.</p>",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "Retrieval",
+        "Consumption",
+        "Arn",
+        "PlaybackConfigurationName",
+        "Name"
+      ],
+      "type": "structure"
     },
     "PutChannelPolicyRequest": {
       "members": {
@@ -2399,6 +3098,10 @@
           "documentation": "<p>The name of the channel that uses this schedule.</p>",
           "shape": "__string"
         },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the live source used for the program.</p>",
+          "shape": "__string"
+        },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
           "shape": "__string"
@@ -2421,9 +3124,8 @@
         }
       },
       "required": [
-        "VodSourceName",
-        "ChannelName",
         "SourceLocationName",
+        "ChannelName",
         "Arn",
         "ProgramName"
       ],
@@ -2449,6 +3151,20 @@
         },
         "SecretStringKey": {
           "documentation": "<p>The AWS Secrets Manager <a href=\"https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_CreateSecret.html#SecretsManager-CreateSecret-request-SecretString.html\">SecretString</a> key associated with the access token. MediaTailor uses the key to look up SecretString key and value pair containing the access token.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
+    "SegmentDeliveryConfiguration": {
+      "documentation": "<p>The base URL of the host or path of the segment delivery server that you're using to serve segments. This is typically a content delivery network (CDN). The URL can be absolute or relative. To use an absolute URL include the protocol, such as https://example.com/some/path. To use a relative URL specify the relative path, such as /some/path*.</p>",
+      "members": {
+        "BaseUrl": {
+          "documentation": "<p>The base URL of the host or path of the segment delivery server that you're using to serve segments. This is typically a content delivery network (CDN). The URL can be absolute or relative. To use an absolute URL include the protocol, such as https://example.com/some/path. To use a relative URL specify the relative path, such as /some/path*.</p>",
+          "shape": "__string"
+        },
+        "Name": {
+          "documentation": "<p>A unique identifier used to distinguish between multiple segment delivery configurations in a source location.</p>",
           "shape": "__string"
         }
       },
@@ -2494,6 +3210,10 @@
         "LastModifiedTime": {
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
+        },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>The segment delivery configurations for the source location.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
@@ -2590,9 +3310,20 @@
       ],
       "type": "structure"
     },
+    "Tier": {
+      "enum": [
+        "BASIC",
+        "STANDARD"
+      ],
+      "type": "string"
+    },
     "Transition": {
       "documentation": "<p>Program transition configuration.</p>",
       "members": {
+        "DurationMillis": {
+          "documentation": "<p>The duration of the live program in seconds.</p>",
+          "shape": "__long"
+        },
         "RelativePosition": {
           "documentation": "<p>The position where this program will be inserted relative to the RelativePosition.</p>",
           "shape": "RelativePosition"
@@ -2652,6 +3383,10 @@
           "locationName": "channelName",
           "shape": "__string"
         },
+        "FillerSlate": {
+          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
+          "shape": "SlateSource"
+        },
         "Outputs": {
           "documentation": "<p>The channel's output properties.</p>",
           "shape": "RequestOutputs"
@@ -2701,6 +3436,70 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
+        },
+        "Tier": {
+          "documentation": "<p>The channel's tier.</p>",
+          "shape": "__string"
+        }
+      },
+      "type": "structure"
+    },
+    "UpdateLiveSourceRequest": {
+      "members": {
+        "HttpPackageConfigurations": {
+          "documentation": "<p>A list of HTTP package configurations for the live source on this account.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The identifier for the live source you are working on.</p>",
+          "location": "uri",
+          "locationName": "liveSourceName",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The identifier for the source location you are working on.</p>",
+          "location": "uri",
+          "locationName": "sourceLocationName",
+          "shape": "__string"
+        }
+      },
+      "required": [
+        "SourceLocationName",
+        "LiveSourceName",
+        "HttpPackageConfigurations"
+      ],
+      "type": "structure"
+    },
+    "UpdateLiveSourceResponse": {
+      "members": {
+        "Arn": {
+          "documentation": "<p>The ARN of the live source.</p>",
+          "shape": "__string"
+        },
+        "CreationTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
+          "shape": "__timestampUnix"
+        },
+        "HttpPackageConfigurations": {
+          "documentation": "<p>The HTTP package configurations.</p>",
+          "shape": "HttpPackageConfigurations"
+        },
+        "LastModifiedTime": {
+          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
+          "shape": "__timestampUnix"
+        },
+        "LiveSourceName": {
+          "documentation": "<p>The name of the live source.</p>",
+          "shape": "__string"
+        },
+        "SourceLocationName": {
+          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
+          "shape": "__string"
+        },
+        "Tags": {
+          "documentation": "<p>The tags assigned to the live source.</p>",
+          "locationName": "tags",
+          "shape": "__mapOf__string"
         }
       },
       "type": "structure"
@@ -2718,6 +3517,10 @@
         "HttpConfiguration": {
           "documentation": "<p>The HTTP configuration for the source location.</p>",
           "shape": "HttpConfiguration"
+        },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The identifier for the source location you are working on.</p>",
@@ -2758,6 +3561,10 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
+        "SegmentDeliveryConfigurations": {
+          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
+          "shape": "__listOfSegmentDeliveryConfiguration"
+        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -2773,7 +3580,7 @@
     "UpdateVodSourceRequest": {
       "members": {
         "HttpPackageConfigurations": {
-          "documentation": "<p>An array of HTTP package configurations for the VOD source on this account.</p>",
+          "documentation": "<p>A list of HTTP package configurations for the VOD source on this account.</p>",
           "shape": "HttpPackageConfigurations"
         },
         "SourceLocationName": {
@@ -2811,7 +3618,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The ARN for the VOD source.</p>",
+          "documentation": "<p>The last modified time of the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -2881,6 +3688,11 @@
       "min": 1,
       "type": "integer"
     },
+    "__integerMin1Max100": {
+      "max": 100,
+      "min": 1,
+      "type": "integer"
+    },
     "__listOfAdBreak": {
       "member": {
         "shape": "AdBreak"
@@ -2893,15 +3705,33 @@
       },
       "type": "list"
     },
+    "__listOfAvailMatchingCriteria": {
+      "member": {
+        "shape": "AvailMatchingCriteria"
+      },
+      "type": "list"
+    },
     "__listOfChannel": {
       "member": {
         "shape": "Channel"
       },
       "type": "list"
     },
+    "__listOfLiveSource": {
+      "member": {
+        "shape": "LiveSource"
+      },
+      "type": "list"
+    },
     "__listOfPlaybackConfiguration": {
       "member": {
         "shape": "PlaybackConfiguration"
+      },
+      "type": "list"
+    },
+    "__listOfPrefetchSchedule": {
+      "member": {
+        "shape": "PrefetchSchedule"
       },
       "type": "list"
     },
@@ -2914,6 +3744,12 @@
     "__listOfScheduleEntry": {
       "member": {
         "shape": "ScheduleEntry"
+      },
+      "type": "list"
+    },
+    "__listOfSegmentDeliveryConfiguration": {
+      "member": {
+        "shape": "SegmentDeliveryConfiguration"
       },
       "type": "list"
     },

@@ -11,14 +11,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
 import os
 import shlex
-import copy
 import sys
 
-from botocore.compat import six
-
 import botocore.exceptions
+from botocore.compat import six
 
 
 def multi_file_load_config(*filenames):
@@ -147,9 +146,10 @@ def raw_config_parse(config_filename, parse_subsections=True):
         cp = six.moves.configparser.RawConfigParser()
         try:
             cp.read([path])
-        except (six.moves.configparser.Error, UnicodeDecodeError):
+        except (six.moves.configparser.Error, UnicodeDecodeError) as e:
             raise botocore.exceptions.ConfigParseError(
-                path=_unicode_path(path))
+                path=_unicode_path(path), error=e
+            ) from None
         else:
             for section in cp.sections():
                 config[section] = {}
@@ -161,15 +161,16 @@ def raw_config_parse(config_filename, parse_subsections=True):
                         # of nesting for now.
                         try:
                             config_value = _parse_nested(config_value)
-                        except ValueError:
+                        except ValueError as e:
                             raise botocore.exceptions.ConfigParseError(
-                                path=_unicode_path(path))
+                                path=_unicode_path(path), error=e
+                            ) from None
                     config[section][option] = config_value
     return config
 
 
 def _unicode_path(path):
-    if isinstance(path, six.text_type):
+    if isinstance(path, str):
         return path
     # According to the documentation getfilesystemencoding can return None
     # on unix in which case the default encoding is used instead.

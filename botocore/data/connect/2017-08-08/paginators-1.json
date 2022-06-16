@@ -143,6 +143,62 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "AgentStatusSummaryList"
+    },
+    "ListSecurityProfilePermissions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Permissions"
+    },
+    "ListContactReferences": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "ReferenceSummaryList"
+    },
+    "ListContactFlowModules": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ContactFlowModulesSummaryList"
+    },
+    "ListDefaultVocabularies": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "DefaultVocabularyList"
+    },
+    "SearchVocabularies": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "VocabularySummaryList"
+    },
+    "ListPhoneNumbersV2": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ListPhoneNumbersSummaryList"
+    },
+    "SearchAvailablePhoneNumbers": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AvailableNumbersList"
+    },
+    "SearchUsers": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "non_aggregate_keys": [
+        "ApproximateTotalCount"
+      ],
+      "output_token": "NextToken",
+      "result_key": "Users"
+    },
+    "ListTaskTemplates": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TaskTemplates"
     }
   }
 }

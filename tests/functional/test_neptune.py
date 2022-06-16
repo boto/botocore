@@ -10,18 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from contextlib import contextmanager
-
-import botocore.session
 from tests import BaseSessionTest, ClientHTTPStubber
-from botocore.stub import Stubber
-from tests import mock, unittest
 
 
 class TestNeptunePresignUrlInjection(BaseSessionTest):
-
     def setUp(self):
-        super(TestNeptunePresignUrlInjection, self).setUp()
+        super().setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
         self.http_stubber = ClientHTTPStubber(self.client)
 
@@ -33,7 +27,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
         params = {
             'DBClusterIdentifier': 'my-cluster',
             'Engine': 'neptune',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CreateDBClusterResponse>'
@@ -51,7 +45,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
         params = {
             'SourceDBClusterSnapshotIdentifier': 'source-db',
             'TargetDBClusterSnapshotIdentifier': 'target-db',
-            'SourceRegion': 'us-east-1'
+            'SourceRegion': 'us-east-1',
         }
         response_body = (
             b'<CopyDBClusterSnapshotResponse>'

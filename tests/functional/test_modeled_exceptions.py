@@ -10,14 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from contextlib import contextmanager
-
-from tests import unittest, BaseSessionTest, ClientHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestModeledExceptions(BaseSessionTest):
     def setUp(self):
-        super(TestModeledExceptions, self).setUp()
+        super().setUp()
         self.region = "us-east-1"
 
     def _create_client(self, service):
@@ -59,7 +57,7 @@ class TestModeledExceptions(BaseSessionTest):
                 template = {
                     'TemplateName': 'foobar',
                     'SubjectPart': 'foo',
-                    'TextPart': 'bar'
+                    'TextPart': 'bar',
                 }
                 ses.create_template(Template=template)
             self.assertEqual(assertion_context.exception.response, response)

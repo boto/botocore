@@ -14,12 +14,9 @@ from collections import defaultdict
 
 import pytest
 
-from tests import mock
-from tests import ClientHTTPStubber
-from botocore.session import Session
-from botocore.exceptions import NoCredentialsError
 from botocore import xform_name
-
+from botocore.session import Session
+from tests import ClientHTTPStubber, mock
 
 REGIONS = defaultdict(lambda: 'us-east-1')
 PUBLIC_API_TESTS = {
@@ -27,15 +24,20 @@ PUBLIC_API_TESTS = {
         "GetId": {"IdentityPoolId": "region:1234"},
         "GetOpenIdToken": {"IdentityId": "region:1234"},
         "UnlinkIdentity": {
-            "IdentityId": "region:1234", "Logins": {}, "LoginsToRemove": []},
+            "IdentityId": "region:1234",
+            "Logins": {},
+            "LoginsToRemove": [],
+        },
         "GetCredentialsForIdentity": {"IdentityId": "region:1234"},
     },
     "sts": {
         "AssumeRoleWithSaml": {
-            "PrincipalArn": "a"*20, "RoleArn": "a"*20, "SAMLAssertion": "abcd",
+            "PrincipalArn": "a" * 20,
+            "RoleArn": "a" * 20,
+            "SAMLAssertion": "abcd",
         },
         "AssumeRoleWithWebIdentity": {
-            "RoleArn": "a"*20,
+            "RoleArn": "a" * 20,
             "RoleSessionName": "foo",
             "WebIdentityToken": "abcd",
         },

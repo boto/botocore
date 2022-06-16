@@ -1,9 +1,9 @@
 import json
 
+from behave import then, when
+
 from botocore import xform_name
 from botocore.exceptions import ClientError
-
-from behave import when, then
 
 
 def _params_from_table(table):
@@ -34,24 +34,24 @@ def _params_from_table(table):
     return params
 
 
-@when(u'I call the "{}" API')
+@when('I call the "{}" API')
 def api_call_no_args(context, operation):
     context.response = getattr(context.client, xform_name(operation))()
 
 
-@when(u'I call the "{}" API with')
+@when('I call the "{}" API with')
 def api_call_with_args(context, operation):
     params = _params_from_table(context.table)
     context.response = getattr(context.client, xform_name(operation))(**params)
 
 
-@when(u'I call the "{}" API with JSON')
+@when('I call the "{}" API with JSON')
 def api_call_with_json(context, operation):
     params = json.loads(context.text)
     context.response = getattr(context.client, xform_name(operation))(**params)
 
 
-@when(u'I attempt to call the "{}" API with')
+@when('I attempt to call the "{}" API with')
 def api_call_with_error(context, operation):
     params = _params_from_table(context.table)
     try:
@@ -60,7 +60,7 @@ def api_call_with_error(context, operation):
         context.error_response = e
 
 
-@when(u'I attempt to call the "{}" API with JSON')
+@when('I attempt to call the "{}" API with JSON')
 def api_call_with_json_and_error(context, operation):
     params = json.loads(context.text)
     try:
@@ -69,12 +69,12 @@ def api_call_with_json_and_error(context, operation):
         context.error_response = e
 
 
-@then(u'I expect the response error code to be "{}"')
+@then('I expect the response error code to be "{}"')
 def then_expected_error(context, code):
     assert context.error_response.response['Error']['Code'] == code
 
 
-@then(u'the value at "{}" should be a list')
+@then('the value at "{}" should be a list')
 def then_expected_type_is_list(context, expression):
     # In botocore, if there are no values with an element,
     # it will not appear in the response dict, so it's actually
@@ -87,7 +87,7 @@ def then_expected_type_is_list(context, expression):
         raise AssertionError("Response is not a dict: %s" % context.response)
 
 
-@then(u'the response should contain a "{}"')
+@then('the response should contain a "{}"')
 def then_should_contain_key(context, key):
     # See then_expected_type_is_a_list for more background info.
     # We really just care that the request succeeded for these
@@ -96,8 +96,10 @@ def then_should_contain_key(context, key):
         raise AssertionError("Response is not a dict: %s" % context.response)
 
 
-@then(u'I expect the response error to contain a message')
+@then('I expect the response error to contain a message')
 def then_error_has_message(context):
     if 'Message' not in context.error_response.response['Error']:
-        raise AssertionError("Message key missing from error response: %s" %
-                             context.error_response.response)
+        raise AssertionError(
+            "Message key missing from error response: %s"
+            % context.error_response.response
+        )
