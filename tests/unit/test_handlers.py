@@ -1166,6 +1166,7 @@ class TestSSEMD5(BaseMD5Test):
             'CreateMultipartUpload',
             'UploadPart',
             'UploadPartCopy',
+            'SelectObjectContent',
         ):
             event = 'before-parameter-build.s3.%s' % op
             params = {
