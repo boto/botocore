@@ -330,7 +330,11 @@ class URLLib3Session:
         return pool_manager_kwargs
 
     def _get_ssl_context(self):
-        return create_urllib3_context()
+        if self._verify:
+            cert_reqs = 'CERT_REQUIRED'
+        else:
+            cert_reqs = 'CERT_NONE'
+        return create_urllib3_context(cert_reqs=cert_reqs)
 
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
