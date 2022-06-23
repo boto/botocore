@@ -611,7 +611,7 @@ class ClientEndpointBridge:
             sslCommonName = resolved.get('sslCommonName')
             hostname = resolved.get('hostname')
             is_disabled = ensure_boolean(
-                os.environ.get('BOTO_EXPERIMENTAL__DISABLE_COMMONNAME', '')
+                os.environ.get('BOTO_DISABLE_COMMONNAME', '')
             )
             if not is_disabled and sslCommonName is not None:
                 warnings.warn(
