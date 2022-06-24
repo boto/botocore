@@ -23,7 +23,11 @@ import contextlib
 import copy
 import os
 import pathlib
-import zipfile
+
+try:
+    from zipfile import Path as ZipPath
+except ImportError:
+    from zipp import Path as ZipPath
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import (
@@ -40,9 +44,7 @@ class TestJSONFileLoader(BaseEnvVar):
     def setUp(self):
         super().setUp()
         self.data_path = pathlib.Path(__file__).parent.joinpath('data')
-        self.zip_data_path = zipfile.Path(
-            self.data_path.joinpath('Archive.zip')
-        )
+        self.zip_data_path = ZipPath(self.data_path.joinpath('Archive.zip'))
         self.file_loader = JSONFileLoader()
         self.valid_file_path = self.data_path.joinpath('foo')
         self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
@@ -83,7 +85,7 @@ class TestJSONFileLoader(BaseEnvVar):
         self.assertIsNone(
             self.file_loader.load_file(pathlib.Path('fooasdfasdfasdf'))
         )
-        # can't instantiate a zipfile.Path object if the path doesn't exist
+        # can't instantiate a ZipPath object if the path doesn't exist
         self.assertIsNone(
             self.file_loader.load_file(
                 self.zip_data_path.joinpath('fooasdfasdfasdf')
@@ -285,15 +287,15 @@ class TestLoader(BaseEnvVar):
         self.assertIn(
             search_path + os.sep, [str(path) for path in loader.search_paths]
         )
-        zip_path = zipfile.Path(os.path.dirname(search_path)).joinpath('foo')
-        # two identical zipfile.Path objects do not 'equal' each other
+        zip_path = ZipPath(os.path.dirname(search_path)).joinpath('foo')
+        # two identical ZipPath objects do not 'equal' each other
         self.assertIn(
             str(zip_path), (str(path) for path in loader.search_paths)
         )
-        # sanity check that one of the paths is a zipfile.Path
+        # sanity check that one of the paths is a ZipPath
         # since it can't be checked directly
         self.assertTrue(
-            any(isinstance(path, zipfile.Path) for path in loader.search_paths)
+            any(isinstance(path, ZipPath) for path in loader.search_paths)
         )
 
     def test_zipped_load_data(self):

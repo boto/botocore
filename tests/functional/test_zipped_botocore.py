@@ -12,7 +12,12 @@
 # language governing permissions and limitations under the License.
 
 import unittest
-import zipfile
+
+try:
+    from zipfile import Path as ZipPath
+except ImportError:
+    from zipp import path as ZipPath
+
 import zipimport
 
 import botocore
@@ -28,11 +33,11 @@ class ZippedBotocoreTestCase(unittest.TestCase):
         self.assertIn('botocore.zip/botocore/__init__.py', botocore.__file__)
 
     def test_BOTOCORE_ROOT(self):
-        self.assertIsInstance(botocore.BOTOCORE_ROOT, zipfile.Path)
+        self.assertIsInstance(botocore.BOTOCORE_ROOT, ZipPath)
 
     def test_loader(self):
         loader = Loader()
-        self.assertIsInstance(loader.BUILTIN_DATA_PATH, zipfile.Path)
+        self.assertIsInstance(loader.BUILTIN_DATA_PATH, ZipPath)
         try:
             loader.load_data('endpoints')
         except Exception:

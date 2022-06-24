@@ -104,7 +104,13 @@ which don't represent the actual service api.
 import logging
 import os
 import pathlib
-import zipfile
+from zipfile import is_zipfile
+
+try:
+    from zipfile import Path as ZipPath
+except ImportError:
+    # python <3.8 compatibility
+    from zipp import Path as ZipPath
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
@@ -155,7 +161,7 @@ class JSONFileLoader:
     def exists(self, file_path):
         """Checks if the file exists.
 
-        :type file_path: zipfile.Path / pathlib.Path
+        :type file_path: ZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
@@ -164,7 +170,7 @@ class JSONFileLoader:
         """
         for ext in _JSON_EXTENSIONS:
             # pathlib.Path.with_suffix would be useful here
-            # but zipfile.Path does not have anything comparable
+            # but ZipPath does not have anything comparable
             path = file_path.parent.joinpath(file_path.name + ext)
             if path.is_file():
                 return True
@@ -185,7 +191,7 @@ class JSONFileLoader:
     def load_file(self, path_obj):
         """Attempt to load the file path.
 
-        :type file_path: zipfile.Path / pathlib.Path
+        :type file_path: ZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
@@ -194,7 +200,7 @@ class JSONFileLoader:
         """
         for ext in _JSON_EXTENSIONS:
             # pathlib.Path.with_suffix would be useful here
-            # but zipfile.Path does not have anything comparable
+            # but ZipPath does not have anything comparable
             with_ext = path_obj.parent.joinpath(path_obj.name + ext)
             data = self._load_file(with_ext, ext)
             if data is not None:
@@ -227,16 +233,16 @@ def create_loader(search_path_string=None):
 
 
 def _create_path(path):
-    """Construct a zipfile.Path object by splitting the root (path to the zip)
+    """Construct a ZipPath object by splitting the root (path to the zip)
     and the path to the subdirectory/file e.g.
     '/Users/user123/Documents/Archive.zip/data' -->
-    zipfile.Path('/Users/user123/Documents/Archive.zip', '/data')
+    ZipPath('/Users/user123/Documents/Archive.zip', '/data')
     If the zipped path doesn't exist, return a pathlib.Path object instead
 
     :type path: str
-    :param path: Full path to construct a zipfile.Path.pathlib.Path object
+    :param path: Full path to construct a ZipPath.pathlib.Path object
 
-    :return: A zipfile.Path/pathlib.Path object consisting of the root and
+    :return: A ZipPath/pathlib.Path object consisting of the root and
     the path to a file or subdirectory
 
     """
@@ -244,21 +250,21 @@ def _create_path(path):
     new_path = os.sep
     while len(parts) > 0:
         new_path = os.path.join(new_path, parts.pop(0))
-        if zipfile.is_zipfile(new_path):
-            return zipfile.Path(new_path).joinpath(*parts)
+        if is_zipfile(new_path):
+            return ZipPath(new_path).joinpath(*parts)
     return pathlib.Path(path)
 
 
 class SearchPathList(list):
     """A simple wrapper for a list. Used to mutate objects that are appended
-    to Loader.search_paths to be pathlib.Path or zipfile.Path objects
+    to Loader.search_paths to be pathlib.Path or ZipPath objects
 
     """
 
-    ALLOWED_TYPES = (str, zipfile.Path, pathlib.Path)
+    ALLOWED_TYPES = (str, ZipPath, pathlib.Path)
 
     def _mutate_path_string(self, __object):
-        """Update a string path to zipfile.Path or pathlib.Path and return it.
+        """Update a string path to ZipPath or pathlib.Path and return it.
         If its already one of those two types, do nothing to it and return it.
         If its not one of those three, raise a TypeError.
 
@@ -267,7 +273,7 @@ class SearchPathList(list):
 
         :raises: TypeError if __object is not one of the types in ALLOWED_TYPES
 
-        :return: A zipfile.Path or pathlib.Path object
+        :return: A ZipPath or pathlib.Path object
 
         """
         if isinstance(__object, str):
