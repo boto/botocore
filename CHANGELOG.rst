@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.27.17
+=======
+
+* api-change:``glue``: This release enables the new ListCrawls API for viewing the AWS Glue Crawler run history.
+* api-change:``rds-data``: Documentation updates for RDS Data API
+
+
 1.27.16
 =======
 
@@ -49,7 +56,6 @@ CHANGELOG
 =======
 
 * api-change:``redshift-data``: This release adds a new --workgroup-name field to operations that connect to an endpoint. Customers can now execute queries against their serverless workgroups.
-* api-change:``redshiftserverless``: Add new API operations for Amazon Redshift Serverless, a new way of using Amazon Redshift without needing to manually manage provisioned clusters. The new operations let you interact with Redshift Serverless resources, such as create snapshots, list VPC endpoints, delete resource policies, and more.
 * api-change:``secretsmanager``: Documentation updates for Secrets Manager
 * api-change:``securityhub``: Added Threats field for security findings. Added new resource details for ECS Container, ECS Task, RDS SecurityGroup, Kinesis Stream, EC2 TransitGateway, EFS AccessPoint, CloudFormation Stack, CloudWatch Alarm, VPC Peering Connection and WAF Rules
 
