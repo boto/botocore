@@ -21,8 +21,23 @@ try:
     from importlib.resources import files
 # python < 3.9 compatability
 except ImportError:
-    from importlib_resources import files
+    import os
+    import pathlib
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+__version__ = '1.27.17'
+>>>>>>> 9b16a94f2 (zip file functionality for botocore)
+=======
+    def files(path):
+        return pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
+
+
+__version__ = '1.27.18'
+>>>>>>> cca0b0177 (pr feedback. some nits, moved zip testing to separate script and gh workflow)
+
+>>>>>>> 28121ade9 (pr feedback. some nits, moved zip testing to separate script and gh workflow)
 
 class NullHandler(logging.Handler):
     def emit(self, record):

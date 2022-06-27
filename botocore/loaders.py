@@ -104,25 +104,33 @@ which don't represent the actual service api.
 import logging
 import os
 import pathlib
+import sys
 from zipfile import is_zipfile
 
-try:
+# python < 3.9 botocore will not support zips
+if sys.version_info < (3, 9):
+
+    class ZipPath:
+        def __init__(self, path):
+            raise RuntimeError(
+                "Using botocore in a zipped context "
+                "is not supported in python < 3.9"
+            )
+
+else:
     from zipfile import Path as ZipPath
-except ImportError:
-    # python <3.8 compatibility
-    from zipp import Path as ZipPath
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 
-_JSON_EXTENSIONS = ['.json']
+_JSON_DECOMPRESSION_METHODS = {'.json': None}
 
 if HAS_GZIP:
     from gzip import decompress
 
-    _JSON_EXTENSIONS.append('.json.gz')
+    _JSON_DECOMPRESSION_METHODS['.json.gz'] = decompress
 
 
 logger = logging.getLogger(__name__)
@@ -161,17 +169,20 @@ class JSONFileLoader:
     def exists(self, file_path):
         """Checks if the file exists.
 
-        :type file_path: ZipPath / pathlib.Path
+        :type file_path: str / ZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
         :return: True if file path exists, False otherwise.
 
         """
-        for ext in _JSON_EXTENSIONS:
+        if isinstance(file_path, str):
+            file_path = _create_path(file_path)
+
+        for ext in _JSON_DECOMPRESSION_METHODS:
             # pathlib.Path.with_suffix would be useful here
             # but ZipPath does not have anything comparable
-            path = file_path.parent.joinpath(file_path.name + ext)
+            path = file_path.parent.joinpath(f'{file_path.name}{ext}')
             if path.is_file():
                 return True
         return False
@@ -182,8 +193,9 @@ class JSONFileLoader:
 
         with full_path.open('rb') as fp:
             payload = fp.read()
-            if ext == '.json.gz':
-                payload = decompress(payload)
+            ext_handler = _JSON_DECOMPRESSION_METHODS.get(ext)
+            if ext_handler is not None:
+                payload = ext_handler(payload)
 
         logger.debug("Loading JSON file: %s", full_path)
         return json.loads(payload, object_pairs_hook=OrderedDict)
@@ -191,17 +203,20 @@ class JSONFileLoader:
     def load_file(self, path_obj):
         """Attempt to load the file path.
 
-        :type file_path: ZipPath / pathlib.Path
+        :type file_path: str / ZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
         :return: The loaded data if it exists, otherwise None.
 
         """
-        for ext in _JSON_EXTENSIONS:
+        if isinstance(path_obj, str):
+            path_obj = _create_path(path_obj)
+
+        for ext in _JSON_DECOMPRESSION_METHODS:
             # pathlib.Path.with_suffix would be useful here
             # but ZipPath does not have anything comparable
-            with_ext = path_obj.parent.joinpath(path_obj.name + ext)
+            with_ext = path_obj.parent.joinpath(f'{path_obj.name}{ext}')
             data = self._load_file(with_ext, ext)
             if data is not None:
                 return data
@@ -233,14 +248,15 @@ def create_loader(search_path_string=None):
 
 
 def _create_path(path):
-    """Construct a ZipPath object by splitting the root (path to the zip)
-    and the path to the subdirectory/file e.g.
+    """Construct a ZipPath or pathlib.Path object from a path string.
+
+    Split the root (path to a zip) and the path to the subdirectory/file e.g.
     '/Users/user123/Documents/Archive.zip/data' -->
     ZipPath('/Users/user123/Documents/Archive.zip', '/data')
     If the zipped path doesn't exist, return a pathlib.Path object instead
 
     :type path: str
-    :param path: Full path to construct a ZipPath.pathlib.Path object
+    :param path: Full path to construct a ZipPath or pathlib.Path object
 
     :return: A ZipPath/pathlib.Path object consisting of the root and
     the path to a file or subdirectory
@@ -255,7 +271,7 @@ def _create_path(path):
     return pathlib.Path(path)
 
 
-class SearchPathList(list):
+class _SearchPathList(list):
     """A simple wrapper for a list. Used to mutate objects that are appended
     to Loader.search_paths to be pathlib.Path or ZipPath objects
 
@@ -279,13 +295,13 @@ class SearchPathList(list):
         if isinstance(__object, str):
             return _create_path(__object)
 
-        if not any(
-            isinstance(__object, _type) for _type in self.ALLOWED_TYPES
-        ):
-            repr_types = ', '.join(repr(_type) for _type in self.ALLOWED_TYPES)
+        if not isinstance(__object, self.ALLOWED_TYPES):
+            allowed_types_string = ', '.join(
+                repr(_type) for _type in self.ALLOWED_TYPES
+            )
             raise TypeError(
-                f"Object {__object} of type {type(__object)} cannot be added "
-                f"to a search path. Please use one of {repr_types} instead."
+                f"Object {__object} of type {type(__object)} cannot be added to a "
+                f"search path. Please use one of {allowed_types_string} instead."
             )
 
         return __object
@@ -315,7 +331,6 @@ class Loader:
     # The included models in botocore/data/ that we ship with botocore.
     BUILTIN_DATA_PATH = BOTOCORE_ROOT.joinpath('data')
     # For convenience we automatically add ~/.aws/models to the data path.
-    # this filepath can never be zipped and will always be on disk
     CUSTOMER_DATA_PATH = pathlib.Path('~', '.aws', 'models').expanduser()
 
     BUILTIN_EXTRAS_TYPES = ['sdk']
@@ -324,6 +339,7 @@ class Loader:
         self,
         extra_search_paths=None,
         file_loader=None,
+        cache=None,
         include_default_search_paths=True,
         include_default_extras=True,
     ):
@@ -331,7 +347,7 @@ class Loader:
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
         self.file_loader = file_loader
-        self._search_paths = SearchPathList()
+        self._search_paths = _SearchPathList()
         if extra_search_paths is not None:
             self._search_paths.extend(extra_search_paths)
         if include_default_search_paths:
@@ -384,14 +400,14 @@ class Loader:
                 for path_obj in possible_path.iterdir()
                 if path_obj.is_dir()
             ]
-            for service_name_path in possible_services:
+            for service_path in possible_services:
                 full_load_paths = [
                     path_obj.joinpath(type_name)
-                    for path_obj in service_name_path.iterdir()
+                    for path_obj in service_path.iterdir()
                 ]
                 for path in full_load_paths:
                     if self.file_loader.exists(path):
-                        services.add(service_name_path.name)
+                        services.add(service_path.name)
                         break
         return sorted(services)
 

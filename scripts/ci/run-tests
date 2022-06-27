@@ -38,8 +38,6 @@ def process_args(args):
         test_args += f"--cov={PACKAGE} --cov-report xml "
     if args.zipped:
         test_args += "--import-mode=append "
-    else:
-        test_args += "--ignore=functional/test_zipped_botocore.py "
     dirs = " ".join(args.test_dirs)
 
     return runner, test_args, dirs

@@ -5,8 +5,13 @@
 
 import argparse
 import os
+import sys
 from contextlib import contextmanager
 from subprocess import check_call
+
+import botocore
+import zipfile
+import zipimport
 
 _dname = os.path.dirname
 
@@ -39,31 +44,23 @@ def process_args(args):
     return runner, test_args, dirs
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "test_dirs",
-        default=["functional/test_zipped_botocore.py"],
-        nargs="*",
-        help="One or more directories containing tests.",
-    )
-    parser.add_argument(
-        "-r",
-        "--test-runner",
-        default="pytest",
-        help="Test runner to execute tests. Defaults to pytest.",
-    )
-    parser.add_argument(
-        "-i",
-        "--import-mode-append",
-        default=False,
-        action="store_true",
-        help="Run test runner in append import mode",
-    )
-    raw_args = parser.parse_args()
-    test_runner, test_args, test_dirs = process_args(raw_args)
+def check_state():
+    zip_loader = isinstance(botocore.__loader__, zipimport.zipimporter)
+    print(f'loader: {botocore.__loader__}')
+    zip_file = 'botocore.zip/botocore/__init__.py' in botocore.__file__
+    print(f'file: {botocore.__file__}')
+    zip_path = isinstance(botocore.BOTOCORE_ROOT, zipfile.Path)
+    print(f'type: {botocore.BOTOCORE_ROOT.__module__}')
+    zipped_state = (zip_loader, zip_file, zip_path)
+    if not all(zipped_state):
+        print("Botocore is not loaded in a zipped context")
+        print(os.environ['GITHUB_WORKSPACE'])
+        print(os.listdir())
+        sys.exit(1)
 
-    cmd = f"{test_runner} {test_args}{test_dirs}"
-    print(f"Running {cmd}...")
+
+if __name__ == "__main__":
+    check_state()
     with cd(os.path.join(REPO_ROOT, "tests")):
-        run(cmd)
+        test_script = os.sep.join([REPO_ROOT, 'scripts', 'ci', 'run-tests'])
+        run(f"python {test_script} unit functional")

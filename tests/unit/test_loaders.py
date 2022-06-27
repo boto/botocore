@@ -23,18 +23,16 @@ import contextlib
 import copy
 import os
 import pathlib
+import sys
 
-try:
-    from zipfile import Path as ZipPath
-except ImportError:
-    from zipp import Path as ZipPath
+import pytest
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import (
     ExtrasProcessor,
     JSONFileLoader,
     Loader,
-    SearchPathList,
+    ZipPath,
     create_loader,
 )
 from tests import BaseEnvVar, mock
@@ -44,47 +42,63 @@ class TestJSONFileLoader(BaseEnvVar):
     def setUp(self):
         super().setUp()
         self.data_path = pathlib.Path(__file__).parent.joinpath('data')
-        self.zip_data_path = ZipPath(self.data_path.joinpath('Archive.zip'))
         self.file_loader = JSONFileLoader()
         self.valid_file_path = self.data_path.joinpath('foo')
-        self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
         self.compressed_file_path = self.data_path.joinpath('compressed')
-        self.zip_compressed_file_path = self.zip_data_path.joinpath(
-            'compressed'
-        )
+        if sys.version_info >= (3, 9):
+            self.zip_data_path = ZipPath(
+                self.data_path.joinpath('Archive.zip')
+            )
+            self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
+            self.zip_compressed_file_path = self.zip_data_path.joinpath(
+                'compressed'
+            )
 
     def test_load_file(self):
         data = self.file_loader.load_file(self.valid_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_load_zipped_file(self):
+
         zip_data = self.file_loader.load_file(self.zip_valid_file_path)
         self.assertEqual(len(zip_data), 3)
         self.assertTrue('test_key_1' in zip_data)
-
-        self.assertEqual(data, zip_data)
 
     def test_load_compressed_file(self):
         data = self.file_loader.load_file(self.compressed_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_load_zipped_compressed_file(self):
         zip_data = self.file_loader.load_file(self.zip_compressed_file_path)
         self.assertEqual(len(zip_data), 3)
-        self.assertTrue('test_key_1' in data)
-
-        self.assertEqual(data, zip_data)
+        self.assertTrue('test_key_1' in zip_data)
 
     def test_load_compressed_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.compressed_file_path))
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_load_zipped_compressed_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.zip_compressed_file_path))
 
     def test_load_json_file_does_not_exist_returns_none(self):
         # None is used to indicate that the loader could not find a
         # file to load.
-        self.assertIsNone(
-            self.file_loader.load_file(pathlib.Path('fooasdfasdfasdf'))
-        )
+        self.assertIsNone(self.file_loader.load_file('fooasdfasdfasdf'))
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_load_zipped_json_file_does_not_exist_returns_none(self):
         # can't instantiate a ZipPath object if the path doesn't exist
         self.assertIsNone(
             self.file_loader.load_file(
@@ -94,6 +108,11 @@ class TestJSONFileLoader(BaseEnvVar):
 
     def test_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.valid_file_path))
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_zipped_file_exists_check(self):
         self.assertTrue(self.file_loader.exists(self.zip_valid_file_path))
 
     def test_file_does_not_exist_returns_false(self):
@@ -102,6 +121,11 @@ class TestJSONFileLoader(BaseEnvVar):
                 self.data_path.joinpath('does', 'not', 'exist')
             )
         )
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_zipped_file_does_not_exist_returns_false(self):
         self.assertFalse(
             self.file_loader.exists(
                 self.zip_data_path.joinpath('does', 'not', 'exist')
@@ -115,11 +139,29 @@ class TestJSONFileLoader(BaseEnvVar):
         except UnicodeDecodeError:
             self.fail('Fail to handle data file with non-ascii characters')
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
+    def test_zipped_file_with_non_ascii(self):
         try:
             filename = self.zip_data_path.joinpath('non_ascii')
             self.assertTrue(self.file_loader.load_file(filename) is not None)
         except UnicodeDecodeError:
             self.fail('Fail to handle data file with non-ascii characters')
+
+
+@pytest.mark.parametrize(
+    "bad_type",
+    [None, [1], 1, 1.5, {'bad': 'type'}, b'bad_type', False, {'bad-type'}],
+)
+def test_cant_add_wrong_type_to_search_path(bad_type):
+
+    with pytest.raises(TypeError):
+        Loader(extra_search_paths=[bad_type])
+
+    loader = Loader()
+    with pytest.raises(TypeError):
+        loader.search_paths.append(bad_type)
 
 
 class TestLoader(BaseEnvVar):
@@ -134,20 +176,17 @@ class TestLoader(BaseEnvVar):
         self.assertTrue(
             any(str(p).endswith(home_dir_path) for p in loader.search_paths)
         )
-        self.assertIsInstance(loader.search_paths, SearchPathList)
 
     def test_can_add_to_search_path(self):
         loader = Loader()
         loader.search_paths.append('mypath')
         self.assertIn(pathlib.Path('mypath'), loader.search_paths)
-        self.assertIsInstance(loader.search_paths, SearchPathList)
 
     def test_can_initialize_with_search_paths(self):
         loader = Loader(extra_search_paths=['foo', 'bar'])
         # Note that the extra search paths are before
         # the customer/builtin data paths.
 
-        self.assertIsInstance(loader.search_paths, SearchPathList)
         self.assertEqual(
             loader.search_paths,
             [
@@ -157,26 +196,6 @@ class TestLoader(BaseEnvVar):
                 loader.BUILTIN_DATA_PATH,
             ],
         )
-
-    def test_cant_add_wrong_type_to_search_path(self):
-
-        bad_types = (
-            None,
-            [1],
-            1,
-            1.5,
-            {'bad': 'type'},
-            b'bad_type',
-            False,
-            {'bad_type'},
-        )
-        for _type in bad_types:
-            with self.assertRaises(TypeError):
-                Loader(extra_search_paths=[_type])
-
-            loader = Loader()
-            with self.assertRaises(TypeError):
-                loader.search_paths.append(_type)
 
     # The file loader isn't consulted unless the current
     # search path exists, so we're patching isdir to always
@@ -279,6 +298,19 @@ class TestLoader(BaseEnvVar):
         self.assertIn(pathlib.Path('bar'), loader.search_paths)
         self.assertIn(pathlib.Path('baz'), loader.search_paths)
 
+    @pytest.mark.skipif(
+        sys.version_info >= (3, 9), reason="Python version >= 3.9"
+    )
+    def test_zips_not_suppored_python_lt_39(self):
+        search_path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
+        )
+        with self.assertRaises(RuntimeError):
+            create_loader(search_path)
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zip_path_created(self):
         search_path = os.path.join(
             os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
@@ -298,6 +330,9 @@ class TestLoader(BaseEnvVar):
             any(isinstance(path, ZipPath) for path in loader.search_paths)
         )
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_load_data(self):
         path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
@@ -307,6 +342,9 @@ class TestLoader(BaseEnvVar):
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_data_not_found_raises_exception(self):
         path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
@@ -315,6 +353,9 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.load_data('cheese')
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_model_not_found_raises_exception(self):
         path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
@@ -323,6 +364,9 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.load_service_model('bestServiceEver', 'service-2')
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_load_zipped_service_model(self):
         path = os.path.join(
             os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
@@ -333,6 +377,9 @@ class TestLoader(BaseEnvVar):
         model = loader.load_service_model('myCoolService', 'service-2')
         self.assertIn("foo", model)
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_list_available_services(self):
         path = os.path.join(
             os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
@@ -345,6 +392,9 @@ class TestLoader(BaseEnvVar):
             available_services, ['dynamodb', 'ec2', 'myCoolService']
         )
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_list_api_versions(self):
         path = os.path.join(
             os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
