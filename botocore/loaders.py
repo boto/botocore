@@ -104,6 +104,7 @@ which don't represent the actual service api.
 import logging
 import os
 import pathlib
+import posixpath
 from zipfile import is_zipfile
 
 try:
@@ -167,7 +168,7 @@ class JSONFileLoader:
     def exists(self, file_path):
         """Checks if the file exists.
 
-        :type file_path: str / ZipPath / pathlib.Path
+        :type file_path: str / BotoZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
@@ -179,12 +180,12 @@ class JSONFileLoader:
 
         for ext in _JSON_DECOMPRESSION_METHODS:
             path = file_path.parent.joinpath(f'{file_path.name}{ext}')
-            if path.is_file():
+            if path.is_file() and path.exists():
                 return True
         return False
 
     def _load_file(self, full_path, ext):
-        if not full_path.is_file():
+        if not full_path.is_file() or not full_path.exists():
             return
 
         with full_path.open('rb') as fp:
@@ -199,7 +200,7 @@ class JSONFileLoader:
     def load_file(self, file_path):
         """Attempt to load the file path.
 
-        :type file_path: str / ZipPath / pathlib.Path
+        :type file_path: str / BotoZipPath / pathlib.Path
         :param file_path: The full path to the file to load without
             the '.json' extension.
 
@@ -242,17 +243,17 @@ def create_loader(search_path_string=None):
 
 
 def _create_path(path):
-    """Construct a ZipPath or pathlib.Path object from a path string.
+    """Construct a BotoZipPath or pathlib.Path object from a path string.
 
     Split the root (path to a zip) and the path to the subdirectory/file e.g.
     '/Users/user123/Documents/Archive.zip/data' -->
-    ZipPath('/Users/user123/Documents/Archive.zip', '/data')
+    BotoZipPath('/Users/user123/Documents/Archive.zip', '/data')
     If the zipped path doesn't exist, return a pathlib.Path object instead
 
     :type path: str
-    :param path: Full path to construct a ZipPath or pathlib.Path object
+    :param path: Full path to construct a BotoZipPath or pathlib.Path object
 
-    :return: A ZipPath/pathlib.Path object consisting of the root and
+    :return: A BotoZipPath/pathlib.Path object consisting of the root and
     the path to a file or subdirectory
 
     """
@@ -261,28 +262,43 @@ def _create_path(path):
     while len(parts) > 0:
         new_path = os.path.join(new_path, parts.pop(0))
         if is_zipfile(new_path):
-            return ZipPath(new_path).joinpath(*parts)
+            return BotoZipPath(new_path).joinpath(*parts)
     return pathlib.Path(path)
+
+
+class BotoZipPath(ZipPath):
+    """A wrapper for ZipPath. This allows for zipped botocore to work with
+    python 3.9. See https://github.com/python/cpython/issues/86256 for
+    additional details.
+
+    """
+
+    def joinpath(self, *other):
+        next = posixpath.join(self.at, *other)
+        return self._next(self.root.resolve_dir(next))
+
+    def _next(self, at):
+        return self.__class__(self.root, at)
 
 
 class _SearchPathList(list):
     """A simple wrapper for a list. Used to mutate objects that are appended
-    to Loader.search_paths to be pathlib.Path or ZipPath objects
+    to Loader.search_paths to be pathlib.Path or BotoZipPath objects
 
     """
 
-    ALLOWED_TYPES = (str, ZipPath, pathlib.Path)
+    ALLOWED_TYPES = (str, BotoZipPath, pathlib.Path)
 
     def _mutate_path_string(self, __object):
         """Validate object type and convert any strings to an appropriate
-        ZipPath or pathlib.Path.
+        BotoZipPath or pathlib.Path.
 
         :type __object: object
         :param __object: An object reperesting a path to a directory in botocore
 
         :raises: TypeError if __object is not one of the types in ALLOWED_TYPES
 
-        :return: A ZipPath or pathlib.Path object
+        :return: A BotoZipPath or pathlib.Path object
 
         """
         if isinstance(__object, str):

@@ -30,10 +30,10 @@ import pytest
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import (
+    BotoZipPath,
     ExtrasProcessor,
     JSONFileLoader,
     Loader,
-    ZipPath,
     create_loader,
 )
 from tests import BaseEnvVar, mock, skip_if_lt_39
@@ -50,7 +50,9 @@ class TestJSONFileLoader(BaseEnvVar):
 
     @skip_if_lt_39
     def _set_zip_vars(self):
-        self.zip_data_path = ZipPath(self.data_path.joinpath('Archive.zip'))
+        self.zip_data_path = BotoZipPath(
+            self.data_path.joinpath('Archive.zip')
+        )
         self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
         self.zip_compressed_file_path = self.zip_data_path.joinpath(
             'compressed'
@@ -101,7 +103,7 @@ class TestJSONFileLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_load_zipped_json_file_does_not_exist_returns_none(self):
-        # can't instantiate a ZipPath object if the path doesn't exist
+        # can't instantiate a BotoZipPath object if the path doesn't exist
         self.assertIsNone(
             self.file_loader.load_file(
                 self.zip_data_path.joinpath('fooasdfasdfasdf')
@@ -324,13 +326,13 @@ class TestLoader(BaseEnvVar):
             self.zip_search_path + os.sep,
             [str(path) for path in loader.search_paths],
         )
-        zip_path = ZipPath(self.zip_path).joinpath('foo')
-        # two identical ZipPath objects do not 'equal' each other
+        zip_path = BotoZipPath(self.zip_path).joinpath('foo')
+        # two identical BotoZipPath objects do not 'equal' each other
         matching_zips = [
             path for path in loader.search_paths if str(path) == str(zip_path)
         ]
         self.assertEqual(len(matching_zips), 1)
-        self.assertIsInstance(matching_zips[0], ZipPath)
+        self.assertIsInstance(matching_zips[0], BotoZipPath)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 9), reason="Python version < 3.9"
