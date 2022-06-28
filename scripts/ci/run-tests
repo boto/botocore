@@ -36,7 +36,7 @@ def process_args(args):
         test_args += "-n auto --dist=loadfile --maxprocesses=4 "
     if args.with_cov:
         test_args += f"--cov={PACKAGE} --cov-report xml "
-    if args.zipped:
+    if args.append_import:
         test_args += "--import-mode=append "
     dirs = " ".join(args.test_dirs)
 
@@ -72,11 +72,14 @@ if __name__ == "__main__":
         help="Run default test-runner with parallelization.",
     )
     parser.add_argument(
-        "-z",
-        "--zipped",
+        "-a",
+        "--append-import",
         default=False,
         action="store_true",
-        help="Run test runner assuming a zipped context",
+        help=(
+            "Append directories to end of sys.path. "
+            "Useful for testing in a zipped context.",
+        ),
     )
     raw_args = parser.parse_args()
     test_runner, test_args, test_dirs = process_args(raw_args)

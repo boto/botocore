@@ -79,6 +79,18 @@ def requires_crt(reason=None):
     return decorator
 
 
+def skip_if_lt_39(func):
+    # breakpoint()
+    def decorator(*args, **kwargs):
+
+        if sys.version_info < (3, 9):
+            pass
+        else:
+            func(*args, **kwargs)
+
+    return decorator
+
+
 def random_chars(num_chars):
     """Returns random hex characters.
 

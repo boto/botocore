@@ -24,6 +24,7 @@ import copy
 import os
 import pathlib
 import sys
+import zipfile
 
 import pytest
 
@@ -35,7 +36,7 @@ from botocore.loaders import (
     ZipPath,
     create_loader,
 )
-from tests import BaseEnvVar, mock
+from tests import BaseEnvVar, mock, skip_if_lt_39
 
 
 class TestJSONFileLoader(BaseEnvVar):
@@ -45,14 +46,15 @@ class TestJSONFileLoader(BaseEnvVar):
         self.file_loader = JSONFileLoader()
         self.valid_file_path = self.data_path.joinpath('foo')
         self.compressed_file_path = self.data_path.joinpath('compressed')
-        if sys.version_info >= (3, 9):
-            self.zip_data_path = ZipPath(
-                self.data_path.joinpath('Archive.zip')
-            )
-            self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
-            self.zip_compressed_file_path = self.zip_data_path.joinpath(
-                'compressed'
-            )
+        self._set_zip_vars()
+
+    @skip_if_lt_39
+    def _set_zip_vars(self):
+        self.zip_data_path = ZipPath(self.data_path.joinpath('Archive.zip'))
+        self.zip_valid_file_path = self.zip_data_path.joinpath('foo')
+        self.zip_compressed_file_path = self.zip_data_path.joinpath(
+            'compressed'
+        )
 
     def test_load_file(self):
         data = self.file_loader.load_file(self.valid_file_path)
@@ -165,6 +167,13 @@ def test_cant_add_wrong_type_to_search_path(bad_type):
 
 
 class TestLoader(BaseEnvVar):
+    def setUp(self):
+        super().setUp()
+        self.zip_path = os.path.join(
+            os.path.dirname(__file__), 'data', 'Archive.zip'
+        )
+        self.zip_search_path = os.path.join(self.zip_path, 'foo')
+
     def test_default_search_paths(self):
         loader = Loader()
         self.assertEqual(len(loader.search_paths), 2)
@@ -302,41 +311,34 @@ class TestLoader(BaseEnvVar):
         sys.version_info >= (3, 9), reason="Python version >= 3.9"
     )
     def test_zips_not_suppored_python_lt_39(self):
-        search_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
-        )
-        with self.assertRaises(RuntimeError):
-            create_loader(search_path)
+        if not hasattr(zipfile, 'Path'):
+            with self.assertRaises(RuntimeError):
+                create_loader(self.zip_search_path)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zip_path_created(self):
-        search_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
-        )
-        loader = create_loader(search_path)
+        loader = create_loader(self.zip_search_path)
         self.assertIn(
-            search_path + os.sep, [str(path) for path in loader.search_paths]
+            self.zip_search_path + os.sep,
+            [str(path) for path in loader.search_paths],
         )
-        zip_path = ZipPath(os.path.dirname(search_path)).joinpath('foo')
+        zip_path = ZipPath(self.zip_path).joinpath('foo')
         # two identical ZipPath objects do not 'equal' each other
-        self.assertIn(
-            str(zip_path), (str(path) for path in loader.search_paths)
-        )
-        # sanity check that one of the paths is a ZipPath
-        # since it can't be checked directly
-        self.assertTrue(
-            any(isinstance(path, ZipPath) for path in loader.search_paths)
-        )
+        matching_zips = [
+            path for path in loader.search_paths if str(path) == str(zip_path)
+        ]
+        self.assertEqual(len(matching_zips), 1)
+        self.assertIsInstance(matching_zips[0], ZipPath)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zipped_load_data(self):
-        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_path],
+            include_default_search_paths=False,
         )
         data = loader.load_data('foo')
         self.assertEqual(len(data), 3)
@@ -346,9 +348,9 @@ class TestLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zipped_data_not_found_raises_exception(self):
-        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_path],
+            include_default_search_paths=False,
         )
         with self.assertRaises(DataNotFoundError):
             loader.load_data('cheese')
@@ -357,9 +359,9 @@ class TestLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zipped_model_not_found_raises_exception(self):
-        path = os.path.join(os.path.dirname(__file__), 'data', 'Archive.zip')
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_path],
+            include_default_search_paths=False,
         )
         with self.assertRaises(DataNotFoundError):
             loader.load_service_model('bestServiceEver', 'service-2')
@@ -368,11 +370,9 @@ class TestLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_load_zipped_service_model(self):
-        path = os.path.join(
-            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
-        )
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_search_path],
+            include_default_search_paths=False,
         )
         model = loader.load_service_model('myCoolService', 'service-2')
         self.assertIn("foo", model)
@@ -381,11 +381,9 @@ class TestLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zipped_list_available_services(self):
-        path = os.path.join(
-            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
-        )
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_search_path],
+            include_default_search_paths=False,
         )
         available_services = loader.list_available_services('service-2')
         self.assertEqual(
@@ -396,11 +394,9 @@ class TestLoader(BaseEnvVar):
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
     def test_zipped_list_api_versions(self):
-        path = os.path.join(
-            os.path.dirname(__file__), 'data', 'Archive.zip', 'foo'
-        )
         loader = Loader(
-            extra_search_paths=[path], include_default_search_paths=False
+            extra_search_paths=[self.zip_search_path],
+            include_default_search_paths=False,
         )
         api_versions = loader.list_api_versions('ec2', 'service-2')
         self.assertEqual(api_versions, ['2010-01-01', '2014-10-01'])

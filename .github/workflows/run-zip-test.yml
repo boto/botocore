@@ -6,7 +6,7 @@ on:
     branches-ignore: [master]
 
 jobs:
-  build:
+  zip:
     runs-on: '${{ matrix.os }}'
     strategy:
       fail-fast: false
@@ -23,10 +23,18 @@ jobs:
       - name: Install dependencies
         run: |
           python scripts/ci/install
+      - name: Set path seperator for windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "PATH_SEPERATOR=\" >> $GITHUB_ENV
+      - name: Set path seperator for ubuntu/mac
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
+        run: |
+          echo "PATH_SEPERATOR=/" >> $GITHUB_ENV
       - name: Run tests
         env:
-            PYTHONPATH: ${{ env.GITHUB_WORKSPACE }}/botocore.zip
+          PYTHONPATH: ${{ github.workspace }}${{ env.PATH_SEPERATOR }}botocore.zip
         run: |
-          zip -r botocore.zip botocore/
-          python scripts/ci/run-zip-tests --with-cov --with-xdist --zipped
+          python -m zipfile -c botocore.zip botocore/
+          python scripts/ci/run-zip-tests --with-cov --with-xdist --append-import
           rm botocore.zip

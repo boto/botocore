@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 make: Entering directory `/Users/davidlm/Documents/aws-sdk/botocore'
  
 make: *** No targets specified and no makefile found.  Stop.
 
 make: Leaving directory `/Users/davidlm/Documents/aws-sdk/botocore'
  
+=======
+make: *** No targets specified and no makefile found.  Stop.
+
+>>>>>>> fbbf4a867 (more pr feedback)

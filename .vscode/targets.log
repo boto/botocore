@@ -7,7 +7,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 
 # This program built for i386-apple-darwin11.3.0
 
+<<<<<<< HEAD
 # Make data base, printed on Mon Jul 11 13:18:37 2022
+=======
+# Make data base, printed on Tue Jun 28 15:29:17 2022
+>>>>>>> fbbf4a867 (more pr feedback)
 
 # Variables
 
@@ -16,11 +20,17 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # automatic
 ?F = $(notdir $?)
 # environment
+<<<<<<< HEAD
 AWS_SECRET_ACCESS_KEY = TSqr3CFXjrvmoLWl+Ne6HwfZnaiBarklKDcvHV6S
 # environment
 ELECTRON_NO_ATTACH_CONSOLE = 1
 # environment
 ISENGARD_PRODUCTION_ACCOUNT = false
+=======
+ELECTRON_NO_ATTACH_CONSOLE = 1
+# environment
+VSCODE_LOG_NATIVE = false
+>>>>>>> fbbf4a867 (more pr feedback)
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # automatic
@@ -38,10 +48,16 @@ _ = /usr/bin/make
 # makefile
 MAKEFILE_LIST := 
 # environment
+<<<<<<< HEAD
+=======
+VSCODE_VERBOSE_LOGGING = true
+# environment
+>>>>>>> fbbf4a867 (more pr feedback)
 __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 P9K_SSH = 0
 # environment
+<<<<<<< HEAD
 VSCODE_CWD = /Users/davidlm/Documents/aws-sdk/botocore
 # environment
 PATH = /Users/davidlm/Documents/aws-sdk/botocore/env/bin:/Users/davidlm/.pyenv/shims:/bin:/Users/davidlm/.toolbox/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
@@ -49,15 +65,35 @@ PATH = /Users/davidlm/Documents/aws-sdk/botocore/env/bin:/Users/davidlm/.pyenv/s
 LSCOLORS = Gxfxcxdxbxegedabagacad
 # environment
 VIRTUAL_ENV = /Users/davidlm/Documents/aws-sdk/botocore/env
+=======
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/04/85rbljqn4qj35qtxc4m650hm0000gr/T/vscode-ipc-38f45fe0-2093-4edf-b3ec-0735c08da2bb.sock
+# environment
+VSCODE_CWD = /Users/davidlm/Documents/aws-sdk/botocore
+# environment
+PATH = /Users/davidlm/.pyenv/shims:/bin:/Users/davidlm/.toolbox/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# environment
+LSCOLORS = Gxfxcxdxbxegedabagacad
+# environment
+VSCODE_LOG_STACK = false
+>>>>>>> fbbf4a867 (more pr feedback)
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
+<<<<<<< HEAD
 SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.nCyuiKFBBr/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
+=======
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.sFvZvU5yeQ/Listeners
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+>>>>>>> fbbf4a867 (more pr feedback)
 PWD = /Users/davidlm/Documents/aws-sdk/botocore
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = undefined
@@ -72,7 +108,11 @@ MAKEFILEPATH = $(shell /usr/bin/xcode-select -print-path 2>/dev/null || echo /De
 # environment
 VSCODE_CLI = 1
 # environment
+<<<<<<< HEAD
 VSCODE_CODE_CACHE_PATH = /Users/davidlm/Library/Application Support/Code/CachedData/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9
+=======
+VSCODE_CODE_CACHE_PATH = /Users/davidlm/Library/Application Support/Code/CachedData/30d9c6cd9483b2cc586687151bcbcd635f373630
+>>>>>>> fbbf4a867 (more pr feedback)
 # environment
 LOGNAME = davidlm
 # environment
@@ -102,13 +142,20 @@ USER = davidlm
 # default
 MAKECMDGOALS := all
 # environment
+<<<<<<< HEAD
 TERM_SESSION_ID = w0t1p0:0E7049E6-41D3-45A8-82D1-8C79FABDB6CE
+=======
+TERM_SESSION_ID = w0t0p0:B80DDAFD-E9D5-43EA-BD46-51DD5D2E319E
+>>>>>>> fbbf4a867 (more pr feedback)
 # environment
 LESS = -R
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
+<<<<<<< HEAD
 # environment
 AWS_ACCESS_KEY_ID = ASIA6CAFY7XCBHBNOFEE
+=======
+>>>>>>> fbbf4a867 (more pr feedback)
 # default
 MAKE_COMMAND := /Library/Developer/CommandLineTools/usr/bin/make
 # environment
@@ -120,9 +167,13 @@ TMPDIR = /var/folders/04/85rbljqn4qj35qtxc4m650hm0000gr/T/
 # automatic
 *F = $(notdir $*)
 # environment
+<<<<<<< HEAD
 VSCODE_IPC_HOOK = /Users/davidlm/Library/Application Support/Code/1.69.0-main.sock
 # environment
 MallocNanoZone = 0
+=======
+VSCODE_IPC_HOOK = /Users/davidlm/Library/Application Support/Code/1.68.1-main.sock
+>>>>>>> fbbf4a867 (more pr feedback)
 # makefile
 MAKEFLAGS = Rrqp
 # environment
@@ -130,6 +181,7 @@ MFLAGS = -Rrqp
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
 # environment
+<<<<<<< HEAD
 TERM_PROGRAM_VERSION = 3.4.16
 # environment
 XPC_SERVICE_NAME = application.com.microsoft.VSCode.6330909.6330915.5BE23AA5-70EB-4B3C-AD3B-82CCC8CD2070
@@ -137,12 +189,23 @@ XPC_SERVICE_NAME = application.com.microsoft.VSCode.6330909.6330915.5BE23AA5-70E
 AWS_SESSION_TOKEN = IQoJb3JpZ2luX2VjEBEaCXVzLWVhc3QtMSJIMEYCIQDRSge13eRYdu67qbZV2X2iMIPpAXLwlrA6bsxIjYq7/QIhAJ4cFfxQNb6xc1et7+vric3XgZD64VV6cbeNCO0B027gKp0CCEoQABoMOTY2Mzc5NzY1MTg4IgxDf35pbdZ+oqy5ACIq+gGM54+/uu3D/1mHmm9/+NXoBzC0YoBSR0PjFhfWjfTfHeFkvW3WNkabc4IRwyOrlSze0GgwOR1hQVeCk4cdSNOjUFNbShs8sSj8SWj0HwBMdAmejNEFpYEaEhtng/MHlo70hdjsEGncsytBKA9M6v7qkYHJTFhi7gr4UcPbgUsC3WMkLc5CSdPP7kDwmBtl9zyvmt6oEP7RVTKAWvBSsnu/uTsL2jCyHc0YXgwcfJAEsx95CTDi6RGJDtIz/MIDK6J7UF+UxrmJbGz7GDGcsJxog2Blo0ir1JmaJyg97ar086UkjR3BleCknrG2YgNg9WwJBfB7zfcZhQdyMJqosZYGOpwBlSmtZZ/VY9LAONyTNFWvZr3aw3pQRq1p/gRfXBmD3mxrlwIPiIdhNoTgA+hmBdrvyXBbLzRknkJ0j4S3aDqgLhNlx9OtxEO78i6g/oXJs/403WQZfpHOo1Roa65bPDDthHBFlGP/XOS5XvSDWO++81xQcWVW0oN+m719oWAb0kfrgT0sS8ecwn198WpTlph1C/Kmex5IsA6NXKUg
 # environment
 LC_TERMINAL_VERSION = 3.4.16
+=======
+TERM_PROGRAM_VERSION = 3.4.15
+# environment
+XPC_SERVICE_NAME = application.com.microsoft.VSCode.4668821.4668827.D2307223-4742-4DF0-8D48-0F8BEFDC92D4
+# environment
+LC_TERMINAL_VERSION = 3.4.15
+>>>>>>> fbbf4a867 (more pr feedback)
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # automatic
 +F = $(notdir $+)
 # environment
+<<<<<<< HEAD
 ITERM_SESSION_ID = w0t1p0:0E7049E6-41D3-45A8-82D1-8C79FABDB6CE
+=======
+ITERM_SESSION_ID = w0t0p0:B80DDAFD-E9D5-43EA-BD46-51DD5D2E319E
+>>>>>>> fbbf4a867 (more pr feedback)
 # environment
 COLORFGBG = 7;0
 # environment
@@ -174,11 +237,19 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
+<<<<<<< HEAD
 _P9K_TTY = /dev/ttys004
 # environment
 VSCODE_PID = 4271
 # variable set hash-table stats:
 # Load=83/1024=8%, Rehash=0, Collisions=5/104=5%
+=======
+_P9K_TTY = /dev/ttys000
+# environment
+VSCODE_PID = 20326
+# variable set hash-table stats:
+# Load=82/1024=8%, Rehash=0, Collisions=4/103=4%
+>>>>>>> fbbf4a867 (more pr feedback)
 
 # Pattern-specific Variable Values
 
@@ -186,9 +257,15 @@ VSCODE_PID = 4271
 
 # Directories
 
+<<<<<<< HEAD
 # . (device 16777221, inode 1348677): 39 files, no impossibilities.
 
 # 39 files, no impossibilities in 1 directories.
+=======
+# . (device 16777221, inode 1348677): 40 files, no impossibilities.
+
+# 40 files, no impossibilities in 1 directories.
+>>>>>>> fbbf4a867 (more pr feedback)
 
 # Implicit Rules
 
@@ -260,7 +337,11 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
+<<<<<<< HEAD
 # Finished Make data base on Mon Jul 11 13:18:37 2022
+=======
+# Finished Make data base on Tue Jun 28 15:29:17 2022
+>>>>>>> fbbf4a867 (more pr feedback)
 
  
 make: *** No rule to make target `all'.  Stop.

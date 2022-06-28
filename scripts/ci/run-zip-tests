@@ -34,16 +34,6 @@ def run(command):
     return check_call(command, shell=True)
 
 
-def process_args(args):
-    runner = args.test_runner
-    test_args = ""
-    if args.import_mode_append:
-        test_args += "--import-mode=append "
-    dirs = " ".join(args.test_dirs)
-
-    return runner, test_args, dirs
-
-
 def check_state():
     zip_loader = isinstance(botocore.__loader__, zipimport.zipimporter)
     print(f'loader: {botocore.__loader__}')
@@ -55,6 +45,8 @@ def check_state():
     if not all(zipped_state):
         print("Botocore is not loaded in a zipped context")
         print(os.environ['GITHUB_WORKSPACE'])
+        print(os.environ['PYTHONPATH'])
+        print(os.getcwd())
         print(os.listdir())
         sys.exit(1)
 

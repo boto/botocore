@@ -104,11 +104,11 @@ which don't represent the actual service api.
 import logging
 import os
 import pathlib
-import sys
 from zipfile import is_zipfile
 
-# python < 3.9 botocore will not support zips
-if sys.version_info < (3, 9):
+try:
+    from zipfile import Path as ZipPath
+except ImportError:
 
     class ZipPath:
         def __init__(self, path):
@@ -117,8 +117,6 @@ if sys.version_info < (3, 9):
                 "is not supported in python < 3.9"
             )
 
-else:
-    from zipfile import Path as ZipPath
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
@@ -180,8 +178,6 @@ class JSONFileLoader:
             file_path = _create_path(file_path)
 
         for ext in _JSON_DECOMPRESSION_METHODS:
-            # pathlib.Path.with_suffix would be useful here
-            # but ZipPath does not have anything comparable
             path = file_path.parent.joinpath(f'{file_path.name}{ext}')
             if path.is_file():
                 return True
@@ -200,7 +196,7 @@ class JSONFileLoader:
         logger.debug("Loading JSON file: %s", full_path)
         return json.loads(payload, object_pairs_hook=OrderedDict)
 
-    def load_file(self, path_obj):
+    def load_file(self, file_path):
         """Attempt to load the file path.
 
         :type file_path: str / ZipPath / pathlib.Path
@@ -210,13 +206,11 @@ class JSONFileLoader:
         :return: The loaded data if it exists, otherwise None.
 
         """
-        if isinstance(path_obj, str):
-            path_obj = _create_path(path_obj)
+        if isinstance(file_path, str):
+            file_path = _create_path(file_path)
 
         for ext in _JSON_DECOMPRESSION_METHODS:
-            # pathlib.Path.with_suffix would be useful here
-            # but ZipPath does not have anything comparable
-            with_ext = path_obj.parent.joinpath(f'{path_obj.name}{ext}')
+            with_ext = file_path.parent.joinpath(f'{file_path.name}{ext}')
             data = self._load_file(with_ext, ext)
             if data is not None:
                 return data
@@ -280,9 +274,8 @@ class _SearchPathList(list):
     ALLOWED_TYPES = (str, ZipPath, pathlib.Path)
 
     def _mutate_path_string(self, __object):
-        """Update a string path to ZipPath or pathlib.Path and return it.
-        If its already one of those two types, do nothing to it and return it.
-        If its not one of those three, raise a TypeError.
+        """Validate object type and convert any strings to an appropriate
+        ZipPath or pathlib.Path.
 
         :type __object: object
         :param __object: An object reperesting a path to a directory in botocore
@@ -401,12 +394,9 @@ class Loader:
                 if path_obj.is_dir()
             ]
             for service_path in possible_services:
-                full_load_paths = [
-                    path_obj.joinpath(type_name)
-                    for path_obj in service_path.iterdir()
-                ]
-                for path in full_load_paths:
-                    if self.file_loader.exists(path):
+                for path in service_path.iterdir():
+                    full_load_path = path.joinpath(type_name)
+                    if self.file_loader.exists(full_load_path):
                         services.add(service_path.name)
                         break
         return sorted(services)
