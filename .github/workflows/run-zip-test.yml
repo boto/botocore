@@ -26,7 +26,7 @@ jobs:
       - name: Set path seperator for windows
         if: matrix.os == 'windows-latest'
         run: |
-          echo "PATH_SEPERATOR=\" >> $GITHUB_ENV
+          echo "PATH_SEPERATOR=\\" >> $GITHUB_ENV
       - name: Set path seperator for ubuntu/mac
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
         run: |
