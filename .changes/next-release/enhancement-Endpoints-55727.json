@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "Endpoints",
-  "description": "Deprecation warning added for old endpoint format (boto/botocore`#2705 <https://github.com/boto/botocore/issues/2705>`__)."
-}
