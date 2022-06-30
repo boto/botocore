@@ -257,13 +257,16 @@ def _create_path(path):
     the path to a file or subdirectory
 
     """
-    parts = path.split(os.sep)
-    new_path = os.sep
+    path_obj = pathlib.Path(path)
+    resolved_path = path_obj.resolve()
+    parts = resolved_path.parts
+    new_path = ''
     while len(parts) > 0:
-        new_path = os.path.join(new_path, parts.pop(0))
+        new_path = os.path.join(new_path, parts[0])
+        parts = parts[1:]
         if is_zipfile(new_path):
             return BotoZipPath(new_path).joinpath(*parts)
-    return pathlib.Path(path)
+    return resolved_path
 
 
 class BotoZipPath(ZipPath):
@@ -367,7 +370,6 @@ class Loader:
         self._extras_types = []
         if include_default_extras:
             self._extras_types.extend(self.BUILTIN_EXTRAS_TYPES)
-
         self._extras_processor = ExtrasProcessor()
 
     @property
@@ -512,7 +514,9 @@ class Loader:
             api_version = self.determine_latest_version(
                 service_name, type_name
             )
-        full_path = os.path.join(service_name, api_version, type_name)
+        full_path = os.path.join(
+            service_name, api_version, type_name
+        )  # ec2\\2014-01-01\\service-2
         model = self.load_data(full_path)
 
         # Load in all the extras
@@ -563,7 +567,8 @@ class Loader:
             if path.is_dir():
                 full_path = path
                 if name is not None:
-                    full_path = path.joinpath(name)
+                    name_parts = name.split(os.sep)
+                    full_path = path.joinpath(*name_parts)
                 if not must_exist:
                     yield full_path
                 else:

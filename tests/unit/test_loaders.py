@@ -191,7 +191,7 @@ class TestLoader(BaseEnvVar):
     def test_can_add_to_search_path(self):
         loader = Loader()
         loader.search_paths.append('mypath')
-        self.assertIn(pathlib.Path('mypath'), loader.search_paths)
+        self.assertIn(pathlib.Path('mypath').resolve(), loader.search_paths)
 
     def test_can_initialize_with_search_paths(self):
         loader = Loader(extra_search_paths=['foo', 'bar'])
@@ -201,8 +201,8 @@ class TestLoader(BaseEnvVar):
         self.assertEqual(
             loader.search_paths,
             [
-                pathlib.Path('foo'),
-                pathlib.Path('bar'),
+                pathlib.Path('foo').resolve(),
+                pathlib.Path('bar').resolve(),
                 loader.CUSTOMER_DATA_PATH,
                 loader.BUILTIN_DATA_PATH,
             ],
@@ -305,9 +305,9 @@ class TestLoader(BaseEnvVar):
     def test_create_loader_parses_data_path(self):
         search_path = os.pathsep.join(['foo', 'bar', 'baz'])
         loader = create_loader(search_path)
-        self.assertIn(pathlib.Path('foo'), loader.search_paths)
-        self.assertIn(pathlib.Path('bar'), loader.search_paths)
-        self.assertIn(pathlib.Path('baz'), loader.search_paths)
+        self.assertIn(pathlib.Path('foo').resolve(), loader.search_paths)
+        self.assertIn(pathlib.Path('bar').resolve(), loader.search_paths)
+        self.assertIn(pathlib.Path('baz').resolve(), loader.search_paths)
 
     @pytest.mark.skipif(
         sys.version_info >= (3, 9), reason="Python version >= 3.9"
@@ -322,10 +322,6 @@ class TestLoader(BaseEnvVar):
     )
     def test_zip_path_created(self):
         loader = create_loader(self.zip_search_path)
-        self.assertIn(
-            self.zip_search_path + os.sep,
-            [str(path) for path in loader.search_paths],
-        )
         zip_path = BotoZipPath(self.zip_path).joinpath('foo')
         # two identical BotoZipPath objects do not 'equal' each other
         matching_zips = [
@@ -439,7 +435,9 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
-        base_path = pathlib.Path('datapath', 'myservice', '2015-03-01')
+        base_path = pathlib.Path(
+            'datapath', 'myservice', '2015-03-01'
+        ).resolve()
         expected_call_args = [
             base_path.joinpath('service-2'),
             base_path.joinpath('service-2.sdk-extras'),
@@ -502,7 +500,9 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
-        base_path = pathlib.Path('datapath', 'myservice', '2015-03-01')
+        base_path = pathlib.Path(
+            'datapath', 'myservice', '2015-03-01'
+        ).resolve()
         expected_call_args = [
             base_path.joinpath('service-2'),
             base_path.joinpath('service-2.sdk-extras'),
