@@ -80,7 +80,6 @@ def requires_crt(reason=None):
 
 
 def skip_if_lt_39(func):
-    # breakpoint()
     def decorator(*args, **kwargs):
 
         if sys.version_info < (3, 9):

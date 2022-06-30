@@ -345,6 +345,22 @@ class TestLoader(BaseEnvVar):
     @pytest.mark.skipif(
         sys.version_info < (3, 9), reason="Python version < 3.9"
     )
+    def test_can_load_relative_zip_path(self):
+        loader = Loader(
+            extra_search_paths=[
+                os.path.join('tests', 'unit', 'data', 'Archive.zip')
+            ],
+            include_default_search_paths=False,
+        )
+        self.assertEqual(len(loader.search_paths), 1)
+        self.assertIsInstance(loader.search_paths[0], BotoZipPath)
+        data = loader.load_data('foo')
+        self.assertEqual(len(data), 3)
+        self.assertTrue('test_key_1' in data)
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9), reason="Python version < 3.9"
+    )
     def test_zipped_data_not_found_raises_exception(self):
         loader = Loader(
             extra_search_paths=[self.zip_path],

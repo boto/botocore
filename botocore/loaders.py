@@ -514,9 +514,7 @@ class Loader:
             api_version = self.determine_latest_version(
                 service_name, type_name
             )
-        full_path = os.path.join(
-            service_name, api_version, type_name
-        )  # ec2\\2014-01-01\\service-2
+        full_path = os.path.join(service_name, api_version, type_name)
         model = self.load_data(full_path)
 
         # Load in all the extras
