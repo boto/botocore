@@ -1390,6 +1390,23 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_expired_credential_file_returns_none(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+                'aws_session_token': 'c',
+                'x_security_token_expires': '2022-07-03T16:24:39+09:00'
+            }
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds',
+            profile_name='default',
+            ini_parser=self.ini_parser
+        )
+        creds = provider.load()
+        self.assertIsNone(creds)
+
 
 class TestConfigFileProvider(BaseEnvVar):
     def setUp(self):
