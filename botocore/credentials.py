@@ -1291,6 +1291,8 @@ class SharedCredentialProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
 
+    TOKEN_EXPIRES_KEY = 'x_security_token_expires'
+
     def __init__(self, creds_filename, profile_name=None, ini_parser=None):
         self._creds_filename = creds_filename
         if profile_name is None:
@@ -1307,6 +1309,15 @@ class SharedCredentialProvider(CredentialProvider):
             return None
         if self._profile_name in available_creds:
             config = available_creds[self._profile_name]
+
+            expires = config.get(self.TOKEN_EXPIRES_KEY)
+            if expires is not None:
+                expires_at = datetime.datetime.fromisoformat(expires)
+
+                # Use alternative credential provider if shared credential has been expired
+                if datetime.datetime.now(tz=expires_at.tzinfo) > expires_at:
+                    return None
+
             if self.ACCESS_KEY in config:
                 logger.info(
                     "Found credentials in shared credentials file: %s",
