@@ -107,9 +107,11 @@ import pathlib
 import posixpath
 from zipfile import is_zipfile
 
-try:
+from botocore import BOTOCORE_ROOT, HAS_ZIP_SUPPORT
+
+if HAS_ZIP_SUPPORT:
     from zipfile import Path as ZipPath
-except ImportError:
+else:
 
     class ZipPath:
         def __init__(self, path):
@@ -119,7 +121,6 @@ except ImportError:
             )
 
 
-from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
@@ -261,7 +262,7 @@ def _create_path(path):
     resolved_path = path_obj.resolve()
     parts = resolved_path.parts
     new_path = ''
-    while len(parts) > 0:
+    while len(parts) > 0 and HAS_ZIP_SUPPORT:
         new_path = os.path.join(new_path, parts[0])
         parts = parts[1:]
         if is_zipfile(new_path):

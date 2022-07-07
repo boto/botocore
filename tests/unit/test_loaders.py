@@ -36,7 +36,7 @@ from botocore.loaders import (
     Loader,
     create_loader,
 )
-from tests import BaseEnvVar, mock, skip_if_lt_39
+from tests import BaseEnvVar, mock, requires_zip_support
 
 
 class TestJSONFileLoader(BaseEnvVar):
@@ -48,7 +48,7 @@ class TestJSONFileLoader(BaseEnvVar):
         self.compressed_file_path = self.data_path.joinpath('compressed')
         self._set_zip_vars()
 
-    @skip_if_lt_39
+    @requires_zip_support()
     def _set_zip_vars(self):
         self.zip_data_path = BotoZipPath(
             self.data_path.joinpath('Archive.zip')
@@ -315,7 +315,7 @@ class TestLoader(BaseEnvVar):
     def test_zips_not_suppored_python_lt_39(self):
         if not hasattr(zipfile, 'Path'):
             with self.assertRaises(RuntimeError):
-                create_loader(self.zip_search_path)
+                BotoZipPath(self.zip_path)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 9), reason="Python version < 3.9"

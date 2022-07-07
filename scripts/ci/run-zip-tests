@@ -38,7 +38,7 @@ def check_state():
     zip_loader = isinstance(botocore.__loader__, zipimport.zipimporter)
     zip_file = os.path.join('botocore.zip', 'botocore', '__init__.py') in botocore.__file__
     zip_path = isinstance(botocore.BOTOCORE_ROOT, zipfile.Path)
-    zipped_state = (zip_loader, zip_file, zip_path)
+    zipped_state = (zip_loader, zip_file, zip_path, botocore.HAS_ZIP_SUPPORT)
     if not all(zipped_state):
         print("Botocore is not loaded in a zipped context")
         sys.exit(1)

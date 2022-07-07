@@ -30,6 +30,7 @@ from unittest import mock
 
 from dateutil.tz import tzlocal
 
+import botocore
 import botocore.loaders
 import botocore.session
 from botocore import credentials, utils
@@ -79,13 +80,11 @@ def requires_crt(reason=None):
     return decorator
 
 
-def skip_if_lt_39(func):
-    def decorator(*args, **kwargs):
+def requires_zip_support():
+    reason = "Test requires zip dependencies available in Python 3.9+"
 
-        if sys.version_info < (3, 9):
-            pass
-        else:
-            func(*args, **kwargs)
+    def decorator(func):
+        return unittest.skipIf(not botocore.HAS_ZIP_SUPPORT, reason)(func)
 
     return decorator
 

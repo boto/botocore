@@ -20,12 +20,15 @@ import re
 __version__ = '1.27.30'
 
 try:
-    # only available in python 3.9+
+    # These imports are only supported in Python 3.9+
     from importlib.resources import files
+
+    HAS_ZIP_SUPPORT = True
 
     BOTOCORE_ROOT = files('botocore')
 except ImportError:
 
+    HAS_ZIP_SUPPORT = False
     BOTOCORE_ROOT = pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
 
 
