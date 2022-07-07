@@ -359,10 +359,16 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         # Setup the config file with the profile we'll be using.
         config = (
             '[profile assume]\n'
+            'aws_access_key_id = %s\n'
+            'aws_secret_access_key = %s\n'
             'role_arn = %s\n'
             'credential_source = Environment\n'
         )
-        config = config % role['Arn']
+        config = config % (
+            user_creds['AccessKeyId'],
+            user_creds['SecretAccessKey'],
+            role['Arn'],
+        )
         with open(self.config_file, 'w') as f:
             f.write(config)
 
@@ -377,7 +383,4 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         # file and add the expected credentials since we're using the
         # environment as our credential source.
         os.environ['AWS_CONFIG_FILE'] = self.config_file
-        os.environ['AWS_SECRET_ACCESS_KEY'] = user_creds['SecretAccessKey']
-        os.environ['AWS_ACCESS_KEY_ID'] = user_creds['AccessKeyId']
-
         self.assert_s3_read_only_session(Session(profile='assume'))
