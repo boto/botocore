@@ -25,8 +25,9 @@ S3_READ_POLICY_ARN = 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
 
 
 class TestCredentialPrecedence(BaseEnvVar):
+
     def setUp(self):
-        super().setUp()
+        super(TestCredentialPrecedence, self).setUp()
 
         # Set the config file to something that doesn't exist so
         # that we don't accidentally load a config.
@@ -40,11 +41,9 @@ class TestCredentialPrecedence(BaseEnvVar):
         """
         kwargs['session_vars'] = {
             'credentials_file': (
-                None,
-                None,
+                None, None,
                 os.path.join(os.path.dirname(__file__), 'test-credentials'),
-                None,
-            )
+                None)
         }
 
         return Session(*args, **kwargs)
@@ -72,8 +71,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         )
 
         credentials_cls.assert_called_with(
-            access_key='code', secret_key='code-secret', token=mock.ANY
-        )
+            access_key='code', secret_key='code-secret', token=mock.ANY)
 
     def test_profile_env_vs_code(self):
         # If the profile is set both by the env var and by code,
@@ -97,8 +95,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         )
 
         credentials_cls.assert_called_with(
-            access_key='code', secret_key='code-secret', token=mock.ANY
-        )
+            access_key='code', secret_key='code-secret', token=mock.ANY)
 
     def test_access_secret_env_vs_profile_code(self):
         # If access/secret keys are set in the environment, but then a
@@ -119,11 +116,9 @@ class TestCredentialPrecedence(BaseEnvVar):
 
     def test_honors_aws_shared_credentials_file_env_var(self):
         with temporary_file('w') as f:
-            f.write(
-                '[default]\n'
-                'aws_access_key_id=custom1\n'
-                'aws_secret_access_key=custom2\n'
-            )
+            f.write('[default]\n'
+                    'aws_access_key_id=custom1\n'
+                    'aws_secret_access_key=custom2\n')
             f.flush()
             os.environ['AWS_SHARED_CREDENTIALS_FILE'] = f.name
             s = Session()
@@ -137,7 +132,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
     def setUp(self):
         self.env_original = os.environ.copy()
         self.environ_copy = os.environ.copy()
-        super().setUp()
+        super(TestAssumeRoleCredentials, self).setUp()
         os.environ = self.environ_copy
         # The tests rely on manipulating AWS_CONFIG_FILE,
         # but we also need to make sure we don't accidentally
@@ -157,14 +152,16 @@ class TestAssumeRoleCredentials(BaseEnvVar):
             "Statement": [
                 {
                     "Effect": "Allow",
-                    "Principal": {"AWS": "arn:aws:iam::%s:root" % account_id},
-                    "Action": "sts:AssumeRole",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::%s:root" % account_id
+                    },
+                    "Action": "sts:AssumeRole"
                 }
-            ],
+            ]
         }
 
     def tearDown(self):
-        super().tearDown()
+        super(TestAssumeRoleCredentials, self).tearDown()
         shutil.rmtree(self.tempdir)
         os.environ = self.env_original.copy()
 
@@ -174,15 +171,15 @@ class TestAssumeRoleCredentials(BaseEnvVar):
     def create_role(self, policy_document, policy_arn=None):
         name = self.random_name()
         response = self.iam.create_role(
-            RoleName=name, AssumeRolePolicyDocument=json.dumps(policy_document)
+            RoleName=name,
+            AssumeRolePolicyDocument=json.dumps(policy_document)
         )
         self.addCleanup(self.iam.delete_role, RoleName=name)
         if policy_arn:
             self.iam.attach_role_policy(RoleName=name, PolicyArn=policy_arn)
             self.addCleanup(
-                self.iam.detach_role_policy,
-                RoleName=name,
-                PolicyArn=policy_arn,
+                self.iam.detach_role_policy, RoleName=name,
+                PolicyArn=policy_arn
             )
         return response['Role']
 
@@ -192,9 +189,13 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         self.addCleanup(self.iam.delete_user, UserName=name)
 
         for arn in policy_arns:
-            self.iam.attach_user_policy(UserName=name, PolicyArn=arn)
+            self.iam.attach_user_policy(
+                UserName=name,
+                PolicyArn=arn
+            )
             self.addCleanup(
-                self.iam.detach_user_policy, UserName=name, PolicyArn=arn
+                self.iam.detach_user_policy,
+                UserName=name, PolicyArn=arn
             )
 
         return user
@@ -203,40 +204,28 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         creds = self.iam.create_access_key(UserName=user_name)['AccessKey']
         self.addCleanup(
             self.iam.delete_access_key,
-            UserName=user_name,
-            AccessKeyId=creds['AccessKeyId'],
+            UserName=user_name, AccessKeyId=creds['AccessKeyId']
         )
         return creds
 
-    def wait_for_assume_role(
-        self,
-        role_arn,
-        access_key,
-        secret_key,
-        token=None,
-        attempts=30,
-        delay=10,
-        success_delay=1,
-        num_success=4,
-    ):
+    def wait_for_assume_role(self, role_arn, access_key, secret_key,
+                             token=None, attempts=30, delay=10,
+                             success_delay=1,
+                             num_success=4):
         for _ in range(num_success):
             creds = self._wait_for_assume_role(
-                role_arn, access_key, secret_key, token, attempts, delay
-            )
+                role_arn, access_key, secret_key, token, attempts, delay)
             time.sleep(success_delay)
         return creds
 
-    def _wait_for_assume_role(
-        self, role_arn, access_key, secret_key, token, attempts, delay
-    ):
+    def _wait_for_assume_role(self, role_arn, access_key, secret_key,
+                              token, attempts, delay):
         # "Why not use the policy simulator?" you might ask. The answer is
         # that the policy simulator will return success far before you can
         # actually make the calls.
         client = self.parent_session.create_client(
-            'sts',
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            aws_session_token=token,
+            'sts', aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key, aws_session_token=token
         )
         attempts_remaining = attempts
         role_session_name = random_chars(10)
@@ -244,8 +233,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
             attempts_remaining -= 1
             try:
                 result = client.assume_role(
-                    RoleArn=role_arn, RoleSessionName=role_session_name
-                )
+                    RoleArn=role_arn, RoleSessionName=role_session_name)
                 return result['Credentials']
             except ClientError as e:
                 code = e.response.get('Error', {}).get('Code')
@@ -263,13 +251,14 @@ class TestAssumeRoleCredentials(BaseEnvVar):
                 {
                     "Effect": "Allow",
                     "Resource": role_arn,
-                    "Action": "sts:AssumeRole",
+                    "Action": "sts:AssumeRole"
                 }
-            ],
+            ]
         }
         name = self.random_name()
         response = self.iam.create_policy(
-            PolicyName=name, PolicyDocument=json.dumps(policy_document)
+            PolicyName=name,
+            PolicyDocument=json.dumps(policy_document)
         )
         self.addCleanup(
             self.iam.delete_policy, PolicyArn=response['Policy']['Arn']
@@ -320,10 +309,8 @@ class TestAssumeRoleCredentials(BaseEnvVar):
             'role_arn = %s\n'
         )
         config = config % (
-            user_creds['AccessKeyId'],
-            user_creds['SecretAccessKey'],
-            middle_role['Arn'],
-            final_role['Arn'],
+            user_creds['AccessKeyId'], user_creds['SecretAccessKey'],
+            middle_role['Arn'], final_role['Arn']
         )
         with open(self.config_file, 'w') as f:
             f.write(config)
