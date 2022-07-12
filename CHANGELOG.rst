@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.28
+=======
+
+* api-change:``networkmanager``: This release adds general availability API support for AWS Cloud WAN.
+
+
 1.27.27
 =======
 
