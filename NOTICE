@@ -1,9 +1,9 @@
 Botocore
-Copyright 2012-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2012-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 ----
 
-Botocore includes a vendorized copy of the requests python library to ease installation.
+Botocore includes vendorized parts of the requests python library for backwards compatibility.
 
 Requests License
 ================
@@ -22,8 +22,7 @@ Copyright 2013 Kenneth Reitz
    See the License for the specific language governing permissions and
    limitations under the License.
 
-
-The requests library also includes some vendorized python libraries to ease installation.
+Botocore includes vendorized parts of the urllib3 library for backwards compatibility.
 
 Urllib3 License
 ===============
@@ -49,38 +48,13 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
-Chardet License
-===============
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA
-
 Bundle of CA Root Certificates
 ==============================
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+***** BEGIN LICENSE BLOCK *****
+This Source Code Form is subject to the terms of the
+Mozilla Public License, v. 2.0. If a copy of the MPL
+was not distributed with this file, You can obtain
+one at http://mozilla.org/MPL/2.0/.
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301
+***** END LICENSE BLOCK *****
