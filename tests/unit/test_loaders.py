@@ -168,6 +168,60 @@ def test_cant_add_wrong_type_to_search_path(bad_type):
         loader.search_paths.append(bad_type)
 
 
+@pytest.mark.parametrize(
+    "file_name,expected_unicode",
+    [
+        ("ar_SA", "\u0639\u0628\u062f \u0627\u0644\u0642\u0627\u062f\u0631"),
+        ("az_AZ", "\u0130nqilab"),
+        ("bg_BG", "\u041c\u0430\u0440\u0442\u0435\u043d"),
+        ("bn_BD", "\u0906\u0936\u0932\u0924\u093e"),
+        ("cs_CZ", "B\u0159etislav"),
+        ("da_DK", "Asbj\u00f8rn"),
+        ("de_CH", "K\u00e4ru"),
+        ("de_DE", "Sch\u00e4fer"),
+        ("el_GR", "\u039d\u03b5\u03ba\u03c4\u03b1\u03c1\u03af\u03b1"),
+        ("es", "Mar\u00eda Luisa"),
+        ("fa_IR", "\u0645\u062d\u0645\u062f \u0637\u0627\u0647\u0627"),
+        ("fr_CA", "J\u00e9r\u00f4me"),
+        ("he_IL", "\u05d9\u05e6\u05d7\u05e7"),
+        ("hi_IN", "\u0938\u0941\u0932\u092d\u093e"),
+        ("hr_HR", "Aljo\u0161a"),
+        ("hu_HU", "\u00c1brah\u00e1m"),
+        ("hy_AM", "\u054c\u0565\u0562\u0565\u056f\u0561"),
+        ("ja_JP", "\u62d3\u771f"),
+        ("ka_GE", "\u10d4\u10d5\u10d2\u10d4\u10dc\u10d8\u10d0"),
+        ("ko_KR", "\ubcf4\ub78c"),
+        ("ne_NP", "\u0927\u093f\u0930\u091c"),
+        ("no_NO", "J\u00f8rgen"),
+        ("or_IN", "\u0b36\u0b4d\u0b30\u0b40\u0b2e\u0b24\u0b40"),
+        ("pt_PT", "\u00c2ngelo"),
+        ("ru_RU", "\u041a\u043e\u043d\u0434\u0440\u0430\u0442\u0438\u0439"),
+        ("sk_SK", "Tom\u00e1\u0161"),
+        ("sl_SI", "Andra\u017e"),
+        ("sv_SE", "\u00c5sa"),
+        (
+            "ta_IN",
+            "\u0baa\u0bbe\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bb2\u0b95\u0bcd\u0bb7\u0bcd\u0bae\u0bbf",
+        ),
+        ("th_TH", "\u0e2a\u0e23\u0e32\u0e0d\u0e08\u0e34\u0e15\u0e15\u0e4c"),
+        ("th", "\u0e44\u0e0a\u0e22\u0e20\u0e1e"),
+        ("tr_TR", "\u00d6mar"),
+        ("uk_UA", "\u041b\u0435\u043e\u043d\u0442\u0456\u0439"),
+        ("vi_VN", "Tr\u00a3uc"),
+        ("zh_CN", "\u5f3a"),
+        ("zh_TW", "\u96c5\u60e0"),
+    ],
+)
+def test_load_different_locales(file_name, expected_unicode):
+    base_path = pathlib.Path(__file__).parent.joinpath('data', 'locales')
+    file_loader = JSONFileLoader()
+    data = file_loader.load_file(base_path.joinpath(file_name))
+    encoded = data['name'].encode('utf-8')
+    # it appears that pytest decodes unicode implicitly
+    expected_encoded = expected_unicode.encode('utf-8')
+    assert encoded == expected_encoded
+
+
 class TestLoader(BaseEnvVar):
     def setUp(self):
         super().setUp()
