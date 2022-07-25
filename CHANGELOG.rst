@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.37
+=======
+
+* api-change:``autoscaling``: Documentation update for Amazon EC2 Auto Scaling.
+
+
 1.27.36
 =======
 
