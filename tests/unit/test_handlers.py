@@ -1520,21 +1520,21 @@ class TestPrependToHost(unittest.TestCase):
     'environ, header_before, header_after',
     [
         ({'AWS_LAMBDA_FUNCTION_NAME': 'foo'}, {}, {}),
-        ({'_X_AMZ_TRACE_ID': 'bar'}, {}, {}),
+        ({'_X_AMZN_TRACE_ID': 'bar'}, {}, {}),
         (
-            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
+            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZN_TRACE_ID': 'bar'},
             {},
             {'X-Amzn-Trace-Id': 'bar'},
         ),
         (
-            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
+            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZN_TRACE_ID': 'bar'},
             {'X-Amzn-Trace-Id': 'fizz'},
             {'X-Amzn-Trace-Id': 'fizz'},
         ),
         (
             {
                 'AWS_LAMBDA_FUNCTION_NAME': 'foo',
-                '_X_AMZ_TRACE_ID': 'first\nsecond',
+                '_X_AMZN_TRACE_ID': 'first\nsecond',
             },
             {},
             {'X-Amzn-Trace-Id': 'first%0Asecond'},
