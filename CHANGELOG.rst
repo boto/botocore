@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.27.41
+=======
+
+* bugfix:Config: Obey _X_AMZN_TRACE_ID environment variable instead of _X_AMZ_TRACE_ID
+* api-change:``ec2``: Documentation updates for Amazon EC2.
+* api-change:``fsx``: Documentation updates for Amazon FSx
+* api-change:``shield``: AWS Shield Advanced now supports filtering for ListProtections and ListProtectionGroups.
+
+
 1.27.40
 =======
 
