@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.42
+=======
+
+* bugfix:TraceId: Rollback bugfix for obeying _X_AMZN_TRACE_ID env var
+
+
 1.27.41
 =======
 
