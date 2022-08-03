@@ -13,6 +13,7 @@
 import logging
 
 from botocore import waiter, xform_name
+from botocore.compat import urlsplit
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
@@ -107,6 +108,11 @@ class ClientCreator:
         responses = self._event_emitter.emit(
             'choose-service-name', service_name=service_name
         )
+        default_endpoint = (
+            '{service}.{region}.%s' % urlsplit(self._endpoint_url).netloc
+            if endpoint_url
+            else None
+        )
         service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
         cls = self._create_client_class(service_name, service_model)
@@ -117,6 +123,7 @@ class ClientCreator:
             self._endpoint_resolver,
             scoped_config,
             client_config,
+            default_endpoint,
             service_signing_name=service_model.metadata.get('signingName'),
             config_store=self._config_store,
         )
