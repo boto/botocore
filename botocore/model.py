@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from botocore.compat import OrderedDict
 from botocore.exceptions import (
@@ -84,6 +84,7 @@ class Shape:
         'retryable',
         'document',
         'union',
+        'contextParam',
     ]
     MAP_TYPE = OrderedDict
 
@@ -265,6 +266,14 @@ class StringShape(Shape):
     @CachedProperty
     def enum(self):
         return self.metadata.get('enum', [])
+
+
+StaticContextParameter = namedtuple(
+    'StaticContextParameter', ['name', 'value']
+)
+
+
+ContextParameter = namedtuple('ContextParameter', ['name', 'member_name'])
 
 
 class ServiceModel:
@@ -558,6 +567,29 @@ class OperationModel:
             for (name, shape) in input_shape.members.items()
             if 'idempotencyToken' in shape.metadata
             and shape.metadata['idempotencyToken']
+        ]
+
+    @CachedProperty
+    def static_context_parameters(self):
+        params = self._operation_model.get('staticContextParams', {})
+        return [
+            StaticContextParameter(name=name, value=props.get('value'))
+            for name, props in params.items()
+        ]
+
+    @CachedProperty
+    def context_parameters(self):
+        if not self.input_shape:
+            return []
+
+        return [
+            ContextParameter(
+                name=shape.metadata['contextParam']['name'],
+                member_name=name,
+            )
+            for name, shape in self.input_shape.members.items()
+            if 'contextParam' in shape.metadata
+            and 'name' in shape.metadata['contextParam']
         ]
 
     @CachedProperty
