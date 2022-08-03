@@ -1519,25 +1519,57 @@ class TestPrependToHost(unittest.TestCase):
 @pytest.mark.parametrize(
     'environ, header_before, header_after',
     [
-        ({'AWS_LAMBDA_FUNCTION_NAME': 'foo'}, {}, {}),
-        ({'_X_AMZ_TRACE_ID': 'bar'}, {}, {}),
+        ({}, {}, {}),
+        ({'AWS_LAMBDA_FUNCTION_NAME': 'some-function'}, {}, {}),
         (
-            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
+            {
+                '_X_AMZN_TRACE_ID': (
+                    'Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;'
+                    'Sampled=1;lineage=a87bd80c:0,68fd508a:5,c512fbe3:2'
+                )
+            },
             {},
-            {'X-Amzn-Trace-Id': 'bar'},
+            {},
         ),
         (
-            {'AWS_LAMBDA_FUNCTION_NAME': 'foo', '_X_AMZ_TRACE_ID': 'bar'},
-            {'X-Amzn-Trace-Id': 'fizz'},
-            {'X-Amzn-Trace-Id': 'fizz'},
+            {
+                'AWS_LAMBDA_FUNCTION_NAME': 'some-function',
+                '_X_AMZN_TRACE_ID': (
+                    'Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;'
+                    'Sampled=1;lineage=a87bd80c:0,68fd508a:5,c512fbe3:2'
+                ),
+            },
+            {},
+            {
+                'X-Amzn-Trace-Id': (
+                    'Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;'
+                    'Sampled=1;lineage=a87bd80c:0,68fd508a:5,c512fbe3:2'
+                )
+            },
+        ),
+        (
+            {
+                'AWS_LAMBDA_FUNCTION_NAME': 'some-function',
+                '_X_AMZN_TRACE_ID': 'EnvValue',
+            },
+            {'X-Amzn-Trace-Id': 'OriginalValue'},
+            {'X-Amzn-Trace-Id': 'OriginalValue'},
         ),
         (
             {
                 'AWS_LAMBDA_FUNCTION_NAME': 'foo',
-                '_X_AMZ_TRACE_ID': 'first\nsecond',
+                '_X_AMZN_TRACE_ID': 'first\nsecond',
             },
             {},
             {'X-Amzn-Trace-Id': 'first%0Asecond'},
+        ),
+        (
+            {
+                'AWS_LAMBDA_FUNCTION_NAME': 'foo',
+                '_X_AMZN_TRACE_ID': 'test123-=;:+&[]{}\"\'',
+            },
+            {},
+            {'X-Amzn-Trace-Id': 'test123-=;:+&[]{}\"\''},
         ),
     ],
 )
