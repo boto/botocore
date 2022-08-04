@@ -20,11 +20,16 @@ import logging
 import re
 from enum import Enum
 
+from botocore import xform_name
+from botocore.endpoint_provider import EndpointProvider
 from botocore.exceptions import (
     EndpointVariantError,
+    FailedEndpointProviderParameterResolution,
     NoRegionError,
+    UnknownEndpointResolutionBuiltInName,
     UnknownRegionError,
 )
+from botocore.utils import ArnParser, InvalidArnException, instance_cache
 
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
@@ -433,3 +438,198 @@ class EndpointResolverBuiltins(str, Enum):
     AWS_S3_DISABLE_MRAP = "AWS::S3::DisableMultiRegionAccessPoints"
     # Whether a custom endpoint has been configured (str)
     SDK_ENDPOINT = "SDK::Endpoint"
+
+
+class EndpointResolverv2:
+    """Resolves endpoints using a service's endpoint ruleset"""
+
+    def __init__(
+        self,
+        endpoint_ruleset_data,
+        partition_data,
+        service_model,
+        builtins,
+        client_context,
+    ):
+        self._provider = EndpointProvider(
+            ruleset_data=endpoint_ruleset_data,
+            partition_data=partition_data,
+        )
+        self._param_definitions = self._provider.ruleset.parameters
+        self._service_model = service_model
+        self._builtins = builtins
+        self._client_context = client_context
+        self._instance_cache = {}
+
+    def construct_endpoint(
+        self,
+        service_name,
+        region_name=None,
+        operation_name=None,
+        call_args=None,
+    ):
+        """Invokes the provider with params defined in the services ruleset
+
+        Named to implement the BaseEndpointResolver interface, but does not
+        actually return an Endpoint object, instead a dict with endpoint info.
+        """
+        if operation_name is None:
+            raise ValueError("operation_name argument is required")
+
+        if call_args is None:
+            call_args = {}
+
+        provider_params = self._get_provider_params(operation_name, call_args)
+        provider_v2_result = self._provider.resolve_endpoint(**provider_params)
+        return provider_v2_result
+
+    def _get_provider_params(self, operation_name, call_args):
+        """Resolve a value for each parameter defined in the service's ruleset
+
+        The resolution order for parameter values is:
+        1. Operation-specific static context values from the service definition
+        2. Operation-specific dynamic context values from API parameters
+        3. Client-specific context parameters
+        4. Built-in values such as region, FIPS usage, ...
+        5. The parameter's default value, if defined
+
+        If no value is found and the parameter is required,
+        FailedEndpointProviderParameterResolution is raised.
+        """
+        provider_params = {}
+        for param_name, param_def in self._param_definitions.items():
+            param_val = self._resolve_param_from_context(
+                param_name=param_name,
+                op_name=operation_name,
+                call_args=call_args,
+            )
+            if param_val is None and param_def.built_in is not None:
+                # Special rules apply for the AWS::S3::ForcePathStyle builtin
+                # to maintain backwards-compatible behavior that is not
+                # reflected in the S3 enpoints ruleset.
+                if (
+                    param_def.built_in
+                    == EndpointResolverBuiltins.AWS_S3_FORCE_PATH_STYLE
+                ):
+                    param_val = self._resolve_param_as_path_style_builtin(
+                        op_name=operation_name,
+                        call_args=call_args,
+                    )
+                else:
+                    param_val = self._resolve_param_as_builtin(
+                        builtin_name=param_def.built_in,
+                    )
+
+            if param_val is not None:
+                provider_params[param_name] = param_val
+            elif param_def.default is not None:
+                provider_params[param_name] = param_def.default
+            elif param_def.required:
+                raise FailedEndpointProviderParameterResolution(
+                    f"Cannot find value for parameter {param_name}"
+                )
+
+        return provider_params
+
+    def _resolve_param_from_context(self, param_name, op_name, call_args):
+        static = self._resolve_param_as_static_context_param(
+            param_name, op_name
+        )
+        if static is not None:
+            return static
+        dynamic = self._resolve_param_as_dynamic_context_param(
+            param_name, op_name, call_args
+        )
+        if dynamic is not None:
+            return dynamic
+        return self._resolve_param_as_client_context_param(param_name)
+
+    def _resolve_param_as_static_context_param(
+        self, param_name, operation_name
+    ):
+        static_ctx_params = self._get_static_context_params(operation_name)
+        return static_ctx_params.get(param_name)
+
+    def _resolve_param_as_dynamic_context_param(
+        self, param_name, operation_name, call_args
+    ):
+        dynamic_ctx_params = self._get_dynamic_context_params(operation_name)
+        if param_name in dynamic_ctx_params:
+            member_name = dynamic_ctx_params[param_name]
+            return call_args.get(member_name)
+
+    def _resolve_param_as_client_context_param(self, param_name):
+        client_ctx_params = self._get_client_context_params()
+        if param_name in client_ctx_params:
+            client_ctx_varname = client_ctx_params[param_name]
+            return self._client_context.get(client_ctx_varname)
+
+    def _resolve_param_as_builtin(self, builtin_name):
+        if builtin_name not in EndpointResolverBuiltins.__members__.values():
+            raise UnknownEndpointResolutionBuiltInName(name=builtin_name)
+        return self._builtins[builtin_name]
+
+    def _resolve_param_as_path_style_builtin(self, op_name, call_args):
+        # Accelerate is not compatible with path-style addresses
+        if self._builtins[EndpointResolverBuiltins.AWS_S3_ACCELERATE]:
+            return False
+
+        # In some situations the host will return AuthorizationHeaderMalformed
+        # when the signing region of a sigv4 request is not the bucket's
+        # region (which is likely unknown by the sender of this request).
+        # Avoid this by always using path style addressing.
+        if op_name == "GetBucketLocation":
+            return True
+
+        # If no special case applies, default to value set during client
+        # creation
+        default = self._builtins[
+            EndpointResolverBuiltins.AWS_S3_FORCE_PATH_STYLE
+        ]
+        bucket_name = call_args.get('Bucket')
+        if bucket_name is None:
+            return default
+
+        # botocore supports legacy buckets that break today's bucket naming
+        # rules. For backwards compatibility, legacy bucket names always
+        # use path style addressing.
+        if len(bucket_name) < 3 or bucket_name != bucket_name.lower():
+            return True
+
+        # All situations where the bucket name is an ARN are not compatible
+        # with path style addressing.
+        arn_parser = ArnParser()
+        if ':' in bucket_name:
+            try:
+                arn_parser.parse_arn(bucket_name)
+                return False
+            except InvalidArnException:
+                pass
+
+        return default
+
+    @instance_cache
+    def _get_static_context_params(self, operation_name):
+        """Mapping of param names to static param value for an operation"""
+        op_model = self._service_model.operation_model(operation_name)
+        return {
+            param.name: param.value
+            for param in op_model.static_context_parameters
+        }
+
+    @instance_cache
+    def _get_dynamic_context_params(self, operation_name):
+        """Mapping of param names to member names for an operation"""
+        op_model = self._service_model.operation_model(operation_name)
+        return {
+            param.name: param.member_name
+            for param in op_model.context_parameters
+        }
+
+    @instance_cache
+    def _get_client_context_params(self):
+        """Mapping of param names to client configuration variable"""
+        return {
+            param.name: xform_name(param.name)
+            for param in self._service_model.client_context_parameters
+        }

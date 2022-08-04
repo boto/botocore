@@ -810,3 +810,11 @@ class EndpointResolutionError(EndpointProviderError):
     """Error when input parameters resolve to an error rule"""
 
     fmt = '{msg}'
+
+
+class UnknownEndpointResolutionBuiltInName(BotoCoreError):
+    fmt = 'Unknown builtin variable name: {name}'
+
+
+class FailedEndpointProviderParameterResolution(BotoCoreError):
+    fmt = 'Could not resolve value for endpoint resolution parameter: {name}'
