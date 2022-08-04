@@ -102,11 +102,11 @@ def handle_service_name_alias(service_name, **kwargs):
 
 def add_recursion_detection_header(params, **kwargs):
     has_lambda_name = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ
-    trace_id = os.environ.get('_X_AMZ_TRACE_ID')
+    trace_id = os.environ.get('_X_AMZN_TRACE_ID')
     if has_lambda_name and trace_id:
         headers = params['headers']
         if 'X-Amzn-Trace-Id' not in headers:
-            headers['X-Amzn-Trace-Id'] = quote(trace_id)
+            headers['X-Amzn-Trace-Id'] = quote(trace_id, safe='-=;:+&[]{}"\',')
 
 
 def escape_xml_payload(params, **kwargs):
