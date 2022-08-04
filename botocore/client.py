@@ -112,6 +112,10 @@ class ClientCreator:
         )
         service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
+        endpoints_ruleset_data = self._load_service_endpoints_ruleset(
+            service_name, api_version
+        )
+        partition_data = self._loader.load_data('partitions')
         cls = self._create_client_class(service_name, service_model)
         region_name, client_config = self._normalize_fips_region(
             region_name, client_config
@@ -133,27 +137,32 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            endpoints_ruleset_data,
+            partition_data,
             auth_token,
         )
         service_client = cls(**client_args)
         self._register_retries(service_client)
-        self._register_eventbridge_events(
-            service_client, endpoint_bridge, endpoint_url
-        )
-        self._register_s3_events(
-            service_client,
-            endpoint_bridge,
-            endpoint_url,
-            client_config,
-            scoped_config,
-        )
-        self._register_s3_control_events(
-            service_client,
-            endpoint_bridge,
-            endpoint_url,
-            client_config,
-            scoped_config,
-        )
+
+        if client_args['endpoint_resolver_v2'] is None:
+            self._register_eventbridge_events(
+                service_client, endpoint_bridge, endpoint_url
+            )
+            self._register_s3_events(
+                service_client,
+                endpoint_bridge,
+                endpoint_url,
+                client_config,
+                scoped_config,
+            )
+            self._register_s3_control_events(
+                service_client,
+                endpoint_bridge,
+                endpoint_url,
+                client_config,
+                scoped_config,
+            )
+
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
@@ -208,6 +217,11 @@ class ClientCreator:
         )
         service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
+
+    def _load_service_endpoints_ruleset(self, service_name, api_version=None):
+        return self._loader.load_service_model(
+            service_name, 'endpoint-rule-set-1', api_version=api_version
+        )
 
     def _register_retries(self, client):
         retry_mode = client.meta.config.retries['mode']
@@ -458,6 +472,8 @@ class ClientCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
+        endpoints_ruleset_data,
+        partition_data,
         auth_token,
     ):
         args_creator = ClientArgsCreator(
@@ -478,6 +494,8 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            endpoints_ruleset_data,
+            partition_data,
             auth_token,
         )
 
@@ -827,9 +845,11 @@ class BaseClient:
         client_config,
         partition,
         exceptions_factory,
+        endpoint_resolver_v2,
     ):
         self._serializer = serializer
         self._endpoint = endpoint
+        self._endpoint_resolver_v2 = endpoint_resolver_v2
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
@@ -898,8 +918,50 @@ class BaseClient:
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
         }
+
+        if self._endpoint_resolver_v2 is None:
+            endpoint_url = self._endpoint.host
+            additional_headers = {}
+        else:
+            endpoint_info = self._endpoint_resolver_v2.construct_endpoint(
+                service_name=service_name,
+                operation_name=operation_name,
+                call_args=api_params,
+            )
+            endpoint_url = endpoint_info.url
+            additional_headers = {
+                # Multi-valued headers are not supported in botocore
+                header_key: header_values[0]
+                for header_key, header_values in endpoint_info.headers.items()
+            }
+            # Always use the highest-priority entry from authSchemes
+            ep_auth = endpoint_info.properties['authSchemes'][0]
+            auth_type = ep_auth['name']
+            if auth_type.startswith("sig"):
+                auth_type = auth_type[3:]
+            request_context['auth_type'] = auth_type
+            signing_context = request_context.get('signing', {})
+            if 'signingRegion' in ep_auth:
+                signing_context.update(region=ep_auth['signingRegion'])
+            elif 'signingRegionSet' in ep_auth:
+                # todo: can we handle lists of regions?
+                if len(ep_auth['signingRegionSet'][0]) > 0:
+                    signing_context.update(
+                        region=ep_auth['signingRegionSet'][0]
+                    )
+            if 'signingName' in ep_auth:
+                signing_context.update(signing_name=ep_auth['signingName'])
+            if signing_context:
+                request_context['signing'] = signing_context
+            # todo: handle "disableDoubleEncoding"
+            # https://code.amazon.com/packages/AwsDrSeps/commits/270160ff6b09fcb35bf70c775610792bafb35ab9#
+
         request_dict = self._convert_to_request_dict(
-            api_params, operation_model, context=request_context
+            api_params=api_params,
+            operation_model=operation_model,
+            endpoint_url=endpoint_url,
+            context=request_context,
+            headers=additional_headers,
         )
         resolve_checksum_context(request_dict, operation_model, api_params)
 
@@ -954,7 +1016,12 @@ class BaseClient:
             raise
 
     def _convert_to_request_dict(
-        self, api_params, operation_model, context=None
+        self,
+        api_params,
+        operation_model,
+        endpoint_url,
+        context=None,
+        headers=None,
     ):
         api_params = self._emit_api_params(
             api_params, operation_model, context
@@ -964,9 +1031,11 @@ class BaseClient:
         )
         if not self._client_config.inject_host_prefix:
             request_dict.pop('host_prefix', None)
+        if headers is not None:
+            request_dict['headers'].update(headers)
         prepare_request_dict(
             request_dict,
-            endpoint_url=self._endpoint.host,
+            endpoint_url=endpoint_url,
             user_agent=self._client_config.user_agent,
             context=context,
         )

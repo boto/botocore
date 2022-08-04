@@ -23,11 +23,12 @@ import socket
 import botocore.exceptions
 import botocore.parsers
 import botocore.serialize
-import botocore.utils
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
+from botocore.regions import EndpointResolverv2
 from botocore.signers import RequestSigner
+from botocore.utils import ensure_boolean
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,8 @@ class ClientArgsCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
+        endpoints_ruleset_data,
+        partition_data,
         auth_token=None,
     ):
         final_args = self.compute_client_args(
@@ -141,6 +144,40 @@ class ClientArgsCreator:
             protocol, parameter_validation
         )
         response_parser = botocore.parsers.create_parser(protocol)
+
+        if endpoints_ruleset_data is None:
+            endpoint_resolver_v2 = None
+        else:
+            # The legacy EndpointResolver is global to the session,
+            # EndpointResolverv2 is service-specific. builtins for
+            # EnpointResolverv2 must not be derived from the legacy endpoint
+            # resolver's output, including final_args, s3_config, ...
+            s3_config_raw = self.compute_s3_config(client_config) or {}
+            service_name_raw = service_model.endpoint_prefix
+            resolver_builtins = (
+                self.compute_endpoint_resolver_builtin_defaults(
+                    region_name=region_name,
+                    service_name=service_name_raw,
+                    s3_config=s3_config_raw,
+                    endpoint_bridge=endpoint_bridge,
+                    client_endpoint_url=endpoint_url,
+                    legacy_endpoint_url=endpoint.host,
+                )
+            )
+            # botocore does not support client context parameters generically
+            # for every service. Instead, the s3 config section entries are
+            # available as client context parameters. In future, endpoint
+            # rulesets of services other than S3 may require client context
+            # parameters.
+            client_context = s3_config_raw if service_name_raw == 's3' else {}
+            endpoint_resolver_v2 = EndpointResolverv2(
+                endpoint_ruleset_data=endpoints_ruleset_data,
+                partition_data=partition_data,
+                service_model=service_model,
+                builtins=resolver_builtins,
+                client_context=client_context,
+            )
+
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -152,6 +189,7 @@ class ClientArgsCreator:
             'client_config': new_config,
             'partition': partition,
             'exceptions_factory': self._exceptions_factory,
+            'endpoint_resolver_v2': endpoint_resolver_v2,
         }
 
     def compute_client_args(
@@ -172,7 +210,7 @@ class ClientArgsCreator:
         elif scoped_config:
             raw_value = scoped_config.get('parameter_validation')
             if raw_value is not None:
-                parameter_validation = botocore.utils.ensure_boolean(raw_value)
+                parameter_validation = ensure_boolean(raw_value)
 
         # Override the user agent if specified in the client config.
         user_agent = self._user_agent
