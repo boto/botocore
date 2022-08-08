@@ -1168,7 +1168,7 @@ class ArgumentGenerator:
                 if self._use_member_names:
                     return name
                 if shape.enum:
-                    return random.choice(shape.enum)
+                    return shape.enum[0]
                 return ''
             elif shape.type_name in ['integer', 'long']:
                 return 0
