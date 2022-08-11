@@ -85,6 +85,7 @@ class Shape:
         'document',
         'union',
         'contextParam',
+        'clientContextParams',
     ]
     MAP_TYPE = OrderedDict
 
@@ -275,6 +276,10 @@ StaticContextParameter = namedtuple(
 
 ContextParameter = namedtuple('ContextParameter', ['name', 'member_name'])
 
+ClientContextParameter = namedtuple(
+    'ClientContextParameter', ['name', 'type', 'documentation']
+)
+
 
 class ServiceModel:
     """
@@ -427,6 +432,18 @@ class ServiceModel:
             ):
                 return True
         return False
+
+    @CachedProperty
+    def client_context_parameters(self):
+        params = self._service_description.get('clientContextParams', {})
+        return [
+            ClientContextParameter(
+                name=param_name,
+                type=param_val['type'],
+                documentation=param_val['documentation'],
+            )
+            for param_name, param_val in params.items()
+        ]
 
     def _get_metadata_property(self, name):
         try:
