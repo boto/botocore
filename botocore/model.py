@@ -454,7 +454,7 @@ class ServiceModel:
             )
 
     # Signature version is one of the rare properties
-    # than can be modified so a CachedProperty is not used here.
+    # that can be modified so a CachedProperty is not used here.
 
     @property
     def signature_version(self):
