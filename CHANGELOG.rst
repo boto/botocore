@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.27.52
+=======
+
+* enhancement:AWSCRT: Upgrade awscrt version to 0.14.0
+* api-change:``cloudfront``: Adds Http 3 support to distributions
+* api-change:``identitystore``: Documentation updates to reflect service rename - AWS IAM Identity Center (successor to AWS Single Sign-On)
+* api-change:``sso``: Documentation updates to reflect service rename - AWS IAM Identity Center (successor to AWS Single Sign-On)
+* api-change:``wisdom``: This release introduces a new API PutFeedback that allows submitting feedback to Wisdom on content relevance.
+
+
 1.27.51
 =======
 
