@@ -1017,14 +1017,6 @@ class TestHandlers(BaseSessionTest):
         )
         self.assertEqual(response, 'v4')
 
-    def test_set_operation_specific_signer_s3v4(self):
-        signing_name = 's3'
-        context = {'auth_type': 'v4'}
-        response = handlers.set_operation_specific_signer(
-            context=context, signing_name=signing_name
-        )
-        self.assertEqual(response, 's3v4')
-
     def test_set_operation_specific_signer_v4_unsinged_payload(self):
         signing_name = 'myservice'
         context = {'auth_type': 'v4-unsigned-body'}
@@ -1042,6 +1034,18 @@ class TestHandlers(BaseSessionTest):
         )
         self.assertEqual(response, 's3v4')
         self.assertEqual(context.get('payload_signing_enabled'), False)
+
+
+@pytest.mark.parametrize(
+    'auth_type, expected_response', [('v4', 's3v4'), ('v4a', 's3v4a')]
+)
+def test_set_operation_specific_signer_s3v4(auth_type, expected_response):
+    signing_name = 's3'
+    context = {'auth_type': auth_type}
+    response = handlers.set_operation_specific_signer(
+        context=context, signing_name=signing_name
+    )
+    assert response == expected_response
 
 
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
