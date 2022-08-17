@@ -912,6 +912,7 @@ class BaseClient:
         if http.status_code >= 300:
             error_code = parsed_response.get("Error", {}).get("Code")
             error_class = self.exceptions.from_code(error_code)
+            parsed_response['Error']['Code'] = self._service_model.aws_query_compatible_error_code(error_code)
             raise error_class(parsed_response, operation_name)
         else:
             return parsed_response

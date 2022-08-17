@@ -21,6 +21,29 @@ class TestServiceId(unittest.TestCase):
     def test_hyphenize_lower_cases(self):
         self.assertEqual(model.ServiceId('MyService').hyphenize(), 'myservice')
 
+class TestAwsQueryCompatible(unittest.TestCase):
+    def setUp(self) -> None:
+        self.model = {
+            'metadata': {
+                'protocol': 'json',
+                'endpointPrefix': 'endpoint-prefix',
+                'serviceId': 'SomeService',
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {'StringShape': {'type': 'string'}},
+            'awsQueryCompatible': {'ServiceError': {'code': 'AWS.Query.ServiceError'}}
+        }
+        self.service_model = model.ServiceModel(self.model)
+
+    def test_aws_query_available(self):
+        self.assertTrue(self.service_model.aws_query_compatible)
+        self.assertEquals(self.service_model.aws_query_compatible.get('ServiceError').get('code'), 'AWS.Query.ServiceError')
+
+    def test_aws_query_compatible_error_code(self):
+        self.assertEquals(self.service_model.aws_query_compatible_error_code('ServiceError'), 'AWS.Query.ServiceError')
+        self.assertEquals(self.service_model.aws_query_compatible_error_code('UnmappedError'), 'UnmappedError')
+
 
 class TestServiceModel(unittest.TestCase):
     def setUp(self):

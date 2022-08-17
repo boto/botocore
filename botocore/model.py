@@ -354,6 +354,17 @@ class ServiceModel:
         return list(self._service_description.get('operations', []))
 
     @CachedProperty
+    def aws_query_compatible(self):
+        return self._service_description.get('awsQueryCompatible', {})
+
+    def aws_query_compatible_error_code(self, error_code):
+        compatible_error = self.aws_query_compatible.get(error_code)
+        if (compatible_error):
+            return compatible_error.get('code', error_code)
+        else:
+            return error_code
+
+    @CachedProperty
     def service_name(self):
         """The name of the service.
 
