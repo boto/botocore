@@ -1017,6 +1017,34 @@ class TestHandlers(BaseSessionTest):
         )
         self.assertEqual(response, 'v4')
 
+    def test_set_operation_specific_signer_v4a(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'v4a'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name
+        )
+        self.assertEqual(response, 'v4a')
+        # for v4a, context gets updated in place
+        self.assertIsNotNone(context.get('signing'))
+        self.assertEqual(context['signing']['region'], '*')
+        self.assertEqual(context['signing']['signing_name'], signing_name)
+
+    def test_set_operation_specific_signer_v4a_existing_signing_context(self):
+        signing_name = 'myservice'
+        context = {
+            'auth_type': 'v4a',
+            'signing': {'foo': 'bar', 'region': 'abc'},
+        }
+        handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name
+        )
+        # region has been updated
+        self.assertEqual(context['signing']['region'], '*')
+        # signing_name has been added
+        self.assertEqual(context['signing']['signing_name'], signing_name)
+        # foo remained untouched
+        self.assertEqual(context['signing']['foo'], 'bar')
+
     def test_set_operation_specific_signer_v4_unsinged_payload(self):
         signing_name = 'myservice'
         context = {'auth_type': 'v4-unsigned-body'}
