@@ -878,3 +878,38 @@ class TestStreamingChecksumBody(unittest.TestCase):
         with self.assertRaises(FlexibleChecksumError):
             for chunk in self.wrapper:
                 pass
+
+    def test_readinto_good(self):
+        chunk = bytearray(6)
+        self.assertEqual(6, self.wrapper.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"hello "))
+        self.assertEqual(5, self.wrapper.readinto(chunk))
+        # Note the trailing space here comes from the fact we've only got 5
+        # bytes left to read from the stream into a 6 byte buffer, so it leaves
+        # the last byte untouched, which is the space character from the
+        # previous read.
+        self.assertEqual(chunk, bytearray(b"world "))
+        # Whole body has been read, next read signals the end of the stream and
+        # validates the checksum of the body contents read
+        self.wrapper.readinto(chunk)
+
+    def test_readinto_bad(self):
+        self._make_wrapper("duorhq==")
+        chunk = bytearray(6)
+        self.assertEqual(6, self.wrapper.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"hello "))
+        self.assertEqual(5, self.wrapper.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"world "))
+        # Whole body has been read, next read signals the end of the stream and
+        # validates the checksum of the body contents read
+        with self.assertRaises(FlexibleChecksumError):
+            self.wrapper.readinto(chunk)
+
+    def test_readinto_zero_bytes(self):
+        # Test that readinto returns 0 when 0 bytes are requested
+        chunk = bytearray(0)
+        self.assertEqual(0, self.wrapper.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b""))
+        # Whole body has been read, next read signals the end of the stream and
+        # validates the checksum of the body contents read
+        self.wrapper.readinto(chunk)
