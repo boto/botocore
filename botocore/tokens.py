@@ -89,7 +89,7 @@ class DeferredRefreshableToken:
         # If we don't need to refresh just return
         refresh_type = self._should_refresh()
         if not refresh_type:
-            return
+            return None
 
         # Block for refresh if we're in the mandatory refresh window
         block_for_refresh = refresh_type == "mandatory"
@@ -104,7 +104,7 @@ class DeferredRefreshableToken:
         # Another thread may have already refreshed, double check refresh
         refresh_type = self._should_refresh()
         if not refresh_type:
-            return
+            return None
 
         try:
             now = self._time_fetcher()
@@ -154,7 +154,7 @@ class DeferredRefreshableToken:
         if remaining < self._mandatory_refresh_timeout:
             return "mandatory"
         elif remaining < self._advisory_refresh_timeout:
-            return "advised"
+            return "advisory"
 
         return None
 
@@ -286,9 +286,9 @@ class SSOTokenProvider:
             logger.info(msg)
             return None
 
-        reg_exp = dateutil.parser.parse(token["registrationExpiresAt"])
-        if total_seconds(reg_exp - self._now()) <= 0:
-            logger.info(f"SSO token registration expired at {reg_exp}")
+        expiry = dateutil.parser.parse(token["registrationExpiresAt"])
+        if total_seconds(expiry - self._now()) <= 0:
+            logger.info(f"SSO token registration expired at {expiry}")
             return None
 
         try:
