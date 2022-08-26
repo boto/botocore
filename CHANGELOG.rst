@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.27.61
+=======
+
+* api-change:``mediapackage``: This release adds Ads AdTriggers and AdsOnDeliveryRestrictions to describe calls for CMAF endpoints on MediaPackage.
+* api-change:``rds``: Removes support for RDS Custom from DBInstanceClass in ModifyDBInstance
+
+
 1.27.60
 =======
 
