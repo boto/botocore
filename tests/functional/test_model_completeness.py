@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import pytest
+import json
 import os
 
 from botocore.exceptions import DataNotFoundError
@@ -71,21 +72,20 @@ def test_all_endpoint_rule_sets_exist(service_name, version):
     assert len(data['rules']) >= 1
 
 
-def _endpoint_tests_cases():
-    for service_name in Session().get_available_services():
-        yield service_name, 'endpoint-tests'
+test_data_dir = os.path.join(os.path.dirname(__file__), "endpoint-rules")
 
 
-@pytest.mark.parametrize(
-    "service_name, type_name",
-    _endpoint_tests_cases(),
-)
-def test_all_endpoint_tests_exist(service_name, type_name):
+def test_all_endpoint_tests_exist():
     """Tests the existence of endpoint-tests.json for each service
     and verifies that content is present."""
-    loader = Loader()
-    data = loader.load_service_model(service_name, type_name, '')
-    assert len(data['testCases']) >= 1
+    for service_name in Session().get_available_services():
+        file_name = 'endpoint-tests.json'
+        endpoint_tests_file = os.path.join(
+            test_data_dir, service_name, file_name
+        )
+        with open(endpoint_tests_file) as f:
+            data = json.load(f)
+            assert len(data['testCases']) >= 1
 
 
 def test_partitions_exists():
