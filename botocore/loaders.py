@@ -104,7 +104,7 @@ which don't represent the actual service api.
 import logging
 import os
 
-from botocore import BOTOCORE_ROOT
+from botocore import BOTOCORE_ROOT, TESTS_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
@@ -234,6 +234,10 @@ class Loader:
     FILE_LOADER_CLASS = JSONFileLoader
     # The included models in botocore/data/ that we ship with botocore.
     BUILTIN_DATA_PATH = os.path.join(BOTOCORE_ROOT, 'data')
+    # The included endpoint tests in tests/functional/endpoint-rules/ that we ship with botocore.
+    BUILTIN_ENDPOINT_RULES_PATH = os.path.join(
+        TESTS_ROOT, 'functional', 'endpoint-rules'
+    )
     # For convenience we automatically add ~/.aws/models to the data path.
     CUSTOMER_DATA_PATH = os.path.join(
         os.path.expanduser('~'), '.aws', 'models'
@@ -258,7 +262,11 @@ class Loader:
             self._search_paths = []
         if include_default_search_paths:
             self._search_paths.extend(
-                [self.CUSTOMER_DATA_PATH, self.BUILTIN_DATA_PATH]
+                [
+                    self.CUSTOMER_DATA_PATH,
+                    self.BUILTIN_DATA_PATH,
+                    self.BUILTIN_ENDPOINT_RULES_PATH,
+                ]
             )
 
         self._extras_types = []
@@ -309,6 +317,8 @@ class Loader:
             for service_name in possible_services:
                 full_dirname = os.path.join(possible_path, service_name)
                 api_versions = os.listdir(full_dirname)
+                if type_name == 'endpoint-tests':
+                    api_versions = ['']
                 for api_version in api_versions:
                     full_load_path = os.path.join(
                         full_dirname, api_version, type_name

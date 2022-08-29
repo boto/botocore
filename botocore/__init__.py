@@ -62,6 +62,7 @@ _xform_cache = {
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
+TESTS_ROOT = os.path.join(os.path.dirname(BOTOCORE_ROOT), 'tests')
 
 
 # Used to specify anonymous (unsigned) request signature

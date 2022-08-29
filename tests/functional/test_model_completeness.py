@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import pytest
+import os
 
 from botocore.exceptions import DataNotFoundError
 from botocore.loaders import Loader
@@ -46,3 +47,49 @@ def test_paginators_and_waiters_are_not_lost_in_new_version(
             raise AssertionError(
                 f"{type_name} must exist for {service_name}: {e}"
             )
+
+
+def _endpoint_rule_set_cases():
+    for service_name in Session().get_available_services():
+        versions = Loader().list_api_versions(service_name, 'service-2')
+        for version in versions:
+            yield service_name, version
+
+
+@pytest.mark.parametrize(
+    "service_name, version",
+    _endpoint_rule_set_cases(),
+)
+def test_all_endpoint_rule_sets_exist(service_name, version):
+    """Tests the existence of endpoint-rule-set.json for each service
+    and verifies that content is present."""
+    loader = Loader()
+    type_name = 'endpoint-rule-set'
+    loader.load_service_model(service_name, type_name, version)
+    full_path = os.path.join(service_name, version, type_name)
+    data = loader.load_data(full_path)
+    assert len(data['rules']) >= 1
+
+
+def _endpoint_tests_cases():
+    for service_name in Session().get_available_services():
+        yield service_name, 'endpoint-tests'
+
+
+@pytest.mark.parametrize(
+    "service_name, type_name",
+    _endpoint_tests_cases(),
+)
+def test_all_endpoint_tests_exist(service_name, type_name):
+    """Tests the existence of endpoint-tests.json for each service
+    and verifies that content is present."""
+    loader = Loader()
+    data = loader.load_service_model(service_name, type_name, '')
+    assert len(data['testCases']) >= 1
+
+
+def test_partitions_exists():
+    """Tests the existence of partitions.json and verifies that content is present."""
+    loader = Loader()
+    data = loader.load_data('partitions')
+    assert len(data['partitions']) >= 1
