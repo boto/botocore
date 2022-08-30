@@ -17,13 +17,13 @@ import pytest
 from botocore.exceptions import DataNotFoundError
 from botocore.loaders import Loader
 
-loader = Loader()
-available_services = loader.list_available_services(type_name='service-2')
+LOADER = Loader()
+AVAILABLE_SERVICES = LOADER.list_available_services(type_name='service-2')
 
 
 def _paginators_and_waiters_test_cases():
-    for service_name in available_services:
-        versions = loader.list_api_versions(service_name, 'service-2')
+    for service_name in AVAILABLE_SERVICES:
+        versions = LOADER.list_api_versions(service_name, 'service-2')
         if len(versions) > 1:
             for type_name in ['paginators-1', 'waiters-2']:
                 yield service_name, type_name, versions[-2], versions[-1]
@@ -39,12 +39,12 @@ def test_paginators_and_waiters_are_not_lost_in_new_version(
     # Make sure if a paginator and/or waiter exists in previous version,
     # there will be a successor existing in latest version.
     try:
-        loader.load_service_model(service_name, type_name, previous_version)
+        LOADER.load_service_model(service_name, type_name, previous_version)
     except DataNotFoundError:
         pass
     else:
         try:
-            loader.load_service_model(service_name, type_name, latest_version)
+            LOADER.load_service_model(service_name, type_name, latest_version)
         except DataNotFoundError as e:
             raise AssertionError(
                 f"{type_name} must exist for {service_name}: {e}"
@@ -52,8 +52,8 @@ def test_paginators_and_waiters_are_not_lost_in_new_version(
 
 
 def _endpoint_rule_set_cases():
-    for service_name in available_services:
-        versions = loader.list_api_versions(service_name, 'service-2')
+    for service_name in AVAILABLE_SERVICES:
+        versions = LOADER.list_api_versions(service_name, 'service-2')
         for version in versions:
             yield service_name, version
 
@@ -66,19 +66,14 @@ def test_all_endpoint_rule_sets_exist(service_name, version):
     """Tests the existence of endpoint-rule-set.json for each service
     and verifies that content is present."""
     type_name = 'endpoint-rule-set'
-    data = loader.load_service_model(service_name, type_name, version)
+    data = LOADER.load_service_model(service_name, type_name, version)
     assert len(data['rules']) >= 1
-
-
-def _endpoint_tests_cases():
-    for service_name in available_services:
-        yield service_name
 
 
 test_data_dir = os.path.join(os.path.dirname(__file__), "endpoint-rules")
 
 
-@pytest.mark.parametrize("service_name", _endpoint_tests_cases())
+@pytest.mark.parametrize("service_name", AVAILABLE_SERVICES)
 def test_all_endpoint_tests_exist(service_name):
     """Tests the existence of endpoint-tests.json for each service
     and verifies that content is present."""
@@ -91,5 +86,5 @@ def test_all_endpoint_tests_exist(service_name):
 
 def test_partitions_exists():
     """Tests the existence of partitions.json and verifies that content is present."""
-    data = loader.load_data('partitions')
+    data = LOADER.load_data('partitions')
     assert len(data['partitions']) >= 4
