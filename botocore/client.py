@@ -44,9 +44,11 @@ from botocore.utils import (
     EventbridgeSignerSetter,
     S3ArnParamHandler,
     S3ControlArnParamHandler,
+    S3ControlArnParamHandler2,
     S3ControlEndpointSetter,
     S3EndpointSetter,
     S3RegionRedirector,
+    S3RegionRedirector2,
     ensure_boolean,
     get_service_module_name,
 )
@@ -63,6 +65,18 @@ from botocore import UNSIGNED  # noqa
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
+
+# List of services for which rule-based endpoint resolution is always enabled.
+# This list will change and eventually be removed during minor or patch version
+# changes as part of the rollout of rule-based endpoints resolution.
+ENDPOINT_RESOLUTION_V2_SERVICES = ['s3', 's3control']
+# Feature flag to enable rule-based endpoint resolution for all services.
+# Only for testing use. Rulesets for services may be missing or incomplete
+# until the service is enabled for rule-based endpoint resolution by default.
+# This flag will eventually be removed during a minor or patch version change.
+FORCE_ENDPOINT_RESOLUTION_V2 = ensure_boolean(
+    os.environ.get('BOTO_FORCE_ENDPOINT_RESOLUTION_V2', False)
+)
 
 
 class ClientCreator:
@@ -112,10 +126,19 @@ class ClientCreator:
         )
         service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
-        endpoints_ruleset_data = self._load_service_endpoints_ruleset(
-            service_name, api_version
-        )
-        partition_data = self._loader.load_data('partitions')
+
+        if (
+            service_name in ENDPOINT_RESOLUTION_V2_SERVICES
+            or FORCE_ENDPOINT_RESOLUTION_V2
+        ):
+            endpoints_ruleset_data = self._load_service_endpoints_ruleset(
+                service_name, api_version
+            )
+            partition_data = self._loader.load_data('partitions')
+        else:
+            endpoints_ruleset_data = None
+            partition_data = None
+
         cls = self._create_client_class(service_name, service_model)
         region_name, client_config = self._normalize_fips_region(
             region_name, client_config
@@ -143,24 +166,14 @@ class ClientCreator:
         )
         service_client = cls(**client_args)
         self._register_retries(service_client)
+        self._register_s3_events2(service_client, client_config, scoped_config)
+        self._register_s3_control_events2(service_client)
 
-        if client_args['endpoint_resolver_v2'] is None:
+        if client_args['endpoint_ruleset_resolver'] is None:
+            # When using the legacy endpoint resolver, several event handlers
+            # modify endpoint and request context.
             self._register_eventbridge_events(
                 service_client, endpoint_bridge, endpoint_url
-            )
-            self._register_s3_events(
-                service_client,
-                endpoint_bridge,
-                endpoint_url,
-                client_config,
-                scoped_config,
-            )
-            self._register_s3_control_events(
-                service_client,
-                endpoint_bridge,
-                endpoint_url,
-                client_config,
-                scoped_config,
             )
 
         self._register_endpoint_discovery(
@@ -354,6 +367,15 @@ class ClientCreator:
             endpoint_url=endpoint_url,
         ).register(client.meta.events)
 
+    def _register_s3_events2(self, client, client_config, scoped_config):
+        if client.meta.service_model.service_name != 's3':
+            return
+        S3RegionRedirector2(None, client).register()
+        self._set_s3_presign_signature_version(
+            client.meta, client_config, scoped_config
+        )
+
+    # Unused method, kept for potential third party importers
     def _register_s3_events(
         self,
         client,
@@ -379,6 +401,12 @@ class ClientCreator:
             client.meta, client_config, scoped_config
         )
 
+    def _register_s3_control_events2(self, client):
+        if client.meta.service_model.service_name != 's3control':
+            return
+        S3ControlArnParamHandler2().register(client.meta.events)
+
+    # Unused method, kept for potential third party importers
     def _register_s3_control_events(
         self,
         client,
@@ -447,7 +475,8 @@ class ClientCreator:
         """
         Returns the 's3' (sigv2) signer if presigning an s3 request. This is
         intended to be used to set the default signature version for the signer
-        to sigv2.
+        to sigv2. Situations where an asymmetric signature is required are the
+        exception, for example MRAP needs v4a.
 
         :type signature_version: str
         :param signature_version: The current client signature version.
@@ -457,9 +486,12 @@ class ClientCreator:
 
         :return: 's3' if the request is an s3 presign request, None otherwise
         """
+        if signature_version.startswith('v4a'):
+            return
+
         for suffix in ['-query', '-presign-post']:
             if signature_version.endswith(suffix):
-                return 's3' + suffix
+                return f's3{suffix}'
 
     def _get_client_args(
         self,
@@ -615,6 +647,9 @@ class ClientEndpointBridge:
             return self._assume_endpoint(
                 service_name, region_name, endpoint_url, is_secure
             )
+
+    def resolver_uses_builtin_data(self):
+        return self.endpoint_resolver.uses_builtin_data
 
     def _check_default_region(self, service_name, region_name):
         if region_name is not None:
@@ -845,11 +880,11 @@ class BaseClient:
         client_config,
         partition,
         exceptions_factory,
-        endpoint_resolver_v2,
+        endpoint_ruleset_resolver,
     ):
         self._serializer = serializer
         self._endpoint = endpoint
-        self._endpoint_resolver_v2 = endpoint_resolver_v2
+        self._ruleset_resolver = endpoint_ruleset_resolver
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
@@ -919,14 +954,14 @@ class BaseClient:
             'auth_type': operation_model.auth_type,
         }
 
-        if self._endpoint_resolver_v2 is None:
-            endpoint_url = self._endpoint.host
+        if self._ruleset_resolver is None:
+            endpoint_url = self.meta.endpoint_url
             additional_headers = {}
         else:
-            endpoint_info = self._endpoint_resolver_v2.construct_endpoint(
-                service_name=service_name,
-                operation_name=operation_name,
+            endpoint_info = self._ruleset_resolver.construct_endpoint(
+                operation_model=operation_model,
                 call_args=api_params,
+                request_context=request_context,
             )
             endpoint_url = endpoint_info.url
             additional_headers = {
@@ -934,27 +969,21 @@ class BaseClient:
                 header_key: header_values[0]
                 for header_key, header_values in endpoint_info.headers.items()
             }
-            # Always use the highest-priority entry from authSchemes
-            ep_auth = endpoint_info.properties['authSchemes'][0]
-            auth_type = ep_auth['name']
-            if auth_type.startswith("sig"):
-                auth_type = auth_type[3:]
-            request_context['auth_type'] = auth_type
-            signing_context = request_context.get('signing', {})
-            if 'signingRegion' in ep_auth:
-                signing_context.update(region=ep_auth['signingRegion'])
-            elif 'signingRegionSet' in ep_auth:
-                # todo: can we handle lists of regions?
-                if len(ep_auth['signingRegionSet'][0]) > 0:
-                    signing_context.update(
-                        region=ep_auth['signingRegionSet'][0]
-                    )
-            if 'signingName' in ep_auth:
-                signing_context.update(signing_name=ep_auth['signingName'])
-            if signing_context:
-                request_context['signing'] = signing_context
-            # todo: handle "disableDoubleEncoding"
-            # https://code.amazon.com/packages/AwsDrSeps/commits/270160ff6b09fcb35bf70c775610792bafb35ab9#
+            # If authSchemes is present, overwrite default auth type and
+            # signing context derived from service model.
+            auth_schemes = endpoint_info.properties.get('authSchemes')
+            if auth_schemes is not None:
+                (
+                    auth_type,
+                    signing_context,
+                ) = self._ruleset_resolver.auth_schemes_to_signing_context(
+                    auth_schemes
+                )
+                request_context['auth_type'] = auth_type
+                if 'signing' in request_context:
+                    request_context['signing'].update(signing_context)
+                else:
+                    request_context['signing'] = signing_context
 
         request_dict = self._convert_to_request_dict(
             api_params=api_params,
@@ -963,7 +992,6 @@ class BaseClient:
             context=request_context,
             headers=additional_headers,
         )
-        resolve_checksum_context(request_dict, operation_model, api_params)
 
         service_id = self._service_model.service_id.hyphenize()
         handler, event_response = self.meta.events.emit_until_response(
@@ -1039,6 +1067,7 @@ class BaseClient:
             user_agent=self._client_config.user_agent,
             context=context,
         )
+        resolve_checksum_context(request_dict, operation_model, api_params)
         return request_dict
 
     def _emit_api_params(self, api_params, operation_model, context):

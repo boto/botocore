@@ -23,6 +23,7 @@ from botocore import xform_name
 from botocore.awsrequest import AWSRequest, HeadersDict
 from botocore.compat import json, six
 from botocore.config import Config
+from botocore.endpoint_provider import RuleSetEndpoint
 from botocore.exceptions import (
     ClientError,
     ConfigNotFound,
@@ -45,6 +46,7 @@ from botocore.model import (
     ServiceModel,
     ShapeResolver,
 )
+from botocore.regions import EndpointRulesetResolver
 from botocore.session import Session
 from botocore.utils import (
     ArgumentGenerator,
@@ -57,7 +59,7 @@ from botocore.utils import (
     InvalidArnException,
     S3ArnParamHandler,
     S3EndpointSetter,
-    S3RegionRedirector,
+    S3RegionRedirector2,
     SSOTokenLoader,
     calculate_sha256,
     calculate_tree_hash,
@@ -70,6 +72,7 @@ from botocore.utils import (
     has_header,
     instance_cache,
     is_json_value_header,
+    is_s3_accelerate_url,
     is_valid_endpoint_url,
     is_valid_ipv6_endpoint_url,
     is_valid_uri,
@@ -1473,13 +1476,30 @@ class TestDeepMerge(unittest.TestCase):
 
 class TestS3RegionRedirector(unittest.TestCase):
     def setUp(self):
-        self.endpoint_bridge = mock.Mock()
-        self.endpoint_bridge.resolve.return_value = {
-            'endpoint_url': 'https://eu-central-1.amazonaws.com'
-        }
         self.client = mock.Mock()
+        self.client._ruleset_resolver = EndpointRulesetResolver(
+            endpoint_ruleset_data={
+                'version': '1.0',
+                'parameters': {},
+                'rules': [],
+            },
+            partition_data={},
+            service_model=None,
+            builtins={},
+            client_context=None,
+            event_emitter=None,
+            use_ssl=True,
+            requested_auth_scheme=None,
+        )
+        self.client._ruleset_resolver.construct_endpoint = mock.Mock(
+            return_value=RuleSetEndpoint(
+                url='https://new-endpoint.amazonaws.com',
+                properties={},
+                headers={},
+            )
+        )
         self.cache = {}
-        self.redirector = S3RegionRedirector(self.endpoint_bridge, self.client)
+        self.redirector = S3RegionRedirector2(None, self.client)
         self.set_client_response_headers({})
         self.operation = mock.Mock()
         self.operation.name = 'foo'
@@ -1499,56 +1519,49 @@ class TestS3RegionRedirector(unittest.TestCase):
         ]
 
     def test_set_request_url(self):
-        params = {'url': 'https://us-west-2.amazonaws.com/foo'}
-        context = {
-            'signing': {'endpoint': 'https://eu-central-1.amazonaws.com'}
-        }
-        self.redirector.set_request_url(params, context)
-        self.assertEqual(
-            params['url'], 'https://eu-central-1.amazonaws.com/foo'
-        )
-
-    def test_only_changes_request_url_if_endpoint_present(self):
-        params = {'url': 'https://us-west-2.amazonaws.com/foo'}
-        context = {}
-        self.redirector.set_request_url(params, context)
-        self.assertEqual(params['url'], 'https://us-west-2.amazonaws.com/foo')
+        old_url = 'https://us-west-2.amazonaws.com/foo'
+        new_endpoint = 'https://eu-central-1.amazonaws.com'
+        new_url = self.redirector.set_request_url(old_url, new_endpoint)
+        self.assertEqual(new_url, 'https://eu-central-1.amazonaws.com/foo')
 
     def test_set_request_url_keeps_old_scheme(self):
-        params = {'url': 'http://us-west-2.amazonaws.com/foo'}
-        context = {
-            'signing': {'endpoint': 'https://eu-central-1.amazonaws.com'}
-        }
-        self.redirector.set_request_url(params, context)
-        self.assertEqual(
-            params['url'], 'http://eu-central-1.amazonaws.com/foo'
-        )
+        old_url = 'http://us-west-2.amazonaws.com/foo'
+        new_endpoint = 'https://eu-central-1.amazonaws.com'
+        new_url = self.redirector.set_request_url(old_url, new_endpoint)
+        self.assertEqual(new_url, 'http://eu-central-1.amazonaws.com/foo')
 
     def test_sets_signing_context_from_cache(self):
-        signing_context = {'endpoint': 'bar'}
-        self.cache['foo'] = signing_context
-        self.redirector = S3RegionRedirector(
-            self.endpoint_bridge, self.client, cache=self.cache
+        self.cache['foo'] = 'new-region-1'
+        self.redirector = S3RegionRedirector2(
+            None, self.client, cache=self.cache
         )
         params = {'Bucket': 'foo'}
-        context = {}
-        self.redirector.redirect_from_cache(params, context)
-        self.assertEqual(context.get('signing'), signing_context)
+        builtins = {'AWS::Region': 'old-region-1'}
+        self.redirector.redirect_from_cache(builtins, params)
+        self.assertEqual(builtins.get('AWS::Region'), 'new-region-1')
 
     def test_only_changes_context_if_bucket_in_cache(self):
-        signing_context = {'endpoint': 'bar'}
-        self.cache['bar'] = signing_context
-        self.redirector = S3RegionRedirector(
-            self.endpoint_bridge, self.client, cache=self.cache
+        self.cache['foo'] = 'new-region-1'
+        self.redirector = S3RegionRedirector2(
+            None, self.client, cache=self.cache
         )
-        params = {'Bucket': 'foo'}
-        context = {}
-        self.redirector.redirect_from_cache(params, context)
-        self.assertNotEqual(context.get('signing'), signing_context)
+        params = {'Bucket': 'bar'}
+        builtins = {'AWS::Region': 'old-region-1'}
+        self.redirector.redirect_from_cache(builtins, params)
+        self.assertEqual(builtins.get('AWS::Region'), 'old-region-1')
 
     def test_redirect_from_error(self):
         request_dict = {
-            'context': {'signing': {'bucket': 'foo'}},
+            'context': {
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                },
+                'signing': {
+                    'region': 'us-west-2',
+                },
+            },
             'url': 'https://us-west-2.amazonaws.com/foo',
         }
         response = (
@@ -1565,6 +1578,22 @@ class TestS3RegionRedirector(unittest.TestCase):
             },
         )
 
+        self.client._ruleset_resolver.construct_endpoint.return_value = (
+            RuleSetEndpoint(
+                url='https://eu-central-1.amazonaws.com/foo',
+                properties={
+                    'authSchemes': [
+                        {
+                            'name': 'sigv4',
+                            'signingRegion': 'eu-central-1',
+                            'disableDoubleEncoding': True,
+                        }
+                    ]
+                },
+                headers={},
+            )
+        )
+
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation
         )
@@ -1577,13 +1606,14 @@ class TestS3RegionRedirector(unittest.TestCase):
         )
 
         expected_signing_context = {
-            'endpoint': 'https://eu-central-1.amazonaws.com',
-            'bucket': 'foo',
             'region': 'eu-central-1',
+            'disableDoubleEncoding': True,
         }
         signing_context = request_dict['context'].get('signing')
         self.assertEqual(signing_context, expected_signing_context)
-        self.assertTrue(request_dict['context'].get('s3_redirected'))
+        self.assertTrue(
+            request_dict['context']['s3_redirect'].get('redirected')
+        )
 
     def test_does_not_redirect_if_previously_redirected(self):
         request_dict = {
@@ -1622,7 +1652,14 @@ class TestS3RegionRedirector(unittest.TestCase):
     def test_does_not_redirect_if_region_cannot_be_found(self):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',
-            'context': {'signing': {'bucket': 'foo'}},
+            'context': {
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                },
+                'signing': {},
+            },
         }
         response = (
             None,
@@ -1645,7 +1682,14 @@ class TestS3RegionRedirector(unittest.TestCase):
     def test_redirects_301(self):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',
-            'context': {'signing': {'bucket': 'foo'}},
+            'context': {
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                },
+                'signing': {},
+            },
         }
         response = (
             None,
@@ -1672,7 +1716,14 @@ class TestS3RegionRedirector(unittest.TestCase):
     def test_redirects_400_head_bucket(self):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',
-            'context': {'signing': {'bucket': 'foo'}},
+            'context': {
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                },
+                'signing': {},
+            },
         }
         response = (
             None,
@@ -1827,16 +1878,6 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation
         )
         self.assertEqual(redirect_response, None)
-
-    def test_no_redirect_from_cache_for_accesspoint(self):
-        self.cache['foo'] = {'endpoint': 'foo-endpoint'}
-        self.redirector = S3RegionRedirector(
-            self.endpoint_bridge, self.client, cache=self.cache
-        )
-        params = {'Bucket': 'foo'}
-        context = {'s3_accesspoint': {}}
-        self.redirector.redirect_from_cache(params, context)
-        self.assertNotIn('signing', context)
 
 
 class TestArnParser(unittest.TestCase):
@@ -3267,3 +3308,28 @@ class TestDetermineContentLength(unittest.TestCase):
 
         length = determine_content_length(Seekable())
         self.assertEqual(length, 50)
+
+
+@pytest.mark.parametrize(
+    'url, expected',
+    (
+        ('https://s3-accelerate.amazonaws.com', True),
+        ('https://s3-accelerate.amazonaws.com/', True),
+        ('https://s3-accelerate.amazonaws.com/key', True),
+        ('http://s3-accelerate.amazonaws.com/key', True),
+        ('https://s3-accelerate.foo.amazonaws.com/key', False),
+        # bucket prefixes are not allowed
+        ('https://bucket.s3-accelerate.amazonaws.com/key', False),
+        # S3 accelerate can be combined with dualstack
+        ('https://s3-accelerate.dualstack.amazonaws.com/key', True),
+        ('https://bucket.s3-accelerate.dualstack.amazonaws.com/key', False),
+        ('https://s3-accelerate.dualstack.dualstack.amazonaws.com/key', False),
+        ('https://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
+        ('https://dualstack.s3-accelerate.amazonaws.com/key', False),
+        # assorted other ways for URLs to not be valid for s3-accelerate
+        ('ftp://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
+        ('https://s3-accelerate.dualstack.foo.c2s.ic.gov/key', False),
+    ),
+)
+def test_is_s3_accelerate_url(url, expected):
+    assert is_s3_accelerate_url(url) == expected

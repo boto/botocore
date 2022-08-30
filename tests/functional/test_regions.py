@@ -14,7 +14,7 @@ import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
-from tests import BaseSessionTest, ClientHTTPStubber, create_session, mock
+from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
 # a bug in python2.6 prevents subjectAltNames from being parsed
@@ -425,15 +425,6 @@ KNOWN_AWS_PARTITION_WIDE = {
 }
 
 
-def _get_patched_session():
-    with mock.patch('os.environ') as environ:
-        environ['AWS_ACCESS_KEY_ID'] = 'access_key'
-        environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
-        environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
-        session = create_session()
-    return session
-
-
 def _known_endpoints_by_region():
     for region_name, service_dict in KNOWN_REGIONS.items():
         for service_name, endpoint in service_dict.items():
@@ -445,7 +436,7 @@ def _known_endpoints_by_region():
     _known_endpoints_by_region(),
 )
 def test_single_service_region_endpoint(
-    service_name, region_name, expected_endpoint
+    patched_session, service_name, region_name, expected_endpoint
 ):
     # Verify the actual values from the partition files.  While
     # TestEndpointHeuristics verified the generic functionality given any
@@ -453,9 +444,7 @@ def test_single_service_region_endpoint(
     # fixed list of known endpoints.  This list doesn't need to be kept 100% up
     # to date, but serves as a basis for regressions as the endpoint data
     # logic evolves.
-    resolver = _get_patched_session()._get_internal_component(
-        'endpoint_resolver'
-    )
+    resolver = patched_session._get_internal_component('endpoint_resolver')
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
     expected = 'https://%s' % expected_endpoint
@@ -463,8 +452,8 @@ def test_single_service_region_endpoint(
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
-def test_all_s3_endpoints_have_s3v4():
-    session = _get_patched_session()
+def test_all_s3_endpoints_have_s3v4(patched_session):
+    session = patched_session
     partitions = session.get_available_partitions()
     resolver = session._get_internal_component('endpoint_resolver')
     for partition_name in partitions:
@@ -477,19 +466,17 @@ def test_all_s3_endpoints_have_s3v4():
 @pytest.mark.parametrize(
     "service_name, expected_endpoint", KNOWN_AWS_PARTITION_WIDE.items()
 )
-def test_single_service_partition_endpoint(service_name, expected_endpoint):
-    resolver = _get_patched_session()._get_internal_component(
-        'endpoint_resolver'
-    )
+def test_single_service_partition_endpoint(
+    patched_session, service_name, expected_endpoint
+):
+    resolver = patched_session._get_internal_component('endpoint_resolver')
     bridge = ClientEndpointBridge(resolver)
     result = bridge.resolve(service_name)
     assert result['endpoint_url'] == expected_endpoint
 
 
-def test_non_partition_endpoint_requires_region():
-    resolver = _get_patched_session()._get_internal_component(
-        'endpoint_resolver'
-    )
+def test_non_partition_endpoint_requires_region(patched_session):
+    resolver = patched_session._get_internal_component('endpoint_resolver')
     with pytest.raises(NoRegionError):
         resolver.construct_endpoint('ec2')
 
@@ -549,11 +536,11 @@ class TestEndpointResolution(BaseSessionTest):
 
 
 @pytest.mark.parametrize("is_builtin", [True, False])
-def test_endpoint_resolver_knows_its_datasource(is_builtin):
+def test_endpoint_resolver_knows_its_datasource(patched_session, is_builtin):
     # The information whether or not the endpoints.json file was loaded from
     # the builtin data directory or not should be passed from Loader to
     # EndpointResolver.
-    session = _get_patched_session()
+    session = patched_session
     loader = session.get_component('data_loader')
     with mock.patch.object(loader, 'is_builtin_path', return_value=is_builtin):
         resolver = session._get_internal_component('endpoint_resolver')

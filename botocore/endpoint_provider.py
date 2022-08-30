@@ -30,7 +30,10 @@ from typing import NamedTuple
 
 from botocore import xform_name
 from botocore.compat import IPV4_RE, quote, urlparse
-from botocore.exceptions import EndpointResolutionError
+from botocore.exceptions import (
+    EndpointResolutionError,
+    MissingRequiredEndpointRulesetParam,
+)
 from botocore.utils import (
     ArnParser,
     InvalidArnException,
@@ -636,9 +639,15 @@ class ParameterDefinition:
 
     def process_input(self, value):
         """Process input against spec, applying default if value is None."""
-        if value is None and self.default is not None:
-            return self.default
-        elif value is not None:
+        if value is None:
+            if self.default is not None:
+                return self.default
+            if self.required:
+                raise MissingRequiredEndpointRulesetParam(
+                    f"Cannot find value for required parameter {self.name}"
+                )
+            # in all other cases, the parameter will keep the value None
+        else:
             self.validate_input(value)
         return value
 

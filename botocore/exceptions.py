@@ -812,9 +812,9 @@ class EndpointResolutionError(EndpointProviderError):
     fmt = '{msg}'
 
 
-class UnknownEndpointResolutionBuiltInName(BotoCoreError):
+class UnknownEndpointResolutionBuiltInName(EndpointProviderError):
     fmt = 'Unknown builtin variable name: {name}'
 
 
-class FailedEndpointProviderParameterResolution(BotoCoreError):
+class MissingRequiredEndpointRulesetParam(EndpointProviderError):
     fmt = 'Could not resolve value for endpoint resolution parameter: {name}'
