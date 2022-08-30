@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Endpoints",
+  "description": "Deprecate SSL common name"
+}
