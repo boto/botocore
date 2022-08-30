@@ -14,9 +14,8 @@ import json
 import logging
 import os
 import threading
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import NamedTuple, Optional
 
 import dateutil.parser
 from dateutil.tz import tzutc
@@ -56,8 +55,7 @@ def _sso_json_dumps(obj):
     return json.dumps(obj, default=_serialize_utc_timestamp)
 
 
-@dataclass(frozen=True)
-class FrozenAuthToken:
+class FrozenAuthToken(NamedTuple):
     token: str
     expiration: Optional[datetime] = None
 
