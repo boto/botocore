@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.27.65
+=======
+
+* api-change:``codeguru-reviewer``: Documentation updates to fix formatting issues in CLI and SDK documentation.
+* api-change:``controltower``: This release contains the first SDK for AWS Control Tower. It introduces  a new set of APIs: EnableControl, DisableControl, GetControlOperation, and ListEnabledControls.
+* api-change:``route53``: Documentation updates for Amazon Route 53.
+
+
 1.27.64
 =======
 
