@@ -496,8 +496,8 @@ class Loader:
         :return: Whether the given path is within the package's data directory.
 
         """
-        # normalize and absolutize the path, self.BUILTIN_DATA_PATH already is
-        path = os.path.realpath(path)
+        # normalize the path and resolve symlinks
+        path = os.path.realpath(os.path.abspath(path))
         return path.startswith(self.BUILTIN_DATA_PATH)
 
 

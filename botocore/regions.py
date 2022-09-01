@@ -98,7 +98,7 @@ class EndpointResolver(BaseEndpointResolver):
 
     def __init__(self, endpoint_data, uses_builtin_data=False):
         """
-        :type path: dict
+        :type endpoint_data: dict
         :param endpoint_data: A dict of partition data.
 
         :type uses_builtin_data: boolean

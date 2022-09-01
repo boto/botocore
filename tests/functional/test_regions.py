@@ -548,7 +548,7 @@ class TestEndpointResolution(BaseSessionTest):
         )
 
 
-@pytest.mark.parametrize("is_builtin", [(True,), (False,)])
+@pytest.mark.parametrize("is_builtin", [True, False])
 def test_endpoint_resolver_knows_its_datasource(is_builtin):
     # The information whether or not the endpoints.json file was loaded from
     # the builtin data directory or not should be passed from Loader to
