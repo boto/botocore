@@ -19,6 +19,7 @@ from botocore.loaders import Loader
 
 LOADER = Loader()
 AVAILABLE_SERVICES = LOADER.list_available_services(type_name='service-2')
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "endpoint-rules")
 
 
 def _paginators_and_waiters_test_cases():
@@ -69,19 +70,14 @@ def test_all_endpoint_rule_sets_exist(service_name, version):
     data = LOADER.load_service_model(service_name, type_name, version)
     assert len(data['rules']) >= 1
 
-
-test_data_dir = os.path.join(os.path.dirname(__file__), "endpoint-rules")
-
-
 @pytest.mark.parametrize("service_name", AVAILABLE_SERVICES)
 def test_all_endpoint_tests_exist(service_name):
     """Tests the existence of endpoint-tests.json for each service
     and verifies that content is present."""
-    file_name = 'endpoint-tests.json'
-    endpoint_tests_file = os.path.join(test_data_dir, service_name, file_name)
+    endpoint_tests_file = os.path.join(TEST_DATA_DIR, service_name, 'endpoint-tests.json')
     with open(endpoint_tests_file) as f:
         data = json.load(f)
-        assert len(data['testCases']) >= 1
+    assert len(data['testCases']) >= 1
 
 
 def test_partitions_exists():
