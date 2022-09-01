@@ -434,7 +434,8 @@ class Loader:
                 pass
 
     @instance_cache
-    def load_data(self, name):
+    def load_data(self, name, return_path=False):
+
         """Load data given a data path.
 
         This is a low level method that will search through the various
@@ -446,14 +447,23 @@ class Loader:
         :type name: str
         :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
 
-        :return: The loaded data.  If no data could be found then
-            a DataNotFoundError is raised.
+        :type return_path: bool
+        :param return_path: Whether to return the path where the data was
+            loaded from as a second return value.
+
+        :return: The loaded data. If return_path is True, the path to the
+            data file is returned as string in the second return value. If
+            no data could be found then a DataNotFoundError is raised.
 
         """
         for possible_path in self._potential_locations(name):
             found = self.file_loader.load_file(possible_path)
             if found is not None:
-                return found
+                if return_path:
+                    return found, possible_path
+                else:
+                    return found
+
         # We didn't find anything that matched on any path.
         raise DataNotFoundError(data_path=name)
 
@@ -472,6 +482,23 @@ class Loader:
                         yield full_path
                     elif os.path.exists(full_path):
                         yield full_path
+
+    def is_builtin_path(self, path):
+        """Whether a given path is within the package's data directory
+
+        This method can be used together with load_data(name, include_path=True)
+        to determine if data has been loaded from a file bundled with the
+        package, as opposed to a file in a separate location.
+
+        :type path: str
+        :param path: The file path to check.
+
+        :return: Whether the given path is within the package's data directory.
+
+        """
+        # normalize and absolutize the path, self.BUILTIN_DATA_PATH already is
+        path = os.path.realpath(path)
+        return path.startswith(self.BUILTIN_DATA_PATH)
 
 
 class ExtrasProcessor:
