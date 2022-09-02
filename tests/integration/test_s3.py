@@ -96,7 +96,15 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
     for page in page.paginate(Bucket=bucket):
         keys = [{'Key': obj['Key']} for obj in page.get('Contents', [])]
         if keys:
-            s3.delete_objects(Bucket=bucket, Delete={'Objects': keys})
+            for _ in range(5):
+                try:
+                    s3.delete_objects(Bucket=bucket, Delete={'Objects': keys})
+                    break
+                except s3.exceptions.NoSuchBucket:
+                    exists_waiter.wait(Bucket=bucket)
+                except WaiterError:
+                    continue
+    
     if delete_bucket:
         for _ in range(5):
             try:
@@ -302,9 +310,6 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
             Bucket=self.bucket_name, Key='foo', Body=body
         )
         self.assert_status_code(response, 200)
-        self.addCleanup(
-            client.delete_object, Bucket=self.bucket_name, Key='foo'
-        )
 
 
 class TestS3Buckets(TestS3BaseWithBucket):
@@ -1131,18 +1136,12 @@ class TestSSEKeyParamValidation(BaseS3ClientTest):
             SSECustomerAlgorithm='AES256',
             SSECustomerKey=key_bytes,
         )
-        self.addCleanup(
-            self.client.delete_object, Bucket=self.bucket_name, Key='foo.txt'
-        )
         self.client.put_object(
             Bucket=self.bucket_name,
             Key='foo2.txt',
             Body=BytesIO(b'mycontents2'),
             SSECustomerAlgorithm='AES256',
             SSECustomerKey=key_str,
-        )
-        self.addCleanup(
-            self.client.delete_object, Bucket=self.bucket_name, Key='foo2.txt'
         )
 
         self.assertEqual(
@@ -1176,9 +1175,6 @@ class TestSSEKeyParamValidation(BaseS3ClientTest):
             SSECustomerAlgorithm='AES256',
             SSECustomerKey=encrypt_key,
         )
-        self.addCleanup(
-            self.client.delete_object, Bucket=self.bucket_name, Key='foo.txt'
-        )
 
         # Copy the object using the original encryption key as the copy source
         # and encrypt with a new encryption key.
@@ -1190,9 +1186,6 @@ class TestSSEKeyParamValidation(BaseS3ClientTest):
             CopySourceSSECustomerKey=encrypt_key,
             SSECustomerAlgorithm='AES256',
             SSECustomerKey=other_encrypt_key,
-        )
-        self.addCleanup(
-            self.client.delete_object, Bucket=self.bucket_name, Key='bar.txt'
         )
 
         # Download the object using the new encryption key.
@@ -1219,9 +1212,6 @@ class TestS3UTF8Headers(BaseS3ClientTest):
             ContentDisposition="attachment; filename=5小時接力起跑.jpg;",
         )
         self.assert_status_code(response, 200)
-        self.addCleanup(
-            self.client.delete_object, Bucket=bucket_name, Key="foo.txt"
-        )
 
 
 class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
