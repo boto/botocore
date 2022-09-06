@@ -617,7 +617,11 @@ class ClientEndpointBridge:
             is_disabled = ensure_boolean(
                 os.environ.get('BOTO_DISABLE_COMMONNAME', False)
             )
-            if not is_disabled and sslCommonName is not None:
+            if (
+                not is_disabled
+                and sslCommonName is not None
+                and sslCommonName != hostname
+            ):
                 warnings.warn(
                     f'The {service_name} client is currently using a '
                     f'deprecated endpoint: {sslCommonName}. In the next '
