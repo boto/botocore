@@ -22,7 +22,10 @@
 import contextlib
 import copy
 import os
+import sys
 import tempfile
+
+import pytest
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import (
@@ -244,6 +247,12 @@ class TestLoader(BaseEnvVar):
         self.assertTrue(loader.is_builtin_path(path_in_builtins))
         self.assertFalse(loader.is_builtin_path(path_elsewhere))
 
+    @pytest.mark.skipif(
+        sys.platform == 'win32',
+        reason=(
+            'os.symlink() requires developer mode or elevated permissions'
+        ),
+    )
     def test_is_builtin_path_with_symlink(self):
         loader = Loader()
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -254,7 +263,7 @@ class TestLoader(BaseEnvVar):
                 target_is_directory=True,
             )
             path_in_builtins = os.path.join(link_to_builtins, "foo.txt")
-            self.assertTrue(loader.is_builtin_path(path_in_builtins))
+            assert loader.is_builtin_path(path_in_builtins)
 
 
 class TestMergeExtras(BaseEnvVar):
