@@ -104,7 +104,7 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
                     exists_waiter.wait(Bucket=bucket)
                 except WaiterError:
                     continue
-    
+
     if delete_bucket:
         for _ in range(5):
             try:
