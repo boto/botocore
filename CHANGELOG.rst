@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.27.67
+=======
+
+* api-change:``identitystore``: Documentation updates for the Identity Store CLI Reference.
+* api-change:``sagemaker``: This release adds HyperParameterTuningJob type in Search API.
+
+
 1.27.66
 =======
 
