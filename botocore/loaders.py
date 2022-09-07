@@ -434,38 +434,42 @@ class Loader:
                 pass
 
     @instance_cache
-    def load_data(self, name, return_path=False):
+    def load_data_with_path(self, name):
+        """Same as ``load_data`` but returns file path as second return value.
 
+        :type name: str
+        :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
+
+        :return: Tuple of the loaded data and the path to the data file
+            where the data was loaded from. If no data could be found then a
+            DataNotFoundError is raised.
+        """
+        for possible_path in self._potential_locations(name):
+            found = self.file_loader.load_file(possible_path)
+            if found is not None:
+                return found, possible_path
+
+        # We didn't find anything that matched on any path.
+        raise DataNotFoundError(data_path=name)
+
+    def load_data(self, name):
         """Load data given a data path.
 
         This is a low level method that will search through the various
         search paths until it's able to load a value.  This is typically
         only needed to load *non* model files (such as _endpoints and
         _retry).  If you need to load model files, you should prefer
-        ``load_service_model``.
+        ``load_service_model``.  Use ``load_data_with_path`` to get the
+        file system path of the data file as second return value.
 
         :type name: str
         :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
 
-        :type return_path: bool
-        :param return_path: Whether to return the path where the data was
-            loaded from as a second return value.
-
-        :return: The loaded data. If return_path is True, the path to the
-            data file is returned as string in the second return value. If
-            no data could be found then a DataNotFoundError is raised.
-
+        :return: The loaded data. If no data could be found then
+            a DataNotFoundError is raised.
         """
-        for possible_path in self._potential_locations(name):
-            found = self.file_loader.load_file(possible_path)
-            if found is not None:
-                if return_path:
-                    return found, possible_path
-                else:
-                    return found
-
-        # We didn't find anything that matched on any path.
-        raise DataNotFoundError(data_path=name)
+        data, _ = self.load_data_with_path(name)
+        return data
 
     def _potential_locations(self, name=None, must_exist=False, is_dir=False):
         # Will give an iterator over the full path of potential locations

@@ -133,7 +133,7 @@ class TestLoader(BaseEnvVar):
         self.assertEqual(loaded, ['loaded data'])
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
-    def test_load_data_optionally_returns_path(self):
+    def test_load_data_with_path(self):
         search_paths = ['foo', 'bar', 'baz']
 
         class FakeLoader:
@@ -145,7 +145,7 @@ class TestLoader(BaseEnvVar):
         loader = Loader(
             extra_search_paths=search_paths, file_loader=FakeLoader()
         )
-        loaded, path = loader.load_data('abc', return_path=True)
+        loaded, path = loader.load_data_with_path('abc')
         self.assertEqual(loaded, ['loaded data'])
         self.assertEqual(path, os.path.join('bar', 'abc'))
 
@@ -160,14 +160,14 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.load_data('baz')
 
-    def test_asking_for_path_doesnt_break_notfound_exception(self):
+    def test_data_not_found_raises_exception_load_data_with_path(self):
         class FakeLoader:
             def load_file(self, name):
                 return None
 
         loader = Loader(file_loader=FakeLoader())
         with self.assertRaises(DataNotFoundError):
-            loader.load_data('baz', return_path=True)
+            loader.load_data_with_path('baz')
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_error_raised_if_service_does_not_exist(self):
