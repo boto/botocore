@@ -459,3 +459,32 @@ class TestCreateClientArgs(unittest.TestCase):
             client_config=Config(retries={'mode': 'standard'})
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
+
+    def test_does_set_global_sts_endpoint_if_in_legacy_region(self):
+        should = self.args_create._should_set_global_sts_endpoint(
+            region_name='us-west-1', endpoint_url=None, endpoint_config=None
+        )
+        self.assertTrue(should)
+
+    def test_doesnt_set_global_sts_endpoint_if_not_in_legacy_region(self):
+        should = self.args_create._should_set_global_sts_endpoint(
+            region_name='eu-south-1', endpoint_url=None, endpoint_config=None
+        )
+        self.assertFalse(should)
+
+    def test_doesnt_set_global_sts_endpoint_if_endpoint_url_is_given(self):
+        should = self.args_create._should_set_global_sts_endpoint(
+            region_name='us-west-1',
+            endpoint_url="https://my.endpoint.url.com",
+            endpoint_config=None,
+        )
+        self.assertFalse(should)
+
+    def test_doesnt_set_global_sts_endpoint_if_configured(self):
+        self.args_create._config_store.set_config_variable(
+            'sts_regional_endpoints', 'regional'
+        )
+        should = self.args_create._should_set_global_sts_endpoint(
+            region_name='us-west-1', endpoint_url=None, endpoint_config=None
+        )
+        self.assertFalse(should)
