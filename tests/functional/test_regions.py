@@ -555,8 +555,6 @@ def test_endpoint_resolver_knows_its_datasource(is_builtin):
     # EndpointResolver.
     session = _get_patched_session()
     loader = session.get_component('data_loader')
-    with mock.patch.object(
-        loader, 'is_builtin_path', mock.Mock(return_value=is_builtin)
-    ):
+    with mock.patch.object(loader, 'is_builtin_path', return_value=is_builtin):
         resolver = session._get_internal_component('endpoint_resolver')
         assert resolver.uses_builtin_data == is_builtin

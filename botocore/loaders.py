@@ -488,9 +488,9 @@ class Loader:
                         yield full_path
 
     def is_builtin_path(self, path):
-        """Whether a given path is within the package's data directory
+        """Whether a given path is within the package's data directory.
 
-        This method can be used together with load_data(name, include_path=True)
+        This method can be used together with load_data_with_path(name)
         to determine if data has been loaded from a file bundled with the
         package, as opposed to a file in a separate location.
 
@@ -498,7 +498,6 @@ class Loader:
         :param path: The file path to check.
 
         :return: Whether the given path is within the package's data directory.
-
         """
         # normalize the path and resolve symlinks
         path = os.path.realpath(os.path.abspath(path))
