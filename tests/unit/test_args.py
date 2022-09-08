@@ -488,3 +488,197 @@ class TestCreateClientArgs(unittest.TestCase):
             region_name='us-west-1', endpoint_url=None, endpoint_config=None
         )
         self.assertFalse(should)
+
+
+class TestEndpointResolverBuiltins(unittest.TestCase):
+    def setUp(self):
+        event_emitter = mock.Mock(HierarchicalEmitter)
+        self.config_store = ConfigValueStore()
+        self.args_create = args.ClientArgsCreator(
+            event_emitter, None, None, None, None, self.config_store
+        )
+        self.bridge = mock.Mock(ClientEndpointBridge)
+        self.bridge.endpoint_resolver = mock.Mock()
+        self.bridge.endpoint_resolver.uses_builtin_data = True
+
+        def mock_cfgvar_fn(cfgvar):
+            return False if cfgvar == 'use_fips_endpoint' else 42
+
+        self.bridge._resolve_endpoint_variant_config_var = mock.Mock(
+            side_effect=mock_cfgvar_fn
+        )
+        self.bridge._resolve_use_dualstack_endpoint = mock.Mock(
+            return_value=False
+        )
+
+    def call_compute_endpoint_resolver_v2_builtin_defaults(self, **overrides):
+        defaults = {
+            'region_name': 'ca-central-1',
+            'service_name': 'fooservice',
+            's3_config': {},
+            'endpoint_bridge': self.bridge,
+            'client_endpoint_url': None,
+            'legacy_endpoint_url': 'https://my.legacy.endpoint.com',
+        }
+        kwargs = {**defaults, **overrides}
+        return self.args_create._compute_endpoint_resolver_v2_builtin_defaults(
+            **kwargs
+        )
+
+    def test_builtins_defaults(self):
+        # assume a legacy endpoint resolver that uses the builtin
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = True
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults()
+
+        self.assertEqual(bins['AWS::Region'], 'ca-central-1')
+        self.assertEqual(bins['AWS::UseFIPS'], False)
+        self.assertEqual(bins['AWS::UseDualStack'], False)
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], True)
+        self.assertEqual(bins['AWS::S3::UseGlobalEndpoint'], False)
+        self.assertEqual(bins['AWS::S3::Accelerate'], False)
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], False)
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], True)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], False)
+        self.assertEqual(
+            bins['AWS::S3::DisableMultiRegionAccessPoints'], False
+        )
+        self.assertEqual(bins['SDK::Endpoint'], None)
+
+    def test_builtin_aws_region(self):
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            region_name='my-region-1',
+        )
+        self.assertEqual(bins['AWS::Region'], 'my-region-1')
+
+    def test_builtin_aws_use_fips(self):
+        # The only reason for this builtin to not have the default value
+        # (False) is that the ``use_fips_endpoint`` config variable resolves
+        # to True.
+        self.bridge._resolve_endpoint_variant_config_var = mock.Mock(
+            return_value=True
+        )
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults()
+        self.assertEqual(bins['AWS::UseFIPS'], True)
+        self.bridge._resolve_endpoint_variant_config_var.assert_called_once_with(
+            'use_fips_endpoint'
+        )
+
+    def test_builtin_aws_use_dualstack(self):
+        # The only reason for this builtin to not have the default value
+        # (False) is that the ``_resolve_use_dualstack_endpoint`` method
+        # of the ClientEndpointBridge object returns False.
+        self.bridge._resolve_use_dualstack_endpoint = mock.Mock(
+            return_value=True
+        )
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            service_name='test-service'
+        )
+        self.assertEqual(bins['AWS::UseDualStack'], True)
+        self.bridge._resolve_use_dualstack_endpoint.assert_called_once_with(
+            'test-service'
+        )
+
+    def test_builtin_aws_sts_global_endpoint(self):
+        # The only reason for this builtin to not have the default value
+        # (True) is that the ``_should_set_global_sts_endpoint`` method
+        # returns False.
+        self.args_create._should_set_global_sts_endpoint = mock.Mock(
+            return_value=False
+        )
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            region_name='my-region-2',
+        )
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
+        self.args_create._should_set_global_sts_endpoint.assert_called_once_with(
+            region_name='my-region-2',
+            endpoint_url=None,
+            endpoint_config=None,
+        )
+
+    def test_builtin_s3_global_endpoint(self):
+        # The only reason for this builtin to not have the default value
+        # (False) is that the ``_should_force_s3_global`` method
+        # returns True.
+        self.args_create._should_force_s3_global = mock.Mock(return_value=True)
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults()
+        self.assertTrue(bins['AWS::S3::UseGlobalEndpoint'])
+        self.args_create._should_force_s3_global.assert_called_once()
+
+    def test_builtin_s3_accelerate(self):
+        # This builtin has a default value of False. It will be True only if
+        # the ``use_accelerate_endpoint`` field in the S3 configuration is
+        # True.
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            s3_config={'use_accelerate_endpoint': True},
+        )
+        self.assertEqual(bins['AWS::S3::Accelerate'], True)
+
+    def test_builtin_force_path_style(self):
+        # This builtin has a default value of False. It will be True only if
+        # the ``addressing_style`` field in the S3 configuration equals "path".
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            s3_config={'addressing_style': 'path'},
+        )
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], True)
+
+    def test_builtin_use_arn_region_false(self):
+        # These two builtins both take their value from the ``use_arn_region``
+        # in the S3 configuration, but have different default values.
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            s3_config={'use_arn_region': False},
+        )
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], False)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], False)
+
+    def test_builtin_use_arn_region_true(self):
+        # These two builtins both take their value from the ``use_arn_region``
+        # in the S3 configuration, but have different default values.
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            s3_config={'use_arn_region': True},
+        )
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], True)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], True)
+
+    def test_builtin_disable_mrap(self):
+        # This builtin has a default value of False. It will be True only if
+        # the ``s3_disable_multiregion_access_points`` field in the S3 config
+        # is True.
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            s3_config={'s3_disable_multiregion_access_points': True},
+        )
+        self.assertEqual(bins['AWS::S3::DisableMultiRegionAccessPoints'], True)
+
+    def test_builtin_sdk_endpoint_1(self):
+        # assume a legacy endpoint resolver that uses a customized
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = False
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            client_endpoint_url='https://my.client.endpoint.com',
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(
+            bins['SDK::Endpoint'], 'https://my.client.endpoint.com'
+        )
+
+    def test_builtin_sdk_endpoint_2(self):
+        # assume a legacy endpoint resolver that uses a customized
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = False
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            client_endpoint_url=None,
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(
+            bins['SDK::Endpoint'], 'https://my.legacy.endpoint.com'
+        )
+
+    def test_builtin_sdk_endpoint_3(self):
+        # assume a legacy endpoint resolver that uses the builtin
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = True
+        bins = self.call_compute_endpoint_resolver_v2_builtin_defaults(
+            client_endpoint_url=None,
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(bins['SDK::Endpoint'], None)
