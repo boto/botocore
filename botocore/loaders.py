@@ -460,7 +460,7 @@ class Loader:
         only needed to load *non* model files (such as _endpoints and
         _retry).  If you need to load model files, you should prefer
         ``load_service_model``.  Use ``load_data_with_path`` to get the
-        file system path of the data file as second return value.
+        data path of the data file as second return value.
 
         :type name: str
         :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
@@ -499,8 +499,7 @@ class Loader:
 
         :return: Whether the given path is within the package's data directory.
         """
-        # normalize the path and resolve symlinks
-        path = os.path.realpath(os.path.abspath(path))
+        path = os.path.expanduser(os.path.expandvars(path))
         return path.startswith(self.BUILTIN_DATA_PATH)
 
 
