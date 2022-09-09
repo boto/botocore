@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.27.70
+=======
+
+* api-change:``cloudtrail``: This release adds CloudTrail getChannel and listChannels APIs to allow customer to view the ServiceLinkedChannel configurations.
+* api-change:``lexv2-models``: Update lexv2-models client to latest version
+* api-change:``lexv2-runtime``: Update lexv2-runtime client to latest version
+* api-change:``pi``: Increases the maximum values of two RDS Performance Insights APIs. The maximum value of the Limit parameter of DimensionGroup is 25. The MaxResult maximum is now 25 for the following APIs: DescribeDimensionKeys, GetResourceMetrics, ListAvailableResourceDimensions, and ListAvailableResourceMetrics.
+* api-change:``redshift``: This release updates documentation for AQUA features and other description updates.
+
+
 1.27.69
 =======
 
