@@ -716,6 +716,7 @@ class TestS3SigV2Presign(BasePresignTest):
 
     def tearDown(self):
         self.time_patch.stop()
+        super().tearDown()
 
     def test_presign_with_query_string(self):
         self.request.url = (
@@ -808,6 +809,7 @@ class TestSigV4Presign(BasePresignTest):
 
     def tearDown(self):
         self.datetime_patcher.stop()
+        super().tearDown()
 
     def test_presign_no_params(self):
         request = AWSRequest()
@@ -1044,6 +1046,7 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
 
     def tearDown(self):
         self.time_patch.stop()
+        super().tearDown()
 
     def test_presign_post(self):
         self.auth.add_auth(self.request)
@@ -1110,6 +1113,7 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
 
     def tearDown(self):
         self.datetime_patcher.stop()
+        super().tearDown()
 
     def test_presign_post(self):
         self.auth.add_auth(self.request)
