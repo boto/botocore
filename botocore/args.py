@@ -345,9 +345,10 @@ class ClientArgsCreator:
     def _should_set_global_sts_endpoint(
         self, region_name, endpoint_url, endpoint_config
     ):
-        if endpoint_url:
-            return False
-        if endpoint_config and endpoint_config.get('metadata', {}).get('tags'):
+        has_variant_tags = endpoint_config and endpoint_config.get(
+            'metadata', {}
+        ).get('tags')
+        if endpoint_url or has_variant_tags:
             return False
         return (
             self._get_sts_regional_endpoints_config() == 'legacy'
