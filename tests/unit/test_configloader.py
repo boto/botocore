@@ -39,6 +39,7 @@ class TestConfigLoader(BaseEnvVar):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+        super().tearDown()
 
     def create_config_file(self, filename):
         contents = (

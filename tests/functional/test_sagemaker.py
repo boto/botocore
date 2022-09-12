@@ -15,6 +15,7 @@ class TestSagemaker(BaseSessionTest):
         self.hook_calls.append(kwargs['event_name'])
 
     def tearDown(self):
+        super().tearDown()
         self.stubber.deactivate()
 
     def test_event_with_old_prefix(self):
