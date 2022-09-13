@@ -460,35 +460,6 @@ class TestCreateClientArgs(unittest.TestCase):
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
 
-    def test_does_set_global_sts_endpoint_if_in_legacy_region(self):
-        should = self.args_create._should_set_global_sts_endpoint(
-            region_name='us-west-1', endpoint_url=None, endpoint_config=None
-        )
-        self.assertTrue(should)
-
-    def test_doesnt_set_global_sts_endpoint_if_not_in_legacy_region(self):
-        should = self.args_create._should_set_global_sts_endpoint(
-            region_name='eu-south-1', endpoint_url=None, endpoint_config=None
-        )
-        self.assertFalse(should)
-
-    def test_doesnt_set_global_sts_endpoint_if_endpoint_url_is_given(self):
-        should = self.args_create._should_set_global_sts_endpoint(
-            region_name='us-west-1',
-            endpoint_url="https://my.endpoint.url.com",
-            endpoint_config=None,
-        )
-        self.assertFalse(should)
-
-    def test_doesnt_set_global_sts_endpoint_if_configured(self):
-        self.args_create._config_store.set_config_variable(
-            'sts_regional_endpoints', 'regional'
-        )
-        should = self.args_create._should_set_global_sts_endpoint(
-            region_name='us-west-1', endpoint_url=None, endpoint_config=None
-        )
-        self.assertFalse(should)
-
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
@@ -596,11 +567,6 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             region_name='my-region-2',
         )
         self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
-        self.args_create._should_set_global_sts_endpoint.assert_called_once_with(
-            region_name='my-region-2',
-            endpoint_url=None,
-            endpoint_config=None,
-        )
 
     def test_s3_global_endpoint(self):
         # The only reason for this builtin to not have the default value
