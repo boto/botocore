@@ -13,7 +13,6 @@
 # language governing permissions and limitations under the License.
 import socket
 
-import botocore.config
 from botocore import args, exceptions
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
@@ -131,7 +130,7 @@ class TestCreateClientArgs(unittest.TestCase):
         )
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
-        config = botocore.config.Config(max_pool_connections=20)
+        config = Config(max_pool_connections=20)
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(client_config=config)
             self.assert_create_endpoint_call(m, max_pool_connections=20)
@@ -141,7 +140,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'http': 'http://foo.bar:1234',
             'https': 'https://foo.bar:4321',
         }
-        config = botocore.config.Config(proxies=proxies)
+        config = Config(proxies=proxies)
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(client_config=config)
             self.assert_create_endpoint_call(m, proxies=proxies)
@@ -370,16 +369,14 @@ class TestCreateClientArgs(unittest.TestCase):
             )
 
     def test_provides_total_max_attempts(self):
-        config = botocore.config.Config(retries={'total_max_attempts': 10})
+        config = Config(retries={'total_max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 10
         )
 
     def test_provides_total_max_attempts_has_precedence(self):
-        config = botocore.config.Config(
-            retries={'total_max_attempts': 10, 'max_attempts': 5}
-        )
+        config = Config(retries={'total_max_attempts': 10, 'max_attempts': 5})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 10
@@ -387,7 +384,7 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertNotIn('max_attempts', client_args['client_config'].retries)
 
     def test_provide_retry_config_maps_total_max_attempts(self):
-        config = botocore.config.Config(retries={'max_attempts': 10})
+        config = Config(retries={'max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 11
