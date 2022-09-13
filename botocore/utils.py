@@ -37,15 +37,16 @@ import botocore.httpsession
 from botocore.compat import HEX_PAT  # noqa: F401
 from botocore.compat import IPV4_PAT  # noqa: F401
 from botocore.compat import IPV6_ADDRZ_PAT  # noqa: F401
-from botocore.compat import IPV6_ADDRZ_RE  # noqa: F401
 from botocore.compat import IPV6_PAT  # noqa: F401
 from botocore.compat import LS32_PAT  # noqa: F401
 from botocore.compat import UNRESERVED_PAT  # noqa: F401
-from botocore.compat import UNSAFE_URL_CHARS  # noqa: F401
 from botocore.compat import ZONE_ID_PAT  # noqa: F401
 from botocore.compat import (
     HAS_CRT,
+    IPV4_RE,
+    IPV6_ADDRZ_RE,
     MD5_AVAILABLE,
+    UNSAFE_URL_CHARS,
     OrderedDict,
     get_md5,
     get_tzinfo_options,
@@ -1217,6 +1218,11 @@ def is_valid_ipv6_endpoint_url(endpoint_url):
         return False
     hostname = f'[{urlparse(endpoint_url).hostname}]'
     return IPV6_ADDRZ_RE.match(hostname) is not None
+
+
+def is_valid_ipv4_endpoint_url(endpoint_url):
+    hostname = urlparse(endpoint_url).hostname
+    return IPV4_RE.match(hostname) is not None
 
 
 def is_valid_endpoint_url(endpoint_url):

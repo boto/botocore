@@ -23,7 +23,7 @@ from botocore.configloader import (
     multi_file_load_config,
     raw_config_parse,
 )
-from tests import BaseEnvVar, mock, unittest
+from tests import mock, unittest
 
 
 def path(filename):
@@ -33,7 +33,7 @@ def path(filename):
     return os.path.join(directory, filename)
 
 
-class TestConfigLoader(BaseEnvVar):
+class TestConfigLoader(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
