@@ -17,7 +17,7 @@ import os
 
 import pytest
 
-from botocore.endpoints_v2 import (
+from botocore.endpoint_provider import (
     EndpointProvider,
     EndpointRule,
     ErrorRule,
@@ -87,7 +87,7 @@ def partitions(loader):
 
 
 @pytest.fixture(scope="module")
-def standard_library(partitions):
+def rule_lib(partitions):
     return RuleSetStandardLibary(partitions)
 
 
@@ -198,46 +198,43 @@ def test_endpoint_resolution(
     assert endpoint.headers == expected_endpoint.get("headers", {})
 
 
-def test_none_doesnt_use_default_partition(standard_library):
-    assert standard_library._aws_partition(None) is None
+def test_none_doesnt_use_default_partition(rule_lib):
+    assert rule_lib.aws_partition(None) is None
 
 
-def test_no_match_region_returns_default_partition(standard_library):
-    partition_dict = standard_library._aws_partition("invalid-region-42")
+def test_no_match_region_returns_default_partition(rule_lib):
+    partition_dict = rule_lib.aws_partition("invalid-region-42")
     assert partition_dict['name'] == "aws"
 
 
-def test_invalid_arn_returns_none(standard_library):
-    assert (
-        standard_library._aws_parse_arn("arn:aws:this-is-not-an-arn:foo")
-        is None
-    )
+def test_invalid_arn_returns_none(rule_lib):
+    assert rule_lib.aws_parse_arn("arn:aws:this-is-not-an-arn:foo") is None
 
 
-def test_uri_encode_none_returns_none(standard_library):
-    assert standard_library._uri_encode(None) is None
+def test_uri_encode_none_returns_none(rule_lib):
+    assert rule_lib.uri_encode(None) is None
 
 
-def test_parse_url_none_return_none(standard_library):
-    assert standard_library._parse_url(None) is None
+def test_parse_url_none_return_none(rule_lib):
+    assert rule_lib.parse_url(None) is None
 
 
-def test_string_equals_wrong_type_raises(standard_library):
+def test_string_equals_wrong_type_raises(rule_lib):
     with pytest.raises(EndpointResolutionError) as exc_info:
-        standard_library._string_equals(1, 2)
+        rule_lib.string_equals(1, 2)
     assert "Both values must be strings" in str(exc_info.value)
 
 
-def test_boolean_equals_wrong_type_raises(standard_library):
+def test_boolean_equals_wrong_type_raises(rule_lib):
     with pytest.raises(EndpointResolutionError) as exc_info:
-        standard_library._boolean_equals(1, 2)
-    assert "Both arguments must be booleans." in str(exc_info.value)
+        rule_lib.boolean_equals(1, 2)
+    assert "Both arguments must be bools" in str(exc_info.value)
 
 
-def test_substring_wrong_type_raises(standard_library):
+def test_substring_wrong_type_raises(rule_lib):
     with pytest.raises(EndpointResolutionError) as exc_info:
-        standard_library._substring(["h", "e", "l", "l", "o"], 0, 5, False)
-    assert "Input must be a string." in str(exc_info.value)
+        rule_lib.substring(["h", "e", "l", "l", "o"], 0, 5, False)
+    assert "Input must be a string" in str(exc_info.value)
 
 
 def test_creator_unknown_type_raises():
@@ -250,7 +247,7 @@ def test_parameter_wrong_type_raises(endpoint_provider):
     param = endpoint_provider.ruleset.parameters["Region"]
     with pytest.raises(EndpointResolutionError) as exc_info:
         param.validate_input(1)
-    assert "Input parameter Region is the wrong type" in str(exc_info.value)
+    assert "Value (Region) is the wrong type" in str(exc_info.value)
 
 
 def test_deprecated_parameter_logs(endpoint_provider, caplog):
@@ -305,7 +302,7 @@ def test_rule_creation(rule_dict, expected_rule_type):
     assert isinstance(rule, expected_rule_type)
 
 
-def test_assign_existing_scope_var_raises(standard_library):
+def test_assign_existing_scope_var_raises(rule_lib):
     rule = EndpointRule(
         conditions=[
             {
@@ -326,7 +323,7 @@ def test_assign_existing_scope_var_raises(standard_library):
             scope_vars={
                 'Bucket': 'arn:aws:s3:us-east-1:123456789012:mybucket'
             },
-            standard_library=standard_library,
+            rule_lib=rule_lib,
         )
     assert str(exc_info.value) == (
         "Assignment bucketArn already exists in "

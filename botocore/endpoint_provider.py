@@ -11,13 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-# NOTE: All classes and functions in this module are considered private and not
-# subject to backwards compatibility guarantees. Please do not use them directly.
+"""
+NOTE: All classes and functions in this module are considered private and are
+subject to abrupt breaking changes. Please do not use them directly.
 
-
-# NOTE: To view the raw JSON that the objects in this module represent, please
-# go to any `endpoint-rule-set.json` file in /botocore/data/<service>/<api version>/
-# or you can look at the test files in /tests/unit/data/endpoints/valid-rules/
+To view the raw JSON that the objects in this module represent, please
+go to any `endpoint-rule-set.json` file in /botocore/data/<service>/<api version>/
+or you can look at the test files in /tests/unit/data/endpoints/valid-rules/
+"""
 
 
 import logging
@@ -52,12 +53,12 @@ STRING_FORMATTER = Formatter()
 
 
 class RuleSetStandardLibary:
-    """A set of functions supported in rule sets and helpers."""
+    """Rule actions to be performed by the EndpointProvider."""
 
     def __init__(self, partitions_data):
         self.partitions_data = partitions_data
 
-    def _is_func(self, argument):
+    def is_func(self, argument):
         """Determine if an object is a function object.
 
         :type argument: Any
@@ -65,7 +66,7 @@ class RuleSetStandardLibary:
         """
         return isinstance(argument, dict) and "fn" in argument
 
-    def _is_ref(self, argument):
+    def is_ref(self, argument):
         """Determine if an object is a reference object.
 
         :type argument: Any
@@ -73,7 +74,7 @@ class RuleSetStandardLibary:
         """
         return isinstance(argument, dict) and "ref" in argument
 
-    def _is_template(self, argument):
+    def is_template(self, argument):
         """Determine if an object contains a template string.
 
         :type argument: Any
@@ -84,7 +85,7 @@ class RuleSetStandardLibary:
             and TEMPLATE_STRING_RE.search(argument) is not None
         )
 
-    def _resolve_template_string(self, value, scope_vars):
+    def resolve_template_string(self, value, scope_vars):
         """Resolve and inject values into a template string.
 
         :type value: str
@@ -103,32 +104,34 @@ class RuleSetStandardLibary:
                 result += literal
         return result
 
-    def _resolve_value(self, value, scope_vars):
+    def resolve_value(self, value, scope_vars):
         """Return evaluated value based on type.
 
         :type value: Any
         :type scope_vars: dict
         :rtype: Any
         """
-        if self._is_func(value):
-            return self._call_function(value, scope_vars)
-        elif self._is_ref(value):
+        if self.is_func(value):
+            return self.call_function(value, scope_vars)
+        elif self.is_ref(value):
             return scope_vars.get(value["ref"])
-        elif self._is_template(value):
-            return self._resolve_template_string(value, scope_vars)
+        elif self.is_template(value):
+            return self.resolve_template_string(value, scope_vars)
 
         return value
 
-    def _convert_func_name(self, value):
+    def convert_func_name(self, value):
         """Normalize function names.
 
         :type value: str
         :rtype: str
         """
-        change_case = f"_{xform_name(value)}"
-        return change_case.replace(".", "_")
+        normalized_name = f"{xform_name(value)}"
+        if normalized_name == "not":
+            normalized_name = f"_{normalized_name}"
+        return normalized_name.replace(".", "_")
 
-    def _call_function(self, func_signature, scope_vars):
+    def call_function(self, func_signature, scope_vars):
         """Call the function with the resolved arguments and assign to `scope_vars`
         when applicable.
 
@@ -137,10 +140,10 @@ class RuleSetStandardLibary:
         :rtype: Any
         """
         func_args = [
-            self._resolve_value(arg, scope_vars)
+            self.resolve_value(arg, scope_vars)
             for arg in func_signature["argv"]
         ]
-        func_name = self._convert_func_name(func_signature["fn"])
+        func_name = self.convert_func_name(func_signature["fn"])
         func = getattr(self, func_name)
         result = func(*func_args)
         if "assign" in func_signature:
@@ -153,16 +156,15 @@ class RuleSetStandardLibary:
             scope_vars[assign] = result
         return result
 
-    def _is_set(self, value):
-        """Evaluates whether a value (such as an endpoint parameter) is set
-        (aka not None).
+    def is_set(self, value):
+        """Evaluates whether a value is set.
 
         :type value: Any
         :rytpe: bool
         """
         return value is not None
 
-    def _get_attr(self, value, path):
+    def get_attr(self, value, path):
         """Find an attribute within a value given a path string. The path can contain
         the name of the attribute and an index in brackets. A period separating attribute
         names indicates the one to the right is nested. The index will always occur at
@@ -185,18 +187,16 @@ class RuleSetStandardLibary:
                 value = value[part]
         return value
 
-    def _format_partition_output(self, partition):
+    def format_partition_output(self, partition):
         output = partition["outputs"]
         output["name"] = partition["id"]
         return output
 
-    def _is_partition_match(self, region, partition):
-        return (
-            region in partition["regions"]
-            or re.match(partition["regionRegex"], region) is not None
-        )
+    def is_partition_match(self, region, partition):
+        matches_regex = re.match(partition["regionRegex"], region) is not None
+        return region in partition["regions"] or matches_regex
 
-    def _aws_partition(self, value):
+    def aws_partition(self, value):
         """Match a region string to an AWS partition.
 
         :type value: str
@@ -207,14 +207,14 @@ class RuleSetStandardLibary:
 
         partitions = self.partitions_data['partitions']
         for partition in partitions:
-            if self._is_partition_match(value, partition):
-                return self._format_partition_output(partition)
+            if self.is_partition_match(value, partition):
+                return self.format_partition_output(partition)
 
         # return the default partition if no matches were found
         aws_partition = partitions[0]
-        return self._format_partition_output(aws_partition)
+        return self.format_partition_output(aws_partition)
 
-    def _aws_parse_arn(self, value):
+    def aws_parse_arn(self, value):
         """Parse and validate string for ARN components.
 
         :type value: str
@@ -228,7 +228,7 @@ class RuleSetStandardLibary:
         except InvalidArnException:
             return None
 
-        # these three components are the only ones that cannot be empty
+        # partition, resource, and service are required
         if not all(
             (arn_dict["partition"], arn_dict["service"], arn_dict["resource"])
         ):
@@ -242,10 +242,10 @@ class RuleSetStandardLibary:
 
         return arn_dict
 
-    def _is_valid_host_label(self, value, allow_subdomains):
-        """Evaluates whether one or more string values are valid host labels per
-        RFC 1123. If allow_subdomains is True, split on `.` and recurse with
-        it set to False.
+    def is_valid_host_label(self, value, allow_subdomains):
+        """Evaluates whether a value is a valid host label per
+        RFC 1123. If allow_subdomains is True, split on `.` and validate
+        each component separately.
 
         :type value: str
         :type allow_subdomains: bool
@@ -256,31 +256,25 @@ class RuleSetStandardLibary:
 
         if allow_subdomains is True:
             return all(
-                self._is_valid_host_label(label, False)
+                self.is_valid_host_label(label, False)
                 for label in value.split(".")
             )
 
         return VALID_HOST_LABEL_RE.match(value) is not None
 
-    def _string_equals(self, value1, value2):
-        """Evaluates two string values for equality and returns a boolean indicating
-        if they match or not.
+    def string_equals(self, value1, value2):
+        """Evaluates two string values for equality.
 
         :type value1: str
         :type value2: str
         :rtype: bool
         """
         if not all(isinstance(val, str) for val in (value1, value2)):
-            raise EndpointResolutionError(
-                msg=(
-                    f"Both values must be strings.\n"
-                    f"value1: {value1}\n"
-                    f"value2: {value2}"
-                )
-            )
+            msg = f"Both values must be strings, not {type(value1)} and {type(value2)}."
+            raise EndpointResolutionError(msg=msg)
         return value1 == value2
 
-    def _uri_encode(self, value):
+    def uri_encode(self, value):
         """Perform percent-encoding on an input string.
 
         :type value: str
@@ -291,7 +285,7 @@ class RuleSetStandardLibary:
 
         return percent_encode(value)
 
-    def _parse_url(self, value):
+    def parse_url(self, value):
         """Parse a URL string into components.
 
         :type value: str
@@ -301,9 +295,9 @@ class RuleSetStandardLibary:
             return None
 
         url_components = urlparse(value)
-        # urlparse will silently include a port in the authority (netloc) even if
-        # the value is not a base-10 integer.
         try:
+            # url_parse may assign non-integer values to
+            # `port` and will fail when accessed.
             url_components.port
         except ValueError:
             return None
@@ -311,7 +305,7 @@ class RuleSetStandardLibary:
         scheme = url_components.scheme
         query = url_components.query
         # URLs with queries are not supported
-        if scheme not in ["https", "http"] or len(query) > 0:
+        if scheme not in ("https", "http") or len(query) > 0:
             return None
 
         path = url_components.path
@@ -328,7 +322,7 @@ class RuleSetStandardLibary:
             or is_valid_ipv6_endpoint_url(value),
         }
 
-    def _boolean_equals(self, value1, value2):
+    def boolean_equals(self, value1, value2):
         """Evaluates two boolean values for equality.
 
         :type value1: bool
@@ -336,57 +330,44 @@ class RuleSetStandardLibary:
         :rtype: bool
         """
         if not all(isinstance(val, bool) for val in (value1, value2)):
-            raise EndpointResolutionError(
-                msg=(
-                    f"Both arguments must be booleans.\n"
-                    f"value1: {value1}\n"
-                    f"value2: {value2}"
-                )
-            )
+            msg = f"Both arguments must be bools, not {type(value1)} and {type(value2)}."
+            raise EndpointResolutionError(msg=msg)
         return value1 is value2
 
-    def _is_ascii(self, string):
+    def is_ascii(self, value):
         """Evaluates if a string only contains ASCII characters.
 
-        :type string: str
+        :type value: str
         :rtype: bool
         """
         try:
-            string.encode("ascii")
+            value.encode("ascii")
             return True
         except UnicodeEncodeError:
             return False
 
-    def _substring(self, string_input, start, stop, reverse):
+    def substring(self, value, start, stop, reverse):
         """Computes a substring given the start index and end index. If `reverse` is
         True, slice the string from the end instead.
 
-        :type string_input: str
+        :type value: str
         :type start: int
         :type end: int
         :type reverse: bool
         :rtype: str
         """
-        if not isinstance(string_input, str):
-            raise EndpointResolutionError(
-                msg=(
-                    f"Input must be a string.\n"
-                    f"string_input: {string_input}"
-                )
-            )
-        if (
-            start >= stop
-            or len(string_input) < stop
-            or not self._is_ascii(string_input)
-        ):
+        if not isinstance(value, str):
+            msg = f"Input must be a string, not {type(value)}."
+            raise EndpointResolutionError(msg=msg)
+        if start >= stop or len(value) < stop or not self.is_ascii(value):
             return None
 
         if reverse is True:
-            r_start = len(string_input) - stop
-            r_stop = len(string_input) - start
-            return string_input[r_start:r_stop]
+            r_start = len(value) - stop
+            r_stop = len(value) - start
+            return value[r_start:r_stop]
 
-        return string_input[start:stop]
+        return value[start:stop]
 
     def _not(self, value):
         """A function implementation of the logical operator `not`.
@@ -398,35 +379,31 @@ class RuleSetStandardLibary:
 
 
 class BaseRule:
-    """A rule within a rule set. All rules contain a conditions property,
-    which can be empty, and documentation about the rule.
-    """
+    """Base interface for individual endpoint rules."""
 
     def __init__(self, conditions, documentation=None):
         self.conditions = conditions
         self.documentation = documentation
 
-    def evaluate(self, scope_vars, standard_library):
+    def evaluate(self, scope_vars, rule_lib):
         raise NotImplementedError()
 
-    def evaluate_conditions(self, scope_vars, standard_library):
+    def evaluate_conditions(self, scope_vars, rule_lib):
         """Determine if all conditions in a rule are met.
 
         :type scope_vars: dict
-        :type standard_library: RuleSetStandardLibrary
+        :type rule_lib: RuleSetStandardLibrary
         :rtype: bool
         """
         for func_signature in self.conditions:
-            result = standard_library._call_function(
-                func_signature, scope_vars
-            )
+            result = rule_lib.call_function(func_signature, scope_vars)
             if result is False or result is None:
                 return False
         return True
 
 
 class RuleSetEndpoint(NamedTuple):
-    """A fully resolved endpoint object returned by a rule."""
+    """A resolved endpoint object returned by a rule."""
 
     url: str
     properties: dict
@@ -438,62 +415,54 @@ class EndpointRule(BaseRule):
         super().__init__(**kwargs)
         self.endpoint = endpoint
 
-    def evaluate(self, scope_vars, standard_library):
-        """If an endpoint rule's conditions are met, return the fully resolved
-        endpoint object.
+    def evaluate(self, scope_vars, rule_lib):
+        """Determine if conditions are met to provide a valid endpoint.
 
         :type scope_vars: dict
         :rtype: RuleSetEndpoint
         """
-        if self.evaluate_conditions(scope_vars, standard_library) is True:
-            url = standard_library._resolve_value(
-                self.endpoint["url"], scope_vars
-            )
+        if self.evaluate_conditions(scope_vars, rule_lib):
+            url = rule_lib.resolve_value(self.endpoint["url"], scope_vars)
             properties = self.resolve_properties(
                 self.endpoint.get("properties", {}),
                 scope_vars,
-                standard_library,
+                rule_lib,
             )
-            headers = self.resolve_headers(scope_vars, standard_library)
+            headers = self.resolve_headers(scope_vars, rule_lib)
             return RuleSetEndpoint(
                 url=url, properties=properties, headers=headers
             )
 
         return None
 
-    def resolve_properties(self, properties, scope_vars, standard_library):
-        """Recurse through an endpoint's `properties` attribute, resolving template
-        strings when found. Return the fully resolved attribute.
+    def resolve_properties(self, properties, scope_vars, rule_lib):
+        """Traverse `properties` attribute, resolving any template strings.
 
         :type properties: dict/list/str
         :type scope_vars: dict
-        :type standard_library: RuleSetStandardLibrary
+        :type rule_lib: RuleSetStandardLibrary
         :rtype: dict
         """
         if isinstance(properties, list):
             return [
-                self.resolve_properties(prop, scope_vars, standard_library)
+                self.resolve_properties(prop, scope_vars, rule_lib)
                 for prop in properties
             ]
         elif isinstance(properties, dict):
             return {
-                key: self.resolve_properties(
-                    value, scope_vars, standard_library
-                )
+                key: self.resolve_properties(value, scope_vars, rule_lib)
                 for key, value in properties.items()
             }
-        elif standard_library._is_template(properties):
-            return standard_library._resolve_template_string(
-                properties, scope_vars
-            )
+        elif rule_lib.is_template(properties):
+            return rule_lib.resolve_template_string(properties, scope_vars)
+
         return properties
 
-    def resolve_headers(self, scope_vars, standard_library):
-        """Iterate through an endpoint's headers attribute resolving values along
-        the way. Return the fully resolved attribute.
+    def resolve_headers(self, scope_vars, rule_lib):
+        """Iterate through headers attribute resolving all values.
 
         :type scope_vars: dict
-        :type standard_library: RuleSetStandardLibrary
+        :type rule_lib: RuleSetStandardLibrary
         :rtype: dict
         """
         resolved_headers = {}
@@ -501,8 +470,7 @@ class EndpointRule(BaseRule):
 
         for header, values in headers.items():
             resolved_headers[header] = [
-                standard_library._resolve_value(item, scope_vars)
-                for item in values
+                rule_lib.resolve_value(item, scope_vars) for item in values
             ]
         return resolved_headers
 
@@ -512,15 +480,15 @@ class ErrorRule(BaseRule):
         super().__init__(**kwargs)
         self.error = error
 
-    def evaluate(self, scope_vars, standard_library):
-        """If an error rule's conditions are met, raise the fully resolved error rule
+    def evaluate(self, scope_vars, rule_lib):
+        """If an error rule's conditions are met, raise an error rule.
 
         :type scope_vars: dict
-        :type standard_library: RuleSetStandardLibrary
+        :type rule_lib: RuleSetStandardLibrary
         :rtype: EndpointResolutionError
         """
-        if self.evaluate_conditions(scope_vars, standard_library) is True:
-            error = standard_library._resolve_value(self.error, scope_vars)
+        if self.evaluate_conditions(scope_vars, rule_lib):
+            error = rule_lib.resolve_value(self.error, scope_vars)
             raise EndpointResolutionError(msg=error)
         return None
 
@@ -534,23 +502,18 @@ class TreeRule(BaseRule):
         super().__init__(**kwargs)
         self.rules = [RuleCreator.create(**rule) for rule in rules]
 
-    def evaluate(self, scope_vars, standard_library):
-        """If a tree rule's conditions evaluate successfully, iterate over its
-        subordinate rules and return a result if there is one. If any of the
-        subsequent rules are trees, the function will recurse until it reaches
-        an error or an endpoint rule.
+    def evaluate(self, scope_vars, rule_lib):
+        """If a tree rule's conditions are met, iterate its sub-rules
+        and return first result found.
 
         :type scope_vars: dict
-        :type standard_library: RuleSetStandardLibrary
+        :type rule_lib: RuleSetStandardLibrary
         :rtype: RuleSetEndpoint/EndpointResolutionError
         """
-        if self.evaluate_conditions(scope_vars, standard_library) is True:
+        if self.evaluate_conditions(scope_vars, rule_lib):
             for rule in self.rules:
-                # newly set parameters via "assign" cannot be shared between
-                # adjacent rules
-                rule_result = rule.evaluate(
-                    scope_vars.copy(), standard_library
-                )
+                # don't share scope_vars between rules
+                rule_result = rule.evaluate(scope_vars.copy(), rule_lib)
                 if rule_result:
                     return rule_result
         return None
@@ -564,7 +527,7 @@ class RuleCreator:
 
     @classmethod
     def create(cls, **kwargs):
-        """Create a class instance from rule metadata.
+        """Create a rule instance from metadata.
 
         :rtype: TreeRule/EndpointRule/ErrorRule
         """
@@ -580,8 +543,15 @@ class RuleCreator:
             return rule_class(**kwargs)
 
 
+class ParameterType(Enum):
+    """Translation from `type` attribute to native Python type."""
+
+    string = str
+    boolean = bool
+
+
 class ParameterDefinition:
-    """The spec of an individual parameter defined in a rule set object."""
+    """The spec of an individual parameter defined in a RuleSet."""
 
     def __init__(
         self,
@@ -596,12 +566,12 @@ class ParameterDefinition:
         self.name = name
         try:
             self.parameter_type = getattr(
-                self.ParameterType, parameter_type.lower()
+                ParameterType, parameter_type.lower()
             ).value
         except AttributeError:
             raise EndpointResolutionError(
                 msg=f"Unknown parameter type: {parameter_type}. "
-                "A parameter must be of type string or boolean"
+                "A parameter must be of type string or boolean."
             )
         self.documentation = documentation
         self.built_in = builtIn
@@ -609,50 +579,53 @@ class ParameterDefinition:
         self.required = required
         self.deprecated = deprecated
 
-    class ParameterType(Enum):
-        """An enum that translates a parameter definition's `type` attribute to
-        its corresponding python native type.
-        """
+    def validate_input(self, value):
+        """Perform base validation on parameter input.
 
-        string = str
-        boolean = bool
-
-    def validate_input(self, input_param):
-        """Validate that an input parameter matches the type provided in its spec.
-
-        :type input_param: Any
+        :type value: Any
         :raises: EndpointParametersError
         """
 
-        if not isinstance(input_param, self.parameter_type):
+        if not isinstance(value, self.parameter_type):
             raise EndpointResolutionError(
-                msg=f"Input parameter {self.name} is the wrong "
-                f"type. Must be {self.parameter_type}"
+                msg=f"Value ({self.name}) is the wrong "
+                f"type. Must be {self.parameter_type}."
             )
         if self.deprecated is not None:
-            depr_string = f"{self.name} has been deprecated."
-            msg = self.deprecated["message"]
-            if msg:
-                depr_string += f"\n{msg}"
+            depr_str = f"{self.name} has been deprecated."
+            msg = self.deprecated.get("message")
             since = self.deprecated.get("since")
+            if msg:
+                depr_str += f"\n{msg}"
             if since:
-                depr_string += f"\nDeprecated since {since}."
-            logger.info(depr_string)
+                depr_str += f"\nDeprecated since {since}."
+            logger.info(depr_str)
+
         return None
+
+    def process_input(self, value):
+        """Process input against spec, applying default if value is None."""
+        if value is None and self.default is not None:
+            return self.default
+        elif value is not None:
+            self.validate_input(value)
+        return value
 
 
 class RuleSet:
-    """An entire rule set object. Every rule set contains a version, parameters
-    (specification of parameters not values) and rules. Additionally, it is provided
-    with input parameters from a client to validate against its defined parameter
-    traits and an instance of an endpoint provider.
-    """
+    """Collection of rules to derive a routable service endpoint."""
 
     def __init__(
         self, version, parameters, rules, partitions, documentation=None
     ):
         self.version = version
-        self.parameters = {
+        self.parameters = self._ingest_parameter_spec(parameters)
+        self.rules = [RuleCreator.create(**rule) for rule in rules]
+        self.rule_lib = RuleSetStandardLibary(partitions)
+        self.documentation = documentation
+
+    def _ingest_parameter_spec(self, parameters):
+        return {
             name: ParameterDefinition(
                 name,
                 spec["type"],
@@ -664,46 +637,33 @@ class RuleSet:
             )
             for name, spec in parameters.items()
         }
-        self.rules = [RuleCreator.create(**rule) for rule in rules]
-        self.standard_library = RuleSetStandardLibary(partitions)
-        self.documentation = documentation
 
-    def validate_input_parameters(self, input_parameters):
-        """Validate each input parameter against its spec. If not provided, add
-        the default value to the `input_parameters` dictionary.
+    def process_input_parameters(self, input_params):
+        """Process each input parameter against its spec.
 
-        :type input_parameters: dict
+        :type input_params: dict
         """
-        for param_name, param_spec in self.parameters.items():
-            input_param = input_parameters.get(param_name)
-            if input_param is None and param_spec.default is not None:
-                input_parameters[param_name] = param_spec.default
-            elif input_param is not None:
-                param_spec.validate_input(input_param)
+        for name, spec in self.parameters.items():
+            value = spec.process_input(input_params.get(name))
+            if value is not None:
+                input_params[name] = value
         return None
 
     def evaluate(self, input_parameters):
-        """Evaluate the rule set against the input parameters. Return the first rule
-        the parameters match against.
+        """Evaluate input parameters against rules returning first match.
 
         :type input_parameters: dict
         """
-        self.validate_input_parameters(input_parameters)
+        self.process_input_parameters(input_parameters)
         for rule in self.rules:
-            # newly set parameters via "assign" cannot be shared between
-            # adjacent rules
-            evaluation = rule.evaluate(
-                input_parameters.copy(), self.standard_library
-            )
+            evaluation = rule.evaluate(input_parameters.copy(), self.rule_lib)
             if evaluation is not None:
                 return evaluation
         return None
 
 
 class EndpointProvider:
-    """Provides a resolved endpoint for a set of input parameters after evaluating
-    them against a service rule set.
-    """
+    """Derives endpoints from a RuleSet for given input parameters."""
 
     def __init__(self, ruleset_data, partition_data):
         self.ruleset = RuleSet(**ruleset_data, partitions=partition_data)
