@@ -496,9 +496,11 @@ class ClientArgsCreator:
                 endpoint_bridge._resolve_endpoint_variant_config_var(
                     'use_fips_endpoint'
                 )
+                or False
             ),
             EPRBuiltins.AWS_USE_DUALSTACK: (
                 endpoint_bridge._resolve_use_dualstack_endpoint(service_name)
+                or False
             ),
             EPRBuiltins.AWS_STS_USE_GLOBAL_ENDPOINT: (
                 self._should_set_global_sts_endpoint(
