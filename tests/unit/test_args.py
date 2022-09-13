@@ -498,7 +498,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             'legacy_endpoint_url': 'https://my.legacy.endpoint.com',
         }
         kwargs = {**defaults, **overrides}
-        return self.args_create._compute_endpoint_resolver_v2_builtin_defaults(
+        return self.args_create.compute_endpoint_resolver_builtin_defaults(
             **kwargs
         )
 

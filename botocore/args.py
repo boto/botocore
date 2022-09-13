@@ -468,7 +468,7 @@ class ClientArgsCreator:
         else:
             return val.lower() == 'true'
 
-    def _compute_endpoint_resolver_v2_builtin_defaults(
+    def compute_endpoint_resolver_builtin_defaults(
         self,
         region_name,
         service_name,
