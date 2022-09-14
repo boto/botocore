@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
-from collections import defaultdict, namedtuple
+from collections import defaultdict
+from typing import NamedTuple, Union
 
 from botocore.compat import OrderedDict
 from botocore.exceptions import (
@@ -269,16 +270,20 @@ class StringShape(Shape):
         return self.metadata.get('enum', [])
 
 
-StaticContextParameter = namedtuple(
-    'StaticContextParameter', ['name', 'value']
-)
+class StaticContextParameter(NamedTuple):
+    name: str
+    value: Union[bool, str]
 
 
-ContextParameter = namedtuple('ContextParameter', ['name', 'member_name'])
+class ContextParameter(NamedTuple):
+    name: str
+    member_name: str
 
-ClientContextParameter = namedtuple(
-    'ClientContextParameter', ['name', 'type', 'documentation']
-)
+
+class ClientContextParameter(NamedTuple):
+    name: str
+    type: str
+    documentation: str
 
 
 class ServiceModel:
