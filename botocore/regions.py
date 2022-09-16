@@ -405,31 +405,31 @@ class EndpointResolver(BaseEndpointResolver):
 
 
 class EndpointResolverBuiltins(str, Enum):
-    # The AWS Region configured for the SDK client
-    AWS_REGION: str = "AWS::Region"
+    # The AWS Region configured for the SDK client (str)
+    AWS_REGION = "AWS::Region"
     # Whether the UseFIPSEndpoint configuration option has been enabled for
-    # the SDK client
-    AWS_USE_FIPS: bool = "AWS::UseFIPS"
+    # the SDK client (bool)
+    AWS_USE_FIPS = "AWS::UseFIPS"
     # Whether the UseDualStackEndpoint configuration option has been enabled
-    # for the SDK client
-    AWS_USE_DUALSTACK: bool = "AWS::UseDualStack"
+    # for the SDK client (bool)
+    AWS_USE_DUALSTACK = "AWS::UseDualStack"
     # Whether the global endpoint should be used with STS, rather the the
-    # regional endpoint for us-east-1
-    AWS_STS_USE_GLOBAL_ENDPOINT: bool = "AWS::STS::UseGlobalEndpoint"
+    # regional endpoint for us-east-1 (bool)
+    AWS_STS_USE_GLOBAL_ENDPOINT = "AWS::STS::UseGlobalEndpoint"
     # Whether the global endpoint should be used with S3, rather then the
-    # regional endpoint for us-east-1
-    AWS_S3_USE_GLOBAL_ENDPOINT: bool = "AWS::S3::UseGlobalEndpoint"
-    # Whether S3 Transfer Acceleration has been requested
-    AWS_S3_ACCELERATE: bool = "AWS::S3::Accelerate"
-    # Whether S3 Force Path Style has been enabled
-    AWS_S3_FORCE_PATH_STYLE: bool = "AWS::S3::ForcePathStyle"
+    # regional endpoint for us-east-1 (bool)
+    AWS_S3_USE_GLOBAL_ENDPOINT = "AWS::S3::UseGlobalEndpoint"
+    # Whether S3 Transfer Acceleration has been requested (bool)
+    AWS_S3_ACCELERATE = "AWS::S3::Accelerate"
+    # Whether S3 Force Path Style has been enabled (bool)
+    AWS_S3_FORCE_PATH_STYLE = "AWS::S3::ForcePathStyle"
     # Whether to use the ARN region or raise an error when ARN and client
-    # region differ (for s3 service only)
-    AWS_S3_USE_ARN_REGION: bool = "AWS::S3::UseArnRegion"
+    # region differ (for s3 service only, bool)
+    AWS_S3_USE_ARN_REGION = "AWS::S3::UseArnRegion"
     # Whether to use the ARN region or raise an error when ARN and client
-    # region differ (for s3-control service only)
-    AWS_S3CONTROL_USE_ARN_REGION: bool = 'AWS::S3Control::UseArnRegion'
-    # Whether multi-region access points (MRAP) should be disabled.
-    AWS_S3_DISABLE_MRAP: bool = "AWS::S3::DisableMultiRegionAccessPoints"
-    # Whether a custom endpoint has been configured
-    SDK_ENDPOINT: str = "SDK::Endpoint"
+    # region differ (for s3-control service only, bool)
+    AWS_S3CONTROL_USE_ARN_REGION = 'AWS::S3Control::UseArnRegion'
+    # Whether multi-region access points (MRAP) should be disabled (bool)
+    AWS_S3_DISABLE_MRAP = "AWS::S3::DisableMultiRegionAccessPoints"
+    # Whether a custom endpoint has been configured (str)
+    SDK_ENDPOINT = "SDK::Endpoint"
