@@ -135,6 +135,7 @@ def ruleset_testcases():
         "eventbridge",
         "fns",
         "headers",
+        "is-virtual-hostable-s3-bucket",
         "local-region-override",
         "parse-arn",
         "parse-url",
