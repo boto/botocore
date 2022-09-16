@@ -394,9 +394,9 @@ class RuleSetStandardLibary:
         """
         if (
             value is None
+            or len(value) < 3
             or value.lower() != value
             or IPV4_RE.match(value) is not None
-            or (allow_subdomains is False and value.count(".") > 0)
         ):
             return False
 
@@ -406,9 +406,7 @@ class RuleSetStandardLibary:
                 for label in value.split(".")
             )
 
-        return 3 <= len(value) <= 63 and self.is_valid_host_label(
-            value, allow_subdomains=False
-        )
+        return self.is_valid_host_label(value, allow_subdomains=False)
 
 
 class BaseRule:
