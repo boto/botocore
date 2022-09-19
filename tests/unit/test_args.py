@@ -13,7 +13,6 @@
 # language governing permissions and limitations under the License.
 import socket
 
-import botocore.config
 from botocore import args, exceptions
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
@@ -131,7 +130,7 @@ class TestCreateClientArgs(unittest.TestCase):
         )
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
-        config = botocore.config.Config(max_pool_connections=20)
+        config = Config(max_pool_connections=20)
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(client_config=config)
             self.assert_create_endpoint_call(m, max_pool_connections=20)
@@ -141,7 +140,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'http': 'http://foo.bar:1234',
             'https': 'https://foo.bar:4321',
         }
-        config = botocore.config.Config(proxies=proxies)
+        config = Config(proxies=proxies)
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(client_config=config)
             self.assert_create_endpoint_call(m, proxies=proxies)
@@ -370,16 +369,14 @@ class TestCreateClientArgs(unittest.TestCase):
             )
 
     def test_provides_total_max_attempts(self):
-        config = botocore.config.Config(retries={'total_max_attempts': 10})
+        config = Config(retries={'total_max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 10
         )
 
     def test_provides_total_max_attempts_has_precedence(self):
-        config = botocore.config.Config(
-            retries={'total_max_attempts': 10, 'max_attempts': 5}
-        )
+        config = Config(retries={'total_max_attempts': 10, 'max_attempts': 5})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 10
@@ -387,7 +384,7 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertNotIn('max_attempts', client_args['client_config'].retries)
 
     def test_provide_retry_config_maps_total_max_attempts(self):
-        config = botocore.config.Config(retries={'max_attempts': 10})
+        config = Config(retries={'max_attempts': 10})
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries['total_max_attempts'], 11
@@ -459,3 +456,222 @@ class TestCreateClientArgs(unittest.TestCase):
             client_config=Config(retries={'mode': 'standard'})
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
+
+
+class TestEndpointResolverBuiltins(unittest.TestCase):
+    def setUp(self):
+        event_emitter = mock.Mock(HierarchicalEmitter)
+        self.config_store = ConfigValueStore()
+        self.args_create = args.ClientArgsCreator(
+            event_emitter=event_emitter,
+            user_agent=None,
+            response_parser_factory=None,
+            loader=None,
+            exceptions_factory=None,
+            config_store=self.config_store,
+        )
+        self.bridge = ClientEndpointBridge(
+            endpoint_resolver=mock.Mock(),
+            scoped_config=None,
+            client_config=Config(),
+            default_endpoint=None,
+            service_signing_name=None,
+            config_store=self.config_store,
+        )
+        # assume a legacy endpoint resolver that uses the builtin
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = True
+
+    def call_compute_endpoint_resolver_builtin_defaults(self, **overrides):
+        defaults = {
+            'region_name': 'ca-central-1',
+            'service_name': 'fooservice',
+            's3_config': {},
+            'endpoint_bridge': self.bridge,
+            'client_endpoint_url': None,
+            'legacy_endpoint_url': 'https://my.legacy.endpoint.com',
+        }
+        kwargs = {**defaults, **overrides}
+        return self.args_create.compute_endpoint_resolver_builtin_defaults(
+            **kwargs
+        )
+
+    def test_builtins_defaults(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults()
+
+        self.assertEqual(bins['AWS::Region'], 'ca-central-1')
+        self.assertEqual(bins['AWS::UseFIPS'], False)
+        self.assertEqual(bins['AWS::UseDualStack'], False)
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], True)
+        self.assertEqual(bins['AWS::S3::UseGlobalEndpoint'], False)
+        self.assertEqual(bins['AWS::S3::Accelerate'], False)
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], False)
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], True)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], False)
+        self.assertEqual(
+            bins['AWS::S3::DisableMultiRegionAccessPoints'], False
+        )
+        self.assertEqual(bins['SDK::Endpoint'], None)
+
+    def test_aws_region(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            region_name='my-region-1',
+        )
+        self.assertEqual(bins['AWS::Region'], 'my-region-1')
+
+    def test_aws_use_fips_when_config_is_set_true(self):
+        self.config_store.set_config_variable('use_fips_endpoint', True)
+        bins = self.call_compute_endpoint_resolver_builtin_defaults()
+        self.assertEqual(bins['AWS::UseFIPS'], True)
+
+    def test_aws_use_fips_when_config_is_set_false(self):
+        self.config_store.set_config_variable('use_fips_endpoint', False)
+        bins = self.call_compute_endpoint_resolver_builtin_defaults()
+        self.assertEqual(bins['AWS::UseFIPS'], False)
+
+    def test_aws_use_dualstack_when_config_is_set_true(self):
+        self.bridge.client_config = Config(s3={'use_dualstack_endpoint': True})
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            service_name='s3-control'
+        )
+        self.assertEqual(bins['AWS::UseDualStack'], True)
+
+    def test_aws_use_dualstack_when_config_is_set_false(self):
+        self.bridge.client_config = Config(
+            s3={'use_dualstack_endpoint': False}
+        )
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            service_name='s3-control'
+        )
+        self.assertEqual(bins['AWS::UseDualStack'], False)
+
+    def test_aws_use_dualstack_when_non_dualstack_service(self):
+        self.bridge.client_config = Config(s3={'use_dualstack_endpoint': True})
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            service_name='other-service'
+        )
+        self.assertEqual(bins['AWS::UseDualStack'], False)
+
+    def test_aws_sts_global_endpoint_with_default_and_legacy_region(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            region_name='us-west-2',
+        )
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], True)
+
+    def test_aws_sts_global_endpoint_with_default_and_nonlegacy_region(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            region_name='eu-south-1',
+        )
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
+
+    def test_aws_sts_global_endpoint_with_nondefault_config(self):
+        self.config_store.set_config_variable(
+            'sts_regional_endpoints', 'regional'
+        )
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            region_name='us-west-2',
+        )
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
+
+    def test_s3_global_endpoint(self):
+        # The only reason for this builtin to not have the default value
+        # (False) is that the ``_should_force_s3_global`` method
+        # returns True.
+        self.args_create._should_force_s3_global = mock.Mock(return_value=True)
+        bins = self.call_compute_endpoint_resolver_builtin_defaults()
+        self.assertTrue(bins['AWS::S3::UseGlobalEndpoint'])
+        self.args_create._should_force_s3_global.assert_called_once()
+
+    def test_s3_accelerate_with_config_set_true(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'use_accelerate_endpoint': True},
+        )
+        self.assertEqual(bins['AWS::S3::Accelerate'], True)
+
+    def test_s3_accelerate_with_config_set_false(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'use_accelerate_endpoint': False},
+        )
+        self.assertEqual(bins['AWS::S3::Accelerate'], False)
+
+    def test_force_path_style_with_config_set_to_path(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'addressing_style': 'path'},
+        )
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], True)
+
+    def test_force_path_style_with_config_set_to_auto(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'addressing_style': 'auto'},
+        )
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], False)
+
+    def test_force_path_style_with_config_set_to_virtual(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'addressing_style': 'virtual'},
+        )
+        self.assertEqual(bins['AWS::S3::ForcePathStyle'], False)
+
+    def test_use_arn_region_with_config_set_false(self):
+        # These two builtins both take their value from the ``use_arn_region``
+        # in the S3 configuration, but have different default values.
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'use_arn_region': False},
+        )
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], False)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], False)
+
+    def test_use_arn_region_with_config_set_true(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'use_arn_region': True},
+        )
+        self.assertEqual(bins['AWS::S3::UseArnRegion'], True)
+        self.assertEqual(bins['AWS::S3Control::UseArnRegion'], True)
+
+    def test_disable_mrap_with_config_set_true(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'s3_disable_multiregion_access_points': True},
+        )
+        self.assertEqual(bins['AWS::S3::DisableMultiRegionAccessPoints'], True)
+
+    def test_disable_mrap_with_config_set_false(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            s3_config={'s3_disable_multiregion_access_points': False},
+        )
+        self.assertEqual(
+            bins['AWS::S3::DisableMultiRegionAccessPoints'], False
+        )
+
+    def test_sdk_endpoint_both_inputs_set(self):
+        # assume a legacy endpoint resolver that uses a customized
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = False
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            client_endpoint_url='https://my.client.endpoint.com',
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(
+            bins['SDK::Endpoint'], 'https://my.client.endpoint.com'
+        )
+
+    def test_sdk_endpoint_legacy_set_with_builtin_data(self):
+        # assume a legacy endpoint resolver that uses a customized
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = False
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            client_endpoint_url=None,
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(
+            bins['SDK::Endpoint'], 'https://my.legacy.endpoint.com'
+        )
+
+    def test_sdk_endpoint_legacy_set_without_builtin_data(self):
+        # assume a legacy endpoint resolver that uses the builtin
+        # endpoints.json file
+        self.bridge.endpoint_resolver.uses_builtin_data = True
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            client_endpoint_url=None,
+            legacy_endpoint_url='https://my.legacy.endpoint.com',
+        )
+        self.assertEqual(bins['SDK::Endpoint'], None)
