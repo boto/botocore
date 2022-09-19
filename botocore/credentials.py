@@ -1105,7 +1105,7 @@ class InstanceMetadataProvider(CredentialProvider):
         metadata = fetcher.retrieve_iam_role_credentials()
         if not metadata:
             return None
-        logger.debug(
+        logger.info(
             'Found credentials from IAM Role: %s', metadata['role_name']
         )
         # We manually set the data here, since we already made the request &
