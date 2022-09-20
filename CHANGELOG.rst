@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.77
+=======
+
+* api-change:``ec2``: This release adds support for blocked paths to Amazon VPC Reachability Analyzer.
+
+
 1.27.76
 =======
 
