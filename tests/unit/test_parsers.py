@@ -1091,8 +1091,8 @@ class TestParseErrorResponses(unittest.TestCase):
             "status_code": 400,
             "headers": {
                 "x-amzn-requestid": "request-id",
-                "x-amzn-query-error": "AWS.SimpleQueueService.NonExistentQueue;Sender"
-            }
+                "x-amzn-query-error": "AWS.SimpleQueueService.NonExistentQueue;Sender",
+            },
         }
         parsed = parser.parse(response, None)
         # Even (especially) on an error condition, the
@@ -1102,7 +1102,9 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error']['Message'], 'this is a message')
-        self.assertEqual(parsed['Error']['Code'], 'AWS.SimpleQueueService.NonExistentQueue')
+        self.assertEqual(
+            parsed['Error']['Code'], 'AWS.SimpleQueueService.NonExistentQueue'
+        )
 
     def test_response_with_invalid_query_error_for_json_protocol(self):
         parser = parsers.JSONParser()
@@ -1114,8 +1116,8 @@ class TestParseErrorResponses(unittest.TestCase):
             "status_code": 400,
             "headers": {
                 "x-amzn-requestid": "request-id",
-                "x-amzn-query-error": "AWS.SimpleQueueService.NonExistentQueue;sender;400"
-            }
+                "x-amzn-query-error": "AWS.SimpleQueueService.NonExistentQueue;sender;400",
+            },
         }
         parsed = parser.parse(response, None)
         # Even (especially) on an error condition, the
@@ -1137,8 +1139,8 @@ class TestParseErrorResponses(unittest.TestCase):
             "status_code": 400,
             "headers": {
                 "x-amzn-requestid": "request-id",
-                "x-amzn-query-error": ";sender"
-            }
+                "x-amzn-query-error": ";sender",
+            },
         }
         parsed = parser.parse(response, None)
         # Even (especially) on an error condition, the
@@ -1160,8 +1162,8 @@ class TestParseErrorResponses(unittest.TestCase):
             "status_code": 400,
             "headers": {
                 "x-amzn-requestid": "request-id",
-                "x-amzn-query-error": ""
-            }
+                "x-amzn-query-error": "",
+            },
         }
         parsed = parser.parse(response, None)
         # Even (especially) on an error condition, the

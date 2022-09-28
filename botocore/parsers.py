@@ -699,13 +699,20 @@ class BaseJSONParser(ResponseParser):
         # we need to fetch the error code from this header in that case
         query_error = header.get('x-amzn-query-error') if header else None
         query_error_code = None
-        if query_error and query_error.split(';') and len(query_error.split(';')) == 2:
+        if (
+            query_error
+            and query_error.split(';')
+            and len(query_error.split(';')) == 2
+        ):
             query_error_code = query_error.split(';')[0]
         # if the message did not contain an error code
         # include the response status code
         response_code = response.get('status_code')
-        code = query_error_code if query_error_code \
+        code = (
+            query_error_code
+            if query_error_code
             else body.get('__type', response_code and str(response_code))
+        )
         if code is not None:
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
