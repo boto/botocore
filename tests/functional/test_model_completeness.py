@@ -64,17 +64,17 @@ def _endpoint_rule_set_cases():
     _endpoint_rule_set_cases(),
 )
 def test_all_endpoint_rule_sets_exist(service_name, version):
-    """Tests the existence of endpoint-rule-set.json for each service
+    """Tests the existence of endpoint-rule-set-1.json for each service
     and verifies that content is present."""
-    type_name = 'endpoint-rule-set'
+    type_name = 'endpoint-rule-set-1'
     data = LOADER.load_service_model(service_name, type_name, version)
     assert len(data['rules']) >= 1
 
 @pytest.mark.parametrize("service_name", AVAILABLE_SERVICES)
 def test_all_endpoint_tests_exist(service_name):
-    """Tests the existence of endpoint-tests.json for each service
+    """Tests the existence of endpoint-tests-1.json for each service
     and verifies that content is present."""
-    endpoint_tests_file = os.path.join(TEST_DATA_DIR, service_name, 'endpoint-tests.json')
+    endpoint_tests_file = os.path.join(TEST_DATA_DIR, service_name, 'endpoint-tests-1.json')
     with open(endpoint_tests_file) as f:
         data = json.load(f)
     assert len(data['testCases']) >= 1
