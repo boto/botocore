@@ -26,6 +26,7 @@ import botocore.serialize
 import botocore.utils
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
+from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.signers import RequestSigner
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ class ClientArgsCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
+        auth_token=None,
     ):
         final_args = self.compute_client_args(
             service_model,
@@ -114,6 +116,7 @@ class ClientArgsCreator:
             endpoint_config['signature_version'],
             credentials,
             event_emitter,
+            auth_token,
         )
 
         config_kwargs['s3'] = s3_config
@@ -342,8 +345,10 @@ class ClientArgsCreator:
     def _should_set_global_sts_endpoint(
         self, region_name, endpoint_url, endpoint_config
     ):
-        endpoint_variant_tags = endpoint_config['metadata'].get('tags')
-        if endpoint_url or endpoint_variant_tags:
+        has_variant_tags = endpoint_config and endpoint_config.get(
+            'metadata', {}
+        ).get('tags')
+        if endpoint_url or has_variant_tags:
             return False
         return (
             self._get_sts_regional_endpoints_config() == 'legacy'
@@ -462,3 +467,67 @@ class ClientArgsCreator:
             return val
         else:
             return val.lower() == 'true'
+
+    def compute_endpoint_resolver_builtin_defaults(
+        self,
+        region_name,
+        service_name,
+        s3_config,
+        endpoint_bridge,
+        client_endpoint_url,
+        legacy_endpoint_url,
+    ):
+        # EndpointResolverv2 rulesets may accept an "SDK::Endpoint" as input.
+        # If the endpoint_url argument of create_client() is set, it always
+        # takes priority.
+        if client_endpoint_url:
+            given_endpoint = client_endpoint_url
+        # If an endpoints.json data file other than the one bundled within
+        # the botocore/data directory is used, the output of legacy
+        # endpoint resolution is provided to EndpointResolverv2.
+        elif not endpoint_bridge.endpoint_resolver.uses_builtin_data:
+            given_endpoint = legacy_endpoint_url
+        else:
+            given_endpoint = None
+
+        return {
+            EPRBuiltins.AWS_REGION: region_name,
+            EPRBuiltins.AWS_USE_FIPS: (
+                endpoint_bridge._resolve_endpoint_variant_config_var(
+                    'use_fips_endpoint'
+                )
+                or False
+                and not given_endpoint
+            ),
+            EPRBuiltins.AWS_USE_DUALSTACK: (
+                endpoint_bridge._resolve_use_dualstack_endpoint(service_name)
+                or False
+                and not given_endpoint
+            ),
+            EPRBuiltins.AWS_STS_USE_GLOBAL_ENDPOINT: (
+                self._should_set_global_sts_endpoint(
+                    region_name=region_name,
+                    endpoint_url=None,
+                    endpoint_config=None,
+                )
+            ),
+            EPRBuiltins.AWS_S3_USE_GLOBAL_ENDPOINT: (
+                self._should_force_s3_global(region_name, s3_config)
+            ),
+            EPRBuiltins.AWS_S3_ACCELERATE: s3_config.get(
+                'use_accelerate_endpoint', False
+            ),
+            EPRBuiltins.AWS_S3_FORCE_PATH_STYLE: (
+                s3_config.get('addressing_style') == 'path'
+            ),
+            EPRBuiltins.AWS_S3_USE_ARN_REGION: s3_config.get(
+                'use_arn_region', True
+            ),
+            EPRBuiltins.AWS_S3CONTROL_USE_ARN_REGION: s3_config.get(
+                'use_arn_region', False
+            ),
+            EPRBuiltins.AWS_S3_DISABLE_MRAP: s3_config.get(
+                's3_disable_multiregion_access_points', False
+            ),
+            EPRBuiltins.SDK_ENDPOINT: given_endpoint,
+        }

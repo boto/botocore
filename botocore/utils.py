@@ -37,15 +37,16 @@ import botocore.httpsession
 from botocore.compat import HEX_PAT  # noqa: F401
 from botocore.compat import IPV4_PAT  # noqa: F401
 from botocore.compat import IPV6_ADDRZ_PAT  # noqa: F401
-from botocore.compat import IPV6_ADDRZ_RE  # noqa: F401
 from botocore.compat import IPV6_PAT  # noqa: F401
 from botocore.compat import LS32_PAT  # noqa: F401
 from botocore.compat import UNRESERVED_PAT  # noqa: F401
-from botocore.compat import UNSAFE_URL_CHARS  # noqa: F401
 from botocore.compat import ZONE_ID_PAT  # noqa: F401
 from botocore.compat import (
     HAS_CRT,
+    IPV4_RE,
+    IPV6_ADDRZ_RE,
     MD5_AVAILABLE,
+    UNSAFE_URL_CHARS,
     OrderedDict,
     get_md5,
     get_tzinfo_options,
@@ -1217,6 +1218,11 @@ def is_valid_ipv6_endpoint_url(endpoint_url):
         return False
     hostname = f'[{urlparse(endpoint_url).hostname}]'
     return IPV6_ADDRZ_RE.match(hostname) is not None
+
+
+def is_valid_ipv4_endpoint_url(endpoint_url):
+    hostname = urlparse(endpoint_url).hostname
+    return IPV4_RE.match(hostname) is not None
 
 
 def is_valid_endpoint_url(endpoint_url):
@@ -2764,21 +2770,31 @@ class SSOTokenLoader:
             cache = {}
         self._cache = cache
 
-    def _generate_cache_key(self, start_url):
-        return hashlib.sha1(start_url.encode('utf-8')).hexdigest()
+    def _generate_cache_key(self, start_url, session_name):
+        input_str = start_url
+        if session_name is not None:
+            input_str = session_name
+        return hashlib.sha1(input_str.encode('utf-8')).hexdigest()
 
-    def __call__(self, start_url):
-        cache_key = self._generate_cache_key(start_url)
-        try:
-            token = self._cache[cache_key]
-            return token['accessToken']
-        except KeyError:
-            logger.debug('Failed to load SSO token:', exc_info=True)
-            error_msg = (
-                'The SSO access token has either expired or is otherwise '
-                'invalid.'
-            )
+    def save_token(self, start_url, token, session_name=None):
+        cache_key = self._generate_cache_key(start_url, session_name)
+        self._cache[cache_key] = token
+
+    def __call__(self, start_url, session_name=None):
+        cache_key = self._generate_cache_key(start_url, session_name)
+        logger.debug(f'Checking for cached token at: {cache_key}')
+        if cache_key not in self._cache:
+            name = start_url
+            if session_name is not None:
+                name = session_name
+            error_msg = f'Token for {name} does not exist'
             raise SSOTokenLoadError(error_msg=error_msg)
+
+        token = self._cache[cache_key]
+        if 'accessToken' not in token or 'expiresAt' not in token:
+            error_msg = f'Token for {start_url} is invalid'
+            raise SSOTokenLoadError(error_msg=error_msg)
+        return token
 
 
 class EventbridgeSignerSetter:

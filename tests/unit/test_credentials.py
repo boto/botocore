@@ -3442,7 +3442,9 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         self.start_url = 'https://d-92671207e4.awsapps.com/start'
         self.role_name = 'test-role'
         self.account_id = '1234567890'
-        self.access_token = 'some.sso.token'
+        self.access_token = {
+            'accessToken': 'some.sso.token',
+        }
         # This is just an arbitrary point in time we can pin to
         self.now = datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
         # The SSO endpoint uses ms whereas the OIDC endpoint uses seconds
@@ -3464,7 +3466,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         expected_params = {
             'roleName': self.role_name,
             'accountId': self.account_id,
-            'accessToken': self.access_token,
+            'accessToken': self.access_token['accessToken'],
         }
         expected_response = {
             'roleCredentials': {
@@ -3501,7 +3503,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         expected_params = {
             'roleName': self.role_name,
             'accountId': self.account_id,
-            'accessToken': self.access_token,
+            'accessToken': self.access_token['accessToken'],
         }
         self.stubber.add_client_error(
             'get_role_credentials',

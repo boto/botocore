@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
 from collections import defaultdict
+from typing import NamedTuple, Union
 
 from botocore.compat import OrderedDict
 from botocore.exceptions import (
@@ -84,6 +85,8 @@ class Shape:
         'retryable',
         'document',
         'union',
+        'contextParam',
+        'clientContextParams',
     ]
     MAP_TYPE = OrderedDict
 
@@ -267,6 +270,22 @@ class StringShape(Shape):
         return self.metadata.get('enum', [])
 
 
+class StaticContextParameter(NamedTuple):
+    name: str
+    value: Union[bool, str]
+
+
+class ContextParameter(NamedTuple):
+    name: str
+    member_name: str
+
+
+class ClientContextParameter(NamedTuple):
+    name: str
+    type: str
+    documentation: str
+
+
 class ServiceModel:
     """
 
@@ -419,6 +438,18 @@ class ServiceModel:
                 return True
         return False
 
+    @CachedProperty
+    def client_context_parameters(self):
+        params = self._service_description.get('clientContextParams', {})
+        return [
+            ClientContextParameter(
+                name=param_name,
+                type=param_val['type'],
+                documentation=param_val['documentation'],
+            )
+            for param_name, param_val in params.items()
+        ]
+
     def _get_metadata_property(self, name):
         try:
             return self.metadata[name]
@@ -428,7 +459,7 @@ class ServiceModel:
             )
 
     # Signature version is one of the rare properties
-    # than can be modified so a CachedProperty is not used here.
+    # that can be modified so a CachedProperty is not used here.
 
     @property
     def signature_version(self):
@@ -558,6 +589,29 @@ class OperationModel:
             for (name, shape) in input_shape.members.items()
             if 'idempotencyToken' in shape.metadata
             and shape.metadata['idempotencyToken']
+        ]
+
+    @CachedProperty
+    def static_context_parameters(self):
+        params = self._operation_model.get('staticContextParams', {})
+        return [
+            StaticContextParameter(name=name, value=props.get('value'))
+            for name, props in params.items()
+        ]
+
+    @CachedProperty
+    def context_parameters(self):
+        if not self.input_shape:
+            return []
+
+        return [
+            ContextParameter(
+                name=shape.metadata['contextParam']['name'],
+                member_name=name,
+            )
+            for name, shape in self.input_shape.members.items()
+            if 'contextParam' in shape.metadata
+            and 'name' in shape.metadata['contextParam']
         ]
 
     @CachedProperty

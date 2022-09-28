@@ -73,11 +73,13 @@ class RequestSigner:
         signature_version,
         credentials,
         event_emitter,
+        auth_token=None,
     ):
         self._region_name = region_name
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
+        self._auth_token = auth_token
         self._service_id = service_id
 
         # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
@@ -260,6 +262,14 @@ class RequestSigner:
             raise UnknownSignatureVersionError(
                 signature_version=signature_version
             )
+
+        if cls.REQUIRES_TOKEN is True:
+            frozen_token = None
+            if self._auth_token is not None:
+                frozen_token = self._auth_token.get_frozen_token()
+            auth = cls(frozen_token)
+            return auth
+
         # If there's no credentials provided (i.e credentials is None),
         # then we'll pass a value of "None" over to the auth classes,
         # which already handle the cases where no credentials have

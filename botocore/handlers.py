@@ -194,6 +194,9 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
     if auth_type == 'none':
         return botocore.UNSIGNED
 
+    if auth_type == 'bearer':
+        return 'bearer'
+
     if auth_type.startswith('v4'):
         if auth_type == 'v4a':
             # If sigv4a is chosen, we must add additional signing config for
