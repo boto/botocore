@@ -189,7 +189,7 @@ class TestCreateClientArgs(unittest.TestCase):
         )
         self.assertEqual(client_args['client_config'].region_name, None)
 
-    def test_tcp_keepalive_enabled(self):
+    def test_tcp_keepalive_enabled_scoped_config(self):
         scoped_config = {'tcp_keepalive': 'true'}
         with mock.patch('botocore.args.EndpointCreator') as m:
             self.call_get_client_args(scoped_config=scoped_config)
@@ -200,11 +200,37 @@ class TestCreateClientArgs(unittest.TestCase):
             )
 
     def test_tcp_keepalive_not_specified(self):
-        scoped_config = {}
         with mock.patch('botocore.args.EndpointCreator') as m:
-            self.call_get_client_args(scoped_config=scoped_config)
+            self.call_get_client_args(scoped_config={}, client_config=None)
             self.assert_create_endpoint_call(
                 m, socket_options=self.default_socket_options
+            )
+            self.call_get_client_args(
+                scoped_config=None, client_config=Config()
+            )
+            self.assert_create_endpoint_call(
+                m, socket_options=self.default_socket_options
+            )
+
+    def test_tcp_keepalive_enabled_if_set_anywhere(self):
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(
+                scoped_config={'tcp_keepalive': 'true'},
+                client_config=Config(tcp_keepalive=False),
+            )
+            self.assert_create_endpoint_call(
+                m,
+                socket_options=self.default_socket_options
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+            )
+            self.call_get_client_args(
+                scoped_config={'tcp_keepalive': 'false'},
+                client_config=Config(tcp_keepalive=True),
+            )
+            self.assert_create_endpoint_call(
+                m,
+                socket_options=self.default_socket_options
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_tcp_keepalive_explicitly_disabled(self):

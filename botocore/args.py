@@ -234,7 +234,9 @@ class ClientArgsCreator:
             'protocol': protocol,
             'config_kwargs': config_kwargs,
             's3_config': s3_config,
-            'socket_options': self._compute_socket_options(scoped_config),
+            'socket_options': self._compute_socket_options(
+                scoped_config, client_config
+            ),
         }
 
     def compute_s3_config(self, client_config):
@@ -387,16 +389,17 @@ class ClientArgsCreator:
             service_name, region_name, endpoint_url, is_secure
         )
 
-    def _compute_socket_options(self, scoped_config):
+    def _compute_socket_options(self, scoped_config, client_config=None):
         # This disables Nagle's algorithm and is the default socket options
         # in urllib3.
         socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
-        if scoped_config:
-            # Enables TCP Keepalive if specified in shared config file.
-            if self._ensure_boolean(scoped_config.get('tcp_keepalive', False)):
-                socket_options.append(
-                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                )
+        client_keepalive = client_config and client_config.tcp_keepalive
+        scoped_keepalive = scoped_config and self._ensure_boolean(
+            scoped_config.get("tcp_keepalive", False)
+        )
+        # Enables TCP Keepalive if specified in client config object or shared config file.
+        if client_keepalive or scoped_keepalive:
+            socket_options.append((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
         return socket_options
 
     def _compute_retry_config(self, config_kwargs):

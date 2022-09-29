@@ -183,6 +183,12 @@ class Config:
         endpoint resolution.
 
         Defaults to None.
+
+    :type tcp_keepalive: bool
+    :param tcp_keepalive: Enables the TCP Keep-Alive socket option used when
+        creating new connections if set to True.
+
+        Defaults to False.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -205,6 +211,7 @@ class Config:
             ('use_dualstack_endpoint', None),
             ('use_fips_endpoint', None),
             ('defaults_mode', None),
+            ('tcp_keepalive', None),
         ]
     )
 
