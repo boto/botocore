@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -1733,6 +1734,12 @@ class TestCreateCredentialResolver(BaseEnvVar):
         )
         self.session.set_config_variable = self.fake_set_config_variable
         self.session.instance_variables = self.fake_instance_variable_lookup
+        self.temp_dir = os.path.join(os.path.dirname(__file__), 'tmp')
+
+    def tearDown(self):
+        super().tearDown()
+        if os.path.isdir(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
 
     def fake_get_component(self, key):
         if key == 'config_provider':
@@ -1779,6 +1786,28 @@ class TestCreateCredentialResolver(BaseEnvVar):
         )
         cache = resolver.get_provider('assume-role').cache
         self.assertIs(cache, custom_cache)
+
+    def test_multithreaded_cache(self):
+        cache = credentials.JSONFileCache(working_dir=self.temp_dir)
+        thread1 = threading.Thread(
+            target=cache.__setitem__, args=('foo', 'bar')
+        )
+        thread2 = threading.Thread(
+            target=cache.__setitem__, args=('biz', 'baz')
+        )
+        for thread in [thread1, thread2]:
+            thread.start()
+            thread.join()
+        foo_file = os.path.join(cache._working_dir, 'foo.json')
+        biz_file = os.path.join(cache._working_dir, 'biz.json')
+        self.assertTrue(os.path.isfile(foo_file))
+        self.assertTrue(os.path.isfile(biz_file))
+        with open(foo_file) as f:
+            key1 = json.load(f)
+        self.assertEqual(key1, "bar")
+        with open(biz_file) as f:
+            key2 = json.load(f)
+        self.assertEqual(key2, "baz")
 
 
 class TestCanonicalNameSourceProvider(BaseEnvVar):
