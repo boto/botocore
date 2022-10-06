@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.88
+=======
+
+* api-change:``resiliencehub``: Documentation change for AWS Resilience Hub. Doc-only update to fix Documentation layout
+
+
 1.27.87
 =======
 
