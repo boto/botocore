@@ -1095,8 +1095,7 @@ class TestParseErrorResponses(unittest.TestCase):
             },
         }
         parsed = parser.parse(response, None)
-        # Even (especially) on an error condition, the
-        # ResponseMetadata should be populated.
+        # ResponseMetadata should always be populated.
         self.assertIn('ResponseMetadata', parsed)
         self.assertEqual(parsed['ResponseMetadata']['RequestId'], 'request-id')
 
@@ -1120,8 +1119,6 @@ class TestParseErrorResponses(unittest.TestCase):
             },
         }
         parsed = parser.parse(response, None)
-        # Even (especially) on an error condition, the
-        # ResponseMetadata should be populated.
         self.assertIn('ResponseMetadata', parsed)
         self.assertEqual(parsed['ResponseMetadata']['RequestId'], 'request-id')
 
@@ -1143,8 +1140,6 @@ class TestParseErrorResponses(unittest.TestCase):
             },
         }
         parsed = parser.parse(response, None)
-        # Even (especially) on an error condition, the
-        # ResponseMetadata should be populated.
         self.assertIn('ResponseMetadata', parsed)
         self.assertEqual(parsed['ResponseMetadata']['RequestId'], 'request-id')
 
@@ -1166,8 +1161,6 @@ class TestParseErrorResponses(unittest.TestCase):
             },
         }
         parsed = parser.parse(response, None)
-        # Even (especially) on an error condition, the
-        # ResponseMetadata should be populated.
         self.assertIn('ResponseMetadata', parsed)
         self.assertEqual(parsed['ResponseMetadata']['RequestId'], 'request-id')
 
