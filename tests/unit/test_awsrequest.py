@@ -30,7 +30,7 @@ from botocore.awsrequest import (
     create_request_object,
     prepare_request_dict,
 )
-from botocore.compat import file_type, six
+from botocore.compat import file_type
 from botocore.exceptions import UnseekableStreamError
 from tests import mock, unittest
 
@@ -59,7 +59,7 @@ class FakeSocket:
         pass
 
 
-class BytesIOWithLen(six.BytesIO):
+class BytesIOWithLen(io.BytesIO):
     def __len__(self):
         return len(self.getvalue())
 
@@ -400,7 +400,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request(
                 'GET',
                 '/bucket/foo',
-                six.BytesIO(b'body'),
+                io.BytesIO(b'body'),
                 {'Expect': b'100-continue', 'Content-Length': b'4'},
             )
             response = conn.getresponse()

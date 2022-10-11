@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-from botocore.compat import six
 from botocore.docs.bcdoc.restdoc import ReSTDocument
 from botocore.docs.bcdoc.style import ReSTStyle
 from tests import unittest
@@ -151,9 +150,9 @@ class TestStyle(unittest.TestCase):
         style.tocitem('bar')
         self.assertEqual(
             style.doc.getvalue(),
-            six.b(
-                '\n.. toctree::\n  :maxdepth: 1'
-                '\n  :titlesonly:\n\n  foo\n  bar\n'
+            (
+                b'\n.. toctree::\n  :maxdepth: 1'
+                b'\n  :titlesonly:\n\n  foo\n  bar\n'
             ),
         )
 
@@ -173,9 +172,9 @@ class TestStyle(unittest.TestCase):
         style.hidden_tocitem('bar')
         self.assertEqual(
             style.doc.getvalue(),
-            six.b(
-                '\n.. toctree::\n  :maxdepth: 1'
-                '\n  :hidden:\n\n  foo\n  bar\n'
+            (
+                b'\n.. toctree::\n  :maxdepth: 1'
+                b'\n  :hidden:\n\n  foo\n  bar\n'
             ),
         )
 
@@ -294,7 +293,9 @@ class TestStyle(unittest.TestCase):
             'returns: None'
         )
         style.write_py_doc_string(docstring)
-        self.assertEqual(style.doc.getvalue(), six.b(docstring + '\n'))
+        self.assertEqual(
+            style.doc.getvalue(), (docstring + '\n').encode('latin-1')
+        )
 
     def test_new_line(self):
         style = ReSTStyle(ReSTDocument())

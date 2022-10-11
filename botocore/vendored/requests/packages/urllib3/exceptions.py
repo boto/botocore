@@ -1,18 +1,19 @@
-
 ## Base Exceptions
+
 
 class HTTPError(Exception):
     "Base exception used by this module."
     pass
+
 
 class HTTPWarning(Warning):
     "Base warning used by this module."
     pass
 
 
-
 class PoolError(HTTPError):
     "Base exception for errors caused within a pool."
+
     def __init__(self, pool, message):
         self.pool = pool
         HTTPError.__init__(self, "%s: %s" % (pool, message))
@@ -24,6 +25,7 @@ class PoolError(HTTPError):
 
 class RequestError(PoolError):
     "Base exception for PoolErrors that have associated URLs."
+
     def __init__(self, pool, url, message):
         self.url = url
         PoolError.__init__(self, pool, message)
@@ -59,6 +61,7 @@ ConnectionError = ProtocolError
 
 ## Leaf Exceptions
 
+
 class MaxRetryError(RequestError):
     """Raised when the maximum number of retries is exceeded.
 
@@ -73,7 +76,9 @@ class MaxRetryError(RequestError):
         self.reason = reason
 
         message = "Max retries exceeded with url: %s (Caused by %r)" % (
-            url, reason)
+            url,
+            reason,
+        )
 
         RequestError.__init__(self, pool, url, message)
 
@@ -88,16 +93,18 @@ class HostChangedError(RequestError):
 
 
 class TimeoutStateError(HTTPError):
-    """ Raised when passing an invalid state to a timeout """
+    """Raised when passing an invalid state to a timeout"""
+
     pass
 
 
 class TimeoutError(HTTPError):
-    """ Raised when a socket timeout error occurs.
+    """Raised when a socket timeout error occurs.
 
     Catching this error will catch both :exc:`ReadTimeoutErrors
     <ReadTimeoutError>` and :exc:`ConnectTimeoutErrors <ConnectTimeoutError>`.
     """
+
     pass
 
 

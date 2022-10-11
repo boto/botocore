@@ -24,7 +24,7 @@ from dateutil.tz import tzlocal, tzutc
 import botocore.exceptions
 import botocore.session
 from botocore import credentials
-from botocore.compat import json, six
+from botocore.compat import json
 from botocore.configprovider import ConfigValueStore
 from botocore.credentials import (
     AssumeRoleProvider,
@@ -3425,7 +3425,7 @@ class TestProfileProviderBuilder(unittest.TestCase):
             ConfigProvider,
         ]
         self.assertEqual(len(providers), len(expected_providers))
-        zipped_providers = six.moves.zip(providers, expected_providers)
+        zipped_providers = zip(providers, expected_providers)
         for provider, expected_type in zipped_providers:
             self.assertTrue(isinstance(provider, expected_type))
 

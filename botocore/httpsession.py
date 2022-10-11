@@ -49,6 +49,8 @@ try:
 except ImportError:
     from urllib3.util.ssl_ import SSLContext
 
+from urllib.parse import unquote
+
 import botocore.awsrequest
 from botocore.compat import (
     IPV6_ADDRZ_RE,
@@ -66,7 +68,6 @@ from botocore.exceptions import (
     ReadTimeoutError,
     SSLError,
 )
-from botocore.vendored.six.moves.urllib_parse import unquote
 
 filter_ssl_warnings()
 logger = logging.getLogger(__name__)

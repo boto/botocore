@@ -17,6 +17,7 @@ import sys
 import inspect
 import warnings
 import hashlib
+import http.client
 import logging
 import shlex
 import re
@@ -25,7 +26,6 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from math import floor
 
-from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
@@ -33,10 +33,9 @@ from urllib3 import exceptions
 logger = logging.getLogger(__name__)
 
 
-from botocore.vendored.six.moves import http_client
-
-class HTTPHeaders(http_client.HTTPMessage):
+class HTTPHeaders(http.client.HTTPMessage):
     pass
+
 
 from urllib.parse import (
     quote,
@@ -55,12 +54,14 @@ from io import IOBase as _IOBase
 from base64 import encodebytes
 from email.utils import formatdate
 from itertools import zip_longest
+
 file_type = _IOBase
 zip = zip
 
 # In python3, unquote takes a str() object, url decodes it,
 # then takes the bytestring and decodes it to utf-8.
 unquote_str = unquote_plus
+
 
 def set_socket_timeout(http_response, timeout):
     """Set the timeout of the socket from an HTTPResponse.
@@ -70,14 +71,17 @@ def set_socket_timeout(http_response, timeout):
     """
     http_response._fp.fp.raw._sock.settimeout(timeout)
 
+
 def accepts_kwargs(func):
     # In python3.4.1, there's backwards incompatible
     # changes when using getargspec with functools.partials.
     return inspect.getfullargspec(func)[2]
 
+
 def ensure_unicode(s, encoding=None, errors=None):
     # NOOP in Python 3, because every string is already unicode
     return s
+
 
 def ensure_bytes(s, encoding='utf-8', errors='strict'):
     if isinstance(s, str):
@@ -346,6 +350,7 @@ UNSAFE_URL_CHARS = frozenset('\t\r\n')
 # Detect if gzip is available for use
 try:
     import gzip
+
     HAS_GZIP = True
 except ImportError:
     HAS_GZIP = False
