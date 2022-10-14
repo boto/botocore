@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.27.91
+=======
+
+* api-change:``mediaconvert``: MediaConvert now supports specifying the minimum percentage of the HRD buffer available at the end of each encoded video segment.
+
+
 1.27.90
 =======
 
