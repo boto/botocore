@@ -1041,15 +1041,14 @@ def remove_bucket_from_url_paths_from_model(params, model, context, **kwargs):
     endpoint resolution, the problem exists in _all_ URLs that contain a bucket
     name and can therefore be addressed before the URL gets assembled.
     """
-    if model.service_model.service_name != 's3':
-        return
     req_uri = model.http['requestUri']
-    if req_uri.startswith('/{Bucket}'):
-        model.http['requestUri'] = req_uri[9:]
+    bucket_path = '/{Bucket}'
+    if req_uri.startswith(bucket_path):
+        model.http['requestUri'] = req_uri[len(bucket_path) :]
         # If the request URI is _only_ a bucket, the auth_path must be
         # terminated with a '/' character to generate a signature that the
         # server will accept.
-        needs_slash = req_uri == '/{Bucket}'
+        needs_slash = req_uri == bucket_path
         model.http['authPath'] = f'{req_uri}/' if needs_slash else req_uri
 
 
@@ -1061,17 +1060,14 @@ def remove_accid_host_prefix_from_model(params, model, context, **kwargs):
     client object.
 
     When the ruleset based endpoint resolver is in effect, both the endpoint
-    ruleset _and_ the service model place the {AccountId}. prefix the URL.
+    ruleset _and_ the service model place the {AccountId}. prefix in the URL.
     The result is an invalid endpoint. This handler modifies the operation
     model to remove the `endpoint.hostPrefix` field while leaving the
     `RequiresAccountId` static context parameter in place.
     """
-    if model.service_model.service_name != 's3control':
-        return
     has_ctx_param = any(
-        True
+        ctx_param.name == 'RequiresAccountId' and ctx_param.value is True
         for ctx_param in model.static_context_parameters
-        if ctx_param.name == 'RequiresAccountId' and ctx_param.value is True
     )
     if (
         model.endpoint is not None

@@ -18,12 +18,17 @@ from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
+from botocore.config import Config
 from botocore.discovery import (
     EndpointDiscoveryHandler,
     EndpointDiscoveryManager,
     block_endpoint_discovery_required_operations,
 )
 from botocore.docs.docstring import ClientMethodDocstring, PaginatorDocstring
+from botocore.endpoint_provider import (
+    ENDPOINT_RESOLUTION_V2_SERVICES,
+    FORCE_ENDPOINT_RESOLUTION_V2,
+)
 from botocore.exceptions import (
     DataNotFoundError,
     InvalidEndpointDiscoveryConfigurationError,
@@ -42,41 +47,27 @@ from botocore.retries import adaptive, standard
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
-    S3ArnParamHandler,
-    S3ControlArnParamHandler,
     S3ControlArnParamHandler2,
-    S3ControlEndpointSetter,
-    S3EndpointSetter,
-    S3RegionRedirector,
     S3RegionRedirector2,
     ensure_boolean,
     get_service_module_name,
 )
 
 # Keep these imported.  There's pre-existing code that uses:
-# "from botocore.client import Config"
+# "from botocore.client import UNSIGNED"
 # "from botocore.client import ClientError"
 # etc.
-from botocore.config import Config  # noqa
 from botocore.exceptions import ClientError  # noqa
-from botocore.args import ClientArgsCreator  # noqa
+from botocore.utils import S3ArnParamHandler  # noqa
+from botocore.utils import S3ControlArnParamHandler  # noqa
+from botocore.utils import S3ControlEndpointSetter  # noqa
+from botocore.utils import S3EndpointSetter  # noqa
+from botocore.utils import S3RegionRedirector  # noqa
 from botocore import UNSIGNED  # noqa
 
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
-
-# List of services for which rule-based endpoint resolution is always enabled.
-# This list will change and eventually be removed during minor or patch version
-# changes as part of the rollout of rule-based endpoints resolution.
-ENDPOINT_RESOLUTION_V2_SERVICES = ['s3', 's3control']
-# Feature flag to enable rule-based endpoint resolution for all services.
-# Only for testing use. Rulesets for services may be missing or incomplete
-# until the service is enabled for rule-based endpoint resolution by default.
-# This flag will eventually be removed during a minor or patch version change.
-FORCE_ENDPOINT_RESOLUTION_V2 = ensure_boolean(
-    os.environ.get('BOTO_FORCE_ENDPOINT_RESOLUTION_V2', False)
-)
 
 
 class ClientCreator:
@@ -160,14 +151,14 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            auth_token,
             endpoints_ruleset_data,
             partition_data,
-            auth_token,
         )
         service_client = cls(**client_args)
         self._register_retries(service_client)
-        self._register_s3_events2(service_client, client_config, scoped_config)
-        self._register_s3_control_events2(service_client)
+        self._register_s3_events(service_client, client_config, scoped_config)
+        self._register_s3_control_events(service_client)
 
         if client_args['endpoint_ruleset_resolver'] is None:
             # When using the legacy endpoint resolver, several event handlers
@@ -367,7 +358,7 @@ class ClientCreator:
             endpoint_url=endpoint_url,
         ).register(client.meta.events)
 
-    def _register_s3_events2(self, client, client_config, scoped_config):
+    def _register_s3_events(self, client, client_config, scoped_config):
         if client.meta.service_model.service_name != 's3':
             return
         S3RegionRedirector2(None, client).register()
@@ -375,58 +366,10 @@ class ClientCreator:
             client.meta, client_config, scoped_config
         )
 
-    # Unused method, kept for potential third party importers
-    def _register_s3_events(
-        self,
-        client,
-        endpoint_bridge,
-        endpoint_url,
-        client_config,
-        scoped_config,
-    ):
-        if client.meta.service_model.service_name != 's3':
-            return
-        S3RegionRedirector(endpoint_bridge, client).register()
-        S3ArnParamHandler().register(client.meta.events)
-        use_fips_endpoint = client.meta.config.use_fips_endpoint
-        S3EndpointSetter(
-            endpoint_resolver=self._endpoint_resolver,
-            region=client.meta.region_name,
-            s3_config=client.meta.config.s3,
-            endpoint_url=endpoint_url,
-            partition=client.meta.partition,
-            use_fips_endpoint=use_fips_endpoint,
-        ).register(client.meta.events)
-        self._set_s3_presign_signature_version(
-            client.meta, client_config, scoped_config
-        )
-
-    def _register_s3_control_events2(self, client):
+    def _register_s3_control_events(self, client):
         if client.meta.service_model.service_name != 's3control':
             return
         S3ControlArnParamHandler2().register(client.meta.events)
-
-    # Unused method, kept for potential third party importers
-    def _register_s3_control_events(
-        self,
-        client,
-        endpoint_bridge,
-        endpoint_url,
-        client_config,
-        scoped_config,
-    ):
-        if client.meta.service_model.service_name != 's3control':
-            return
-        use_fips_endpoint = client.meta.config.use_fips_endpoint
-        S3ControlArnParamHandler().register(client.meta.events)
-        S3ControlEndpointSetter(
-            endpoint_resolver=self._endpoint_resolver,
-            region=client.meta.region_name,
-            s3_config=client.meta.config.s3,
-            endpoint_url=endpoint_url,
-            partition=client.meta.partition,
-            use_fips_endpoint=use_fips_endpoint,
-        ).register(client.meta.events)
 
     def _set_s3_presign_signature_version(
         self, client_meta, client_config, scoped_config
@@ -504,9 +447,9 @@ class ClientCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
+        auth_token,
         endpoints_ruleset_data,
         partition_data,
-        auth_token,
     ):
         args_creator = ClientArgsCreator(
             self._event_emitter,
@@ -526,9 +469,9 @@ class ClientCreator:
             scoped_config,
             client_config,
             endpoint_bridge,
+            auth_token,
             endpoints_ruleset_data,
             partition_data,
-            auth_token,
         )
 
     def _create_methods(self, service_model):
@@ -953,38 +896,9 @@ class BaseClient:
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
         }
-
-        if self._ruleset_resolver is None:
-            endpoint_url = self.meta.endpoint_url
-            additional_headers = {}
-        else:
-            endpoint_info = self._ruleset_resolver.construct_endpoint(
-                operation_model=operation_model,
-                call_args=api_params,
-                request_context=request_context,
-            )
-            endpoint_url = endpoint_info.url
-            additional_headers = {
-                # Multi-valued headers are not supported in botocore
-                header_key: header_values[0]
-                for header_key, header_values in endpoint_info.headers.items()
-            }
-            # If authSchemes is present, overwrite default auth type and
-            # signing context derived from service model.
-            auth_schemes = endpoint_info.properties.get('authSchemes')
-            if auth_schemes is not None:
-                (
-                    auth_type,
-                    signing_context,
-                ) = self._ruleset_resolver.auth_schemes_to_signing_context(
-                    auth_schemes
-                )
-                request_context['auth_type'] = auth_type
-                if 'signing' in request_context:
-                    request_context['signing'].update(signing_context)
-                else:
-                    request_context['signing'] = signing_context
-
+        endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+            operation_model, api_params, request_context
+        )
         request_dict = self._convert_to_request_dict(
             api_params=api_params,
             operation_model=operation_model,
@@ -992,6 +906,7 @@ class BaseClient:
             context=request_context,
             headers=additional_headers,
         )
+        resolve_checksum_context(request_dict, operation_model, api_params)
 
         service_id = self._service_model.service_id.hyphenize()
         handler, event_response = self.meta.events.emit_until_response(
@@ -1050,6 +965,7 @@ class BaseClient:
         endpoint_url,
         context=None,
         headers=None,
+        set_user_agent_header=True,
     ):
         api_params = self._emit_api_params(
             api_params, operation_model, context
@@ -1061,13 +977,16 @@ class BaseClient:
             request_dict.pop('host_prefix', None)
         if headers is not None:
             request_dict['headers'].update(headers)
+        if set_user_agent_header:
+            user_agent = self._client_config.user_agent
+        else:
+            user_agent = None
         prepare_request_dict(
             request_dict,
             endpoint_url=endpoint_url,
-            user_agent=self._client_config.user_agent,
+            user_agent=user_agent,
             context=context,
         )
-        resolve_checksum_context(request_dict, operation_model, api_params)
         return request_dict
 
     def _emit_api_params(self, api_params, operation_model, context):
@@ -1094,6 +1013,56 @@ class BaseClient:
             context=context,
         )
         return api_params
+
+    def _resolve_endpoint_ruleset(
+        self,
+        operation_model,
+        params,
+        request_context,
+        ignore_signing_region=False,
+    ):
+        """Returns endpoint URL and list of additional headers returned from
+        EndpointRulesetResolver for the given operation and params. If the
+        ruleset resolver is not available, for example because the service has
+        no endpoints ruleset file, the legacy endpoint resolver's value is
+        returned.
+
+        Use ignore_signing_region for generating presigned URLs or any other
+        situtation where the signin region information from the ruleset
+        resolver should be ignored.
+
+        Returns tuple of URL and headers dictionary. Additionally, the
+        request_context dict is modified in place with any signing information
+        returned from the ruleset resolver.
+        """
+        if self._ruleset_resolver is None:
+            endpoint_url = self.meta.endpoint_url
+            additional_headers = {}
+        else:
+            endpoint_info = self._ruleset_resolver.construct_endpoint(
+                operation_model=operation_model,
+                call_args=params,
+                request_context=request_context,
+            )
+            endpoint_url = endpoint_info.url
+            additional_headers = endpoint_info.headers
+            # If authSchemes is present, overwrite default auth type and
+            # signing context derived from service model.
+            auth_schemes = endpoint_info.properties.get('authSchemes')
+            if auth_schemes is not None:
+                auth_info = self._ruleset_resolver.auth_schemes_to_signing_ctx(
+                    auth_schemes
+                )
+                auth_type, signing_context = auth_info
+                request_context['auth_type'] = auth_type
+                if 'region' in signing_context and ignore_signing_region:
+                    del signing_context['region']
+                if 'signing' in request_context:
+                    request_context['signing'].update(signing_context)
+                else:
+                    request_context['signing'] = signing_context
+
+        return endpoint_url, additional_headers
 
     def get_paginator(self, operation_name):
         """Create a paginator for an operation.

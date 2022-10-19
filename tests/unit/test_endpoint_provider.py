@@ -379,7 +379,7 @@ def test_auth_schemes_conversion_sigv4(empty_resolver):
             'otherParameter': 'otherValue',
         }
     ]
-    at, sc = empty_resolver.auth_schemes_to_signing_context(auth_schemes)
+    at, sc = empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
     assert at == 'v4'
     assert sc == {
         'region': 'my-region-1',
@@ -394,7 +394,7 @@ def test_auth_schemes_conversion_sigv4a_with_crt(monkeypatch, empty_resolver):
     auth_schemes = [
         {'name': 'sigv4a', 'signingName': 's3', 'signingRegionSet': ['*']}
     ]
-    at, sc = empty_resolver.auth_schemes_to_signing_context(auth_schemes)
+    at, sc = empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
     assert at == 'v4a'
     assert sc == {'region': '*', 'signing_name': 's3'}
 
@@ -408,7 +408,7 @@ def test_auth_schemes_conversion_sigv4a_without_crt(
         {'name': 'sigv4a', 'signingName': 's3', 'signingRegionSet': ['*']}
     ]
     with pytest.raises(MissingDependencyException):
-        empty_resolver.auth_schemes_to_signing_context(auth_schemes)
+        empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
 
 
 def test_auth_schemes_conversion_no_known_auth_types(empty_resolver):
@@ -417,7 +417,7 @@ def test_auth_schemes_conversion_no_known_auth_types(empty_resolver):
         {'name': 'bar', 'otherParamKey': 'otherParamVal'},
     ]
     with pytest.raises(UnknownSignatureVersionError):
-        empty_resolver.auth_schemes_to_signing_context(auth_schemes)
+        empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
 
 
 def test_auth_schemes_conversion_first_authtype_unknown(
@@ -429,6 +429,6 @@ def test_auth_schemes_conversion_first_authtype_unknown(
         {'name': 'foo', 'signingName': 's3', 'signingRegion': 'ap-south-1'},
         {'name': 'bar', 'signingName': 's3', 'signingRegion': 'ap-south-2'},
     ]
-    at, sc = empty_resolver.auth_schemes_to_signing_context(auth_schemes)
+    at, sc = empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
     assert at == 'bar'
     assert sc == {'region': 'ap-south-2', 'signing_name': 's3'}

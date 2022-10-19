@@ -1861,7 +1861,44 @@ class TestS3RegionRedirector(unittest.TestCase):
                 'https://myendpoint-123456789012.s3-accesspoint.'
                 'us-west-2.amazonaws.com/key'
             ),
-            'context': {'s3_accesspoint': {}},
+            'context': {
+                's3_redirect': {
+                    'redirected': False,
+                    'bucket': 'arn:aws:s3:us-west-2:123456789012:myendpoint',
+                    'params': {},
+                }
+            },
+        }
+        response = (
+            None,
+            {
+                'Error': {'Code': '400', 'Message': 'Bad Request'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+                },
+            },
+        )
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation
+        )
+        self.assertEqual(redirect_response, None)
+
+    def test_no_redirect_from_error_for_mrap_accesspoint(self):
+        mrap_arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+        request_dict = {
+            'url': (
+                'https://mfzwi23gnjvgw.mrap.accesspoint.'
+                's3-global.amazonaws.com'
+            ),
+            'context': {
+                's3_redirect': {
+                    'redirected': False,
+                    'bucket': mrap_arn,
+                    'params': {},
+                }
+            },
         }
         response = (
             None,
@@ -3329,6 +3366,8 @@ class TestDetermineContentLength(unittest.TestCase):
         # assorted other ways for URLs to not be valid for s3-accelerate
         ('ftp://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
         ('https://s3-accelerate.dualstack.foo.c2s.ic.gov/key', False),
+        # None-valued url is accepted
+        (None, False),
     ),
 )
 def test_is_s3_accelerate_url(url, expected):

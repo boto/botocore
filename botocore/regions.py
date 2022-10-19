@@ -484,11 +484,7 @@ class EndpointRulesetResolver:
         call_args,
         request_context,
     ):
-        """Invokes the provider with params defined in the services ruleset
-
-        Named to implement the BaseEndpointResolver interface, but does not
-        actually return an Endpoint object, instead a dict with endpoint info.
-        """
+        """Invokes the provider with params defined in the service's ruleset"""
         if call_args is None:
             call_args = {}
 
@@ -520,6 +516,15 @@ class EndpointRulesetResolver:
             provider_result = provider_result._replace(
                 url=f'http://{provider_result.url[8:]}'
             )
+
+        # Multi-valued headers are not supported in botocore. Replace the list
+        # of values returned for each header with just its first entry,
+        # dropping any additionally entries.
+        provider_result = provider_result._replace(
+            headers={
+                key: val[0] for key, val in provider_result.headers.items()
+            }
+        )
 
         return provider_result
 
@@ -635,7 +640,7 @@ class EndpointRulesetResolver:
         )
         return customized_builtins
 
-    def auth_schemes_to_signing_context(self, auth_schemes):
+    def auth_schemes_to_signing_ctx(self, auth_schemes):
         """Convert an Endpoint's authSchemes property to a signing_context dict
 
         :type auth_schemes: list

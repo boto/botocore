@@ -85,9 +85,9 @@ class ClientArgsCreator:
         scoped_config,
         client_config,
         endpoint_bridge,
-        endpoints_ruleset_data,
-        partition_data,
         auth_token=None,
+        endpoints_ruleset_data=None,
+        partition_data=None,
     ):
         final_args = self.compute_client_args(
             service_model,
@@ -145,52 +145,19 @@ class ClientArgsCreator:
         )
         response_parser = botocore.parsers.create_parser(protocol)
 
-        if endpoints_ruleset_data is None:
-            ruleset_resolver = None
-        else:
-            # The legacy EndpointResolver is global to the session,
-            # EndpointRulesetResolver is service-specific. Builtins for
-            # EndpointRulesetResolver must not be derived from the legacy
-            # endpoint resolver's output, including final_args, s3_config, ...
-            s3_config_raw = self.compute_s3_config(client_config) or {}
-            service_name_raw = service_model.endpoint_prefix
-            # Maintain complex logic for s3 and sts endpoints for backwards
-            # compatibility.
-            if service_name_raw in ['s3', 'sts']:
-                eprv2_region_name = endpoint_region_name
-            else:
-                eprv2_region_name = region_name
-            resolver_builtins = (
-                self.compute_endpoint_resolver_builtin_defaults(
-                    region_name=eprv2_region_name,
-                    service_name=service_name_raw,
-                    s3_config=s3_config_raw,
-                    endpoint_bridge=endpoint_bridge,
-                    client_endpoint_url=endpoint_url,
-                    legacy_endpoint_url=endpoint.host,
-                )
-            )
-            # botocore does not support client context parameters generically
-            # for every service. Instead, the s3 config section entries are
-            # available as client context parameters. In future, endpoint
-            # rulesets of services other than S3 may require client context
-            # parameters.
-            client_context = s3_config_raw if service_name_raw == 's3' else {}
-            sig_version = (
-                client_config.signature_version
-                if client_config is not None
-                else None
-            )
-            ruleset_resolver = EndpointRulesetResolver(
-                endpoint_ruleset_data=endpoints_ruleset_data,
-                partition_data=partition_data,
-                service_model=service_model,
-                builtins=resolver_builtins,
-                client_context=client_context,
-                event_emitter=event_emitter,
-                use_ssl=is_secure,
-                requested_auth_scheme=sig_version,
-            )
+        ruleset_resolver = self._build_endpoint_resolver(
+            endpoints_ruleset_data,
+            partition_data,
+            client_config,
+            service_model,
+            endpoint_region_name,
+            region_name,
+            endpoint_url,
+            endpoint,
+            is_secure,
+            endpoint_bridge,
+            event_emitter,
+        )
 
         return {
             'serializer': serializer,
@@ -523,6 +490,66 @@ class ClientArgsCreator:
             return val
         else:
             return val.lower() == 'true'
+
+    def _build_endpoint_resolver(
+        self,
+        endpoints_ruleset_data,
+        partition_data,
+        client_config,
+        service_model,
+        endpoint_region_name,
+        region_name,
+        endpoint_url,
+        endpoint,
+        is_secure,
+        endpoint_bridge,
+        event_emitter,
+    ):
+        if endpoints_ruleset_data is None:
+            return None
+
+        # The legacy EndpointResolver is global to the session,
+        # EndpointRulesetResolver is service-specific. Builtins for
+        # EndpointRulesetResolver must not be derived from the legacy
+        # endpoint resolver's output, including final_args, s3_config,
+        # etc.
+        s3_config_raw = self.compute_s3_config(client_config) or {}
+        service_name_raw = service_model.endpoint_prefix
+        # Maintain complex logic for s3 and sts endpoints for backwards
+        # compatibility.
+        if service_name_raw in ['s3', 'sts']:
+            eprv2_region_name = endpoint_region_name
+        else:
+            eprv2_region_name = region_name
+        resolver_builtins = self.compute_endpoint_resolver_builtin_defaults(
+            region_name=eprv2_region_name,
+            service_name=service_name_raw,
+            s3_config=s3_config_raw,
+            endpoint_bridge=endpoint_bridge,
+            client_endpoint_url=endpoint_url,
+            legacy_endpoint_url=endpoint.host,
+        )
+        # botocore does not support client context parameters generically
+        # for every service. Instead, the s3 config section entries are
+        # available as client context parameters. In future, endpoint
+        # rulesets of services other than S3 may require client context
+        # parameters.
+        client_context = s3_config_raw if service_name_raw == 's3' else {}
+        sig_version = (
+            client_config.signature_version
+            if client_config is not None
+            else None
+        )
+        return EndpointRulesetResolver(
+            endpoint_ruleset_data=endpoints_ruleset_data,
+            partition_data=partition_data,
+            service_model=service_model,
+            builtins=resolver_builtins,
+            client_context=client_context,
+            event_emitter=event_emitter,
+            use_ssl=is_secure,
+            requested_auth_scheme=sig_version,
+        )
 
     def compute_endpoint_resolver_builtin_defaults(
         self,

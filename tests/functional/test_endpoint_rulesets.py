@@ -18,12 +18,12 @@ from pathlib import Path
 import pytest
 
 from botocore import xform_name
-from botocore.client import (
+from botocore.config import Config
+from botocore.endpoint_provider import (
     ENDPOINT_RESOLUTION_V2_SERVICES,
     FORCE_ENDPOINT_RESOLUTION_V2,
+    EndpointProvider,
 )
-from botocore.config import Config
-from botocore.endpoint_provider import EndpointProvider
 from botocore.exceptions import (
     BotoCoreError,
     ClientError,
@@ -175,15 +175,25 @@ def iter_e2e_test_cases_that_produce(endpoints=False, errors=False):
 
             expected_object = test['expect']
             if endpoints and 'endpoint' in expected_object:
-                yield (
+                expected_endpoint = expected_object['endpoint']
+                expected_props = expected_endpoint.get('properties', {})
+                expected_authschemes = [
+                    auth_scheme['name']
+                    for auth_scheme in expected_props.get('authSchemes', [])
+                ]
+                yield pytest.param(
                     service_name,
                     op_name,
                     op_params,
                     builtins,
-                    expected_object['endpoint'],
+                    expected_endpoint,
+                    marks=pytest.mark.skipif(
+                        'sigv4a' in expected_authschemes,
+                        reason="Test case expects sigv4a which required CRT",
+                    ),
                 )
             if errors and 'error' in expected_object:
-                yield (
+                yield pytest.param(
                     service_name,
                     op_name,
                     op_params,

@@ -1535,22 +1535,15 @@ class S3RegionRedirector2:
             # transport error.
             return
 
-        previous_request_netloc = urlsplit(request_dict.get('url', '')).netloc
-        if (
-            '.s3-accesspoint.' in previous_request_netloc
-            or '.s3-accesspoint-fips.' in previous_request_netloc
-        ):
+        redirect_ctx = request_dict.get('context', {}).get('s3_redirect', {})
+        if ArnParser.is_arn(redirect_ctx.get('bucket')):
             logger.debug(
                 'S3 request was previously for an Accesspoint ARN, not '
                 'redirecting.'
             )
             return
 
-        if (
-            request_dict.get('context', {})
-            .get('s3_redirect', {})
-            .get('redirected')
-        ):
+        if redirect_ctx.get('redirected'):
             logger.debug(
                 'S3 request was previously redirected, not redirecting.'
             )
@@ -1616,7 +1609,7 @@ class S3RegionRedirector2:
         # Re-resolve endpoint with new region and modify request_dict with
         # the new URL, auth scheme, and signing context.
         ep_resolver = self._client._ruleset_resolver
-        ep_info = self._client._ruleset_resolver.construct_endpoint(
+        ep_info = ep_resolver.construct_endpoint(
             operation_model=operation,
             call_args=request_dict['context']['s3_redirect']['params'],
             request_context=request_dict['context'],
@@ -1627,10 +1620,8 @@ class S3RegionRedirector2:
         request_dict['context']['s3_redirect']['redirected'] = True
         auth_schemes = ep_info.properties.get('authSchemes')
         if auth_schemes is not None:
-            (
-                auth_type,
-                signing_context,
-            ) = ep_resolver.auth_schemes_to_signing_context(auth_schemes)
+            auth_info = ep_resolver.auth_schemes_to_signing_ctx(auth_schemes)
+            auth_type, signing_context = auth_info
             request_dict['context']['auth_type'] = auth_type
             request_dict['context']['signing'] = {
                 **request_dict['context'].get('signing', {}),
@@ -3233,6 +3224,8 @@ def is_s3_accelerate_url(url):
     Virtual host naming style with bucket names in the netloc part of the URL
     are not allowed by this function.
     """
+    if url is None:
+        return False
 
     # Accelerate is only valid for Amazon endpoints.
     url_parts = urlsplit(url)
