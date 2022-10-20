@@ -321,6 +321,7 @@ class TestValidateTypes(BaseTestValidate):
                     'List': {'shape': 'ListType'},
                     'Struct': {'shape': 'StructType'},
                     'Double': {'shape': 'DoubleType'},
+                    'BigDecimal': {'shape': 'BigDecimalType'},
                     'Long': {'shape': 'LongType'},
                     'Map': {'shape': 'MapType'},
                     'Timestamp': {'shape': 'TimeType'},
@@ -332,6 +333,7 @@ class TestValidateTypes(BaseTestValidate):
             'ListType': {'type': 'list'},
             'StructType': {'type': 'structure'},
             'DoubleType': {'type': 'double'},
+            'BigDecimalType': {'type': 'bigdecimal'},
             'LongType': {'type': 'long'},
             'MapType': {'type': 'map'},
             'TimeType': {'type': 'timestamp'},
@@ -347,6 +349,7 @@ class TestValidateTypes(BaseTestValidate):
                 'List': 'notList',
                 'Struct': 'notDict',
                 'Double': 'notDouble',
+                'BigDecimal': 'notBigDecimal',
                 'Long': 'notLong',
                 'Map': 'notDict',
                 'Timestamp': 'notTimestamp',
@@ -358,6 +361,7 @@ class TestValidateTypes(BaseTestValidate):
                 'Invalid type for parameter List',
                 'Invalid type for parameter Struct',
                 'Invalid type for parameter Double',
+                'Invalid type for parameter BigDecimal',
                 'Invalid type for parameter Long',
                 'Invalid type for parameter Map',
                 'Invalid type for parameter Timestamp',
@@ -558,7 +562,7 @@ class TestValidateMapType(BaseTestValidate):
         )
 
 
-class TestValidationFloatType(BaseTestValidate):
+class TestValidateFloatType(BaseTestValidate):
     def setUp(self):
         self.shapes = {
             'Input': {
@@ -601,6 +605,53 @@ class TestValidationFloatType(BaseTestValidate):
             },
             errors=[
                 'Invalid value for parameter Float',
+            ],
+        )
+
+
+class TestValidateBigDecimalType(BaseTestValidate):
+    def setUp(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'BigDecimal': {'shape': 'BigDecimalType'},
+                },
+            },
+            'BigDecimalType': {
+                'type': 'bigdecimal',
+                'min': 2,
+                'max': 5,
+            },
+        }
+
+    def test_range_bigdecimal(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={
+                'BigDecimal': 1,
+            },
+            errors=[
+                'Invalid value for parameter BigDecimal',
+            ],
+        )
+
+    def test_decimal_allowed(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'BigDecimal': decimal.Decimal('2.12345')},
+        )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
+
+    def test_decimal_still_validates_range(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={
+                'BigDecimal': decimal.Decimal('1'),
+            },
+            errors=[
+                'Invalid value for parameter BigDecimal',
             ],
         )
 

@@ -340,6 +340,7 @@ class ParamValidator:
         range_check(name, param, shape, 'invalid range', errors)
 
     _validate_float = _validate_double
+    _validate_bigdecimal = _validate_double
 
     @type_check(valid_types=(int,))
     def _validate_long(self, param, shape, errors, name):
