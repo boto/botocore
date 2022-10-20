@@ -6,6 +6,7 @@ exclude: "\
     botocore/vendored|\
     botocore/compat.py|\
     docs/|\
+    tests/functional/endpoint-rules|\
     tests/unit/auth/aws4_testsuite|\
     tests/unit/data/endpoints/|\
     tests/unit/response_parsing/xml|\
