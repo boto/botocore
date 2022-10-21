@@ -508,7 +508,7 @@ class ClientArgsCreator:
         if endpoints_ruleset_data is None:
             return None
 
-        # The legacy EndpointResolver is global to the session,
+        # The legacy EndpointResolver is global to the session, but
         # EndpointRulesetResolver is service-specific. Builtins for
         # EndpointRulesetResolver must not be derived from the legacy
         # endpoint resolver's output, including final_args, s3_config,
@@ -531,7 +531,7 @@ class ClientArgsCreator:
         )
         # botocore does not support client context parameters generically
         # for every service. Instead, the s3 config section entries are
-        # available as client context parameters. In future, endpoint
+        # available as client context parameters. In the future, endpoint
         # rulesets of services other than S3 may require client context
         # parameters.
         client_context = s3_config_raw if service_name_raw == 's3' else {}

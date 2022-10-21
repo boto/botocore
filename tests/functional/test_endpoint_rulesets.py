@@ -58,7 +58,7 @@ def partitions():
 def get_endpoint_tests_for_service(service_name):
     file_path = ENDPOINT_TESTDATA_DIR / service_name / 'endpoint-tests-1.json'
     if not file_path.is_file():
-        raise Exception(
+        raise FileNotFoundError(
             f'Cannot find endpoint tests file for "{service_name}" at '
             'path {file_path}'
         )

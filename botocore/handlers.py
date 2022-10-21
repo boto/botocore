@@ -1034,18 +1034,18 @@ def remove_bucket_from_url_paths_from_model(params, model, context, **kwargs):
     client object.
 
     When the ruleset based endpoint resolver is in effect, both the endpoint
-    ruleset _and_ the service model place the bucket name in the final URL.
+    ruleset AND the service model place the bucket name in the final URL.
     The result is an invalid URL. This handler modifies the operation model to
     no longer place the bucket name. Previous versions of botocore fixed the
     URL after the fact when necessary. Since the introduction of ruleset based
-    endpoint resolution, the problem exists in _all_ URLs that contain a bucket
+    endpoint resolution, the problem exists in ALL URLs that contain a bucket
     name and can therefore be addressed before the URL gets assembled.
     """
     req_uri = model.http['requestUri']
     bucket_path = '/{Bucket}'
     if req_uri.startswith(bucket_path):
         model.http['requestUri'] = req_uri[len(bucket_path) :]
-        # If the request URI is _only_ a bucket, the auth_path must be
+        # If the request URI is ONLY a bucket, the auth_path must be
         # terminated with a '/' character to generate a signature that the
         # server will accept.
         needs_slash = req_uri == bucket_path
@@ -1060,7 +1060,7 @@ def remove_accid_host_prefix_from_model(params, model, context, **kwargs):
     client object.
 
     When the ruleset based endpoint resolver is in effect, both the endpoint
-    ruleset _and_ the service model place the {AccountId}. prefix in the URL.
+    ruleset AND the service model place the {AccountId}. prefix in the URL.
     The result is an invalid endpoint. This handler modifies the operation
     model to remove the `endpoint.hostPrefix` field while leaving the
     `RequiresAccountId` static context parameter in place.
