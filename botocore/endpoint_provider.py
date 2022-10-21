@@ -619,7 +619,7 @@ class ParameterDefinition:
                 "A parameter must be of type string or boolean."
             )
         self.documentation = documentation
-        self.built_in = builtIn
+        self.builtin = builtIn
         self.default = default
         self.required = required
         self.deprecated = deprecated

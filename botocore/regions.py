@@ -551,9 +551,9 @@ class EndpointRulesetResolver:
                 operation_model=operation_model,
                 call_args=call_args,
             )
-            if param_val is None and param_def.built_in is not None:
+            if param_val is None and param_def.builtin is not None:
                 param_val = self._resolve_param_as_builtin(
-                    builtin_name=param_def.built_in,
+                    builtin_name=param_def.builtin,
                     builtins=customized_builtins,
                 )
             if param_val is not None:

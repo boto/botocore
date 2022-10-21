@@ -90,7 +90,7 @@ _ACCESSPOINT_ARN = (
 )
 _OUTPOST_ARN = (
     r'^arn:(aws).*:s3-outposts:[a-z\-0-9]+:[0-9]{12}:outpost[/:]'
-    r'[a-zA-Z0-9\-]{1,63}[/:](bucket|accesspoint)[/:][a-zA-Z0-9\-]{1,63}$'
+    r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$'
 )
 VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
