@@ -59,7 +59,7 @@ from botocore.utils import (
     InvalidArnException,
     S3ArnParamHandler,
     S3EndpointSetter,
-    S3RegionRedirector2,
+    S3RegionRedirectorv2,
     SSOTokenLoader,
     calculate_sha256,
     calculate_tree_hash,
@@ -1499,7 +1499,7 @@ class TestS3RegionRedirector(unittest.TestCase):
             )
         )
         self.cache = {}
-        self.redirector = S3RegionRedirector2(None, self.client)
+        self.redirector = S3RegionRedirectorv2(None, self.client)
         self.set_client_response_headers({})
         self.operation = mock.Mock()
         self.operation.name = 'foo'
@@ -1532,7 +1532,7 @@ class TestS3RegionRedirector(unittest.TestCase):
 
     def test_sets_signing_context_from_cache(self):
         self.cache['foo'] = 'new-region-1'
-        self.redirector = S3RegionRedirector2(
+        self.redirector = S3RegionRedirectorv2(
             None, self.client, cache=self.cache
         )
         params = {'Bucket': 'foo'}
@@ -1542,7 +1542,7 @@ class TestS3RegionRedirector(unittest.TestCase):
 
     def test_only_changes_context_if_bucket_in_cache(self):
         self.cache['foo'] = 'new-region-1'
-        self.redirector = S3RegionRedirector2(
+        self.redirector = S3RegionRedirectorv2(
             None, self.client, cache=self.cache
         )
         params = {'Bucket': 'bar'}

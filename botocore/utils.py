@@ -23,6 +23,7 @@ import random
 import re
 import socket
 import time
+import warnings
 import weakref
 
 import dateutil.parser
@@ -1715,6 +1716,13 @@ class S3RegionRedirector:
         # python 2.6
         self._client = weakref.proxy(client)
 
+        warnings.warn(
+            'The S3RegionRedirector class has been deprecated for a new '
+            'internal replacement. A future version of botocore may remove '
+            'this class.',
+            category=FutureWarning,
+        )
+
     def register(self, event_emitter=None):
         emitter = event_emitter or self._client.meta.events
         emitter.register('needs-retry.s3', self.redirect_from_error)
@@ -2625,6 +2633,12 @@ class S3ControlArnParamHandler:
         self._arn_parser = arn_parser
         if arn_parser is None:
             self._arn_parser = ArnParser()
+        warnings.warn(
+            'The S3ControlArnParamHandler class has been deprecated for a new '
+            'internal replacement. A future version of botocore may remove '
+            'this class.',
+            category=FutureWarning,
+        )
 
     def register(self, event_emitter):
         event_emitter.register(
@@ -2748,6 +2762,11 @@ class S3ControlArnParamHandlerv2(S3ControlArnParamHandler):
     This class is considered private and subject to abrupt breaking changes or
     removal without prior announcement. Please do not use it directly.
     """
+
+    def __init__(self, arn_parser=None):
+        self._arn_parser = arn_parser
+        if arn_parser is None:
+            self._arn_parser = ArnParser()
 
     def register(self, event_emitter):
         event_emitter.register(
