@@ -595,8 +595,8 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={"use_arn_region": False}),
         )
         self.http_stubber.add_response()
-        self.client.list_objects(Bucket=accesspoint_arn)
-        self.assert_signing_region(self.http_stubber.requests[0], "us-east-1")
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.client.list_objects(Bucket=accesspoint_arn)
 
     def test_presign_signs_with_arn_region(self):
         accesspoint_arn = (
@@ -620,10 +620,10 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
                 signature_version="s3v4", s3={"use_arn_region": False}
             ),
         )
-        url = self.client.generate_presigned_url(
-            "get_object", {"Bucket": accesspoint_arn, "Key": "mykey"}
-        )
-        self.assert_signing_region_in_url(url, "us-east-1")
+        with self.assertRaises(UnsupportedS3AccesspointConfigurationError):
+            self.client.generate_presigned_url(
+                "get_object", {"Bucket": accesspoint_arn, "Key": "mykey"}
+            )
 
     def test_copy_source_str_with_accesspoint_arn(self):
         copy_source = (
@@ -902,9 +902,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={"use_arn_region": False}),
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegex(
-            expected_exception, "ARNs in another region are not allowed"
-        ):
+        with self.assertRaises(expected_exception):
             self.client.list_objects(Bucket=s3_object_lambda_arn)
 
     def test_s3_object_lambda_with_global_regions(self):
@@ -913,12 +911,11 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             "accesspoint/mybanner"
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        expected_msg = "a regional endpoint must be specified"
         for region in ("aws-global", "s3-external-1"):
             self.client, _ = self.create_stubbed_s3_client(
                 region_name=region, config=Config(s3={"use_arn_region": False})
             )
-            with self.assertRaisesRegex(expected_exception, expected_msg):
+            with self.assertRaises(expected_exception):
                 self.client.list_objects(Bucket=s3_object_lambda_arn)
 
     def test_s3_object_lambda_arn_with_us_east_1(self):
@@ -969,9 +966,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             region_name="fips-east-1"
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegex(
-            expected_exception, "outpost ARNs do not support FIPS"
-        ):
+        with self.assertRaises(expected_exception):
             self.client.list_objects(Bucket=outpost_arn)
 
     def test_accesspoint_fips_raise_for_cross_region(self):
@@ -984,9 +979,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={"use_arn_region": False}),
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegex(
-            expected_exception, "ARNs in another region are not allowed"
-        ):
+        with self.assertRaises(expected_exception):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
     def test_accesspoint_fips_raise_if_fips_in_arn(self):
@@ -998,9 +991,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             region_name="fips-us-gov-west-1",
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegex(
-            expected_exception, "Invalid ARN, FIPS region not allowed in ARN."
-        ):
+        with self.assertRaises(expected_exception):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
     def test_accesspoint_with_global_regions(self):
@@ -1012,9 +1003,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={"use_arn_region": False}),
         )
         expected_exception = UnsupportedS3AccesspointConfigurationError
-        with self.assertRaisesRegex(
-            expected_exception, "regional endpoint must be specified"
-        ):
+        with self.assertRaises(expected_exception):
             self.client.list_objects(Bucket=s3_accesspoint_arn)
 
         # It shouldn't raise if use_arn_region is True
@@ -1080,26 +1069,6 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         ]
         for region, config in config_tests:
             self._assert_mrap_config_failure(mrap_arn, region, config=config)
-
-    @requires_crt()
-    def test_mrap_arn_with_custom_endpoint(self):
-        mrap_arn = "arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap"
-        endpoint_url = "https://test.endpoint.amazonaws.com"
-        expected = "mfzwi23gnjvgw.mrap.test.endpoint.amazonaws.com"
-        self._assert_mrap_endpoint(
-            mrap_arn, "us-east-1", expected, endpoint_url=endpoint_url
-        )
-
-    @requires_crt()
-    def test_mrap_arn_with_vpc_endpoint(self):
-        mrap_arn = "arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap"
-        endpoint_url = "https://vpce-123-abc.vpce.s3-global.amazonaws.com"
-        expected = (
-            "mfzwi23gnjvgw.mrap.vpce-123-abc.vpce.s3-global.amazonaws.com"
-        )
-        self._assert_mrap_endpoint(
-            mrap_arn, "us-west-2", expected, endpoint_url=endpoint_url
-        )
 
     @requires_crt()
     def test_mrap_arn_with_disable_config_enabled(self):
@@ -1209,7 +1178,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self, arn, region, expected, endpoint_url=None, config=None
     ):
         presigned_url = self._get_presigned_url(
-            arn, region, endpoint_url=None, config=None
+            arn, region, endpoint_url=endpoint_url, config=config
         )
         url_parts = urlsplit(presigned_url)
         self.assertEqual(expected, url_parts.hostname)
@@ -1686,10 +1655,7 @@ class TestFipsRegionRedirect(BaseS3OperationTest):
         self.client = self.session.create_client(
             "s3",
             "fips-us-west-2",
-            config=Config(
-                signature_version="s3v4",
-                s3={"addressing_style": "path"},
-            ),
+            config=Config(signature_version="s3v4"),
         )
         self.http_stubber = ClientHTTPStubber(self.client)
 
@@ -1749,12 +1715,12 @@ class TestFipsRegionRedirect(BaseS3OperationTest):
         self.assertEqual(len(self.http_stubber.requests), 2)
 
         initial_url = (
-            "https://s3-fips.us-west-2.amazonaws.com/foo" "?encoding-type=url"
+            "https://foo.s3-fips.us-west-2.amazonaws.com/?encoding-type=url"
         )
         self.assertEqual(self.http_stubber.requests[0].url, initial_url)
 
         fixed_url = (
-            "https://s3-fips.us-west-1.amazonaws.com/foo" "?encoding-type=url"
+            "https://foo.s3-fips.us-west-1.amazonaws.com/?encoding-type=url"
         )
         self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
 
@@ -1776,12 +1742,12 @@ class TestFipsRegionRedirect(BaseS3OperationTest):
 
         self.assertEqual(len(self.http_stubber.requests), 3)
         initial_url = (
-            "https://s3-fips.us-west-2.amazonaws.com/foo" "?encoding-type=url"
+            "https://foo.s3-fips.us-west-2.amazonaws.com/?encoding-type=url"
         )
         self.assertEqual(self.http_stubber.requests[0].url, initial_url)
 
         fixed_url = (
-            "https://s3-fips.us-west-1.amazonaws.com/foo" "?encoding-type=url"
+            "https://foo.s3-fips.us-west-1.amazonaws.com/?encoding-type=url"
         )
         self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
         self.assertEqual(self.http_stubber.requests[2].url, fixed_url)
@@ -1828,7 +1794,7 @@ class TestFipsRegionRedirect(BaseS3OperationTest):
             )
 
             self.assertEqual(len(http_stubber.requests), 4)
-            initial_url = "https://foo.s3-fips.aws-global.amazonaws.com/bar"
+            initial_url = "https://foo.s3-fips.us-east-1.amazonaws.com/bar"
             self.assertEqual(http_stubber.requests[0].url, initial_url)
 
             fixed_url = "https://foo.s3-fips.us-east-2.amazonaws.com/bar"
@@ -1924,7 +1890,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
         config = Config(signature_version=botocore.UNSIGNED)
         client = self.session.create_client("s3", "us-east-2", config=config)
         url = client.generate_presigned_url(ClientMethod="list_buckets")
-        self.assertEqual("https://s3.us-east-2.amazonaws.com/", url)
+        self.assertEqual("https://s3.amazonaws.com/", url)
 
     def test_presign_url_with_ssec(self):
         config = Config(signature_version="s3")
@@ -1967,7 +1933,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
         )
         expected_exception = UnsupportedS3ConfigurationError
         with self.assertRaisesRegex(
-            expected_exception, "S3 Accelerate does not have any FIPS"
+            expected_exception, "Accelerate cannot be used with FIPS"
         ):
             client.generate_presigned_url(
                 ClientMethod="get_object",
@@ -2089,6 +2055,17 @@ CHECKSUM_TEST_CASES = [
         {"Bucket": "foo", "ObjectLockConfiguration": {}},
     ),
 ]
+
+accesspoint_arn = "arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint"
+accesspoint_arn_cn = (
+    "arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint"
+)
+accesspoint_arn_gov = (
+    "arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint"
+)
+accesspoint_cross_region_arn_gov = (
+    "arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint"
+)
 
 
 @pytest.mark.parametrize("operation, operation_kwargs", CHECKSUM_TEST_CASES)
@@ -2513,12 +2490,10 @@ def _s3_addressing_test_cases():
         bucket="bucket",
         key="key",
         s3_config=use_dualstack,
-        # Pseudo-regions should not have any special resolving logic even when
-        # the endpoint won't work as we do not have the metadata to know that
-        # a region does not support dualstack. So just format it based on the
-        # region name.
+        # The aws-global pseudo region does not support dualstack and should
+        # be resolved to us-east-1.
         expected_url=(
-            "https://bucket.s3.dualstack.aws-global.amazonaws.com/key"
+            "https://bucket.s3.dualstack.us-east-1.amazonaws.com/key"
         ),
     )
     yield dict(
@@ -2698,9 +2673,6 @@ def _s3_addressing_test_cases():
     )
 
     # Access-point arn cases
-    accesspoint_arn = (
-        "arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint"
-    )
     yield dict(
         region="us-west-2",
         bucket=accesspoint_arn,
@@ -2750,16 +2722,6 @@ def _s3_addressing_test_cases():
         ),
     )
     yield dict(
-        region="us-east-1",
-        bucket=accesspoint_arn,
-        key="key",
-        s3_config={"use_arn_region": False},
-        expected_url=(
-            "https://myendpoint-123456789012.s3-accesspoint."
-            "us-east-1.amazonaws.com/key"
-        ),
-    )
-    yield dict(
         region="s3-external-1",
         bucket=accesspoint_arn,
         key="key",
@@ -2784,24 +2746,11 @@ def _s3_addressing_test_cases():
         region="unknown",
         bucket=accesspoint_arn,
         key="key",
-        s3_config={"use_arn_region": False},
-        expected_url=(
-            "https://myendpoint-123456789012.s3-accesspoint."
-            "unknown.amazonaws.com/key"
-        ),
-    )
-    yield dict(
-        region="unknown",
-        bucket=accesspoint_arn,
-        key="key",
         s3_config={"use_arn_region": True},
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint."
             "us-west-2.amazonaws.com/key"
         ),
-    )
-    accesspoint_arn_cn = (
-        "arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint"
     )
     yield dict(
         region="cn-north-1",
@@ -2820,22 +2769,6 @@ def _s3_addressing_test_cases():
             "https://myendpoint-123456789012.s3-accesspoint."
             "cn-north-1.amazonaws.com.cn/key"
         ),
-    )
-    yield dict(
-        region="cn-northwest-1",
-        bucket=accesspoint_arn_cn,
-        key="key",
-        s3_config={"use_arn_region": False},
-        expected_url=(
-            "https://myendpoint-123456789012.s3-accesspoint."
-            "cn-northwest-1.amazonaws.com.cn/key"
-        ),
-    )
-    accesspoint_arn_gov = (
-        "arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint"
-    )
-    accesspoint_cross_region_arn_gov = (
-        "arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint"
     )
     yield dict(
         region="us-gov-west-1",
@@ -2921,16 +2854,6 @@ def _s3_addressing_test_cases():
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint.dualstack."
             "us-west-2.amazonaws.com/key"
-        ),
-    )
-    yield dict(
-        region="us-east-1",
-        bucket=accesspoint_arn,
-        key="key",
-        s3_config={"use_dualstack_endpoint": True, "use_arn_region": False},
-        expected_url=(
-            "https://myendpoint-123456789012.s3-accesspoint.dualstack."
-            "us-east-1.amazonaws.com/key"
         ),
     )
     yield dict(
@@ -3150,11 +3073,62 @@ def _s3_addressing_test_cases():
     )
 
 
+def _s3_addressing_invalid_test_cases():
+    # client region does not match access point ARN region and use_arn_region
+    # is False. If sent to service, this results in an "invalid access point"
+    # response. We expect it to be caught by the S3 endpoints ruleset.
+    yield dict(
+        region="us-east-1",
+        bucket=accesspoint_arn,
+        key="key",
+        s3_config={"use_arn_region": False},
+        expected_exception_type=UnsupportedS3AccesspointConfigurationError,
+        expected_exception_regex=(
+            "region from ARN `us-west-2` does not match client region "
+            "`us-east-1`"
+        ),
+    )
+    yield dict(
+        region="cn-northwest-1",
+        bucket=accesspoint_arn_cn,
+        key="key",
+        s3_config={"use_arn_region": False},
+        expected_exception_type=UnsupportedS3AccesspointConfigurationError,
+        expected_exception_regex=(
+            "region from ARN `cn-north-1` does not match client region "
+            "`cn-northwest-1`"
+        ),
+    )
+    yield dict(
+        region="unknown",
+        bucket=accesspoint_arn,
+        key="key",
+        s3_config={"use_arn_region": False},
+        expected_exception_type=UnsupportedS3AccesspointConfigurationError,
+        expected_exception_regex=None,
+    )
+    yield dict(
+        region="us-east-1",
+        bucket=accesspoint_arn,
+        key="key",
+        s3_config={"use_arn_region": False},
+        expected_exception_type=UnsupportedS3AccesspointConfigurationError,
+        expected_exception_regex=None,
+    )
+
+
 @pytest.mark.parametrize("test_case", _s3_addressing_test_cases())
 def test_correct_url_used_for_s3(test_case):
     # Test that given various sets of config options and bucket names,
     # we construct the expect endpoint url.
     _verify_expected_endpoint_url(**test_case)
+
+
+@pytest.mark.parametrize("test_case", _s3_addressing_invalid_test_cases())
+def test_correct_exception_raise_for_s3(test_case):
+    # Test that invalid sets of config options and bucket names, result in
+    # appropriate exceptions.
+    _verify_expected_exception(**test_case)
 
 
 def _verify_expected_endpoint_url(
@@ -3166,6 +3140,56 @@ def _verify_expected_endpoint_url(
     customer_provided_endpoint=None,
     expected_url=None,
     signature_version=None,
+    use_fips_endpoint=None,
+):
+    s3 = _create_s3_client(
+        region=region,
+        is_secure=is_secure,
+        endpoint_url=customer_provided_endpoint,
+        s3_config=s3_config,
+        signature_version=signature_version,
+        use_fips_endpoint=use_fips_endpoint,
+    )
+    with ClientHTTPStubber(s3) as http_stubber:
+        http_stubber.add_response()
+        s3.put_object(Bucket=bucket, Key=key, Body=b"bar")
+        assert http_stubber.requests[0].url == expected_url
+
+
+def _verify_expected_exception(
+    expected_exception_type,
+    expected_exception_regex=None,
+    region=None,
+    bucket="bucket",
+    key="key",
+    s3_config=None,
+    is_secure=True,
+    customer_provided_endpoint=None,
+    signature_version=None,
+    use_fips_endpoint=None,
+):
+    s3 = _create_s3_client(
+        region=region,
+        is_secure=is_secure,
+        endpoint_url=customer_provided_endpoint,
+        s3_config=s3_config,
+        signature_version=signature_version,
+        use_fips_endpoint=use_fips_endpoint,
+    )
+    with ClientHTTPStubber(s3) as http_stubber:
+        http_stubber.add_response()
+        with pytest.raises(
+            expected_exception_type, match=expected_exception_regex
+        ):
+            s3.put_object(Bucket=bucket, Key=key, Body=b"bar")
+
+
+def _create_s3_client(
+    region,
+    is_secure,
+    endpoint_url,
+    s3_config,
+    signature_version,
     use_fips_endpoint=None,
 ):
     environ = {}
@@ -3181,31 +3205,6 @@ def _verify_expected_endpoint_url(
             s3=s3_config,
             use_fips_endpoint=use_fips_endpoint,
         )
-        s3 = session.create_client(
-            "s3",
-            region_name=region,
-            use_ssl=is_secure,
-            config=config,
-            endpoint_url=customer_provided_endpoint,
-        )
-        with ClientHTTPStubber(s3) as http_stubber:
-            http_stubber.add_response()
-            s3.put_object(Bucket=bucket, Key=key, Body=b"bar")
-            assert http_stubber.requests[0].url == expected_url
-
-
-def _create_s3_client(
-    region, is_secure, endpoint_url, s3_config, signature_version
-):
-    environ = {}
-    with mock.patch("os.environ", environ):
-        environ["AWS_ACCESS_KEY_ID"] = "access_key"
-        environ["AWS_SECRET_ACCESS_KEY"] = "secret_key"
-        environ["AWS_CONFIG_FILE"] = "no-exist-foo"
-        environ["AWS_SHARED_CREDENTIALS_FILE"] = "no-exist-foo"
-        session = create_session()
-        session.config_filename = "no-exist-foo"
-        config = Config(signature_version=signature_version, s3=s3_config)
         s3 = session.create_client(
             "s3",
             region_name=region,
@@ -3350,7 +3349,7 @@ def _addressing_for_presigned_url_test_cases():
 
     # A region that we don't know about.
     yield dict(
-        region="us-west-50",
+        region="boto-west-1",
         bucket="bucket",
         key="key",
         signature_version=None,
@@ -3368,9 +3367,6 @@ def _addressing_for_presigned_url_test_cases():
     )
 
     # Access-point
-    accesspoint_arn = (
-        "arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint"
-    )
     yield dict(
         region="us-west-2",
         bucket=accesspoint_arn,
@@ -3378,16 +3374,6 @@ def _addressing_for_presigned_url_test_cases():
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint."
             "us-west-2.amazonaws.com/key"
-        ),
-    )
-    yield dict(
-        region="us-east-1",
-        bucket=accesspoint_arn,
-        key="key",
-        s3_config={"use_arn_region": False},
-        expected_url=(
-            "https://myendpoint-123456789012.s3-accesspoint."
-            "us-east-1.amazonaws.com/key"
         ),
     )
 
@@ -3415,7 +3401,7 @@ def _addressing_for_presigned_url_test_cases():
     "test_case", _addressing_for_presigned_url_test_cases()
 )
 def test_addressing_for_presigned_urls(test_case):
-    # Here's we're just focusing on the addressing mode used for presigned URLs.
+    # Here we're just focusing on the addressing mode used for presigned URLs.
     # We special case presigned URLs due to backward compatibility.
     _verify_presigned_url_addressing(**test_case)
 

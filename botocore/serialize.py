@@ -170,7 +170,10 @@ class Serializer:
 
     def _expand_host_prefix(self, parameters, operation_model):
         operation_endpoint = operation_model.endpoint
-        if operation_endpoint is None:
+        if (
+            operation_endpoint is None
+            or 'hostPrefix' not in operation_endpoint
+        ):
             return None
 
         host_prefix_expression = operation_endpoint['hostPrefix']
@@ -467,6 +470,12 @@ class BaseRestSerializer(Serializer):
         serialized['url_path'] = self._render_uri_template(
             operation_model.http['requestUri'], partitioned['uri_path_kwargs']
         )
+
+        if 'authPath' in operation_model.http:
+            serialized['auth_path'] = self._render_uri_template(
+                operation_model.http['authPath'],
+                partitioned['uri_path_kwargs'],
+            )
         # Note that we lean on the http implementation to handle the case
         # where the requestUri path already has query parameters.
         # The bundled http client, requests, already supports this.

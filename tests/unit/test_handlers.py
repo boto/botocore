@@ -1056,7 +1056,14 @@ class TestHandlers(BaseSessionTest):
 
     def test_set_operation_specific_signer_s3v4_unsigned_payload(self):
         signing_name = 's3'
-        context = {'auth_type': 'v4-unsigned-body'}
+        context = {
+            'auth_type': 'v4-unsigned-body',
+            'signing': {
+                'foo': 'bar',
+                'region': 'abc',
+                'disableDoubleEncoding': True,
+            },
+        }
         response = handlers.set_operation_specific_signer(
             context=context, signing_name=signing_name
         )
@@ -1069,7 +1076,10 @@ class TestHandlers(BaseSessionTest):
 )
 def test_set_operation_specific_signer_s3v4(auth_type, expected_response):
     signing_name = 's3'
-    context = {'auth_type': auth_type}
+    context = {
+        'auth_type': auth_type,
+        'signing': {'disableDoubleEncoding': True},
+    }
     response = handlers.set_operation_specific_signer(
         context=context, signing_name=signing_name
     )
@@ -1205,14 +1215,18 @@ class TestSSEMD5(BaseMD5Test):
                 'SSECustomerKey': b'bar',
                 'SSECustomerAlgorithm': 'AES256',
             }
-            self.session.emit(event, params=params, model=mock.MagicMock())
+            self.session.emit(
+                event, params=params, model=mock.MagicMock(), context={}
+            )
             self.assertEqual(params['SSECustomerKey'], 'YmFy')
             self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
     def test_sse_params_as_str(self):
         event = 'before-parameter-build.s3.PutObject'
         params = {'SSECustomerKey': 'bar', 'SSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.MagicMock())
+        self.session.emit(
+            event, params=params, model=mock.MagicMock(), context={}
+        )
         self.assertEqual(params['SSECustomerKey'], 'YmFy')
         self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
@@ -1223,7 +1237,9 @@ class TestSSEMD5(BaseMD5Test):
                 'CopySourceSSECustomerKey': b'bar',
                 'CopySourceSSECustomerAlgorithm': 'AES256',
             }
-            self.session.emit(event, params=params, model=mock.MagicMock())
+            self.session.emit(
+                event, params=params, model=mock.MagicMock(), context={}
+            )
             self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
             self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
@@ -1233,7 +1249,9 @@ class TestSSEMD5(BaseMD5Test):
             'CopySourceSSECustomerKey': 'bar',
             'CopySourceSSECustomerAlgorithm': 'AES256',
         }
-        self.session.emit(event, params=params, model=mock.MagicMock())
+        self.session.emit(
+            event, params=params, model=mock.MagicMock(), context={}
+        )
         self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
         self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
@@ -1610,3 +1628,52 @@ def test_add_recursion_detection_header(environ, header_before, header_after):
     with mock.patch('os.environ', environ):
         handlers.add_recursion_detection_header(request_dict)
         assert request_dict['headers'] == header_after
+
+
+@pytest.mark.parametrize(
+    'auth_path_in, auth_path_expected',
+    [
+        # access points should be stripped
+        (
+            '/arn%3Aaws%3As3%3Aus-west-2%3A1234567890%3Aaccesspoint%2Fmy-ap/object.txt',
+            '/object.txt',
+        ),
+        (
+            '/arn%3Aaws%3As3%3Aus-west-2%3A1234567890%3Aaccesspoint%2Fmy-ap/foo/foo/foo/object.txt',
+            '/foo/foo/foo/object.txt',
+        ),
+        # regular bucket names should not be stripped
+        (
+            '/mybucket/object.txt',
+            '/mybucket/object.txt',
+        ),
+        (
+            '/mybucket/foo/foo/foo/object.txt',
+            '/mybucket/foo/foo/foo/object.txt',
+        ),
+        (
+            '/arn-is-a-valid-bucketname/object.txt',
+            '/arn-is-a-valid-bucketname/object.txt',
+        ),
+        # non-bucket cases
+        (
+            '',
+            '',
+        ),
+        (
+            None,
+            None,
+        ),
+        (
+            123,
+            123,
+        ),
+    ],
+)
+def test_remove_arn_from_signing_path(auth_path_in, auth_path_expected):
+    request = AWSRequest(method='GET', auth_path=auth_path_in)
+    # the handler modifies the request in place
+    handlers.remove_arn_from_signing_path(
+        request=request, some='other', kwarg='values'
+    )
+    assert request.auth_path == auth_path_expected

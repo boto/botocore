@@ -35,6 +35,7 @@ class TestCreateClientArgs(unittest.TestCase):
         self.service_model = self._get_service_model()
         self.bridge = mock.Mock(ClientEndpointBridge)
         self._set_endpoint_bridge_resolve()
+        self._set_resolver_uses_builtin()
         self.default_socket_options = [
             (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         ]
@@ -64,6 +65,9 @@ class TestCreateClientArgs(unittest.TestCase):
         ret_val.update(**override_kwargs)
         self.bridge.resolve.return_value = ret_val
 
+    def _set_resolver_uses_builtin(self, uses_builtin=True):
+        self.bridge.resolver_uses_builtin_data.return_value = uses_builtin
+
     def call_get_client_args(self, **override_kwargs):
         call_kwargs = {
             'service_model': self.service_model,
@@ -75,6 +79,12 @@ class TestCreateClientArgs(unittest.TestCase):
             'scoped_config': {},
             'client_config': None,
             'endpoint_bridge': self.bridge,
+            'endpoints_ruleset_data': {
+                'version': '1.0',
+                'parameters': {},
+                'rules': [],
+            },
+            'partition_data': {},
         }
         call_kwargs.update(**override_kwargs)
         return self.args_create.get_client_args(**call_kwargs)
@@ -482,6 +492,26 @@ class TestCreateClientArgs(unittest.TestCase):
             client_config=Config(retries={'mode': 'standard'})
         )['client_config']
         self.assertEqual(config.retries['mode'], 'standard')
+
+    def test_creates_ruleset_resolver_if_given_data(self):
+        with mock.patch('botocore.args.EndpointRulesetResolver') as m:
+            self.call_get_client_args(
+                service_model=self._get_service_model('s3'),
+                endpoints_ruleset_data={
+                    'version': '1.0',
+                    'parameters': {},
+                    'rules': [],
+                },
+            )
+            m.assert_called_once()
+
+    def test_doesnt_create_ruleset_resolver_if_not_given_data(self):
+        with mock.patch('botocore.args.EndpointRulesetResolver') as m:
+            self.call_get_client_args(
+                service_model=self._get_service_model('s3'),
+                endpoints_ruleset_data=None,
+            )
+            m.assert_not_called()
 
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
