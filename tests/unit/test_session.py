@@ -23,12 +23,9 @@ import botocore.config
 import botocore.exceptions
 import botocore.loaders
 import botocore.session
-from botocore import (
-    UNSIGNED,
-    client,
-    register_initializer,
-    unregister_initializer,
-)
+from botocore import UNSIGNED, client
+from botocore import handlers as boto_handlers
+from botocore import register_initializer, unregister_initializer
 from botocore.configprovider import ConfigChainFactory
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
@@ -297,6 +294,37 @@ class SessionTest(BaseSessionTest):
         self.session.unregister('foo', unique_id='bar')
         self.session.emit('foo')
         self.assertEqual(calls, [])
+
+    def test_register_with_position_first(self):
+        self.session.register('foo', lambda **kwargs: None)
+        self.session.register('foo', lambda **kwargs: 'first')
+        self.session.register(
+            'foo',
+            lambda **kwargs: 'second',
+            position=boto_handlers.REGISTER_FIRST,
+        )
+        response = self.session.emit_first_non_none_response('foo')
+        self.assertEqual(response, 'second')
+
+    def test_register_with_position_last(self):
+        self.session.register('foo', lambda **kwargs: None)
+        self.session.register(
+            'foo',
+            lambda **kwargs: 'first',
+            position=boto_handlers.REGISTER_LAST,
+        )
+        self.session.register('foo', lambda **kwargs: 'second')
+        response = self.session.emit_first_non_none_response('foo')
+        self.assertEqual(response, 'second')
+
+    def test_register_with_position_unknown(self):
+        self.session.register('foo', lambda **kwargs: None)
+        self.session.register(
+            'foo', lambda **kwargs: 'first', position="Unknown"
+        )
+        self.session.register('foo', lambda **kwargs: 'second')
+        response = self.session.emit_first_non_none_response('foo')
+        self.assertEqual(response, 'first')
 
 
 class TestBuiltinEventHandlers(BaseSessionTest):

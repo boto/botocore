@@ -701,7 +701,12 @@ class Session:
         log.addHandler(ch)
 
     def register(
-        self, event_name, handler, unique_id=None, unique_id_uses_count=False
+        self,
+        event_name,
+        handler,
+        unique_id=None,
+        unique_id_uses_count=False,
+        position=None,
     ):
         """Register a handler with an event.
 
@@ -721,7 +726,7 @@ class Session:
             This can be used to prevent an event handler from being
             registered twice.
 
-        :param unique_id_uses_count: boolean
+        :type unique_id_uses_count: boolean
         :param unique_id_uses_count: Specifies if the event should maintain
             a count when a ``unique_id`` is registered and unregisted. The
             event can only be completely unregistered once every register call
@@ -730,17 +735,37 @@ class Session:
             calls must use the same value for  ``unique_id_uses_count``
             as the ``register`` call that first registered the event.
 
+        :param position: Register sentinel values REGISTER_FIRST and REGISTER_LAST
+            representing the state of either first or last in the handler stack.
+            This allows priority placement to modify preference of early or
+            late evaluation.
+
         :raises ValueError: If the call to ``register`` uses ``unique_id``
             but the value for ``unique_id_uses_count`` differs from the
             ``unique_id_uses_count`` value declared by the very first
             ``register`` call for that ``unique_id``.
         """
-        self._events.register(
-            event_name,
-            handler,
-            unique_id,
-            unique_id_uses_count=unique_id_uses_count,
-        )
+        if position is handlers.REGISTER_FIRST:
+            self._events.register_first(
+                event_name,
+                handler,
+                unique_id,
+                unique_id_uses_count=unique_id_uses_count,
+            )
+        elif position is handlers.REGISTER_LAST:
+            self._events.register_last(
+                event_name,
+                handler,
+                unique_id,
+                unique_id_uses_count=unique_id_uses_count,
+            )
+        else:
+            self._events.register(
+                event_name,
+                handler,
+                unique_id,
+                unique_id_uses_count=unique_id_uses_count,
+            )
 
     def unregister(
         self,
