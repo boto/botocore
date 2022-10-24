@@ -24,7 +24,7 @@ from botocore.exceptions import (
     UnknownSignatureVersionError,
     UnsupportedSignatureVersionError,
 )
-from botocore.utils import datetime2timestamp
+from botocore.utils import ArnParser, datetime2timestamp
 
 # Keep these imported.  There's pre-existing code that uses them.
 from botocore.utils import fix_s3_host  # noqa
@@ -204,7 +204,12 @@ class RequestSigner:
         }
         suffix = signing_type_suffix_map.get(signing_type, '')
 
-        signature_version = self._signature_version
+        # operation specific signing context takes precedent over client-level
+        # defaults
+        signature_version = context.get('auth_type') or self._signature_version
+        signing = context.get('signing', {})
+        signing_name = signing.get('signing_name', self._signing_name)
+        region_name = signing.get('region', self._region_name)
         if (
             signature_version is not botocore.UNSIGNED
             and not signature_version.endswith(suffix)
@@ -215,8 +220,8 @@ class RequestSigner:
             'choose-signer.{}.{}'.format(
                 self._service_id.hyphenize(), operation_name
             ),
-            signing_name=self._signing_name,
-            region_name=self._region_name,
+            signing_name=signing_name,
+            region_name=region_name,
             signature_version=signature_version,
             context=context,
         )
@@ -644,7 +649,6 @@ def generate_presigned_url(
     }
 
     request_signer = self._request_signer
-    serializer = self._serializer
 
     try:
         operation_name = self._PY_TO_OP_NAME[client_method]
@@ -652,20 +656,26 @@ def generate_presigned_url(
         raise UnknownClientMethodError(method_name=client_method)
 
     operation_model = self.meta.service_model.operation_model(operation_name)
+    bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
+    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+        operation_model,
+        params,
+        context,
+        ignore_signing_region=(not bucket_is_arn),
+    )
 
-    params = self._emit_api_params(params, operation_model, context)
-
-    # Create a request dict based on the params to serialize.
-    request_dict = serializer.serialize_to_request(params, operation_model)
+    request_dict = self._convert_to_request_dict(
+        api_params=params,
+        operation_model=operation_model,
+        endpoint_url=endpoint_url,
+        context=context,
+        headers=additional_headers,
+        set_user_agent_header=False,
+    )
 
     # Switch out the http method if user specified it.
     if http_method is not None:
         request_dict['method'] = http_method
-
-    # Prepare the request dict by including the client's endpoint url.
-    prepare_request_dict(
-        request_dict, endpoint_url=self.meta.endpoint_url, context=context
-    )
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(
@@ -758,26 +768,32 @@ def generate_presigned_post(
     if conditions is None:
         conditions = []
 
+    context = {
+        'is_presign_request': True,
+        'use_global_endpoint': _should_use_global_endpoint(self),
+    }
+
     post_presigner = S3PostPresigner(self._request_signer)
-    serializer = self._serializer
 
     # We choose the CreateBucket operation model because its url gets
     # serialized to what a presign post requires.
     operation_model = self.meta.service_model.operation_model('CreateBucket')
-
-    # Create a request dict based on the params to serialize.
-    request_dict = serializer.serialize_to_request(
-        {'Bucket': bucket}, operation_model
+    params = {'Bucket': bucket}
+    bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
+    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+        operation_model,
+        params,
+        context,
+        ignore_signing_region=(not bucket_is_arn),
     )
 
-    # Prepare the request dict by including the client's endpoint url.
-    prepare_request_dict(
-        request_dict,
-        endpoint_url=self.meta.endpoint_url,
-        context={
-            'is_presign_request': True,
-            'use_global_endpoint': _should_use_global_endpoint(self),
-        },
+    request_dict = self._convert_to_request_dict(
+        api_params=params,
+        operation_model=operation_model,
+        endpoint_url=endpoint_url,
+        context=context,
+        headers=additional_headers,
+        set_user_agent_header=False,
     )
 
     # Append that the bucket name to the list of conditions.
