@@ -47,8 +47,8 @@ from botocore.retries import adaptive, standard
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
-    S3ControlArnParamHandler2,
-    S3RegionRedirector2,
+    S3ControlArnParamHandlerv2,
+    S3RegionRedirectorv2,
     ensure_boolean,
     get_service_module_name,
 )
@@ -361,7 +361,7 @@ class ClientCreator:
     def _register_s3_events(self, client, client_config, scoped_config):
         if client.meta.service_model.service_name != 's3':
             return
-        S3RegionRedirector2(None, client).register()
+        S3RegionRedirectorv2(None, client).register()
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config
         )
@@ -369,7 +369,7 @@ class ClientCreator:
     def _register_s3_control_events(self, client):
         if client.meta.service_model.service_name != 's3control':
             return
-        S3ControlArnParamHandler2().register(client.meta.events)
+        S3ControlArnParamHandlerv2().register(client.meta.events)
 
     def _set_s3_presign_signature_version(
         self, client_meta, client_config, scoped_config
