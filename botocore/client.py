@@ -823,7 +823,7 @@ class BaseClient:
         client_config,
         partition,
         exceptions_factory,
-        endpoint_ruleset_resolver,
+        endpoint_ruleset_resolver=None,
     ):
         self._serializer = serializer
         self._endpoint = endpoint
