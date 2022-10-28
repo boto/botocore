@@ -46,6 +46,7 @@ from botocore.docs.utils import (
     AutoPopulatedParam,
     HideParamFromOperations,
 )
+from botocore.endpoint_provider import VALID_HOST_LABEL_RE
 from botocore.exceptions import (
     AliasConflictParameterError,
     ParamValidationError,
@@ -1109,10 +1110,23 @@ def customize_endpoint_resolver_builtins(
     elif bucket_is_arn:
         builtins[EndpointResolverBuiltins.AWS_S3_FORCE_PATH_STYLE] = False
 
+    # Bucket names that are invalid host labels require path-style addressing.
+    # If path-style addressing was specifically requested, the default builtin
+    # value is already set.
+    path_style_required = (
+        bucket_name is not None and not VALID_HOST_LABEL_RE.match(bucket_name)
+    )
+    path_style_requested = builtins[
+        EndpointResolverBuiltins.AWS_S3_FORCE_PATH_STYLE
+    ]
+
+    # Path-style addressing is incompatible with the global endpoint for
+    # presigned URLs. If the bucket name is an ARN, the ARN's region should be
+    # used in the endpoint.
     if (
-        context.get('is_presign_request')
-        and context.get('use_global_endpoint')
-        and not builtins[EndpointResolverBuiltins.AWS_S3_FORCE_PATH_STYLE]
+        context.get('use_global_endpoint')
+        and not path_style_required
+        and not path_style_requested
         and not bucket_is_arn
     ):
         builtins[EndpointResolverBuiltins.AWS_REGION] = 'aws-global'
