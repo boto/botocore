@@ -19,11 +19,7 @@ import pytest
 
 from botocore import xform_name
 from botocore.config import Config
-from botocore.endpoint_provider import (
-    ENDPOINT_RESOLUTION_V2_SERVICES,
-    FORCE_ENDPOINT_RESOLUTION_V2,
-    EndpointProvider,
-)
+from botocore.endpoint_provider import EndpointProvider
 from botocore.exceptions import (
     BotoCoreError,
     ClientError,
@@ -44,8 +40,6 @@ ALL_SERVICES = [
     for service_name in LOADER.list_available_services(
         type_name='endpoint-rule-set-1'
     )
-    if service_name in ENDPOINT_RESOLUTION_V2_SERVICES
-    or FORCE_ENDPOINT_RESOLUTION_V2
 ]
 
 
@@ -189,7 +183,7 @@ def iter_e2e_test_cases_that_produce(endpoints=False, errors=False):
                     expected_endpoint,
                     marks=pytest.mark.skipif(
                         'sigv4a' in expected_authschemes,
-                        reason="Test case expects sigv4a which required CRT",
+                        reason="Test case expects sigv4a which requires CRT",
                     ),
                 )
             if errors and 'error' in expected_object:
