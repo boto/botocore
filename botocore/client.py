@@ -122,6 +122,11 @@ class ClientCreator:
         except UnknownServiceError:
             endpoints_ruleset_data = None
             partition_data = None
+            logger.info(
+                'No endpoints ruleset found for service %s, falling back to '
+                'legacy endpoint routing.',
+                service_name,
+            )
 
         cls = self._create_client_class(service_name, service_model)
         region_name, client_config = self._normalize_fips_region(
