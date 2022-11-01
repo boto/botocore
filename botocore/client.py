@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
-import os
-import warnings
 
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
@@ -25,14 +23,11 @@ from botocore.discovery import (
     block_endpoint_discovery_required_operations,
 )
 from botocore.docs.docstring import ClientMethodDocstring, PaginatorDocstring
-from botocore.endpoint_provider import (
-    ENDPOINT_RESOLUTION_V2_SERVICES,
-    FORCE_ENDPOINT_RESOLUTION_V2,
-)
 from botocore.exceptions import (
     DataNotFoundError,
     InvalidEndpointDiscoveryConfigurationError,
     OperationNotPageableError,
+    UnknownServiceError,
     UnknownSignatureVersionError,
 )
 from botocore.history import get_global_history_recorder
@@ -117,18 +112,19 @@ class ClientCreator:
         )
         service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
-
-        if (
-            service_name in ENDPOINT_RESOLUTION_V2_SERVICES
-            or FORCE_ENDPOINT_RESOLUTION_V2
-        ):
+        try:
             endpoints_ruleset_data = self._load_service_endpoints_ruleset(
                 service_name, api_version
             )
             partition_data = self._loader.load_data('partitions')
-        else:
+        except UnknownServiceError:
             endpoints_ruleset_data = None
             partition_data = None
+            logger.info(
+                'No endpoints ruleset found for service %s, falling back to '
+                'legacy endpoint routing.',
+                service_name,
+            )
 
         cls = self._create_client_class(service_name, service_model)
         region_name, client_config = self._normalize_fips_region(
@@ -159,14 +155,6 @@ class ClientCreator:
         self._register_retries(service_client)
         self._register_s3_events(service_client, client_config, scoped_config)
         self._register_s3_control_events(service_client)
-
-        if client_args['endpoint_ruleset_resolver'] is None:
-            # When using the legacy endpoint resolver, several event handlers
-            # modify endpoint and request context.
-            self._register_eventbridge_events(
-                service_client, endpoint_bridge, endpoint_url
-            )
-
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
@@ -608,27 +596,10 @@ class ClientEndpointBridge:
             resolved, region_name, endpoint_url
         )
         if endpoint_url is None:
-            sslCommonName = resolved.get('sslCommonName')
-            hostname = resolved.get('hostname')
-            is_disabled = ensure_boolean(
-                os.environ.get('BOTO_DISABLE_COMMONNAME', False)
-            )
-            if (
-                not is_disabled
-                and sslCommonName is not None
-                and sslCommonName != hostname
-            ):
-                warnings.warn(
-                    f'The {service_name} client is currently using a '
-                    f'deprecated endpoint: {sslCommonName}. In the next '
-                    f'minor version this will be moved to {hostname}. '
-                    'See https://github.com/boto/botocore/issues/2705 '
-                    'for more details.',
-                    category=FutureWarning,
-                )
-                hostname = sslCommonName
             endpoint_url = self._make_url(
-                hostname, is_secure, resolved.get('protocols', [])
+                resolved.get('hostname'),
+                is_secure,
+                resolved.get('protocols', []),
             )
         signature_version = self._resolve_signature_version(
             service_name, resolved
