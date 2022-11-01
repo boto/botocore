@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
-import os
-import warnings
 
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
@@ -598,27 +596,10 @@ class ClientEndpointBridge:
             resolved, region_name, endpoint_url
         )
         if endpoint_url is None:
-            sslCommonName = resolved.get('sslCommonName')
-            hostname = resolved.get('hostname')
-            is_disabled = ensure_boolean(
-                os.environ.get('BOTO_DISABLE_COMMONNAME', False)
-            )
-            if (
-                not is_disabled
-                and sslCommonName is not None
-                and sslCommonName != hostname
-            ):
-                warnings.warn(
-                    f'The {service_name} client is currently using a '
-                    f'deprecated endpoint: {sslCommonName}. In the next '
-                    f'minor version this will be moved to {hostname}. '
-                    'See https://github.com/boto/botocore/issues/2705 '
-                    'for more details.',
-                    category=FutureWarning,
-                )
-                hostname = sslCommonName
             endpoint_url = self._make_url(
-                hostname, is_secure, resolved.get('protocols', [])
+                resolved.get('hostname'),
+                is_secure,
+                resolved.get('protocols', []),
             )
         signature_version = self._resolve_signature_version(
             service_name, resolved
