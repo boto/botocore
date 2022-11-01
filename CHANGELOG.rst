@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.29.0
+======
+
+* feature:Endpoints: Migrate all services to use new AWS Endpoint Resolution framework
+* Enhancement:Endpoints: Discontinued use of `sslCommonName` hosts as detailed in 1.27.0 (see `#2705 <https://github.com/boto/botocore/issues/2705>`__ for more info)
+* api-change:``rds``: Relational Database Service - This release adds support for configuring Storage Throughput on RDS database instances.
+* api-change:``textract``: Add ocr results in AnalyzeIDResponse as blocks
+
+
 1.28.5
 ======
 
