@@ -33,7 +33,7 @@ from urllib3 import exceptions
 logger = logging.getLogger(__name__)
 
 
-class HTTPHeaders(http.client.HTTPMessage):
+class HTTPHeaders(HTTPMessage):
     pass
 
 from urllib.parse import (

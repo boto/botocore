@@ -13,7 +13,7 @@
 from html.parser import HTMLParser
 
 
-class DocStringParser(html.parser.HTMLParser):
+class DocStringParser(HTMLParser):
     """
     A simple HTML parser.  Focused on converting the subset of HTML
     that appears in the documentation strings of the JSON models into
@@ -23,20 +23,20 @@ class DocStringParser(html.parser.HTMLParser):
     def __init__(self, doc):
         self.tree = None
         self.doc = doc
-        html.parser.HTMLParser.__init__(self)
+        HTMLParser.__init__(self)
 
     def reset(self):
-        html.parser.HTMLParser.reset(self)
+        HTMLParser.reset(self)
         self.tree = HTMLTree(self.doc)
 
     def feed(self, data):
         # HTMLParser is an old style class, so the super() method will not work.
-        html.parser.HTMLParser.feed(self, data)
+        HTMLParser.feed(self, data)
         self.tree.write()
         self.tree = HTMLTree(self.doc)
 
     def close(self):
-        html.parser.HTMLParser.close(self)
+        HTMLParser.close(self)
         # Write if there is anything remaining.
         self.tree.write()
         self.tree = HTMLTree(self.doc)

@@ -23,11 +23,11 @@ generate testcases based on these files.
 
 """
 import datetime
-import http.server
 import io
 import logging
 import os
 import re
+from http.server import BaseHTTPRequestHandler
 
 import pytest
 
@@ -61,7 +61,7 @@ TESTS_TO_IGNORE = [
 log = logging.getLogger(__name__)
 
 
-class RawHTTPRequest(http.server.BaseHTTPRequestHandler):
+class RawHTTPRequest(BaseHTTPRequestHandler):
     def __init__(self, raw_request):
         if isinstance(raw_request, str):
             raw_request = raw_request.encode('utf-8')

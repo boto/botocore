@@ -293,7 +293,9 @@ class TestStyle(unittest.TestCase):
             'returns: None'
         )
         style.write_py_doc_string(docstring)
-        self.assertEqual(style.doc.getvalue(), docstring + b'\n')
+        self.assertEqual(
+            style.doc.getvalue(), (docstring + '\n').encode('latin-1')
+        )
 
     def test_new_line(self):
         style = ReSTStyle(ReSTDocument())
