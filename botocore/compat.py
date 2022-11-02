@@ -17,6 +17,7 @@ import sys
 import inspect
 import warnings
 import hashlib
+import http.client
 import logging
 import shlex
 import re
@@ -25,7 +26,6 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from math import floor
 
-from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
@@ -33,9 +33,7 @@ from urllib3 import exceptions
 logger = logging.getLogger(__name__)
 
 
-from botocore.vendored.six.moves import http_client
-
-class HTTPHeaders(http_client.HTTPMessage):
+class HTTPHeaders(http.client.HTTPMessage):
     pass
 
 from urllib.parse import (

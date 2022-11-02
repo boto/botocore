@@ -100,7 +100,7 @@ class AWSConnection:
     def _convert_to_bytes(self, mixed_buffer):
         # Take a list of mixed str/bytes and convert it
         # all into a single bytestring.
-        # Any six.text_types will be encoded as utf-8.
+        # Any str will be encoded as utf-8.
         bytes_buffer = []
         for chunk in mixed_buffer:
             if isinstance(chunk, str):

@@ -23,6 +23,8 @@ generate testcases based on these files.
 
 """
 import datetime
+import http.server
+import io
 import logging
 import os
 import re
@@ -31,7 +33,7 @@ import pytest
 
 import botocore.auth
 from botocore.awsrequest import AWSRequest
-from botocore.compat import parse_qsl, six, urlsplit
+from botocore.compat import parse_qsl, urlsplit
 from botocore.credentials import Credentials
 from tests import FreezeTime
 
@@ -55,21 +57,15 @@ TESTS_TO_IGNORE = [
     'get-vanilla-query-order-key',
     'get-vanilla-query-order-value',
 ]
-if not six.PY3:
-    TESTS_TO_IGNORE += [
-        # NO support
-        'get-header-key-duplicate',
-        'get-header-value-order',
-    ]
 
 log = logging.getLogger(__name__)
 
 
-class RawHTTPRequest(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
+class RawHTTPRequest(http.server.BaseHTTPRequestHandler):
     def __init__(self, raw_request):
         if isinstance(raw_request, str):
             raw_request = raw_request.encode('utf-8')
-        self.rfile = six.BytesIO(raw_request)
+        self.rfile = io.BytesIO(raw_request)
         self.raw_requestline = self.rfile.readline()
         self.error_code = None
         self.error_message = None

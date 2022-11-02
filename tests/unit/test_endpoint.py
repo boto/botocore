@@ -11,12 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import io
 import socket
 
 import pytest
 
 import botocore.endpoint
-from botocore.compat import six
 from botocore.config import Config
 from botocore.endpoint import DEFAULT_TIMEOUT, Endpoint, EndpointCreator
 from botocore.exceptions import HTTPClientError
@@ -44,14 +44,14 @@ def request_dict(**kwargs):
     return base
 
 
-class RecordStreamResets(six.StringIO):
+class RecordStreamResets(io.StringIO):
     def __init__(self, value):
-        six.StringIO.__init__(self, value)
+        io.StringIO.__init__(self, value)
         self.total_resets = 0
 
     def seek(self, where, whence=0):
         self.total_resets += 1
-        six.StringIO.seek(self, where, whence)
+        io.StringIO.seek(self, where, whence)
 
 
 class TestEndpointBase(unittest.TestCase):

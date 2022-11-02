@@ -10,10 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.compat import six
+import html.parser
 
 
-class DocStringParser(six.moves.html_parser.HTMLParser):
+class DocStringParser(html.parser.HTMLParser):
     """
     A simple HTML parser.  Focused on converting the subset of HTML
     that appears in the documentation strings of the JSON models into
@@ -23,20 +23,20 @@ class DocStringParser(six.moves.html_parser.HTMLParser):
     def __init__(self, doc):
         self.tree = None
         self.doc = doc
-        six.moves.html_parser.HTMLParser.__init__(self)
+        html.parser.HTMLParser.__init__(self)
 
     def reset(self):
-        six.moves.html_parser.HTMLParser.reset(self)
+        html.parser.HTMLParser.reset(self)
         self.tree = HTMLTree(self.doc)
 
     def feed(self, data):
         # HTMLParser is an old style class, so the super() method will not work.
-        six.moves.html_parser.HTMLParser.feed(self, data)
+        html.parser.HTMLParser.feed(self, data)
         self.tree.write()
         self.tree = HTMLTree(self.doc)
 
     def close(self):
-        six.moves.html_parser.HTMLParser.close(self)
+        html.parser.HTMLParser.close(self)
         # Write if there is anything remaining.
         self.tree.write()
         self.tree = HTMLTree(self.doc)
