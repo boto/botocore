@@ -1,5 +1,5 @@
 import contextlib
-import http.server
+from http.server import BaseHTTPServer
 import select
 import socket
 import socketserver
