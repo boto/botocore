@@ -17,7 +17,7 @@ import sys
 import inspect
 import warnings
 import hashlib
-import http.client
+from http.client import HTTPMessage
 import logging
 import shlex
 import re
