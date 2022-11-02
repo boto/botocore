@@ -5,7 +5,6 @@ import socket
 import sys
 import warnings
 from base64 import b64encode
-from urllib.parse import unquote
 
 from urllib3 import PoolManager, Timeout, proxy_from_url
 from urllib3.exceptions import (
@@ -55,6 +54,7 @@ from botocore.compat import (
     IPV6_ADDRZ_RE,
     ensure_bytes,
     filter_ssl_warnings,
+    unquote,
     urlparse,
 )
 from botocore.exceptions import (
