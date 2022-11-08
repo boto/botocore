@@ -4,7 +4,7 @@
             "documentation": "For region ap-south-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-south-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.ap-south-1.api.aws"
                 }
             },
             "params": {
@@ -17,7 +17,7 @@
             "documentation": "For region ap-south-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-south-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ap-south-1.api.aws"
                 }
             },
             "params": {
@@ -30,7 +30,7 @@
             "documentation": "For region ap-south-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-south-1.api.aws"
+                    "url": "https://resource-explorer-2.ap-south-1.api.aws"
                 }
             },
             "params": {
@@ -43,7 +43,7 @@
             "documentation": "For region ap-south-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-south-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.ap-south-1.api.aws"
                 }
             },
             "params": {
@@ -53,10 +53,166 @@
             }
         },
         {
+            "documentation": "For region eu-south-1 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.eu-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "eu-south-1"
+            }
+        },
+        {
+            "documentation": "For region eu-south-1 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.eu-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "eu-south-1"
+            }
+        },
+        {
+            "documentation": "For region eu-south-1 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.eu-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "eu-south-1"
+            }
+        },
+        {
+            "documentation": "For region eu-south-1 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.eu-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "eu-south-1"
+            }
+        },
+        {
+            "documentation": "For region eu-south-2 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.eu-south-2.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "eu-south-2"
+            }
+        },
+        {
+            "documentation": "For region eu-south-2 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.eu-south-2.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "eu-south-2"
+            }
+        },
+        {
+            "documentation": "For region eu-south-2 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.eu-south-2.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "eu-south-2"
+            }
+        },
+        {
+            "documentation": "For region eu-south-2 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.eu-south-2.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "eu-south-2"
+            }
+        },
+        {
+            "documentation": "For region me-central-1 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.me-central-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "me-central-1"
+            }
+        },
+        {
+            "documentation": "For region me-central-1 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.me-central-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "me-central-1"
+            }
+        },
+        {
+            "documentation": "For region me-central-1 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.me-central-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "me-central-1"
+            }
+        },
+        {
+            "documentation": "For region me-central-1 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.me-central-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "me-central-1"
+            }
+        },
+        {
             "documentation": "For region ca-central-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ca-central-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.ca-central-1.api.aws"
                 }
             },
             "params": {
@@ -69,7 +225,7 @@
             "documentation": "For region ca-central-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ca-central-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ca-central-1.api.aws"
                 }
             },
             "params": {
@@ -82,7 +238,7 @@
             "documentation": "For region ca-central-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ca-central-1.api.aws"
+                    "url": "https://resource-explorer-2.ca-central-1.api.aws"
                 }
             },
             "params": {
@@ -95,7 +251,7 @@
             "documentation": "For region ca-central-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ca-central-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.ca-central-1.api.aws"
                 }
             },
             "params": {
@@ -108,7 +264,7 @@
             "documentation": "For region eu-central-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-central-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.eu-central-1.api.aws"
                 }
             },
             "params": {
@@ -121,7 +277,7 @@
             "documentation": "For region eu-central-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-central-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.eu-central-1.api.aws"
                 }
             },
             "params": {
@@ -134,7 +290,7 @@
             "documentation": "For region eu-central-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-central-1.api.aws"
+                    "url": "https://resource-explorer-2.eu-central-1.api.aws"
                 }
             },
             "params": {
@@ -147,7 +303,7 @@
             "documentation": "For region eu-central-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-central-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.eu-central-1.api.aws"
                 }
             },
             "params": {
@@ -157,10 +313,62 @@
             }
         },
         {
+            "documentation": "For region us-west-1 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.us-west-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "us-west-1"
+            }
+        },
+        {
+            "documentation": "For region us-west-1 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.us-west-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "us-west-1"
+            }
+        },
+        {
+            "documentation": "For region us-west-1 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.us-west-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "us-west-1"
+            }
+        },
+        {
+            "documentation": "For region us-west-1 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.us-west-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "us-west-1"
+            }
+        },
+        {
             "documentation": "For region us-west-2 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-west-2.api.aws"
+                    "url": "https://resource-explorer-2-fips.us-west-2.api.aws"
                 }
             },
             "params": {
@@ -173,7 +381,7 @@
             "documentation": "For region us-west-2 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-west-2.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.us-west-2.api.aws"
                 }
             },
             "params": {
@@ -186,7 +394,7 @@
             "documentation": "For region us-west-2 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-west-2.api.aws"
+                    "url": "https://resource-explorer-2.us-west-2.api.aws"
                 }
             },
             "params": {
@@ -199,7 +407,7 @@
             "documentation": "For region us-west-2 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-west-2.amazonaws.com"
+                    "url": "https://resource-explorer-2.us-west-2.api.aws"
                 }
             },
             "params": {
@@ -212,7 +420,7 @@
             "documentation": "For region eu-north-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-north-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.eu-north-1.api.aws"
                 }
             },
             "params": {
@@ -225,7 +433,7 @@
             "documentation": "For region eu-north-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-north-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.eu-north-1.api.aws"
                 }
             },
             "params": {
@@ -238,7 +446,7 @@
             "documentation": "For region eu-north-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-north-1.api.aws"
+                    "url": "https://resource-explorer-2.eu-north-1.api.aws"
                 }
             },
             "params": {
@@ -251,7 +459,7 @@
             "documentation": "For region eu-north-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-north-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.eu-north-1.api.aws"
                 }
             },
             "params": {
@@ -264,7 +472,7 @@
             "documentation": "For region eu-west-3 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-3.api.aws"
+                    "url": "https://resource-explorer-2-fips.eu-west-3.api.aws"
                 }
             },
             "params": {
@@ -277,7 +485,7 @@
             "documentation": "For region eu-west-3 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-3.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.eu-west-3.api.aws"
                 }
             },
             "params": {
@@ -290,7 +498,7 @@
             "documentation": "For region eu-west-3 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-3.api.aws"
+                    "url": "https://resource-explorer-2.eu-west-3.api.aws"
                 }
             },
             "params": {
@@ -303,7 +511,7 @@
             "documentation": "For region eu-west-3 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-3.amazonaws.com"
+                    "url": "https://resource-explorer-2.eu-west-3.api.aws"
                 }
             },
             "params": {
@@ -316,7 +524,7 @@
             "documentation": "For region eu-west-2 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-2.api.aws"
+                    "url": "https://resource-explorer-2-fips.eu-west-2.api.aws"
                 }
             },
             "params": {
@@ -329,7 +537,7 @@
             "documentation": "For region eu-west-2 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-2.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.eu-west-2.api.aws"
                 }
             },
             "params": {
@@ -342,7 +550,7 @@
             "documentation": "For region eu-west-2 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-2.api.aws"
+                    "url": "https://resource-explorer-2.eu-west-2.api.aws"
                 }
             },
             "params": {
@@ -355,7 +563,7 @@
             "documentation": "For region eu-west-2 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-2.amazonaws.com"
+                    "url": "https://resource-explorer-2.eu-west-2.api.aws"
                 }
             },
             "params": {
@@ -368,7 +576,7 @@
             "documentation": "For region eu-west-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.eu-west-1.api.aws"
                 }
             },
             "params": {
@@ -381,7 +589,7 @@
             "documentation": "For region eu-west-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.eu-west-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.eu-west-1.api.aws"
                 }
             },
             "params": {
@@ -394,7 +602,7 @@
             "documentation": "For region eu-west-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-1.api.aws"
+                    "url": "https://resource-explorer-2.eu-west-1.api.aws"
                 }
             },
             "params": {
@@ -407,7 +615,7 @@
             "documentation": "For region eu-west-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.eu-west-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.eu-west-1.api.aws"
                 }
             },
             "params": {
@@ -417,10 +625,62 @@
             }
         },
         {
+            "documentation": "For region ap-northeast-3 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.ap-northeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "ap-northeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-northeast-3 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.ap-northeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "ap-northeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-northeast-3 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.ap-northeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "ap-northeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-northeast-3 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.ap-northeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "ap-northeast-3"
+            }
+        },
+        {
             "documentation": "For region ap-northeast-2 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-northeast-2.api.aws"
+                    "url": "https://resource-explorer-2-fips.ap-northeast-2.api.aws"
                 }
             },
             "params": {
@@ -433,7 +693,7 @@
             "documentation": "For region ap-northeast-2 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-northeast-2.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ap-northeast-2.api.aws"
                 }
             },
             "params": {
@@ -446,7 +706,7 @@
             "documentation": "For region ap-northeast-2 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-northeast-2.api.aws"
+                    "url": "https://resource-explorer-2.ap-northeast-2.api.aws"
                 }
             },
             "params": {
@@ -459,7 +719,7 @@
             "documentation": "For region ap-northeast-2 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-northeast-2.amazonaws.com"
+                    "url": "https://resource-explorer-2.ap-northeast-2.api.aws"
                 }
             },
             "params": {
@@ -472,7 +732,7 @@
             "documentation": "For region ap-northeast-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-northeast-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.ap-northeast-1.api.aws"
                 }
             },
             "params": {
@@ -485,7 +745,7 @@
             "documentation": "For region ap-northeast-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-northeast-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ap-northeast-1.api.aws"
                 }
             },
             "params": {
@@ -498,7 +758,7 @@
             "documentation": "For region ap-northeast-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-northeast-1.api.aws"
+                    "url": "https://resource-explorer-2.ap-northeast-1.api.aws"
                 }
             },
             "params": {
@@ -511,7 +771,7 @@
             "documentation": "For region ap-northeast-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-northeast-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.ap-northeast-1.api.aws"
                 }
             },
             "params": {
@@ -521,10 +781,114 @@
             }
         },
         {
+            "documentation": "For region me-south-1 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.me-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "me-south-1"
+            }
+        },
+        {
+            "documentation": "For region me-south-1 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.me-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "me-south-1"
+            }
+        },
+        {
+            "documentation": "For region me-south-1 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.me-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "me-south-1"
+            }
+        },
+        {
+            "documentation": "For region me-south-1 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.me-south-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "me-south-1"
+            }
+        },
+        {
+            "documentation": "For region sa-east-1 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.sa-east-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "sa-east-1"
+            }
+        },
+        {
+            "documentation": "For region sa-east-1 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.sa-east-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "sa-east-1"
+            }
+        },
+        {
+            "documentation": "For region sa-east-1 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.sa-east-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "sa-east-1"
+            }
+        },
+        {
+            "documentation": "For region sa-east-1 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.sa-east-1.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "sa-east-1"
+            }
+        },
+        {
             "documentation": "For region ap-southeast-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-southeast-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.ap-southeast-1.api.aws"
                 }
             },
             "params": {
@@ -537,7 +901,7 @@
             "documentation": "For region ap-southeast-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-southeast-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ap-southeast-1.api.aws"
                 }
             },
             "params": {
@@ -550,7 +914,7 @@
             "documentation": "For region ap-southeast-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-southeast-1.api.aws"
+                    "url": "https://resource-explorer-2.ap-southeast-1.api.aws"
                 }
             },
             "params": {
@@ -563,7 +927,7 @@
             "documentation": "For region ap-southeast-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-southeast-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.ap-southeast-1.api.aws"
                 }
             },
             "params": {
@@ -576,7 +940,7 @@
             "documentation": "For region ap-southeast-2 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-southeast-2.api.aws"
+                    "url": "https://resource-explorer-2-fips.ap-southeast-2.api.aws"
                 }
             },
             "params": {
@@ -589,7 +953,7 @@
             "documentation": "For region ap-southeast-2 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.ap-southeast-2.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.ap-southeast-2.api.aws"
                 }
             },
             "params": {
@@ -602,7 +966,7 @@
             "documentation": "For region ap-southeast-2 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-southeast-2.api.aws"
+                    "url": "https://resource-explorer-2.ap-southeast-2.api.aws"
                 }
             },
             "params": {
@@ -615,7 +979,7 @@
             "documentation": "For region ap-southeast-2 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.ap-southeast-2.amazonaws.com"
+                    "url": "https://resource-explorer-2.ap-southeast-2.api.aws"
                 }
             },
             "params": {
@@ -625,10 +989,62 @@
             }
         },
         {
+            "documentation": "For region ap-southeast-3 with FIPS enabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.ap-southeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": true,
+                "Region": "ap-southeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-southeast-3 with FIPS enabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2-fips.ap-southeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": true,
+                "Region": "ap-southeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-southeast-3 with FIPS disabled and DualStack enabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.ap-southeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": true,
+                "UseFIPS": false,
+                "Region": "ap-southeast-3"
+            }
+        },
+        {
+            "documentation": "For region ap-southeast-3 with FIPS disabled and DualStack disabled",
+            "expect": {
+                "endpoint": {
+                    "url": "https://resource-explorer-2.ap-southeast-3.api.aws"
+                }
+            },
+            "params": {
+                "UseDualStack": false,
+                "UseFIPS": false,
+                "Region": "ap-southeast-3"
+            }
+        },
+        {
             "documentation": "For region us-east-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-east-1.api.aws"
+                    "url": "https://resource-explorer-2-fips.us-east-1.api.aws"
                 }
             },
             "params": {
@@ -641,7 +1057,7 @@
             "documentation": "For region us-east-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-east-1.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.us-east-1.api.aws"
                 }
             },
             "params": {
@@ -654,7 +1070,7 @@
             "documentation": "For region us-east-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-east-1.api.aws"
+                    "url": "https://resource-explorer-2.us-east-1.api.aws"
                 }
             },
             "params": {
@@ -667,7 +1083,7 @@
             "documentation": "For region us-east-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-east-1.amazonaws.com"
+                    "url": "https://resource-explorer-2.us-east-1.api.aws"
                 }
             },
             "params": {
@@ -680,7 +1096,7 @@
             "documentation": "For region us-east-2 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-east-2.api.aws"
+                    "url": "https://resource-explorer-2-fips.us-east-2.api.aws"
                 }
             },
             "params": {
@@ -693,7 +1109,7 @@
             "documentation": "For region us-east-2 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail-fips.us-east-2.amazonaws.com"
+                    "url": "https://resource-explorer-2-fips.us-east-2.api.aws"
                 }
             },
             "params": {
@@ -706,7 +1122,7 @@
             "documentation": "For region us-east-2 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-east-2.api.aws"
+                    "url": "https://resource-explorer-2.us-east-2.api.aws"
                 }
             },
             "params": {
@@ -719,7 +1135,7 @@
             "documentation": "For region us-east-2 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://lightsail.us-east-2.amazonaws.com"
+                    "url": "https://resource-explorer-2.us-east-2.api.aws"
                 }
             },
             "params": {
@@ -750,18 +1166,6 @@
             "params": {
                 "UseDualStack": false,
                 "UseFIPS": true,
-                "Region": "us-east-1",
-                "Endpoint": "https://example.com"
-            }
-        },
-        {
-            "documentation": "For custom endpoint with fips disabled and dualstack enabled",
-            "expect": {
-                "error": "Invalid Configuration: Dualstack and custom endpoint are not supported"
-            },
-            "params": {
-                "UseDualStack": true,
-                "UseFIPS": false,
                 "Region": "us-east-1",
                 "Endpoint": "https://example.com"
             }
