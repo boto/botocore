@@ -153,8 +153,14 @@ class ClientCreator:
         )
         service_client = cls(**client_args)
         self._register_retries(service_client)
-        self._register_s3_events(service_client, client_config, scoped_config)
-        self._register_s3_control_events(service_client)
+        self._register_s3_events(
+            client=service_client,
+            endpoint_bridge=None,
+            endpoint_url=None,
+            client_config=client_config,
+            scoped_config=scoped_config,
+        )
+        self._register_s3_control_events(client=service_client)
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
@@ -346,7 +352,14 @@ class ClientCreator:
             endpoint_url=endpoint_url,
         ).register(client.meta.events)
 
-    def _register_s3_events(self, client, client_config, scoped_config):
+    def _register_s3_events(
+        self,
+        client,
+        endpoint_bridge,
+        endpoint_url,
+        client_config,
+        scoped_config,
+    ):
         if client.meta.service_model.service_name != 's3':
             return
         S3RegionRedirectorv2(None, client).register()
@@ -354,7 +367,14 @@ class ClientCreator:
             client.meta, client_config, scoped_config
         )
 
-    def _register_s3_control_events(self, client):
+    def _register_s3_control_events(
+        self,
+        client,
+        endpoint_bridge=None,
+        endpoint_url=None,
+        client_config=None,
+        scoped_config=None,
+    ):
         if client.meta.service_model.service_name != 's3control':
             return
         S3ControlArnParamHandlerv2().register(client.meta.events)
