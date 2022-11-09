@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.29.6
+======
+
+* api-change:``connect``: This release adds new fields SignInUrl, UserArn, and UserId to GetFederationToken response payload.
+* api-change:``connectcases``: This release adds the ability to disable templates through the UpdateTemplate API. Disabling templates prevents customers from creating cases using the template. For more information see https://docs.aws.amazon.com/cases/latest/APIReference/Welcome.html
+* api-change:``ec2``: Amazon EC2 Trn1 instances, powered by AWS Trainium chips, are purpose built for high-performance deep learning training. u-24tb1.112xlarge and u-18tb1.112xlarge High Memory instances are purpose-built to run large in-memory databases.
+* api-change:``groundstation``: This release adds the preview of customer-provided ephemeris support for AWS Ground Station, allowing space vehicle owners to provide their own position and trajectory information for a satellite.
+* api-change:``mediapackage-vod``: This release adds "IncludeIframeOnlyStream" for Dash endpoints.
+* api-change:``endpoint-rules``: Update endpoint-rules client to latest version
+
+
 1.29.5
 ======
 
