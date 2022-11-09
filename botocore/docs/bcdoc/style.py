@@ -227,7 +227,7 @@ class ReSTStyle(BaseStyle):
         else:
             self.doc.write(text)
 
-    def end_a(self):
+    def end_a(self, next):
         self.doc.do_translation = False
         if self.a_href:
             last_write = self.doc.pop_write()
@@ -249,7 +249,13 @@ class ReSTStyle(BaseStyle):
                 self.doc.hrefs[self.a_href] = self.a_href
                 self.doc.write('`__')
             self.a_href = None
-        self.doc.write(' ')
+
+        special_characters = ['.', ',', '?', '!', ':', ';']
+        if next is None or next.data[0] not in special_characters:
+            # We only want to add a trailing space if the link is
+            # not followed by a period, comma, or other gramatically
+            # correct special character.
+            self.doc.write(' ')
 
     def start_i(self, attrs=None):
         self.doc.do_translation = True

@@ -115,8 +115,14 @@ class StemNode(Node):
         self._write_children(doc)
 
     def _write_children(self, doc):
-        for child in self.children:
-            child.write(doc)
+        for index in range(len(self.children)):
+            if isinstance(self.children[index], TagNode):
+                next_child = None
+                if index + 1 < len(self.children):
+                    next_child = self.children[index + 1]
+                self.children[index].write(doc, next_child)
+            else:
+                self.children[index].write(doc)
 
 
 class TagNode(StemNode):
@@ -129,29 +135,32 @@ class TagNode(StemNode):
         self.attrs = attrs
         self.tag = tag
 
-    def write(self, doc):
+    def write(self, doc, next):
         self._write_start(doc)
         self._write_children(doc)
-        self._write_end(doc)
+        self._write_end(doc, next)
 
     def _write_start(self, doc):
         handler_name = 'start_%s' % self.tag
         if hasattr(doc.style, handler_name):
             getattr(doc.style, handler_name)(self.attrs)
 
-    def _write_end(self, doc):
+    def _write_end(self, doc, next):
         handler_name = 'end_%s' % self.tag
         if hasattr(doc.style, handler_name):
-            getattr(doc.style, handler_name)()
+            if handler_name == 'end_a':
+                getattr(doc.style, handler_name)(next)
+            else:
+                getattr(doc.style, handler_name)()
 
 
 class LineItemNode(TagNode):
     def __init__(self, attrs=None, parent=None):
         super().__init__('li', attrs, parent)
 
-    def write(self, doc):
+    def write(self, doc, next):
         self._lstrip(self)
-        super().write(doc)
+        super().write(doc, next)
 
     def _lstrip(self, node):
         """
