@@ -253,12 +253,6 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
             output_members.remove(member)
 
     if output_members:
-        for member in output_members:
-            key = "{}.{}.{}".format(
-                service_model.service_name, operation_name, member
-            )
-            with open('/tmp/blah', 'a') as f:
-                f.write("'%s',\n" % key)
         raise AssertionError(
             "There are member names in the output shape of "
             "%s that are not accounted for in the pagination "
