@@ -115,14 +115,13 @@ class StemNode(Node):
         self._write_children(doc)
 
     def _write_children(self, doc):
-        for index in range(len(self.children)):
-            if isinstance(self.children[index], TagNode):
-                next_child = None
-                if index + 1 < len(self.children):
-                    next_child = self.children[index + 1]
-                self.children[index].write(doc, next_child)
+        for index, child in enumerate(self.children):
+            next_child = None
+            if isinstance(child, TagNode) and index + 1 < len(self.children):
+                next_child = self.children[index + 1]
+                child.write(doc, next_child)
             else:
-                self.children[index].write(doc)
+                child.write(doc)
 
 
 class TagNode(StemNode):
@@ -135,21 +134,21 @@ class TagNode(StemNode):
         self.attrs = attrs
         self.tag = tag
 
-    def write(self, doc, next):
+    def write(self, doc, next_child=None):
         self._write_start(doc)
         self._write_children(doc)
-        self._write_end(doc, next)
+        self._write_end(doc, next_child)
 
     def _write_start(self, doc):
         handler_name = 'start_%s' % self.tag
         if hasattr(doc.style, handler_name):
             getattr(doc.style, handler_name)(self.attrs)
 
-    def _write_end(self, doc, next):
+    def _write_end(self, doc, next_child):
         handler_name = 'end_%s' % self.tag
         if hasattr(doc.style, handler_name):
             if handler_name == 'end_a':
-                getattr(doc.style, handler_name)(next)
+                getattr(doc.style, handler_name)(next_child)
             else:
                 getattr(doc.style, handler_name)()
 
@@ -158,9 +157,9 @@ class LineItemNode(TagNode):
     def __init__(self, attrs=None, parent=None):
         super().__init__('li', attrs, parent)
 
-    def write(self, doc, next):
+    def write(self, doc, next_child=None):
         self._lstrip(self)
-        super().write(doc, next)
+        super().write(doc, next_child)
 
     def _lstrip(self, node):
         """

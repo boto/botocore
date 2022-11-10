@@ -54,6 +54,20 @@ class TestDocStringParser(unittest.TestCase):
             result, [b'* Wello', b'  * Horld']
         )
 
+    def test_link_with_no_period(self):
+        html = "<p>This is a test <a href='https://testing.com'>Link</a></p>"
+        result = self.parse(html)
+        self.assert_contains_exact_lines_in_order(
+            result, [b'This is a test `Link <https://testing.com>`__ ']
+        )
+
+    def test_link_with_period(self):
+        html = "<p>This is a test <a href='https://testing.com'>Link</a>.</p>"
+        result = self.parse(html)
+        self.assert_contains_exact_lines_in_order(
+            result, [b'This is a test `Link <https://testing.com>`__.']
+        )
+
 
 class TestHTMLTree(unittest.TestCase):
     def setUp(self):
