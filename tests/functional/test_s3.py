@@ -716,6 +716,9 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             "s3-outposts.us-west-2.amazonaws.com"
         )
         self.assert_endpoint(request, expected_endpoint)
+        sha_header = request.headers.get("x-amz-content-sha256")
+        self.assertIsNotNone(sha_header)
+        self.assertNotEqual(sha_header, b"UNSIGNED-PAYLOAD")
 
     def test_basic_outpost_arn_custom_endpoint(self):
         outpost_arn = (
