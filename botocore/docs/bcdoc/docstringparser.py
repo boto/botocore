@@ -116,8 +116,8 @@ class StemNode(Node):
 
     def _write_children(self, doc):
         for index, child in enumerate(self.children):
-            next_child = None
             if isinstance(child, TagNode) and index + 1 < len(self.children):
+                # Provide a look ahead for TagNode's when one exists
                 next_child = self.children[index + 1]
                 child.write(doc, next_child)
             else:
@@ -148,6 +148,7 @@ class TagNode(StemNode):
         handler_name = 'end_%s' % self.tag
         if hasattr(doc.style, handler_name):
             if handler_name == 'end_a':
+                # We use lookahead to determine if a space is needed after a link node
                 getattr(doc.style, handler_name)(next_child)
             else:
                 getattr(doc.style, handler_name)()
