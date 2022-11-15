@@ -1406,7 +1406,7 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_content_sha256_set_if_config_value_is_true(self):
         # By default, put_object() does not include an x-amz-content-sha256
-        # header because it also includes a `Content-MD5`` header. The
+        # header because it also includes a `Content-MD5` header. The
         # `payload_signing_enabled` config overrides this logic and forces the
         # header.
         config = Config(
@@ -1468,6 +1468,7 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.list_objects(Bucket="foo")
         sent_headers = self.get_sent_headers()
         sha_header = sent_headers.get("x-amz-content-sha256")
+        self.assertIsNotNone(sha_header)
         self.assertNotEqual(sha_header, b"UNSIGNED-PAYLOAD")
 
     def test_content_sha256_set_s3_on_outpost(self):
