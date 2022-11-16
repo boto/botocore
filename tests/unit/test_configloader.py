@@ -17,7 +17,6 @@ import shutil
 import tempfile
 
 import botocore.exceptions
-from botocore.compat import six
 from botocore.configloader import (
     load_config,
     multi_file_load_config,
@@ -29,7 +28,7 @@ from tests import mock, unittest
 def path(filename):
     directory = os.path.join(os.path.dirname(__file__), 'cfg')
     if isinstance(filename, bytes):
-        directory = six.b(directory)
+        directory = directory.encode('latin-1')
     return os.path.join(directory, filename)
 
 
@@ -53,7 +52,7 @@ class TestConfigLoader(unittest.TestCase):
 
         directory = self.tempdir
         if isinstance(filename, bytes):
-            directory = six.b(directory)
+            directory = directory.encode('latin-1')
         full_path = os.path.join(directory, filename)
 
         with open(full_path, 'w') as f:

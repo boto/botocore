@@ -13,12 +13,12 @@ spec.  This can happen for a number of reasons:
 """
 import base64
 import datetime
+import io
 import json
 
 import dateutil.tz
 
 from botocore import serialize
-from botocore.compat import six
 from botocore.exceptions import ParamValidationError
 from botocore.model import ServiceModel
 from tests import unittest
@@ -125,7 +125,7 @@ class TestBinaryTypesWithRestXML(BaseModelWithBlob):
         }
 
     def test_blob_serialization_with_file_like_object(self):
-        body = six.BytesIO(b'foobar')
+        body = io.BytesIO(b'foobar')
         request = self.serialize_to_request(input_params={'Blob': body})
         self.assertEqual(request['body'], body)
 
