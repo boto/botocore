@@ -219,7 +219,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
             context['payload_signing_enabled'] = False
 
         # s3 and s3-control have customized signers "s3v4" and "s3v4a".
-        if signing_name == 's3':
+        if signing_name in ('s3', 's3-outposts'):
             signature_version = f's3{signature_version}'
 
         return signature_version

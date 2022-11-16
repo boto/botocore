@@ -58,6 +58,9 @@ class FakeSocket:
     def close(self):
         pass
 
+    def settimeout(self, value):
+        pass
+
 
 class BytesIOWithLen(io.BytesIO):
     def __len__(self):
