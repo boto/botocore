@@ -117,7 +117,7 @@ class StemNode(Node):
     def _write_children(self, doc):
         for index, child in enumerate(self.children):
             if isinstance(child, TagNode) and index + 1 < len(self.children):
-                # Provide a look ahead for TagNode's when one exists
+                # Provide a look ahead for TagNodes when one exists
                 next_child = self.children[index + 1]
                 child.write(doc, next_child)
             else:
