@@ -26,6 +26,7 @@ import time
 import warnings
 import weakref
 from pathlib import Path
+from urllib.request import getproxies, proxy_bypass
 
 import dateutil.parser
 from dateutil.tz import tzutc
@@ -84,7 +85,6 @@ from botocore.exceptions import (
     UnsupportedS3ControlArnError,
     UnsupportedS3ControlConfigurationError,
 )
-from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1

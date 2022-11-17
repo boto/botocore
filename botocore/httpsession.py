@@ -54,6 +54,7 @@ from botocore.compat import (
     IPV6_ADDRZ_RE,
     ensure_bytes,
     filter_ssl_warnings,
+    unquote,
     urlparse,
 )
 from botocore.exceptions import (
@@ -66,7 +67,6 @@ from botocore.exceptions import (
     ReadTimeoutError,
     SSLError,
 )
-from botocore.vendored.six.moves.urllib_parse import unquote
 
 filter_ssl_warnings()
 logger = logging.getLogger(__name__)

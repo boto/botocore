@@ -1,8 +1,10 @@
 import contextlib
 import select
 import socket
+import socketserver
 import threading
 from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler
 
 import botocore.session
 from botocore.config import Config
@@ -15,7 +17,6 @@ from botocore.exceptions import (
     ReadTimeoutError,
 )
 from botocore.vendored.requests import exceptions as requests_exceptions
-from botocore.vendored.six.moves import BaseHTTPServer, socketserver
 from tests import mock, unittest
 
 
@@ -182,7 +183,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             'ec2', endpoint_url=self.localhost, config=config
         )
 
-        class BadStatusHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+        class BadStatusHandler(BaseHTTPRequestHandler):
             event = threading.Event()
 
             def do_POST(self):
@@ -200,7 +201,7 @@ def unused_port():
         return sock.getsockname()[1]
 
 
-class SimpleHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class SimpleHandler(BaseHTTPRequestHandler):
     status = 200
 
     def get_length(self):
@@ -219,7 +220,7 @@ class SimpleHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     do_POST = do_PUT = do_GET
 
 
-class ProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class ProxyHandler(BaseHTTPRequestHandler):
     tunnel_chunk_size = 1024
     poll_limit = 10**4
 
