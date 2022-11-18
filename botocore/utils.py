@@ -12,8 +12,8 @@
 # language governing permissions and limitations under the License.
 import base64
 import binascii
-import cgi
 import datetime
+import email.message
 import functools
 import hashlib
 import io
@@ -3011,10 +3011,12 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
     if not content_type:
         return None
 
-    content_type, params = cgi.parse_header(content_type)
+    message = email.message.Message()
+    message['content-type'] = content_type
+    charset = message.get_param("charset")
 
-    if 'charset' in params:
-        return params['charset'].strip("'\"")
+    if charset is not None:
+        return charset
 
     if 'text' in content_type:
         return default
