@@ -25,11 +25,6 @@
     "type": "api-change"
   },
   {
-    "category": "``ssmsap``",
-    "description": "AWS Systems Manager for SAP provides simplified operations and management of SAP applications such as SAP HANA. With this release, SAP customers and partners can automate and simplify their SAP system administration tasks such as backup/restore of SAP HANA.",
-    "type": "api-change"
-  },
-  {
     "category": "``workspaces``",
     "description": "This release introduces ModifyCertificateBasedAuthProperties, a new API that allows control of certificate-based auth properties associated with a WorkSpaces directory. The DescribeWorkspaceDirectories API will now additionally return certificate-based auth properties in its responses.",
     "type": "api-change"
