@@ -64,6 +64,15 @@ class BaseStyle:
     def italics(self, s):
         return s
 
+    def add_leading_space(self):
+        # Adds a leading white space if none exists.
+        last_write = self.doc.pop_write()
+        if last_write == None:
+            last_write = ''
+        if last_write != '' and last_write[-1] != ' ':
+            last_write += ' '
+        self.doc.push_write(last_write)
+
 
 class ReSTStyle(BaseStyle):
     def __init__(self, doc, indent_width=2):
@@ -162,6 +171,7 @@ class ReSTStyle(BaseStyle):
 
     def start_code(self, attrs=None):
         self.doc.do_translation = True
+        self.add_leading_space()
         self._start_inline('``')
 
     def end_code(self):
@@ -205,10 +215,15 @@ class ReSTStyle(BaseStyle):
         self.new_paragraph()
 
     def start_a(self, attrs=None):
+        # Write an empty space to prevent issues cause by missing
+        # whitespace before an "a" tag. Example: hi<a>Example</a>
+        self.add_leading_space()
         if attrs:
             for attr_key, attr_value in attrs:
                 if attr_key == 'href':
-                    self.a_href = attr_value
+                    # Removes unnecessary whitespace around the href link.
+                    # Example: <a href=" http://example.com ">Example</a>
+                    self.a_href = attr_value.strip()
                     self.doc.write('`')
         else:
             # There are some model documentation that
@@ -229,9 +244,24 @@ class ReSTStyle(BaseStyle):
         else:
             self.doc.write(text)
 
+    def _clean_link_text(self):
+        doc = self.doc
+        # Pop till we reach the link start character to retrieve link text.
+        last_write = doc.pop_write()[::-1]
+        while last_write[-1] != '`':
+            last_write += doc.pop_write()[::-1]  # Reverse text to preserve order
+        doc.push_write('`')
+        last_write = last_write[:-1]
+
+        # Remove whitespace and reverse again to correct order, then push clean text.
+        last_write = last_write.rstrip(' ')[::-1]
+        if last_write != '':
+            doc.push_write(last_write)
+
     def end_a(self, next_child=None):
         self.doc.do_translation = False
         if self.a_href:
+            self._clean_link_text()
             last_write = self.doc.pop_write()
             last_write = last_write.rstrip(' ')
             if last_write and last_write != '`':
