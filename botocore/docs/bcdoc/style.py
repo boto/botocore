@@ -67,7 +67,7 @@ class BaseStyle:
     def add_leading_space(self):
         # Adds a leading white space if none exists.
         last_write = self.doc.pop_write()
-        if last_write == None:
+        if last_write is None:
             last_write = ''
         if last_write != '' and last_write[-1] != ' ':
             last_write += ' '
@@ -249,7 +249,9 @@ class ReSTStyle(BaseStyle):
         # Pop till we reach the link start character to retrieve link text.
         last_write = doc.pop_write()[::-1]
         while last_write[-1] != '`':
-            last_write += doc.pop_write()[::-1]  # Reverse text to preserve order
+            last_write += doc.pop_write()[
+                ::-1
+            ]  # Reverse text to preserve order
         doc.push_write('`')
         last_write = last_write[:-1]
 
