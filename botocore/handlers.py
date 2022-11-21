@@ -218,8 +218,9 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         if auth_type == 'v4-unsigned-body':
             context['payload_signing_enabled'] = False
 
-        # s3 and s3-control have customized signers "s3v4" and "s3v4a".
-        if signing_name in ('s3', 's3-outposts'):
+        # Signing names used by s3 and s3-control use customized signers "s3v4"
+        # and "s3v4a".
+        if signing_name in ('s3', 's3-outposts', 's3-object-lambda'):
             signature_version = f's3{signature_version}'
 
         return signature_version
