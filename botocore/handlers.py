@@ -94,6 +94,9 @@ _OUTPOST_ARN = (
     r'[a-zA-Z0-9\-]{1,63}[/:]accesspoint[/:][a-zA-Z0-9\-]{1,63}$'
 )
 VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
+# signing names used for the services s3 and s3-control, for example in
+# botocore/data/s3/2006-03-01/endpoints-rule-set-1.json
+S3_SIGNING_NAMES = ('s3', 's3-outposts', 's3-object-lambda')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 SERVICE_NAME_ALIASES = {'runtime.sagemaker': 'sagemaker-runtime'}
@@ -220,7 +223,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
 
         # Signing names used by s3 and s3-control use customized signers "s3v4"
         # and "s3v4a".
-        if signing_name in ('s3', 's3-outposts', 's3-object-lambda'):
+        if signing_name in S3_SIGNING_NAMES:
             signature_version = f's3{signature_version}'
 
         return signature_version
