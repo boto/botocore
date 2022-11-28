@@ -175,7 +175,7 @@
                                 {
                                     "conditions": [],
                                     "endpoint": {
-                                        "url": "https://rds-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                        "url": "https://oam-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
                                         "properties": {},
                                         "headers": {}
                                     },
@@ -226,138 +226,12 @@
                             "rules": [
                                 {
                                     "conditions": [],
-                                    "type": "tree",
-                                    "rules": [
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "Region"
-                                                        },
-                                                        "rds.ca-central-1"
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.ca-central-1.amazonaws.com",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "Region"
-                                                        },
-                                                        "rds.us-east-1"
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.us-east-1.amazonaws.com",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "Region"
-                                                        },
-                                                        "rds.us-east-2"
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.us-east-2.amazonaws.com",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "Region"
-                                                        },
-                                                        "rds.us-west-1"
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.us-west-1.amazonaws.com",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "Region"
-                                                        },
-                                                        "rds.us-west-2"
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.us-west-2.amazonaws.com",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [
-                                                {
-                                                    "fn": "stringEquals",
-                                                    "argv": [
-                                                        "aws-us-gov",
-                                                        {
-                                                            "fn": "getAttr",
-                                                            "argv": [
-                                                                {
-                                                                    "ref": "PartitionResult"
-                                                                },
-                                                                "name"
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ],
-                                            "endpoint": {
-                                                "url": "https://rds.{Region}.{PartitionResult#dnsSuffix}",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        },
-                                        {
-                                            "conditions": [],
-                                            "endpoint": {
-                                                "url": "https://rds-fips.{Region}.{PartitionResult#dnsSuffix}",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        }
-                                    ]
+                                    "endpoint": {
+                                        "url": "https://oam-fips.{Region}.{PartitionResult#dnsSuffix}",
+                                        "properties": {},
+                                        "headers": {}
+                                    },
+                                    "type": "endpoint"
                                 }
                             ]
                         },
@@ -405,7 +279,7 @@
                                 {
                                     "conditions": [],
                                     "endpoint": {
-                                        "url": "https://rds.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                        "url": "https://oam.{Region}.{PartitionResult#dualStackDnsSuffix}",
                                         "properties": {},
                                         "headers": {}
                                     },
@@ -423,7 +297,7 @@
                 {
                     "conditions": [],
                     "endpoint": {
-                        "url": "https://rds.{Region}.{PartitionResult#dnsSuffix}",
+                        "url": "https://oam.{Region}.{PartitionResult#dnsSuffix}",
                         "properties": {},
                         "headers": {}
                     },
