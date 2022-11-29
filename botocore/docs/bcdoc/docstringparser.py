@@ -140,10 +140,7 @@ class TagNode(StemNode):
 
     def _has_nested_tags(self):
         # Returns True if any children are TagNodes and False otherwise.
-        for child in self.children:
-            if isinstance(child, TagNode):
-                return True
-        return False
+        return any(isinstance(child, TagNode) for child in self.children)
 
     def write(self, doc, next_child=None):
         prioritize_nested_tags = (
@@ -225,8 +222,9 @@ class DataNode(Node):
         if self.data.isspace():
             str_data = ' '
             if isinstance(self.parent, TagNode) and self.parent.tag == 'code':
-                # Prevents adding whitespace to code tags that would cause
-                # issues. We want to generate ``Test`` instead of `` Test ``.
+                # Inline markup content may not start or end with whitespace.
+                # When provided <code> Test </code>, we want to
+                # generate ``Test`` instead of `` Test ``.
                 str_data = ''
         else:
             end_space = self.data[-1].isspace()
