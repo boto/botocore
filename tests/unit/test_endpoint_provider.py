@@ -14,6 +14,7 @@
 import json
 import logging
 import os
+from unittest.mock import Mock
 
 import pytest
 
@@ -433,3 +434,20 @@ def test_auth_schemes_conversion_first_authtype_unknown(
     at, sc = empty_resolver.auth_schemes_to_signing_ctx(auth_schemes)
     assert at == 'bar'
     assert sc == {'region': 'ap-south-2', 'signing_name': 's3'}
+
+
+def test_endpoint_resolution_caches(endpoint_provider, monkeypatch):
+    mock_evaluate = Mock()
+    monkeypatch.setattr(RuleSet, "evaluate", mock_evaluate)
+    for _ in range(5):
+        endpoint_provider.resolve_endpoint(Region="us-east-2")
+    mock_evaluate.assert_called_once_with({"Region": "us-east-2"})
+
+
+def test_endpoint_reevaluates_result(endpoint_provider, monkeypatch):
+    regions = ["us-east-1", "us-west-2"]
+    mock_evaluate = Mock()
+    monkeypatch.setattr(RuleSet, "evaluate", mock_evaluate)
+    for region in regions:
+        endpoint_provider.resolve_endpoint(Region=region)
+    assert mock_evaluate.call_count == 2
