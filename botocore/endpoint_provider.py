@@ -52,7 +52,7 @@ ARN_PARSER = ArnParser()
 STRING_FORMATTER = Formatter()
 
 
-class RuleSetStandardLibary:
+class RuleSetStandardLibrary:
     """Rule actions to be performed by the EndpointProvider."""
 
     def __init__(self, partitions_data):
@@ -657,7 +657,7 @@ class RuleSet:
         self.version = version
         self.parameters = self._ingest_parameter_spec(parameters)
         self.rules = [RuleCreator.create(**rule) for rule in rules]
-        self.rule_lib = RuleSetStandardLibary(partitions)
+        self.rule_lib = RuleSetStandardLibrary(partitions)
         self.documentation = documentation
 
     def _ingest_parameter_spec(self, parameters):
