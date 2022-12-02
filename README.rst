@@ -36,13 +36,13 @@ For more information, see this `blog post <https://aws.amazon.com/blogs/develope
 
 Getting Started
 ---------------
-Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this or you can install the library using ``pip``:
+Assuming that you have Python installed, set up your environment and install the required dependencies like this or you can install the library using ``pip``:
 
 .. code-block:: sh
 
     $ git clone https://github.com/boto/botocore.git
     $ cd botocore
-    $ virtualenv venv
+    $ python -m venv venv
     ...
     $ . venv/bin/activate
     $ pip install -r requirements.txt
