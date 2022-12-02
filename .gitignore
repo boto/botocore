@@ -36,6 +36,7 @@ pip-log.txt
 env
 env2
 env3
+venv
 
 docs/source/reference/services
 tests/coverage.xml
