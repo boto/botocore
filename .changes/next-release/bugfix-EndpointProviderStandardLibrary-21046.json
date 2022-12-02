@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Endpoint Provider Standard Library",
+  "description": "Typo to correctly spell 'library' in `StandardLibrary` class"
+}

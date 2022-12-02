@@ -52,7 +52,7 @@ ARN_PARSER = ArnParser()
 STRING_FORMATTER = Formatter()
 
 
-class RuleSetStandardLibrary:
+class RuleSetStandardLibary:
     """Rule actions to be performed by the EndpointProvider."""
 
     def __init__(self, partitions_data):
@@ -406,6 +406,11 @@ class RuleSetStandardLibrary:
             )
 
         return self.is_valid_host_label(value, allow_subdomains=False)
+
+
+# fixes the typo in the original name while maintaining
+# backwards compatibility
+RuleSetStandardLibrary = RuleSetStandardLibary
 
 
 class BaseRule:
