@@ -58,7 +58,7 @@ class ReSTDocument:
         """
         Removes and returns the last content written to the stack.
         """
-        return self._writes.pop()
+        return self._writes.pop() if len(self._writes) > 0 else None
 
     def push_write(self, s):
         """
