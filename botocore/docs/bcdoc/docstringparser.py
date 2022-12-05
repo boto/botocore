@@ -12,6 +12,10 @@
 # language governing permissions and limitations under the License.
 from html.parser import HTMLParser
 
+PRIORITY_PARENT_TAGS = ('code', 'a')
+OMIT_NESTED_TAGS = ('span', 'i', 'code', 'a')
+OMIT_SELF_TAGS = ('i', 'b')
+
 
 class DocStringParser(HTMLParser):
     """
@@ -134,7 +138,23 @@ class TagNode(StemNode):
         self.attrs = attrs
         self.tag = tag
 
+    def _has_nested_tags(self):
+        # Returns True if any children are TagNodes and False otherwise.
+        return any(isinstance(child, TagNode) for child in self.children)
+
     def write(self, doc, next_child=None):
+        prioritize_nested_tags = (
+            self.tag in OMIT_SELF_TAGS and self._has_nested_tags()
+        )
+        prioritize_parent_tag = (
+            isinstance(self.parent, TagNode)
+            and self.parent.tag in PRIORITY_PARENT_TAGS
+            and self.tag in OMIT_NESTED_TAGS
+        )
+        if prioritize_nested_tags or prioritize_parent_tag:
+            self._write_children(doc)
+            return
+
         self._write_start(doc)
         self._write_children(doc)
         self._write_end(doc, next_child)
@@ -201,6 +221,11 @@ class DataNode(Node):
 
         if self.data.isspace():
             str_data = ' '
+            if isinstance(self.parent, TagNode) and self.parent.tag == 'code':
+                # Inline markup content may not start or end with whitespace.
+                # When provided <code> Test </code>, we want to
+                # generate ``Test`` instead of `` Test ``.
+                str_data = ''
         else:
             end_space = self.data[-1].isspace()
             words = self.data.split()
