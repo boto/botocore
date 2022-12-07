@@ -1,5 +1,5 @@
 {
   "type": "enhancement",
   "category": "Endpoint Provider Standard Library",
-  "description": "Correct spelling of 'library' in `StandardLibrary` class"
+  "description": "Correct spelling of 'library' in ``StandardLibrary`` class"
 }
