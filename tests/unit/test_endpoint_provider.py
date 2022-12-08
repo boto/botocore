@@ -24,7 +24,7 @@ from botocore.endpoint_provider import (
     ErrorRule,
     RuleCreator,
     RuleSet,
-    RuleSetStandardLibary,
+    RuleSetStandardLibrary,
     TreeRule,
 )
 from botocore.exceptions import (
@@ -95,7 +95,7 @@ def partitions(loader):
 
 @pytest.fixture(scope="module")
 def rule_lib(partitions):
-    return RuleSetStandardLibary(partitions)
+    return RuleSetStandardLibrary(partitions)
 
 
 @pytest.fixture(scope="module")
