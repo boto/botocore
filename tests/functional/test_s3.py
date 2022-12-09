@@ -1709,6 +1709,162 @@ class TestRegionRedirect(BaseS3OperationTest):
                 self.fail("PermanentRedirect error should have been raised")
 
 
+class TestHTTPRedirect(BaseS3OperationTest):
+    def setUp(self):
+        super().setUp()
+
+        self.default_client = self.session.create_client(
+            "s3",
+            "us-west-2",
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            ),
+        )
+        self.default_http_stubber = ClientHTTPStubber(self.default_client)
+
+        self.client = self.session.create_client(
+            "s3",
+            "us-west-2",
+            config=Config(
+                allow_http_redirects="True",
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            ),
+        )
+        self.http_stubber = ClientHTTPStubber(self.client)
+
+        self.redirect_response = {
+            "status": 307,
+            "headers": {
+                "location": "https://ham.s3.eu-central-1.amazonaws.com:1234/foo?bar=spam"
+            },
+            "body": (
+                b'<?xml version="1.0" encoding="UTF-8"?>\n'
+                b"<Error>"
+                b"    <Code>TemporaryRedirect</Code>"
+                b"    <Message>An arbitrary temporary redirect message."
+                b"    </Message>"
+                b"    <Bucket>foo</Bucket>"
+                b"    <Endpoint>foo.s3.eu-central-1.amazonaws.com</Endpoint>"
+                b"</Error>"
+            ),
+        }
+        self.success_response = {
+            "status": 200,
+            "headers": {},
+            "body": (
+                b'<?xml version="1.0" encoding="UTF-8"?>\n'
+                b"<ListBucketResult>"
+                b"    <Name>foo</Name>"
+                b"    <Prefix></Prefix>"
+                b"    <Marker></Marker>"
+                b"    <MaxKeys>1000</MaxKeys>"
+                b"    <EncodingType>url</EncodingType>"
+                b"    <IsTruncated>false</IsTruncated>"
+                b"</ListBucketResult>"
+            ),
+        }
+
+    def test_http_redirects_disabled_by_default(self):
+        self.default_http_stubber.add_response(**self.redirect_response)
+        self.default_http_stubber.add_response(**self.success_response)
+        with self.default_http_stubber:
+            try:
+                self.default_client.list_objects(Bucket="foo")
+            except self.client.exceptions.ClientError as e:
+                self.assertEqual(
+                    e.response["Error"]["Code"], "TemporaryRedirect"
+                )
+            else:
+                self.fail("TemporaryRedirect error should have been raised")
+
+    def test_http_redirect(self):
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+        with self.http_stubber:
+            response = self.client.list_objects(Bucket="foo")
+        self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
+        self.assertEqual(len(self.http_stubber.requests), 2)
+
+        initial_url = (
+            "https://s3.us-west-2.amazonaws.com/foo" "?encoding-type=url"
+        )
+        self.assertEqual(self.http_stubber.requests[0].url, initial_url)
+
+        fixed_url = (
+            "https://ham.s3.eu-central-1.amazonaws.com:1234/foo" "?bar=spam"
+        )
+        self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
+
+    def test_http_redirect_bypasses_cache(self):
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+
+        with self.http_stubber:
+            first_response = self.client.list_objects(Bucket="foo")
+            second_response = self.client.list_objects(Bucket="foo")
+
+        self.assertEqual(
+            first_response["ResponseMetadata"]["HTTPStatusCode"], 200
+        )
+        self.assertEqual(
+            second_response["ResponseMetadata"]["HTTPStatusCode"], 200
+        )
+
+        self.assertEqual(len(self.http_stubber.requests), 4)
+        initial_url = (
+            "https://s3.us-west-2.amazonaws.com/foo" "?encoding-type=url"
+        )
+        fixed_url = (
+            "https://ham.s3.eu-central-1.amazonaws.com:1234/foo" "?bar=spam"
+        )
+
+        self.assertEqual(self.http_stubber.requests[0].url, initial_url)
+        self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
+        self.assertEqual(self.http_stubber.requests[2].url, initial_url)
+        self.assertEqual(self.http_stubber.requests[3].url, fixed_url)
+
+    def test_http_multiple_redirections(self):
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+
+        with self.http_stubber:
+            response = self.client.list_objects(Bucket="foo")
+
+        self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
+
+        self.assertEqual(len(self.http_stubber.requests), 3)
+        initial_url = (
+            "https://s3.us-west-2.amazonaws.com/foo" "?encoding-type=url"
+        )
+        fixed_url = (
+            "https://ham.s3.eu-central-1.amazonaws.com:1234/foo" "?bar=spam"
+        )
+
+        self.assertEqual(self.http_stubber.requests[0].url, initial_url)
+        self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
+        self.assertEqual(self.http_stubber.requests[2].url, fixed_url)
+
+    def test_http_redirection_limit(self):
+        for _ in range(4):
+            self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+
+        with self.http_stubber:
+            try:
+                self.client.list_objects(Bucket="foo")
+            except self.client.exceptions.ClientError as e:
+                self.assertEqual(
+                    e.response["Error"]["Code"], "TemporaryRedirect"
+                )
+            else:
+                self.fail("TemporaryRedirect error should have been raised")
+
+
 class TestFipsRegionRedirect(BaseS3OperationTest):
     def setUp(self):
         super().setUp()
