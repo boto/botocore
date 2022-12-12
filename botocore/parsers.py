@@ -706,6 +706,7 @@ class BaseJSONParser(ResponseParser):
         code = None
         if len(query_error_components) == 2 and query_error_components[0]:
             code = query_error_components[0]
+            error['Error']['Type'] = query_error_components[1]
         if code is None:
             code = body.get('__type', response_code and str(response_code))
         if code is not None:
