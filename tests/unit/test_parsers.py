@@ -1104,6 +1104,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertEqual(
             parsed['Error']['Code'], 'AWS.SimpleQueueService.NonExistentQueue'
         )
+        self.assertEqual(parsed['Error']['Type'], 'Sender')
 
     def test_response_with_invalid_query_error_for_json_protocol(self):
         parser = parsers.JSONParser()
@@ -1125,6 +1126,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error']['Message'], 'this is a message')
         self.assertEqual(parsed['Error']['Code'], 'ValidationException')
+        self.assertNotIn('Type', parsed['Error'])
 
     def test_response_with_incomplete_query_error_for_json_protocol(self):
         parser = parsers.JSONParser()
@@ -1146,6 +1148,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error']['Message'], 'this is a message')
         self.assertEqual(parsed['Error']['Code'], 'ValidationException')
+        self.assertNotIn('Type', parsed['Error'])
 
     def test_response_with_empty_query_errors_for_json_protocol(self):
         parser = parsers.JSONParser()
@@ -1167,6 +1170,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error']['Message'], 'this is a message')
         self.assertEqual(parsed['Error']['Code'], 'ValidationException')
+        self.assertNotIn('Type', parsed['Error'])
 
     def test_parse_error_response_for_query_protocol(self):
         body = (
