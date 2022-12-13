@@ -47,7 +47,6 @@ GET_ATTR_RE = re.compile(r"(\w+)\[(\d+)\]")
 VALID_HOST_LABEL_RE = re.compile(
     r"^(?!-)[a-zA-Z\d-]{1,63}(?<!-)$",
 )
-ARN_DELIMITER_RE = re.compile(r"/|:")
 CACHE_SIZE = 100
 ARN_PARSER = ArnParser()
 STRING_FORMATTER = Formatter()
@@ -237,7 +236,7 @@ class RuleSetStandardLibrary:
         arn_dict["accountId"] = arn_dict.pop("account")
 
         resource = arn_dict.pop("resource")
-        arn_dict["resourceId"] = re.split(ARN_DELIMITER_RE, resource)
+        arn_dict["resourceId"] = resource.replace(":", "/").split("/")
 
         return arn_dict
 
