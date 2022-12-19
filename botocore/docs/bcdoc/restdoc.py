@@ -17,6 +17,11 @@ from botocore.docs.bcdoc.docstringparser import DocStringParser
 from botocore.docs.bcdoc.style import ReSTStyle
 
 LOG = logging.getLogger('bcdocs')
+SECTION_LINE_LIMITS = {
+    'example': 1500,
+    'description': 10000,
+    'request-params': 10000,
+}
 
 
 class ReSTDocument:
@@ -206,7 +211,10 @@ class DocumentStructure(ReSTDocument):
         value = self.getvalue()
         for name, section in self._structure.items():
             value += section.flush_structure()
-        return value
+        # Ignores response/request sections if the line number exceeds our limit.
+        line_count = value.decode('utf-8').count('\n')
+        line_limit = SECTION_LINE_LIMITS.get(self.name)
+        return b'' if line_limit and line_count > line_limit else value
 
     def getvalue(self):
         return ''.join(self._writes).encode('utf-8')
