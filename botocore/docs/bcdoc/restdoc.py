@@ -16,11 +16,22 @@ from botocore.compat import OrderedDict
 from botocore.docs.bcdoc.docstringparser import DocStringParser
 from botocore.docs.bcdoc.style import ReSTStyle
 
+LARGE_SECTION_MESSAGE = (
+    '    ::\n\n        # This section is too large to render.'
+    '\n        # Please see the AWS API Documentation linked below.\n\n    '
+)
 LOG = logging.getLogger('bcdocs')
 SECTION_LINE_LIMITS = {
-    'example': 1500,
-    'description': 10000,
-    'request-params': 10000,
+    'request-example': 1500,
+    'response-example': 1500,
+    'description': 5000,
+    'request-params': 5000,
+}
+SECTION_NAME_MAPPING = {
+    'response-example': 'Response Syntax',
+    'description': 'Response Structure',
+    'request-example': 'Request Syntax',
+    'request-params': 'Parameters',
 }
 
 
@@ -195,7 +206,7 @@ class DocumentStructure(ReSTDocument):
         """Delete a section"""
         del self._structure[name]
 
-    def flush_structure(self):
+    def flush_structure(self, docs_link=None):
         """Flushes a doc structure to a ReSTructed string
 
         The document is flushed out in a DFS style where sections and their
@@ -210,11 +221,27 @@ class DocumentStructure(ReSTDocument):
                     self.style.link_target_definition(refname, link)
         value = self.getvalue()
         for name, section in self._structure.items():
-            value += section.flush_structure()
-        # Ignores response/request sections if the line number exceeds our limit.
-        line_count = value.decode('utf-8').count('\n')
+            # Checks is the AWS API Documentation link has been generated.
+            # If it has been generated, it gets passed as a the doc_link parameter.
+            if b'`AWS API Documentation <' in value:
+                start = value.find(b'`AWS API Documentation <')
+                end = value.find(b'>`_', start) + 3
+                docs_link = value[start:end] + b'\n\n'
+            value += section.flush_structure(docs_link)
+
+        # Replace response/request sections if the line number exceeds our limit.
+        # The section is replaced with a message linking to AWS API Documentation.
+        line_count = len(value.splitlines())
         line_limit = SECTION_LINE_LIMITS.get(self.name)
-        return b'' if line_limit and line_count > line_limit else value
+        if line_limit and line_count > line_limit:
+            print(f'Lines:{line_count}, Section:{self.name}')
+            value = (
+                f'\n\n    **{SECTION_NAME_MAPPING.get(self.name)}**'
+                f'\n{LARGE_SECTION_MESSAGE}'
+            ).encode()
+            if docs_link is not None:
+                value += docs_link
+        return value
 
     def getvalue(self):
         return ''.join(self._writes).encode('utf-8')
