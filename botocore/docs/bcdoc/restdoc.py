@@ -234,7 +234,6 @@ class DocumentStructure(ReSTDocument):
         line_count = len(value.splitlines())
         line_limit = SECTION_LINE_LIMITS.get(self.name)
         if line_limit and line_count > line_limit:
-            print(f'Lines:{line_count}, Section:{self.name}')
             value = (
                 f'\n\n    **{SECTION_NAME_MAPPING.get(self.name)}**'
                 f'\n{LARGE_SECTION_MESSAGE}'
