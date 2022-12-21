@@ -11,27 +11,38 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+import re
 
 from botocore.compat import OrderedDict
 from botocore.docs.bcdoc.docstringparser import DocStringParser
 from botocore.docs.bcdoc.style import ReSTStyle
 
-LARGE_SECTION_MESSAGE = (
-    '    ::\n\n        # This section is too large to render.'
-    '\n        # Please see the AWS API Documentation linked below.\n\n    '
+DEFAULT_AWS_DOCS_LINK = 'https://docs.aws.amazon.com/index.html'
+DOCUMENTATION_LINK_REGEX = (
+    r'`AWS API Documentation '
+    r'<https://docs.aws.amazon.com/goto/WebAPI/[a-z0-9-.]*/[a-zA-Z]*>`_'
 )
+LARGE_SECTION_MESSAGE = """
+
+    **{}**
+    ::
+
+        # This section is too large to render.
+        # Please see the AWS API Documentation linked below.
+
+    {}
+    """
 LOG = logging.getLogger('bcdocs')
-SECTION_LINE_LIMITS = {
-    'request-example': 1500,
-    'response-example': 1500,
-    'description': 5000,
-    'request-params': 5000,
+SECTION_LINE_LIMIT_CONFIG = {
+    'response-example': {'name': 'Response Syntax', 'line_limit': 1500},
+    'description': {'name': 'Response Structure', 'line_limit': 5000},
+    'request-example': {'name': 'Request Syntax', 'line_limit': 1500},
+    'request-params': {'name': 'Parameters', 'line_limit': 5000},
 }
-SECTION_NAME_MAPPING = {
-    'response-example': 'Response Syntax',
-    'description': 'Response Structure',
-    'request-example': 'Request Syntax',
-    'request-params': 'Parameters',
+SECTION_METHOD_PATH_DEPTH = {
+    'client-api': 4,
+    'paginator-api': 3,
+    'waiter-api': 3,
 }
 
 
@@ -214,32 +225,38 @@ class DocumentStructure(ReSTDocument):
         """
         # We are at the root flush the links at the beginning of the
         # document
-        if len(self.path) == 1:
+        path_length = len(self.path)
+        if path_length == 1:
             if self.hrefs:
                 self.style.new_paragraph()
                 for refname, link in self.hrefs.items():
                     self.style.link_target_definition(refname, link)
+        # Clear docs_link at the correct depth to prevent passing a non-related link.
+        elif path_length == SECTION_METHOD_PATH_DEPTH.get(self.path[1]):
+            docs_link = None
         value = self.getvalue()
         for name, section in self._structure.items():
             # Checks is the AWS API Documentation link has been generated.
             # If it has been generated, it gets passed as a the doc_link parameter.
-            if b'`AWS API Documentation <' in value:
-                start = value.find(b'`AWS API Documentation <')
-                end = value.find(b'>`_', start) + 3
-                docs_link = value[start:end] + b'\n\n'
+            match = re.search(DOCUMENTATION_LINK_REGEX, value.decode())
+            docs_link = (
+                (match.group(0) + '\n\n').encode() if match else docs_link
+            )
             value += section.flush_structure(docs_link)
 
         # Replace response/request sections if the line number exceeds our limit.
         # The section is replaced with a message linking to AWS API Documentation.
         line_count = len(value.splitlines())
-        line_limit = SECTION_LINE_LIMITS.get(self.name)
-        if line_limit and line_count > line_limit:
-            value = (
-                f'\n\n    **{SECTION_NAME_MAPPING.get(self.name)}**'
-                f'\n{LARGE_SECTION_MESSAGE}'
+        section_config = SECTION_LINE_LIMIT_CONFIG.get(self.name)
+        aws_docs_link = (
+            docs_link.decode()
+            if docs_link is not None
+            else DEFAULT_AWS_DOCS_LINK
+        )
+        if section_config and line_count > section_config['line_limit']:
+            value = LARGE_SECTION_MESSAGE.format(
+                section_config['name'], aws_docs_link
             ).encode()
-            if docs_link is not None:
-                value += docs_link
         return value
 
     def getvalue(self):
