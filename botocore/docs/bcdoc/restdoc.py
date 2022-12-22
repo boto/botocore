@@ -18,7 +18,7 @@ from botocore.docs.bcdoc.docstringparser import DocStringParser
 from botocore.docs.bcdoc.style import ReSTStyle
 
 DEFAULT_AWS_DOCS_LINK = 'https://docs.aws.amazon.com/index.html'
-DOCUMENTATION_LINK_REGEX = (
+DOCUMENTATION_LINK_REGEX = re.compile(
     r'`AWS API Documentation '
     r'<https://docs.aws.amazon.com/goto/WebAPI/[a-z0-9-.]*/[a-zA-Z]*>`_'
 )
@@ -238,9 +238,9 @@ class DocumentStructure(ReSTDocument):
         for name, section in self._structure.items():
             # Checks is the AWS API Documentation link has been generated.
             # If it has been generated, it gets passed as a the doc_link parameter.
-            match = re.search(DOCUMENTATION_LINK_REGEX, value.decode())
+            match = DOCUMENTATION_LINK_REGEX.search(value.decode())
             docs_link = (
-                (match.group(0) + '\n\n').encode() if match else docs_link
+                f'{match.group(0)}\n\n'.encode() if match else docs_link
             )
             value += section.flush_structure(docs_link)
 
