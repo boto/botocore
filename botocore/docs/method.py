@@ -217,7 +217,7 @@ def document_model_driven_method(
         method_intro_section.writeln('')
 
     # Add the example section.
-    example_section = section.add_new_section('example')
+    example_section = section.add_new_section('request-example')
     example_section.style.new_paragraph()
     example_section.style.bold('Request Syntax')
 
@@ -287,7 +287,9 @@ def document_model_driven_method(
             event_section.style.new_line()
 
         # Add an example return value
-        return_example_section = return_section.add_new_section('example')
+        return_example_section = return_section.add_new_section(
+            'response-example'
+        )
         return_example_section.style.new_line()
         return_example_section.style.bold('Response Syntax')
         return_example_section.style.new_paragraph()
