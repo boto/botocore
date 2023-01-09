@@ -6,4 +6,4 @@ Available Services
   :titlesonly:
   :glob:
 
-  services/*
+  services/*/index

@@ -10,7 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+
 from botocore.compat import OrderedDict
+from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.method import (
     document_custom_method,
@@ -33,8 +36,9 @@ class ClientDocumenter:
         _allowlist_generate_presigned_url,
     ]
 
-    def __init__(self, client, shared_examples=None):
+    def __init__(self, client, root_docs_path, shared_examples=None):
         self._client = client
+        self._root_docs_path = root_docs_path
         self._shared_examples = shared_examples
         if self._shared_examples is None:
             self._shared_examples = {}
@@ -49,7 +53,7 @@ class ClientDocumenter:
         self._add_class_signature(section)
         client_methods = self._get_client_methods()
         self._add_client_intro(section, client_methods)
-        self._add_client_methods(section, client_methods)
+        self._add_client_methods(client_methods)
 
     def _get_client_methods(self):
         client_methods = get_instance_public_methods(self._client)
@@ -99,11 +103,11 @@ class ClientDocumenter:
 
         # List out all of the possible client methods.
         section.style.new_line()
-        section.write('These are the available methods:')
-        section.style.new_line()
-        class_name = self._client.__class__.__name__
+        section.writeln('These are the available methods:')
+        section.style.toctree()
+        section.style.dedent()
         for method_name in sorted(client_methods):
-            section.style.li(f":py:meth:`~{class_name}.Client.{method_name}`")
+            section.style.tocitem(f'client/{method_name}')
 
     def _add_class_signature(self, section):
         section.style.start_sphinx_py_class(
@@ -120,19 +124,36 @@ class ClientDocumenter:
         )
         section.style.end_codeblock()
 
-    def _add_client_methods(self, section, client_methods):
-        section = section.add_new_section('methods')
+    def _add_client_methods(self, client_methods):
         for method_name in sorted(client_methods):
+            # Create a new DocumentStructure for each client method and add contents.
+            client_doc_structure = DocumentStructure(
+                self._service_name, target='html'
+            )
             self._add_client_method(
-                section, method_name, client_methods[method_name]
+                client_doc_structure, method_name, client_methods[method_name]
             )
 
     def _add_client_method(self, section, method_name, method):
-        section = section.add_new_section(method_name)
+        title_section = section.add_new_section('title')
+        title_section.style.h1(method_name)
+
+        method_section = section.add_new_section(method_name)
         if self._is_custom_method(method_name):
-            self._add_custom_method(section, method_name, method)
+            self._add_custom_method(method_section, method_name, method)
         else:
-            self._add_model_driven_method(section, method_name)
+            self._add_model_driven_method(method_section, method_name)
+
+        # Write client methods in individual/nested files.
+        # Path: <root>/reference/services/<service>/client/<method_name>.rst
+        client_dir_path = os.path.join(
+            self._root_docs_path, f'{self._service_name}', 'client'
+        )
+        if not os.path.exists(client_dir_path):
+            os.makedirs(client_dir_path)
+        method_file_path = os.path.join(client_dir_path, f'{method_name}.rst')
+        with open(method_file_path, 'wb') as f:
+            f.write(section.flush_structure())
 
     def _is_custom_method(self, method_name):
         return method_name not in self._client.meta.method_to_api_mapping
@@ -213,15 +234,16 @@ class ClientExceptionsDocumenter:
         ),
     )
 
-    def __init__(self, client):
+    def __init__(self, client, root_docs_path):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
+        self._root_docs_path = root_docs_path
 
     def document_exceptions(self, section):
         self._add_title(section)
         self._add_overview(section)
         self._add_exceptions_list(section)
-        self._add_exception_classes(section)
+        self._add_exception_classes()
 
     def _add_title(self, section):
         section.style.h2('Client Exceptions')
@@ -253,17 +275,23 @@ class ClientExceptionsDocumenter:
             section.style.new_line()
             return
         section.style.new_line()
-        section.write('The available client exceptions are:')
-        section.style.new_line()
+        section.writeln('The available client exceptions are:')
+        section.style.toctree()
+        section.style.dedent()
         for shape in error_shapes:
-            class_name = self._exception_class_name(shape)
-            section.style.li(':py:class:`%s`' % class_name)
+            section.style.tocitem(f'exceptions/{shape.name}')
 
-    def _add_exception_classes(self, section):
+    def _add_exception_classes(self):
         for shape in self._client.meta.service_model.error_shapes:
-            self._add_exception_class(section, shape)
+            # Create a new DocumentStructure for each exception method and add contents.
+            exceptions_doc_structure = DocumentStructure(
+                self._service_name, target='html'
+            )
+            self._add_exception_class(exceptions_doc_structure, shape)
 
     def _add_exception_class(self, section, shape):
+        title_section = section.add_new_section('title')
+        title_section.style.h1(shape.name)
         class_section = section.add_new_section(shape.name)
         class_name = self._exception_class_name(shape)
         class_section.style.start_sphinx_py_class(class_name=class_name)
@@ -271,6 +299,19 @@ class ClientExceptionsDocumenter:
         self._add_exception_catch_example(class_section, shape)
         self._add_response_attr(class_section, shape)
         class_section.style.end_sphinx_py_class()
+
+        # Write exceptions in individual/nested files.
+        # Path: <root>/reference/services/<service>/exceptions/<exception_name>.rst
+        exception_dir_path = os.path.join(
+            self._root_docs_path, f"{self._service_name}", 'exceptions'
+        )
+        if not os.path.exists(exception_dir_path):
+            os.makedirs(exception_dir_path)
+        exception_file_path = os.path.join(
+            exception_dir_path, f'{shape.name}.rst'
+        )
+        with open(exception_file_path, 'wb') as f:
+            f.write(section.flush_structure())
 
     def _add_top_level_documentation(self, section, shape):
         if shape.documentation:

@@ -10,18 +10,22 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+
 from botocore import xform_name
 from botocore.compat import OrderedDict
+from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.utils import DocumentedShape
 from botocore.utils import get_service_module_name
 
 
 class PaginatorDocumenter:
-    def __init__(self, client, service_paginator_model):
+    def __init__(self, client, service_paginator_model, root_docs_path):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
         self._service_paginator_model = service_paginator_model
+        self._root_docs_path = root_docs_path
 
     def document_paginators(self, section):
         """Documents the various paginators for a service
@@ -31,6 +35,8 @@ class PaginatorDocumenter:
         section.style.h2('Paginators')
         section.style.new_line()
         section.writeln('The available paginators are:')
+        section.style.toctree()
+        section.style.dedent()
 
         paginator_names = sorted(
             self._service_paginator_model._paginator_config
@@ -38,40 +44,57 @@ class PaginatorDocumenter:
 
         # List the available paginators and then document each paginator.
         for paginator_name in paginator_names:
-            section.style.li(
-                f':py:class:`{self._client.__class__.__name__}.Paginator.{paginator_name}`'
+            section.style.tocitem(f'paginators/{paginator_name}')
+            # Create a new DocumentStructure for each paginator and add contents.
+            waiter_doc_structure = DocumentStructure(
+                self._service_name, target='html'
             )
-            self._add_paginator(section, paginator_name)
+            self._add_paginator(waiter_doc_structure, paginator_name)
 
     def _add_paginator(self, section, paginator_name):
-        section = section.add_new_section(paginator_name)
+        title_section = section.add_new_section('title')
+        title_section.style.h1(paginator_name)
 
         # Docment the paginator class
-        section.style.start_sphinx_py_class(
+        paginator_section = section.add_new_section(paginator_name)
+        paginator_section.style.start_sphinx_py_class(
             class_name=(
                 f'{self._client.__class__.__name__}.Paginator.{paginator_name}'
             )
         )
-        section.style.start_codeblock()
-        section.style.new_line()
+        paginator_section.style.start_codeblock()
+        paginator_section.style.new_line()
 
         # Document how to instantiate the paginator.
-        section.write(
+        paginator_section.write(
             f"paginator = client.get_paginator('{xform_name(paginator_name)}')"
         )
-        section.style.end_codeblock()
-        section.style.new_line()
+        paginator_section.style.end_codeblock()
+        paginator_section.style.new_line()
         # Get the pagination model for the particular paginator.
         paginator_config = self._service_paginator_model.get_paginator(
             paginator_name
         )
         document_paginate_method(
-            section=section,
+            section=paginator_section,
             paginator_name=paginator_name,
             event_emitter=self._client.meta.events,
             service_model=self._client.meta.service_model,
             paginator_config=paginator_config,
         )
+
+        # Write paginators in individual/nested files.
+        # Path: <root>/reference/services/<service>/paginators/<paginator_name>.rst
+        paginator_dir_path = os.path.join(
+            self._root_docs_path, f"{self._service_name}", 'paginators'
+        )
+        if not os.path.exists(paginator_dir_path):
+            os.makedirs(paginator_dir_path)
+        paginator_file_path = os.path.join(
+            paginator_dir_path, f'{paginator_name}.rst'
+        )
+        with open(paginator_file_path, 'wb') as f:
+            f.write(section.flush_structure())
 
 
 def document_paginate_method(
