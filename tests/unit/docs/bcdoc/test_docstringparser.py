@@ -248,42 +248,29 @@ class TestDataNode(unittest.TestCase):
         self.assertFalse(self.doc.handle_data.called)
 
 
-class TestLineItemNode(unittest.TestCase):
-    def setUp(self):
-        self.style = mock.Mock()
-        self.doc = mock.Mock()
-        self.doc.style = self.style
-        self.doc.translate_words.return_value = ['foo']
-        self.node = parser.LineItemNode()
 
-    def test_write_strips_white_space(self):
-        self.node.add_child(parser.DataNode('  foo'))
-        self.node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with('foo')
 
-    def test_write_strips_nested_white_space(self):
-        self.node.add_child(parser.DataNode('  '))
-        tag_child = parser.TagNode('foo')
-        tag_child.add_child(parser.DataNode('  '))
-        tag_child_2 = parser.TagNode('foo')
-        tag_child_2.add_child(parser.DataNode(' foo'))
-        tag_child.add_child(tag_child_2)
-        self.node.add_child(tag_child)
+@pytest.mark.parametrize(
+    'html, expected_lines',
+    [
+        ('<li>  foo</li>', [b'* foo']),
+        ('<li>  <foo>  </foo><foo> foo</foo></li>', [b'* foo']),
+        ('<li>  <foo> foo</foo><foo>  </foo></li>', [b'* foo']),
+        ('<li><foo>  </foo><foo> foo</foo> <foo>bar</li>', [b'* foo bar']),
+        ('<li><foo>  </foo><foo> foo</foo> <foo> bar</li>', [b'* foo bar']),
+        ('<li><foo>  </foo><foo> foo</foo><foo> bar</li>', [b'* foo bar']),
+    ],
+)
+def test_whitespace_collapsing_foo(html, expected_lines):
+    docstring_parser = parser.DocStringParser(ReSTDocument())
+    docstring_parser.feed(html)
+    docstring_parser.close()
+    actual = docstring_parser.doc.getvalue()
 
-        self.node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with('foo')
-
-    def test_write_only_strips_until_text_is_found(self):
-        self.node.add_child(parser.DataNode('  '))
-        tag_child = parser.TagNode('foo')
-        tag_child.add_child(parser.DataNode('  '))
-        tag_child_2 = parser.TagNode('foo')
-        tag_child_2.add_child(parser.DataNode(' foo'))
-        tag_child_2.add_child(parser.DataNode(' '))
-        tag_child.add_child(tag_child_2)
-        self.node.add_child(tag_child)
-
-        self.node.write(self.doc)
-
-        calls = [mock.call('foo'), mock.call(' ')]
-        self.doc.handle_data.assert_has_calls(calls)
+    # Get each line and filter out empty lines
+    contents = actual.split(b'\n')
+    contents = [line for line in contents if line and not line.isspace()]
+    for line in expected_lines:
+        assert line in contents
+        beginning = contents.index(line)
+        contents = contents[beginning:]

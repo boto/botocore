@@ -74,10 +74,7 @@ class HTMLTree:
             return
 
         if is_start:
-            if tag == 'li':
-                node = LineItemNode(attrs)
-            else:
-                node = TagNode(tag, attrs)
+            node = TagNode(tag, attrs)
             self.current_node.add_child(node)
             self.current_node = node
         else:
@@ -172,33 +169,6 @@ class TagNode(StemNode):
                 getattr(doc.style, handler_name)(next_child)
             else:
                 getattr(doc.style, handler_name)()
-
-
-class LineItemNode(TagNode):
-    def __init__(self, attrs=None, parent=None):
-        super().__init__('li', attrs, parent)
-
-    def write(self, doc, next_child=None):
-        self._lstrip(self)
-        super().write(doc, next_child)
-
-    def _lstrip(self, node):
-        """
-        Traverses the tree, stripping out whitespace until text data is found
-        :param node: The node to strip
-        :return: True if non-whitespace data was found, False otherwise
-        """
-        for child in node.children:
-            if isinstance(child, DataNode):
-                child.lstrip()
-                if child.data:
-                    return True
-            else:
-                found = self._lstrip(child)
-                if found:
-                    return True
-
-        return False
 
 
 class DataNode(Node):
