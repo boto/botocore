@@ -104,6 +104,37 @@ class TestDocStringParser(unittest.TestCase):
             result, [b'`Test <https://testing.com>`__ ']
         )
 
+    def test_indentation_with_spaces_between_tags(self):
+        # Leading spaces inserted as padding between HTML tags can lead to
+        # unexpected indentation in RST. For example, consider the space between
+        # ``<p>`` and ``<b>`` in the third line of this example:
+        html = (
+            "<p>First paragraph </p> "
+            "<note> <p> Second paragraph in note </p> </note> "
+            "<p> <b>Bold statement:</b> Third paragraph</p>"
+            "<p>Last paragraph</p> "
+        )
+        # If kept, it will appear as indentation in RST and have the effect of
+        # pulling the third paragraph into the note:
+        #
+        # ```
+        # First paragraph
+        #
+        # ..note::
+        #   Second paragraph in note <-- intentionally indented
+        #
+        #  **Bold statement:** Third paragraph <-- unintentionally indented
+        #
+        # Last paragraph <-- first non-indented paragraph after note
+        # ```
+        result = self.parse(html)
+        self.assert_contains_exact_lines_in_order(
+            result,
+            #  ↓ no whitespace here
+            [b'**Bold statement:**  Third paragraph'],
+            #                     ↑ extra space introduced by ``ReSTStyle``
+        )
+
 
 class TestHTMLTree(unittest.TestCase):
     def setUp(self):
