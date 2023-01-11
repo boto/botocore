@@ -100,10 +100,10 @@ class ReSTStyle(BaseStyle):
         # the whitespace and then pushing it back on the stack.
         last_write = self.doc.pop_write().rstrip(' ')
 
-        # Sometimes, for whatever reason, a tag like <b/> is present. This
-        # is problematic because if we simply translate that directly then
-        # we end up with something like ****, which rst will assume is a
-        # heading instead of an empty bold.
+        # Remove empty and self-closing tags like ``<b></b>`` and ``<b/>``.
+        # If we simply translate that directly then we end up with something
+        # like ****, which rst will assume is a heading instead of an empty
+        # bold.
         if last_write == markup:
             return
 
