@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from html.parser import HTMLParser
+from itertools import zip_longest
 
 PRIORITY_PARENT_TAGS = ('code', 'a')
 OMIT_NESTED_TAGS = ('span', 'i', 'code', 'a')
@@ -118,10 +119,10 @@ class StemNode(Node):
         self._write_children(doc)
 
     def _write_children(self, doc):
-        for index, child in enumerate(self.children):
-            if isinstance(child, TagNode) and index + 1 < len(self.children):
-                # Provide a look ahead for TagNodes when one exists
-                next_child = self.children[index + 1]
+        for index, (child, next_child) in enumerate(
+            zip_longest(self.children, self.children[1:])
+        ):
+            if isinstance(child, TagNode) and next_child is not None:
                 child.write(doc, next_child)
             else:
                 child.write(doc)
