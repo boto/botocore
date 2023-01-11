@@ -27,20 +27,19 @@ class DocStringParser(HTMLParser):
     def __init__(self, doc):
         self.tree = None
         self.doc = doc
-        HTMLParser.__init__(self)
+        super().__init__()
 
     def reset(self):
         HTMLParser.reset(self)
         self.tree = HTMLTree(self.doc)
 
     def feed(self, data):
-        # HTMLParser is an old style class, so the super() method will not work.
-        HTMLParser.feed(self, data)
+        super().feed(data)
         self.tree.write()
         self.tree = HTMLTree(self.doc)
 
     def close(self):
-        HTMLParser.close(self)
+        super().close()
         # Write if there is anything remaining.
         self.tree.write()
         self.tree = HTMLTree(self.doc)
