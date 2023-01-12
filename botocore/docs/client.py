@@ -102,10 +102,10 @@ class ClientDocumenter:
         self._add_client_creation_example(section)
 
         # List out all of the possible client methods.
-        section.style.new_line()
+        section.style.dedent()
+        section.style.new_paragraph()
         section.writeln('These are the available methods:')
         section.style.toctree()
-        section.style.dedent()
         for method_name in sorted(client_methods):
             section.style.tocitem(f'client/{method_name}')
 
@@ -277,7 +277,6 @@ class ClientExceptionsDocumenter:
         section.style.new_line()
         section.writeln('The available client exceptions are:')
         section.style.toctree()
-        section.style.dedent()
         for shape in error_shapes:
             section.style.tocitem(f'exceptions/{shape.name}')
 

@@ -36,7 +36,6 @@ class WaiterDocumenter:
         section.style.new_line()
         section.writeln('The available waiters are:')
         section.style.toctree()
-        section.style.dedent()
         for waiter_name in self._service_waiter_model.waiter_names:
             section.style.tocitem(f'waiters/{waiter_name}')
             # Create a new DocumentStructure for each waiter and add contents.

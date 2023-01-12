@@ -36,7 +36,6 @@ class PaginatorDocumenter:
         section.style.new_line()
         section.writeln('The available paginators are:')
         section.style.toctree()
-        section.style.dedent()
 
         paginator_names = sorted(
             self._service_paginator_model._paginator_config
