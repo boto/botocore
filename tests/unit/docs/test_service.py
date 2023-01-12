@@ -48,8 +48,8 @@ class TestServiceDocumenter(BaseDocsTest):
             '  A low-level client representing AWS MyService',
             '  AWS MyService Description',
             '    client = session.create_client(\'myservice\')',
-            '  These are the available methods:',
-            '  client/sample_operation',
+            'These are the available methods:',
+            '  myservice/client/sample_operation',
             '=================',
             'Client Exceptions',
             '=================',
@@ -57,11 +57,11 @@ class TestServiceDocumenter(BaseDocsTest):
             '==========',
             'Paginators',
             '==========',
-            '  paginators/SampleOperation',
+            '  myservice/paginators/SampleOperation',
             '=======',
             'Waiters',
             '=======',
-            '  waiters/SampleOperationComplete',
+            '  myservice/waiters/SampleOperationComplete',
         ]
         for line in lines:
             self.assertIn(line, contents)

@@ -107,7 +107,7 @@ class ClientDocumenter:
         section.writeln('These are the available methods:')
         section.style.toctree()
         for method_name in sorted(client_methods):
-            section.style.tocitem(f'client/{method_name}')
+            section.style.tocitem(f'{self._service_name}/client/{method_name}')
 
     def _add_class_signature(self, section):
         section.style.start_sphinx_py_class(
@@ -278,7 +278,9 @@ class ClientExceptionsDocumenter:
         section.writeln('The available client exceptions are:')
         section.style.toctree()
         for shape in error_shapes:
-            section.style.tocitem(f'exceptions/{shape.name}')
+            section.style.tocitem(
+                f'{self._service_name}/exceptions/{shape.name}'
+            )
 
     def _add_exception_classes(self):
         for shape in self._client.meta.service_model.error_shapes:

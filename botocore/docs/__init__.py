@@ -39,7 +39,7 @@ def generate_docs(root_dir, session):
         # Write the main service documentation page.
         # Path: <root>/reference/services/<service>/index.rst
         service_file_path = os.path.join(
-            services_dir_path, service_name, 'index.rst'
+            services_dir_path, f'{service_name}.rst'
         )
         with open(service_file_path, 'wb') as f:
             f.write(docs)

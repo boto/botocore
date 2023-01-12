@@ -43,11 +43,11 @@ class TestClientDocumenter(BaseDocsTest):
                 '  A low-level client representing AWS MyService',
                 '  AWS MyService Description',
                 '    client = session.create_client(\'myservice\')',
-                '  These are the available methods:',
-                '  client/can_paginate',
-                '  client/get_paginator',
-                '  client/get_waiter',
-                '  client/sample_operation',
+                'These are the available methods:',
+                '  myservice/client/can_paginate',
+                '  myservice/client/get_paginator',
+                '  myservice/client/get_waiter',
+                '  myservice/client/sample_operation',
             ]
         )
         self.assert_contains_lines_in_order(
@@ -138,7 +138,7 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
                 '.. toctree::',
                 ':maxdepth: 1',
                 ':titlesonly:',
-                '  exceptions/SomeException',
+                '  myservice/exceptions/SomeException',
             ]
         )
         self.assert_contains_lines_in_order(

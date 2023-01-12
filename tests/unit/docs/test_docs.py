@@ -42,7 +42,7 @@ class TestGenerateDocs(BaseDocsTest):
         generate_docs(self.docs_root_dir, session)
 
         reference_service_path = os.path.join(
-            self.root_services_path, 'myservice', 'index.rst'
+            self.root_services_path, 'myservice.rst'
         )
         self.assertTrue(os.path.exists(reference_service_path))
 

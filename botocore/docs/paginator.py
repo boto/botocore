@@ -43,7 +43,9 @@ class PaginatorDocumenter:
 
         # List the available paginators and then document each paginator.
         for paginator_name in paginator_names:
-            section.style.tocitem(f'paginators/{paginator_name}')
+            section.style.tocitem(
+                f'{self._service_name}/paginators/{paginator_name}'
+            )
             # Create a new DocumentStructure for each paginator and add contents.
             waiter_doc_structure = DocumentStructure(
                 self._service_name, target='html'
