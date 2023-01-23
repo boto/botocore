@@ -4240,7 +4240,6 @@
       "type":"structure",
       "required":[
         "HealthChecks",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -4414,7 +4413,6 @@
       "type":"structure",
       "required":[
         "HostedZones",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -4572,7 +4570,6 @@
       "type":"structure",
       "required":[
         "DelegationSets",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
