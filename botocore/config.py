@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import copy
 
-from botocore.compat import OrderedDict
 from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import (
     InvalidMaxRetryAttemptsError,
@@ -191,29 +190,27 @@ class Config:
         Defaults to False.
     """
 
-    OPTION_DEFAULTS = OrderedDict(
-        [
-            ('region_name', None),
-            ('signature_version', None),
-            ('user_agent', None),
-            ('user_agent_extra', None),
-            ('connect_timeout', DEFAULT_TIMEOUT),
-            ('read_timeout', DEFAULT_TIMEOUT),
-            ('parameter_validation', True),
-            ('max_pool_connections', MAX_POOL_CONNECTIONS),
-            ('proxies', None),
-            ('proxies_config', None),
-            ('s3', None),
-            ('retries', None),
-            ('client_cert', None),
-            ('inject_host_prefix', True),
-            ('endpoint_discovery_enabled', None),
-            ('use_dualstack_endpoint', None),
-            ('use_fips_endpoint', None),
-            ('defaults_mode', None),
-            ('tcp_keepalive', None),
-        ]
-    )
+    OPTION_DEFAULTS = {
+        'region_name': None,
+        'signature_version': None,
+        'user_agent': None,
+        'user_agent_extra': None,
+        'connect_timeout': DEFAULT_TIMEOUT,
+        'read_timeout': DEFAULT_TIMEOUT,
+        'parameter_validation': True,
+        'max_pool_connections': MAX_POOL_CONNECTIONS,
+        'proxies': None,
+        'proxies_config': None,
+        's3': None,
+        'retries': None,
+        'client_cert': None,
+        'inject_host_prefix': True,
+        'endpoint_discovery_enabled': None,
+        'use_dualstack_endpoint': None,
+        'use_fips_endpoint': None,
+        'defaults_mode': None,
+        'tcp_keepalive': None,
+    }
 
     NON_LEGACY_OPTION_DEFAULTS = {
         'connect_timeout': None,

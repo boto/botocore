@@ -22,7 +22,6 @@ import logging
 import shlex
 import re
 import os
-from collections import OrderedDict
 from collections.abc import MutableMapping
 from math import floor
 
