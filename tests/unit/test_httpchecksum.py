@@ -313,7 +313,9 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         request["headers"]["Content-Encoding"] = "foo"
         apply_request_checksum(request)
         # The content encoding should not have been modified
-        self.assertEqual(request["headers"]["Content-Encoding"], "foo,aws-chunked")
+        self.assertEqual(
+            request["headers"]["Content-Encoding"], "foo,aws-chunked"
+        )
 
     def test_apply_request_checksum_content_encoding_default(self):
         request = self._build_request(b"")
@@ -325,9 +327,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             }
         }
         apply_request_checksum(request)
-        self.assertEqual(
-            request["headers"]["Content-Encoding"], "aws-chunked"
-        )
+        self.assertEqual(request["headers"]["Content-Encoding"], "aws-chunked")
 
     def test_response_checksum_algorithm_no_model(self):
         request = self._build_request(b"")
