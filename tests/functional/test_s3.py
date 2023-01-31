@@ -2141,6 +2141,36 @@ def test_checksums_included_in_expected_operations(
         assert "Content-MD5" in stub.requests[-1].headers
 
 
+@pytest.mark.parametrize(
+    "input_param, expected_header",
+    [("foo", "foo,aws-chunked"), (None, "aws-chunked")],
+)
+def test_checksum_content_encoding(input_param, expected_header):
+    environ = {}
+    op_kwargs = {
+        "Bucket": "mybucket",
+        "Key": "mykey",
+        "Body": b"foo",
+        "ChecksumAlgorithm": "sha256",
+    }
+    if input_param is not None:
+        op_kwargs["ContentEncoding"] = input_param
+    with mock.patch("os.environ", environ):
+        environ["AWS_ACCESS_KEY_ID"] = "access_key"
+        environ["AWS_SECRET_ACCESS_KEY"] = "secret_key"
+        environ["AWS_CONFIG_FILE"] = "no-exist-foo"
+        session = create_session()
+        session.config_filename = "no-exist-foo"
+        s3 = session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response()
+            s3.put_object(**op_kwargs)
+            assert (
+                http_stubber.requests[-1].headers["Content-Encoding"].decode()
+                == expected_header
+            )
+
+
 def _s3_addressing_test_cases():
     # The default behavior for sigv2. DNS compatible buckets
     yield dict(

@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "s3 content encoding",
+  "description": "Appends `aws-chunked` to `Content-Encoding` header."
+}

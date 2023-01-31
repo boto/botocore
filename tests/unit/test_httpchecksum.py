@@ -312,7 +312,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         request["headers"]["Content-Encoding"] = "foo"
         apply_request_checksum(request)
-        # The content encoding should not have been modified
+        # The content encoding should only have been appended
         self.assertEqual(
             request["headers"]["Content-Encoding"], "foo,aws-chunked"
         )
