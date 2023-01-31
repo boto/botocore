@@ -2143,7 +2143,7 @@ def test_checksums_included_in_expected_operations(
 
 @pytest.mark.parametrize(
     "content_encoding, expected_header",
-    [("foo", "foo,aws-chunked"), (None, "aws-chunked")],
+    [("foo", b"foo,aws-chunked"), (None, b"aws-chunked")],
 )
 def test_checksum_content_encoding(content_encoding, expected_header):
     op_kwargs = {
@@ -2158,10 +2158,8 @@ def test_checksum_content_encoding(content_encoding, expected_header):
     with ClientHTTPStubber(s3) as http_stubber:
         http_stubber.add_response()
         s3.put_object(**op_kwargs)
-        assert (
-            http_stubber.requests[-1].headers["Content-Encoding"].decode()
-            == expected_header
-        )
+        request_headers = http_stubber.requests[-1].headers
+        assert request_headers["Content-Encoding"] == expected_header
 
 
 def _s3_addressing_test_cases():
