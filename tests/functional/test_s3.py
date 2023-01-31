@@ -2154,13 +2154,7 @@ def test_checksum_content_encoding(content_encoding, expected_header):
     }
     if content_encoding is not None:
         op_kwargs["ContentEncoding"] = content_encoding
-    s3 = _create_s3_client(
-        region="us-west-2",
-        is_secure=True,
-        s3_config={},
-        signature_version="s3v4",
-        endpoint_url=None,
-    )
+    s3 = _create_s3_client()
     with ClientHTTPStubber(s3) as http_stubber:
         http_stubber.add_response()
         s3.put_object(**op_kwargs)
