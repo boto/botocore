@@ -2133,19 +2133,33 @@ def test_checksums_included_in_expected_operations(
     operation, operation_kwargs
 ):
     """Validate expected calls include Content-MD5 header"""
-    environ = {}
-    with mock.patch("os.environ", environ):
-        environ["AWS_ACCESS_KEY_ID"] = "access_key"
-        environ["AWS_SECRET_ACCESS_KEY"] = "secret_key"
-        environ["AWS_CONFIG_FILE"] = "no-exist-foo"
-        session = create_session()
-        session.config_filename = "no-exist-foo"
-        client = session.create_client("s3")
-        with ClientHTTPStubber(client) as stub:
-            stub.add_response()
-            call = getattr(client, operation)
-            call(**operation_kwargs)
-            assert "Content-MD5" in stub.requests[-1].headers
+    client = _create_s3_client()
+    with ClientHTTPStubber(client) as stub:
+        stub.add_response()
+        call = getattr(client, operation)
+        call(**operation_kwargs)
+        assert "Content-MD5" in stub.requests[-1].headers
+
+
+@pytest.mark.parametrize(
+    "content_encoding, expected_header",
+    [("foo", b"foo,aws-chunked"), (None, b"aws-chunked")],
+)
+def test_checksum_content_encoding(content_encoding, expected_header):
+    op_kwargs = {
+        "Bucket": "mybucket",
+        "Key": "mykey",
+        "Body": b"foo",
+        "ChecksumAlgorithm": "sha256",
+    }
+    if content_encoding is not None:
+        op_kwargs["ContentEncoding"] = content_encoding
+    s3 = _create_s3_client()
+    with ClientHTTPStubber(s3) as http_stubber:
+        http_stubber.add_response()
+        s3.put_object(**op_kwargs)
+        request_headers = http_stubber.requests[-1].headers
+        assert request_headers["Content-Encoding"] == expected_header
 
 
 def _s3_addressing_test_cases():
@@ -3245,11 +3259,11 @@ def _verify_expected_exception(
 
 
 def _create_s3_client(
-    region,
-    is_secure,
-    endpoint_url,
-    s3_config,
-    signature_version,
+    region="us-west-2",
+    is_secure=True,
+    endpoint_url=None,
+    s3_config=None,
+    signature_version="s3v4",
     use_fips_endpoint=None,
 ):
     environ = {}
