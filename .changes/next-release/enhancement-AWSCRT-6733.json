@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "AWSCRT",
+  "description": "Upgrade awscrt version to support 0.16.9"
+}
