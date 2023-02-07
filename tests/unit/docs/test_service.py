@@ -27,7 +27,9 @@ class TestServiceDocumenter(BaseDocsTest):
             'botocore.session.create_loader', return_value=self.loader
         ):
             session = get_session()
-            self.service_documenter = ServiceDocumenter('myservice', session)
+            self.service_documenter = ServiceDocumenter(
+                'myservice', session, self.root_services_path
+            )
 
     def test_document_service(self):
         # Note that not everything will be included as it is just
@@ -46,13 +48,8 @@ class TestServiceDocumenter(BaseDocsTest):
             '  A low-level client representing AWS MyService',
             '  AWS MyService Description',
             '    client = session.create_client(\'myservice\')',
-            '  These are the available methods:',
-            '  *   :py:meth:`~MyService.Client.sample_operation`',
-            '  .. py:method:: sample_operation(**kwargs)',
-            '    **Examples** ',
-            '    Sample Description.',
-            '    ::',
-            '      response = client.sample_operation(',
+            'These are the available methods:',
+            '  myservice/Client/sample_operation',
             '=================',
             'Client Exceptions',
             '=================',
@@ -60,16 +57,27 @@ class TestServiceDocumenter(BaseDocsTest):
             '==========',
             'Paginators',
             '==========',
-            '.. py:class:: MyService.Paginator.SampleOperation',
-            '  .. py:method:: paginate(**kwargs)',
+            '  myservice/Paginator/SampleOperation',
             '=======',
             'Waiters',
             '=======',
-            '.. py:class:: MyService.Waiter.SampleOperationComplete',
-            '  .. py:method:: wait(**kwargs)',
+            '  myservice/Waiter/SampleOperationComplete',
         ]
         for line in lines:
             self.assertIn(line, contents)
+
+        self.assert_contains_lines_in_order(
+            [
+                '.. py:method:: sample_operation(**kwargs)',
+                '  **Examples** ',
+                '  Sample Description.',
+                '  ::',
+                '    response = client.sample_operation(',
+            ],
+            self.get_nested_service_contents(
+                'myservice', 'Client', 'sample_operation'
+            ),
+        )
 
     def test_document_service_no_paginator(self):
         os.remove(self.paginator_model_file)

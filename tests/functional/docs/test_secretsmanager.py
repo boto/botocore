@@ -16,6 +16,8 @@ from tests.functional.docs import BaseDocsFunctionalTest
 
 class TestSecretsManagerDocs(BaseDocsFunctionalTest):
     def test_generate_presigned_url_is_not_documented(self):
-        documenter = ServiceDocumenter('secretsmanager', self._session)
+        documenter = ServiceDocumenter(
+            'secretsmanager', self._session, self.root_services_path
+        )
         docs = documenter.document_service()
         self.assert_not_contains_line('generate_presigned_url', docs)

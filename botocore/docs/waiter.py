@@ -10,18 +10,23 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+
 from botocore import xform_name
 from botocore.compat import OrderedDict
+from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.utils import DocumentedShape
 from botocore.utils import get_service_module_name
 
 
 class WaiterDocumenter:
-    def __init__(self, client, service_waiter_model):
+    def __init__(self, client, service_waiter_model, root_docs_path):
         self._client = client
+        self._client_class_name = self._client.__class__.__name__
         self._service_name = self._client.meta.service_model.service_name
         self._service_waiter_model = service_waiter_model
+        self._root_docs_path = root_docs_path
 
     def document_waiters(self, section):
         """Documents the various waiters for a service.
@@ -31,30 +36,40 @@ class WaiterDocumenter:
         section.style.h2('Waiters')
         section.style.new_line()
         section.writeln('The available waiters are:')
+        section.style.toctree()
         for waiter_name in self._service_waiter_model.waiter_names:
-            section.style.li(
-                f":py:class:`{self._client.__class__.__name__}.Waiter.{waiter_name}`"
+            section.style.tocitem(f'{self._service_name}/Waiter/{waiter_name}')
+            # Create a new DocumentStructure for each waiter and add contents.
+            waiter_doc_structure = DocumentStructure(
+                waiter_name, target='html'
             )
-            self._add_single_waiter(section, waiter_name)
+            self._add_single_waiter(waiter_doc_structure, waiter_name)
+            # Write waiters in individual/nested files.
+            # Path: <root>/reference/services/<service>/Waiter/<waiter_name>.rst
+            waiter_dir_path = os.path.join(
+                self._root_docs_path, f"{self._service_name}", 'Waiter'
+            )
+            waiter_doc_structure.write_to_file(waiter_dir_path, waiter_name)
 
     def _add_single_waiter(self, section, waiter_name):
-        section = section.add_new_section(waiter_name)
-        section.style.start_sphinx_py_class(
-            class_name=f"{self._client.__class__.__name__}.Waiter.{waiter_name}"
+        section.add_title_section(waiter_name)
+        waiter_section = section.add_new_section(waiter_name)
+        waiter_section.style.start_sphinx_py_class(
+            class_name=f"{self._client_class_name}.Waiter.{waiter_name}"
         )
 
         # Add example on how to instantiate waiter.
-        section.style.start_codeblock()
-        section.style.new_line()
-        section.write(
+        waiter_section.style.start_codeblock()
+        waiter_section.style.new_line()
+        waiter_section.write(
             'waiter = client.get_waiter(\'%s\')' % xform_name(waiter_name)
         )
-        section.style.end_codeblock()
+        waiter_section.style.end_codeblock()
 
         # Add information on the wait() method
-        section.style.new_line()
+        waiter_section.style.new_line()
         document_wait_method(
-            section=section,
+            section=waiter_section,
             waiter_name=waiter_name,
             event_emitter=self._client.meta.events,
             service_model=self._client.meta.service_model,
