@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.29.66
+=======
+
+* api-change:``transfer``: Updated the documentation for the ImportCertificate API call, and added examples.
+
+
 1.29.65
 =======
 
