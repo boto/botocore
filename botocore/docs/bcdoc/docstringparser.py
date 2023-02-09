@@ -16,7 +16,7 @@ from itertools import zip_longest
 PRIORITY_PARENT_TAGS = ('code', 'a')
 OMIT_NESTED_TAGS = ('span', 'i', 'code', 'a')
 OMIT_SELF_TAGS = ('i', 'b')
-HTML_BLOCK_DISPLAY_TAGS = ['p', 'note', 'ul', 'li']
+HTML_BLOCK_DISPLAY_TAGS = ('p', 'note', 'ul', 'li')
 
 
 class DocStringParser(HTMLParser):
