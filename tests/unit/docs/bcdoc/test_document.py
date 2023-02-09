@@ -38,7 +38,7 @@ class TestReSTDocument(unittest.TestCase):
     def test_include_doc_string(self):
         doc = ReSTDocument()
         doc.include_doc_string('<p>this is a <code>test</code></p>')
-        self.assertEqual(doc.getvalue(), b'\n\nthis is a ``test`` \n\n')
+        self.assertEqual(doc.getvalue(), b'\n\nthis is a ``test``\n\n')
 
     def test_remove_doc_string(self):
         doc = ReSTDocument()

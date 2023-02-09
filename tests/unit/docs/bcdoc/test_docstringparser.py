@@ -65,7 +65,7 @@ class TestDocStringParser(unittest.TestCase):
         html = "<p>This is a test <a href='https://testing.com'>Link</a></p>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'This is a test `Link <https://testing.com>`__ ']
+            result, [b'This is a test `Link <https://testing.com>`__']
         )
 
     def test_link_with_period(self):
@@ -78,37 +78,37 @@ class TestDocStringParser(unittest.TestCase):
     def test_code_with_empty_link(self):
         html = "<p>Foo <code> <a>Link</a> </code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_code_with_link_spaces(self):
         html = "<p>Foo <code> <a href=\"https://aws.dev\">Link</a> </code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_code_with_link_no_spaces(self):
         html = "<p>Foo <code><a href=\"https://aws.dev\">Link</a></code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_href_with_spaces(self):
         html = "<p><a href=\" https://testing.com\">Link</a></p>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b' `Link <https://testing.com>`__ ']
+            result, [b' `Link <https://testing.com>`__']
         )
 
     def test_bold_with_nested_formatting(self):
         html = "<b><code>Test</code>test<a href=\" https://testing.com\">Link</a></b>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'``Test`` test `Link <https://testing.com>`__ ']
+            result, [b'``Test``test `Link <https://testing.com>`__']
         )
 
     def test_link_with_nested_formatting(self):
         html = "<a href=\"https://testing.com\"><code>Test</code></a>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'`Test <https://testing.com>`__ ']
+            result, [b'`Test <https://testing.com>`__']
         )
 
     def test_indentation_with_spaces_between_tags(self):
@@ -138,8 +138,7 @@ class TestDocStringParser(unittest.TestCase):
         self.assert_contains_exact_lines_in_order(
             result,
             #  ↓ no whitespace here
-            [b'**Bold statement:**  Third paragraph'],
-            #                     ↑ extra space introduced by ``ReSTStyle``
+            [b'**Bold statement:** Third paragraph'],
         )
 
 
@@ -306,7 +305,7 @@ def test_datanode_stripping(data, lstrip, rstrip, both):
         # various nested markup examples
         ('<p><i>italic</i></p>', [b'*italic*']),
         ('<p><i>italic</i> </p>', [b'*italic*']),
-        ('<p><i>italic </i></p>', [b'*italic*']),
+        ('<p><i>italic </i></p>', [b'*italic *']),
         ('<p>  <span> foo <i> bar</i> </span>  </p>', [b'foo *bar*']),
         ('<p>  <span> foo<i> bar</i> </span>  </p>', [b'foo* bar*']),
         ('<p>  <span> foo <i>bar</i> </span>  </p>', [b'foo *bar*']),
