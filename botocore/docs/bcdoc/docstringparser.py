@@ -205,8 +205,7 @@ class TagNode(StemNode):
             self.lstrip()
             self.rstrip()
         # Collapse whitespace in situations like ``</b> <i> foo</i>`` into
-        # ``</b><i> foo</i>``, unless the extraneous whitespace is in a
-        # whitespace-preserving tag.
+        # ``</b><i> foo</i>``.
         for prev, cur in zip(self.children[:-1], self.children[1:]):
             if prev.endswith_whitespace() and cur.startswith_whitespace():
                 cur.lstrip()
