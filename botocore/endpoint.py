@@ -229,6 +229,8 @@ class Endpoint:
             ] = total_retries
             if context["client_config"].retrieve_original_header:
                 success_response[1]["OriginalRequest"] = request
+            else:
+                success_response[1]["OriginalRequest"] = None
         if exception is not None:
             raise exception
         else:
