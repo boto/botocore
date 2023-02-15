@@ -118,13 +118,32 @@ class StemNode(Node):
         self._write_children(doc)
 
     def _write_children(self, doc):
-        for index, (child, next_child) in enumerate(
-            zip_longest(self.children, self.children[1:])
-        ):
+        for child, next_child in zip_longest(self.children, self.children[1:]):
             if isinstance(child, TagNode) and next_child is not None:
                 child.write(doc, next_child)
             else:
                 child.write(doc)
+
+    def is_whitespace(self):
+        return all(child.is_whitespace() for child in self.children)
+
+    def startswith_whitespace(self):
+        return self.children and self.children[0].startswith_whitespace()
+
+    def endswith_whitespace(self):
+        return self.children and self.children[-1].endswith_whitespace()
+
+    def lstrip(self):
+        while self.children and self.children[0].is_whitespace():
+            self.children = self.children[1:]
+        if self.children:
+            self.children[0].lstrip()
+
+    def rstrip(self):
+        while self.children and self.children[-1].is_whitespace():
+            self.children = self.children[:-1]
+        if self.children:
+            self.children[-1].rstrip()
 
     def collapse_whitespace(self):
         """Remove collapsible white-space from HTML.
@@ -135,6 +154,8 @@ class StemNode(Node):
         part of the syntax, for example for indentation, it can result in
         incorrect output.
         """
+        self.lstrip()
+        self.rstrip()
         for child in self.children:
             child.collapse_whitespace()
 
@@ -169,27 +190,6 @@ class TagNode(StemNode):
         self._write_start(doc)
         self._write_children(doc)
         self._write_end(doc, next_child)
-
-    def is_whitespace(self):
-        return all(child.is_whitespace() for child in self.children)
-
-    def startswith_whitespace(self):
-        return self.children and self.children[0].startswith_whitespace()
-
-    def endswith_whitespace(self):
-        return self.children and self.children[-1].endswith_whitespace()
-
-    def lstrip(self):
-        while self.children and self.children[0].is_whitespace():
-            self.children = self.children[1:]
-        if self.children:
-            self.children[0].lstrip()
-
-    def rstrip(self):
-        while self.children and self.children[-1].is_whitespace():
-            self.children = self.children[:-1]
-        if self.children:
-            self.children[-1].rstrip()
 
     def collapse_whitespace(self):
         """Remove collapsible white-space.
@@ -255,7 +255,6 @@ class DataNode(Node):
         last_non_space = len(data) - next(
             idx for idx, ch in enumerate(reversed(data)) if not ch.isspace()
         )
-
         self._leading_whitespace = data[:first_non_space]
         self._trailing_whitespace = data[last_non_space:]
         self._stripped_data = data[first_non_space:last_non_space]
