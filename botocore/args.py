@@ -234,6 +234,7 @@ class ClientArgsCreator:
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
                 tcp_keepalive=client_config.tcp_keepalive,
+                retrieve_original_header=client_config.retrieve_original_header,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)

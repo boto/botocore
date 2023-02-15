@@ -189,6 +189,12 @@ class Config:
         creating new connections if set to True.
 
         Defaults to False.
+
+    :type retrieve_original_header: bool
+    :param retrieve_original_header: Enables the option to return request
+        information made internally.
+
+        Defaults to False.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -212,6 +218,7 @@ class Config:
             ('use_fips_endpoint', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
+            ('retrieve_original_header', False),
         ]
     )
 
