@@ -44,28 +44,28 @@ class TestClientDocumenter(BaseDocsTest):
                 '  AWS MyService Description',
                 '    client = session.create_client(\'myservice\')',
                 'These are the available methods:',
-                '  myservice/Client/can_paginate',
-                '  myservice/Client/get_paginator',
-                '  myservice/Client/get_waiter',
-                '  myservice/Client/sample_operation',
+                '  myservice/client/can_paginate',
+                '  myservice/client/get_paginator',
+                '  myservice/client/get_waiter',
+                '  myservice/client/sample_operation',
             ]
         )
         self.assert_contains_lines_in_order(
             ['.. py:method:: can_paginate(operation_name)'],
             self.get_nested_service_contents(
-                'myservice', 'Client', 'can_paginate'
+                'myservice', 'client', 'can_paginate'
             ),
         )
         self.assert_contains_lines_in_order(
             ['.. py:method:: get_paginator(operation_name)'],
             self.get_nested_service_contents(
-                'myservice', 'Client', 'get_paginator'
+                'myservice', 'client', 'get_paginator'
             ),
         )
         self.assert_contains_lines_in_order(
             ['.. py:method:: get_waiter(waiter_name)'],
             self.get_nested_service_contents(
-                'myservice', 'Client', 'get_waiter'
+                'myservice', 'client', 'get_waiter'
             ),
         )
         self.assert_contains_lines_in_order(
@@ -92,7 +92,7 @@ class TestClientDocumenter(BaseDocsTest):
                 '*   :py:class:`MyService.Client.exceptions.SomeException`',
             ],
             self.get_nested_service_contents(
-                'myservice', 'Client', 'sample_operation'
+                'myservice', 'client', 'sample_operation'
             ),
         )
 
@@ -138,7 +138,7 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
                 '.. toctree::',
                 ':maxdepth: 1',
                 ':titlesonly:',
-                '  myservice/Client/exceptions/SomeException',
+                '  myservice/client/exceptions/SomeException',
             ]
         )
         self.assert_contains_lines_in_order(
@@ -163,6 +163,6 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
                 '- **Message** *(string) --* ',
             ],
             self.get_nested_service_contents(
-                'myservice', 'Client/exceptions', 'SomeException'
+                'myservice', 'client/exceptions', 'SomeException'
             ),
         )

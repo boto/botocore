@@ -49,7 +49,7 @@ class TestServiceDocumenter(BaseDocsTest):
             '  AWS MyService Description',
             '    client = session.create_client(\'myservice\')',
             'These are the available methods:',
-            '  myservice/Client/sample_operation',
+            '  myservice/client/sample_operation',
             '=================',
             'Client Exceptions',
             '=================',
@@ -57,11 +57,11 @@ class TestServiceDocumenter(BaseDocsTest):
             '==========',
             'Paginators',
             '==========',
-            '  myservice/Paginator/SampleOperation',
+            '  myservice/paginator/SampleOperation',
             '=======',
             'Waiters',
             '=======',
-            '  myservice/Waiter/SampleOperationComplete',
+            '  myservice/waiter/SampleOperationComplete',
         ]
         for line in lines:
             self.assertIn(line, contents)
@@ -75,7 +75,7 @@ class TestServiceDocumenter(BaseDocsTest):
                 '    response = client.sample_operation(',
             ],
             self.get_nested_service_contents(
-                'myservice', 'Client', 'sample_operation'
+                'myservice', 'client', 'sample_operation'
             ),
         )
 

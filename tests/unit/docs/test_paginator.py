@@ -38,7 +38,7 @@ class TestPaginatorDocumenter(BaseDocsTest):
                 'Paginators',
                 '==========',
                 'The available paginators are:',
-                'Paginator/SampleOperation',
+                'paginator/SampleOperation',
             ]
         )
         self.assert_contains_lines_in_order(
@@ -86,7 +86,7 @@ class TestPaginatorDocumenter(BaseDocsTest):
                 '        - **NextToken** *(string) --*',
             ],
             self.get_nested_service_contents(
-                'myservice', 'Paginator', 'SampleOperation'
+                'myservice', 'paginator', 'SampleOperation'
             ),
         )
 

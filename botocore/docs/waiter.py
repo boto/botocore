@@ -38,16 +38,16 @@ class WaiterDocumenter:
         section.writeln('The available waiters are:')
         section.style.toctree()
         for waiter_name in self._service_waiter_model.waiter_names:
-            section.style.tocitem(f'{self._service_name}/Waiter/{waiter_name}')
+            section.style.tocitem(f'{self._service_name}/waiter/{waiter_name}')
             # Create a new DocumentStructure for each waiter and add contents.
             waiter_doc_structure = DocumentStructure(
                 waiter_name, target='html'
             )
             self._add_single_waiter(waiter_doc_structure, waiter_name)
             # Write waiters in individual/nested files.
-            # Path: <root>/reference/services/<service>/Waiter/<waiter_name>.rst
+            # Path: <root>/reference/services/<service>/waiter/<waiter_name>.rst
             waiter_dir_path = os.path.join(
-                self._root_docs_path, f"{self._service_name}", 'Waiter'
+                self._root_docs_path, f"{self._service_name}", 'waiter'
             )
             waiter_doc_structure.write_to_file(waiter_dir_path, waiter_name)
 

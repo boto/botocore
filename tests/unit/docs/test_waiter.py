@@ -35,7 +35,7 @@ class TestWaiterDocumenter(BaseDocsTest):
                 'Waiters',
                 '=======',
                 'The available waiters are:',
-                'Waiter/SampleOperationComplete',
+                'waiter/SampleOperationComplete',
             ]
         )
         self.assert_contains_lines_in_order(
@@ -72,6 +72,6 @@ class TestWaiterDocumenter(BaseDocsTest):
                 '    :returns: None',
             ],
             self.get_nested_service_contents(
-                'myservice', 'Waiter', 'SampleOperationComplete'
+                'myservice', 'waiter', 'SampleOperationComplete'
             ),
         )

@@ -108,7 +108,7 @@ class ClientDocumenter:
         section.writeln('These are the available methods:')
         section.style.toctree()
         for method_name in sorted(client_methods):
-            section.style.tocitem(f'{self._service_name}/Client/{method_name}')
+            section.style.tocitem(f'{self._service_name}/client/{method_name}')
 
     def _add_class_signature(self, section):
         section.style.start_sphinx_py_class(
@@ -135,9 +135,9 @@ class ClientDocumenter:
                 method_doc_structure, method_name, client_methods[method_name]
             )
             # Write client methods in individual/nested files.
-            # Path: <root>/reference/services/<service>/Client/<method_name>.rst
+            # Path: <root>/reference/services/<service>/client/<method_name>.rst
             client_dir_path = os.path.join(
-                self._root_docs_path, f'{self._service_name}', 'Client'
+                self._root_docs_path, f'{self._service_name}', 'client'
             )
             method_doc_structure.write_to_file(client_dir_path, method_name)
 
@@ -274,7 +274,7 @@ class ClientExceptionsDocumenter:
         section.style.toctree()
         for shape in error_shapes:
             section.style.tocitem(
-                f'{self._service_name}/Client/exceptions/{shape.name}'
+                f'{self._service_name}/client/exceptions/{shape.name}'
             )
 
     def _add_exception_classes(self):
@@ -285,11 +285,11 @@ class ClientExceptionsDocumenter:
             )
             self._add_exception_class(exception_doc_structure, shape)
             # Write exceptions in individual/nested files.
-            # Path: <root>/reference/services/<service>/Client/exceptions/<exception_name>.rst
+            # Path: <root>/reference/services/<service>/client/exceptions/<exception_name>.rst
             exception_dir_path = os.path.join(
                 self._root_docs_path,
                 f"{self._service_name}",
-                'Client',
+                'client',
                 'exceptions',
             )
             exception_doc_structure.write_to_file(
