@@ -54,7 +54,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         service_file_path = os.path.join(
             self.root_services_path,
             service_name,
-            'Client',
+            'client',
             f'{method_name}.rst',
         )
         with open(service_file_path, 'rb') as f:
