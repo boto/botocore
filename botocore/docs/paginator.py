@@ -27,6 +27,10 @@ class PaginatorDocumenter:
         self._service_name = self._client.meta.service_model.service_name
         self._service_paginator_model = service_paginator_model
         self._root_docs_path = root_docs_path
+        self._USER_GUIDE_LINK = (
+            'https://boto3.amazonaws.com/'
+            'v1/documentation/api/latest/guide/paginators.html'
+        )
 
     def document_paginators(self, section):
         """Documents the various paginators for a service
@@ -34,6 +38,7 @@ class PaginatorDocumenter:
         param section: The section to write to.
         """
         section.style.h2('Paginators')
+        self._add_overview(section)
         section.style.new_line()
         section.writeln('The available paginators are:')
         section.style.toctree()
@@ -91,6 +96,21 @@ class PaginatorDocumenter:
             service_model=self._client.meta.service_model,
             paginator_config=paginator_config,
         )
+
+    def _add_overview(self, section):
+        section.style.new_line()
+        section.write(
+            'Paginators are available on a client instance '
+            'via the ``get_paginator`` method. For more detailed instructions '
+            'and examples on the usage of paginators, see the '
+            'paginators '
+        )
+        section.style.external_link(
+            title='user guide',
+            link=self._USER_GUIDE_LINK,
+        )
+        section.write('.')
+        section.style.new_line()
 
 
 def document_paginate_method(

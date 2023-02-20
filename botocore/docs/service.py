@@ -88,10 +88,11 @@ class ServiceDocumenter:
             )
         except DataNotFoundError:
             return
-        paginator_documenter = PaginatorDocumenter(
-            self._client, service_paginator_model, self._root_docs_path
-        )
-        paginator_documenter.document_paginators(section)
+        if service_paginator_model._paginator_config:
+            paginator_documenter = PaginatorDocumenter(
+                self._client, service_paginator_model, self._root_docs_path
+            )
+            paginator_documenter.document_paginators(section)
 
     def waiter_api(self, section):
         if self._client.waiter_names:

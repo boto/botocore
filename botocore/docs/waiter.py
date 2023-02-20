@@ -27,6 +27,10 @@ class WaiterDocumenter:
         self._service_name = self._client.meta.service_model.service_name
         self._service_waiter_model = service_waiter_model
         self._root_docs_path = root_docs_path
+        self._USER_GUIDE_LINK = (
+            'https://boto3.amazonaws.com/'
+            'v1/documentation/api/latest/guide/clients.html#waiters'
+        )
 
     def document_waiters(self, section):
         """Documents the various waiters for a service.
@@ -34,6 +38,7 @@ class WaiterDocumenter:
         :param section: The section to write to.
         """
         section.style.h2('Waiters')
+        self._add_overview(section)
         section.style.new_line()
         section.writeln('The available waiters are:')
         section.style.toctree()
@@ -75,6 +80,21 @@ class WaiterDocumenter:
             service_model=self._client.meta.service_model,
             service_waiter_model=self._service_waiter_model,
         )
+
+    def _add_overview(self, section):
+        section.style.new_line()
+        section.write(
+            'Waiters are available on a client instance '
+            'via the ``get_waiter`` method. For more detailed instructions '
+            'and examples on the usage or waiters, see the '
+            'waiters '
+        )
+        section.style.external_link(
+            title='user guide',
+            link=self._USER_GUIDE_LINK,
+        )
+        section.write('.')
+        section.style.new_line()
 
 
 def document_wait_method(
