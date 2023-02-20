@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.29.75
+=======
+
+* bugfix:SSO: Fixes aws/aws-cli`#7496 <https://github.com/aws/aws-cli/issues/7496>`__ by using the correct profile name rather than the one set in the session.
+* api-change:``auditmanager``: This release introduces a ServiceQuotaExceededException to the UpdateAssessmentFrameworkShare API operation.
+* api-change:``connect``: Reasons for failed diff has been approved by SDK Reviewer
+
+
 1.29.74
 =======
 
