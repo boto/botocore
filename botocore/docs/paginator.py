@@ -60,7 +60,7 @@ class PaginatorDocumenter:
             # Write paginators in individual/nested files.
             # Path: <root>/reference/services/<service>/paginator/<paginator_name>.rst
             paginator_dir_path = os.path.join(
-                self._root_docs_path, f"{self._service_name}", 'paginator'
+                self._root_docs_path, self._service_name, 'paginator'
             )
             paginator_doc_structure.write_to_file(
                 paginator_dir_path, paginator_name

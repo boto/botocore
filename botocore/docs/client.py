@@ -137,7 +137,7 @@ class ClientDocumenter:
             # Write client methods in individual/nested files.
             # Path: <root>/reference/services/<service>/client/<method_name>.rst
             client_dir_path = os.path.join(
-                self._root_docs_path, f'{self._service_name}', 'client'
+                self._root_docs_path, self._service_name, 'client'
             )
             method_doc_structure.write_to_file(client_dir_path, method_name)
 
@@ -288,7 +288,7 @@ class ClientExceptionsDocumenter:
             # Path: <root>/reference/services/<service>/client/exceptions/<exception_name>.rst
             exception_dir_path = os.path.join(
                 self._root_docs_path,
-                f"{self._service_name}",
+                self._service_name,
                 'client',
                 'exceptions',
             )

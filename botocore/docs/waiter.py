@@ -52,7 +52,7 @@ class WaiterDocumenter:
             # Write waiters in individual/nested files.
             # Path: <root>/reference/services/<service>/waiter/<waiter_name>.rst
             waiter_dir_path = os.path.join(
-                self._root_docs_path, f"{self._service_name}", 'waiter'
+                self._root_docs_path, self._service_name, 'waiter'
             )
             waiter_doc_structure.write_to_file(waiter_dir_path, waiter_name)
 
