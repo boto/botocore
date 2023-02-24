@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import os
+from pathlib import Path
 
 from botocore.docs import generate_docs
 from botocore.session import get_session
@@ -41,10 +41,8 @@ class TestGenerateDocs(BaseDocsTest):
         # Have the rst files get written to the temporary directory
         generate_docs(self.docs_root_dir, session)
 
-        reference_service_path = os.path.join(
-            self.root_services_path, 'myservice.rst'
-        )
-        self.assertTrue(os.path.exists(reference_service_path))
+        reference_service_path = Path(self.root_services_path, 'myservice.rst')
+        self.assertTrue(reference_service_path.exists())
 
         # Make sure the rst file has some the expected contents.
         with open(reference_service_path) as f:

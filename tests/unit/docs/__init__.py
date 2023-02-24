@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import json
-import os
 import shutil
 import tempfile
+from pathlib import Path
 
 from botocore.client import ClientCreator
 from botocore.compat import OrderedDict
@@ -28,22 +28,16 @@ from tests import mock, unittest
 class BaseDocsTest(unittest.TestCase):
     def setUp(self):
         self.root_dir = tempfile.mkdtemp()
-        self.version_dirs = os.path.join(
-            self.root_dir, 'myservice', '2014-01-01'
-        )
-        os.makedirs(self.version_dirs)
-        self.model_file = os.path.join(self.version_dirs, 'service-2.json')
-        self.waiter_model_file = os.path.join(
-            self.version_dirs, 'waiters-2.json'
-        )
-        self.paginator_model_file = os.path.join(
+        self.version_dirs = Path(self.root_dir, 'myservice', '2014-01-01')
+        self.version_dirs.mkdir(parents=True, exist_ok=True)
+        self.model_file = Path(self.version_dirs, 'service-2.json')
+        self.waiter_model_file = Path(self.version_dirs, 'waiters-2.json')
+        self.paginator_model_file = Path(
             self.version_dirs, 'paginators-1.json'
         )
-        self.example_model_file = os.path.join(
-            self.version_dirs, 'examples-1.json'
-        )
+        self.example_model_file = Path(self.version_dirs, 'examples-1.json')
         self.docs_root_dir = tempfile.mkdtemp()
-        self.root_services_path = os.path.join(
+        self.root_services_path = Path(
             self.docs_root_dir, 'reference', 'services'
         )
 
@@ -208,7 +202,7 @@ class BaseDocsTest(unittest.TestCase):
         }
 
     def get_nested_service_contents(self, service, type, name):
-        service_file_path = os.path.join(
+        service_file_path = Path(
             self.root_services_path, service, type, f'{name}.rst'
         )
         with open(service_file_path, 'rb') as f:
