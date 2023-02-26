@@ -10,9 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
 import shutil
 import tempfile
-from pathlib import Path
 
 from botocore.docs.service import ServiceDocumenter
 from botocore.session import get_session
@@ -23,7 +23,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
     def setUp(self):
         self._session = get_session()
         self.docs_root_dir = tempfile.mkdtemp()
-        self.root_services_path = Path(
+        self.root_services_path = os.path.join(
             self.docs_root_dir, 'reference', 'services'
         )
 
@@ -51,7 +51,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
             self.assertNotIn(line, contents)
 
     def get_client_method_contents(self, service_name, method_name):
-        service_file_path = Path(
+        service_file_path = os.path.join(
             self.root_services_path,
             service_name,
             'client',

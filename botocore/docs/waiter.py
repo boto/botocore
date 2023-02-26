@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from pathlib import Path
+import os
 
 from botocore import xform_name
 from botocore.compat import OrderedDict
@@ -51,7 +51,7 @@ class WaiterDocumenter:
             self._add_single_waiter(waiter_doc_structure, waiter_name)
             # Write waiters in individual/nested files.
             # Path: <root>/reference/services/<service>/waiter/<waiter_name>.rst
-            waiter_dir_path = Path(
+            waiter_dir_path = os.path.join(
                 self._root_docs_path, self._service_name, 'waiter'
             )
             waiter_doc_structure.write_to_file(waiter_dir_path, waiter_name)

@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+import os
 import re
-from pathlib import Path
 
 from botocore.compat import OrderedDict
 from botocore.docs.bcdoc.docstringparser import DocStringParser
@@ -275,7 +275,8 @@ class DocumentStructure(ReSTDocument):
         return title_section
 
     def write_to_file(self, full_path, file_name):
-        full_path.mkdir(parents=True, exist_ok=True)
-        sub_resource_file_path = Path(full_path, f'{file_name}.rst')
+        if not os.path.exists(full_path):
+            os.makedirs(full_path)
+        sub_resource_file_path = os.path.join(full_path, f'{file_name}.rst')
         with open(sub_resource_file_path, 'wb') as f:
             f.write(self.flush_structure())

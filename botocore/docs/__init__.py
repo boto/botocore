@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from pathlib import Path
+import os
 
 from botocore.docs.service import ServiceDocumenter
 
@@ -26,8 +26,9 @@ def generate_docs(root_dir, session):
         root_dir/reference/services/service-name.rst
     """
     # Create the root directory where all service docs live.
-    services_dir_path = Path(root_dir, 'reference', 'services')
-    services_dir_path.mkdir(parents=True, exist_ok=True)
+    services_dir_path = os.path.join(root_dir, 'reference', 'services')
+    if not os.path.exists(services_dir_path):
+        os.makedirs(services_dir_path)
 
     # Generate reference docs and write them out.
     for service_name in session.get_available_services():
@@ -37,6 +38,8 @@ def generate_docs(root_dir, session):
 
         # Write the main service documentation page.
         # Path: <root>/reference/services/<service>/index.rst
-        service_file_path = Path(services_dir_path, f'{service_name}.rst')
+        service_file_path = os.path.join(
+            services_dir_path, f'{service_name}.rst'
+        )
         with open(service_file_path, 'wb') as f:
             f.write(docs)
