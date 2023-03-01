@@ -15,9 +15,10 @@ limitations under the License.
 */
 
 // Checks if an html doc name matches a service class name.
-function isValidServiceName(docName, serviceClassName) {
-	const new_docName = docName.replaceAll('-', '').toLowerCase();
-	return new_docName === serviceClassName;
+function isValidServiceName(serviceClassName) {
+	const pageTitle = document.getElementsByTagName('h1')[0];
+	const newDocName = pageTitle.getElementsByTagName('a')[0].innerHTML;
+	return newDocName.toLowerCase() === serviceClassName;
 }
 // Checks if all elements of the split fragment are valid.
 // Fragment items should only contain alphanumerics, hyphens, & underscores.
@@ -44,7 +45,7 @@ function isValidFragment(splitFragment) {
 		const serviceDocName = currentPath[currentPath.length - 1].replace('.html', '');
 		const splitFragment = fragment.split('.');
 		splitFragment[0] = splitFragment[0].toLowerCase();
-		if (isValidFragment(splitFragment) && isValidServiceName(serviceDocName, splitFragment[0])) {
+		if (isValidFragment(splitFragment) && isValidServiceName(splitFragment[0])) {
 			// Replace class name with doc name
 			splitFragment[0] = serviceDocName;
 			splitFragment[1] = splitFragment[1].toLowerCase();
