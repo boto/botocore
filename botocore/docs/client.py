@@ -153,7 +153,8 @@ class ClientDocumenter:
         return method_name not in self._client.meta.method_to_api_mapping
 
     def _add_custom_method(self, section, method_name, method):
-        document_custom_method(section, method_name, method)
+        full_method_name = f'{self._client_class_name}.Client.{method_name}'
+        document_custom_method(section, full_method_name, method)
 
     def _add_method_exceptions_list(self, section, operation_model):
         error_section = section.add_new_section('exceptions')
@@ -172,9 +173,10 @@ class ClientDocumenter:
         operation_model = service_model.operation_model(operation_name)
 
         example_prefix = 'response = client.%s' % method_name
+        full_method_name = f'{self._client_class_name}.Client.{method_name}'
         document_model_driven_method(
             section,
-            method_name,
+            full_method_name,
             operation_model,
             event_emitter=self._client.meta.events,
             method_description=operation_model.documentation,
