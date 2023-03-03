@@ -51,26 +51,26 @@ class TestClientDocumenter(BaseDocsTest):
             ]
         )
         self.assert_contains_lines_in_order(
-            ['.. py:method:: can_paginate(operation_name)'],
+            ['.. py:method:: MyService.Client.can_paginate(operation_name)'],
             self.get_nested_service_contents(
                 'myservice', 'client', 'can_paginate'
             ),
         )
         self.assert_contains_lines_in_order(
-            ['.. py:method:: get_paginator(operation_name)'],
+            ['.. py:method:: MyService.Client.get_paginator(operation_name)'],
             self.get_nested_service_contents(
                 'myservice', 'client', 'get_paginator'
             ),
         )
         self.assert_contains_lines_in_order(
-            ['.. py:method:: get_waiter(waiter_name)'],
+            ['.. py:method:: MyService.Client.get_waiter(waiter_name)'],
             self.get_nested_service_contents(
                 'myservice', 'client', 'get_waiter'
             ),
         )
         self.assert_contains_lines_in_order(
             [
-                '.. py:method:: sample_operation(**kwargs)',
+                '.. py:method:: MyService.Client.sample_operation(**kwargs)',
                 '  **Request Syntax**',
                 '  ::',
                 '    response = client.sample_operation(',
