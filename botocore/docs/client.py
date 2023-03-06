@@ -148,26 +148,17 @@ class ClientDocumenter:
         if self._is_custom_method(method_name):
             self._add_custom_method(
                 method_section,
-                method_name,
+                full_method_name,
                 method,
-                full_method_name=full_method_name,
             )
         else:
-            self._add_model_driven_method(
-                method_section, method_name, full_method_name=full_method_name
-            )
+            self._add_model_driven_method(method_section, full_method_name)
 
     def _is_custom_method(self, method_name):
         return method_name not in self._client.meta.method_to_api_mapping
 
-    def _add_custom_method(
-        self, section, method_name, method, full_method_name=None
-    ):
-        if full_method_name is None:
-            full_method_name = method_name
-        document_custom_method(
-            section, full_method_name, method, full_method_name=None
-        )
+    def _add_custom_method(self, section, method_name, method):
+        document_custom_method(section, method_name, method)
 
     def _add_method_exceptions_list(self, section, operation_model):
         error_section = section.add_new_section('exceptions')
@@ -180,16 +171,14 @@ class ClientDocumenter:
             )
             error_section.style.li(':py:class:`%s`' % class_name)
 
-    def _add_model_driven_method(
-        self, section, method_name, full_method_name=None
-    ):
+    def _add_model_driven_method(self, section, method_name):
+        full_method_name = method_name
+        method_name = full_method_name.split('.')[-1]
         service_model = self._client.meta.service_model
         operation_name = self._client.meta.method_to_api_mapping[method_name]
         operation_model = service_model.operation_model(operation_name)
 
         example_prefix = 'response = client.%s' % method_name
-        if full_method_name is None:
-            full_method_name = method_name
         document_model_driven_method(
             section,
             full_method_name,
