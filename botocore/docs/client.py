@@ -143,15 +143,14 @@ class ClientDocumenter:
 
     def _add_client_method(self, section, method_name, method):
         section.add_title_section(method_name)
-        full_method_name = f'{self._client_class_name}.Client.{method_name}'
         method_section = section.add_new_section(
             method_name,
-            context={'full_method_name': full_method_name},
+            context={'qualifier': f'{self._client_class_name}.Client.'},
         )
         if self._is_custom_method(method_name):
             self._add_custom_method(
                 method_section,
-                full_method_name,
+                method_name,
                 method,
             )
         else:
@@ -180,7 +179,9 @@ class ClientDocumenter:
         operation_model = service_model.operation_model(operation_name)
 
         example_prefix = 'response = client.%s' % method_name
-        full_method_name = section.context.get('full_method_name', method_name)
+        full_method_name = (
+            f"{section.context.get('qualifier', '')}{method_name}"
+        )
         document_model_driven_method(
             section,
             full_method_name,
