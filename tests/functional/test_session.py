@@ -87,16 +87,35 @@ class TestSession(unittest.TestCase):
             self.assertEqual(creds.access_key, 'env_var_akid')
             self.assertEqual(creds.secret_key, 'env_var_sak')
 
-    def test_provides_available_regions_for_same_endpoint_prefix(self):
+    def test_provides_available_regions_when_name_and_prefix_match(self):
+        # s3's endpoint prefix matches its service name
         regions = self.session.get_available_regions('s3')
         self.assertTrue(regions)
 
-    def test_provides_available_regions_for_different_endpoint_prefix(self):
-        regions = self.session.get_available_regions('elb')
-        self.assertTrue(regions)
+    def test_provides_available_regions_for_mismatching_service_name(self):
+        # elb's endpoint prefix is elasticloadbalancing
+        regions_from_name = self.session.get_available_regions('elb')
+        regions_from_prefix = self.session.get_available_regions(
+            'elasticloadbalancing'
+        )
+        self.assertEqual(regions_from_name, regions_from_prefix)
 
-    def test_does_not_provide_regions_for_mismatch_service_name(self):
-        # elb's endpoint prefix is elasticloadbalancing, but users should
-        # still be using the service name when getting regions
-        regions = self.session.get_available_regions('elasticloadbalancing')
+    def test_provides_regions_for_name_before_prefix(self):
+        # neptune has the endpoint prefix "rds" (shared with RDS and others)
+        # but is often not available in the same regions as RDS.
+        mocked_get_available_regions = mock.Mock(
+            spec=self.session.get_available_regions, return_value=[]
+        )
+
+        with mock.patch(
+            'botocore.session.Session.get_available_regions',
+            mocked_get_available_regions,
+        ):
+            self.session.get_available_regions('neptune')
+        mocked_get_available_regions.assert_called_once_with(
+            service_name='neptune'
+        )
+
+    def test_does_not_provide_regions_for_unknown_service(self):
+        regions = self.session.get_available_regions('notaservice')
         self.assertEqual(regions, [])
