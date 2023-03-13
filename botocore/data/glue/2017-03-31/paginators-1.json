@@ -112,6 +112,12 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Schemas"
+    },
+    "ListJobs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "JobNames"
     }
   }
 }
