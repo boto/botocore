@@ -46,6 +46,8 @@ class BaseExampleDocumenter(ShapeDocumenter):
             include=include,
             exclude=exclude,
         )
+        final_blank_line_section = section.add_new_section('final-blank-line')
+        final_blank_line_section.style.new_line()
 
     def document_recursive_shape(self, section, shape, **kwargs):
         section.write('{\'... recursive ...\'}')
