@@ -79,7 +79,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         contents = contents.decode('utf-8')
         regex = rf'.. py:method:: ([a-zA-Z0-9]*\.)*{operation_name}\('
         match = re.search(regex, contents)
-        self.assertNotEqual(match, None, 'Method is not found in contents')
+        self.assertIsNotNone(match, 'Method is not found in contents')
         start_method_document = match.group()
         start_index = match.start()
         contents = contents[start_index:]
