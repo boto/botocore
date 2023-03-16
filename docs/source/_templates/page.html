@@ -1,4 +1,4 @@
-<!--
+{#
 Copyright (c) 2020 Pradyun Gedam <mail@pradyunsg.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -7,7 +7,7 @@ deal in the Software without restriction, including without limitation the
 rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 sell copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
--->
+#}
 
 {%- extends "!page.html" %}
 
@@ -70,6 +70,8 @@ furnished to do so, subject to the following conditions:
         {%- endtrans -%}
     </div>
     {%- endif %}
+
+    {# start of AWS modification of Furo template #}
     <div class="legal-info">
         <script type="text/javascript" src="{{ pathto('_static/shortbreadv1.js',1 ) }}"></script>
         <script type="text/javascript">
@@ -81,6 +83,8 @@ furnished to do so, subject to the following conditions:
         <a href="http://aws.amazon.com/privacy">Privacy</a> | <a href="http://aws.amazon.com/terms">Site Terms</a> | <a
             href="#" onclick="shortbread.customizeCookies();">Cookie preferences</a>
     </div>
+    {# end of AWS modification of Furo template #}
+
     </div>
     <div class="right-details">
     {% if theme_footer_icons or READTHEDOCS -%}
