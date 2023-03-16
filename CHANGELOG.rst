@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.29.93
+=======
+
+* api-change:``guardduty``: Updated 9 APIs for feature enablement to reflect expansion of GuardDuty to features. Added new APIs and updated existing APIs to support RDS Protection GA.
+* api-change:``resource-explorer-2``: Documentation updates for APIs.
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+
+
 1.29.92
 =======
 

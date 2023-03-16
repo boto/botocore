@@ -127,7 +127,8 @@ def document_custom_method(section, method_name, method):
 
     :param method: The handle to the method being documented
     """
-    document_custom_signature(section, method_name, method)
+    full_method_name = f"{section.context.get('qualifier', '')}{method_name}"
+    document_custom_signature(section, full_method_name, method)
     method_intro_section = section.add_new_section('method-intro')
     method_intro_section.writeln('')
     doc_string = inspect.getdoc(method)
