@@ -24,7 +24,6 @@ or you can look at the test files in /tests/unit/data/endpoints/valid-rules/
 import logging
 import re
 from enum import Enum
-from functools import lru_cache
 from string import Formatter
 from typing import NamedTuple
 
@@ -34,6 +33,7 @@ from botocore.exceptions import EndpointResolutionError
 from botocore.utils import (
     ArnParser,
     InvalidArnException,
+    instance_cache,
     is_valid_ipv4_endpoint_url,
     is_valid_ipv6_endpoint_url,
     normalize_url_path,
@@ -47,7 +47,6 @@ GET_ATTR_RE = re.compile(r"(\w+)\[(\d+)\]")
 VALID_HOST_LABEL_RE = re.compile(
     r"^(?!-)[a-zA-Z\d-]{1,63}(?<!-)$",
 )
-CACHE_SIZE = 100
 ARN_PARSER = ArnParser()
 STRING_FORMATTER = Formatter()
 
@@ -707,8 +706,9 @@ class EndpointProvider:
 
     def __init__(self, ruleset_data, partition_data):
         self.ruleset = RuleSet(**ruleset_data, partitions=partition_data)
+        self._instance_cache = {}
 
-    @lru_cache(maxsize=CACHE_SIZE)
+    @instance_cache
     def resolve_endpoint(self, **input_parameters):
         """Match input parameters to a rule.
 
