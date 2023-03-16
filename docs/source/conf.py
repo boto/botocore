@@ -11,7 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import datetime, sys, os
 from botocore.session import get_session
 from botocore.docs import generate_docs
 
@@ -48,7 +48,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'botocore'
-copyright = u'2013, Mitch Garnaat'
+current_year = datetime.date.today().year
+copyright = f'{current_year}, Amazon Web Services, Inc'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
