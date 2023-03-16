@@ -118,8 +118,8 @@ html_theme_options = {
             "class": "",
         },
     ],
-    "light_logo": "logos/aws_light_logo.png",
-    "dark_logo": "logos/aws_dark_logo.png",
+    "light_logo": "logos/aws_light_theme_logo.svg",
+    "dark_logo": "logos/aws_dark_theme_logo.svg",
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
