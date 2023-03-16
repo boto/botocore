@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
+import re
 import shutil
 import tempfile
 
@@ -76,9 +77,11 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
     def get_method_document_block(self, operation_name, contents):
         contents = contents.decode('utf-8')
-        start_method_document = '.. py:method:: %s(' % operation_name
-        start_index = contents.find(start_method_document)
-        self.assertNotEqual(start_index, -1, 'Method is not found in contents')
+        regex = rf'.. py:method:: ([a-zA-Z0-9]*\.)*{operation_name}\('
+        match = re.search(regex, contents)
+        self.assertIsNotNone(match, 'Method is not found in contents')
+        start_method_document = match.group()
+        start_index = match.start()
         contents = contents[start_index:]
         end_index = contents.find('.. py:method::', len(start_method_document))
         contents = contents[:end_index]
