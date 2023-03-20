@@ -142,6 +142,11 @@ class ClientDocumenter:
             method_doc_structure.write_to_file(client_dir_path, method_name)
 
     def _add_client_method(self, section, method_name, method):
+        breadcrumb_section = section.add_new_section('breadcrumb')
+        breadcrumb_section.style.ref(
+            self._client_class_name, f'../../{self._service_name}'
+        )
+        breadcrumb_section.write(f' / Client / {method_name}')
         section.add_title_section(method_name)
         method_section = section.add_new_section(
             method_name,
@@ -307,6 +312,11 @@ class ClientExceptionsDocumenter:
             )
 
     def _add_exception_class(self, section, shape):
+        breadcrumb_section = section.add_new_section('breadcrumb')
+        breadcrumb_section.style.ref(
+            self._client_class_name, f'../../../{self._service_name}'
+        )
+        breadcrumb_section.write(f' / Client / exceptions / {shape.name}')
         section.add_title_section(shape.name)
         class_section = section.add_new_section(shape.name)
         class_name = self._exception_class_name(shape)

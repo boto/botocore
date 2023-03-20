@@ -33,7 +33,6 @@ class ServiceDocumenter:
 
         self.sections = [
             'title',
-            'table-of-contents',
             'client-api',
             'client-exceptions',
             'paginator-api',
@@ -49,7 +48,6 @@ class ServiceDocumenter:
             self._service_name, section_names=self.sections, target='html'
         )
         self.title(doc_structure.get_section('title'))
-        self.table_of_contents(doc_structure.get_section('table-of-contents'))
         self.client_api(doc_structure.get_section('client-api'))
         self.client_exceptions(doc_structure.get_section('client-exceptions'))
         self.paginator_api(doc_structure.get_section('paginator-api'))

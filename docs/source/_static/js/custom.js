@@ -17,7 +17,7 @@ limitations under the License.
 // Checks if an html doc name matches a service class name.
 function isValidServiceName(serviceClassName) {
 	const pageTitle = document.getElementsByTagName('h1')[0];
-	const newDocName = pageTitle.getElementsByTagName('a')[0].innerHTML;
+	const newDocName = pageTitle.innerText.replace('#', '');
 	return newDocName.toLowerCase() === serviceClassName;
 }
 // Checks if all elements of the split fragment are valid.
@@ -63,3 +63,29 @@ function isValidFragment(splitFragment) {
 		}
 	}
 }());
+// Given a service name, we apply the html classes which indicate a current page to the corresponsing list item.
+// Before: <li class="toctree-l2"><a class="reference internal" href="../../acm.html">ACM</a></li>
+// After: <li class="toctree-l2 current current-page"><a class="reference internal" href="../../acm.html">ACM</a></li>
+function makeServiceLinkCurrent(serviceName) {
+	const servicesSection = $("a:contains('Available Services')")[0].parentElement;
+	var linkElement = servicesSection.querySelectorAll(`a[href*="../${ serviceName }.html"]`);
+	if (linkElement.length === 0) {
+		linkElement = sideBarElement.querySelectorAll(`a[href*="#"]`)[0];
+	} else {
+		linkElement = linkElement[0];
+	}
+	let linkParent = linkElement.parentElement;
+	linkParent.classList.add('current');
+	linkParent.classList.add('current-page');
+}
+// Expands the "Available Services" sub-menu in the side-bar when viewing
+// nested doc pages and highlights the corresponding service list item.
+const currentPagePath = window.location.pathname.split('/');
+const currentPagePathLength = currentPagePath.length;
+if (currentPagePath.includes('services')) {
+	document.getElementById('toctree-checkbox-1').checked = true;
+	// Example Nested Path: /reference/services/<service_name>/client/<operation_name>.html
+	const serviceNameIndex = currentPagePath.indexOf('services') + 1;
+	const serviceName = currentPagePath[serviceNameIndex];
+	makeServiceLinkCurrent(serviceName);
+}

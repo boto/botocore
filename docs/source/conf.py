@@ -11,7 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import datetime, sys, os
 from botocore.session import get_session
 from botocore.docs import generate_docs
 
@@ -29,7 +29,10 @@ generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx_copybutton', 'sphinx_remove_toctrees']
+
+# Remove service docs from toctree to speed up writing phase.
+remove_from_toctrees = ['reference/services/*/**/*']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -45,7 +48,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'botocore'
-copyright = u'2013, Mitch Garnaat'
+current_year = datetime.date.today().year
+copyright = f'{current_year}, Amazon Web Services, Inc'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -85,7 +89,8 @@ exclude_patterns = []
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "default"
+pygments_dark_style = "monokai"
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -95,12 +100,27 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'furo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/boto/botocore",
+            "html": """
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            """,
+            "class": "",
+        },
+    ],
+    "light_logo": "logos/aws_light_theme_logo.svg",
+    "dark_logo": "logos/aws_dark_theme_logo.svg",
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -126,6 +146,16 @@ html_theme = 'default'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# List of custom CSS files relative to _static directory.
+html_css_files = [
+    'css/custom.css',
+]
+
+# List of custom JS files relative to _static directory.
+html_js_files = [
+    'js/custom.js',
+]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
@@ -137,10 +167,14 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 html_show_sourcelink = False
 html_sidebars = {
-    '**': ['logo-text.html',
-           'globaltoc.html',
-           'localtoc.html',
-           'searchbox.html']
+    "**": [
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/scroll-start.html",
+        "sidebar/feedback.html",
+        "sidebar/navigation.html",
+        "sidebar/scroll-end.html",
+    ]
 }
 
 # Additional templates that should be rendered to pages, maps page names to
@@ -175,20 +209,6 @@ html_sidebars = {
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'botocoredoc'
-
-import guzzle_sphinx_theme
-
-extensions.append("guzzle_sphinx_theme")
-html_translator_class = 'guzzle_sphinx_theme.HTMLTranslator'
-html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = 'guzzle_sphinx_theme'
-# Guzzle theme options (see theme.conf for more information)
-
-html_theme_options = {
-    # hack to add tracking
-    "google_analytics_account": os.getenv('TRACKING', False),
-    "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/"
-}
 
 # -- Options for LaTeX output --------------------------------------------------
 
