@@ -57,6 +57,11 @@ class WaiterDocumenter:
             waiter_doc_structure.write_to_file(waiter_dir_path, waiter_name)
 
     def _add_single_waiter(self, section, waiter_name):
+        breadcrumb_section = section.add_new_section('breadcrumb')
+        breadcrumb_section.style.ref(
+            self._client_class_name, f'../../{self._service_name}'
+        )
+        breadcrumb_section.write(f' / Waiter / {waiter_name}')
         section.add_title_section(waiter_name)
         waiter_section = section.add_new_section(waiter_name)
         waiter_section.style.start_sphinx_py_class(

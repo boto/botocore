@@ -67,6 +67,11 @@ class PaginatorDocumenter:
             )
 
     def _add_paginator(self, section, paginator_name):
+        breadcrumb_section = section.add_new_section('breadcrumb')
+        breadcrumb_section.style.ref(
+            self._client_class_name, f'../../{self._service_name}'
+        )
+        breadcrumb_section.write(f' / Paginator / {paginator_name}')
         section.add_title_section(paginator_name)
 
         # Docment the paginator class
