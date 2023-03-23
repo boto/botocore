@@ -136,13 +136,14 @@ class BaseParamsDocumenter(ShapeDocumenter):
         special_py_type = self._get_special_py_type_name(shape)
         py_type = py_type_name(shape.type_name)
 
-        type_format = '(%s) -- '
+        type_format = '(%s) --'
         if special_py_type is not None:
             # Special type can reference a linked class.
             # Italicizing it blows away the link.
             type_section.write(type_format % special_py_type)
         else:
             type_section.style.italics(type_format % py_type)
+        type_section.write(' ')
 
     def _start_nested_param(self, section):
         section.style.indent()
@@ -162,7 +163,8 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         name_section = section.add_new_section('param-name')
         name_section.write('- ')
         if name is not None:
-            name_section.style.bold('%s ' % name)
+            name_section.style.bold('%s' % name)
+            name_section.write(' ')
         type_section = section.add_new_section('param-type')
         self._document_non_top_level_param_type(type_section, shape)
 
@@ -259,14 +261,16 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             name_section = section.add_new_section('param-name')
             name_section.write('- ')
             if name is not None:
-                name_section.style.bold('%s ' % name)
+                name_section.style.bold('%s' % name)
+                name_section.write(' ')
             type_section = section.add_new_section('param-type')
             self._document_non_top_level_param_type(type_section, shape)
 
         if is_required:
             is_required_section = section.add_new_section('is-required')
             is_required_section.style.indent()
-            is_required_section.style.bold('[REQUIRED] ')
+            is_required_section.style.bold('[REQUIRED]')
+            is_required_section.write(' ')
         if shape.documentation:
             documentation_section = section.add_new_section(
                 'param-documentation'

@@ -18,6 +18,8 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
+import pytest
+
 import botocore.docs.bcdoc.docstringparser as parser
 from botocore.docs.bcdoc.restdoc import ReSTDocument
 from tests import mock, unittest
@@ -40,6 +42,11 @@ class TestDocStringParser(unittest.TestCase):
             beginning = contents.index(line)
             contents = contents[beginning:]
 
+    def test_tag_with_collapsible_spaces(self):
+        html = "<p>  a       bcd efg </p>"
+        result = self.parse(html)
+        self.assert_contains_exact_lines_in_order(result, [b'a bcd efg '])
+
     def test_nested_lists(self):
         html = "<ul><li>Wello</li><ul><li>Horld</li></ul></ul>"
         result = self.parse(html)
@@ -58,7 +65,7 @@ class TestDocStringParser(unittest.TestCase):
         html = "<p>This is a test <a href='https://testing.com'>Link</a></p>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'This is a test `Link <https://testing.com>`__ ']
+            result, [b'This is a test `Link <https://testing.com>`__']
         )
 
     def test_link_with_period(self):
@@ -69,39 +76,69 @@ class TestDocStringParser(unittest.TestCase):
         )
 
     def test_code_with_empty_link(self):
-        html = "<code> <a>Link</a> </code>"
+        html = "<p>Foo <code> <a>Link</a> </code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_code_with_link_spaces(self):
-        html = "<code> <a href=\"https://testing.com\">Link</a> </code>"
+        html = "<p>Foo <code> <a href=\"https://aws.dev\">Link</a> </code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_code_with_link_no_spaces(self):
-        html = "<code><a href=\"https://testing.com\">Link</a></code>"
+        html = "<p>Foo <code><a href=\"https://aws.dev\">Link</a></code></p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'``Link`` '])
+        self.assert_contains_exact_lines_in_order(result, [b'Foo ``Link``'])
 
     def test_href_with_spaces(self):
         html = "<p><a href=\" https://testing.com\">Link</a></p>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b' `Link <https://testing.com>`__ ']
+            result, [b' `Link <https://testing.com>`__']
         )
 
     def test_bold_with_nested_formatting(self):
         html = "<b><code>Test</code>test<a href=\" https://testing.com\">Link</a></b>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'``Test`` test `Link <https://testing.com>`__ ']
+            result, [b'``Test``test `Link <https://testing.com>`__']
         )
 
     def test_link_with_nested_formatting(self):
         html = "<a href=\"https://testing.com\"><code>Test</code></a>"
         result = self.parse(html)
         self.assert_contains_exact_lines_in_order(
-            result, [b'`Test <https://testing.com>`__ ']
+            result, [b'`Test <https://testing.com>`__']
+        )
+
+    def test_indentation_with_spaces_between_tags(self):
+        # Leading spaces inserted as padding between HTML tags can lead to
+        # unexpected indentation in RST. For example, consider the space between
+        # ``<p>`` and ``<b>`` in the third line of this example:
+        html = (
+            "<p>First paragraph </p> "
+            "<note> <p> Second paragraph in note </p> </note> "
+            "<p> <b>Bold statement:</b> Third paragraph</p>"
+            "<p>Last paragraph</p> "
+        )
+        # If kept, it will appear as indentation in RST and have the effect of
+        # pulling the third paragraph into the note:
+        #
+        # ```
+        # First paragraph
+        #
+        # ..note::
+        #   Second paragraph in note <-- intentionally indented
+        #
+        #  **Bold statement:** Third paragraph <-- unintentionally indented
+        #
+        # Last paragraph <-- first non-indented paragraph after note
+        # ```
+        result = self.parse(html)
+        self.assert_contains_exact_lines_in_order(
+            result,
+            #  ↓ no whitespace here
+            [b'**Bold statement:** Third paragraph'],
         )
 
 
@@ -181,6 +218,7 @@ class TestDataNode(unittest.TestCase):
         self.style = mock.Mock()
         self.doc = mock.Mock()
         self.doc.style = self.style
+        self.doc.translate_words.return_value = []
 
     def test_string_data(self):
         node = parser.DataNode('foo')
@@ -201,58 +239,103 @@ class TestDataNode(unittest.TestCase):
         node.write(self.doc)
         self.doc.handle_data.assert_called_once_with('foo bar baz')
 
-    def test_write_space(self):
-        node = parser.DataNode(' ')
-        node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with(' ')
-        self.doc.handle_data.reset_mock()
-
-        node = parser.DataNode('              ')
-        node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with(' ')
-
     def test_write_empty_string(self):
         node = parser.DataNode('')
         node.write(self.doc)
         self.assertFalse(self.doc.handle_data.called)
 
 
-class TestLineItemNode(unittest.TestCase):
-    def setUp(self):
-        self.style = mock.Mock()
-        self.doc = mock.Mock()
-        self.doc.style = self.style
-        self.doc.translate_words.return_value = ['foo']
-        self.node = parser.LineItemNode()
+@pytest.mark.parametrize(
+    'data, lstrip, rstrip, both',
+    [
+        # Note for cases with trailing white-space: If any white-space exists
+        # at the end of the string, stripping will leave behind a single space.
+        ('foo', 'foo', 'foo', 'foo'),
+        (' foo', 'foo', ' foo', 'foo'),
+        ('   foo', 'foo', '   foo', 'foo'),
+        ('\tfoo', 'foo', '\tfoo', 'foo'),
+        ('\t \t foo', 'foo', '\t \t foo', 'foo'),
+        ('foo ', 'foo ', 'foo ', 'foo '),
+        ('foo  ', 'foo  ', 'foo ', 'foo '),
+        ('foo\t\t', 'foo\t\t', 'foo ', 'foo '),
+        (' ', ' ', ' ', ' '),
+        ('  ', ' ', ' ', ' '),
+        ('\t', ' ', ' ', ' '),
+    ],
+)
+def test_datanode_stripping(data, lstrip, rstrip, both):
+    doc = mock.Mock()
+    doc.style = mock.Mock()
+    doc.translate_words.side_effect = lambda words: words
 
-    def test_write_strips_white_space(self):
-        self.node.add_child(parser.DataNode('  foo'))
-        self.node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with('foo')
+    node = parser.DataNode(data)
+    node.lstrip()
+    node.write(doc)
+    doc.handle_data.assert_called_once_with(lstrip)
+    doc.handle_data.reset_mock()
 
-    def test_write_strips_nested_white_space(self):
-        self.node.add_child(parser.DataNode('  '))
-        tag_child = parser.TagNode('foo')
-        tag_child.add_child(parser.DataNode('  '))
-        tag_child_2 = parser.TagNode('foo')
-        tag_child_2.add_child(parser.DataNode(' foo'))
-        tag_child.add_child(tag_child_2)
-        self.node.add_child(tag_child)
+    node = parser.DataNode(data)
+    node.rstrip()
+    node.write(doc)
+    doc.handle_data.assert_called_once_with(rstrip)
+    doc.handle_data.reset_mock()
 
-        self.node.write(self.doc)
-        self.doc.handle_data.assert_called_once_with('foo')
+    node = parser.DataNode(data)
+    node.lstrip()
+    node.rstrip()
+    node.write(doc)
+    doc.handle_data.assert_called_once_with(both)
 
-    def test_write_only_strips_until_text_is_found(self):
-        self.node.add_child(parser.DataNode('  '))
-        tag_child = parser.TagNode('foo')
-        tag_child.add_child(parser.DataNode('  '))
-        tag_child_2 = parser.TagNode('foo')
-        tag_child_2.add_child(parser.DataNode(' foo'))
-        tag_child_2.add_child(parser.DataNode(' '))
-        tag_child.add_child(tag_child_2)
-        self.node.add_child(tag_child)
 
-        self.node.write(self.doc)
+@pytest.mark.parametrize(
+    'html, expected_lines',
+    [
+        ('<p>  foo</p>', [b'foo']),
+        ('<p>  <span>  </span> <span> <span> foo</span></span></p>', [b'foo']),
+        # if there are trailing white-spaces, right-stripping text always
+        # leaves one space character behind
+        ('<p>foo  </p>', [b'foo ']),
+        ('<p>foo\t</p>', [b'foo ']),
+        ('<p>  foo  </p>', [b'foo ']),
+        ('<p>  <span>foo  </span>  </p>', [b'foo ']),
+        # ... but right-stripping tag-nodes does not
+        ('<p>  <span>foo</span>  </p>', [b'foo']),
+        ('<p>  <span>  foo</span>  </p>', [b'foo']),
+        ('<p>  <span>  foo  </span>  </p>', [b'foo ']),
+        # various nested markup examples
+        ('<p><i>italic</i></p>', [b'*italic*']),
+        ('<p><i>italic</i> </p>', [b'*italic*']),
+        ('<p><i>italic </i></p>', [b'*italic *']),
+        ('<p>  <span> foo <i> bar</i> </span>  </p>', [b'foo *bar*']),
+        ('<p>  <span> foo<i> bar</i> </span>  </p>', [b'foo* bar*']),
+        ('<p>  <span> foo <i>bar</i> </span>  </p>', [b'foo *bar*']),
+        # list items
+        ('<li>  foo</li>', [b'* foo']),
+        ('<li>  <foo>  </foo><foo> foo</foo></li>', [b'* foo']),
+        ('<li>  <foo> foo</foo><foo>  </foo></li>', [b'* foo']),
+        ('<li><foo>  </foo><foo> foo</foo> <foo>bar</li>', [b'* foo bar']),
+        ('<li><foo>  </foo><foo> foo</foo> <foo> bar</li>', [b'* foo bar']),
+        ('<li><foo>  </foo><foo> foo</foo><foo> bar</li>', [b'* foo bar']),
+        # multiple block tags in sequence are each left and right stripped
+        ('<p>  foo</p><p>  bar\t</p>', [b'foo', b'bar ']),
+        ('<p>  foo</p><li>  bar  </li>', [b'foo', b'* bar ']),
+        # nested block tags also work
+        (
+            '<p> <p> foo </p> <p> <span> bar </span> </p> </p>',
+            [b'foo ', b'bar '],
+        ),
+    ],
+)
+def test_whitespace_collapsing_foo(html, expected_lines):
+    docstring_parser = parser.DocStringParser(ReSTDocument())
+    docstring_parser.feed(html)
+    docstring_parser.close()
+    actual = docstring_parser.doc.getvalue()
 
-        calls = [mock.call('foo'), mock.call(' ')]
-        self.doc.handle_data.assert_has_calls(calls)
+    # Get each line and filter out empty lines
+    contents = actual.split(b'\n')
+    contents = [line for line in contents if line and not line.isspace()]
+    for line in expected_lines:
+        assert line in contents
+        beginning = contents.index(line)
+        contents = contents[beginning:]

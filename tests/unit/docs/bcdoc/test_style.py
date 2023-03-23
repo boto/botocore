@@ -43,7 +43,7 @@ class TestStyle(unittest.TestCase):
     def test_bold(self):
         style = ReSTStyle(ReSTDocument())
         style.bold('foobar')
-        self.assertEqual(style.doc.getvalue(), b'**foobar** ')
+        self.assertEqual(style.doc.getvalue(), b'**foobar**')
 
     def test_empty_bold(self):
         style = ReSTStyle(ReSTDocument())
@@ -54,7 +54,7 @@ class TestStyle(unittest.TestCase):
     def test_italics(self):
         style = ReSTStyle(ReSTDocument())
         style.italics('foobar')
-        self.assertEqual(style.doc.getvalue(), b'*foobar* ')
+        self.assertEqual(style.doc.getvalue(), b'*foobar*')
 
     def test_empty_italics(self):
         style = ReSTStyle(ReSTDocument())
@@ -72,7 +72,7 @@ class TestStyle(unittest.TestCase):
     def test_code(self):
         style = ReSTStyle(ReSTDocument())
         style.code('foobar')
-        self.assertEqual(style.doc.getvalue(), b'``foobar`` ')
+        self.assertEqual(style.doc.getvalue(), b'``foobar``')
 
     def test_empty_code(self):
         style = ReSTStyle(ReSTDocument())
@@ -192,7 +192,7 @@ class TestStyle(unittest.TestCase):
         style.doc.write('example')
         style.end_a()
         self.assertEqual(
-            style.doc.getvalue(), b'`example <http://example.org>`__ '
+            style.doc.getvalue(), b'`example <http://example.org>`__'
         )
 
     def test_escape_href_link(self):
@@ -202,14 +202,14 @@ class TestStyle(unittest.TestCase):
         style.end_a()
         self.assertEqual(
             style.doc.getvalue(),
-            b'`foo\\: the next bar <http://example.org>`__ ',
+            b'`foo\\: the next bar <http://example.org>`__',
         )
 
     def test_handle_no_text_hrefs(self):
         style = ReSTStyle(ReSTDocument())
         style.start_a(attrs=[('href', 'http://example.org')])
         style.end_a()
-        self.assertEqual(style.doc.getvalue(), b'`<http://example.org>`__ ')
+        self.assertEqual(style.doc.getvalue(), b'`<http://example.org>`__')
 
     def test_sphinx_reference_label_html(self):
         style = ReSTStyle(ReSTDocument())

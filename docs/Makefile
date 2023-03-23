@@ -6,6 +6,7 @@ SPHINXOPTS    = -j auto
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
+SERVICESDIR   = source/reference/services
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -40,6 +41,7 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	-rm -rf $(SERVICESDIR)/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

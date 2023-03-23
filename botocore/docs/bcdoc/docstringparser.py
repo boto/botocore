@@ -11,10 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from html.parser import HTMLParser
+from itertools import zip_longest
 
 PRIORITY_PARENT_TAGS = ('code', 'a')
 OMIT_NESTED_TAGS = ('span', 'i', 'code', 'a')
 OMIT_SELF_TAGS = ('i', 'b')
+HTML_BLOCK_DISPLAY_TAGS = ('p', 'note', 'ul', 'li')
 
 
 class DocStringParser(HTMLParser):
@@ -27,20 +29,19 @@ class DocStringParser(HTMLParser):
     def __init__(self, doc):
         self.tree = None
         self.doc = doc
-        HTMLParser.__init__(self)
+        super().__init__()
 
     def reset(self):
         HTMLParser.reset(self)
         self.tree = HTMLTree(self.doc)
 
     def feed(self, data):
-        # HTMLParser is an old style class, so the super() method will not work.
-        HTMLParser.feed(self, data)
+        super().feed(data)
         self.tree.write()
         self.tree = HTMLTree(self.doc)
 
     def close(self):
-        HTMLParser.close(self)
+        super().close()
         # Write if there is anything remaining.
         self.tree.write()
         self.tree = HTMLTree(self.doc)
@@ -74,10 +75,7 @@ class HTMLTree:
             return
 
         if is_start:
-            if tag == 'li':
-                node = LineItemNode(attrs)
-            else:
-                node = TagNode(tag, attrs)
+            node = TagNode(tag, attrs)
             self.current_node.add_child(node)
             self.current_node = node
         else:
@@ -116,16 +114,50 @@ class StemNode(Node):
         self.children.append(child)
 
     def write(self, doc):
+        self.collapse_whitespace()
         self._write_children(doc)
 
     def _write_children(self, doc):
-        for index, child in enumerate(self.children):
-            if isinstance(child, TagNode) and index + 1 < len(self.children):
-                # Provide a look ahead for TagNodes when one exists
-                next_child = self.children[index + 1]
+        for child, next_child in zip_longest(self.children, self.children[1:]):
+            if isinstance(child, TagNode) and next_child is not None:
                 child.write(doc, next_child)
             else:
                 child.write(doc)
+
+    def is_whitespace(self):
+        return all(child.is_whitespace() for child in self.children)
+
+    def startswith_whitespace(self):
+        return self.children and self.children[0].startswith_whitespace()
+
+    def endswith_whitespace(self):
+        return self.children and self.children[-1].endswith_whitespace()
+
+    def lstrip(self):
+        while self.children and self.children[0].is_whitespace():
+            self.children = self.children[1:]
+        if self.children:
+            self.children[0].lstrip()
+
+    def rstrip(self):
+        while self.children and self.children[-1].is_whitespace():
+            self.children = self.children[:-1]
+        if self.children:
+            self.children[-1].rstrip()
+
+    def collapse_whitespace(self):
+        """Remove collapsible white-space from HTML.
+
+        HTML in docstrings often contains extraneous white-space around tags,
+        for readability. Browsers would collapse this white-space before
+        rendering. If not removed before conversion to RST where white-space is
+        part of the syntax, for example for indentation, it can result in
+        incorrect output.
+        """
+        self.lstrip()
+        self.rstrip()
+        for child in self.children:
+            child.collapse_whitespace()
 
 
 class TagNode(StemNode):
@@ -159,6 +191,32 @@ class TagNode(StemNode):
         self._write_children(doc)
         self._write_end(doc, next_child)
 
+    def collapse_whitespace(self):
+        """Remove collapsible white-space.
+
+        All tags collapse internal whitespace. Block-display HTML tags also
+        strip all leading and trailing whitespace.
+
+        Approximately follows the specification used in browsers:
+        https://www.w3.org/TR/css-text-3/#white-space-rules
+        https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace
+        """
+        if self.tag in HTML_BLOCK_DISPLAY_TAGS:
+            self.lstrip()
+            self.rstrip()
+        # Collapse whitespace in situations like ``</b> <i> foo</i>`` into
+        # ``</b><i> foo</i>``.
+        for prev, cur in zip(self.children[:-1], self.children[1:]):
+            if prev.endswith_whitespace() and cur.startswith_whitespace():
+                cur.lstrip()
+        # Same logic, but for situations like ``<b>bar </b> <i>``:
+        for cur, nxt in zip(self.children[:-1], self.children[1:]):
+            if cur.endswith_whitespace() and nxt.startswith_whitespace():
+                cur.rstrip()
+        # Recurse into children
+        for child in self.children:
+            child.collapse_whitespace()
+
     def _write_start(self, doc):
         handler_name = 'start_%s' % self.tag
         if hasattr(doc.style, handler_name):
@@ -174,33 +232,6 @@ class TagNode(StemNode):
                 getattr(doc.style, handler_name)()
 
 
-class LineItemNode(TagNode):
-    def __init__(self, attrs=None, parent=None):
-        super().__init__('li', attrs, parent)
-
-    def write(self, doc, next_child=None):
-        self._lstrip(self)
-        super().write(doc, next_child)
-
-    def _lstrip(self, node):
-        """
-        Traverses the tree, stripping out whitespace until text data is found
-        :param node: The node to strip
-        :return: True if non-whitespace data was found, False otherwise
-        """
-        for child in node.children:
-            if isinstance(child, DataNode):
-                child.lstrip()
-                if child.data:
-                    return True
-            else:
-                found = self._lstrip(child)
-                if found:
-                    return True
-
-        return False
-
-
 class DataNode(Node):
     """
     A Node that contains only string data.
@@ -210,28 +241,72 @@ class DataNode(Node):
         super().__init__(parent)
         if not isinstance(data, str):
             raise ValueError("Expecting string type, %s given." % type(data))
-        self.data = data
+        self._leading_whitespace = ''
+        self._trailing_whitespace = ''
+        self._stripped_data = ''
+        if data == '':
+            return
+        if data.isspace():
+            self._trailing_whitespace = data
+            return
+        first_non_space = next(
+            idx for idx, ch in enumerate(data) if not ch.isspace()
+        )
+        last_non_space = len(data) - next(
+            idx for idx, ch in enumerate(reversed(data)) if not ch.isspace()
+        )
+        self._leading_whitespace = data[:first_non_space]
+        self._trailing_whitespace = data[last_non_space:]
+        self._stripped_data = data[first_non_space:last_non_space]
+
+    @property
+    def data(self):
+        return (
+            f'{self._leading_whitespace}{self._stripped_data}'
+            f'{self._trailing_whitespace}'
+        )
+
+    def is_whitespace(self):
+        return self._stripped_data == '' and (
+            self._leading_whitespace != '' or self._trailing_whitespace != ''
+        )
+
+    def startswith_whitespace(self):
+        return self._leading_whitespace != '' or (
+            self._stripped_data == '' and self._trailing_whitespace != ''
+        )
+
+    def endswith_whitespace(self):
+        return self._trailing_whitespace != '' or (
+            self._stripped_data == '' and self._leading_whitespace != ''
+        )
 
     def lstrip(self):
-        self.data = self.data.lstrip()
+        if self._leading_whitespace != '':
+            self._leading_whitespace = ''
+        elif self._stripped_data == '':
+            self.rstrip()
+
+    def rstrip(self):
+        # If there is no content, consolidate all white-space on the right.
+        if self._stripped_data == '' and self._leading_whitespace != '':
+            self._trailing_whitespace = (
+                f"{self._leading_whitespace}{self._trailing_whitespace}"
+            )
+            self._leading_whitespace = ''
+        # Up to one trailing space is always preserved
+        if self._trailing_whitespace != '':
+            self._trailing_whitespace = ' '
+
+    def collapse_whitespace(self):
+        """Noop, ``DataNode.write`` always collapses whitespace"""
+        return
 
     def write(self, doc):
-        if not self.data:
-            return
-
-        if self.data.isspace():
-            str_data = ' '
-            if isinstance(self.parent, TagNode) and self.parent.tag == 'code':
-                # Inline markup content may not start or end with whitespace.
-                # When provided <code> Test </code>, we want to
-                # generate ``Test`` instead of `` Test ``.
-                str_data = ''
-        else:
-            end_space = self.data[-1].isspace()
-            words = self.data.split()
-            words = doc.translate_words(words)
-            str_data = ' '.join(words)
-            if end_space:
-                str_data += ' '
-
-        doc.handle_data(str_data)
+        words = doc.translate_words(self._stripped_data.split())
+        str_data = (
+            f'{self._leading_whitespace}{" ".join(words)}'
+            f'{self._trailing_whitespace}'
+        )
+        if str_data != '':
+            doc.handle_data(str_data)

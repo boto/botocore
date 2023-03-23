@@ -89,26 +89,27 @@ class ReSTStyle(BaseStyle):
         self.doc.write('\n%s' % self.spaces())
 
     def _start_inline(self, markup):
+        # Insert space between any directly adjacent bold and italic inlines to
+        # avoid situations like ``**abc***def*``.
+        try:
+            last_write = self.doc.peek_write()
+        except IndexError:
+            pass
+        else:
+            if last_write in ('*', '**') and markup in ('*', '**'):
+                self.doc.write(' ')
         self.doc.write(markup)
 
     def _end_inline(self, markup):
-        # Sometimes the HTML markup has whitespace between the end
-        # of the text inside the inline markup and the closing element
-        # (e.g. <b>foobar </b>).  This trailing space will cause
-        # problems in the ReST inline markup so we remove it here
-        # by popping the last item written off the stack, striping
-        # the whitespace and then pushing it back on the stack.
-        last_write = self.doc.pop_write().rstrip(' ')
-
-        # Sometimes, for whatever reason, a tag like <b/> is present. This
-        # is problematic because if we simply translate that directly then
-        # we end up with something like ****, which rst will assume is a
-        # heading instead of an empty bold.
+        # Remove empty and self-closing tags like ``<b></b>`` and ``<b/>``.
+        # If we simply translate that directly then we end up with something
+        # like ****, which rst will assume is a heading instead of an empty
+        # bold.
+        last_write = self.doc.pop_write()
         if last_write == markup:
             return
-
         self.doc.push_write(last_write)
-        self.doc.write(markup + ' ')
+        self.doc.write(markup)
 
     def start_bold(self, attrs=None):
         self._start_inline('**')
@@ -251,10 +252,7 @@ class ReSTStyle(BaseStyle):
         last_write = doc.pop_write()
         while not last_write.startswith('`'):
             last_write = doc.pop_write() + last_write
-        doc.push_write('`')
 
-        # Remove whitespace from the start of link text.
-        last_write = last_write[1:].lstrip(' ')
         if last_write != '':
             doc.push_write(last_write)
 
@@ -281,15 +279,6 @@ class ReSTStyle(BaseStyle):
                 self.doc.hrefs[self.a_href] = self.a_href
                 self.doc.write('`__')
             self.a_href = None
-
-        if (
-            next_child is None
-            or next_child.data[0] not in PUNCTUATION_CHARACTERS
-        ):
-            # We only want to add a trailing space if the link is
-            # not followed by a period, comma, or other gramatically
-            # correct special character.
-            self.doc.write(' ')
 
     def start_i(self, attrs=None):
         self.doc.do_translation = True
