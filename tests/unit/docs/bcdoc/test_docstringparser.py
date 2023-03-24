@@ -303,12 +303,21 @@ def test_datanode_stripping(data, lstrip, rstrip, both):
         ('<p>  <span>  foo</span>  </p>', [b'foo']),
         ('<p>  <span>  foo  </span>  </p>', [b'foo ']),
         # various nested markup examples
+        ('<i>italic</i>', [b'*italic*']),
         ('<p><i>italic</i></p>', [b'*italic*']),
         ('<p><i>italic</i> </p>', [b'*italic*']),
         ('<p><i>italic </i></p>', [b'*italic *']),
+        ('<p>foo <i> italic </i> bar</p>', [b'*italic * foo']),
         ('<p>  <span> foo <i> bar</i> </span>  </p>', [b'foo *bar*']),
         ('<p>  <span> foo<i> bar</i> </span>  </p>', [b'foo* bar*']),
         ('<p>  <span> foo <i>bar</i> </span>  </p>', [b'foo *bar*']),
+        # links
+        ('<a href="url">foo</a> <i>bar</i>', [b'`foo <url>`__ *bar*']),
+        # ReST does not support link text starting with whitespace
+        ('<p>abc<a href="url"> foo</a></p>', [b'abc `foo <url>`__']),
+        ('<p>abc<a href="url"> foo </a> bar</p>', [b'abc `foo <url>`__ bar']),
+        # code-in-a removed and whitespace removed
+        ('<a href="url"> <code>foo</code> </a> bar', [b'`foo <url>`__ bar']),
         # list items
         ('<li>  foo</li>', [b'* foo']),
         ('<li>  <foo>  </foo><foo> foo</foo></li>', [b'* foo']),
@@ -326,7 +335,7 @@ def test_datanode_stripping(data, lstrip, rstrip, both):
         ),
     ],
 )
-def test_whitespace_collapsing_foo(html, expected_lines):
+def test_whitespace_collapsing(html, expected_lines):
     docstring_parser = parser.DocStringParser(ReSTDocument())
     docstring_parser.feed(html)
     docstring_parser.close()
