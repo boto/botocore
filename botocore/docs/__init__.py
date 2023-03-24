@@ -32,7 +32,7 @@ def generate_docs(root_dir, session):
     if not os.path.exists(services_dir_path):
         os.makedirs(services_dir_path)
 
-    # Filters out service names that are deprecated from being generated in docs.
+    # Prevents deprecated service names from being generated in docs.
     available_services = [
         service
         for service in session.get_available_services()
