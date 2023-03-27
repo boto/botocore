@@ -207,11 +207,19 @@ class TagNode(StemNode):
         # Collapse whitespace in situations like ``</b> <i> foo</i>`` into
         # ``</b><i> foo</i>``.
         for prev, cur in zip(self.children[:-1], self.children[1:]):
-            if prev.endswith_whitespace() and cur.startswith_whitespace():
+            if (
+                isinstance(prev, DataNode)
+                and prev.endswith_whitespace()
+                and cur.startswith_whitespace()
+            ):
                 cur.lstrip()
         # Same logic, but for situations like ``<b>bar </b> <i>``:
         for cur, nxt in zip(self.children[:-1], self.children[1:]):
-            if cur.endswith_whitespace() and nxt.startswith_whitespace():
+            if (
+                isinstance(nxt, DataNode)
+                and cur.endswith_whitespace()
+                and nxt.startswith_whitespace()
+            ):
                 cur.rstrip()
         # Recurse into children
         for child in self.children:
@@ -288,15 +296,10 @@ class DataNode(Node):
             self.rstrip()
 
     def rstrip(self):
-        # If there is no content, consolidate all white-space on the right.
-        if self._stripped_data == '' and self._leading_whitespace != '':
-            self._trailing_whitespace = (
-                f"{self._leading_whitespace}{self._trailing_whitespace}"
-            )
-            self._leading_whitespace = ''
-        # Up to one trailing space is always preserved
         if self._trailing_whitespace != '':
-            self._trailing_whitespace = ' '
+            self._trailing_whitespace = ''
+        elif self._stripped_data == '':
+            self.lstrip()
 
     def collapse_whitespace(self):
         """Noop, ``DataNode.write`` always collapses whitespace"""

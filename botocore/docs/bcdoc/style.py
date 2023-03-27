@@ -252,8 +252,10 @@ class ReSTStyle(BaseStyle):
         last_write = doc.pop_write()
         while not last_write.startswith('`'):
             last_write = doc.pop_write() + last_write
-
         if last_write != '':
+            # Remove whitespace from the start of link text.
+            if last_write.startswith('` '):
+                last_write = f'`{last_write[1:].lstrip(" ")}'
             doc.push_write(last_write)
 
     def end_a(self, next_child=None):
