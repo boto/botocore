@@ -69,14 +69,15 @@ function isValidFragment(splitFragment) {
 function makeServiceLinkCurrent(serviceName) {
 	const servicesSection = $("a:contains('Available Services')")[0].parentElement;
 	var linkElement = servicesSection.querySelectorAll(`a[href*="../${ serviceName }.html"]`);
-	if (linkElement.length === 0) {
-		linkElement = sideBarElement.querySelectorAll(`a[href*="#"]`)[0];
+	if (linkElement.length !== 0) {
+		linkElement = linkElement[0];
+		let linkParent = linkElement.parentElement;
+		linkParent.classList.add('current');
+		linkParent.classList.add('current-page');
+		// linkElement = sideBarElement.querySelectorAll(`a[href*="#"]`)[0];
 	} else {
 		linkElement = linkElement[0];
 	}
-	let linkParent = linkElement.parentElement;
-	linkParent.classList.add('current');
-	linkParent.classList.add('current-page');
 }
 // Expands the "Available Services" sub-menu in the side-bar when viewing
 // nested doc pages and highlights the corresponding service list item.
@@ -89,3 +90,20 @@ if (currentPagePath.includes('services')) {
 	const serviceName = currentPagePath[serviceNameIndex];
 	makeServiceLinkCurrent(serviceName);
 }
+
+$(document).ready(function() {
+    const codeBlockSelector = 'div.highlight pre';
+	const codeCells = document.querySelectorAll(codeBlockSelector);
+	codeCells.forEach((codeCell) => {
+		codeCell.tabIndex = 0;
+	})
+
+	const boldSelector = 'strong';
+	const boldCells = document.querySelectorAll(boldSelector);
+	const testing = ['Request Syntax', 'Response Syntax', 'Response Structure', 'Exceptions', 'Examples'];
+	boldCells.forEach((boldCell) => {
+		if (testing.includes(boldCell.innerHTML)){
+			boldCell.parentElement.outerHTML = '<h3>' + boldCell.innerHTML + '</h3>';
+		}
+	})
+});
