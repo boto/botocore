@@ -45,7 +45,7 @@ class TestDocStringParser(unittest.TestCase):
     def test_tag_with_collapsible_spaces(self):
         html = "<p>  a       bcd efg </p>"
         result = self.parse(html)
-        self.assert_contains_exact_lines_in_order(result, [b'a bcd efg '])
+        self.assert_contains_exact_lines_in_order(result, [b'a bcd efg'])
 
     def test_nested_lists(self):
         html = "<ul><li>Wello</li><ul><li>Horld</li></ul></ul>"
@@ -248,19 +248,14 @@ class TestDataNode(unittest.TestCase):
 @pytest.mark.parametrize(
     'data, lstrip, rstrip, both',
     [
-        # Note for cases with trailing white-space: If any white-space exists
-        # at the end of the string, stripping will leave behind a single space.
         ('foo', 'foo', 'foo', 'foo'),
         (' foo', 'foo', ' foo', 'foo'),
         ('   foo', 'foo', '   foo', 'foo'),
         ('\tfoo', 'foo', '\tfoo', 'foo'),
         ('\t \t foo', 'foo', '\t \t foo', 'foo'),
-        ('foo ', 'foo ', 'foo ', 'foo '),
-        ('foo  ', 'foo  ', 'foo ', 'foo '),
-        ('foo\t\t', 'foo\t\t', 'foo ', 'foo '),
-        (' ', ' ', ' ', ' '),
-        ('  ', ' ', ' ', ' '),
-        ('\t', ' ', ' ', ' '),
+        ('foo ', 'foo ', 'foo', 'foo'),
+        ('foo  ', 'foo  ', 'foo', 'foo'),
+        ('foo\t\t', 'foo\t\t', 'foo', 'foo'),
     ],
 )
 def test_datanode_stripping(data, lstrip, rstrip, both):
@@ -288,26 +283,43 @@ def test_datanode_stripping(data, lstrip, rstrip, both):
 
 
 @pytest.mark.parametrize(
+    'data',
+    [
+        (' '),
+        ('  '),
+        ('\t'),
+        ('\t \t '),
+    ],
+)
+def test_datanode_stripping_empty_string(data):
+    doc = mock.Mock()
+    doc.style = mock.Mock()
+    doc.translate_words.side_effect = lambda words: words
+    node = parser.DataNode(data)
+    node.lstrip()
+    node.write(doc)
+    doc.handle_data.assert_not_called()
+
+
+@pytest.mark.parametrize(
     'html, expected_lines',
     [
         ('<p>  foo</p>', [b'foo']),
+        ('<p>\tfoo</p>', [b'foo']),
         ('<p>  <span>  </span> <span> <span> foo</span></span></p>', [b'foo']),
-        # if there are trailing white-spaces, right-stripping text always
-        # leaves one space character behind
-        ('<p>foo  </p>', [b'foo ']),
-        ('<p>foo\t</p>', [b'foo ']),
-        ('<p>  foo  </p>', [b'foo ']),
-        ('<p>  <span>foo  </span>  </p>', [b'foo ']),
-        # ... but right-stripping tag-nodes does not
+        ('<p>foo  </p>', [b'foo']),
+        ('<p>foo\t</p>', [b'foo']),
+        ('<p>  foo  </p>', [b'foo']),
         ('<p>  <span>foo</span>  </p>', [b'foo']),
+        ('<p>  <span>foo  </span>  </p>', [b'foo']),
         ('<p>  <span>  foo</span>  </p>', [b'foo']),
-        ('<p>  <span>  foo  </span>  </p>', [b'foo ']),
+        ('<p>  <span>  foo  </span>  </p>', [b'foo']),
         # various nested markup examples
         ('<i>italic</i>', [b'*italic*']),
         ('<p><i>italic</i></p>', [b'*italic*']),
         ('<p><i>italic</i> </p>', [b'*italic*']),
-        ('<p><i>italic </i></p>', [b'*italic *']),
-        ('<p>foo <i> italic </i> bar</p>', [b'*italic * foo']),
+        ('<p><i>italic </i></p>', [b'*italic*']),
+        ('<p>foo <i> italic </i> bar</p>', [b'foo *italic* bar']),
         ('<p>  <span> foo <i> bar</i> </span>  </p>', [b'foo *bar*']),
         ('<p>  <span> foo<i> bar</i> </span>  </p>', [b'foo* bar*']),
         ('<p>  <span> foo <i>bar</i> </span>  </p>', [b'foo *bar*']),
@@ -326,12 +338,12 @@ def test_datanode_stripping(data, lstrip, rstrip, both):
         ('<li><foo>  </foo><foo> foo</foo> <foo> bar</li>', [b'* foo bar']),
         ('<li><foo>  </foo><foo> foo</foo><foo> bar</li>', [b'* foo bar']),
         # multiple block tags in sequence are each left and right stripped
-        ('<p>  foo</p><p>  bar\t</p>', [b'foo', b'bar ']),
-        ('<p>  foo</p><li>  bar  </li>', [b'foo', b'* bar ']),
+        ('<p>  foo</p><p>  bar\t</p>', [b'foo', b'bar']),
+        ('<p>  foo</p><li>  bar  </li>', [b'foo', b'* bar']),
         # nested block tags also work
         (
             '<p> <p> foo </p> <p> <span> bar </span> </p> </p>',
-            [b'foo ', b'bar '],
+            [b'foo', b'bar'],
         ),
     ],
 )
