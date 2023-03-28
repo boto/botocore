@@ -69,41 +69,57 @@ function isValidFragment(splitFragment) {
 function makeServiceLinkCurrent(serviceName) {
 	const servicesSection = $("a:contains('Available Services')")[0].parentElement;
 	var linkElement = servicesSection.querySelectorAll(`a[href*="../${ serviceName }.html"]`);
-	if (linkElement.length !== 0) {
-		linkElement = linkElement[0];
-		let linkParent = linkElement.parentElement;
-		linkParent.classList.add('current');
-		linkParent.classList.add('current-page');
-		// linkElement = sideBarElement.querySelectorAll(`a[href*="#"]`)[0];
+	if (linkElement.length === 0) {
+		linkElement = servicesSection.querySelectorAll(`a[href*="#"]`)[0];
 	} else {
 		linkElement = linkElement[0];
 	}
+	let linkParent = linkElement.parentElement;
+	linkParent.classList.add('current');
+	linkParent.classList.add('current-page');
 }
-// Expands the "Available Services" sub-menu in the side-bar when viewing
-// nested doc pages and highlights the corresponding service list item.
-const currentPagePath = window.location.pathname.split('/');
-const currentPagePathLength = currentPagePath.length;
-if (currentPagePath.includes('services')) {
-	document.getElementById('toctree-checkbox-1').checked = true;
-	// Example Nested Path: /reference/services/<service_name>/client/<operation_name>.html
-	const serviceNameIndex = currentPagePath.indexOf('services') + 1;
-	const serviceName = currentPagePath[serviceNameIndex];
-	makeServiceLinkCurrent(serviceName);
-}
-
-$(document).ready(function() {
-    const codeBlockSelector = 'div.highlight pre';
-	const codeCells = document.querySelectorAll(codeBlockSelector);
-	codeCells.forEach((codeCell) => {
-		codeCell.tabIndex = 0;
-	})
-
-	const boldSelector = 'strong';
-	const boldCells = document.querySelectorAll(boldSelector);
-	const testing = ['Request Syntax', 'Response Syntax', 'Response Structure', 'Exceptions', 'Examples'];
-	boldCells.forEach((boldCell) => {
-		if (testing.includes(boldCell.innerHTML)){
-			boldCell.parentElement.outerHTML = '<h3>' + boldCell.innerHTML + '</h3>';
+$(document).ready(function () {
+	const currentPagePath = window.location.pathname.split('/');
+	const codeBlockSelector = 'div.highlight pre';
+	const boldTextSelector = 'strong';
+	const boldElements = document.querySelectorAll(boldTextSelector);
+	const headings = [
+		'Example',
+		'Examples',
+		'Exceptions',
+		'Request Syntax',
+		'Response Structure',
+		'Response Syntax',
+		'Structure',
+		'Syntax'
+	];
+	// Expands the "Available Services" sub-menu in the side-bar when viewing
+	// nested doc pages and highlights the corresponding service list item.
+	function expandSubMenu() {
+		if (currentPagePath.includes('services')) {
+			document.getElementById('toctree-checkbox-1').checked = true;
+			// Example Nested Path: /reference/services/<service_name>/client/<operation_name>.html
+			const serviceNameIndex = currentPagePath.indexOf('services') + 1;
+			const serviceName = currentPagePath[serviceNameIndex];
+			makeServiceLinkCurrent(serviceName);
 		}
-	})
+	}
+	// Allows code blocks to be scrollable by keyboard only users.
+	function makeCodeBlocksScrollable() {
+		const codeCells = document.querySelectorAll(codeBlockSelector);
+		codeCells.forEach(codeCell => {
+			codeCell.tabIndex = 0;
+		});
+	}
+	// Converts implicit bold headings into actual headings with h3 tags.
+	function convertImplicitHeadings() {
+		boldElements.forEach(boldElement => {
+			if (headings.includes(boldElement.innerHTML)) {
+				boldElement.parentElement.outerHTML = `<h3>${ boldElement.innerHTML }</h3>`;
+			}
+		});
+	}
+	expandSubMenu();
+	makeCodeBlocksScrollable();
+	convertImplicitHeadings();
 });
