@@ -14,6 +14,8 @@ import os
 
 from botocore.docs.service import ServiceDocumenter
 
+DEPRECATED_SERVICE_NAMES = {'sms-voice'}
+
 
 def generate_docs(root_dir, session):
     """Generates the reference documentation for botocore
@@ -30,8 +32,15 @@ def generate_docs(root_dir, session):
     if not os.path.exists(services_dir_path):
         os.makedirs(services_dir_path)
 
+    # Prevents deprecated service names from being generated in docs.
+    available_services = [
+        service
+        for service in session.get_available_services()
+        if service not in DEPRECATED_SERVICE_NAMES
+    ]
+
     # Generate reference docs and write them out.
-    for service_name in session.get_available_services():
+    for service_name in available_services:
         docs = ServiceDocumenter(
             service_name, session, services_dir_path
         ).document_service()
