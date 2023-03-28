@@ -67,7 +67,7 @@ function isValidFragment(splitFragment) {
 // Before: <li class="toctree-l2"><a class="reference internal" href="../../acm.html">ACM</a></li>
 // After: <li class="toctree-l2 current current-page"><a class="reference internal" href="../../acm.html">ACM</a></li>
 function makeServiceLinkCurrent(serviceName) {
-	const servicesSection = $("a:contains('Available Services')")[0].parentElement;
+	const servicesSection = document.querySelectorAll("a:contains('Available Services')")[0].parentElement;
 	var linkElement = servicesSection.querySelectorAll(`a[href*="../${ serviceName }.html"]`);
 	if (linkElement.length === 0) {
 		linkElement = servicesSection.querySelectorAll(`a[href*="#"]`)[0];
@@ -78,7 +78,7 @@ function makeServiceLinkCurrent(serviceName) {
 	linkParent.classList.add('current');
 	linkParent.classList.add('current-page');
 }
-$(document).ready(function () {
+(function () {
 	const currentPagePath = window.location.pathname.split('/');
 	const codeBlockSelector = 'div.highlight pre';
 	const boldTextSelector = 'strong';
