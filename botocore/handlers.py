@@ -1390,15 +1390,6 @@ BUILTIN_HANDLERS = [
         'docs.*.docdb.CreateDBCluster.complete-section',
         AutoPopulatedParam('PreSignedUrl').document_auto_populated_param,
     ),
-    ###########
-    # SMS Voice
-    ###########
-    (
-        'docs.title.sms-voice',
-        DeprecatedServiceDocumenter(
-            'pinpoint-sms-voice'
-        ).inject_deprecation_notice,
-    ),
     ('before-call', inject_api_version_header_if_needed),
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)
