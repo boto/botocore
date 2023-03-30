@@ -4,104 +4,104 @@
             "documentation": "For region us-gov-east-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-gov-east-1.api.aws"
+                    "url": "https://vpc-lattice-fips.us-gov-east-1.api.aws"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": true,
                 "Region": "us-gov-east-1",
-                "UseDualStack": true
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-gov-east-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-gov-east-1.amazonaws.com"
+                    "url": "https://vpc-lattice-fips.us-gov-east-1.amazonaws.com"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": false,
                 "Region": "us-gov-east-1",
-                "UseDualStack": false
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-gov-east-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-gov-east-1.api.aws"
+                    "url": "https://vpc-lattice.us-gov-east-1.api.aws"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": true,
                 "Region": "us-gov-east-1",
-                "UseDualStack": true
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region us-gov-east-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-gov-east-1.amazonaws.com"
+                    "url": "https://vpc-lattice.us-gov-east-1.amazonaws.com"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": false,
                 "Region": "us-gov-east-1",
-                "UseDualStack": false
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region cn-north-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.cn-north-1.api.amazonwebservices.com.cn"
+                    "url": "https://vpc-lattice-fips.cn-north-1.api.amazonwebservices.com.cn"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": true,
                 "Region": "cn-north-1",
-                "UseDualStack": true
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region cn-north-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.cn-north-1.amazonaws.com.cn"
+                    "url": "https://vpc-lattice-fips.cn-north-1.amazonaws.com.cn"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": false,
                 "Region": "cn-north-1",
-                "UseDualStack": false
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region cn-north-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.cn-north-1.api.amazonwebservices.com.cn"
+                    "url": "https://vpc-lattice.cn-north-1.api.amazonwebservices.com.cn"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": true,
                 "Region": "cn-north-1",
-                "UseDualStack": true
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region cn-north-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.cn-north-1.amazonaws.com.cn"
+                    "url": "https://vpc-lattice.cn-north-1.amazonaws.com.cn"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": false,
                 "Region": "cn-north-1",
-                "UseDualStack": false
+                "UseFIPS": false
             }
         },
         {
@@ -110,22 +110,22 @@
                 "error": "FIPS and DualStack are enabled, but this partition does not support one or both"
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": true,
                 "Region": "us-iso-east-1",
-                "UseDualStack": true
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-iso-east-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-iso-east-1.c2s.ic.gov"
+                    "url": "https://vpc-lattice-fips.us-iso-east-1.c2s.ic.gov"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": false,
                 "Region": "us-iso-east-1",
-                "UseDualStack": false
+                "UseFIPS": true
             }
         },
         {
@@ -134,74 +134,74 @@
                 "error": "DualStack is enabled but this partition does not support DualStack"
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": true,
                 "Region": "us-iso-east-1",
-                "UseDualStack": true
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region us-iso-east-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-iso-east-1.c2s.ic.gov"
+                    "url": "https://vpc-lattice.us-iso-east-1.c2s.ic.gov"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": false,
                 "Region": "us-iso-east-1",
-                "UseDualStack": false
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region us-east-1 with FIPS enabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-east-1.api.aws"
+                    "url": "https://vpc-lattice-fips.us-east-1.api.aws"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": true,
                 "Region": "us-east-1",
-                "UseDualStack": true
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-east-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-east-1.amazonaws.com"
+                    "url": "https://vpc-lattice-fips.us-east-1.amazonaws.com"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": false,
                 "Region": "us-east-1",
-                "UseDualStack": false
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-east-1 with FIPS disabled and DualStack enabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-east-1.api.aws"
+                    "url": "https://vpc-lattice.us-east-1.api.aws"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": true,
                 "Region": "us-east-1",
-                "UseDualStack": true
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region us-east-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-east-1.amazonaws.com"
+                    "url": "https://vpc-lattice.us-east-1.amazonaws.com"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": false,
                 "Region": "us-east-1",
-                "UseDualStack": false
+                "UseFIPS": false
             }
         },
         {
@@ -210,22 +210,22 @@
                 "error": "FIPS and DualStack are enabled, but this partition does not support one or both"
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": true,
                 "Region": "us-isob-east-1",
-                "UseDualStack": true
+                "UseFIPS": true
             }
         },
         {
             "documentation": "For region us-isob-east-1 with FIPS enabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial-fips.us-isob-east-1.sc2s.sgov.gov"
+                    "url": "https://vpc-lattice-fips.us-isob-east-1.sc2s.sgov.gov"
                 }
             },
             "params": {
-                "UseFIPS": true,
+                "UseDualStack": false,
                 "Region": "us-isob-east-1",
-                "UseDualStack": false
+                "UseFIPS": true
             }
         },
         {
@@ -234,22 +234,22 @@
                 "error": "DualStack is enabled but this partition does not support DualStack"
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": true,
                 "Region": "us-isob-east-1",
-                "UseDualStack": true
+                "UseFIPS": false
             }
         },
         {
             "documentation": "For region us-isob-east-1 with FIPS disabled and DualStack disabled",
             "expect": {
                 "endpoint": {
-                    "url": "https://sagemaker-geospatial.us-isob-east-1.sc2s.sgov.gov"
+                    "url": "https://vpc-lattice.us-isob-east-1.sc2s.sgov.gov"
                 }
             },
             "params": {
-                "UseFIPS": false,
+                "UseDualStack": false,
                 "Region": "us-isob-east-1",
-                "UseDualStack": false
+                "UseFIPS": false
             }
         },
         {
@@ -260,9 +260,9 @@
                 }
             },
             "params": {
-                "UseFIPS": false,
-                "Region": "us-east-1",
                 "UseDualStack": false,
+                "Region": "us-east-1",
+                "UseFIPS": false,
                 "Endpoint": "https://example.com"
             }
         },
@@ -272,9 +272,9 @@
                 "error": "Invalid Configuration: FIPS and custom endpoint are not supported"
             },
             "params": {
-                "UseFIPS": true,
-                "Region": "us-east-1",
                 "UseDualStack": false,
+                "Region": "us-east-1",
+                "UseFIPS": true,
                 "Endpoint": "https://example.com"
             }
         },
@@ -284,9 +284,9 @@
                 "error": "Invalid Configuration: Dualstack and custom endpoint are not supported"
             },
             "params": {
-                "UseFIPS": false,
-                "Region": "us-east-1",
                 "UseDualStack": true,
+                "Region": "us-east-1",
+                "UseFIPS": false,
                 "Endpoint": "https://example.com"
             }
         }
