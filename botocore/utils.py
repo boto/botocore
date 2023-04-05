@@ -919,6 +919,12 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
         # In certain cases, a timestamp marked with GMT can be parsed into a
         # different time zone, so here we provide a context which will
         # enforce that GMT == UTC.
+        STRING_FORMAT_PATTERN = r'^[a-zA-Z]{3}, \d{2} [a-zA-Z]{3} \d{4} \d{2}:\d{2}:\d{2} [A-Z]{3}$'
+        if re.match(STRING_FORMAT_PATTERN, value):
+            return datetime.datetime.strptime(
+                value, '%a, %d %b %Y %H:%M:%S %Z'
+            ).replace(tzinfo=tzutc())
+
         return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError(f'Invalid timestamp "{value}": {e}')

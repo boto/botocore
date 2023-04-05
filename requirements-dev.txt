@@ -9,3 +9,6 @@ pytest-cov==2.12.1
 pytest-xdist==2.4.0
 atomicwrites>=1.0 # Windows requirement
 colorama>0.3.0 # Windows requirement
+
+# Pre commit
+pre-commit==3.2.2
