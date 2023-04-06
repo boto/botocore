@@ -62,75 +62,75 @@ class Config:
     :type proxies: dict
     :param proxies: A dictionary of proxy servers to use by protocol or
         endpoint, e.g.:
-        {'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}.
+        ``{'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}``.
         The proxies are used on each request.
 
     :type proxies_config: dict
     :param proxies_config: A dictionary of additional proxy configurations.
         Valid keys are:
 
-        * 'proxy_ca_bundle' -- The path to a custom certificate bundle to use
+        * ``proxy_ca_bundle`` -- The path to a custom certificate bundle to use
           when establishing SSL/TLS connections with proxy.
 
-        * 'proxy_client_cert' -- The path to a certificate for proxy
+        * ``proxy_client_cert`` -- The path to a certificate for proxy
           TLS client authentication.
 
-          When a str is provided it is treated as a path to a proxy client
+          When a string is provided it is treated as a path to a proxy client
           certificate. When a two element tuple is provided, it will be
           interpreted as the path to the client certificate, and the path
           to the certificate key.
 
-        * 'proxy_use_forwarding_for_https' -- For HTTPS proxies,
+        * ``proxy_use_forwarding_for_https`` -- For HTTPS proxies,
           forward your requests to HTTPS destinations with an absolute
           URI. We strongly recommend you only use this option with
           trusted or corporate proxies. Value must be boolean.
 
     :type s3: dict
-    :param s3: A dictionary of s3 specific configurations.
+    :param s3: A dictionary of S3 specific configurations.
         Valid keys are:
 
-        * 'use_accelerate_endpoint' -- Refers to whether to use the S3
+        * ``use_accelerate_endpoint`` -- Refers to whether to use the S3
           Accelerate endpoint. The value must be a boolean. If True, the
           client will use the S3 Accelerate endpoint. If the S3 Accelerate
           endpoint is being used then the addressing style will always
           be virtual.
 
-        * 'payload_signing_enabled' -- Refers to whether or not to SHA256
+        * ``payload_signing_enabled`` -- Refers to whether or not to SHA256
           sign sigv4 payloads. By default, this is disabled for streaming
           uploads (UploadPart and PutObject).
 
-        * 'addressing_style' -- Refers to the style in which to address
-          s3 endpoints. Values must be a string that equals:
+        * ``addressing_style`` -- Refers to the style in which to address
+          s3 endpoints. Values must be a string that equals one of:
 
-          * auto -- Addressing style is chosen for user. Depending
+          * ``auto`` -- Addressing style is chosen for user. Depending
             on the configuration of client, the endpoint may be addressed in
             the virtual or the path style. Note that this is the default
             behavior if no style is specified.
 
-          * virtual -- Addressing style is always virtual. The name of the
+          * ``virtual`` -- Addressing style is always virtual. The name of the
             bucket must be DNS compatible or an exception will be thrown.
-            Endpoints will be addressed as such: mybucket.s3.amazonaws.com
+            Endpoints will be addressed as such: ``mybucket.s3.amazonaws.com``
 
-          * path -- Addressing style is always by path. Endpoints will be
-            addressed as such: s3.amazonaws.com/mybucket
+          * ``path`` -- Addressing style is always by path. Endpoints will be
+            addressed as such: ``s3.amazonaws.com/mybucket``
 
-        * 'us_east_1_regional_endpoint' - Refers to what S3 endpoint to use
+        * ``us_east_1_regional_endpoint`` -- Refers to what S3 endpoint to use
           when the region is configured to be us-east-1. Values must be a
           string that equals:
 
-           * regional -- Use the us-east-1.amazonaws.com endpoint if the
-             client is configured to use the us-east-1 region.
+          * ``regional`` -- Use the us-east-1.amazonaws.com endpoint if the
+            client is configured to use the us-east-1 region.
 
-           * legacy -- Use the s3.amazonaws.com endpoint if the client is
-             configured to use the us-east-1 region. This is the default if
-             the configuration option is not specified.
+          * ``legacy`` -- Use the s3.amazonaws.com endpoint if the client is
+            configured to use the us-east-1 region. This is the default if
+            the configuration option is not specified.
 
 
     :type retries: dict
-    :param retries: A dictionary for retry specific configurations.
+    :param retries: A dictionary for configuration related to retry behavior.
         Valid keys are:
 
-        * 'total_max_attempts' -- An integer representing the maximum number of
+        * ``total_max_attempts`` -- An integer representing the maximum number of
           total attempts that will be made on a single request.  This includes
           the initial request, so a value of 1 indicates that no requests
           will be retried.  If ``total_max_attempts`` and ``max_attempts``
@@ -138,25 +138,29 @@ class Config:
           ``total_max_attempts`` is preferred over ``max_attempts`` because
           it maps to the ``AWS_MAX_ATTEMPTS`` environment variable and
           the ``max_attempts`` config file value.
-        * 'max_attempts' -- An integer representing the maximum number of
+        * ``max_attempts`` -- An integer representing the maximum number of
           retry attempts that will be made on a single request. For
           example, setting this value to 2 will result in the request
           being retried at most two times after the initial request. Setting
-          this value to 0 will result in no retries ever being attempted on
+          this value to 0 will result in no retries ever being attempted after
           the initial request. If not provided, the number of retries will
-          default to whatever is modeled, which is typically four retries.
-        * 'mode' -- A string representing the type of retry mode botocore
+          default to the value specified in the service model, which is
+          typically four retries.
+        * ``mode`` -- A string representing the type of retry mode botocore
           should use.  Valid values are:
-              * ``legacy`` - The pre-existing retry behavior.
-              * ``standard`` - The standardized set of retry rules.  This
-                will also default to 3 max attempts unless overridden.
-              * ``adaptive`` - Retries with additional client side throttling.
+
+          * ``legacy`` - The pre-existing retry behavior.
+
+          * ``standard`` - The standardized set of retry rules. This will also
+            default to 3 max attempts unless overridden.
+
+          * ``adaptive`` - Retries with additional client side throttling.
 
     :type client_cert: str, (str, str)
     :param client_cert: The path to a certificate for TLS client authentication.
 
-        When a str is provided it is treated as a path to a client certificate
-        to be used when creating a TLS connection.
+        When a string is provided it is treated as a path to a client
+        certificate to be used when creating a TLS connection.
 
         If a client key is to be provided alongside the client certificate the
         client_cert should be set to a tuple of length two where the first
