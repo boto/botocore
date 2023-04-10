@@ -253,8 +253,8 @@ def resolve_request_checksum_algorithm(
         if algorithm_name == "crc32c" and not HAS_CRT:
             raise FlexibleChecksumError(
                 error_msg=(
-                    "CRC32C is not supported without the CRT. To use "
-                    "CRC32C, please install the `awscrt` package."
+                    "Using CRC32C requires an additional dependency. You will "
+                    "need to pip install botocore[crt] before proceeding."
                 )
             )
         elif algorithm_name not in supported_algorithms:

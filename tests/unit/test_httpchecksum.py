@@ -185,7 +185,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
                 request, operation_model, params
             )
             self.assertIn(
-                "CRC32C is not supported without the CRT",
+                "Using CRC32C requires an additional dependency",
                 str(context.exception),
             )
 
