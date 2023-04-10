@@ -14,6 +14,7 @@ import unittest
 from io import BytesIO
 
 from botocore.awsrequest import AWSResponse
+from botocore.compat import HAS_CRT
 from botocore.exceptions import AwsChunkedWrapperError, FlexibleChecksumError
 from botocore.httpchecksum import (
     _CHECKSUM_CLS,
@@ -170,6 +171,22 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         with self.assertRaises(FlexibleChecksumError):
             resolve_request_checksum_algorithm(
                 request, operation_model, params, supported_algorithms=[]
+            )
+
+    @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
+    def test_request_checksum_algorithm_model_no_crt_crc32c_unsupported(self):
+        request = self._build_request(b"")
+        operation_model = self._make_operation_model(
+            http_checksum={"requestAlgorithmMember": "Algorithm"},
+        )
+        params = {"Algorithm": "crc32c"}
+        with self.assertRaises(FlexibleChecksumError) as context:
+            resolve_request_checksum_algorithm(
+                request, operation_model, params
+            )
+            self.assertIn(
+                "CRC32C is not supported without the CRT",
+                str(context.exception),
             )
 
     def test_request_checksum_algorithm_model_legacy_md5(self):
