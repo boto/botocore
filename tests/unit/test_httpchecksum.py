@@ -15,9 +15,14 @@ from io import BytesIO
 
 from botocore.awsrequest import AWSResponse
 from botocore.compat import HAS_CRT
-from botocore.exceptions import AwsChunkedWrapperError, FlexibleChecksumError
+from botocore.exceptions import (
+    AwsChunkedWrapperError,
+    FlexibleChecksumError,
+    MissingDependencyException,
+)
 from botocore.httpchecksum import (
     _CHECKSUM_CLS,
+    _CRT_SUPPORTED_CHECKSUM_ALGORITHMS,
     AwsChunkedWrapper,
     Crc32Checksum,
     CrtCrc32cChecksum,
@@ -170,7 +175,11 @@ class TestHttpChecksumHandlers(unittest.TestCase):
 
         with self.assertRaises(FlexibleChecksumError):
             resolve_request_checksum_algorithm(
-                request, operation_model, params, supported_algorithms=[]
+                request,
+                operation_model,
+                params,
+                supported_algorithms=[],
+                crt_supported_algorithms=[],
             )
 
     @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
@@ -180,7 +189,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             http_checksum={"requestAlgorithmMember": "Algorithm"},
         )
         params = {"Algorithm": "crc32c"}
-        with self.assertRaises(FlexibleChecksumError) as context:
+        with self.assertRaises(MissingDependencyException) as context:
             resolve_request_checksum_algorithm(
                 request, operation_model, params
             )
@@ -535,6 +544,14 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         )
         body = response_dict["body"]
         self.assertEqual(body.read(), b"hello world")
+
+    @requires_crt()
+    def test_checksum_cls_crt_supported_algorithms_in_sync(self):
+        self.assertEqual(
+            _CRT_SUPPORTED_CHECKSUM_ALGORITHMS, ["crc32", "crc32c"]
+        )
+        for algorithm in _CRT_SUPPORTED_CHECKSUM_ALGORITHMS:
+            self.assertIn(algorithm, _CHECKSUM_CLS.keys())
 
 
 class TestAwsChunkedWrapper(unittest.TestCase):
