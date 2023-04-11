@@ -469,12 +469,15 @@ _CHECKSUM_CLS = {
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
 }
+_CRT_CHECKSUM_CLS = {}
 
 if HAS_CRT:
     # Use CRT checksum implementations if available
-    _CHECKSUM_CLS.update(
-        {"crc32": CrtCrc32Checksum, "crc32c": CrtCrc32cChecksum}
-    )
+    _CRT_CHECKSUM_CLS = {
+        "crc32": CrtCrc32Checksum,
+        "crc32c": CrtCrc32cChecksum,
+    }
+    _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
 
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
 _CRT_SUPPORTED_CHECKSUM_ALGORITHMS = ["crc32", "crc32c"]
