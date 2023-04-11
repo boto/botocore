@@ -250,7 +250,14 @@ def resolve_request_checksum_algorithm(
             supported_algorithms = _SUPPORTED_CHECKSUM_ALGORITHMS
 
         algorithm_name = params[algorithm_member].lower()
-        if algorithm_name not in supported_algorithms:
+        if algorithm_name == "crc32c" and not HAS_CRT:
+            raise FlexibleChecksumError(
+                error_msg=(
+                    "Using CRC32C requires an additional dependency. You will "
+                    "need to pip install botocore[crt] before proceeding."
+                )
+            )
+        elif algorithm_name not in supported_algorithms:
             raise FlexibleChecksumError(
                 error_msg="Unsupported checksum algorithm: %s" % algorithm_name
             )
