@@ -244,7 +244,6 @@ def resolve_request_checksum_algorithm(
     operation_model,
     params,
     supported_algorithms=None,
-    crt_supported_algorithms=None,
 ):
     http_checksum = operation_model.http_checksum
     algorithm_member = http_checksum.get("requestAlgorithmMember")
@@ -253,16 +252,15 @@ def resolve_request_checksum_algorithm(
         # request supports it, use that instead of checksum required
         if supported_algorithms is None:
             supported_algorithms = _SUPPORTED_CHECKSUM_ALGORITHMS
-        if crt_supported_algorithms is None:
-            crt_supported_algorithms = _CRT_SUPPORTED_CHECKSUM_ALGORITHMS
 
         algorithm_name = params[algorithm_member].lower()
         if algorithm_name not in supported_algorithms:
-            if not HAS_CRT and algorithm_name in crt_supported_algorithms:
+            if not HAS_CRT and algorithm_name in _CRT_CHECKSUM_ALGORITHMS:
                 raise MissingDependencyException(
                     msg=(
-                        "Using CRC32C requires an additional dependency. You will "
-                        "need to pip install botocore[crt] before proceeding."
+                        f"Using {algorithm_name.upper()} requires an "
+                        "additional dependency. You will need to pip install "
+                        "botocore[crt] before proceeding."
                     )
                 )
             raise FlexibleChecksumError(
@@ -469,8 +467,7 @@ _CHECKSUM_CLS = {
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
 }
-_CRT_CHECKSUM_CLS = {}
-
+_CRT_CHECKSUM_ALGORITHMS = ["crc32", "crc32c"]
 if HAS_CRT:
     # Use CRT checksum implementations if available
     _CRT_CHECKSUM_CLS = {
@@ -478,7 +475,7 @@ if HAS_CRT:
         "crc32c": CrtCrc32cChecksum,
     }
     _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
-
+    # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
+    assert all(name in _CRT_CHECKSUM_ALGORITHMS for name in _CRT_CHECKSUM_CLS)
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
-_CRT_SUPPORTED_CHECKSUM_ALGORITHMS = ["crc32", "crc32c"]
 _ALGORITHMS_PRIORITY_LIST = ['crc32c', 'crc32', 'sha1', 'sha256']

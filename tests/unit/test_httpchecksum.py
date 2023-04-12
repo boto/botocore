@@ -22,8 +22,6 @@ from botocore.exceptions import (
 )
 from botocore.httpchecksum import (
     _CHECKSUM_CLS,
-    _CRT_CHECKSUM_CLS,
-    _CRT_SUPPORTED_CHECKSUM_ALGORITHMS,
     AwsChunkedWrapper,
     Crc32Checksum,
     CrtCrc32cChecksum,
@@ -545,13 +543,6 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         )
         body = response_dict["body"]
         self.assertEqual(body.read(), b"hello world")
-
-    @requires_crt()
-    def test_checksum_cls_crt_supported_algorithms_in_sync(self):
-        self.assertEqual(
-            sorted(_CRT_SUPPORTED_CHECKSUM_ALGORITHMS),
-            sorted(list(_CRT_CHECKSUM_CLS.keys())),
-        )
 
 
 class TestAwsChunkedWrapper(unittest.TestCase):
