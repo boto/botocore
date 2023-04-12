@@ -174,11 +174,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
 
         with self.assertRaises(FlexibleChecksumError):
             resolve_request_checksum_algorithm(
-                request,
-                operation_model,
-                params,
-                supported_algorithms=[],
-                crt_supported_algorithms=[],
+                request, operation_model, params, supported_algorithms=[]
             )
 
     @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
