@@ -1384,7 +1384,7 @@ class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
         self.http_stubber.add_response()
         with self.assertRaises(ParamValidationError):
             self.client.write_get_object_response(
-                RequestRoute="evil.com/",
+                RequestRoute="my-route/",
                 RequestToken="SecretToken",
             )
 

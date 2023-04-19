@@ -186,17 +186,20 @@ class Serializer:
             if shape.serialization.get('hostLabel')
         ]
         format_kwargs = {}
+        bad_labels = []
         for name in host_labels:
             param = parameters[name]
             if not HOST_PREFIX_RE.match(param):
-                raise ParamValidationError(
-                    report=(
-                        f"Invalid value for parameter {name}: {param}. "
-                        "Must contain only alphanumeric characters, hyphen, "
-                        "or period."
-                    )
-                )
+                bad_labels.append(name)
             format_kwargs[name] = param
+        if bad_labels:
+            raise ParamValidationError(
+                report=(
+                    f"Invalid value for parameter(s): {', '.join(bad_labels)}. "
+                    "Must contain only alphanumeric characters, hyphen, "
+                    "or period."
+                )
+            )
         return host_prefix_expression.format(**format_kwargs)
 
 
