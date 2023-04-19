@@ -196,7 +196,7 @@ class Serializer:
                         "or period."
                     )
                 )
-        format_kwargs = {name: parameters[name] for name in host_labels}
+            format_kwargs[name] = param
         return host_prefix_expression.format(**format_kwargs)
 
 
