@@ -193,12 +193,11 @@ class Serializer:
                     report=(
                         f"Invalid value for parameter {name}: {param}. "
                         "Must contain only alphanumeric characters, hyphen, "
-                        "and period."
+                        "or period."
                     )
                 )
         format_kwargs = {name: parameters[name] for name in host_labels}
-        host_prefix = host_prefix_expression.format(**format_kwargs)
-        return host_prefix
+        return host_prefix_expression.format(**format_kwargs)
 
 
 class QuerySerializer(Serializer):
@@ -499,6 +498,7 @@ class BaseRestSerializer(Serializer):
             partitioned, parameters, serialized, shape, shape_members
         )
         self._serialize_content_type(serialized, shape, shape_members)
+
         host_prefix = self._expand_host_prefix(parameters, operation_model)
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
