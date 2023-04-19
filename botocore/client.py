@@ -990,6 +990,7 @@ class BaseClient:
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model
         )
+
         if not self._client_config.inject_host_prefix:
             request_dict.pop('host_prefix', None)
         if headers is not None:

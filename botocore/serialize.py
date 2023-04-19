@@ -46,6 +46,7 @@ from xml.etree import ElementTree
 
 from botocore import validate
 from botocore.compat import formatdate
+from botocore.exceptions import ParamValidationError
 from botocore.utils import (
     has_header,
     is_json_value_header,
@@ -58,6 +59,7 @@ DEFAULT_TIMESTAMP_FORMAT = 'iso8601'
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 # Same as ISO8601, but with microsecond precision.
 ISO8601_MICRO = '%Y-%m-%dT%H:%M:%S.%fZ'
+HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+$")
 
 
 def create_serializer(protocol_name, include_validation=True):
@@ -183,9 +185,20 @@ class Serializer:
             for member, shape in input_members.items()
             if shape.serialization.get('hostLabel')
         ]
+        format_kwargs = {}
+        for name in host_labels:
+            param = parameters[name]
+            if not HOST_PREFIX_RE.match(param):
+                raise ParamValidationError(
+                    report=(
+                        f"Invalid value for parameter {name}: {param}. "
+                        "Must contain only alphanumeric characters, hyphen, "
+                        "and period."
+                    )
+                )
         format_kwargs = {name: parameters[name] for name in host_labels}
-
-        return host_prefix_expression.format(**format_kwargs)
+        host_prefix = host_prefix_expression.format(**format_kwargs)
+        return host_prefix
 
 
 class QuerySerializer(Serializer):
@@ -486,7 +499,6 @@ class BaseRestSerializer(Serializer):
             partitioned, parameters, serialized, shape, shape_members
         )
         self._serialize_content_type(serialized, shape, shape_members)
-
         host_prefix = self._expand_host_prefix(parameters, operation_model)
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
