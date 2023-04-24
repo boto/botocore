@@ -144,7 +144,10 @@ class BaseS3ClientTest(unittest.TestCase):
         bucket_client = client or self.client
         if bucket_name is None:
             bucket_name = random_bucketname()
-        bucket_kwargs = {'Bucket': bucket_name}
+        bucket_kwargs = {
+            'Bucket': bucket_name,
+            'ObjectOwnership': 'ObjectWriter',
+        }
         if region_name != 'us-east-1':
             bucket_kwargs['CreateBucketConfiguration'] = {
                 'LocationConstraint': region_name,
@@ -158,6 +161,7 @@ class BaseS3ClientTest(unittest.TestCase):
         consistency_waiter.wait(
             lambda: waiter.wait(Bucket=bucket_name) is None
         )
+        bucket_client.delete_public_access_block(Bucket=bucket_name)
         self.addCleanup(clear_out_bucket, bucket_name, region_name, True)
         return bucket_name
 
@@ -694,9 +698,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
     def setUp(self):
         super().setUp()
         self.region = 'us-east-1'
-        self.client_config = Config(
-            region_name=self.region, signature_version='s3'
-        )
+        self.client_config = Config(region_name=self.region)
         self.client = self.session.create_client(
             's3', config=self.client_config
         )
@@ -704,6 +706,10 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         self.setup_bucket()
 
     def test_presign_sigv2(self):
+        self.client_config.signature_version = 's3'
+        self.client = self.session.create_client(
+            's3', config=self.client_config
+        )
         presigned_url = self.client.generate_presigned_url(
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key}
         )
@@ -756,6 +762,10 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
+        self.client_config.signature_version = 's3'
+        self.client = self.session.create_client(
+            's3', config=self.client_config
+        )
 
         # Create some of the various supported conditions.
         conditions = [
@@ -828,15 +838,18 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
 class TestS3PresignNonUsStandard(BaseS3PresignTest):
     def setUp(self):
         super().setUp()
-        self.client_config = Config(
-            region_name=self.region, signature_version='s3'
-        )
+        self.client_config = Config(region_name=self.region)
         self.client = self.session.create_client(
             's3', config=self.client_config
         )
         self.setup_bucket()
 
     def test_presign_sigv2(self):
+        self.client_config.signature_version = 's3'
+        self.client = self.session.create_client(
+            's3', config=self.client_config
+        )
+
         presigned_url = self.client.generate_presigned_url(
             'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key}
         )
@@ -881,6 +894,11 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         self.assertEqual(http_get(presigned_url).data, b'foo')
 
     def test_presign_post_sigv2(self):
+        self.client_config.signature_version = 's3'
+        self.client = self.session.create_client(
+            's3', config=self.client_config
+        )
+
         # Create some of the various supported conditions.
         conditions = [
             {"acl": "public-read"},
