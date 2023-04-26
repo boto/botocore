@@ -170,7 +170,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"},
         )
-        params = {"Algorithm": "sh256"}
+        params = {"Algorithm": "sha256"}
 
         with self.assertRaises(FlexibleChecksumError):
             resolve_request_checksum_algorithm(
