@@ -25,7 +25,11 @@ from binascii import crc32
 from hashlib import sha1, sha256
 
 from botocore.compat import HAS_CRT
-from botocore.exceptions import AwsChunkedWrapperError, FlexibleChecksumError
+from botocore.exceptions import (
+    AwsChunkedWrapperError,
+    FlexibleChecksumError,
+    MissingDependencyException,
+)
 from botocore.response import StreamingBody
 from botocore.utils import (
     conditionally_calculate_md5,
@@ -250,14 +254,15 @@ def resolve_request_checksum_algorithm(
             supported_algorithms = _SUPPORTED_CHECKSUM_ALGORITHMS
 
         algorithm_name = params[algorithm_member].lower()
-        if algorithm_name == "crc32c" and not HAS_CRT:
-            raise FlexibleChecksumError(
-                error_msg=(
-                    "Using CRC32C requires an additional dependency. You will "
-                    "need to pip install botocore[crt] before proceeding."
+        if algorithm_name not in supported_algorithms:
+            if not HAS_CRT and algorithm_name in _CRT_CHECKSUM_ALGORITHMS:
+                raise MissingDependencyException(
+                    msg=(
+                        f"Using {algorithm_name.upper()} requires an "
+                        "additional dependency. You will need to pip install "
+                        "botocore[crt] before proceeding."
+                    )
                 )
-            )
-        elif algorithm_name not in supported_algorithms:
             raise FlexibleChecksumError(
                 error_msg="Unsupported checksum algorithm: %s" % algorithm_name
             )
@@ -462,12 +467,17 @@ _CHECKSUM_CLS = {
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
 }
-
+_CRT_CHECKSUM_ALGORITHMS = ["crc32", "crc32c"]
 if HAS_CRT:
     # Use CRT checksum implementations if available
-    _CHECKSUM_CLS.update(
-        {"crc32": CrtCrc32Checksum, "crc32c": CrtCrc32cChecksum}
+    _CRT_CHECKSUM_CLS = {
+        "crc32": CrtCrc32Checksum,
+        "crc32c": CrtCrc32cChecksum,
+    }
+    _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
+    # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
+    assert all(
+        name in _CRT_CHECKSUM_ALGORITHMS for name in _CRT_CHECKSUM_CLS.keys()
     )
-
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
 _ALGORITHMS_PRIORITY_LIST = ['crc32c', 'crc32', 'sha1', 'sha256']
