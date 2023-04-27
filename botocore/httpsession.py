@@ -20,7 +20,6 @@ from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 from urllib3.exceptions import SSLError as URLLib3SSLError
 from urllib3.util.retry import Retry
 from urllib3.util.ssl_ import (
-    DEFAULT_CIPHERS,
     OP_NO_COMPRESSION,
     PROTOCOL_TLS,
     OP_NO_SSLv2,
@@ -48,6 +47,14 @@ try:
         )
 except ImportError:
     from urllib3.util.ssl_ import SSLContext
+
+try:
+    from urllib3.util.ssl_ import DEFAULT_CIPHERS
+except ImportError:
+    # Defer to system configuration starting with
+    # urllib3 2.0. This will choose the ciphers provided by
+    # Openssl 1.1.1+ or secure system defaults.
+    DEFAULT_CIPHERS = None
 
 import botocore.awsrequest
 from botocore.compat import (
