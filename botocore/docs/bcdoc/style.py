@@ -126,13 +126,9 @@ class ReSTStyle(BaseStyle):
         self.end_bold()
 
     def write_raw_h3(self, s):
-        self.new_paragraph()
-        self.doc.write('.. raw:: html')
-        self.indent()
-        self.new_paragraph()
+        self.start_raw_directive()
         self.doc.write(f"<h3>{s}</h3>")
-        self.dedent()
-        self.new_paragraph()
+        self.end_raw_directive()
 
     def bold(self, s):
         if s:
@@ -195,50 +191,45 @@ class ReSTStyle(BaseStyle):
             self.doc.write(s)
             self.end_code()
 
-    def start_raw_admonition(self, type):
+    def start_raw_directive(self):
+        self.new_paragraph()
         self.doc.write('.. raw:: html')
         self.indent()
         self.new_paragraph()
-        self.doc.write(f'<div class="admonition {type}">')
-        self.doc.write(f'<h3 class="admonition-title">{type.title()}</h3>')
+
+    def end_raw_directive(self):
         self.dedent()
+        self.new_paragraph()
+
+    def start_raw_admonition(self, type):
+        self.start_raw_directive()
+        self.doc.write(f'<div class="admonition {type}">')
+        self.new_line()
+        self.doc.write(f'<h3 class="admonition-title">{type.title()}</h3>')
+        self.end_raw_directive()
 
     def end_raw_admonition(self):
-        self.doc.write('.. raw:: html')
-        self.indent()
-        self.new_paragraph()
+        self.start_raw_directive()
         self.doc.write('</div>')
-        self.dedent()
+        self.end_raw_directive()
 
     def start_note(self, attrs=None):
-        self.new_paragraph()
         self.start_raw_admonition('note')
-        self.new_paragraph()
 
     def end_note(self):
-        self.new_paragraph()
         self.end_raw_admonition()
-        self.new_paragraph()
 
     def start_important(self, attrs=None):
-        self.new_paragraph()
         self.start_raw_admonition('warning')
-        self.new_paragraph()
 
     def end_important(self):
-        self.new_paragraph()
         self.end_raw_admonition()
-        self.new_paragraph()
 
     def start_danger(self, attrs=None):
-        self.new_paragraph()
         self.start_raw_admonition('danger')
-        self.new_paragraph()
 
     def end_danger(self):
-        self.new_paragraph()
         self.end_raw_admonition()
-        self.new_paragraph()
 
     def start_a(self, attrs=None):
         # Write an empty space to guard against zero whitespace
