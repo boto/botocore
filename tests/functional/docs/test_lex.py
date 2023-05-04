@@ -20,10 +20,12 @@ class TestLexDocs(BaseDocsFunctionalTest):
         docs = self.get_docstring_for_method('lex-runtime', 'post_content')
         self.assert_contains_lines_in_order(
             [
-                '**Request Syntax**',
+                '  .. raw:: html',
+                '    <h3>Request Syntax</h3>',
                 'sessionAttributes=%s,' % self.TYPE_STRING,
                 ':type sessionAttributes: JSON serializable',
-                '**Response Syntax**',
+                '  .. raw:: html',
+                '    <h3>Response Syntax</h3>',
                 '\'slots\': %s,' % self.TYPE_STRING,
                 '\'sessionAttributes\': %s' % self.TYPE_STRING,
                 '**slots** (JSON serializable)',

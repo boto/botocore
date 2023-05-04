@@ -68,7 +68,8 @@ class TestDocumentSharedExamples(BaseDocsTest):
         )
         self.assert_contains_lines_in_order(
             [
-                "**Examples**",
+                '.. raw:: html',
+                '  <h3>Examples</h3>',
                 "Sample Description.",
                 "::",
                 "  response = client.foo(",

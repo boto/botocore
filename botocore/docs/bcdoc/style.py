@@ -16,6 +16,17 @@ import logging
 logger = logging.getLogger('bcdocs')
 # Terminal punctuation where a space is not needed before.
 PUNCTUATION_CHARACTERS = ('.', ',', '?', '!', ':', ';')
+# Values that will be converted to HTML h3 tags.
+BOLD_TO_H3_VALUES = [
+    'Example',
+    'Examples',
+    'Exceptions',
+    'Request Syntax',
+    'Response Structure',
+    'Response Syntax',
+    'Structure',
+    'Syntax',
+]
 
 
 class BaseStyle:
@@ -125,11 +136,23 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = False
         self.end_bold()
 
+    def write_raw_h3(self, s):
+        self.doc.write('.. raw:: html')
+        self.indent()
+        self.new_paragraph()
+        self.doc.write(f"<h3>{s}</h3>")
+        self.dedent()
+
     def bold(self, s):
         if s:
-            self.start_bold()
-            self.doc.write(s)
-            self.end_bold()
+            if s in BOLD_TO_H3_VALUES:
+                self.new_paragraph()
+                self.write_raw_h3(s)
+                self.new_paragraph()
+            else:
+                self.start_bold()
+                self.doc.write(s)
+                self.end_bold()
 
     def ref(self, title, link=None):
         if link is None:
@@ -186,34 +209,49 @@ class ReSTStyle(BaseStyle):
             self.doc.write(s)
             self.end_code()
 
+    def start_raw_admonition(self, type):
+        self.doc.write('.. raw:: html')
+        self.indent()
+        self.new_paragraph()
+        self.doc.write(f'<div class="admonition {type}">')
+        self.doc.write(f'<h2 class="admonition-title">{type.title()}</h2>')
+        self.dedent()
+
+    def end_raw_admonition(self):
+        self.doc.write('.. raw:: html')
+        self.indent()
+        self.new_paragraph()
+        self.doc.write(f'</div>')
+        self.dedent()
+
     def start_note(self, attrs=None):
         self.new_paragraph()
-        self.doc.write('.. note::')
-        self.indent()
+        self.start_raw_admonition('note')
         self.new_paragraph()
 
     def end_note(self):
-        self.dedent()
+        self.new_paragraph()
+        self.end_raw_admonition()
         self.new_paragraph()
 
     def start_important(self, attrs=None):
         self.new_paragraph()
-        self.doc.write('.. warning::')
-        self.indent()
+        self.start_raw_admonition('warning')
         self.new_paragraph()
 
     def end_important(self):
-        self.dedent()
+        self.new_paragraph()
+        self.end_raw_admonition()
         self.new_paragraph()
 
     def start_danger(self, attrs=None):
         self.new_paragraph()
-        self.doc.write('.. danger::')
-        self.indent()
+        self.start_raw_admonition('danger')
         self.new_paragraph()
 
     def end_danger(self):
-        self.dedent()
+        self.new_paragraph()
+        self.end_raw_admonition()
         self.new_paragraph()
 
     def start_a(self, attrs=None):

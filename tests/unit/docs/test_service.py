@@ -78,7 +78,8 @@ class TestServiceDocumenter(BaseDocsTest):
         self.assert_contains_lines_in_order(
             [
                 '.. py:method:: MyService.Client.sample_operation(**kwargs)',
-                '  **Examples**',
+                '  .. raw:: html',
+                '    <h3>Examples</h3>',
                 '  Sample Description.',
                 '  ::',
                 '    response = client.sample_operation(',
