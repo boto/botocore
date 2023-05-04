@@ -128,32 +128,41 @@ class TestStyle(unittest.TestCase):
         style = ReSTStyle(ReSTDocument())
         style.start_important()
         style.end_important()
-        self.assertEqual(style.doc.getvalue(), (
-            b'\n\n.. raw:: html\n\n'
-            b'  <div class="admonition warning"><h2 class="admonition-title">Warning</h2>\n\n'
-            b'\n\n.. raw:: html\n\n  </div>\n\n'
-        ))
+        self.assertEqual(
+            style.doc.getvalue(),
+            (
+                b'\n\n.. raw:: html\n\n'
+                b'  <div class="admonition warning"><h2 class="admonition-title">Warning</h2>\n\n'
+                b'\n\n.. raw:: html\n\n  </div>\n\n'
+            ),
+        )
 
     def test_note(self):
         style = ReSTStyle(ReSTDocument())
         style.start_note()
         style.end_note()
-        self.assertEqual(style.doc.getvalue(), (
-            b'\n\n.. raw:: html\n\n'
-            b'  <div class="admonition note"><h2 class="admonition-title">Note</h2>\n\n'
-            b'\n\n.. raw:: html\n\n  </div>\n\n'
-        ))
+        self.assertEqual(
+            style.doc.getvalue(),
+            (
+                b'\n\n.. raw:: html\n\n'
+                b'  <div class="admonition note"><h2 class="admonition-title">Note</h2>\n\n'
+                b'\n\n.. raw:: html\n\n  </div>\n\n'
+            ),
+        )
 
     def test_danger(self):
         style = ReSTStyle(ReSTDocument())
         style.start_danger()
         style.end_danger()
         print(style.doc.getvalue())
-        self.assertEqual(style.doc.getvalue(), (
-            b'\n\n.. raw:: html\n\n'
-            b'  <div class="admonition danger"><h2 class="admonition-title">Danger</h2>\n\n'
-            b'\n\n.. raw:: html\n\n  </div>\n\n'
-        ))
+        self.assertEqual(
+            style.doc.getvalue(),
+            (
+                b'\n\n.. raw:: html\n\n'
+                b'  <div class="admonition danger"><h2 class="admonition-title">Danger</h2>\n\n'
+                b'\n\n.. raw:: html\n\n  </div>\n\n'
+            ),
+        )
 
     def test_toctree_html(self):
         style = ReSTStyle(ReSTDocument())

@@ -469,6 +469,6 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
                 'expected. This operation should not be used going forward and is '
                 'only kept for the purpose of backwards compatiblity.',
                 '  .. raw:: html',
-                '    </div>'
+                '    </div>',
             ]
         )
