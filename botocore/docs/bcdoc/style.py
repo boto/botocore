@@ -221,7 +221,7 @@ class ReSTStyle(BaseStyle):
         self.doc.write('.. raw:: html')
         self.indent()
         self.new_paragraph()
-        self.doc.write(f'</div>')
+        self.doc.write('</div>')
         self.dedent()
 
     def start_note(self, attrs=None):
