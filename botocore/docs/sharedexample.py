@@ -216,7 +216,7 @@ def document_shared_examples(
     """
     container_section = section.add_new_section('shared-examples')
     container_section.style.new_paragraph()
-    container_section.style.bold('Examples')
+    container_section.style.write_raw_h3('Examples')
     documenter = SharedExampleDocumenter()
     for example in shared_examples:
         documenter.document_shared_example(

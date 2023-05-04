@@ -16,17 +16,6 @@ import logging
 logger = logging.getLogger('bcdocs')
 # Terminal punctuation where a space is not needed before.
 PUNCTUATION_CHARACTERS = ('.', ',', '?', '!', ':', ';')
-# Values that will be converted to HTML h3 tags.
-BOLD_TO_H3_VALUES = [
-    'Example',
-    'Examples',
-    'Exceptions',
-    'Request Syntax',
-    'Response Structure',
-    'Response Syntax',
-    'Structure',
-    'Syntax',
-]
 
 
 class BaseStyle:
@@ -137,22 +126,19 @@ class ReSTStyle(BaseStyle):
         self.end_bold()
 
     def write_raw_h3(self, s):
+        self.new_paragraph()
         self.doc.write('.. raw:: html')
         self.indent()
         self.new_paragraph()
         self.doc.write(f"<h3>{s}</h3>")
         self.dedent()
+        self.new_paragraph()
 
     def bold(self, s):
         if s:
-            if s in BOLD_TO_H3_VALUES:
-                self.new_paragraph()
-                self.write_raw_h3(s)
-                self.new_paragraph()
-            else:
-                self.start_bold()
-                self.doc.write(s)
-                self.end_bold()
+            self.start_bold()
+            self.doc.write(s)
+            self.end_bold()
 
     def ref(self, title, link=None):
         if link is None:
@@ -214,7 +200,7 @@ class ReSTStyle(BaseStyle):
         self.indent()
         self.new_paragraph()
         self.doc.write(f'<div class="admonition {type}">')
-        self.doc.write(f'<h2 class="admonition-title">{type.title()}</h2>')
+        self.doc.write(f'<h3 class="admonition-title">{type.title()}</h3>')
         self.dedent()
 
     def end_raw_admonition(self):

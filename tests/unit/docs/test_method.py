@@ -464,7 +464,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         self.assert_contains_lines_in_order(
             [
                 '  .. raw:: html',
-                '    <div class="admonition danger"><h2 class="admonition-title">Danger</h2>',
+                '    <div class="admonition danger"><h3 class="admonition-title">Danger</h3>',
                 '    This operation is deprecated and may not function as '
                 'expected. This operation should not be used going forward and is '
                 'only kept for the purpose of backwards compatiblity.',

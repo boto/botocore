@@ -170,7 +170,7 @@ class ClientDocumenter:
     def _add_method_exceptions_list(self, section, operation_model):
         error_section = section.add_new_section('exceptions')
         error_section.style.new_line()
-        error_section.style.bold('Exceptions')
+        error_section.style.write_raw_h3('Exceptions')
         error_section.style.new_line()
         for error in operation_model.error_shapes:
             class_name = (
@@ -334,7 +334,7 @@ class ClientExceptionsDocumenter:
 
     def _add_exception_catch_example(self, section, shape):
         section.style.new_line()
-        section.style.bold('Example')
+        section.style.write_raw_h3('Example')
         section.style.start_codeblock()
         section.write('try:')
         section.style.indent()
@@ -370,7 +370,7 @@ class ClientExceptionsDocumenter:
     def _add_response_example(self, section, shape):
         example_section = section.add_new_section('syntax')
         example_section.style.new_line()
-        example_section.style.bold('Syntax')
+        example_section.style.write_raw_h3('Syntax')
         example_section.style.new_paragraph()
         documenter = ResponseExampleDocumenter(
             service_name=self._service_name,
@@ -386,7 +386,7 @@ class ClientExceptionsDocumenter:
     def _add_response_params(self, section, shape):
         params_section = section.add_new_section('Structure')
         params_section.style.new_line()
-        params_section.style.bold('Structure')
+        params_section.style.write_raw_h3('Structure')
         params_section.style.new_paragraph()
         documenter = ResponseParamsDocumenter(
             service_name=self._service_name,

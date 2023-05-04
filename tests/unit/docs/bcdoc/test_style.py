@@ -132,7 +132,7 @@ class TestStyle(unittest.TestCase):
             style.doc.getvalue(),
             (
                 b'\n\n.. raw:: html\n\n'
-                b'  <div class="admonition warning"><h2 class="admonition-title">Warning</h2>\n\n'
+                b'  <div class="admonition warning"><h3 class="admonition-title">Warning</h3>\n\n'
                 b'\n\n.. raw:: html\n\n  </div>\n\n'
             ),
         )
@@ -145,7 +145,7 @@ class TestStyle(unittest.TestCase):
             style.doc.getvalue(),
             (
                 b'\n\n.. raw:: html\n\n'
-                b'  <div class="admonition note"><h2 class="admonition-title">Note</h2>\n\n'
+                b'  <div class="admonition note"><h3 class="admonition-title">Note</h3>\n\n'
                 b'\n\n.. raw:: html\n\n  </div>\n\n'
             ),
         )
@@ -159,7 +159,7 @@ class TestStyle(unittest.TestCase):
             style.doc.getvalue(),
             (
                 b'\n\n.. raw:: html\n\n'
-                b'  <div class="admonition danger"><h2 class="admonition-title">Danger</h2>\n\n'
+                b'  <div class="admonition danger"><h3 class="admonition-title">Danger</h3>\n\n'
                 b'\n\n.. raw:: html\n\n  </div>\n\n'
             ),
         )
