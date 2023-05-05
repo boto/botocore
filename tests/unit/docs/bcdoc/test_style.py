@@ -156,7 +156,6 @@ class TestStyle(unittest.TestCase):
         style = ReSTStyle(ReSTDocument())
         style.start_danger()
         style.end_danger()
-        print(style.doc.getvalue())
         self.assertEqual(
             style.doc.getvalue(),
             (
