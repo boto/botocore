@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.29.128
+========
+
+* bugfix:``sqs``: Rolled back recent change to wire format protocol
+
+
 1.29.127
 ========
 
