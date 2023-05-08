@@ -657,24 +657,12 @@ def generate_presigned_url(
 
     operation_model = self.meta.service_model.operation_model(operation_name)
     bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
-    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
-        operation_model,
-        params,
-        context,
-        ignore_signing_region=(not bucket_is_arn),
-    )
-    params = self._emit_api_params(
-        api_params=params,
-        operation_model=operation_model,
-        context=context,
-    )
     request_dict = self._convert_to_request_dict(
         api_params=params,
         operation_model=operation_model,
-        endpoint_url=endpoint_url,
         context=context,
-        headers=additional_headers,
         set_user_agent_header=False,
+        ignore_signing_region=(not bucket_is_arn),
     )
 
     # Switch out the http method if user specified it.
@@ -784,24 +772,12 @@ def generate_presigned_post(
     operation_model = self.meta.service_model.operation_model('CreateBucket')
     params = {'Bucket': bucket}
     bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
-    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
-        operation_model,
-        params,
-        context,
-        ignore_signing_region=(not bucket_is_arn),
-    )
-    params = self._emit_api_params(
-        api_params=params,
-        operation_model=operation_model,
-        context=context,
-    )
     request_dict = self._convert_to_request_dict(
         api_params=params,
         operation_model=operation_model,
-        endpoint_url=endpoint_url,
         context=context,
-        headers=additional_headers,
         set_user_agent_header=False,
+        ignore_signing_region=(not bucket_is_arn),
     )
 
     # Append that the bucket name to the list of conditions.
