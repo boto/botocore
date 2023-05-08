@@ -220,7 +220,7 @@ def document_model_driven_method(
     # Add the example section.
     example_section = section.add_new_section('request-example')
     example_section.style.new_paragraph()
-    example_section.style.write_raw_h3('Request Syntax')
+    example_section.style.bold('Request Syntax')
 
     context = {
         'special_shape_types': {
@@ -292,7 +292,7 @@ def document_model_driven_method(
             'response-example'
         )
         return_example_section.style.new_line()
-        return_example_section.style.write_raw_h3('Response Syntax')
+        return_example_section.style.bold('Response Syntax')
         return_example_section.style.new_paragraph()
         ResponseExampleDocumenter(
             service_name=operation_model.service_model.service_name,
@@ -311,7 +311,7 @@ def document_model_driven_method(
             'description'
         )
         return_description_section.style.new_line()
-        return_description_section.style.write_raw_h3('Response Structure')
+        return_description_section.style.bold('Response Structure')
         return_description_section.style.new_paragraph()
         ResponseParamsDocumenter(
             service_name=operation_model.service_model.service_name,

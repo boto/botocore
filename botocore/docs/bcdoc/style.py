@@ -125,11 +125,6 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = False
         self.end_bold()
 
-    def write_raw_h3(self, s):
-        self.start_raw_directive()
-        self.doc.write(f"<h3>{s}</h3>")
-        self.end_raw_directive()
-
     def bold(self, s):
         if s:
             self.start_bold()
@@ -191,45 +186,35 @@ class ReSTStyle(BaseStyle):
             self.doc.write(s)
             self.end_code()
 
-    def start_raw_directive(self):
+    def start_note(self, attrs=None):
         self.new_paragraph()
-        self.doc.write('.. raw:: html')
+        self.doc.write('.. note::')
         self.indent()
         self.new_paragraph()
 
-    def end_raw_directive(self):
+    def end_note(self):
         self.dedent()
         self.new_paragraph()
 
-    def start_raw_admonition(self, type):
-        self.start_raw_directive()
-        self.doc.write(f'<div class="admonition {type}">')
-        self.new_line()
-        self.doc.write(f'<h3 class="admonition-title">{type.title()}</h3>')
-        self.end_raw_directive()
-
-    def end_raw_admonition(self):
-        self.start_raw_directive()
-        self.doc.write('</div>')
-        self.end_raw_directive()
-
-    def start_note(self, attrs=None):
-        self.start_raw_admonition('note')
-
-    def end_note(self):
-        self.end_raw_admonition()
-
     def start_important(self, attrs=None):
-        self.start_raw_admonition('warning')
+        self.new_paragraph()
+        self.doc.write('.. warning::')
+        self.indent()
+        self.new_paragraph()
 
     def end_important(self):
-        self.end_raw_admonition()
+        self.dedent()
+        self.new_paragraph()
 
     def start_danger(self, attrs=None):
-        self.start_raw_admonition('danger')
+        self.new_paragraph()
+        self.doc.write('.. danger::')
+        self.indent()
+        self.new_paragraph()
 
     def end_danger(self):
-        self.end_raw_admonition()
+        self.dedent()
+        self.new_paragraph()
 
     def start_a(self, attrs=None):
         # Write an empty space to guard against zero whitespace

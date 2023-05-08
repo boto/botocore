@@ -49,8 +49,7 @@ class TestWaiterDocumenter(BaseDocsTest):
                     'every 15 seconds until a successful state is reached. An error '
                     'is returned after 40 failed checks.'
                 ),
-                '    .. raw:: html',
-                '      <h3>Request Syntax</h3>',
+                '    **Request Syntax**',
                 '    ::',
                 '      waiter.wait(',
                 '          Biz=\'string\'',

@@ -771,8 +771,7 @@ class TestCreateWaiter(unittest.TestCase):
                 'seconds until a successful state is reached. An error '
                 'is returned after 1 failed checks.'
             ),
-            '    .. raw:: html',
-            '      <h3>Request Syntax</h3>',
+            '    **Request Syntax**',
             '    ::',
             '      waiter.wait(',
             "          bar='string'",
