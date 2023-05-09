@@ -317,7 +317,7 @@ class HTML5Translator(SphinxHTML5Translator):
         Opens the h3 tag for a specific set of words/phrases and opens the
         strong tag for all others.
         """
-        if node[0] in self.STRONG_TO_H3_HEADINGS:
+        if len(node) > 0 and node[0] in self.STRONG_TO_H3_HEADINGS:
             self.body.append(self.starttag(node, 'h3', ''))
         else:
             self.body.append(self.starttag(node, 'strong', ''))
