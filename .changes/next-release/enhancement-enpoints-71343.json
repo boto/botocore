@@ -1,5 +1,5 @@
 {
   "type": "enhancement",
-  "category": "enpoints",
+  "category": "endpoints",
   "description": "Fix cache implementation to reduce memory consumption."
 }
