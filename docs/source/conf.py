@@ -286,52 +286,50 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
-class HTML5Translator(SphinxHTML5Translator):
-    """
-    This is our custom HTML5Translator which extends the one provided by Sphinx.
-    """
+class BotocoreHTML5Translator(SphinxHTML5Translator):
+    """Extension of Sphinx's ``HTML5Translator`` for Botocore documentation."""
+
     STRONG_TO_H3_HEADINGS = [
-        'Example',
-        'Examples',
-        'Exceptions',
-        'Request Syntax',
-        'Response Structure',
-        'Response Syntax',
-        'Structure',
-        'Syntax'
+        "Example",
+        "Examples",
+        "Exceptions",
+        "Request Syntax",
+        "Response Structure",
+        "Response Syntax",
+        "Structure",
+        "Syntax",
     ]
 
-    def visit_admonition(self, node, name=''):
-        """Uses the h3 tag for admonition titles instead of the p tag"""
-        self.body.append(self.starttag(
-            node, 'div', CLASS=('admonition ' + name)))
+    def visit_admonition(self, node, name=""):
+        """Uses the h3 tag for admonition titles instead of the p tag."""
+        self.body.append(self.starttag(node, "div", CLASS=("admonition " + name)))
         if name:
-            title = (
-                f"<h3 class='admonition-title'>"
-                f"{admonitionlabels[name]}</h3>"
-            )
+            title = f"<h3 class='admonition-title'> {admonitionlabels[name]}</h3>"
             self.body.append(title)
 
     def visit_strong(self, node):
-        """
+        """Visit a strong HTML element.
+
         Opens the h3 tag for a specific set of words/phrases and opens the
         strong tag for all others.
         """
         if len(node) > 0 and node[0] in self.STRONG_TO_H3_HEADINGS:
-            self.body.append(self.starttag(node, 'h3', ''))
+            self.body.append(self.starttag(node, "h3", ""))
         else:
-            self.body.append(self.starttag(node, 'strong', ''))
+            self.body.append(self.starttag(node, "strong", ""))
 
     def depart_strong(self, node):
-        """
+        """Depart a strong HTML element.
+
         Closes the h3 tag for a specific set of words/phrases and closes the
         strong tag for all others.
         """
         if node[0] in self.STRONG_TO_H3_HEADINGS:
-            self.body.append('</h3>')
+            self.body.append("</h3>")
         else:
-            self.body.append('</strong>')
+            self.body.append("</strong>")
+
 
 def setup(app):
     # Register our custom HTML translator.
-    app.set_translator('html', HTML5Translator)
+    app.set_translator("html", BotocoreHTML5Translator)
