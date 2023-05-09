@@ -100,10 +100,19 @@ function makeCodeBlocksScrollable() {
 		codeCell.tabIndex = 0;
 	});
 }
+// Makes the left and right navigation menus keyboard accessible.
+function makeNavigationKeyboardFriendly(){
+	$('label').on('keypress', function(event) {
+		if (event.which === 13) {
+			document.getElementById('__navigation').click();
+		}
+	});
+}
 // Functions to run after the DOM loads.
 function runAfterDOMLoads() {
 	expandSubMenu();
 	makeCodeBlocksScrollable();
+	makeNavigationKeyboardFriendly();
 }
 // Run a function after the DOM loads.
 function ready(fn) {

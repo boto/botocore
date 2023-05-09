@@ -31,7 +31,28 @@ h1, code, li {
 .sidebar-logo{
     padding: 20% 15%;
 }
-
+/* Hides the icon parent container by default and positions items from the right. */
+.close-icon-parent-div {
+    display: none;
+    justify-content: right;
+}
+/* Hides the icon by default and applies relevant styling. */
+.nav-close-icon{
+    color: var(--color-foreground-secondary);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+/* We only want to show the close-icon on medium-small screens. */
+@media (max-width: 67em) {
+    .close-icon-parent-div {
+        display: flex;
+    }
+    .nav-close-icon{
+        display: flex;
+    }
+}
 /* Apply furo styled admonition titles for <h3>. */
 h3.admonition-title {
   position: relative;
