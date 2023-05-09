@@ -912,10 +912,20 @@ class BaseClient:
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
         }
-        request_dict = self._convert_to_request_dict(
+        api_params = self._emit_api_params(
             api_params=api_params,
             operation_model=operation_model,
             context=request_context,
+        )
+        endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+            operation_model, api_params, request_context
+        )
+        request_dict = self._convert_to_request_dict(
+            api_params=api_params,
+            operation_model=operation_model,
+            endpoint_url=endpoint_url,
+            context=request_context,
+            headers=additional_headers,
         )
         resolve_checksum_context(request_dict, operation_model, api_params)
 
@@ -973,23 +983,11 @@ class BaseClient:
         self,
         api_params,
         operation_model,
-        endpoint_url=None,
+        endpoint_url,
         context=None,
         headers=None,
         set_user_agent_header=True,
-        ignore_signing_region=False,
     ):
-        api_params = self._emit_api_params(
-            api_params=api_params,
-            operation_model=operation_model,
-            context=context,
-        )
-        endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
-            operation_model=operation_model,
-            params=api_params,
-            request_context=context,
-            ignore_signing_region=ignore_signing_region,
-        )
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model
         )
@@ -997,8 +995,6 @@ class BaseClient:
             request_dict.pop('host_prefix', None)
         if headers is not None:
             request_dict['headers'].update(headers)
-        if additional_headers is not None:
-            request_dict['headers'].update(additional_headers)
         if set_user_agent_header:
             user_agent = self._client_config.user_agent
         else:

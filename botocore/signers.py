@@ -656,13 +656,25 @@ def generate_presigned_url(
         raise UnknownClientMethodError(method_name=client_method)
 
     operation_model = self.meta.service_model.operation_model(operation_name)
-    bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
-    request_dict = self._convert_to_request_dict(
+    params = self._emit_api_params(
         api_params=params,
         operation_model=operation_model,
         context=context,
-        set_user_agent_header=False,
+    )
+    bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
+    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+        operation_model,
+        params,
+        context,
         ignore_signing_region=(not bucket_is_arn),
+    )
+    request_dict = self._convert_to_request_dict(
+        api_params=params,
+        operation_model=operation_model,
+        endpoint_url=endpoint_url,
+        context=context,
+        headers=additional_headers,
+        set_user_agent_header=False,
     )
 
     # Switch out the http method if user specified it.
@@ -770,14 +782,25 @@ def generate_presigned_post(
     # We choose the CreateBucket operation model because its url gets
     # serialized to what a presign post requires.
     operation_model = self.meta.service_model.operation_model('CreateBucket')
-    params = {'Bucket': bucket}
+    params = self._emit_api_params(
+        api_params={'Bucket': bucket},
+        operation_model=operation_model,
+        context=context,
+    )
     bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
+    endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
+        operation_model,
+        params,
+        context,
+        ignore_signing_region=(not bucket_is_arn),
+    )
     request_dict = self._convert_to_request_dict(
         api_params=params,
         operation_model=operation_model,
+        endpoint_url=endpoint_url,
         context=context,
+        headers=additional_headers,
         set_user_agent_header=False,
-        ignore_signing_region=(not bucket_is_arn),
     )
 
     # Append that the bucket name to the list of conditions.
