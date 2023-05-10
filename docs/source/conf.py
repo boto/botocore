@@ -13,7 +13,8 @@
 
 import datetime, sys, os
 from botocore.session import get_session
-from botocore.docs import generate_docs, BotoHTML5Translator
+from botocore.docs import generate_docs
+from botocore.docs.translator import BotoHTML5Translator
 
 generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
 
