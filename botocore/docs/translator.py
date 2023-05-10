@@ -30,9 +30,13 @@ class BotoHTML5Translator(SphinxHTML5Translator):
 
     def visit_admonition(self, node, name=""):
         """Uses the h3 tag for admonition titles instead of the p tag."""
-        self.body.append(self.starttag(node, "div", CLASS=("admonition " + name)))
+        self.body.append(
+            self.starttag(node, "div", CLASS=("admonition " + name))
+        )
         if name:
-            title = f"<h3 class='admonition-title'> {admonitionlabels[name]}</h3>"
+            title = (
+                f"<h3 class='admonition-title'> {admonitionlabels[name]}</h3>"
+            )
             self.body.append(title)
 
     def visit_strong(self, node):
