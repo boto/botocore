@@ -668,6 +668,7 @@ def generate_presigned_url(
         context,
         ignore_signing_region=(not bucket_is_arn),
     )
+
     request_dict = self._convert_to_request_dict(
         api_params=params,
         operation_model=operation_model,
@@ -794,6 +795,7 @@ def generate_presigned_post(
         context,
         ignore_signing_region=(not bucket_is_arn),
     )
+
     request_dict = self._convert_to_request_dict(
         api_params=params,
         operation_model=operation_model,
