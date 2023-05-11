@@ -24,7 +24,7 @@ CLIENT_KWARGS = {
 
 def _service_alias_test_cases():
     session = botocore.session.get_session()
-    for (alias, name) in SERVICE_NAME_ALIASES.items():
+    for alias, name in SERVICE_NAME_ALIASES.items():
         yield session, name, alias
 
 

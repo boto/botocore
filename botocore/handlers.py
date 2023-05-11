@@ -840,7 +840,7 @@ def _decode_list_object(top_level_keys, nested_keys, parsed, context):
             if key in parsed:
                 parsed[key] = unquote_str(parsed[key])
         # URL decode nested keys from the response if present.
-        for (top_key, child_key) in nested_keys:
+        for top_key, child_key in nested_keys:
             if top_key in parsed:
                 for member in parsed[top_key]:
                     member[child_key] = unquote_str(member[child_key])

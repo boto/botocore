@@ -371,7 +371,6 @@ class BadIMDSRequestError(Exception):
 
 
 class IMDSFetcher:
-
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
     _TOKEN_PATH = 'latest/api/token'
     _TOKEN_TTL = '21600'
@@ -2862,7 +2861,6 @@ class S3ControlArnParamHandlerv2(S3ControlArnParamHandler):
 
 
 class ContainerMetadataFetcher:
-
     TIMEOUT_SECONDS = 2
     RETRY_ATTEMPTS = 3
     SLEEP_TIME = 1

@@ -204,7 +204,6 @@ class Serializer:
 
 
 class QuerySerializer(Serializer):
-
     TIMESTAMP_FORMAT = 'iso8601'
 
     def serialize_to_request(self, parameters, operation_model):

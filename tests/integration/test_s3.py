@@ -125,7 +125,6 @@ def teardown_module():
 
 
 class BaseS3ClientTest(unittest.TestCase):
-
     DEFAULT_DELAY = 5
 
     def setUp(self):

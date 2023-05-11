@@ -834,7 +834,6 @@ class EventStreamXMLParser(BaseEventStreamParser, BaseXMLResponseParser):
 
 
 class JSONParser(BaseJSONParser):
-
     EVENT_STREAM_PARSER_CLS = EventStreamJSONParser
 
     """Response parser for the "json" protocol."""
@@ -994,7 +993,6 @@ class BaseRestParser(ResponseParser):
 
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
-
     EVENT_STREAM_PARSER_CLS = EventStreamJSONParser
 
     def _initial_body_parse(self, body_contents):
@@ -1025,7 +1023,6 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
-
     EVENT_STREAM_PARSER_CLS = EventStreamXMLParser
 
     def _initial_body_parse(self, xml_string):

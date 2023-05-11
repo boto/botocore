@@ -190,7 +190,7 @@ class JSONFileLoader:
         :return: The loaded data if it exists, otherwise None.
 
         """
-        for (ext, open_method) in _JSON_OPEN_METHODS.items():
+        for ext, open_method in _JSON_OPEN_METHODS.items():
             data = self._load_file(file_path + ext, open_method)
             if data is not None:
                 return data
