@@ -299,14 +299,14 @@ def test_all_positive_cases():
     """Test all positive cases can be decoded on the same buffer."""
     event_buffer = EventStreamBuffer()
     # add all positive test cases to the same buffer
-    for (encoded, _) in POSITIVE_CASES:
+    for encoded, _ in POSITIVE_CASES:
         event_buffer.add_data(encoded)
     # collect all of the expected messages
     expected_messages = [decoded for (_, decoded) in POSITIVE_CASES]
     # collect all of the decoded messages
     decoded_messages = list(event_buffer)
     # assert all messages match what we expect
-    for (expected, decoded) in zip(expected_messages, decoded_messages):
+    for expected, decoded in zip(expected_messages, decoded_messages):
         assert_message_equal(expected, decoded)
 
 

@@ -1642,7 +1642,6 @@ class TestRegionRedirect(BaseS3OperationTest):
         self.assertEqual(self.http_stubber.requests[2].url, fixed_url)
 
     def test_resign_request_with_region_when_needed(self):
-
         # Create a client with no explicit configuration so we can
         # verify the default behavior.
         client = self.session.create_client("s3", "us-west-2")
@@ -1824,7 +1823,6 @@ class TestFipsRegionRedirect(BaseS3OperationTest):
         self.assertEqual(self.http_stubber.requests[2].url, fixed_url)
 
     def test_fips_resign_request_with_region_when_needed(self):
-
         # Create a client with no explicit configuration so we can
         # verify the default behavior.
         client = self.session.create_client("s3", "fips-us-west-2")
@@ -3301,7 +3299,6 @@ def _create_s3_client(
 
 
 def _addressing_for_presigned_url_test_cases():
-
     # us-east-1, or the "global" endpoint. A signature version of
     # None means the user doesn't have signature version configured.
     yield dict(

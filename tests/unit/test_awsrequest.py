@@ -573,7 +573,6 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # This simulates what urllib3 does with connections
         # in its connection pool logic.
         with mock.patch('urllib3.util.wait_for_read') as wait_mock:
-
             # First fast fail with a 500 response when we first
             # send the expect header.
             s = FakeSocket(b'HTTP/1.1 500 Internal Server Error\r\n')

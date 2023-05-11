@@ -77,7 +77,7 @@ class RawHTTPRequest(BaseHTTPRequestHandler):
 
 
 def generate_test_cases():
-    for (dirpath, dirnames, filenames) in os.walk(TESTSUITE_DIR):
+    for dirpath, dirnames, filenames in os.walk(TESTSUITE_DIR):
         if not any(f.endswith('.req') for f in filenames):
             continue
 

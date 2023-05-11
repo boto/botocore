@@ -554,7 +554,6 @@ class TreeRule(BaseRule):
 
 
 class RuleCreator:
-
     endpoint = EndpointRule
     error = ErrorRule
     tree = TreeRule

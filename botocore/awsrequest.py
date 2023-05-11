@@ -445,7 +445,6 @@ class AWSRequest:
         auth_path=None,
         stream_output=False,
     ):
-
         self._request_preparer = self._REQUEST_PREPARER_CLS()
 
         # Default empty dicts for dict params.
@@ -565,7 +564,7 @@ class AWSResponse:
             # NOTE: requests would attempt to call stream and fall back
             # to a custom generator that would call read in a loop, but
             # we don't rely on this behavior
-            self._content = bytes().join(self.raw.stream()) or bytes()
+            self._content = b''.join(self.raw.stream()) or b''
 
         return self._content
 

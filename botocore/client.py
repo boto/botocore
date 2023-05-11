@@ -819,7 +819,6 @@ class ClientEndpointBridge:
 
 
 class BaseClient:
-
     # This is actually reassigned with the py->op_name mapping
     # when the client creator creates the subclass.  This value is used
     # because calls such as client.get_paginator('list_objects') use the
