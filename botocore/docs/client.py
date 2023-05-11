@@ -335,6 +335,7 @@ class ClientExceptionsDocumenter:
     def _add_exception_catch_example(self, section, shape):
         section.style.new_line()
         section.style.bold('Example')
+        section.style.new_paragraph()
         section.style.start_codeblock()
         section.write('try:')
         section.style.indent()

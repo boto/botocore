@@ -14,6 +14,7 @@
 import datetime, sys, os
 from botocore.session import get_session
 from botocore.docs import generate_docs
+from botocore.docs.translator import BotoHTML5Translator
 
 generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
 
@@ -283,3 +284,8 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+def setup(app):
+    # Register our custom HTML translator.
+    app.set_translator("html", BotoHTML5Translator)
