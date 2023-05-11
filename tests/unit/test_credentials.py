@@ -1914,7 +1914,6 @@ class TestCanonicalNameSourceProvider(BaseEnvVar):
 
 
 class TestAssumeRoleCredentialProvider(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):

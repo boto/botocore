@@ -112,7 +112,7 @@ class CrtSigV4Auth(BaseSigner):
         crt_path = url_parts.path if url_parts.path else '/'
         if aws_request.params:
             array = []
-            for (param, value) in aws_request.params.items():
+            for param, value in aws_request.params.items():
                 value = str(value)
                 array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)
@@ -309,7 +309,7 @@ class CrtSigV4AsymAuth(BaseSigner):
         crt_path = url_parts.path if url_parts.path else '/'
         if aws_request.params:
             array = []
-            for (param, value) in aws_request.params.items():
+            for param, value in aws_request.params.items():
                 value = str(value)
                 array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)

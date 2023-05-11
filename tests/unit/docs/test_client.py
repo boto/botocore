@@ -144,7 +144,8 @@ class TestClientExceptionsDocumenter(BaseDocsTest):
         self.assert_contains_lines_in_order(
             [
                 '.. py:class:: MyService.Client.exceptions.SomeException',
-                '**Example**::',
+                '**Example**',
+                '::',
                 'except client.exceptions.SomeException as e:',
                 '.. py:attribute:: response',
                 '**Syntax**',

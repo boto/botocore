@@ -656,6 +656,11 @@ def generate_presigned_url(
         raise UnknownClientMethodError(method_name=client_method)
 
     operation_model = self.meta.service_model.operation_model(operation_name)
+    params = self._emit_api_params(
+        api_params=params,
+        operation_model=operation_model,
+        context=context,
+    )
     bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
     endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
         operation_model,
@@ -778,7 +783,11 @@ def generate_presigned_post(
     # We choose the CreateBucket operation model because its url gets
     # serialized to what a presign post requires.
     operation_model = self.meta.service_model.operation_model('CreateBucket')
-    params = {'Bucket': bucket}
+    params = self._emit_api_params(
+        api_params={'Bucket': bucket},
+        operation_model=operation_model,
+        context=context,
+    )
     bucket_is_arn = ArnParser.is_arn(params.get('Bucket', ''))
     endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
         operation_model,

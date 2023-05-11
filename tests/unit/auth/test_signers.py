@@ -38,7 +38,6 @@ class BaseTestWithFixedDate(unittest.TestCase):
 
 
 class TestHMACV1(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):
@@ -185,7 +184,6 @@ class TestHMACV1(unittest.TestCase):
 
 
 class TestSigV2(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):
@@ -266,7 +264,6 @@ class TestSigV2(unittest.TestCase):
 
 
 class TestSigV3(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):
@@ -316,7 +313,6 @@ class TestSigV3(unittest.TestCase):
 
 
 class TestS3SigV4Auth(BaseTestWithFixedDate):
-
     AuthClass = botocore.auth.S3SigV4Auth
     maxDiff = None
 
@@ -644,7 +640,6 @@ class TestSigV4(unittest.TestCase):
 
 
 class TestSigV4Resign(BaseTestWithFixedDate):
-
     maxDiff = None
     AuthClass = botocore.auth.SigV4Auth
 
@@ -783,7 +778,6 @@ class TestS3SigV2Presign(BasePresignTest):
 
 
 class TestSigV4Presign(BasePresignTest):
-
     maxDiff = None
     AuthClass = botocore.auth.SigV4QueryAuth
 

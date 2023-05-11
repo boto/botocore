@@ -456,7 +456,6 @@ class EventAliaser(BaseEventHooks):
             return self._alias_name_cache[event_name]
 
         for old_part, new_part in self._event_aliases.items():
-
             # We can't simply do a string replace for everything, otherwise we
             # might end up translating substrings that we never intended to
             # translate. When there aren't any dots in the old event name

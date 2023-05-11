@@ -960,7 +960,6 @@ class CredentialProvider:
 
 
 class ProcessProvider(CredentialProvider):
-
     METHOD = 'custom-process'
 
     def __init__(self, profile_name, load_config, popen=subprocess.Popen):

@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 # TODO: This is an ideal candidate for the retryable trait once that's
 # available.
 class RetryIDPCommunicationError(BaseRetryableChecker):
-
     _SERVICE_NAME = 'sts'
 
     def is_retryable(self, context):
@@ -28,7 +27,6 @@ class RetryIDPCommunicationError(BaseRetryableChecker):
 
 
 class RetryDDBChecksumError(BaseRetryableChecker):
-
     _CHECKSUM_HEADER = 'x-amz-crc32'
     _SERVICE_NAME = 'dynamodb'
 
