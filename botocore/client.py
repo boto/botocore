@@ -819,7 +819,6 @@ class ClientEndpointBridge:
 
 
 class BaseClient:
-
     # This is actually reassigned with the py->op_name mapping
     # when the client creator creates the subclass.  This value is used
     # because calls such as client.get_paginator('list_objects') use the
@@ -913,6 +912,11 @@ class BaseClient:
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
         }
+        api_params = self._emit_api_params(
+            api_params=api_params,
+            operation_model=operation_model,
+            context=request_context,
+        )
         endpoint_url, additional_headers = self._resolve_endpoint_ruleset(
             operation_model, api_params, request_context
         )
@@ -984,9 +988,6 @@ class BaseClient:
         headers=None,
         set_user_agent_header=True,
     ):
-        api_params = self._emit_api_params(
-            api_params, operation_model, context
-        )
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model
         )
