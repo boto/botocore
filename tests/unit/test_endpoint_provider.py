@@ -491,3 +491,23 @@ def test_endpoint_reevaluates_result(endpoint_provider, monkeypatch):
     for region in regions:
         endpoint_provider.resolve_endpoint(Region=region)
     assert mock_evaluate.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "bucket, expected_value",
+    [
+        ("mybucket", True),
+        ("ab", False),
+        ("a.b", True),
+        ("my.great.bucket.aws.com", True),
+        ("mY.GREAT.bucket.aws.com", False),
+        ("192.168.1.1", False),
+    ],
+)
+def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
+    rule_lib, bucket, expected_value
+):
+    assert (
+        rule_lib.aws_is_virtual_hostable_s3_bucket(bucket, True)
+        == expected_value
+    )
