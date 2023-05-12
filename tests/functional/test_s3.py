@@ -3502,22 +3502,8 @@ def _addressing_for_presigned_url_test_cases():
         bucket="foo.b.biz",
         key="key",
         s3_config={"addressing_style": "virtual"},
-        is_secure=False,
-        expected_url="http://s3.amazonaws.com/foo.b.biz/key",
-    )
-    yield dict(
-        bucket="foo.b.biz",
-        key="key",
-        s3_config={"addressing_style": "virtual"},
         customer_provided_endpoint="https://s3.us-west-2.amazonaws.com",
         expected_url="https://s3.us-west-2.amazonaws.com/foo.b.biz/key",
-    )
-    yield dict(
-        region="us-west-1",
-        bucket="foo.b.biz",
-        key="key",
-        s3_config={"addressing_style": "virtual"},
-        expected_url="https://s3.us-west-1.amazonaws.com/foo.b.biz/key",
     )
 
 
