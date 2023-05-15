@@ -398,13 +398,9 @@ class RuleSetStandardLibrary:
         ):
             return False
 
-        if allow_subdomains is True:
-            return all(
-                self.aws_is_virtual_hostable_s3_bucket(label, False)
-                for label in value.split(".")
-            )
-
-        return self.is_valid_host_label(value, allow_subdomains=False)
+        return self.is_valid_host_label(
+            value, allow_subdomains=allow_subdomains
+        )
 
 
 # maintains backwards compatibility as `Library` was misspelled
