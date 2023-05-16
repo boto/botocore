@@ -3315,3 +3315,12 @@ class JSONFileCache:
                 return value.isoformat()
             return value.strftime('%Y-%m-%dT%H:%M:%S%Z')
         return value
+
+
+def get_crt_version():
+    try:
+        import awscrt
+
+        return awscrt.__version__
+    except AttributeError:
+        return None

@@ -55,6 +55,9 @@ LEGACY_GLOBAL_STS_REGIONS = [
     'us-west-1',
     'us-west-2',
 ]
+# Maximum allowed length of the ``user_agent_appid`` config field. Longer
+# values get truncated and result in a warning-level log message.
+USERAGENT_APPID_MAXLEN = 50
 
 
 class ClientArgsCreator:
@@ -66,13 +69,14 @@ class ClientArgsCreator:
         loader,
         exceptions_factory,
         config_store,
+        user_agent_creator=None,
     ):
         self._event_emitter = event_emitter
-        self._user_agent = user_agent
         self._response_parser_factory = response_parser_factory
         self._loader = loader
         self._exceptions_factory = exceptions_factory
         self._config_store = config_store
+        self._session_ua_creator = user_agent_creator
 
     def get_client_args(
         self,
@@ -159,6 +163,11 @@ class ClientArgsCreator:
             event_emitter,
         )
 
+        # Copy the session's user agent factory and adds client configuration.
+        client_ua_creator = self._session_ua_creator.with_client_config(
+            new_config
+        )
+
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -171,6 +180,7 @@ class ClientArgsCreator:
             'partition': partition,
             'exceptions_factory': self._exceptions_factory,
             'endpoint_ruleset_resolver': ruleset_resolver,
+            'user_agent_creator': client_ua_creator,
         }
 
     def compute_client_args(
@@ -193,14 +203,6 @@ class ClientArgsCreator:
             if raw_value is not None:
                 parameter_validation = ensure_boolean(raw_value)
 
-        # Override the user agent if specified in the client config.
-        user_agent = self._user_agent
-        if client_config is not None:
-            if client_config.user_agent is not None:
-                user_agent = client_config.user_agent
-            if client_config.user_agent_extra is not None:
-                user_agent += ' %s' % client_config.user_agent_extra
-
         s3_config = self.compute_s3_config(client_config)
         endpoint_config = self._compute_endpoint_config(
             service_name=service_name,
@@ -217,7 +219,6 @@ class ClientArgsCreator:
         config_kwargs = dict(
             region_name=endpoint_config['region_name'],
             signature_version=endpoint_config['signature_version'],
-            user_agent=user_agent,
         )
         if 'dualstack' in endpoint_variant_tags:
             config_kwargs.update(use_dualstack_endpoint=True)
@@ -234,9 +235,13 @@ class ClientArgsCreator:
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
                 tcp_keepalive=client_config.tcp_keepalive,
+                user_agent=client_config.user_agent,
+                user_agent_extra=client_config.user_agent_extra,
+                user_agent_appid=client_config.user_agent_appid,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
+        self._compute_user_agent_appid_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -249,7 +254,6 @@ class ClientArgsCreator:
         return {
             'service_name': service_name,
             'parameter_validation': parameter_validation,
-            'user_agent': user_agent,
             'endpoint_config': endpoint_config,
             'protocol': protocol,
             'config_kwargs': config_kwargs,
@@ -646,3 +650,19 @@ class ClientArgsCreator:
             ),
             EPRBuiltins.SDK_ENDPOINT: given_endpoint,
         }
+
+    def _compute_user_agent_appid_config(self, config_kwargs):
+        user_agent_appid = config_kwargs.get('user_agent_appid')
+        if user_agent_appid is None:
+            user_agent_appid = self._config_store.get_config_variable(
+                'user_agent_appid'
+            )
+        if (
+            user_agent_appid is not None
+            and len(user_agent_appid) > USERAGENT_APPID_MAXLEN
+        ):
+            logger.warning(
+                'The configured value for user_agent_appid exceeds the '
+                f'maximum length of {USERAGENT_APPID_MAXLEN} characters.'
+            )
+        config_kwargs['user_agent_appid'] = user_agent_appid
