@@ -55,6 +55,9 @@ LEGACY_GLOBAL_STS_REGIONS = [
     'us-west-1',
     'us-west-2',
 ]
+# Maximum allowed length of the ``user_agent_appid`` config field. Longer
+# values get truncated and result in a warning-level log message.
+USERAGENT_APPID_MAXLEN = 50
 
 
 class ClientArgsCreator:
@@ -198,6 +201,17 @@ class ClientArgsCreator:
         if client_config is not None:
             if client_config.user_agent is not None:
                 user_agent = client_config.user_agent
+            if client_config.user_agent_appid is not None:
+                appid = client_config.user_agent_appid
+                if len(appid) > USERAGENT_APPID_MAXLEN:
+                    logger.warning(
+                        'The configured value for user_agent_appid exceeds the '
+                        f'maximum length of {USERAGENT_APPID_MAXLEN} '
+                        'characters and will be truncated. The original value '
+                        f'is: {client_config.user_agent_appid}'
+                    )
+                    appid = appid[:USERAGENT_APPID_MAXLEN]
+                user_agent += ' app/%s' % appid
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
