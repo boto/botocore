@@ -1184,6 +1184,7 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         ('POST', True),
         ('PUT', True),
         ('DELETE', False),
+        (None, True),
     ],
 )
 def test_generate_presigned_url_content_type_removal(
@@ -1198,4 +1199,4 @@ def test_generate_presigned_url_content_type_removal(
         },
         HttpMethod=request_method,
     )
-    assert 'content-type' in url == content_type_present
+    assert ('content-type' in url) == content_type_present
