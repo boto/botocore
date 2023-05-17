@@ -13,6 +13,7 @@
 import datetime
 import json
 
+import pytest
 from dateutil.tz import tzutc
 
 import botocore
@@ -37,6 +38,12 @@ from botocore.signers import (
     generate_db_auth_token,
 )
 from tests import assert_url_equal, mock, unittest
+
+
+@pytest.fixture(scope='function')
+def polly_client():
+    session = botocore.session.get_session()
+    return session.create_client('polly')
 
 
 class BaseSignerTest(unittest.TestCase):
@@ -1168,3 +1175,27 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         self.assertIn(region, result)
         # The hostname won't be changed even if a different region is specified
         self.assertIn(hostname, result)
+
+
+@pytest.mark.parametrize(
+    'request_method, content_type_present',
+    [
+        ('GET', False),
+        ('POST', True),
+        ('PUT', True),
+        ('DELETE', False),
+    ],
+)
+def test_generate_presigned_url_content_type_removal(
+    polly_client, request_method, content_type_present
+):
+    url = polly_client.generate_presigned_url(
+        'synthesize_speech',
+        Params={
+            'OutputFormat': 'mp3',
+            'Text': 'Hello world!',
+            'VoiceId': 'Joanna',
+        },
+        HttpMethod=request_method,
+    )
+    assert 'content-type' in url == content_type_present
