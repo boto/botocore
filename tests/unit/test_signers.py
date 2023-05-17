@@ -1189,10 +1189,14 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         (None, True),
     ],
 )
+@mock.patch('botocore.signers.RequestSigner.generate_presigned_url')
 def test_generate_presigned_url_content_type_removal(
-    polly_client, request_method, content_type_present
+    generate_presigned_url_mock,
+    polly_client,
+    request_method,
+    content_type_present,
 ):
-    url = polly_client.generate_presigned_url(
+    polly_client.generate_presigned_url(
         'synthesize_speech',
         Params={
             'OutputFormat': 'mp3',
@@ -1201,4 +1205,7 @@ def test_generate_presigned_url_content_type_removal(
         },
         HttpMethod=request_method,
     )
-    assert ('content-type' in url) == content_type_present
+    assert (
+        'Content-Type'
+        in generate_presigned_url_mock.call_args[1]['request_dict']['headers']
+    ) == content_type_present
