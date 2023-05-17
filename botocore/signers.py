@@ -685,7 +685,7 @@ def generate_presigned_url(
         # If we're transforming to a method without formal body
         # semantics we need to remove the Content-Type header.
         if (
-            request_dict['method'].lower() in ('get', 'head', 'options')
+            http_method.lower() in ('get', 'head', 'options')
             and 'Content-Type' in request_dict['headers']
         ):
             del request_dict['headers']['Content-Type']
