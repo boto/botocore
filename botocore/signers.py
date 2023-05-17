@@ -684,8 +684,7 @@ def generate_presigned_url(
 
     # Requests that are bodiless should not have the `Content-Type` header`
     if (
-        request_dict['method'].lower()
-        in ('get', 'head', 'delete', 'options', 'trace')
+        request_dict['method'].lower() in ('get', 'head', 'options')
         and 'Content-Type' in request_dict['headers']
     ):
         del request_dict['headers']['Content-Type']

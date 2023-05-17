@@ -1181,9 +1181,11 @@ class TestGenerateDBAuthToken(BaseSignerTest):
     'request_method, content_type_present',
     [
         ('GET', False),
+        ('HEAD', False),
+        ('OPTIONS', False),
         ('POST', True),
         ('PUT', True),
-        ('DELETE', False),
+        ('DELETE', True),
         (None, True),
     ],
 )
