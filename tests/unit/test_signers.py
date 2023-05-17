@@ -43,7 +43,7 @@ from tests import assert_url_equal, mock, unittest
 @pytest.fixture(scope='function')
 def polly_client():
     session = botocore.session.get_session()
-    return session.create_client('polly')
+    return session.create_client('polly', region_name='us-west-2')
 
 
 class BaseSignerTest(unittest.TestCase):
