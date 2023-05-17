@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "generate_presigned_url",
+  "description": "Remove `Content-Type` header from bodiless request types."
+}
