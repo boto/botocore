@@ -28,6 +28,7 @@ from botocore.endpoint import EndpointCreator
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
+from botocore.useragent import sanitize_user_agent_string_component
 from botocore.utils import ensure_boolean, is_s3_accelerate_url
 
 logger = logging.getLogger(__name__)
@@ -202,7 +203,9 @@ class ClientArgsCreator:
             if client_config.user_agent is not None:
                 user_agent = client_config.user_agent
             if client_config.user_agent_appid is not None:
-                appid = client_config.user_agent_appid
+                appid = sanitize_user_agent_string_component(
+                    client_config.user_agent_appid, allow_hash=False
+                )
                 if len(appid) > USERAGENT_APPID_MAXLEN:
                     logger.warning(
                         'The configured value for user_agent_appid exceeds the '

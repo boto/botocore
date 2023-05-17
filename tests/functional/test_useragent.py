@@ -141,3 +141,20 @@ def test_user_agent_long_appid_gets_truncated(
         in caplog.text
     )
     assert sixtychars in caplog.text
+
+
+def test_user_agent_appid_gets_sanitized(
+    useragent_cap_client, stubbed_list_buckets, caplog
+):
+    # Parentheses and the copyright symbol are not valid characters in the user
+    # agent string
+    badchars = 'Acme Inc(@2099)'
+    client_cfg = Config(user_agent_appid=badchars)
+    with useragent_cap_client('s3', config=client_cfg) as client_s3:
+        with stubbed_list_buckets(client_s3):
+            with caplog.at_level(logging.INFO):
+                client_s3.list_buckets()
+
+    # given string should be truncated to 50 characters
+    uafields = client_s3.captured_user_agent_string.split(' ')
+    assert 'app/Acme-Inc--2099-' in uafields
