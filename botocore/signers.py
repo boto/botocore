@@ -682,13 +682,13 @@ def generate_presigned_url(
     if http_method is not None:
         request_dict['method'] = http_method
 
-    # If we're transforming to a method without formal body
-    # semantics we need to remove the Content-Type header.
-    if (
-        request_dict['method'].lower() in ('get', 'head', 'options')
-        and 'Content-Type' in request_dict['headers']
-    ):
-        del request_dict['headers']['Content-Type']
+        # If we're transforming to a method without formal body
+        # semantics we need to remove the Content-Type header.
+        if (
+            request_dict['method'].lower() in ('get', 'head', 'options')
+            and 'Content-Type' in request_dict['headers']
+        ):
+            del request_dict['headers']['Content-Type']
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(
