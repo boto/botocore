@@ -43,6 +43,7 @@ from tests import assert_url_equal, mock, unittest
 @pytest.fixture(scope='function')
 def polly_client():
     session = botocore.session.get_session()
+    session.set_credentials('key', 'secret')
     return session.create_client('polly', region_name='us-west-2')
 
 
@@ -1189,14 +1190,12 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         (None, True),
     ],
 )
-@mock.patch('botocore.signers.RequestSigner.generate_presigned_url')
 def test_generate_presigned_url_content_type_removal(
-    generate_presigned_url_mock,
     polly_client,
     request_method,
     content_type_present,
 ):
-    polly_client.generate_presigned_url(
+    url = polly_client.generate_presigned_url(
         'synthesize_speech',
         Params={
             'OutputFormat': 'mp3',
@@ -1205,7 +1204,4 @@ def test_generate_presigned_url_content_type_removal(
         },
         HttpMethod=request_method,
     )
-    assert (
-        'Content-Type'
-        in generate_presigned_url_mock.call_args[1]['request_dict']['headers']
-    ) == content_type_present
+    assert ('content-type' in url) == content_type_present

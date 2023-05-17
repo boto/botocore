@@ -682,7 +682,8 @@ def generate_presigned_url(
     if http_method is not None:
         request_dict['method'] = http_method
 
-    # Requests that are bodiless should not have the `Content-Type` header.
+    # If we're transforming to a method without formal body
+    # semantics we need to remove the Content-Type header.
     if (
         request_dict['method'].lower() in ('get', 'head', 'options')
         and 'Content-Type' in request_dict['headers']
