@@ -40,7 +40,7 @@ from botocore.signers import (
 from tests import assert_url_equal, mock, unittest
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def polly_client():
     session = botocore.session.get_session()
     session.set_credentials('key', 'secret')
