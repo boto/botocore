@@ -508,7 +508,8 @@ class AWSPreparedRequest:
             '<AWSPreparedRequest stream_output=%s, method=%s, url=%s, '
             'headers=%s>'
         )
-        return fmt % (self.stream_output, self.method, self.url, self.headers)
+        headers = self._redact_headers()
+        return fmt % (self.stream_output, self.method, self.url, headers)
 
     def reset_stream(self):
         """Resets the streaming body to it's initial position.
@@ -532,6 +533,17 @@ class AWSPreparedRequest:
         except Exception as e:
             logger.debug("Unable to rewind stream: %s", e)
             raise UnseekableStreamError(stream_object=self.body)
+
+    def _redact_headers(self):
+        """Redacts sensitive header values when calling the ``repr`` method."""
+
+        headers = self.headers.copy()
+        sensitive_headers = ["authorization", "x-amz-security-token"]
+        for key in sensitive_headers:
+            if key in headers and headers[key]:
+                headers[key] = "REDACTED"
+
+        return headers
 
 
 class AWSResponse:

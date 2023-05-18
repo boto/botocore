@@ -125,6 +125,24 @@ class TestAWSRequest(unittest.TestCase):
         request_repr = repr(self.prepared_request)
         self.assertEqual(request_repr, expected_repr)
 
+    def test_prepared_request_repr_redacted_headers(self):
+        headers = {
+            "Foo": "bar",
+            "Authorization": "foo",
+            "X-Amz-Security-Token": "bar",
+        }
+        request = AWSRequest(
+            method='GET', url='http://example.com', headers=headers
+        )
+        prepared_request = request.prepare()
+        expected_repr = (
+            "<AWSPreparedRequest stream_output=False, method=GET, "
+            "url=http://example.com, headers={'Foo': 'bar', "
+            "'Authorization': 'REDACTED', 'X-Amz-Security-Token': 'REDACTED'}>"
+        )
+        request_repr = repr(prepared_request)
+        self.assertEqual(request_repr, expected_repr)
+
     def test_can_prepare_url_params(self):
         request = AWSRequest(url='http://example.com/', params={'foo': 'bar'})
         prepared_request = request.prepare()
