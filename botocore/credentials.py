@@ -651,7 +651,7 @@ class CachedCredentialFetcher:
 
     def _make_file_safe(self, filename):
         # Replace :, path sep, and / to make it the string filename safe.
-        filename = filename.replace(':', '_').replace(os.path.sep, '_')
+        filename = filename.replace(':', '_').replace(os.sep, '_')
         return filename.replace('/', '_')
 
     def _get_credentials(self):
