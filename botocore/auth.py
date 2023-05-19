@@ -98,8 +98,6 @@ def _get_body_as_dict(request):
         data = json.loads(data)
     return data
 
-def _replace_header(headers, key, value):
-    
 
 class BaseSigner:
     REQUIRES_REGION = False
