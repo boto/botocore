@@ -815,8 +815,8 @@ class HmacV1Auth(BaseSigner):
         self, method, split, headers, expires=None, auth_path=None
     ):
         if self.credentials.token:
-            if 'X-Amz-Security-Token' in request.headers:
-                del request.headers['X-Amz-Security-Token']
+            if 'X-Amz-Security-Token' in headers:
+                del headers['X-Amz-Security-Token']
             headers['x-amz-security-token'] = self.credentials.token
         string_to_sign = self.canonical_string(
             method, split, headers, auth_path=auth_path
