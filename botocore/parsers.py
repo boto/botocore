@@ -237,7 +237,7 @@ class ResponseParser:
             always be present.
 
         """
-        LOG.debug('Response headers: %r', response['headers'])
+        LOG.debug('Response headers: %r', (response['headers'],))
         LOG.debug('Response body:\n%r', response['body'])
         if response['status_code'] >= 301:
             if self._is_generic_error_response(response):
@@ -425,8 +425,8 @@ class BaseXMLResponseParser(ResponseParser):
         for member_name in members:
             member_shape = members[member_name]
             if (
-                'location' in member_shape.serialization
-                or member_shape.serialization.get('eventheader')
+                    'location' in member_shape.serialization
+                    or member_shape.serialization.get('eventheader')
             ):
                 # All members with locations have already been handled,
                 # so we don't need to parse these members.
@@ -799,7 +799,7 @@ class BaseEventStreamParser(ResponseParser):
             final_parsed.update(body_parsed)
 
     def _parse_non_payload_attrs(
-        self, response, shape, member_shapes, final_parsed
+            self, response, shape, member_shapes, final_parsed
     ):
         headers = response['headers']
         for name in member_shapes:
@@ -934,7 +934,7 @@ class BaseRestParser(ResponseParser):
             final_parsed.update(body_parsed)
 
     def _parse_non_payload_attrs(
-        self, response, shape, member_shapes, final_parsed
+            self, response, shape, member_shapes, final_parsed
     ):
         headers = response['headers']
         for name in member_shapes:
@@ -966,7 +966,7 @@ class BaseRestParser(ResponseParser):
             if header_name.lower().startswith(prefix):
                 # The key name inserted into the parsed hash
                 # strips off the prefix.
-                name = header_name[len(prefix) :]
+                name = header_name[len(prefix):]
                 parsed[name] = headers[header_name]
         return parsed
 
