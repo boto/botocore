@@ -100,12 +100,37 @@ function makeCodeBlocksScrollable() {
 		codeCell.tabIndex = 0;
 	});
 }
+// Determines which of the two table-of-contents menu buttons is visible.
+function determineVisibleTocOpenMenu() {
+	const mediaQuery = window.matchMedia('(max-width: 67em)');
+	return mediaQuery.matches ? 'toc-menu-open-sm' : 'toc-menu-open-md';
+}
+// A mapping of current to next focus id's. For example, We want a corresponsing
+// menu's close button to be highlighted after a menu is opened with a keyboard.
+const NEXT_FOCUS_ID_MAP = {
+	'nav-menu-open': 'nav-menu-close',
+	'nav-menu-close': 'nav-menu-open',
+	'toc-menu-open-sm': 'toc-menu-close',
+	'toc-menu-open-md': 'toc-menu-close',
+	'toc-menu-close': determineVisibleTocOpenMenu()
+};
+// Adds event listener to toggle which of the two table-of-content menu button is visible.
+window.matchMedia('(max-width: 67em)').addEventListener('change', () => {
+	NEXT_FOCUS_ID_MAP['toc-menu-close'] = determineVisibleTocOpenMenu();
+});
 // Makes the left and right navigation menus keyboard accessible.
-function makeNavigationKeyboardFriendly(){
-	$('label').on('keypress', function(event) {
-		if (event.which === 13) {
-			document.getElementById('__navigation').click();
-		}
+function makeNavigationKeyboardFriendly() {
+	const labels = document.querySelectorAll('label');
+	labels.forEach(element => {
+		element.setAttribute('tabindex', '0');
+		element.addEventListener('keypress', function (event) {
+			if (event.key === 'Enter') {
+				document.getElementById(element.getAttribute('for')).click();
+				if (element.id in NEXT_FOCUS_ID_MAP) {
+					document.getElementById(NEXT_FOCUS_ID_MAP[element.id]).focus();
+				}
+			}
+		});
 	});
 }
 // Functions to run after the DOM loads.

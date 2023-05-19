@@ -16,6 +16,16 @@ furnished to do so, subject to the following conditions:
     document.body.dataset.theme = localStorage.getItem("theme") || "auto";
 </script>
 {% include "partials/icons.html" %}
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="svg-close" viewBox="0 0 24 24">
+        <title>Close Menu</title>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+            <line x1="2" y1="22" x2="22" y2="2"/>
+            <line x1="2" y1="2" x2="22" y2="22"/>
+        </svg>
+    </symbol>
+</svg>
 
 <input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
 <input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
@@ -37,7 +47,7 @@ furnished to do so, subject to the following conditions:
 <div class="page">
   <header class="mobile-header">
     <div class="header-left">
-      <label class="nav-overlay-icon" for="__navigation" tabindex="0">
+      <label class="nav-overlay-icon" id="nav-menu-open" for="__navigation" tabindex="0">
         <div class="visually-hidden">Toggle site navigation sidebar</div>
         <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
       </label>
@@ -54,7 +64,7 @@ furnished to do so, subject to the following conditions:
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon{% if furo_hide_toc %} no-toc{% endif %}" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon{% if furo_hide_toc %} no-toc{% endif %}" id="toc-menu-open-sm" for="__toc" tabindex="0">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -95,7 +105,7 @@ furnished to do so, subject to the following conditions:
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon{% if furo_hide_toc %} no-toc{% endif %}" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon{% if furo_hide_toc %} no-toc{% endif %}" id="toc-menu-open-md" for="__toc" tabindex="0">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -218,6 +228,12 @@ furnished to do so, subject to the following conditions:
       {% block right_sidebar %}
       {% if not furo_hide_toc %}
       <div class="toc-sticky toc-scroll">
+        <div class="sidebar-div show-div-md justify-content-left">
+            <label class="nav-close-icon" id="toc-menu-close" for="__toc" tabindex="0">
+                <div class="visually-hidden">Toggle site table of content right sidebar</div>
+                <i class="icon"><svg><use href="#svg-close"></use></svg></i>
+            </label>
+        </div>
         <div class="toc-title-container">
           <span class="toc-title">
             {{ _("On this page") }}
