@@ -363,6 +363,16 @@ class TestConfigValueStore(unittest.TestCase):
         self.assertIsInstance(provider, ConstantProvider)
         self.assertEqual(value, 'bar')
 
+    def test_deepcopy_preserves_overrides(self):
+        provider = ConstantProvider(100)
+        config_store = ConfigValueStore(mapping={'fake_variable': provider})
+        config_store.set_config_variable('fake_variable', 'override-value')
+
+        config_store_deepcopy = copy.deepcopy(config_store)
+
+        value = config_store_deepcopy.get_config_variable('fake_variable')
+        self.assertEqual(value, 'override-value')
+
 
 class TestInstanceVarProvider(unittest.TestCase):
     def assert_provides_value(self, name, instance_map, expected_value):

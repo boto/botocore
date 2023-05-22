@@ -403,7 +403,11 @@ class ConfigValueStore:
                 self.set_config_provider(logical_name, provider)
 
     def __deepcopy__(self, memo):
-        return ConfigValueStore(copy.deepcopy(self._mapping, memo))
+        config_store = ConfigValueStore(copy.deepcopy(self._mapping, memo))
+        for logical_name, override_value in self._overrides.items():
+            config_store.set_config_variable(logical_name, override_value)
+
+        return config_store
 
     def get_config_variable(self, logical_name):
         """
