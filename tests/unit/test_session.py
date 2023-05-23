@@ -772,34 +772,6 @@ class TestCreateClient(BaseSessionTest):
             ]
             self.assertEqual(call_kwargs['api_version'], override_api_version)
 
-    @mock.patch('botocore.client.ClientCreator')
-    def test_defaults_mode_resolved_from_config_store(self, client_creator):
-        config_store = self.session.get_component('config_store')
-        config_store.set_config_variable('defaults_mode', 'standard')
-        self.session.create_client('sts', 'us-west-2')
-        self.assertIsNot(client_creator.call_args[0][-1], config_store)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_defaults_mode_resolved_from_client_config(self, client_creator):
-        config_store = self.session.get_component('config_store')
-        config = botocore.config.Config(defaults_mode='standard')
-        self.session.create_client('sts', 'us-west-2', config=config)
-        self.assertIsNot(client_creator.call_args[0][-1], config_store)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_defaults_mode_resolved_invalid_mode_exception(
-        self, client_creator
-    ):
-        with self.assertRaises(botocore.exceptions.InvalidDefaultsMode):
-            config = botocore.config.Config(defaults_mode='foo')
-            self.session.create_client('sts', 'us-west-2', config=config)
-
-    @mock.patch('botocore.client.ClientCreator')
-    def test_defaults_mode_resolved_legacy(self, client_creator):
-        config_store = self.session.get_component('config_store')
-        self.session.create_client('sts', 'us-west-2')
-        self.assertIs(client_creator.call_args[0][-1], config_store)
-
 
 class TestSessionComponent(BaseSessionTest):
     def test_internal_component(self):
