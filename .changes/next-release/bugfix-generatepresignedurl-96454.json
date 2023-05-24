@@ -1,5 +1,5 @@
 {
   "type": "bugfix",
-  "category": "generate_presigned_url",
-  "description": "Remove `Content-Type` header if transforming to a method without body semantics."
+  "category": "handlers",
+  "description": "Remove `Content-Type` header from Polly ``synthesize_speech`` URL presigning."
 }

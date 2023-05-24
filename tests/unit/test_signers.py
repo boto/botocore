@@ -1179,21 +1179,12 @@ class TestGenerateDBAuthToken(BaseSignerTest):
 
 
 @pytest.mark.parametrize(
-    'request_method, content_type_present',
-    [
-        ('GET', False),
-        ('HEAD', False),
-        ('OPTIONS', False),
-        ('POST', True),
-        ('PUT', True),
-        ('DELETE', True),
-        (None, True),
-    ],
+    'request_method',
+    ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'DELETE', None],
 )
-def test_generate_presigned_url_content_type_removal(
+def test_generate_presigned_url_content_type_removal_for_polly(
     polly_client,
     request_method,
-    content_type_present,
 ):
     url = polly_client.generate_presigned_url(
         'synthesize_speech',
@@ -1204,4 +1195,4 @@ def test_generate_presigned_url_content_type_removal(
         },
         HttpMethod=request_method,
     )
-    assert ('content-type' in url) == content_type_present
+    assert 'content-type' not in url
