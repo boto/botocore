@@ -1195,4 +1195,4 @@ def test_generate_presigned_url_content_type_removal_for_polly(
         },
         HttpMethod=request_method,
     )
-    assert 'content-type' not in url
+    assert 'content-type' not in url.lower()
