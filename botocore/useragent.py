@@ -114,7 +114,6 @@ class UserAgentString:
         ua_session = UserAgentString.from_environment()
         ua_session.set_session_config(...)
         ua_client = ua_session.with_client_config(Config(...))
-        ua_request = ua_client.with_request_params(...)
         ua_string = ua_request.to_string()
 
     For testing or when information from all sources is available at the same
@@ -125,7 +124,6 @@ class UserAgentString:
             .from_environment()
             .set_session_config(...)
             .with_client_config(Config(...))
-            .with_request_params(...)
             .to_string()
         )
 
@@ -223,18 +221,6 @@ class UserAgentString:
         """
         cp = copy(self)
         cp._client_config = client_config
-        return cp
-
-    def with_request_params(self, uses_waiter, uses_paginator, uses_resource):
-        """
-        Create a copy with all original values and request-specific values.
-
-        :param client_config:
-        """
-        cp = copy(self)
-        cp._uses_waiter = uses_waiter
-        cp._uses_paginator = uses_paginator
-        cp._uses_resource = uses_resource
         return cp
 
     def to_string(self):
@@ -359,28 +345,12 @@ class UserAgentString:
 
     def _build_feature_metadata(self):
         """
-        *( "ft/" name ["#" version] *(RWS additional-metadata) )
+        Build the features componentes of the User-Agent header string.
 
-        The SDKs are responsible to append feature metadata to the header. It MUST follow "ft/" name ["_" version]. Version is only required if it is different from the core module. The name SHOULD be concise. Abbreviation SHOULD be used to keep the size of the header small. Additional feature metadata MAY be appended. If a feature has more metadata recorded currently in the UA header, it MUST be recorded in the new header as well as additional metadata.
-
-        Below is a list of names for existing features. Future cross-SDK features should be added to this list.
-
-        DynamoDB High Level Library: ddb-hll
-        DynamoDB Encryption Client: ddb-encrypt
-        S3 TransferManager: s3-transfer
-        S3 Encryption Client: s3-encrypt
-        Paginators: paginator
-        Waiters: waiter
-        Resources: resource
+        Botocore currently does not report any features. This may change in a
+        future version.
         """
-        ft_md = []
-        if self._uses_paginator:
-            ft_md.append(UserAgentComponent('ft', 'paginator'))
-        if self._uses_waiter:
-            ft_md.append(UserAgentComponent('ft', 'waiter'))
-        if self._uses_resource:
-            ft_md.append(UserAgentComponent('ft', 'resource'))
-        return ft_md
+        return []
 
     def _build_config_metadata(self):
         """

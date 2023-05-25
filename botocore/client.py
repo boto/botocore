@@ -1001,12 +1001,7 @@ class BaseClient:
         if headers is not None:
             request_dict['headers'].update(headers)
         if set_user_agent_header:
-            uas = self._user_agent_creator.with_request_params(
-                uses_waiter=False,  # todo
-                uses_paginator=False,  # todo
-                uses_resource=False,  # todo
-            )
-            user_agent = uas.to_string()
+            user_agent = self._user_agent_creator.to_string()
         else:
             user_agent = None
         prepare_request_dict(
