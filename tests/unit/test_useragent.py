@@ -121,7 +121,7 @@ def test_user_agent_string_with_missing_information():
         crt_version=None,
     ).with_client_config(Config())
     actual = uas.to_string()
-    assert actual == 'Botocore/1.29.134 ua/2.0 os/other lang/python'
+    assert actual == f'Botocore/{botocore_version} ua/2.0 os/other lang/python'
 
 
 def test_from_environment(monkeypatch):

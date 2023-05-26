@@ -19,6 +19,7 @@ from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
+from botocore.useragent import UserAgentString
 from tests import mock, unittest
 
 
@@ -26,8 +27,15 @@ class TestCreateClientArgs(unittest.TestCase):
     def setUp(self):
         self.event_emitter = mock.Mock(HierarchicalEmitter)
         self.config_store = ConfigValueStore()
+        user_agent_creator = UserAgentString(None, None, None, None, None)
         self.args_create = args.ClientArgsCreator(
-            self.event_emitter, None, None, None, None, self.config_store
+            event_emitter=self.event_emitter,
+            user_agent=None,
+            response_parser_factory=None,
+            loader=None,
+            exceptions_factory=None,
+            config_store=self.config_store,
+            user_agent_creator=user_agent_creator,
         )
         self.service_name = 'ec2'
         self.region = 'us-west-2'
@@ -518,6 +526,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
         event_emitter = mock.Mock(HierarchicalEmitter)
         self.config_store = ConfigValueStore()
+        user_agent_creator = UserAgentString(None, None, None, None, None)
         self.args_create = args.ClientArgsCreator(
             event_emitter=event_emitter,
             user_agent=None,
@@ -525,6 +534,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             loader=None,
             exceptions_factory=None,
             config_store=self.config_store,
+            user_agent_creator=user_agent_creator,
         )
         self.bridge = ClientEndpointBridge(
             endpoint_resolver=mock.Mock(),
