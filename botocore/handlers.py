@@ -1137,6 +1137,14 @@ def customize_endpoint_resolver_builtins(
         builtins[EndpointResolverBuiltins.AWS_S3_USE_GLOBAL_ENDPOINT] = True
 
 
+def remove_content_type_header_for_presigning(request, **kwargs):
+    if (
+        request.context.get('is_presign_request') is True
+        and 'Content-Type' in request.headers
+    ):
+        del request.headers['Content-Type']
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1240,6 +1248,10 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
     ('before-sign.s3', remove_arn_from_signing_path),
+    (
+        'before-sign.polly.SynthesizeSpeech',
+        remove_content_type_header_for_presigning,
+    ),
     ('after-call.s3.ListObjects', decode_list_object),
     ('after-call.s3.ListObjectsV2', decode_list_object_v2),
     ('after-call.s3.ListObjectVersions', decode_list_object_versions),
