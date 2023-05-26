@@ -42,6 +42,7 @@ from botocore.compat import HAS_CRT, MutableMapping
 from botocore.configprovider import (
     BOTOCORE_DEFAUT_SESSION_VARIABLES,
     ConfigChainFactory,
+    ConfiguredEndpointProvider,
     ConfigValueStore,
     DefaultConfigResolver,
     SmartDefaultsConfigStoreFactory,
@@ -975,6 +976,12 @@ class Session:
             smart_defaults_factory.merge_smart_defaults(
                 config_store, defaults_mode, region_name
             )
+
+        self._add_configured_endpoint_provider(
+            client_name=service_name,
+            config_store=config_store,
+        )
+
         client_creator = botocore.client.ClientCreator(
             loader,
             endpoint_resolver,
@@ -1043,6 +1050,17 @@ class Session:
             )
 
         return lmode
+
+    def _add_configured_endpoint_provider(self, client_name, config_store):
+        chain = ConfiguredEndpointProvider(
+            full_config=self.full_config,
+            scoped_config=self.get_scoped_config(),
+            client_name=client_name,
+        )
+        config_store.set_config_provider(
+            logical_name='endpoint_url',
+            provider=chain,
+        )
 
     def _missing_cred_vars(self, access_key, secret_key):
         if access_key is not None and secret_key is None:

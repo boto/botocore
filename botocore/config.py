@@ -194,6 +194,13 @@ class Config:
 
         Defaults to None.
 
+    :type ignore_configured_endpoint_urls: bool
+    :param ignore_configured_endpoint_urls: Setting to True disables use
+        of endpoint URLs provided via environment variables and
+        the shared configuration file.
+
+        Defaults to None.
+
     :type tcp_keepalive: bool
     :param tcp_keepalive: Enables the TCP Keep-Alive socket option used when
         creating new connections if set to True.
@@ -221,6 +228,7 @@ class Config:
             ('endpoint_discovery_enabled', None),
             ('use_dualstack_endpoint', None),
             ('use_fips_endpoint', None),
+            ('ignore_configured_endpoint_urls', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
         ]
