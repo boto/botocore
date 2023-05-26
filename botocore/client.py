@@ -39,6 +39,7 @@ from botocore.httpchecksum import (
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.retries import adaptive, standard
+from botocore.useragent import UserAgentString
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
@@ -106,7 +107,10 @@ class ClientCreator:
         # config and environment variables (and potentially more in the
         # future).
         self._config_store = config_store
-        self._user_agent_creator = user_agent_creator
+        if user_agent_creator is None:
+            self._user_agent_creator = UserAgentString.from_environment()
+        else:
+            self._user_agent_creator = user_agent_creator
 
     def create_client(
         self,

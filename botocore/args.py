@@ -69,7 +69,7 @@ class ClientArgsCreator:
         loader,
         exceptions_factory,
         config_store,
-        user_agent_creator=None,
+        user_agent_creator,
     ):
         self._event_emitter = event_emitter
         self._response_parser_factory = response_parser_factory
