@@ -73,6 +73,7 @@ from botocore.compat import MD5_AVAILABLE  # noqa
 from botocore.exceptions import MissingServiceIdError  # noqa
 from botocore.utils import hyphenize_service_id  # noqa
 from botocore.utils import is_global_accesspoint  # noqa
+from botocore.utils import SERVICE_NAME_ALIASES  # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -98,8 +99,6 @@ VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 # botocore/data/s3/2006-03-01/endpoints-rule-set-1.json
 S3_SIGNING_NAMES = ('s3', 's3-outposts', 's3-object-lambda')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
-
-SERVICE_NAME_ALIASES = {'runtime.sagemaker': 'sagemaker-runtime'}
 
 
 def handle_service_name_alias(service_name, **kwargs):
