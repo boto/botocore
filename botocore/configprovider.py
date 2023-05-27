@@ -408,6 +408,13 @@ class ConfigValueStore:
 
         return config_store
 
+    def __copy__(self):
+        config_store = ConfigValueStore(copy.copy(self._mapping))
+        for logical_name, override_value in self._overrides.items():
+            config_store.set_config_variable(logical_name, override_value)
+
+        return config_store
+
     def get_config_variable(self, logical_name):
         """
         Retrieve the value associeated with the specified logical_name
@@ -546,24 +553,28 @@ class SmartDefaultsConfigStoreFactory:
         return 'standard'
 
     def _update_provider(self, config_store, variable, value):
-        provider = config_store.get_config_provider(variable)
+        original_provider = config_store.get_config_provider(variable)
         default_provider = ConstantProvider(value)
-        if isinstance(provider, ChainProvider):
-            provider.set_default_provider(default_provider)
-            return
-        elif isinstance(provider, BaseProvider):
+        if isinstance(original_provider, ChainProvider):
+            chain_provider_copy = copy.deepcopy(original_provider)
+            chain_provider_copy.set_default_provider(default_provider)
+            default_provider = chain_provider_copy
+        elif isinstance(original_provider, BaseProvider):
             default_provider = ChainProvider(
-                providers=[provider, default_provider]
+                providers=[original_provider, default_provider]
             )
         config_store.set_config_provider(variable, default_provider)
 
     def _update_section_provider(
         self, config_store, section_name, variable, value
     ):
-        section_provider = config_store.get_config_provider(section_name)
-        section_provider.set_default_provider(
+        section_provider_copy = copy.deepcopy(
+            config_store.get_config_provider(section_name)
+        )
+        section_provider_copy.set_default_provider(
             variable, ConstantProvider(value)
         )
+        config_store.set_config_provider(section_name, section_provider_copy)
 
     def _set_retryMode(self, config_store, value):
         self._update_provider(config_store, 'retry_mode', value)

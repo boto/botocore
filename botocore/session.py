@@ -952,13 +952,13 @@ class Session:
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
-        config_store = self.get_component('config_store')
+
+        config_store = copy.copy(self.get_component('config_store'))
         defaults_mode = self._resolve_defaults_mode(config, config_store)
         if defaults_mode != 'legacy':
             smart_defaults_factory = self._get_internal_component(
                 'smart_defaults_factory'
             )
-            config_store = copy.deepcopy(config_store)
             smart_defaults_factory.merge_smart_defaults(
                 config_store, defaults_mode, region_name
             )
