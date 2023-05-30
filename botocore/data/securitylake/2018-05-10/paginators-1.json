@@ -4,10 +4,7 @@
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "dataLakeSources",
-      "non_aggregate_keys": [
-        "dataLakeArn"
-      ]
+      "result_key": "dataLakeSources"
     },
     "ListDataLakeExceptions": {
       "input_token": "nextToken",
