@@ -20,8 +20,8 @@ class TestDocDBPresignUrlInjection(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
-        self.assertIn('PreSignedUrl', body)
-        self.assertNotIn('SourceRegion', body)
+        self.assertIn(b'PreSignedUrl', body)
+        self.assertNotIn(b'SourceRegion', body)
 
     def test_create_db_cluster(self):
         params = {

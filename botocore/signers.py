@@ -185,7 +185,6 @@ class RequestSigner:
                     )
                 else:
                     raise e
-
             auth.add_auth(request)
 
     def _choose_signer(self, operation_name, signing_type, context):

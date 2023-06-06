@@ -28,6 +28,7 @@ from io import BytesIO
 import botocore
 import botocore.auth
 from botocore import utils
+from botocore.awsrequest import AWSRequestCompressor
 from botocore.compat import (
     ETree,
     OrderedDict,
@@ -38,6 +39,7 @@ from botocore.compat import (
     quote,
     unquote,
     unquote_str,
+    urlencode,
     urlsplit,
     urlunsplit,
 )
@@ -1148,6 +1150,34 @@ def remove_content_type_header_for_presigning(request, **kwargs):
         del request.headers['Content-Type']
 
 
+def urlencode_body(model, params, context, **kwargs):
+    """Urlencode the request body if it is a dictionary.
+
+    This is used for services like S3 that require the body to be urlencoded
+    when the body is a dictionary.
+    """
+    body = params.get('body')
+    if (
+        context['client_config'].signature_version != 'v2'
+        and model.service_model.protocol == 'query'
+        and isinstance(body, dict)
+    ):
+        params['body'] = urlencode(body, doseq=True, encoding='utf-8').encode(
+            'utf-8'
+        )
+
+
+def compress_request(model, params, context, **kwargs):
+    body = params.get('body')
+    config = context['client_config']
+    if config.signature_version == 'v2':
+        logger.debug(
+            "Request compression is not supported for signature version 2"
+        )
+    elif model.request_compression and body is not None:
+        AWS_REQUEST_COMPRESSOR.compress(body, context['client_config'], model)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1207,13 +1237,27 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
+    ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
+    ('before-call.rds.CopyDBClusterSnapshot', inject_presigned_url_rds),
+    ('before-call.rds.CreateDBCluster', inject_presigned_url_rds),
+    ('before-call.rds.CopyDBSnapshot', inject_presigned_url_rds),
+    ('before-call.rds.CreateDBInstanceReadReplica', inject_presigned_url_rds),
+    (
+        'before-call.rds.StartDBInstanceAutomatedBackupsReplication',
+        inject_presigned_url_rds,
+    ),
+    ('before-call.neptune.CopyDBClusterSnapshot', inject_presigned_url_rds),
+    ('before-call.neptune.CreateDBCluster', inject_presigned_url_rds),
+    ('before-call.docdb.CopyDBClusterSnapshot', inject_presigned_url_rds),
+    ('before-call.docdb.CreateDBCluster', inject_presigned_url_rds),
+    ('before-call', urlencode_body),
+    ('before-call', compress_request),
     ('before-call.s3.PutObject', conditionally_calculate_md5),
     ('before-call.s3.UploadPart', conditionally_calculate_md5),
     ('before-call.s3.DeleteObjects', escape_xml_payload),
     ('before-call.s3.PutBucketLifecycleConfiguration', escape_xml_payload),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
-    ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
     ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
@@ -1348,14 +1392,6 @@ BUILTIN_HANDLERS = [
     # RDS
     #############
     ('creating-client-class.rds', add_generate_db_auth_token),
-    ('before-call.rds.CopyDBClusterSnapshot', inject_presigned_url_rds),
-    ('before-call.rds.CreateDBCluster', inject_presigned_url_rds),
-    ('before-call.rds.CopyDBSnapshot', inject_presigned_url_rds),
-    ('before-call.rds.CreateDBInstanceReadReplica', inject_presigned_url_rds),
-    (
-        'before-call.rds.StartDBInstanceAutomatedBackupsReplication',
-        inject_presigned_url_rds,
-    ),
     # RDS PresignedUrl documentation customizations
     (
         'docs.*.rds.CopyDBClusterSnapshot.complete-section',
@@ -1380,8 +1416,6 @@ BUILTIN_HANDLERS = [
     #############
     # Neptune
     #############
-    ('before-call.neptune.CopyDBClusterSnapshot', inject_presigned_url_rds),
-    ('before-call.neptune.CreateDBCluster', inject_presigned_url_rds),
     # Neptune PresignedUrl documentation customizations
     (
         'docs.*.neptune.CopyDBClusterSnapshot.complete-section',
@@ -1394,8 +1428,6 @@ BUILTIN_HANDLERS = [
     #############
     # DocDB
     #############
-    ('before-call.docdb.CopyDBClusterSnapshot', inject_presigned_url_rds),
-    ('before-call.docdb.CreateDBCluster', inject_presigned_url_rds),
     # DocDB PresignedUrl documentation customizations
     (
         'docs.*.docdb.CopyDBClusterSnapshot.complete-section',

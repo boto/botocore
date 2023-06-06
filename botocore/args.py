@@ -260,10 +260,17 @@ class ClientArgsCreator:
                 tcp_keepalive=client_config.tcp_keepalive,
                 user_agent_extra=client_config.user_agent_extra,
                 user_agent_appid=client_config.user_agent_appid,
+                request_min_compression_size_bytes=(
+                    client_config.request_min_compression_size_bytes
+                ),
+                disable_request_compression=(
+                    client_config.disable_request_compression
+                ),
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
         self._compute_user_agent_appid_config(config_kwargs)
+        self._compute_request_compression_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -542,6 +549,20 @@ class ClientArgsCreator:
         )
         if connect_timeout:
             config_kwargs['connect_timeout'] = connect_timeout
+
+    def _compute_request_compression_config(self, config_kwargs):
+        min_size = config_kwargs.get('request_min_compression_size_bytes')
+        disabled = config_kwargs.get('disable_request_compression')
+        if min_size is None:
+            min_size = self._config_store.get_config_variable(
+                'request_min_compression_size_bytes'
+            )
+            config_kwargs['request_min_compression_size_bytes'] = min_size
+        if disabled is None:
+            disabled = self._config_store.get_config_variable(
+                'disable_request_compression'
+            )
+            config_kwargs['disable_request_compression'] = disabled
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):

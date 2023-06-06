@@ -59,6 +59,7 @@ class TestEndpointBase(unittest.TestCase):
         self.op = mock.Mock()
         self.op.has_streaming_output = False
         self.op.has_event_stream_output = False
+        self.op.request_compression = None
         self.op.metadata = {'protocol': 'json'}
         self.event_emitter = mock.Mock()
         self.event_emitter.emit.return_value = []
@@ -216,6 +217,7 @@ class TestRetryInterface(TestEndpointBase):
         self._operation.service_model.service_id = ServiceId('EC2')
         self._operation.has_streaming_output = False
         self._operation.has_event_stream_output = False
+        self._operation.request_compression = None
 
     def assert_events_emitted(self, event_emitter, expected_events):
         self.assertEqual(
@@ -306,6 +308,7 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         op.name = 'PutObject'
         op.has_streaming_output = True
         op.has_event_stream_output = False
+        op.request_compression = None
         op.metadata = {'protocol': 'rest-xml'}
         request = request_dict()
         request['body'] = body

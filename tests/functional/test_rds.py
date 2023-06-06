@@ -21,8 +21,8 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
-        self.assertIn('PreSignedUrl', body)
-        self.assertNotIn('SourceRegion', body)
+        self.assertIn(b'PreSignedUrl', body)
+        self.assertNotIn(b'SourceRegion', body)
 
     def test_copy_snapshot(self):
         params = {
