@@ -40,9 +40,9 @@ class Config:
 
     :type user_agent_appid: str
     :param user_agent_appid: A value that gets included in the User-Agent
-        string in the format "app/<user_agent_appid>" which is consistent
-        across all AWS SDKs. Allowed characters are ASCII alphanumerics and
-        ``!$%&'*+-.^_`|~``. All other characters will be replaced by a ``-``.
+        string in the format "app/<user_agent_appid>". Allowed characters are
+        ASCII alphanumerics and ``!$%&'*+-.^_`|~``. All other characters will
+        be replaced by a ``-``.
 
     :type connect_timeout: float or int
     :param connect_timeout: The time in seconds till a timeout exception is

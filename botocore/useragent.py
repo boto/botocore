@@ -45,6 +45,9 @@ def sanitize_user_agent_string_component(raw_str, allow_hash):
     Allowed characters are ASCII alphanumerics and ``!$%&'*+-.^_`|~``. If
     ``allow_hash`` is ``True``, "#"``" is also allowed.
 
+    :type raw_str: str
+    :param raw_str: The input string to be sanitized.
+
     :type allow_hash: bool
     :param allow_hash: Whether "#" is considered an allowed character.
     """
@@ -345,7 +348,7 @@ class UserAgentString:
 
     def _build_feature_metadata(self):
         """
-        Build the features componentes of the User-Agent header string.
+        Build the features components of the User-Agent header string.
 
         Botocore currently does not report any features. This may change in a
         future version.

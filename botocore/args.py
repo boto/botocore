@@ -56,7 +56,7 @@ LEGACY_GLOBAL_STS_REGIONS = [
     'us-west-2',
 ]
 # Maximum allowed length of the ``user_agent_appid`` config field. Longer
-# values get truncated and result in a warning-level log message.
+# values result in a warning-level log message.
 USERAGENT_APPID_MAXLEN = 50
 
 

@@ -219,6 +219,7 @@ def test_user_agent_long_appid_yields_warning(
     # user_agent_appid config values longer than 50 characters should result
     # in a warning
     sixtychars = '000000000011111111112222222222333333333344444444445555555555'
+    assert len(sixtychars) > 50
     client_cfg = Config(user_agent_appid=sixtychars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
     with uacap_client(client_s3) as cap_client:
@@ -235,8 +236,7 @@ def test_user_agent_long_appid_yields_warning(
 def test_user_agent_appid_gets_sanitized(
     patched_session, stubbed_list_buckets, caplog
 ):
-    # Parentheses and the copyright symbol are not valid characters in the user
-    # agent string
+    # Parentheses are not valid characters in the user agent string
     badchars = '1234('
     client_cfg = Config(user_agent_appid=badchars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
