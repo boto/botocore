@@ -1050,6 +1050,10 @@ def remove_bucket_from_url_paths_from_model(params, model, context, **kwargs):
     bucket_path = '/{Bucket}'
     if req_uri.startswith(bucket_path):
         model.http['requestUri'] = req_uri[len(bucket_path) :]
+        # Strip query off the requestUri before using as authPath. The
+        # HmacV1Auth signer will append query params to the authPath during
+        # signing.
+        req_uri = req_uri.split('?')[0]
         # If the request URI is ONLY a bucket, the auth_path must be
         # terminated with a '/' character to generate a signature that the
         # server will accept.
