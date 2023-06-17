@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "s3",
+  "description": "fixes `#2962 <https://github.com/boto/botocore/issues/2962>`__"
+}
