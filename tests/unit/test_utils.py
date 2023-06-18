@@ -424,6 +424,18 @@ class TestParseTimestamps(unittest.TestCase):
             datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc()),
         )
 
+    def test_parse_epoch_negative_time(self):
+        self.assertEqual(
+            parse_timestamp(-2208988800),
+            datetime.datetime(1900, 1, 1, 0, 0, 0, tzinfo=tzutc()),
+        )
+
+    def test_parse_epoch_beyond_2038(self):
+        self.assertEqual(
+            parse_timestamp(2524608000),
+            datetime.datetime(2050, 1, 1, 0, 0, 0, tzinfo=tzutc()),
+        )
+
     def test_parse_epoch_as_string(self):
         self.assertEqual(
             parse_timestamp('1222172800'),
