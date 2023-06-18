@@ -14,6 +14,7 @@ import copy
 import datetime
 import io
 import operator
+from contextlib import contextmanager
 from sys import getrefcount
 
 import pytest
@@ -476,6 +477,42 @@ class TestParseTimestamps(unittest.TestCase):
         ):
             with self.assertRaises(RuntimeError):
                 parse_timestamp(0)
+
+    @contextmanager
+    def mocked_fromtimestamp_that_raises(self, exception_type):
+        class MockDatetime(datetime.datetime):
+            @classmethod
+            def fromtimestamp(cls, *args, **kwargs):
+                raise exception_type()
+
+        mock_fromtimestamp = mock.Mock()
+        mock_fromtimestamp.side_effect = OverflowError()
+
+        with mock.patch('datetime.datetime', MockDatetime):
+            yield
+
+    def test_parse_timestamp_succeeds_with_fromtimestamp_overflowerror(self):
+        # ``datetime.fromtimestamp()`` fails with OverflowError on some systems
+        # for timestamps beyond 2038. See
+        # https://docs.python.org/3/library/datetime.html#datetime.datetime.fromtimestamp
+        # This test mocks fromtimestamp() to always raise an OverflowError and
+        # checks that the fallback method returns the same time and timezone
+        # as fromtimestamp.
+        wout_fallback = parse_timestamp(0)
+        with self.mocked_fromtimestamp_that_raises(OverflowError):
+            with_fallback = parse_timestamp(0)
+            self.assertEqual(with_fallback, wout_fallback)
+            self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
+
+    def test_parse_timestamp_succeeds_with_fromtimestamp_oserror(self):
+        # Same as test_parse_timestamp_succeeds_with_fromtimestamp_overflowerror
+        # but for systems where datetime.fromtimestamp() fails with OSerror for
+        # negative timestamps that represent times before 1970.
+        wout_fallback = parse_timestamp(0)
+        with self.mocked_fromtimestamp_that_raises(OSError):
+            with_fallback = parse_timestamp(0)
+            self.assertEqual(with_fallback, wout_fallback)
+            self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
 
 
 class TestDatetime2Timestamp(unittest.TestCase):
