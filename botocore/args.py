@@ -287,9 +287,11 @@ class ClientArgsCreator:
         }
 
     def _compute_configured_endpoint_url(self, client_config, endpoint_url):
-        if endpoint_url is not None or self._ignore_configured_endpoint_urls(
-            client_config
-        ):
+        if endpoint_url is not None:
+            return endpoint_url
+
+        if self._ignore_configured_endpoint_urls(client_config):
+            logger.debug("Ignoring configured endpoint URLs.")
             return endpoint_url
 
         return self._config_store.get_config_variable('endpoint_url')
