@@ -11,73 +11,29 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
-from contextlib import contextmanager
-from datetime import datetime
 from itertools import product
 
 import pytest
 
 from botocore import __version__ as botocore_version
 from botocore.config import Config
-from botocore.stub import Stubber
+from tests import ClientHTTPStubber
 
 
-@contextmanager
-def uacap_client(client):
-    """Contextmanager yielding client object that captures the last UA header
-
-    Usage:
-
-        with uacap_client(myclient) as cap_client:
-            myclient.operation()
-        print(cap_client.captured_ua_string)
+class UACapHTTPStubber(ClientHTTPStubber):
     """
-    client.captured_ua_string = None
-
-    def event_handler(params, **kwargs):
-        client.captured_ua_string = params['headers']['User-Agent']
-
-    client.meta.events.register_first(
-        'before-call.*.*',
-        event_handler,
-        unique_id='useragent_cap_client',
-    )
-
-    yield client
-
-    client.meta.events.unregister(
-        'before-call.*.*',
-        event_handler,
-        unique_id='useragent_cap_client',
-    )
-
-
-@pytest.fixture
-def stubbed_list_buckets():
-    """botocore.stubb.Stubber instance with a stubbed ``list_buckets`` method.
-
-    Use with an S3 client, for example:
-
-        client_s3 = session.create_client('s3')
-        with stubbed_list_buckets(client_s3) as stubber:
-            client_s3.list_buckets()
-        assert stubber.assert_no_pending_responses()
-
+    Wrapper for ClientHTTPStubber that captures UA header from one request.
     """
-    response = {
-        'Owner': {'ID': 'foo', 'DisplayName': 'bar'},
-        'Buckets': [
-            {'CreationDate': datetime(2099, 12, 31, 23, 59), 'Name': 'buck'}
-        ],
-    }
 
-    @contextmanager
-    def wrapper(client):
-        with Stubber(client) as stubber:
-            stubber.add_response('list_buckets', response, {})
-            yield stubber
+    def __init__(self, obj_with_event_emitter):
+        super().__init__(obj_with_event_emitter, strict=False)
+        self.add_response()  # expect exactly one request
 
-    return wrapper
+    @property
+    def captured_ua_string(self):
+        if len(self.requests) > 0:
+            return self.requests[0].headers['User-Agent'].decode()
+        return None
 
 
 @pytest.mark.parametrize(
@@ -99,7 +55,6 @@ def test_user_agent_from_config_replaces_default(
     cfg_extra,
     cfg_appid,
     patched_session,
-    stubbed_list_buckets,
 ):
     # Config.user_agent replaces all parts of the regular User-Agent header
     # format except for itself and "extras" set in Session and Config. This
@@ -121,11 +76,10 @@ def test_user_agent_from_config_replaces_default(
     if cfg_extra:
         expected_str += f' {cfg_extra}'
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
 
-    assert cap_client.captured_ua_string == expected_str
+    assert stub_client.captured_ua_string == expected_str
 
 
 @pytest.mark.parametrize(
@@ -146,7 +100,6 @@ def test_user_agent_includes_extra(
     sess_version,
     cfg_appid,
     patched_session,
-    stubbed_list_buckets,
 ):
     # Libraries and apps can use the ``Config.user_agent_extra`` and
     # ``Session.user_agent_extra`` to append arbitrary data to the User-Agent
@@ -163,11 +116,10 @@ def test_user_agent_includes_extra(
         user_agent_appid=cfg_appid,
     )
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
 
-    assert cap_client.captured_ua_string.endswith(' sess_extra cfg_extra')
+    assert stub_client.captured_ua_string.endswith(' sess_extra cfg_extra')
 
 
 @pytest.mark.parametrize(
@@ -188,7 +140,6 @@ def test_user_agent_includes_appid(
     sess_extra,
     cfg_extra,
     patched_session,
-    stubbed_list_buckets,
 ):
     # The User-Agent header string should always include the value set in
     # ``Config.user_agent_appid``, unless ``Config.user_agent`` is also set
@@ -205,27 +156,23 @@ def test_user_agent_includes_appid(
         user_agent_extra=cfg_extra,
     )
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
 
-    uafields = cap_client.captured_ua_string.split(' ')
+    uafields = stub_client.captured_ua_string.split(' ')
     assert 'app/123456' in uafields
 
 
-def test_user_agent_long_appid_yields_warning(
-    patched_session, stubbed_list_buckets, caplog
-):
+def test_user_agent_long_appid_yields_warning(patched_session, caplog):
     # user_agent_appid config values longer than 50 characters should result
     # in a warning
     sixtychars = '000000000011111111112222222222333333333344444444445555555555'
     assert len(sixtychars) > 50
     client_cfg = Config(user_agent_appid=sixtychars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            with caplog.at_level(logging.INFO):
-                cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3):
+        with caplog.at_level(logging.INFO):
+            client_s3.list_buckets()
 
     assert (
         'The configured value for user_agent_appid exceeds the maximum length'
@@ -233,24 +180,22 @@ def test_user_agent_long_appid_yields_warning(
     )
 
 
-def test_user_agent_appid_gets_sanitized(
-    patched_session, stubbed_list_buckets, caplog
-):
+def test_user_agent_appid_gets_sanitized(patched_session, caplog):
     # Parentheses are not valid characters in the user agent string
     badchars = '1234('
     client_cfg = Config(user_agent_appid=badchars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            with caplog.at_level(logging.INFO):
-                cap_client.list_buckets()
+
+    with UACapHTTPStubber(client_s3) as stub_client:
+        with caplog.at_level(logging.INFO):
+            client_s3.list_buckets()
 
     # given string should be truncated to 50 characters
-    uafields = cap_client.captured_ua_string.split(' ')
+    uafields = stub_client.captured_ua_string.split(' ')
     assert 'app/1234-' in uafields
 
 
-def test_boto3_behavior(patched_session, stubbed_list_buckets):
+def test_boto3_user_agent(patched_session):
     # emulate Boto3's behavior
     botocore_info = f'Botocore/{patched_session.user_agent_version}'
     if patched_session.user_agent_extra:
@@ -261,46 +206,45 @@ def test_boto3_behavior(patched_session, stubbed_list_buckets):
     patched_session.user_agent_version = '9.9.9'  # Boto3 version
 
     client_s3 = patched_session.create_client('s3')
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
     # The user agent string should start with "Boto3/9.9.9" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert cap_client.captured_ua_string.startswith(
+    assert stub_client.captured_ua_string.startswith(
         f'Boto3/9.9.9 md/Botocore#{botocore_version} '
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in cap_client.captured_ua_string
-    assert ' os/' in cap_client.captured_ua_string
-    assert ' lang/' in cap_client.captured_ua_string
-    assert ' cfg/' in cap_client.captured_ua_string
+    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' os/' in stub_client.captured_ua_string
+    assert ' lang/' in stub_client.captured_ua_string
+    assert ' cfg/' in stub_client.captured_ua_string
 
 
-def test_awscli_v1_behavior(patched_session, stubbed_list_buckets):
+def test_awscli_v1_user_agent(patched_session):
     # emulate behavior from awscli.clidriver._set_user_agent_for_session
     patched_session.user_agent_name = 'aws-cli'
     patched_session.user_agent_version = '1.1.1'
     patched_session.user_agent_extra = f'botocore/{botocore_version}'
 
     client_s3 = patched_session.create_client('s3')
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
+
     # The user agent string should start with "aws-cli/1.1.1" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert cap_client.captured_ua_string.startswith(
+    assert stub_client.captured_ua_string.startswith(
         f'aws-cli/1.1.1 md/Botocore#{botocore_version} '
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in cap_client.captured_ua_string
-    assert ' os/' in cap_client.captured_ua_string
-    assert ' lang/' in cap_client.captured_ua_string
-    assert ' cfg/' in cap_client.captured_ua_string
+    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' os/' in stub_client.captured_ua_string
+    assert ' lang/' in stub_client.captured_ua_string
+    assert ' cfg/' in stub_client.captured_ua_string
 
 
-def test_awscli_v2_behavior(patched_session, stubbed_list_buckets):
+def test_awscli_v2_user_agent(patched_session):
     # emulate behavior from awscli.clidriver._set_user_agent_for_session
     patched_session.user_agent_name = 'aws-cli'
     patched_session.user_agent_version = '2.2.2'
@@ -311,20 +255,19 @@ def test_awscli_v2_behavior(patched_session, stubbed_list_buckets):
     patched_session.user_agent_extra += ' command/service-name.op-name'
 
     client_s3 = patched_session.create_client('s3')
-    with uacap_client(client_s3) as cap_client:
-        with stubbed_list_buckets(cap_client):
-            cap_client.list_buckets()
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
     # The user agent string should start with "aws-cli/1.1.1" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert cap_client.captured_ua_string.startswith(
+    assert stub_client.captured_ua_string.startswith(
         f'aws-cli/2.2.2 md/Botocore#{botocore_version} '
     )
-    assert cap_client.captured_ua_string.endswith(
+    assert stub_client.captured_ua_string.endswith(
         ' sources/x86_64 prompt/off command/service-name.op-name'
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in cap_client.captured_ua_string
-    assert ' os/' in cap_client.captured_ua_string
-    assert ' lang/' in cap_client.captured_ua_string
-    assert ' cfg/' in cap_client.captured_ua_string
+    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' os/' in stub_client.captured_ua_string
+    assert ' lang/' in stub_client.captured_ua_string
+    assert ' cfg/' in stub_client.captured_ua_string
