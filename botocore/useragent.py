@@ -10,6 +10,18 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""
+NOTE: All classes and functions in this module are considered private and are
+subject to abrupt breaking changes. Please do not use them directly.
+
+To modify the User-Agent header sent by botocore, use one of these
+configuration options:
+* The ``AWS_SDK_UA_APP_ID`` environment variable.
+* The ``sdk_ua_app_id`` setting in the shared AWS config file.
+* The ``user_agent_appid`` field in the :py:class:`botocore.config.Config`.
+* The ``user_agent_extra`` field in the :py:class:`botocore.config.Config`.
+
+"""
 import os
 import platform
 from copy import copy
@@ -64,6 +76,8 @@ class UserAgentComponent(NamedTuple):
 
     Each component consists of a prefix, a name, and a value. In the string
     representation these are combined in the format ``prefix/name#value``.
+
+    This class is considered private and is subject to abrupt breaking changes.
     """
 
     prefix: str
