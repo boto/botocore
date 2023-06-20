@@ -107,10 +107,7 @@ class ClientCreator:
         # config and environment variables (and potentially more in the
         # future).
         self._config_store = config_store
-        if user_agent_creator is None:
-            self._user_agent_creator = UserAgentString.from_environment()
-        else:
-            self._user_agent_creator = user_agent_creator
+        self._user_agent_creator = user_agent_creator
 
     def create_client(
         self,
@@ -868,6 +865,12 @@ class BaseClient:
         self._exceptions_factory = exceptions_factory
         self._exceptions = None
         self._user_agent_creator = user_agent_creator
+        if self._user_agent_creator is None:
+            self._user_agent_creator = (
+                UserAgentString.from_environment().with_client_config(
+                    self._client_config
+                )
+            )
         self._register_handlers()
 
     def __getattr__(self, item):

@@ -28,6 +28,7 @@ from botocore.endpoint import EndpointCreator
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
+from botocore.useragent import UserAgentString
 from botocore.utils import ensure_boolean, is_s3_accelerate_url
 
 logger = logging.getLogger(__name__)
@@ -69,14 +70,17 @@ class ClientArgsCreator:
         loader,
         exceptions_factory,
         config_store,
-        user_agent_creator,
+        user_agent_creator=None,
     ):
         self._event_emitter = event_emitter
         self._response_parser_factory = response_parser_factory
         self._loader = loader
         self._exceptions_factory = exceptions_factory
         self._config_store = config_store
-        self._session_ua_creator = user_agent_creator
+        if user_agent_creator is None:
+            self._session_ua_creator = UserAgentString.from_environment()
+        else:
+            self._session_ua_creator = user_agent_creator
 
     def get_client_args(
         self,
