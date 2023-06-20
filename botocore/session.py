@@ -68,7 +68,6 @@ from botocore.useragent import UserAgentString
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
-    get_crt_version,
     validate_region_name,
 )
 
@@ -293,7 +292,8 @@ class Session:
         return None
 
     def _get_crt_version(self):
-        return get_crt_version() or "Unknown"
+        user_agent_creator = self.get_component('user_agent_creator')
+        return user_agent_creator._crt_version or 'Unknown'
 
     @property
     def available_profiles(self):

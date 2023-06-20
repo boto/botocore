@@ -18,7 +18,6 @@ from typing import NamedTuple, Optional
 
 from botocore import __version__ as botocore_version
 from botocore.compat import HAS_CRT
-from botocore.utils import get_crt_version
 
 _USERAGENT_ALLOWED_CHARACTERS = ascii_letters + digits + "!$%&'*+-.^_`|~"
 _USERAGENT_ALLOWED_OS_NAMES = [
@@ -187,7 +186,7 @@ class UserAgentString:
     def from_environment(cls):
         crt_version = None
         if HAS_CRT:
-            crt_version = get_crt_version() or 'Unknown'
+            crt_version = _get_crt_version() or 'Unknown'
         return cls(
             platform_name=platform.system(),
             platform_version=platform.release(),
@@ -455,3 +454,16 @@ class UserAgentString:
         if self._client_config.user_agent_extra:
             components.append(self._client_config.user_agent_extra)
         return ' '.join(components)
+
+
+def _get_crt_version():
+    """
+    This function is considered private and is subject to abrupt breaking
+    changes.
+    """
+    try:
+        import awscrt
+
+        return awscrt.__version__
+    except AttributeError:
+        return None
