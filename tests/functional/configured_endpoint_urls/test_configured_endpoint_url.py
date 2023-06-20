@@ -20,6 +20,7 @@ import pytest
 import botocore.configprovider
 import botocore.utils
 from botocore.compat import urlsplit
+from botocore.config import Config
 from tests import ClientHTTPStubber
 
 ENDPOINT_TESTDATA_FILE = Path(__file__).parent / "profile-tests.json"
@@ -49,8 +50,10 @@ def create_cases():
                 'expected_endpoint_url': test_case_data['output'][
                     'endpointUrl'
                 ],
-                'client_args': test_suite['client_configs'].get(
-                    test_case_data['client_config'], {}
+                'client_args': get_create_client_args(
+                    test_suite['client_configs'].get(
+                        test_case_data['client_config'], {}
+                    )
                 ),
                 'config_file_contents': get_config_file_contents(
                     test_case_data['profile'], test_suite
@@ -61,6 +64,24 @@ def create_cases():
             },
             id=test_case_data['name'],
         )
+
+
+def get_create_client_args(test_case_client_config):
+    create_client_args = {}
+
+    if 'endpoint_url' in test_case_client_config:
+        create_client_args['endpoint_url'] = test_case_client_config[
+            'endpoint_url'
+        ]
+
+    if 'ignore_configured_endpoint_urls' in test_case_client_config:
+        create_client_args['config'] = Config(
+            ignore_configured_endpoint_urls=test_case_client_config[
+                'ignore_configured_endpoint_urls'
+            ]
+        )
+
+    return create_client_args
 
 
 def get_config_file_contents(profile_name, test_suite):
