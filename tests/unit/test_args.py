@@ -27,7 +27,15 @@ class TestCreateClientArgs(unittest.TestCase):
     def setUp(self):
         self.event_emitter = mock.Mock(HierarchicalEmitter)
         self.config_store = ConfigValueStore()
-        user_agent_creator = UserAgentString(None, None, None, None, None)
+        user_agent_creator = UserAgentString(
+            platform_name=None,
+            platform_version=None,
+            platform_machine=None,
+            python_version=None,
+            python_implementation=None,
+            execution_env=None,
+            crt_version=None,
+        )
         self.args_create = args.ClientArgsCreator(
             event_emitter=self.event_emitter,
             user_agent=None,
@@ -526,7 +534,15 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
         event_emitter = mock.Mock(HierarchicalEmitter)
         self.config_store = ConfigValueStore()
-        user_agent_creator = UserAgentString(None, None, None, None, None)
+        user_agent_creator = UserAgentString(
+            platform_name=None,
+            platform_version=None,
+            platform_machine=None,
+            python_version=None,
+            python_implementation=None,
+            execution_env=None,
+            crt_version=None,
+        )
         self.args_create = args.ClientArgsCreator(
             event_emitter=event_emitter,
             user_agent=None,

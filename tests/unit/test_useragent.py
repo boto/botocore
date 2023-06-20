@@ -56,6 +56,7 @@ def test_basic_user_agent_string():
     ua = UserAgentString(
         platform_name='linux',
         platform_version='1.2.3-foo',
+        platform_machine='x86_64',
         python_version='3.8.20',
         python_implementation='Dpython',
         execution_env='AWS_Lambda_python3.8',
@@ -67,8 +68,10 @@ def test_basic_user_agent_string():
     actual = ua.to_string()
     expected = (
         f'Botocore/{botocore_version} '
+        'md/awscrt#Unknown '
         'ua/2.0 '
         'os/linux#1.2.3-foo '
+        'md/arch#x86_64 '
         'lang/python#3.8.20 '
         'md/pyimpl#Dpython '
         'exec-env/AWS_Lambda_python3.8 '
@@ -84,6 +87,7 @@ def test_shared_test_case():
     uas = UserAgentString(
         platform_name="Linux",
         platform_version="5.4.228-131.415.AMZN2.X86_64",
+        platform_machine="",
         python_version="4.3.2",
         python_implementation=None,
         execution_env='lambda',
@@ -115,6 +119,7 @@ def test_user_agent_string_with_missing_information():
     uas = UserAgentString(
         platform_name=None,
         platform_version=None,
+        platform_machine=None,
         python_version=None,
         python_implementation=None,
         execution_env=None,

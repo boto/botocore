@@ -136,6 +136,7 @@ class UserAgentString:
         self,
         platform_name,
         platform_version,
+        platform_machine,
         python_version,
         python_implementation,
         execution_env,
@@ -148,6 +149,9 @@ class UserAgentString:
         :type platform_version: str
         :param platform_version: Version of the operating system or equivalent
             platform name. Should be sourced from :py:meth:`platform.version`.
+        :type platform_machine: str
+        :param platform_version: Processor architecture or machine type. For
+        example "x86_64". Should be sourced from :py:meth:`platform.machine`.
         :type python_version: str
         :param python_version: Version of the python implementation as str.
             Should be sourced from :py:meth:`platform.python_version`.
@@ -163,6 +167,7 @@ class UserAgentString:
         """
         self._platform_name = platform_name
         self._platform_version = platform_version
+        self._platform_machine = platform_machine
         self._python_version = python_version
         self._python_implementation = python_implementation
         self._execution_env = execution_env
@@ -186,6 +191,7 @@ class UserAgentString:
         return cls(
             platform_name=platform.system(),
             platform_version=platform.release(),
+            platform_machine=platform.machine(),
             python_version=platform.python_version(),
             python_implementation=platform.python_implementation(),
             execution_env=os.environ.get('AWS_EXECUTION_ENV'),
@@ -237,6 +243,7 @@ class UserAgentString:
             *self._build_sdk_metadata(),
             RawStringUserAgentComponent('ua/2.0'),
             *self._build_os_metadata(),
+            *self._build_architecture_metadata(),
             *self._build_language_metadata(),
             *self._build_execution_env_metadata(),
             *self._build_feature_metadata(),
@@ -255,6 +262,7 @@ class UserAgentString:
         information from the start of the string, Botocore's name and version
         are included as a separate field with "md" prefix.
         """
+        sdk_md = []
         if (
             self._session_user_agent_name
             and self._session_user_agent_version
@@ -263,17 +271,28 @@ class UserAgentString:
                 or self._session_user_agent_version != botocore_version
             )
         ):
-            return [
-                UserAgentComponent(
-                    self._session_user_agent_name,
-                    self._session_user_agent_version,
-                ),
-                UserAgentComponent(
-                    'md', _USERAGENT_SDK_NAME, botocore_version
-                ),
-            ]
+            sdk_md.extend(
+                [
+                    UserAgentComponent(
+                        self._session_user_agent_name,
+                        self._session_user_agent_version,
+                    ),
+                    UserAgentComponent(
+                        'md', _USERAGENT_SDK_NAME, botocore_version
+                    ),
+                ]
+            )
+        else:
+            sdk_md.append(
+                UserAgentComponent(_USERAGENT_SDK_NAME, botocore_version)
+            )
 
-        return [UserAgentComponent(_USERAGENT_SDK_NAME, botocore_version)]
+        if self._crt_version is not None:
+            sdk_md.append(
+                UserAgentComponent('md', 'awscrt', self._crt_version)
+            )
+
+        return sdk_md
 
     def _build_os_metadata(self):
         """
@@ -289,7 +308,6 @@ class UserAgentString:
          * ``os/linux``
          * ``os/other``
          * ``os/other md/foobar#1.2.3``
-         * ``os/linux md/arch#x86_64``
         """
         if self._platform_name is None:
             return [UserAgentComponent('os', 'other')]
@@ -314,6 +332,21 @@ class UserAgentString:
                 ),
             ]
 
+    def _build_architecture_metadata(self):
+        """
+        Build architecture component of the User-Agent header string.
+
+        Returns the machine type with prefix "md" and name "arch", if one is
+        available. Common values include "x86_64", "arm64", "i386".
+        """
+        if self._platform_machine:
+            return [
+                UserAgentComponent(
+                    'md', 'arch', self._platform_machine.lower()
+                )
+            ]
+        return []
+
     def _build_language_metadata(self):
         """
         Build the language components of the User-Agent header string.
@@ -323,7 +356,7 @@ class UserAgentString:
         separate metadata component with prefix "md" and name "pyimpl".
 
         String representation of an example return value:
-        ``lang/python/3.10.4 md/pyimpl/Cpython``
+        ``lang/python#3.10.4 md/pyimpl#CPython``
         """
         lang_md = [
             UserAgentComponent('lang', 'python', self._python_version),
