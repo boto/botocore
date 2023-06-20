@@ -862,7 +862,7 @@ class ConstantProvider(BaseProvider):
 
 
 class ConfiguredEndpointProvider(BaseProvider):
-    """Lookup an endpoint URL from environment variable or shared cong file.
+    """Lookup an endpoint URL from environment variable or shared config file.
 
     NOTE: This class is considered private and is subject to abrupt breaking
     changes or removal without prior announcement. Please do not use it
@@ -904,7 +904,9 @@ class ConfiguredEndpointProvider(BaseProvider):
         self._full_config = full_config
         self._scoped_config = scoped_config
         self._client_name = client_name
-
+        self._transformed_service_id = self._get_snake_case_service_id(
+            self._client_name
+        )
         if environ is None:
             environ = os.environ
         self._environ = environ
@@ -943,14 +945,8 @@ class ConfiguredEndpointProvider(BaseProvider):
         return None
 
     def _get_snake_case_service_id(self, client_name):
-        # Use lookups to get the serice ID without loading the service data
-        # file. `client_name`` refers to the name used to instantiate a client
-        # through botocore.session.Session.create_client (parameter name there
-        # is `service_name`). This client name is generally the hyphenized
-        # service ID.  We need to look up services that have been renamed
-        # (SERVICE_NAME_ALIASES) as well as services that do not use
-        # the service ID as their data directory name
-        # (CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES).
+        # Get the service ID without loading the service data file, accounting
+        # for any aliases and standardizing the names with hyphens.
         client_name = utils.SERVICE_NAME_ALIASES.get(client_name, client_name)
         hyphenized_service_id = (
             utils.CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES.get(
@@ -960,9 +956,7 @@ class ConfiguredEndpointProvider(BaseProvider):
         return hyphenized_service_id.replace('-', '_')
 
     def _get_service_env_var_name(self):
-        transformed_service_id_env = self._get_snake_case_service_id(
-            self._client_name
-        ).upper()
+        transformed_service_id_env = self._transformed_service_id.upper()
         return f'AWS_ENDPOINT_URL_{transformed_service_id_env}'
 
     def _get_services_config(self):
@@ -985,9 +979,7 @@ class ConfiguredEndpointProvider(BaseProvider):
         return services_section
 
     def _get_endpoint_url_config_service(self):
-        snakecase_service_id = self._get_snake_case_service_id(
-            self._client_name
-        ).lower()
+        snakecase_service_id = self._transformed_service_id.lower()
         return (
             self._get_services_config()
             .get(snakecase_service_id, {})
