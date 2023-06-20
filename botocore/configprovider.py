@@ -998,12 +998,3 @@ class ConfiguredEndpointProvider(BaseProvider):
         return EnvironmentProvider(
             name='AWS_ENDPOINT_URL', env=self._environ
         ).provide()
-
-    def __repr__(self):
-        return (
-            f'ConfiguredEndpointProvider('
-            f'full_config={self._full_config}, '
-            f'scoped_config={self._scoped_config}, '
-            f'client_name={self._client_name}, '
-            f'environ={self._environ})'
-        )
