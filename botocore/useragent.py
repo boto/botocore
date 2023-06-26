@@ -32,7 +32,7 @@ from botocore import __version__ as botocore_version
 from botocore.compat import HAS_CRT
 
 _USERAGENT_ALLOWED_CHARACTERS = ascii_letters + digits + "!$%&'*+-.^_`|~"
-_USERAGENT_ALLOWED_OS_NAMES = [
+_USERAGENT_ALLOWED_OS_NAMES = (
     'windows',
     'linux',
     'macos',
@@ -41,7 +41,7 @@ _USERAGENT_ALLOWED_OS_NAMES = [
     'watchos',
     'tvos',
     'other',
-]
+)
 _USERAGENT_PLATFORM_NAME_MAPPINGS = {'darwin': 'macos'}
 # The name by which botocore is identified in the User-Agent header. While most
 # AWS SDKs follow a naming pattern of "aws-sdk-*", botocore and boto3 continue
