@@ -15,7 +15,7 @@ import logging
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.awsrequest import prepare_request_dict
+from botocore.awsrequest import RequestCompressor, prepare_request_dict
 from botocore.config import Config
 from botocore.discovery import (
     EndpointDiscoveryHandler,
@@ -72,6 +72,7 @@ _LEGACY_SIGNATURE_VERSIONS = frozenset(
         's3v4',
     )
 )
+REQUEST_COMPRESSOR = RequestCompressor()
 
 
 logger = logging.getLogger(__name__)
@@ -955,6 +956,9 @@ class BaseClient:
         if event_response is not None:
             http, parsed_response = event_response
         else:
+            REQUEST_COMPRESSOR.compress(
+                self.meta.config, request_dict, operation_model
+            )
             apply_request_checksum(request_dict)
             http, parsed_response = self._make_request(
                 operation_model, request_dict, request_context

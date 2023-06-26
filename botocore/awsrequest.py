@@ -536,12 +536,11 @@ class AWSPreparedRequest:
             raise UnseekableStreamError(stream_object=self.body)
 
 
-class AWSRequestCompressor:
+class RequestCompressor:
     """A class that can compress the body of an ``AWSRequest``."""
 
     def compress(self, config, request_dict, operation_model):
-        """Compresses the request body using the specified encodings if conditions
-        are met.
+        """Compresses the request body using the specified encodings.
 
         Check if the request should be compressed based on the contents of its
         body and config settings. Set or append the `Content-Encoding` header
@@ -554,14 +553,11 @@ class AWSRequestCompressor:
             for encoding in encodings:
                 encoder = getattr(self, f'_{encoding}_compress_body', None)
                 if encoder is not None:
-                    if 'Content-Encoding' not in headers:
+                    ce_header = headers.get('Content-Encoding')
+                    if ce_header is None:
                         headers['Content-Encoding'] = encoding
-                    elif encoding not in headers['Content-Encoding'].split(
-                        ','
-                    ):
-                        headers[
-                            'Content-Encoding'
-                        ] = f'{headers["Content-Encoding"]},{encoding}'
+                    elif encoding not in ce_header.split(','):
+                        headers['Content-Encoding'] = f'{ce_header},{encoding}'
                     request_dict['body'] = encoder(body)
                     if 'headers' not in request_dict:
                         request_dict['headers'] = headers
@@ -597,7 +593,11 @@ class AWSRequestCompressor:
         return compressed_obj
 
     def _should_compress_request(self, config, body, operation_model):
-        if config.disable_request_compression is not True:
+        if (
+            config.disable_request_compression is not True
+            and config.signature_version != 'v2'
+            and operation_model.request_compression is not None
+        ):
             # Request is compressed no matter the content length if it has a streaming input.
             # However, if the stream has the `requiresLength` trait it is NOT compressed.
             if operation_model.has_streaming_input:

@@ -25,13 +25,13 @@ from botocore.awsrequest import (
     AWSHTTPConnection,
     AWSHTTPSConnection,
     AWSRequest,
-    AWSRequestCompressor,
     AWSResponse,
     HeadersDict,
+    RequestCompressor,
     create_request_object,
     prepare_request_dict,
 )
-from botocore.compat import HTTPHeaders, file_type
+from botocore.compat import file_type
 from botocore.config import Config
 from botocore.exceptions import UnseekableStreamError
 from tests import mock, unittest
@@ -168,7 +168,6 @@ COMPRESSION_CONFIG_0_BYTES = Config(
     disable_request_compression=False,
     request_min_compression_size_bytes=0,
 )
-GZIP_ENCODINGS = ['gzip']
 
 
 def request_dict():
@@ -186,21 +185,19 @@ def request_dict_with_content_encoding_header():
 
 
 @pytest.fixture(scope="module")
-def aws_request_compressor():
-    return AWSRequestCompressor()
+def request_compressor():
+    return RequestCompressor()
 
 
-@pytest.fixture(scope="module")
-def headers():
-    return HTTPHeaders()
+COMPRESSION_HEADERS = {'gzip': b'\x1f\x8b'}
 
 
-def _assert_compression(is_compressed, body):
+def _assert_compression(is_compressed, body, encoding):
     if hasattr(body, 'read'):
         header = body.read(2)
     else:
         header = body[:2]
-    assert is_compressed == (header == b'\x1f\x8b')
+    assert is_compressed == (header == COMPRESSION_HEADERS.get(encoding))
 
 
 class TestAWSRequest(unittest.TestCase):
@@ -1004,15 +1001,15 @@ class TestHeadersDict(unittest.TestCase):
     ],
 )
 def test_compress(
-    aws_request_compressor,
+    request_compressor,
     config,
     request_dict,
     operation_model,
     is_compressed,
     encoding,
 ):
-    aws_request_compressor.compress(config, request_dict, operation_model)
-    _assert_compression(is_compressed, request_dict['body'])
+    request_compressor.compress(config, request_dict, operation_model)
+    _assert_compression(is_compressed, request_dict['body'], encoding)
     assert (
         'headers' in request_dict
         and 'Content-Encoding' in request_dict['headers']
@@ -1021,9 +1018,9 @@ def test_compress(
 
 
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
-def test_compress_bad_types(aws_request_compressor, body):
+def test_compress_bad_types(request_compressor, body):
     request_dict = {'body': body}
-    aws_request_compressor.compress(
+    request_compressor.compress(
         COMPRESSION_CONFIG_0_BYTES, request_dict, OP_WITH_COMPRESSION
     )
     assert request_dict['body'] == body
@@ -1033,8 +1030,8 @@ def test_compress_bad_types(aws_request_compressor, body):
     'body',
     [io.StringIO("foo"), io.BytesIO(b"foo")],
 )
-def test_body_streams_position_reset(aws_request_compressor, body):
-    aws_request_compressor.compress(
+def test_body_streams_position_reset(request_compressor, body):
+    request_compressor.compress(
         COMPRESSION_CONFIG_0_BYTES, {'body': body}, OP_WITH_COMPRESSION
     )
     assert body.tell() == 0

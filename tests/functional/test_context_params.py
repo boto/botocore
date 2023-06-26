@@ -398,7 +398,6 @@ def test_static_context_param_sent_to_endpoint_resolver(
     client = patched_session.create_client(
         service_name, region_name='us-east-1'
     )
-
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(status=200)
         with mock.patch.object(

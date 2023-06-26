@@ -151,7 +151,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'request_min_compression_size_bytes',
         'AWS_REQUEST_MIN_COMPRESSION_SIZE_BYTES',
         10240,
-        int,
+        None,
     ),
     'disable_request_compression': (
         'disable_request_compression',

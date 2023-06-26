@@ -20,7 +20,7 @@ import time
 import uuid
 
 from botocore import parsers
-from botocore.awsrequest import AWSRequestCompressor, create_request_object
+from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
 from botocore.history import get_global_history_recorder
 from botocore.hooks import first_non_none_response
@@ -75,8 +75,14 @@ def convert_to_response_dict(http_response, operation_model):
 
 
 class Endpoint:
-    """Represents an endpoint for a particular service in a specific region.
-    Only an endpoint can make requests.
+    """
+    Represents an endpoint for a particular service in a specific
+    region.  Only an endpoint can make requests.
+
+    :ivar service: The Service object that describes this endpoints
+        service.
+    :ivar host: The fully qualified endpoint hostname.
+    :ivar session: The session object.
     """
 
     def __init__(
@@ -97,7 +103,6 @@ class Endpoint:
         self.http_session = http_session
         if self.http_session is None:
             self.http_session = URLLib3Session()
-        self._request_compressor = AWSRequestCompressor()
 
     def __repr__(self):
         return f'{self._endpoint_prefix}({self.host})'
@@ -116,12 +121,6 @@ class Endpoint:
     def create_request(self, params, operation_model=None):
         request = create_request_object(params)
         if operation_model:
-            if operation_model.request_compression:
-                self._request_compressor.compress(
-                    params['context']['client_config'],
-                    request,
-                    operation_model,
-                )
             request.stream_output = any(
                 [
                     operation_model.has_streaming_output,

@@ -558,11 +558,34 @@ class ClientArgsCreator:
                 'request_min_compression_size_bytes'
             )
             config_kwargs['request_min_compression_size_bytes'] = min_size
+        # conversion func is skipped so input validation must be done here
+        # regardless if the value is coming from the config store or the
+        # config object
+        self._validate_min_compression_size(min_size)
         if disabled is None:
             disabled = self._config_store.get_config_variable(
                 'disable_request_compression'
             )
-            config_kwargs['disable_request_compression'] = disabled
+        else:
+            # if the user provided a value we must check if its a boolean
+            disabled = ensure_boolean(disabled)
+        config_kwargs['disable_request_compression'] = disabled
+
+    def _validate_min_compression_size(self, min_size):
+        if min_size is not None:
+            try:
+                min_size = int(min_size)
+            except ValueError:
+                raise botocore.exceptions.InvalidConfigError(
+                    error_msg=f"Invalid value '{min_size}' for "
+                    "request_min_compression_size_bytes. Value must be an integer."
+                )
+            if not 0 <= min_size <= 1048576:
+                raise botocore.exceptions.InvalidConfigError(
+                    error_msg=f"Invalid value '{min_size}' for "
+                    "request_min_compression_size_bytes. Value must be between 0 "
+                    "and 1048576."
+                )
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):
