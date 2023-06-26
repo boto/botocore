@@ -184,7 +184,7 @@ def request_dict_with_content_encoding_header():
     }
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def request_compressor():
     return RequestCompressor()
 
@@ -989,14 +989,14 @@ class TestHeadersDict(unittest.TestCase):
             request_dict_with_content_encoding_header(),
             OP_UNKNOWN_COMPRESSION,
             False,
-            "foo",
+            'foo',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
             request_dict_with_content_encoding_header(),
             OP_WITH_COMPRESSION,
             True,
-            "gzip",
+            'gzip',
         ),
     ],
 )
@@ -1028,7 +1028,7 @@ def test_compress_bad_types(request_compressor, body):
 
 @pytest.mark.parametrize(
     'body',
-    [io.StringIO("foo"), io.BytesIO(b"foo")],
+    [io.StringIO('foo'), io.BytesIO(b'foo')],
 )
 def test_body_streams_position_reset(request_compressor, body):
     request_compressor.compress(

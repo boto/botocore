@@ -479,7 +479,7 @@ class AWSRequest:
 
     @property
     def body(self):
-        body = self._request_preparer._prepare_body(self)
+        body = self.prepare().body
         if isinstance(body, str):
             body = body.encode('utf-8')
         return body

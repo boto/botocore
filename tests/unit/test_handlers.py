@@ -1089,6 +1089,25 @@ def test_set_operation_specific_signer_s3v4(auth_type, expected_response):
     assert response == expected_response
 
 
+@pytest.mark.parametrize(
+    'protocol, signature_version, params, expected_body',
+    [
+        ('query', 'v4', {'body': {'foo': 'bar'}}, b'foo=bar'),
+        ('query', 'v4', {}, None),
+        ('json', 'v4', {'body': {'foo': 'bar'}}, {'foo': 'bar'}),
+        ('query', 'v2', {'body': {'foo': 'bar'}}, {'foo': 'bar'}),
+        ('query', 'v4', {'body': 'foo=bar'}, 'foo=bar'),
+    ],
+)
+def test_urlencode_body(protocol, signature_version, params, expected_body):
+    operation_def = {'name': 'CreateFoo'}
+    service_def = {'metadata': {'protocol': protocol}, 'shapes': {}}
+    model = OperationModel(operation_def, ServiceModel(service_def))
+    context = {'client_config': Config(signature_version=signature_version)}
+    handlers.urlencode_body(model, params, context)
+    assert params.get('body') == expected_body
+
+
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
     def assert_converts_to_file_like_object_with_bytes(self, body, body_bytes):
         params = {'Body': body}

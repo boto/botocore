@@ -1150,10 +1150,10 @@ def remove_content_type_header_for_presigning(request, **kwargs):
 
 
 def urlencode_body(model, params, context, **kwargs):
-    """Url encode the request body if it is a dictionary.
+    """URL-encode the request body if it is a dictionary.
 
-    This is used for services using the query protocol. The body must be serialized
-    as a urlencoded string before it can be compressed.
+    This is used for services using the query protocol. The body must be
+    serialized as a URL-encoded string before it can be compressed.
     """
     body = params.get('body')
     if (

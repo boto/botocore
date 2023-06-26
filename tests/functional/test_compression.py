@@ -18,7 +18,7 @@ import pytest
 from botocore.config import Config
 from tests import ALL_SERVICES, ClientHTTPStubber, patch_load_service_model
 
-KNOWN_COMPRESSION_ENCODINGS = 'gzip'
+KNOWN_COMPRESSION_ENCODINGS = ("gzip",)
 
 FAKE_MODEL = {
     "version": "2.0",
@@ -107,14 +107,17 @@ def test_compression(patched_session, monkeypatch):
         patched_session, monkeypatch, FAKE_MODEL, FAKE_RULESET
     )
     client = patched_session.create_client(
-        'otherservice',
-        region_name='us-west-2',
+        "otherservice",
+        region_name="us-west-2",
         config=Config(request_min_compression_size_bytes=100),
     )
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(
             status=200,
-            body=b'<response><status>success</status><message>Request processed successfully</message></response>',
+            body=(
+                b"<response><status>success</status><message>"
+                b"Request processed successfully</message></response>"
+            ),
         )
         client.mock_operation(
             MockOpParamList=[

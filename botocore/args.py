@@ -573,18 +573,22 @@ class ClientArgsCreator:
 
     def _validate_min_compression_size(self, min_size):
         if min_size is not None:
+            error_msg_base = (
+                f'Invalid value "{min_size}" for '
+                'request_min_compression_size_bytes. '
+            )
             try:
                 min_size = int(min_size)
             except ValueError:
                 raise botocore.exceptions.InvalidConfigError(
-                    error_msg=f"Invalid value '{min_size}' for "
-                    "request_min_compression_size_bytes. Value must be an integer."
+                    error_msg=f'{error_msg_base}Value must be an integer.'
                 )
             if not 0 <= min_size <= 1048576:
                 raise botocore.exceptions.InvalidConfigError(
-                    error_msg=f"Invalid value '{min_size}' for "
-                    "request_min_compression_size_bytes. Value must be between 0 "
-                    "and 1048576."
+                    error_msg=(
+                        f'{error_msg_base}Value must '
+                        'be between 0 and 1048576.'
+                    )
                 )
 
     def _ensure_boolean(self, val):
