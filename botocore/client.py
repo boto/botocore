@@ -39,6 +39,7 @@ from botocore.httpchecksum import (
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.retries import adaptive, standard
+from botocore.useragent import UserAgentString
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
@@ -91,6 +92,7 @@ class ClientCreator:
         response_parser_factory=None,
         exceptions_factory=None,
         config_store=None,
+        user_agent_creator=None,
     ):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
@@ -105,6 +107,7 @@ class ClientCreator:
         # config and environment variables (and potentially more in the
         # future).
         self._config_store = config_store
+        self._user_agent_creator = user_agent_creator
 
     def create_client(
         self,
@@ -481,6 +484,7 @@ class ClientCreator:
             self._loader,
             self._exceptions_factory,
             config_store=self._config_store,
+            user_agent_creator=self._user_agent_creator,
         )
         return args_creator.get_client_args(
             service_model,
@@ -840,6 +844,7 @@ class BaseClient:
         partition,
         exceptions_factory,
         endpoint_ruleset_resolver=None,
+        user_agent_creator=None,
     ):
         self._serializer = serializer
         self._endpoint = endpoint
@@ -859,6 +864,13 @@ class BaseClient:
         )
         self._exceptions_factory = exceptions_factory
         self._exceptions = None
+        self._user_agent_creator = user_agent_creator
+        if self._user_agent_creator is None:
+            self._user_agent_creator = (
+                UserAgentString.from_environment().with_client_config(
+                    self._client_config
+                )
+            )
         self._register_handlers()
 
     def __getattr__(self, item):
@@ -996,7 +1008,7 @@ class BaseClient:
         if headers is not None:
             request_dict['headers'].update(headers)
         if set_user_agent_header:
-            user_agent = self._client_config.user_agent
+            user_agent = self._user_agent_creator.to_string()
         else:
             user_agent = None
         prepare_request_dict(
