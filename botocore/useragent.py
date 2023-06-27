@@ -249,8 +249,15 @@ class UserAgentString:
         """
         Build User-Agent header string from the object's properties.
         """
-        if self._client_config and self._client_config.user_agent:
-            return self._build_legacy_ua_string()
+        config_ua_override = None
+        if self._client_config:
+            if hasattr(self._client_config, '_supplied_user_agent'):
+                config_ua_override = self._client_config._supplied_user_agent
+            else:
+                config_ua_override = self._client_config.user_agent
+
+        if config_ua_override is not None:
+            return self._build_legacy_ua_string(config_ua_override)
 
         components = [
             *self._build_sdk_metadata(),
@@ -461,8 +468,8 @@ class UserAgentString:
             )
         return extra
 
-    def _build_legacy_ua_string(self):
-        components = [self._client_config.user_agent]
+    def _build_legacy_ua_string(self, config_ua_override):
+        components = [config_ua_override]
         if self._session_user_agent_extra:
             components.append(self._session_user_agent_extra)
         if self._client_config.user_agent_extra:

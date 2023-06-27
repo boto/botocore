@@ -223,6 +223,7 @@ class Config:
             ('use_fips_endpoint', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
+            ('_supplied_user_agent', None),
         ]
     )
 

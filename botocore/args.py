@@ -171,6 +171,8 @@ class ClientArgsCreator:
         client_ua_creator = self._session_ua_creator.with_client_config(
             new_config
         )
+        if client_config:
+            new_config._supplied_user_agent = client_config.user_agent
 
         return {
             'serializer': serializer,
@@ -217,12 +219,23 @@ class ClientArgsCreator:
             s3_config=s3_config,
         )
         endpoint_variant_tags = endpoint_config['metadata'].get('tags', [])
+
+        # Some third-party libraries expect the final user-agent string in
+        # ``client.meta.config.user_agent``. To maintain backwards
+        # compatibility, the preliminary user-agent string (before any Config
+        # object modifications and without request-specific user-agent
+        # components) is stored in the new Config object's ``user_agent``
+        # property but not used by Botocore itself.
+        preliminary_ua_string = self._session_ua_creator.with_client_config(
+            client_config
+        ).to_string()
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
         config_kwargs = dict(
             region_name=endpoint_config['region_name'],
             signature_version=endpoint_config['signature_version'],
+            user_agent=preliminary_ua_string,
         )
         if 'dualstack' in endpoint_variant_tags:
             config_kwargs.update(use_dualstack_endpoint=True)
@@ -239,7 +252,6 @@ class ClientArgsCreator:
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
                 tcp_keepalive=client_config.tcp_keepalive,
-                user_agent=client_config.user_agent,
                 user_agent_extra=client_config.user_agent_extra,
                 user_agent_appid=client_config.user_agent_appid,
             )
