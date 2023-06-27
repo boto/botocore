@@ -954,7 +954,6 @@ def parse_timestamp(value):
     tzinfo_options = get_tzinfo_options()
     for tzinfo in tzinfo_options:
         try:
-            print(f"_parse_timestamp_with_tzinfo({value}, {tzinfo})")
             return _parse_timestamp_with_tzinfo(value, tzinfo)
         except (OSError, OverflowError) as e:
             logger.debug(
