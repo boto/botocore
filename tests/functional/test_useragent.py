@@ -271,3 +271,31 @@ def test_awscli_v2_user_agent(patched_session):
     assert ' os/' in stub_client.captured_ua_string
     assert ' lang/' in stub_client.captured_ua_string
     assert ' cfg/' in stub_client.captured_ua_string
+
+
+def test_s3transfer_user_agent(patched_session):
+    # emulate behavior from s3transfer ClientFactory
+    cfg = Config(user_agent_extra='s3transfer/0.1.2 processpool')
+    client = patched_session.create_client('s3', config=cfg)
+    # s3transfer tests make assertions against the _modified_ `user_agent` field
+    # in ``client.meta.config.user_agent``. See for example
+    # ``tests.unit.test_processpool.TestClientFactory`` in s3transfer.
+    assert 'processpool' in client.meta.config.user_agent
+
+
+def test_chalice_user_agent(patched_session):
+    # emulate behavior from chalice's cli.factory._add_chalice_user_agent
+    suffix = '{}/{}'.format(
+        patched_session.user_agent_name,
+        patched_session.user_agent_version,
+    )
+    patched_session.user_agent_name = 'aws-chalice'
+    patched_session.user_agent_version = '0.1.2'
+    patched_session.user_agent_extra = suffix
+    client_s3 = patched_session.create_client('s3')
+
+    with UACapHTTPStubber(client_s3) as stub_client:
+        client_s3.list_buckets()
+    assert stub_client.captured_ua_string.startswith(
+        f'aws-chalice/0.1.2 md/Botocore#{botocore_version} '
+    )
