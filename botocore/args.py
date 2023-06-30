@@ -171,8 +171,8 @@ class ClientArgsCreator:
         client_ua_creator = self._session_ua_creator.with_client_config(
             new_config
         )
-        if client_config:
-            new_config._supplied_user_agent = client_config.user_agent
+        supplied_ua = client_config.user_agent if client_config else None
+        new_config._supplied_user_agent = supplied_ua
 
         return {
             'serializer': serializer,
