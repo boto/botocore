@@ -193,6 +193,18 @@ class Config:
         creating new connections if set to True.
 
         Defaults to False.
+
+    :type allow_http_redirects: bool
+    :param allow_http_redirects: Whether to allow HTTP redirects using the
+        'location' header.
+
+        Setting this True will cause botocore to redirect requests to
+        the URL specified by the HTTP 'location' header, if any, on receiving
+        a HTTP 301, 302 or 307 from the upstream service.
+
+        HTTP redirections are limited to a maximum of three per request.
+
+        Defaults to False.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -216,6 +228,7 @@ class Config:
             ('use_fips_endpoint', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
+            ('allow_http_redirects', False),
         ]
     )
 

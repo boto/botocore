@@ -1765,6 +1765,89 @@ class TestS3RegionRedirector(unittest.TestCase):
         )
         self.assertIsNone(redirect_response)
 
+    def test_allow_http_redirects(self):
+        self.client._client_config.allow_http_redirects = True
+
+        request_dict = {
+            'url': 'https://us-west-2.amazonaws.com/foo',
+            'context': {
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                },
+                'signing': {},
+            },
+        }
+
+        raw_response = mock.Mock()
+        raw_response.status_code = 307
+        raw_response.content = 'Temporary Redirect'
+        raw_response.headers = {'location': 'https://foo.spam:1234/ham?eggs'}
+        response = (
+            raw_response,
+            {
+                'Error': {'Code': '307', 'Message': 'Temporary Redirect'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {
+                        'location': 'https://foo.spam:1234/ham?eggs',
+                    }
+                },
+            },
+        )
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation
+        )
+        self.assertEqual(redirect_response, 0)
+        self.assertEqual(request_dict['url'], 'https://foo.spam:1234/ham?eggs')
+
+        self.operation.name = 'ListObjects'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation
+        )
+        self.assertEqual(redirect_response, 0)
+        self.assertEqual(request_dict['url'], 'https://foo.spam:1234/ham?eggs')
+
+    def test_allow_http_redirects_limit(self):
+        self.client._client_config.allow_http_redirects = True
+
+        request_dict = {
+            'context': {
+                'signing': {'bucket': 'foo', 'region': 'us-west-2'},
+                's3_redirected': False,
+                's3_redirect': {
+                    'bucket': 'foo',
+                    'redirected': False,
+                    'params': {'Bucket': 'foo'},
+                    'redirect_count': 4,
+                },
+            },
+            'url': 'https://us-west-2.amazonaws.com/foo',
+        }
+
+        raw_response = mock.Mock()
+        raw_response.status_code = 307
+        raw_response.content = 'Temporary Redirect'
+        raw_response.headers = {'location': 'https://foo.spam:1234/ham?eggs'}
+        response = (
+            raw_response,
+            {
+                'Error': {'Code': '307', 'Message': 'Temporary Redirect'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {
+                        'location': 'https://foo.spam:1234/ham?eggs',
+                    }
+                },
+            },
+        )
+
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation
+        )
+        self.assertIsNone(redirect_response)
+
     def test_redirects_400_head_bucket(self):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',

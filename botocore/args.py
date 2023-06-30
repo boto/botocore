@@ -234,6 +234,7 @@ class ClientArgsCreator:
                 client_cert=client_config.client_cert,
                 inject_host_prefix=client_config.inject_host_prefix,
                 tcp_keepalive=client_config.tcp_keepalive,
+                allow_http_redirects=client_config.allow_http_redirects,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)

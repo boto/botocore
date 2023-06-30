@@ -1614,12 +1614,6 @@ class S3RegionRedirectorv2:
             )
             return
 
-        if redirect_ctx.get('redirected'):
-            logger.debug(
-                'S3 request was previously redirected, not redirecting.'
-            )
-            return
-
         error = response[1].get('Error', {})
         error_code = error.get('Code')
         response_metadata = response[1].get('ResponseMetadata', {})
@@ -1653,6 +1647,41 @@ class S3RegionRedirectorv2:
                 is_redirect_status,
             ]
         ):
+            return
+
+        # If the user has enabled the "allow_http_redirects" config option,
+        # set our URL to that provided by the "location" response header
+        # on receiving a HTTP 301, 302 or 307.
+        #
+        # This helps compatibility with some third-party storage
+        # systems.
+        #
+        # We dont treat the codes as semantically different, and we don't
+        # implement any sort of caching (ie, we don't respect the
+        # "Cache-Control" or "Expires" response headers).
+        #
+        # We also won't redirect more than three times.
+        location = response_metadata.get('HTTPHeaders', {}).get('location')
+        is_http_redirect = (
+            self._client._client_config.allow_http_redirects
+            and is_redirect_status
+            and location
+        )
+        if is_http_redirect:
+            redirect_count = redirect_ctx.get('redirect_count', 0)
+            if redirect_count >= 3:
+                logger.debug(
+                    'S3 request was previously redirected too many times, not redirecting.'
+                )
+                return
+            request_dict['url'] = location
+            redirect_ctx['redirect_count'] = redirect_count + 1
+            return 0
+
+        if redirect_ctx.get('redirected'):
+            logger.debug(
+                'S3 request was previously redirected, not redirecting.'
+            )
             return
 
         bucket = request_dict['context']['s3_redirect']['bucket']
@@ -1762,6 +1791,7 @@ class S3RegionRedirectorv2:
         bucket = params.get('Bucket')
         context['s3_redirect'] = {
             'redirected': False,
+            'redirect_count': 0,
             'bucket': bucket,
             'params': params,
         }
