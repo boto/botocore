@@ -64,11 +64,15 @@ from botocore.loaders import create_loader
 from botocore.model import ServiceModel
 from botocore.parsers import ResponseParserFactory
 from botocore.regions import EndpointResolver
+from botocore.useragent import UserAgentString
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
     validate_region_name,
 )
+
+from botocore.compat import HAS_CRT  # noqa
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +169,7 @@ class Session:
         self._register_monitor()
         self._register_default_config_resolver()
         self._register_smart_defaults_factory()
+        self._register_user_agent_creator()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -263,6 +268,10 @@ class Session:
             'monitor', self._create_csm_monitor
         )
 
+    def _register_user_agent_creator(self):
+        uas = UserAgentString.from_environment()
+        self._components.register_component('user_agent_creator', uas)
+
     def _create_csm_monitor(self):
         if self.get_config_variable('csm_enabled'):
             client_id = self.get_config_variable('csm_client_id')
@@ -283,12 +292,8 @@ class Session:
         return None
 
     def _get_crt_version(self):
-        try:
-            import awscrt
-
-            return awscrt.__version__
-        except AttributeError:
-            return "Unknown"
+        user_agent_creator = self.get_component('user_agent_creator')
+        return user_agent_creator._crt_version or 'Unknown'
 
     @property
     def available_profiles(self):
@@ -953,6 +958,15 @@ class Session:
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
         config_store = self.get_component('config_store')
+        user_agent_creator = self.get_component('user_agent_creator')
+        # Session configuration values for the user agent string are applied
+        # just before each client creation because they may have been modified
+        # at any time between session creation and client creation.
+        user_agent_creator.set_session_config(
+            session_user_agent_name=self.user_agent_name,
+            session_user_agent_version=self.user_agent_version,
+            session_user_agent_extra=self.user_agent_extra,
+        )
         defaults_mode = self._resolve_defaults_mode(config, config_store)
         if defaults_mode != 'legacy':
             smart_defaults_factory = self._get_internal_component(
@@ -972,6 +986,7 @@ class Session:
             response_parser_factory,
             exceptions_factory,
             config_store,
+            user_agent_creator=user_agent_creator,
         )
         client = client_creator.create_client(
             service_name=service_name,
