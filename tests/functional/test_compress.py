@@ -97,9 +97,10 @@ def _all_compression_operations():
 @pytest.mark.parametrize("operation_model", _all_compression_operations())
 def test_no_unknown_compression_encodings(operation_model):
     for encoding in operation_model.request_compression["encodings"]:
-        assert (
-            encoding in KNOWN_COMPRESSION_ENCODINGS
-        ), f"Found unknown compression encoding '{encoding}' in operation {operation_model.name}"
+        assert encoding in KNOWN_COMPRESSION_ENCODINGS, (
+            f"Found unknown compression encoding '{encoding}' "
+            f"in operation {operation_model.name}"
+        )
 
 
 def test_compression(patched_session, monkeypatch):

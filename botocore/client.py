@@ -15,7 +15,8 @@ import logging
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.awsrequest import RequestCompressor, prepare_request_dict
+from botocore.awsrequest import prepare_request_dict
+from botocore.compress import RequestCompressor
 from botocore.config import Config
 from botocore.discovery import (
     EndpointDiscoveryHandler,
@@ -47,6 +48,7 @@ from botocore.utils import (
     S3RegionRedirectorv2,
     ensure_boolean,
     get_service_module_name,
+    urlencode_query_body,
 )
 
 # Keep these imported.  There's pre-existing code that uses:
@@ -72,7 +74,6 @@ _LEGACY_SIGNATURE_VERSIONS = frozenset(
         's3v4',
     )
 )
-REQUEST_COMPRESSOR = RequestCompressor()
 
 
 logger = logging.getLogger(__name__)
@@ -956,7 +957,10 @@ class BaseClient:
         if event_response is not None:
             http, parsed_response = event_response
         else:
-            REQUEST_COMPRESSOR.compress(
+            urlencode_query_body(
+                request_dict, operation_model, self.meta.config
+            )
+            RequestCompressor.compress(
                 self.meta.config, request_dict, operation_model
             )
             apply_request_checksum(request_dict)

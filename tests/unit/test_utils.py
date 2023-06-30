@@ -94,6 +94,7 @@ from botocore.utils import (
     set_value_from_jmespath,
     switch_host_s3_accelerate,
     switch_to_virtual_host_style,
+    urlencode_query_body,
     validate_jmespath_for_set,
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
@@ -3476,3 +3477,25 @@ def test_lru_cache_weakref():
     assert cls2.cached_fn.cache_info().currsize == 2
     assert cls2.cached_fn.cache_info().hits == 1  # the call was a cache hit
     assert cls2.cached_fn.cache_info().misses == 2
+
+
+@pytest.mark.parametrize(
+    'request_dict, protocol, signature_version, expected_body',
+    [
+        ({'body': {'foo': 'bar'}}, 'query', 'v4', b'foo=bar'),
+        ({'body': b''}, 'query', 'v4', b''),
+        ({'body': {'foo': 'bar'}}, 'json', 'v4', {'foo': 'bar'}),
+        ({'body': {'foo': 'bar'}}, 'query', 'v2', {'foo': 'bar'}),
+        ({'body': 'foo=bar'}, 'query', 'v4', 'foo=bar'),
+    ],
+)
+def test_urlencode_query_body(
+    request_dict, protocol, signature_version, expected_body
+):
+    operation_def = {'name': 'CreateFoo'}
+    service_def = {'metadata': {'protocol': protocol}, 'shapes': {}}
+    model = OperationModel(operation_def, ServiceModel(service_def))
+    urlencode_query_body(
+        request_dict, model, Config(signature_version=signature_version)
+    )
+    assert request_dict['body'] == expected_body

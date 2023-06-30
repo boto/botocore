@@ -147,6 +147,8 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     # whatever the defaults are in _retry.json.
     'max_attempts': ('max_attempts', 'AWS_MAX_ATTEMPTS', None, int),
     'user_agent_appid': ('sdk_ua_app_id', 'AWS_SDK_UA_APP_ID', None, None),
+    # This must be a parsable integer between 0 and 1048576, but validation
+    # is performed during client initialization instead of here.
     'request_min_compression_size_bytes': (
         'request_min_compression_size_bytes',
         'AWS_REQUEST_MIN_COMPRESSION_SIZE_BYTES',

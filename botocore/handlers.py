@@ -38,7 +38,6 @@ from botocore.compat import (
     quote,
     unquote,
     unquote_str,
-    urlencode,
     urlsplit,
     urlunsplit,
 )
@@ -1149,23 +1148,6 @@ def remove_content_type_header_for_presigning(request, **kwargs):
         del request.headers['Content-Type']
 
 
-def urlencode_body(model, params, context, **kwargs):
-    """URL-encode the request body if it is a dictionary.
-
-    This is used for services using the query protocol. The body must be
-    serialized as a URL-encoded string before it can be compressed.
-    """
-    body = params.get('body')
-    if (
-        context['client_config'].signature_version != 'v2'
-        and model.service_model.protocol == 'query'
-        and isinstance(body, dict)
-    ):
-        params['body'] = urlencode(body, doseq=True, encoding='utf-8').encode(
-            'utf-8'
-        )
-
-
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1424,6 +1406,5 @@ BUILTIN_HANDLERS = [
         AutoPopulatedParam('PreSignedUrl').document_auto_populated_param,
     ),
     ('before-call', inject_api_version_header_if_needed),
-    ('before-call', urlencode_body),
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)
