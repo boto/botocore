@@ -42,6 +42,7 @@ from botocore.compat import HAS_CRT, MutableMapping
 from botocore.configprovider import (
     BOTOCORE_DEFAUT_SESSION_VARIABLES,
     ConfigChainFactory,
+    ConfiguredEndpointProvider,
     ConfigValueStore,
     DefaultConfigResolver,
     SmartDefaultsConfigStoreFactory,
@@ -957,7 +958,7 @@ class Session:
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
-        config_store = self.get_component('config_store')
+        config_store = copy.copy(self.get_component('config_store'))
         user_agent_creator = self.get_component('user_agent_creator')
         # Session configuration values for the user agent string are applied
         # just before each client creation because they may have been modified
@@ -972,10 +973,15 @@ class Session:
             smart_defaults_factory = self._get_internal_component(
                 'smart_defaults_factory'
             )
-            config_store = copy.deepcopy(config_store)
             smart_defaults_factory.merge_smart_defaults(
                 config_store, defaults_mode, region_name
             )
+
+        self._add_configured_endpoint_provider(
+            client_name=service_name,
+            config_store=config_store,
+        )
+
         client_creator = botocore.client.ClientCreator(
             loader,
             endpoint_resolver,
@@ -1044,6 +1050,17 @@ class Session:
             )
 
         return lmode
+
+    def _add_configured_endpoint_provider(self, client_name, config_store):
+        chain = ConfiguredEndpointProvider(
+            full_config=self.full_config,
+            scoped_config=self.get_scoped_config(),
+            client_name=client_name,
+        )
+        config_store.set_config_provider(
+            logical_name='endpoint_url',
+            provider=chain,
+        )
 
     def _missing_cred_vars(self, access_key, secret_key):
         if access_key is not None and secret_key is None:
