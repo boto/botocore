@@ -113,7 +113,7 @@ def _assert_compression(is_compressed, body, encoding):
                 disable_request_compression=True,
                 request_min_compression_size_bytes=1000,
             ),
-            {'body': b'foo'},
+            {'body': b'foo', 'headers': {}},
             OP_WITH_COMPRESSION,
             False,
             None,
@@ -172,28 +172,28 @@ def _assert_compression(is_compressed, body, encoding):
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': REQUEST_BODY.decode()},
+            {'body': REQUEST_BODY.decode(), 'headers': {}},
             OP_WITH_COMPRESSION,
             True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': bytearray(REQUEST_BODY)},
+            {'body': bytearray(REQUEST_BODY), 'headers': {}},
             OP_WITH_COMPRESSION,
             True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': io.BytesIO(REQUEST_BODY)},
+            {'body': io.BytesIO(REQUEST_BODY), 'headers': {}},
             OP_WITH_COMPRESSION,
             True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': io.StringIO(REQUEST_BODY.decode())},
+            {'body': io.StringIO(REQUEST_BODY.decode()), 'headers': {}},
             OP_WITH_COMPRESSION,
             True,
             'gzip',
@@ -232,7 +232,7 @@ def test_compress(
 
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
 def test_compress_bad_types(body):
-    request_dict = {'body': body}
+    request_dict = {'body': body, 'headers': {}}
     RequestCompressor.compress(
         COMPRESSION_CONFIG_0_BYTES, request_dict, OP_WITH_COMPRESSION
     )
@@ -245,6 +245,8 @@ def test_compress_bad_types(body):
 )
 def test_body_streams_position_reset(body):
     RequestCompressor.compress(
-        COMPRESSION_CONFIG_0_BYTES, {'body': body}, OP_WITH_COMPRESSION
+        COMPRESSION_CONFIG_0_BYTES,
+        {'body': body, 'headers': {}},
+        OP_WITH_COMPRESSION,
     )
     assert body.tell() == 0

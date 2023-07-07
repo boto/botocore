@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class RequestCompressor:
-    """A class that can compress the body of an ``AWSRequest``."""
+    """A class that can compress a request body."""
 
     @classmethod
     def compress(cls, config, request_dict, operation_model):
@@ -34,7 +34,7 @@ class RequestCompressor:
         body = request_dict['body']
         if cls._should_compress_request(config, body, operation_model):
             encodings = operation_model.request_compression['encodings']
-            headers = request_dict.get('headers', {})
+            headers = request_dict['headers']
             for encoding in encodings:
                 encoder = getattr(cls, f'_{encoding}_compress_body', None)
                 if encoder is not None:
@@ -47,8 +47,6 @@ class RequestCompressor:
                         'Compressing request with %s encoding', encoding
                     )
                     request_dict['body'] = encoder(body)
-                    if 'headers' not in request_dict:
-                        request_dict['headers'] = headers
                 else:
                     logger.debug(
                         'Unsupported compression encoding: %s' % encoding
