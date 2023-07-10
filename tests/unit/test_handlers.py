@@ -1680,3 +1680,50 @@ def test_remove_arn_from_signing_path(auth_path_in, auth_path_expected):
         request=request, some='other', kwarg='values'
     )
     assert request.auth_path == auth_path_expected
+
+
+@pytest.mark.parametrize(
+    'request_uri_before, request_uri_after, auth_path',
+    [
+        ('/{Bucket}', '', '/{Bucket}/'),
+        ('/{Bucket}?query', '?query', '/{Bucket}/'),
+        ('/{Bucket}/123', '/123', '/{Bucket}/123'),
+        ('/{Bucket}/123?query', '/123?query', '/{Bucket}/123'),
+    ],
+)
+def test_remove_bucket_from_url_paths_from_model(
+    request_uri_before, request_uri_after, auth_path
+):
+    operation_def = {
+        'name': 'TestOp',
+        'http': {
+            'method': 'GET',
+            'requestUri': request_uri_before,
+            'responseCode': 200,
+        },
+        'input': {'shape': 'TestOpInput'},
+    }
+    service_def = {
+        'metadata': {},
+        'shapes': {
+            'TestOpInput': {
+                'type': 'structure',
+                'required': ['Bucket'],
+                'members': {
+                    'Bucket': {
+                        'shape': 'String',
+                        'contextParam': {'name': 'Bucket'},
+                        'location': 'uri',
+                        'locationName': 'Bucket',
+                    },
+                },
+            },
+        },
+    }
+    model = OperationModel(operation_def, ServiceModel(service_def))
+    # the handler modifies ``model`` in place
+    handlers.remove_bucket_from_url_paths_from_model(
+        params=None, model=model, context=None
+    )
+    assert model.http['requestUri'] == request_uri_after
+    assert model.http['authPath'] == auth_path
