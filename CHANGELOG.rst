@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.31.2
+======
+
+* bugfix:s3: Fix s3 presigned URLs for operations with query components (`#2962 <https://github.com/boto/botocore/issues/2962>`__)
+* api-change:``cognito-idp``: API model updated in Amazon Cognito
+
+
 1.31.1
 ======
 
