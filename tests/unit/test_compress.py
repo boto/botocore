@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import gzip
 import io
 
 import pytest
@@ -22,6 +23,13 @@ from tests import mock
 def _op_with_compression():
     op = mock.Mock()
     op.request_compression = {'encodings': ['gzip']}
+    op.has_streaming_input = False
+    return op
+
+
+def _op_with_multiple_compressions():
+    op = mock.Mock()
+    op.request_compression = {'encodings': ['gzip', 'gzip']}
     op.has_streaming_input = False
     return op
 
@@ -94,15 +102,25 @@ def request_dict_with_content_encoding_header():
     }
 
 
-COMPRESSION_HEADERS = {'gzip': b'\x1f\x8b'}
+COMPRESSION_INFO = {
+    'gzip': {'headers': b'\x1f\x8b', 'decompress_method': gzip.decompress}
+}
 
 
-def _assert_compression(is_compressed, body, encoding):
+def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
     if hasattr(body, 'read'):
-        header = body.read(2)
-    else:
-        header = body[:2]
-    assert is_compressed == (header == COMPRESSION_HEADERS.get(encoding))
+        body = body.read()
+        maybe_compressed_body = maybe_compressed_body.read()
+    if isinstance(body, str):
+        body = body.encode('utf-8')
+    compression_info = COMPRESSION_INFO.get(encoding, {})
+    assert is_compressed == (
+        maybe_compressed_body[:2] == compression_info.get('headers')
+    )
+    decompress_method = compression_info.get(
+        'decompress_method', lambda body: body
+    )
+    assert decompress_method(maybe_compressed_body) == body
 
 
 @pytest.mark.parametrize(
@@ -139,6 +157,13 @@ def _assert_compression(is_compressed, body, encoding):
             Config(request_min_compression_size_bytes=128),
             request_dict(),
             OP_WITH_COMPRESSION,
+            True,
+            'gzip',
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            request_dict(),
+            _op_with_multiple_compressions(),
             True,
             'gzip',
         ),
@@ -221,8 +246,11 @@ def test_compress(
     is_compressed,
     encoding,
 ):
+    original_body = request_dict['body']
     RequestCompressor.compress(config, request_dict, operation_model)
-    _assert_compression(is_compressed, request_dict['body'], encoding)
+    _assert_compression(
+        is_compressed, original_body, request_dict['body'], encoding
+    )
     assert (
         'headers' in request_dict
         and 'Content-Encoding' in request_dict['headers']

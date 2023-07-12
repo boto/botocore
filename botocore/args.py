@@ -59,6 +59,10 @@ LEGACY_GLOBAL_STS_REGIONS = [
 # Maximum allowed length of the ``user_agent_appid`` config field. Longer
 # values result in a warning-level log message.
 USERAGENT_APPID_MAXLEN = 50
+# Minimum and maximum allowed value of the `request_min_compression_size_bytes`
+# config field. Lower or higher values result in an InvalidConfigError raised.
+REQUEST_MIN_COMPRESSION_SIZE_BYTES_MIN = 0
+REQUEST_MIN_COMPRESSION_SIZE_BYTES_MAX = 10485760
 
 
 class ClientArgsCreator:
@@ -575,19 +579,27 @@ class ClientArgsCreator:
         if min_size is not None:
             error_msg_base = (
                 f'Invalid value "{min_size}" for '
-                'request_min_compression_size_bytes. '
+                'request_min_compression_size_bytes.'
             )
             try:
                 min_size = int(min_size)
             except ValueError:
                 raise botocore.exceptions.InvalidConfigError(
-                    error_msg=f'{error_msg_base}Value must be an integer.'
+                    error_msg=(
+                        f'{error_msg_base} Value must be an integer.'
+                        f' Received {type(min_size)} instead.'
+                    )
                 )
-            if not 0 <= min_size <= 1048576:
+            if (
+                not REQUEST_MIN_COMPRESSION_SIZE_BYTES_MIN
+                <= min_size
+                <= REQUEST_MIN_COMPRESSION_SIZE_BYTES_MAX
+            ):
                 raise botocore.exceptions.InvalidConfigError(
                     error_msg=(
-                        f'{error_msg_base}Value must '
-                        'be between 0 and 1048576.'
+                        f'{error_msg_base} Value must be between '
+                        f'{REQUEST_MIN_COMPRESSION_SIZE_BYTES_MIN} and '
+                        f'{REQUEST_MIN_COMPRESSION_SIZE_BYTES_MAX}.'
                     )
                 )
 

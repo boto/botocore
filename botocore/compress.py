@@ -25,32 +25,46 @@ class RequestCompressor:
 
     @classmethod
     def compress(cls, config, request_dict, operation_model):
-        """Compresses the request body using the specified encodings.
-
-        Check if the request should be compressed based on the contents of its
-        body and config settings. Set or append the `Content-Encoding` header
-        with the matched encoding if not present.
-        """
+        """Attempt to compress the request body using the modeled encodings."""
         body = request_dict['body']
         if cls._should_compress_request(config, body, operation_model):
-            encodings = operation_model.request_compression['encodings']
-            headers = request_dict['headers']
-            for encoding in encodings:
+            for i, encoding in enumerate(
+                operation_model.request_compression['encodings']
+            ):
                 encoder = getattr(cls, f'_{encoding}_compress_body', None)
                 if encoder is not None:
-                    ce_header = headers.get('Content-Encoding')
-                    if ce_header is None:
-                        headers['Content-Encoding'] = encoding
-                    elif encoding not in ce_header.split(','):
-                        headers['Content-Encoding'] = f'{ce_header},{encoding}'
                     logger.debug(
-                        'Compressing request with %s encoding', encoding
+                        'Compressing request with %s encoding.', encoding
                     )
                     request_dict['body'] = encoder(body)
+                    cls._set_compression_header(
+                        request_dict['headers'], encoding
+                    )
+                    return
                 else:
                     logger.debug(
-                        'Unsupported compression encoding: %s' % encoding
+                        'Unsupported compression encoding: %s', encoding
                     )
+
+    @classmethod
+    def _should_compress_request(cls, config, body, operation_model):
+        if (
+            config.disable_request_compression is not True
+            and config.signature_version != 'v2'
+            and operation_model.request_compression is not None
+        ):
+            # Request is compressed no matter the content length if it has a streaming input.
+            # However, if the stream has the `requiresLength` trait it is NOT compressed.
+            if operation_model.has_streaming_input:
+                return (
+                    'requiresLength'
+                    not in operation_model.get_streaming_input().metadata
+                )
+            return (
+                config.request_min_compression_size_bytes
+                <= cls._get_body_size(body)
+            )
+        return False
 
     @classmethod
     def _gzip_compress_body(cls, body):
@@ -80,33 +94,22 @@ class RequestCompressor:
         compressed_obj.seek(0)
         return compressed_obj
 
-    @classmethod
-    def _should_compress_request(cls, config, body, operation_model):
-        if (
-            config.disable_request_compression is not True
-            and config.signature_version != 'v2'
-            and operation_model.request_compression is not None
-        ):
-            # Request is compressed no matter the content length if it has a streaming input.
-            # However, if the stream has the `requiresLength` trait it is NOT compressed.
-            if operation_model.has_streaming_input:
-                return (
-                    'requiresLength'
-                    not in operation_model.get_streaming_input().metadata
-                )
-            return (
-                config.request_min_compression_size_bytes
-                <= cls._get_body_size(body)
-            )
-        return False
-
     @staticmethod
     def _get_body_size(body):
         size = determine_content_length(body)
         if size is None:
             logger.debug(
-                'Unable to get length of the request body: %s. Not compressing.'
-                % body
+                'Unable to get length of the request body: %s. '
+                'Skipping compression.',
+                body,
             )
             return -1
         return size
+
+    @staticmethod
+    def _set_compression_header(headers, encoding):
+        ce_header = headers.get('Content-Encoding')
+        if ce_header is None:
+            headers['Content-Encoding'] = encoding
+        elif encoding not in ce_header.split(','):
+            headers['Content-Encoding'] = f'{ce_header},{encoding}'

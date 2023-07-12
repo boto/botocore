@@ -217,8 +217,8 @@ class Config:
         Defaults to None.
 
     :type disable_request_compression: bool
-    :param disable_request_compression: Disables the request body compression
-    if set to True.
+    :param disable_request_compression: Disables request body compression if
+    set to True.
 
         Defaults to None.
     """
