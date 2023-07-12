@@ -15,7 +15,7 @@ import io
 
 import pytest
 
-from botocore.compress import RequestCompressor
+from botocore.compress import compress_request
 from botocore.config import Config
 from tests import mock
 
@@ -247,7 +247,7 @@ def test_compress(
     encoding,
 ):
     original_body = request_dict['body']
-    RequestCompressor.compress(config, request_dict, operation_model)
+    compress_request(config, request_dict, operation_model)
     _assert_compression(
         is_compressed, original_body, request_dict['body'], encoding
     )
@@ -261,7 +261,7 @@ def test_compress(
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
 def test_compress_bad_types(body):
     request_dict = {'body': body, 'headers': {}}
-    RequestCompressor.compress(
+    compress_request(
         COMPRESSION_CONFIG_0_BYTES, request_dict, OP_WITH_COMPRESSION
     )
     assert request_dict['body'] == body
@@ -272,7 +272,7 @@ def test_compress_bad_types(body):
     [io.StringIO('foo'), io.BytesIO(b'foo')],
 )
 def test_body_streams_position_reset(body):
-    RequestCompressor.compress(
+    compress_request(
         COMPRESSION_CONFIG_0_BYTES,
         {'body': body, 'headers': {}},
         OP_WITH_COMPRESSION,

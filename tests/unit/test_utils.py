@@ -3479,6 +3479,11 @@ def test_lru_cache_weakref():
     assert cls2.cached_fn.cache_info().misses == 2
 
 
+@pytest.fixture
+def operation_def():
+    return {'name': 'CreateFoo'}
+
+
 @pytest.mark.parametrize(
     'request_dict, protocol, signature_version, expected_body',
     [
@@ -3490,9 +3495,8 @@ def test_lru_cache_weakref():
     ],
 )
 def test_urlencode_query_body(
-    request_dict, protocol, signature_version, expected_body
+    operation_def, request_dict, protocol, signature_version, expected_body
 ):
-    operation_def = {'name': 'CreateFoo'}
     service_def = {'metadata': {'protocol': protocol}, 'shapes': {}}
     model = OperationModel(operation_def, ServiceModel(service_def))
     urlencode_query_body(

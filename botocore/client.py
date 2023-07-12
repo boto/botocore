@@ -16,7 +16,7 @@ from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
-from botocore.compress import RequestCompressor
+from botocore.compress import compress_request
 from botocore.config import Config
 from botocore.discovery import (
     EndpointDiscoveryHandler,
@@ -960,9 +960,7 @@ class BaseClient:
             urlencode_query_body(
                 request_dict, operation_model, self.meta.config
             )
-            RequestCompressor.compress(
-                self.meta.config, request_dict, operation_model
-            )
+            compress_request(self.meta.config, request_dict, operation_model)
             apply_request_checksum(request_dict)
             http, parsed_response = self._make_request(
                 operation_model, request_dict, request_context
