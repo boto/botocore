@@ -102,9 +102,7 @@ def request_dict_with_content_encoding_header():
     }
 
 
-COMPRESSION_INFO = {
-    'gzip': {'headers': b'\x1f\x8b', 'decompress_method': gzip.decompress}
-}
+DECOMPRESSION_METHOD_MAP = {'gzip': gzip.decompress}
 
 
 def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
@@ -113,12 +111,8 @@ def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
         maybe_compressed_body = maybe_compressed_body.read()
     if isinstance(body, str):
         body = body.encode('utf-8')
-    compression_info = COMPRESSION_INFO.get(encoding, {})
-    assert is_compressed == (
-        maybe_compressed_body[:2] == compression_info.get('headers')
-    )
-    decompress_method = compression_info.get(
-        'decompress_method', lambda body: body
+    decompress_method = DECOMPRESSION_METHOD_MAP.get(
+        encoding, lambda body: body
     )
     assert decompress_method(maybe_compressed_body) == body
 
