@@ -28,9 +28,7 @@ class RequestCompressor:
         """Attempt to compress the request body using the modeled encodings."""
         body = request_dict['body']
         if cls._should_compress_request(config, body, operation_model):
-            for i, encoding in enumerate(
-                operation_model.request_compression['encodings']
-            ):
+            for encoding in operation_model.request_compression['encodings']:
                 encoder = getattr(cls, f'_{encoding}_compress_body', None)
                 if encoder is not None:
                     logger.debug(
@@ -103,7 +101,7 @@ class RequestCompressor:
                 'Skipping compression.',
                 body,
             )
-            return -1
+            size = -1
         return size
 
     @staticmethod
