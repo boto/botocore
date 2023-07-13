@@ -15,7 +15,7 @@ import io
 
 import pytest
 
-from botocore.compress import compress_request
+from botocore.compress import maybe_compress_request
 from botocore.config import Config
 from tests import mock
 
@@ -29,6 +29,8 @@ def _op_with_compression():
 
 def _op_with_multiple_compressions():
     op = mock.Mock()
+    # TODO: Update second value to a different encoding. Currently only gzip
+    # is supported.
     op.request_compression = {'encodings': ['gzip', 'gzip']}
     op.has_streaming_input = False
     return op
@@ -241,7 +243,7 @@ def test_compress(
     encoding,
 ):
     original_body = request_dict['body']
-    compress_request(config, request_dict, operation_model)
+    maybe_compress_request(config, request_dict, operation_model)
     _assert_compression(
         is_compressed, original_body, request_dict['body'], encoding
     )
@@ -255,7 +257,7 @@ def test_compress(
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
 def test_compress_bad_types(body):
     request_dict = {'body': body, 'headers': {}}
-    compress_request(
+    maybe_compress_request(
         COMPRESSION_CONFIG_0_BYTES, request_dict, OP_WITH_COMPRESSION
     )
     assert request_dict['body'] == body
@@ -266,7 +268,7 @@ def test_compress_bad_types(body):
     [io.StringIO('foo'), io.BytesIO(b'foo')],
 )
 def test_body_streams_position_reset(body):
-    compress_request(
+    maybe_compress_request(
         COMPRESSION_CONFIG_0_BYTES,
         {'body': body, 'headers': {}},
         OP_WITH_COMPRESSION,

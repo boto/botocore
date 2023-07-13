@@ -20,7 +20,7 @@ from botocore.utils import determine_content_length
 logger = logging.getLogger(__name__)
 
 
-def compress_request(config, request_dict, operation_model):
+def maybe_compress_request(config, request_dict, operation_model):
     """Attempt to compress the request body using the modeled encodings."""
     body = request_dict['body']
     if _should_compress_request(config, body, operation_model):
