@@ -41,8 +41,9 @@ def _should_compress_request(config, body, operation_model):
         and config.signature_version != 'v2'
         and operation_model.request_compression is not None
     ):
-        # Request is compressed no matter the content length if it has a streaming input.
-        # However, if the stream has the `requiresLength` trait it is NOT compressed.
+        # Requests with streaming input are compressed regardless of
+        # `request_min_compression_size_bytes` if they don't contain the
+        # `requiresLength` trait.
         if operation_model.has_streaming_input:
             return (
                 'requiresLength'
