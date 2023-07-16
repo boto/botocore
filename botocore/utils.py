@@ -3440,6 +3440,4 @@ def urlencode_query_body(request_dict, operation_model, config):
         and isinstance(body, dict)
         and config.signature_version != 'v2'
     ):
-        request_dict['body'] = urlencode(
-            body, doseq=True, encoding='utf-8'
-        ).encode('utf-8')
+        request_dict['body'] = urlencode(body, doseq=True, encoding='utf-8')

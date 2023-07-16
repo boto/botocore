@@ -3487,7 +3487,7 @@ def operation_def():
 @pytest.mark.parametrize(
     'request_dict, protocol, signature_version, expected_body',
     [
-        ({'body': {'foo': 'bar'}}, 'query', 'v4', b'foo=bar'),
+        ({'body': {'foo': 'bar'}}, 'query', 'v4', 'foo=bar'),
         ({'body': b''}, 'query', 'v4', b''),
         ({'body': {'foo': 'bar'}}, 'json', 'v4', {'foo': 'bar'}),
         ({'body': {'foo': 'bar'}}, 'query', 'v2', {'foo': 'bar'}),
