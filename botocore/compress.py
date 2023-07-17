@@ -49,10 +49,21 @@ def _should_compress_request(config, body, operation_model):
                 'requiresLength'
                 not in operation_model.get_streaming_input().metadata
             )
-        return config.request_min_compression_size_bytes <= _get_body_size(
-            body
-        )
+        body_size = _get_body_size(body)
+        return config.request_min_compression_size_bytes <= body_size
     return False
+
+
+def _get_body_size(body):
+    size = determine_content_length(body)
+    if size is None:
+        logger.debug(
+            'Unable to get length of the request body: %s. '
+            'Skipping compression.',
+            body,
+        )
+        size = -1
+    return size
 
 
 def _gzip_compress_body(body):
@@ -81,18 +92,6 @@ def _gzip_compress_fileobj(body):
             gz.write(chunk)
     compressed_obj.seek(0)
     return compressed_obj
-
-
-def _get_body_size(body):
-    size = determine_content_length(body)
-    if size is None:
-        logger.debug(
-            'Unable to get length of the request body: %s. '
-            'Skipping compression.',
-            body,
-        )
-        size = -1
-    return size
 
 
 def _set_compression_header(headers, encoding):

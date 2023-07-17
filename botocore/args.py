@@ -567,7 +567,7 @@ class ClientArgsCreator:
                 'disable_request_compression'
             )
         else:
-            # if the user provided a value we must check if its a boolean
+            # if the user provided a value we must check if it's a boolean
             disabled = ensure_boolean(disabled)
         config_kwargs['disable_request_compression'] = disabled
 
