@@ -529,6 +529,81 @@ class TestCreateClientArgs(unittest.TestCase):
             )
             m.assert_not_called()
 
+    def test_request_compression_client_config(self):
+        config = self.call_get_client_args(
+            client_config=Config(
+                disable_request_compression=True,
+                request_min_compression_size_bytes=100,
+            )
+        )['client_config']
+        self.assertEqual(config.request_min_compression_size_bytes, 100)
+        self.assertTrue(config.disable_request_compression)
+
+    def test_request_compression_config_store(self):
+        self.config_store.set_config_variable(
+            'request_min_compression_size_bytes', 100
+        )
+        self.config_store.set_config_variable(
+            'disable_request_compression', True
+        )
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.request_min_compression_size_bytes, 100)
+        self.assertTrue(config.disable_request_compression)
+
+    def test_request_compression_client_config_overrides_config_store(self):
+        self.config_store.set_config_variable(
+            'request_min_compression_size_bytes', 100
+        )
+        self.config_store.set_config_variable(
+            'disable_request_compression', True
+        )
+        config = self.call_get_client_args(
+            client_config=Config(
+                disable_request_compression=False,
+                request_min_compression_size_bytes=0,
+            )
+        )['client_config']
+        self.assertEqual(config.request_min_compression_size_bytes, 0)
+        self.assertFalse(config.disable_request_compression)
+
+    def test_bad_type_request_min_compression_size_bytes(self):
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args(
+                client_config=Config(
+                    request_min_compression_size_bytes='foo',
+                ),
+            )
+        self.config_store.set_config_variable(
+            'request_min_compression_size_bytes', 'foo'
+        )
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args()
+
+    def test_bad_value_request_min_compression_size_bytes(self):
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args(
+                client_config=Config(
+                    request_min_compression_size_bytes=-1,
+                ),
+            )
+        self.config_store.set_config_variable(
+            'request_min_compression_size_bytes', 99999999
+        )
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args(
+                client_config=Config(
+                    request_min_compression_size_bytes=-1,
+                ),
+            )
+
+    def test_bad_value_disable_request_compression(self):
+        config = self.call_get_client_args(
+            client_config=Config(
+                disable_request_compression='foo',
+            ),
+        )['client_config']
+        self.assertFalse(config.disable_request_compression)
+
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
