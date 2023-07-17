@@ -579,7 +579,7 @@ class TestCreateClientArgs(unittest.TestCase):
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()
 
-    def test_bad_value_request_min_compression_size_bytes(self):
+    def test_low_min_request_min_compression_size_bytes(self):
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args(
                 client_config=Config(
@@ -587,14 +587,23 @@ class TestCreateClientArgs(unittest.TestCase):
                 ),
             )
         self.config_store.set_config_variable(
-            'request_min_compression_size_bytes', 99999999
+            'request_min_compression_size_bytes', -1
         )
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args()
+
+    def test_high_max_request_min_compression_size_bytes(self):
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args(
                 client_config=Config(
-                    request_min_compression_size_bytes=-1,
+                    request_min_compression_size_bytes=9999999,
                 ),
             )
+        self.config_store.set_config_variable(
+            'request_min_compression_size_bytes', 9999999
+        )
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args()
 
     def test_bad_value_disable_request_compression(self):
         config = self.call_get_client_args(
