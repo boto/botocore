@@ -583,11 +583,11 @@ class TestCreateClientArgs(unittest.TestCase):
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args(
                 client_config=Config(
-                    request_min_compression_size_bytes=-1,
+                    request_min_compression_size_bytes=0,
                 ),
             )
         self.config_store.set_config_variable(
-            'request_min_compression_size_bytes', -1
+            'request_min_compression_size_bytes', 0
         )
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()

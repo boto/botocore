@@ -113,24 +113,16 @@ def test_compression(patched_session, monkeypatch):
         config=Config(request_min_compression_size_bytes=100),
     )
     with ClientHTTPStubber(client, strict=True) as http_stubber:
-        http_stubber.add_response(
-            status=200,
-            body=(
-                b"<response><status>success</status><message>"
-                b"Request processed successfully</message></response>"
-            ),
+        http_stubber.add_response(status=200, body=b"<response/>")
+        params_list = [
+            {"MockOpParam": f"MockOpParamValue{i}"} for i in range(1, 21)
+        ]
+        client.mock_operation(MockOpParamList=params_list)
+        param_template = (
+            "MockOpParamList.member.{i}.MockOpParam=MockOpParamValue{i}"
         )
-        client.mock_operation(
-            MockOpParamList=[
-                {"MockOpParam": f"MockOpParamValue{i}"} for i in range(1, 21)
-            ]
+        serialized_body = "&".join(
+            param_template.format(i=i) for i in range(1, 21)
         )
-        serialized_body = b"&".join(
-            [
-                f"MockOpParamList.member.{i}.MockOpParam=MockOpParamValue{i}".encode()
-                for i in range(1, 21)
-            ]
-        )
-        assert serialized_body in gzip.decompress(
-            http_stubber.requests[0].body
-        )
+        actual_body = gzip.decompress(http_stubber.requests[0].body)
+        assert serialized_body.encode('utf-8') in actual_body

@@ -94,7 +94,6 @@ from botocore.utils import (
     set_value_from_jmespath,
     switch_host_s3_accelerate,
     switch_to_virtual_host_style,
-    urlencode_query_body,
     validate_jmespath_for_set,
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
@@ -3482,24 +3481,3 @@ def test_lru_cache_weakref():
 @pytest.fixture
 def operation_def():
     return {'name': 'CreateFoo'}
-
-
-@pytest.mark.parametrize(
-    'request_dict, protocol, signature_version, expected_body',
-    [
-        ({'body': {'foo': 'bar'}}, 'query', 'v4', 'foo=bar'),
-        ({'body': b''}, 'query', 'v4', b''),
-        ({'body': {'foo': 'bar'}}, 'json', 'v4', {'foo': 'bar'}),
-        ({'body': {'foo': 'bar'}}, 'query', 'v2', {'foo': 'bar'}),
-        ({'body': 'foo=bar'}, 'query', 'v4', 'foo=bar'),
-    ],
-)
-def test_urlencode_query_body(
-    operation_def, request_dict, protocol, signature_version, expected_body
-):
-    service_def = {'metadata': {'protocol': protocol}, 'shapes': {}}
-    model = OperationModel(operation_def, ServiceModel(service_def))
-    urlencode_query_body(
-        request_dict, model, Config(signature_version=signature_version)
-    )
-    assert request_dict['body'] == expected_body

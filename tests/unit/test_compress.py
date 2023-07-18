@@ -15,61 +15,42 @@ import io
 
 import pytest
 
-from botocore.compress import maybe_compress_request
+from botocore.compat import urlencode
+from botocore.compress import COMPRESSION_MAPPING, maybe_compress_request
 from botocore.config import Config
 from tests import mock
 
 
-def _op_with_compression():
+def _make_op(
+    request_compression=None,
+    has_streaming_input=False,
+    streaming_metadata=None,
+):
     op = mock.Mock()
-    op.request_compression = {'encodings': ['gzip']}
-    op.has_streaming_input = False
+    op.request_compression = request_compression
+    op.has_streaming_input = has_streaming_input
+    if streaming_metadata is not None:
+        streaming_shape = mock.Mock()
+        streaming_shape.metadata = streaming_metadata
+        op.get_streaming_input.return_value = streaming_shape
     return op
 
 
-def _op_with_multiple_compressions():
-    op = mock.Mock()
-    # TODO: Update second value to a different encoding. Currently only gzip
-    # is supported.
-    op.request_compression = {'encodings': ['gzip', 'gzip']}
-    op.has_streaming_input = False
-    return op
-
-
-def _op_unknown_compression():
-    op = mock.Mock()
-    op.request_compression = {'encodings': ['foo']}
-    op.has_streaming_input = None
-    return op
-
-
-def _op_without_compression():
-    op = mock.Mock()
-    op.request_compression = None
-    op.has_streaming_input = False
-    return op
-
-
-def _streaming_op_with_compression():
-    op = _op_with_compression()
-    op.has_streaming_input = True
-    streaming_shape = mock.Mock()
-    streaming_shape.metadata = {}
-    op.get_streaming_input.return_value = streaming_shape
-    return op
-
-
-def _streaming_op_with_compression_requires_length():
-    op = _streaming_op_with_compression()
-    streaming_shape = mock.Mock()
-    streaming_shape.metadata = {'requiresLength': True}
-    op.get_streaming_input.return_value = streaming_shape
-    return op
-
-
-OP_WITH_COMPRESSION = _op_with_compression()
-OP_UNKNOWN_COMPRESSION = _op_unknown_compression()
-STREAMING_OP_WITH_COMPRESSION = _streaming_op_with_compression()
+OP_WITH_COMPRESSION = _make_op(request_compression={'encodings': ['gzip']})
+OP_UNKNOWN_COMPRESSION = _make_op(request_compression={'encodings': ['foo']})
+OP_MULTIPLE_COMPRESSIONS = _make_op(
+    request_compression={'encodings': ['gzip', 'foo']}
+)
+STREAMING_OP_WITH_COMPRESSION = _make_op(
+    request_compression={'encodings': ['gzip']},
+    has_streaming_input=True,
+    streaming_metadata={},
+)
+STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH = _make_op(
+    request_compression={'encodings': ['gzip']},
+    has_streaming_input=True,
+    streaming_metadata={'requiresLength': True},
+)
 REQUEST_BODY = (
     b'Action=PutMetricData&Version=2010-08-01&Namespace=Namespace'
     b'&MetricData.member.1.MetricName=metric&MetricData.member.1.Unit=Bytes'
@@ -107,16 +88,26 @@ def request_dict_with_content_encoding_header():
 DECOMPRESSION_METHOD_MAP = {'gzip': gzip.decompress}
 
 
-def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
+def _assert_compression(body, maybe_compressed_body, encoding):
     if hasattr(body, 'read'):
         body = body.read()
         maybe_compressed_body = maybe_compressed_body.read()
     if isinstance(body, str):
         body = body.encode('utf-8')
+    if isinstance(body, dict) and encoding is not None:
+        body = urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
     decompress_method = DECOMPRESSION_METHOD_MAP.get(
         encoding, lambda body: body
     )
     assert decompress_method(maybe_compressed_body) == body
+
+
+def _bad_compression(body):
+    raise ValueError('Reached unintended compression algorithm "foo"')
+
+
+MOCK_COMPRESSION = {'foo': _bad_compression}
+MOCK_COMPRESSION.update(COMPRESSION_MAPPING)
 
 
 @pytest.mark.parametrize(
@@ -159,7 +150,7 @@ def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
         (
             COMPRESSION_CONFIG_128_BYTES,
             request_dict(),
-            _op_with_multiple_compressions(),
+            OP_MULTIPLE_COMPRESSIONS,
             True,
             'gzip',
         ),
@@ -173,14 +164,14 @@ def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
         (
             DEFAULT_COMPRESSION_CONFIG,
             request_dict(),
-            _streaming_op_with_compression_requires_length(),
+            STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH,
             False,
             None,
         ),
         (
             DEFAULT_COMPRESSION_CONFIG,
             request_dict(),
-            _op_without_compression(),
+            _make_op(),
             False,
             None,
         ),
@@ -233,6 +224,20 @@ def _assert_compression(is_compressed, body, maybe_compressed_body, encoding):
             True,
             'gzip',
         ),
+        (
+            COMPRESSION_CONFIG_0_BYTES,
+            {'body': {'foo': 'bar'}, 'headers': {}},
+            OP_WITH_COMPRESSION,
+            True,
+            'gzip',
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            {'body': {'foo': 'bar'}, 'headers': {}},
+            OP_WITH_COMPRESSION,
+            False,
+            None,
+        ),
     ],
 )
 def test_compress(
@@ -244,9 +249,7 @@ def test_compress(
 ):
     original_body = request_dict['body']
     maybe_compress_request(config, request_dict, operation_model)
-    _assert_compression(
-        is_compressed, original_body, request_dict['body'], encoding
-    )
+    _assert_compression(original_body, request_dict['body'], encoding)
     assert (
         'headers' in request_dict
         and 'Content-Encoding' in request_dict['headers']
@@ -274,3 +277,12 @@ def test_body_streams_position_reset(body):
         OP_WITH_COMPRESSION,
     )
     assert body.tell() == 0
+
+
+def test_only_compress_once():
+    with mock.patch('botocore.compress.COMPRESSION_MAPPING', MOCK_COMPRESSION):
+        request_dict = {'body': REQUEST_BODY, 'headers': {}}
+        maybe_compress_request(
+            COMPRESSION_CONFIG_128_BYTES, request_dict, OP_WITH_COMPRESSION
+        )
+        _assert_compression(REQUEST_BODY, request_dict['body'], 'gzip')

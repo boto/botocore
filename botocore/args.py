@@ -572,7 +572,7 @@ class ClientArgsCreator:
         config_kwargs['disable_request_compression'] = disabled
 
     def _validate_min_compression_size(self, min_size):
-        min_allowed_min_size = 0
+        min_allowed_min_size = 1
         max_allowed_min_size = 1048576
         if min_size is not None:
             error_msg_base = (

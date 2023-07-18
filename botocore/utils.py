@@ -55,7 +55,6 @@ from botocore.compat import (
     get_tzinfo_options,
     json,
     quote,
-    urlencode,
     urlparse,
     urlsplit,
     urlunsplit,
@@ -3430,14 +3429,3 @@ CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES = {
     'stepfunctions': 'sfn',
     'storagegateway': 'storage-gateway',
 }
-
-
-def urlencode_query_body(request_dict, operation_model, config):
-    """URL encode a request's body if it using the query protocol."""
-    body = request_dict['body']
-    if (
-        operation_model.service_model.protocol == 'query'
-        and isinstance(body, dict)
-        and config.signature_version != 'v2'
-    ):
-        request_dict['body'] = urlencode(body, doseq=True, encoding='utf-8')

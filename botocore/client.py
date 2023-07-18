@@ -48,7 +48,6 @@ from botocore.utils import (
     S3RegionRedirectorv2,
     ensure_boolean,
     get_service_module_name,
-    urlencode_query_body,
 )
 
 # Keep these imported.  There's pre-existing code that uses:
@@ -957,9 +956,6 @@ class BaseClient:
         if event_response is not None:
             http, parsed_response = event_response
         else:
-            urlencode_query_body(
-                request_dict, operation_model, self.meta.config
-            )
             maybe_compress_request(
                 self.meta.config, request_dict, operation_model
             )

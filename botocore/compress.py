@@ -15,6 +15,7 @@ import gzip
 import io
 import logging
 
+from botocore.compat import urlencode
 from botocore.utils import determine_content_length
 
 logger = logging.getLogger(__name__)
@@ -22,20 +23,19 @@ logger = logging.getLogger(__name__)
 
 def maybe_compress_request(config, request_dict, operation_model):
     """Attempt to compress the request body using the modeled encodings."""
-    body = request_dict['body']
-    if _should_compress_request(config, body, operation_model):
+    if _should_compress_request(config, request_dict, operation_model):
         for encoding in operation_model.request_compression['encodings']:
             encoder = COMPRESSION_MAPPING.get(encoding)
             if encoder is not None:
                 logger.debug('Compressing request with %s encoding.', encoding)
-                request_dict['body'] = encoder(body)
+                request_dict['body'] = encoder(request_dict['body'])
                 _set_compression_header(request_dict['headers'], encoding)
                 return
             else:
                 logger.debug('Unsupported compression encoding: %s', encoding)
 
 
-def _should_compress_request(config, body, operation_model):
+def _should_compress_request(config, request_dict, operation_model):
     if (
         config.disable_request_compression is not True
         and config.signature_version != 'v2'
@@ -49,8 +49,20 @@ def _should_compress_request(config, body, operation_model):
                 'requiresLength'
                 not in operation_model.get_streaming_input().metadata
             )
-        body_size = _get_body_size(body)
-        return config.request_min_compression_size_bytes <= body_size
+        else:
+            # If the request body is a dictionary, we need to encode it to get the
+            # length. If compression should occur, the encoded body will be saved
+            # to the request dictionary so it doesn't need to be encoded again.
+            body = request_dict['body']
+            if isinstance(body, dict):
+                body = urlencode(body, doseq=True, encoding='utf-8')
+            should_compress = (
+                config.request_min_compression_size_bytes
+                <= _get_body_size(body)
+            )
+            if should_compress:
+                request_dict['body'] = body
+            return should_compress
     return False
 
 
@@ -62,7 +74,7 @@ def _get_body_size(body):
             'Skipping compression.',
             body,
         )
-        size = -1
+        size = 0
     return size
 
 
@@ -78,6 +90,10 @@ def _gzip_compress_body(body):
             body.seek(current_position)
             return compressed_obj
         return _gzip_compress_fileobj(body)
+    elif isinstance(body, dict):
+        return gzip.compress(
+            urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
+        )
 
 
 def _gzip_compress_fileobj(body):
@@ -98,7 +114,7 @@ def _set_compression_header(headers, encoding):
     ce_header = headers.get('Content-Encoding')
     if ce_header is None:
         headers['Content-Encoding'] = encoding
-    elif encoding not in ce_header.split(','):
+    else:
         headers['Content-Encoding'] = f'{ce_header},{encoding}'
 
 
