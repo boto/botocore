@@ -1141,7 +1141,15 @@ class ComponentLocator:
             # Only delete the component from the deferred dict after
             # successfully creating the object from the factory as well as
             # injecting the instantiated value into the _components dict.
-            del self._deferred[name]
+            try:
+                del self._deferred[name]
+            except KeyError:
+                # If we get here, it's likely that get_component was called
+                # concurrently from multiple threads, and another thread
+                # already deleted the entry. This means the factory was
+                # probably called twice, but cleaning up the deferred entry
+                # should not crash outright.
+                pass
         try:
             return self._components[name]
         except KeyError:
