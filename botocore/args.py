@@ -581,11 +581,11 @@ class ClientArgsCreator:
             )
             try:
                 min_size = int(min_size)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise botocore.exceptions.InvalidConfigError(
                     error_msg=(
-                        f'{error_msg_base} Value must be an integer.'
-                        f' Received {type(min_size)} instead.'
+                        f'{error_msg_base} Value must be an integer. '
+                        f'Received {type(min_size)} instead.'
                     )
                 )
             if not min_allowed_min_size <= min_size <= max_allowed_min_size:

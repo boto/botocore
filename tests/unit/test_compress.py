@@ -240,7 +240,7 @@ MOCK_COMPRESSION.update(COMPRESSION_MAPPING)
         ),
     ],
 )
-def test_compress(
+def test_maybe_compress(
     config,
     request_dict,
     operation_model,
@@ -258,7 +258,7 @@ def test_compress(
 
 
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
-def test_compress_bad_types(body):
+def test_maybe_compress_bad_types(body):
     request_dict = {'body': body, 'headers': {}}
     maybe_compress_request(
         COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION

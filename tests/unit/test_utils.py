@@ -3476,8 +3476,3 @@ def test_lru_cache_weakref():
     assert cls2.cached_fn.cache_info().currsize == 2
     assert cls2.cached_fn.cache_info().hits == 1  # the call was a cache hit
     assert cls2.cached_fn.cache_info().misses == 2
-
-
-@pytest.fixture
-def operation_def():
-    return {'name': 'CreateFoo'}

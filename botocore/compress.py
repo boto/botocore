@@ -56,10 +56,8 @@ def _should_compress_request(config, request_dict, operation_model):
             body = request_dict['body']
             if isinstance(body, dict):
                 body = urlencode(body, doseq=True, encoding='utf-8')
-            should_compress = (
-                config.request_min_compression_size_bytes
-                <= _get_body_size(body)
-            )
+            config_min = config.request_min_compression_size_bytes
+            should_compress = config_min <= _get_body_size(body)
             if should_compress:
                 request_dict['body'] = body
             return should_compress
