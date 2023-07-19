@@ -94,7 +94,7 @@ def _assert_compression(body, maybe_compressed_body, encoding):
         maybe_compressed_body = maybe_compressed_body.read()
     if isinstance(body, str):
         body = body.encode('utf-8')
-    if isinstance(body, dict) and encoding is not None:
+    if isinstance(body, dict):
         body = urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
     decompress_method = DECOMPRESSION_METHOD_MAP.get(
         encoding, lambda body: body

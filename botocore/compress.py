@@ -41,27 +41,32 @@ def _should_compress_request(config, request_dict, operation_model):
         and config.signature_version != 'v2'
         and operation_model.request_compression is not None
     ):
-        # Requests with streaming input are compressed regardless of
-        # `request_min_compression_size_bytes` if they don't contain the
-        # `requiresLength` trait.
-        if operation_model.has_streaming_input:
-            return (
-                'requiresLength'
-                not in operation_model.get_streaming_input().metadata
+        if not _is_compressible_type(request_dict):
+            body_type = type(request_dict['body'])
+            logger.debug(
+                'Body type %s does not support compression.', body_type
             )
-        else:
-            # If the request body is a dictionary, we need to encode it to get the
-            # length. If compression should occur, the encoded body will be saved
-            # to the request dictionary so it doesn't need to be encoded again.
-            body = request_dict['body']
-            if isinstance(body, dict):
-                body = urlencode(body, doseq=True, encoding='utf-8')
-            config_min = config.request_min_compression_size_bytes
-            should_compress = config_min <= _get_body_size(body)
-            if should_compress:
-                request_dict['body'] = body
-            return should_compress
+            return False
+
+        if operation_model.has_streaming_input:
+            streaming_input = operation_model.get_streaming_input()
+            streaming_metadata = streaming_input.metadata
+            return 'requiresLength' not in streaming_metadata
+
+        body_size = _get_body_size(request_dict['body'])
+        min_size = config.request_min_compression_size_bytes
+        return min_size <= body_size
     return False
+
+
+def _is_compressible_type(request_dict):
+    body = request_dict['body']
+    # Coerce dict to a format compatible with compression.
+    if isinstance(body, dict):
+        body = urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
+        request_dict['body'] = body
+    is_supported_type = isinstance(body, (str, bytes, bytearray))
+    return is_supported_type or hasattr(body, 'read')
 
 
 def _get_body_size(body):
@@ -88,10 +93,6 @@ def _gzip_compress_body(body):
             body.seek(current_position)
             return compressed_obj
         return _gzip_compress_fileobj(body)
-    elif isinstance(body, dict):
-        return gzip.compress(
-            urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
-        )
 
 
 def _gzip_compress_fileobj(body):
