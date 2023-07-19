@@ -560,10 +560,10 @@ class TestCreateClientArgs(unittest.TestCase):
         config = self.call_get_client_args(
             client_config=Config(
                 disable_request_compression=False,
-                request_min_compression_size_bytes=0,
+                request_min_compression_size_bytes=1,
             )
         )['client_config']
-        self.assertEqual(config.request_min_compression_size_bytes, 0)
+        self.assertEqual(config.request_min_compression_size_bytes, 1)
         self.assertFalse(config.disable_request_compression)
 
     def test_bad_type_request_min_compression_size_bytes(self):

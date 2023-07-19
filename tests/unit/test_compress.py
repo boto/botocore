@@ -65,9 +65,9 @@ COMPRESSION_CONFIG_128_BYTES = Config(
     disable_request_compression=False,
     request_min_compression_size_bytes=128,
 )
-COMPRESSION_CONFIG_0_BYTES = Config(
+COMPRESSION_CONFIG_1_BYTE = Config(
     disable_request_compression=False,
-    request_min_compression_size_bytes=0,
+    request_min_compression_size_bytes=1,
 )
 
 
@@ -225,7 +225,7 @@ MOCK_COMPRESSION.update(COMPRESSION_MAPPING)
             'gzip',
         ),
         (
-            COMPRESSION_CONFIG_0_BYTES,
+            COMPRESSION_CONFIG_1_BYTE,
             {'body': {'foo': 'bar'}, 'headers': {}},
             OP_WITH_COMPRESSION,
             True,
@@ -261,7 +261,7 @@ def test_compress(
 def test_compress_bad_types(body):
     request_dict = {'body': body, 'headers': {}}
     maybe_compress_request(
-        COMPRESSION_CONFIG_0_BYTES, request_dict, OP_WITH_COMPRESSION
+        COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION
     )
     assert request_dict['body'] == body
 
@@ -272,7 +272,7 @@ def test_compress_bad_types(body):
 )
 def test_body_streams_position_reset(body):
     maybe_compress_request(
-        COMPRESSION_CONFIG_0_BYTES,
+        COMPRESSION_CONFIG_1_BYTE,
         {'body': body, 'headers': {}},
         OP_WITH_COMPRESSION,
     )
