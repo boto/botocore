@@ -1,0 +1,12 @@
+[
+  {
+    "category": "AWSCRT",
+    "description": "Upgrade awscrt version to 0.16.26",
+    "type": "enhancement"
+  },
+  {
+    "category": "``savingsplans``",
+    "description": "Savings Plans endpoints update",
+    "type": "api-change"
+  }
+]
