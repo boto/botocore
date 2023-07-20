@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.31.7
+======
+
+* enhancement:AWSCRT: Upgrade awscrt version to 0.16.26
+* api-change:``savingsplans``: Savings Plans endpoints update
+
+
 1.31.6
 ======
 
