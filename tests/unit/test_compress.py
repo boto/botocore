@@ -274,7 +274,7 @@ def test_no_compression(config, request_dict, operation_model):
     original_body = request_dict['body']
     maybe_compress_request(config, request_dict, operation_model)
     assert request_dict['body'] is original_body
-    assert ce_header == request_dict['headers'].get('Content-Encoding')
+    assert ce_header is request_dict['headers'].get('Content-Encoding')
 
 
 def test_dict_no_compression():
