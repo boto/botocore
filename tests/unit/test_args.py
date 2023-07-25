@@ -566,6 +566,12 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(config.request_min_compression_size_bytes, 1)
         self.assertFalse(config.disable_request_compression)
 
+    def test_coercible_value_request_min_compression_size_bytes(self):
+        config = Config(request_min_compression_size_bytes='100')
+        client_args = self.call_get_client_args(client_config=config)
+        config = client_args['client_config']
+        self.assertEqual(config.request_min_compression_size_bytes, 100)
+
     def test_bad_type_request_min_compression_size_bytes(self):
         with self.assertRaises(exceptions.InvalidConfigError):
             config = Config(request_min_compression_size_bytes='foo')

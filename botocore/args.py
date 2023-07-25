@@ -557,11 +557,12 @@ class ClientArgsCreator:
             min_size = self._config_store.get_config_variable(
                 'request_min_compression_size_bytes'
             )
-            config_kwargs['request_min_compression_size_bytes'] = min_size
         # conversion func is skipped so input validation must be done here
         # regardless if the value is coming from the config store or the
         # config object
-        self._validate_min_compression_size(min_size)
+        min_size = self._validate_min_compression_size(min_size)
+        config_kwargs['request_min_compression_size_bytes'] = min_size
+
         if disabled is None:
             disabled = self._config_store.get_config_variable(
                 'disable_request_compression'
@@ -582,19 +583,19 @@ class ClientArgsCreator:
             try:
                 min_size = int(min_size)
             except (ValueError, TypeError):
-                raise botocore.exceptions.InvalidConfigError(
-                    error_msg=(
-                        f'{error_msg_base} Value must be an integer. '
-                        f'Received {type(min_size)} instead.'
-                    )
+                msg = (
+                    f'{error_msg_base} Value must be an integer. '
+                    f'Received {type(min_size)} instead.'
                 )
+                raise botocore.exceptions.InvalidConfigError(error_msg=msg)
             if not min_allowed_min_size <= min_size <= max_allowed_min_size:
-                raise botocore.exceptions.InvalidConfigError(
-                    error_msg=(
-                        f'{error_msg_base} Value must be between '
-                        f'{min_allowed_min_size} and {max_allowed_min_size}.'
-                    )
+                msg = (
+                    f'{error_msg_base} Value must be between '
+                    f'{min_allowed_min_size} and {max_allowed_min_size}.'
                 )
+                raise botocore.exceptions.InvalidConfigError(error_msg=msg)
+
+        return min_size
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):
