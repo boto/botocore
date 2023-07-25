@@ -131,6 +131,10 @@ def _assert_compression_body(original_body, compressed_body, encoding):
         compressed_body = compressed_body.read()
     if isinstance(original_body, str):
         original_body = original_body.encode('utf-8')
+    if isinstance(original_body, dict):
+        original_body = urlencode(
+            original_body, doseq=True, encoding='utf-8'
+        ).encode('utf-8')
     decompress = DECOMPRESSION_METHOD_MAP[encoding]
     assert original_body == decompress(compressed_body)
 
@@ -200,6 +204,12 @@ def _assert_compression_header(request_dict, encoding):
             OP_WITH_COMPRESSION,
             'gzip',
         ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            request_dict_dict(),
+            OP_WITH_COMPRESSION,
+            'gzip',
+        ),
     ],
 )
 def test_maybe_compress(
@@ -211,20 +221,6 @@ def test_maybe_compress(
     original_body = request_dict['body']
     maybe_compress_request(config, request_dict, operation_model)
     _assert_compression_body(original_body, request_dict['body'], encoding)
-    _assert_compression_header(request_dict, encoding)
-
-
-def test_maybe_compress_dict():
-    request_dict = request_dict_dict()
-    original_body = request_dict['body']
-    encoded_body = urlencode(
-        original_body, doseq=True, encoding='utf-8'
-    ).encode('utf-8')
-    encoding = 'gzip'
-    maybe_compress_request(
-        COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION
-    )
-    _assert_compression_body(encoded_body, request_dict['body'], encoding)
     _assert_compression_header(request_dict, encoding)
 
 
