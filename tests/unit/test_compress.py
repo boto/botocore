@@ -135,11 +135,18 @@ def _assert_compression_body(original_body, compressed_body, encoding):
     assert original_body == decompress(compressed_body)
 
 
-def _assert_compression_header(request_dict, encoding):
+def _assert_compression_header(headers, encoding):
     assert (
-        'Content-Encoding' in request_dict['headers']
-        and encoding in request_dict['headers']['Content-Encoding']
+        'Content-Encoding' in headers
+        and encoding in headers['Content-Encoding']
     )
+
+
+def assert_compression(original_body, request_dict, encoding):
+    compressed_body = request_dict['body']
+    headers = request_dict['headers']
+    _assert_compression_body(original_body, compressed_body, encoding)
+    _assert_compression_header(headers, encoding)
 
 
 @pytest.mark.parametrize(
@@ -204,8 +211,7 @@ def _assert_compression_header(request_dict, encoding):
 def test_compression(config, request_dict, operation_model, encoding):
     original_body = request_dict['body']
     maybe_compress_request(config, request_dict, operation_model)
-    _assert_compression_body(original_body, request_dict['body'], encoding)
-    _assert_compression_header(request_dict, encoding)
+    assert_compression(original_body, request_dict, encoding)
 
 
 @pytest.mark.parametrize(
@@ -313,7 +319,8 @@ def test_body_streams_position_reset(request_dict):
 def test_only_compress_once():
     with mock.patch('botocore.compress.COMPRESSION_MAPPING', MOCK_COMPRESSION):
         request_dict = default_request_dict()
+        body = request_dict['body']
         maybe_compress_request(
             COMPRESSION_CONFIG_128_BYTES, request_dict, OP_WITH_COMPRESSION
         )
-        _assert_compression_body(REQUEST_BODY, request_dict['body'], 'gzip')
+        assert_compression(body, request_dict, 'gzip')
