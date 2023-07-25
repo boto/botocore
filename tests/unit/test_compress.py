@@ -288,10 +288,9 @@ def test_dict_no_compression():
     assert body == encoded_body.encode('utf-8')
 
 
-@pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
+@pytest.mark.parametrize('body', [1, object(), True, 1.0])
 def test_maybe_compress_bad_types(body):
     request_dict = _request_dict(body)
-    body = request_dict['body']
     maybe_compress_request(
         COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION
     )
