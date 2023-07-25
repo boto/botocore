@@ -36,6 +36,7 @@ def _make_op(
     return op
 
 
+OP_NO_COMPRESSION = _make_op()
 OP_WITH_COMPRESSION = _make_op(request_compression={'encodings': ['gzip']})
 OP_UNKNOWN_COMPRESSION = _make_op(request_compression={'encodings': ['foo']})
 OP_MULTIPLE_COMPRESSIONS = _make_op(
@@ -71,35 +72,49 @@ COMPRESSION_CONFIG_1_BYTE = Config(
 )
 
 
-def request_dict():
+def _request_dict(body=None, headers=None):
+    if body is None:
+        body = b''
+    if headers is None:
+        headers = {}
+
     return {
-        'body': REQUEST_BODY,
-        'headers': {'foo': 'bar'},
+        'body': body,
+        'headers': headers,
     }
+
+
+def default_request_dict():
+    return _request_dict(REQUEST_BODY)
+
+
+def request_dict_string():
+    return _request_dict(REQUEST_BODY.decode('utf-8'))
+
+
+def request_dict_bytearray():
+    return _request_dict(bytearray(REQUEST_BODY))
 
 
 def request_dict_with_content_encoding_header():
-    return {
-        'body': REQUEST_BODY,
-        'headers': {'foo': 'bar', 'Content-Encoding': 'identity'},
-    }
+    return _request_dict(
+        REQUEST_BODY, {'foo': b'bar', 'Content-Encoding': 'identity'}
+    )
+
+
+def request_dict_string_io():
+    return _request_dict(io.StringIO(REQUEST_BODY.decode('utf-8')))
+
+
+def request_dict_bytes_io():
+    return _request_dict(io.BytesIO(REQUEST_BODY))
+
+
+def request_dict_dict():
+    return _request_dict({'foo': 'bar'})
 
 
 DECOMPRESSION_METHOD_MAP = {'gzip': gzip.decompress}
-
-
-def _assert_compression(body, maybe_compressed_body, encoding):
-    if hasattr(body, 'read'):
-        body = body.read()
-        maybe_compressed_body = maybe_compressed_body.read()
-    if isinstance(body, str):
-        body = body.encode('utf-8')
-    if isinstance(body, dict):
-        body = urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
-    decompress_method = DECOMPRESSION_METHOD_MAP.get(
-        encoding, lambda body: body
-    )
-    assert decompress_method(maybe_compressed_body) == body
 
 
 def _bad_compression(body):
@@ -110,133 +125,80 @@ MOCK_COMPRESSION = {'foo': _bad_compression}
 MOCK_COMPRESSION.update(COMPRESSION_MAPPING)
 
 
+def _assert_compression_body(original_body, compressed_body, encoding):
+    if hasattr(original_body, 'read'):
+        original_body = original_body.read()
+        compressed_body = compressed_body.read()
+    if isinstance(original_body, str):
+        original_body = original_body.encode('utf-8')
+    decompress = DECOMPRESSION_METHOD_MAP[encoding]
+    assert original_body == decompress(compressed_body)
+
+
+def _assert_compression_header(request_dict, encoding):
+    assert (
+        'headers' in request_dict
+        and 'Content-Encoding' in request_dict['headers']
+        and encoding in request_dict['headers']['Content-Encoding']
+    )
+
+
 @pytest.mark.parametrize(
-    'config, request_dict, operation_model, is_compressed, encoding',
+    'config, request_dict, operation_model, encoding',
     [
         (
-            Config(
-                disable_request_compression=True,
-                request_min_compression_size_bytes=1000,
-            ),
-            {'body': b'foo', 'headers': {}},
-            OP_WITH_COMPRESSION,
-            False,
-            None,
-        ),
-        (
             COMPRESSION_CONFIG_128_BYTES,
-            request_dict(),
+            default_request_dict(),
             OP_WITH_COMPRESSION,
-            True,
-            'gzip',
-        ),
-        (
-            Config(
-                disable_request_compression=False,
-                request_min_compression_size_bytes=256,
-            ),
-            request_dict(),
-            OP_WITH_COMPRESSION,
-            False,
-            None,
-        ),
-        (
-            Config(request_min_compression_size_bytes=128),
-            request_dict(),
-            OP_WITH_COMPRESSION,
-            True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            request_dict(),
+            default_request_dict(),
+            OP_WITH_COMPRESSION,
+            'gzip',
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            default_request_dict(),
             OP_MULTIPLE_COMPRESSIONS,
-            True,
             'gzip',
         ),
         (
             DEFAULT_COMPRESSION_CONFIG,
-            request_dict(),
+            default_request_dict(),
             STREAMING_OP_WITH_COMPRESSION,
-            True,
-            'gzip',
-        ),
-        (
-            DEFAULT_COMPRESSION_CONFIG,
-            request_dict(),
-            STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH,
-            False,
-            None,
-        ),
-        (
-            DEFAULT_COMPRESSION_CONFIG,
-            request_dict(),
-            _make_op(),
-            False,
-            None,
-        ),
-        (
-            COMPRESSION_CONFIG_128_BYTES,
-            request_dict(),
-            OP_UNKNOWN_COMPRESSION,
-            False,
-            None,
-        ),
-        (
-            COMPRESSION_CONFIG_128_BYTES,
-            {'body': REQUEST_BODY.decode(), 'headers': {}},
-            OP_WITH_COMPRESSION,
-            True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': bytearray(REQUEST_BODY), 'headers': {}},
+            request_dict_bytearray(),
             OP_WITH_COMPRESSION,
-            True,
-            'gzip',
-        ),
-        (
-            COMPRESSION_CONFIG_128_BYTES,
-            {'body': io.BytesIO(REQUEST_BODY), 'headers': {}},
-            OP_WITH_COMPRESSION,
-            True,
-            'gzip',
-        ),
-        (
-            COMPRESSION_CONFIG_128_BYTES,
-            {'body': io.StringIO(REQUEST_BODY.decode()), 'headers': {}},
-            OP_WITH_COMPRESSION,
-            True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
             request_dict_with_content_encoding_header(),
-            OP_UNKNOWN_COMPRESSION,
-            False,
-            'foo',
-        ),
-        (
-            COMPRESSION_CONFIG_128_BYTES,
-            request_dict_with_content_encoding_header(),
             OP_WITH_COMPRESSION,
-            True,
-            'gzip',
-        ),
-        (
-            COMPRESSION_CONFIG_1_BYTE,
-            {'body': {'foo': 'bar'}, 'headers': {}},
-            OP_WITH_COMPRESSION,
-            True,
             'gzip',
         ),
         (
             COMPRESSION_CONFIG_128_BYTES,
-            {'body': {'foo': 'bar'}, 'headers': {}},
+            request_dict_string(),
             OP_WITH_COMPRESSION,
-            False,
-            None,
+            'gzip',
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            request_dict_bytes_io(),
+            OP_WITH_COMPRESSION,
+            'gzip',
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            request_dict_string_io(),
+            OP_WITH_COMPRESSION,
+            'gzip',
         ),
     ],
 )
@@ -244,17 +206,110 @@ def test_maybe_compress(
     config,
     request_dict,
     operation_model,
-    is_compressed,
     encoding,
 ):
     original_body = request_dict['body']
     maybe_compress_request(config, request_dict, operation_model)
-    _assert_compression(original_body, request_dict['body'], encoding)
-    assert (
-        'headers' in request_dict
-        and 'Content-Encoding' in request_dict['headers']
-        and encoding in request_dict['headers']['Content-Encoding']
-    ) == is_compressed
+    _assert_compression_body(original_body, request_dict['body'], encoding)
+    _assert_compression_header(request_dict, encoding)
+
+
+def test_maybe_compress_dict():
+    request_dict = request_dict_dict()
+    original_body = request_dict['body']
+    encoded_body = urlencode(
+        original_body, doseq=True, encoding='utf-8'
+    ).encode('utf-8')
+    encoding = 'gzip'
+    maybe_compress_request(
+        COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION
+    )
+    _assert_compression_body(encoded_body, request_dict['body'], encoding)
+    _assert_compression_header(request_dict, encoding)
+
+
+@pytest.mark.parametrize(
+    'config, request_dict, operation_model',
+    [
+        (
+            Config(
+                disable_request_compression=True,
+                request_min_compression_size_bytes=1000,
+            ),
+            default_request_dict(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            Config(
+                disable_request_compression=False,
+                request_min_compression_size_bytes=256,
+            ),
+            default_request_dict(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            default_request_dict(),
+            STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            default_request_dict(),
+            OP_NO_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            default_request_dict(),
+            OP_UNKNOWN_COMPRESSION,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            request_dict_string(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            request_dict_bytearray(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            request_dict_bytes_io(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            DEFAULT_COMPRESSION_CONFIG,
+            request_dict_string_io(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_128_BYTES,
+            request_dict_with_content_encoding_header(),
+            OP_UNKNOWN_COMPRESSION,
+        ),
+    ],
+)
+def test_no_compression(
+    config,
+    request_dict,
+    operation_model,
+):
+    ce_header = request_dict['headers'].get('Content-Encoding')
+    original_body = request_dict['body']
+    maybe_compress_request(config, request_dict, operation_model)
+    assert request_dict['body'] is original_body
+    assert ce_header == request_dict['headers'].get('Content-Encoding')
+
+
+def test_dict_no_compression():
+    request_dict = request_dict_dict()
+    original_body = request_dict['body']
+    maybe_compress_request(
+        COMPRESSION_CONFIG_128_BYTES, request_dict, OP_WITH_COMPRESSION
+    )
+    assert request_dict['body'] == urlencode(
+        original_body, doseq=True, encoding='utf-8'
+    ).encode('utf-8')
 
 
 @pytest.mark.parametrize('body', [1, object(), None, True, 1.0])
@@ -267,16 +322,16 @@ def test_maybe_compress_bad_types(body):
 
 
 @pytest.mark.parametrize(
-    'body',
-    [io.StringIO('foo'), io.BytesIO(b'foo')],
+    'request_dict',
+    [request_dict_string_io(), request_dict_bytes_io()],
 )
-def test_body_streams_position_reset(body):
+def test_body_streams_position_reset(request_dict):
     maybe_compress_request(
-        COMPRESSION_CONFIG_1_BYTE,
-        {'body': body, 'headers': {}},
+        COMPRESSION_CONFIG_128_BYTES,
+        request_dict,
         OP_WITH_COMPRESSION,
     )
-    assert body.tell() == 0
+    assert request_dict['body'].tell() == 0
 
 
 def test_only_compress_once():
@@ -285,4 +340,4 @@ def test_only_compress_once():
         maybe_compress_request(
             COMPRESSION_CONFIG_128_BYTES, request_dict, OP_WITH_COMPRESSION
         )
-        _assert_compression(REQUEST_BODY, request_dict['body'], 'gzip')
+        _assert_compression_body(REQUEST_BODY, request_dict['body'], 'gzip')

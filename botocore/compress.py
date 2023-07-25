@@ -56,6 +56,7 @@ def _should_compress_request(config, request_dict, operation_model):
         body_size = _get_body_size(request_dict['body'])
         min_size = config.request_min_compression_size_bytes
         return min_size <= body_size
+
     return False
 
 
