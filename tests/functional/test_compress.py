@@ -99,7 +99,7 @@ def test_no_unknown_compression_encodings(operation_model):
     for encoding in operation_model.request_compression["encodings"]:
         assert encoding in KNOWN_COMPRESSION_ENCODINGS, (
             f"Found unknown compression encoding '{encoding}' "
-            f"in operation {operation_model.name}"
+            f"in operation {operation_model.name}."
         )
 
 
