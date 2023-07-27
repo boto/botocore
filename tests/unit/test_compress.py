@@ -188,7 +188,7 @@ def assert_request_compressed(request_dict, expected_body):
 @mock.patch.object(botocore.compress, 'GzipFile', StaticGzipFile)
 @mock.patch.object(botocore.compress, 'gzip_compress', static_compress)
 @pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="requires python3.8 or higher"
+    sys.version_info < (3, 8), reason='requires python3.8 or higher'
 )
 def test_compression(request_dict, operation_model):
     maybe_compress_request(
@@ -275,7 +275,7 @@ def test_no_compression(config, request_dict, operation_model):
 )
 @mock.patch.object(botocore.compress, 'gzip_compress', static_compress)
 @pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="requires python3.8 or higher"
+    sys.version_info < (3, 8), reason='requires python3.8 or higher'
 )
 def test_dict_compression(operation_model, expected_body):
     request_dict = _request_dict({'foo': 'bar'})
@@ -304,14 +304,13 @@ def test_body_streams_position_reset():
         OP_WITH_COMPRESSION,
     )
     assert request_dict['body'].tell() == 0
-    assert 'Content-Encoding' in request_dict['headers']
-    assert request_dict['body'].read() == REQUEST_BODY_COMPRESSED
+    assert_request_compressed(request_dict, REQUEST_BODY_COMPRESSED)
 
 
 @mock.patch.object(botocore.compress, 'gzip_compress', static_compress)
 @mock.patch.object(botocore.compress, 'COMPRESSION_MAPPING', MOCK_COMPRESSION)
 @pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="requires python3.8 or higher"
+    sys.version_info < (3, 8), reason='requires python3.8 or higher'
 )
 def test_only_compress_once():
     request_dict = _request_dict()
