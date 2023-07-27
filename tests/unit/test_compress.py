@@ -10,6 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""
+NOTE: All classes and functions in this module are considered private and are
+subject to abrupt breaking changes. Please do not use them directly.
+
+"""
 import gzip
 import io
 from copy import deepcopy
@@ -59,9 +64,10 @@ REQUEST_BODY = (
 
 REQUEST_BODY_STRING = REQUEST_BODY.decode('utf-8')
 
-DEFAULT_COMPRESSION_CONFIG = Config(
+
+COMPRESSION_CONFIG_10240_BYTES = Config(
     disable_request_compression=False,
-    request_min_compression_size_bytes=10420,
+    request_min_compression_size_bytes=10240,
 )
 COMPRESSION_CONFIG_128_BYTES = Config(
     disable_request_compression=False,
@@ -81,9 +87,7 @@ class NonSeekableStream:
         return self._buffer.read(size)
 
 
-def _request_dict(body=None, headers=None):
-    if body is None:
-        body = b''
+def _request_dict(body=b'', headers=None):
     if headers is None:
         headers = {}
 
@@ -184,7 +188,7 @@ def assert_compression(original_body, request_dict, encoding):
             'gzip',
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             default_request_dict(),
             STREAMING_OP_WITH_COMPRESSION,
             'gzip',
@@ -237,13 +241,13 @@ def test_compression(config, request_dict, operation_model, encoding):
     'config, request_dict, operation_model, encoding',
     [
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_non_seekable_bytes_stream(),
             STREAMING_OP_WITH_COMPRESSION,
             'gzip',
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_non_seekable_text_stream(),
             STREAMING_OP_WITH_COMPRESSION,
             'gzip',
@@ -280,12 +284,12 @@ def test_compression_non_seekable_streams(
             OP_WITH_COMPRESSION,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             default_request_dict(),
             STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             default_request_dict(),
             OP_NO_COMPRESSION,
         ),
@@ -295,22 +299,22 @@ def test_compression_non_seekable_streams(
             OP_UNKNOWN_COMPRESSION,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_string(),
             OP_WITH_COMPRESSION,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_bytearray(),
             OP_WITH_COMPRESSION,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_bytes_io(),
             OP_WITH_COMPRESSION,
         ),
         (
-            DEFAULT_COMPRESSION_CONFIG,
+            COMPRESSION_CONFIG_10240_BYTES,
             request_dict_string_io(),
             OP_WITH_COMPRESSION,
         ),
@@ -327,6 +331,41 @@ def test_compression_non_seekable_streams(
         (
             COMPRESSION_CONFIG_1_BYTE,
             request_dict_non_seekable_text_stream(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            request_dict_non_seekable_text_stream(),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(1),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(1.0),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(object()),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(True),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(None),
+            OP_WITH_COMPRESSION,
+        ),
+        (
+            COMPRESSION_CONFIG_1_BYTE,
+            _request_dict(set()),
             OP_WITH_COMPRESSION,
         ),
     ],
@@ -348,15 +387,6 @@ def test_dict_no_compression():
     body = request_dict['body']
     encoded_body = urlencode(original_body, doseq=True, encoding='utf-8')
     assert body == encoded_body.encode('utf-8')
-
-
-@pytest.mark.parametrize('body', [1, object(), True, 1.0])
-def test_maybe_compress_bad_types(body):
-    request_dict = _request_dict(body)
-    maybe_compress_request(
-        COMPRESSION_CONFIG_1_BYTE, request_dict, OP_WITH_COMPRESSION
-    )
-    assert request_dict['body'] is body
 
 
 @pytest.mark.parametrize(

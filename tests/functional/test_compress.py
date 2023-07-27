@@ -15,10 +15,9 @@ import gzip
 
 import pytest
 
+from botocore.compress import COMPRESSION_MAPPING
 from botocore.config import Config
 from tests import ALL_SERVICES, ClientHTTPStubber, patch_load_service_model
-
-KNOWN_COMPRESSION_ENCODINGS = ("gzip",)
 
 FAKE_MODEL = {
     "version": "2.0",
@@ -97,7 +96,7 @@ def _all_compression_operations():
 @pytest.mark.parametrize("operation_model", _all_compression_operations())
 def test_no_unknown_compression_encodings(operation_model):
     for encoding in operation_model.request_compression["encodings"]:
-        assert encoding in KNOWN_COMPRESSION_ENCODINGS, (
+        assert encoding in COMPRESSION_MAPPING.keys(), (
             f"Found unknown compression encoding '{encoding}' "
             f"in operation {operation_model.name}."
         )

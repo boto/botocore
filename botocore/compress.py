@@ -43,9 +43,8 @@ def _should_compress_request(config, request_dict, operation_model):
     ):
         if not _is_compressible_type(request_dict):
             body_type = type(request_dict['body'])
-            logger.debug(
-                'Body type %s does not support compression.', body_type
-            )
+            log_msg = 'Body type %s does not support compression.'
+            logger.debug(log_msg, body_type)
             return False
 
         if operation_model.has_streaming_input:
