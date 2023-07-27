@@ -10,11 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-"""
-NOTE: All classes and functions in this module are considered private and are
-subject to abrupt breaking changes. Please do not use them directly.
-
-"""
 import gzip
 import io
 from copy import deepcopy
