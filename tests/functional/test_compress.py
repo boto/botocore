@@ -120,8 +120,10 @@ def test_compression(patched_session, monkeypatch):
         param_template = (
             "MockOpParamList.member.{i}.MockOpParam=MockOpParamValue{i}"
         )
-        serialized_body = "&".join(
+        serialized_params = "&".join(
             param_template.format(i=i) for i in range(1, 21)
         )
+        additional_params = "Action=MockOperation&Version=2020-02-02"
+        serialized_body = f"{additional_params}&{serialized_params}"
         actual_body = gzip.decompress(http_stubber.requests[0].body)
-        assert serialized_body.encode('utf-8') in actual_body
+        assert serialized_body.encode('utf-8') == actual_body
