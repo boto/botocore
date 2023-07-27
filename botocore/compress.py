@@ -16,9 +16,10 @@ subject to abrupt breaking changes. Please do not use them directly.
 
 """
 
-import gzip
 import io
 import logging
+from gzip import GzipFile
+from gzip import compress as gzip_compress
 
 from botocore.compat import urlencode
 from botocore.utils import determine_content_length
@@ -88,9 +89,9 @@ def _get_body_size(body):
 
 def _gzip_compress_body(body):
     if isinstance(body, str):
-        return gzip.compress(body.encode('utf-8'))
+        return gzip_compress(body.encode('utf-8'))
     elif isinstance(body, (bytes, bytearray)):
-        return gzip.compress(body)
+        return gzip_compress(body)
     elif hasattr(body, 'read'):
         if hasattr(body, 'seek') and hasattr(body, 'tell'):
             current_position = body.tell()
@@ -102,7 +103,7 @@ def _gzip_compress_body(body):
 
 def _gzip_compress_fileobj(body):
     compressed_obj = io.BytesIO()
-    with gzip.GzipFile(fileobj=compressed_obj, mode='wb') as gz:
+    with GzipFile(fileobj=compressed_obj, mode='wb') as gz:
         while True:
             chunk = body.read(8192)
             if not chunk:
