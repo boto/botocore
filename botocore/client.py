@@ -16,6 +16,7 @@ from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
+from botocore.compress import maybe_compress_request
 from botocore.config import Config
 from botocore.discovery import (
     EndpointDiscoveryHandler,
@@ -955,6 +956,9 @@ class BaseClient:
         if event_response is not None:
             http, parsed_response = event_response
         else:
+            maybe_compress_request(
+                self.meta.config, request_dict, operation_model
+            )
             apply_request_checksum(request_dict)
             http, parsed_response = self._make_request(
                 operation_model, request_dict, request_context
