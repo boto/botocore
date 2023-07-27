@@ -318,6 +318,6 @@ def test_only_compress_once():
     maybe_compress_request(
         COMPRESSION_CONFIG_128_BYTES,
         request_dict,
-        OP_WITH_COMPRESSION,
+        OP_MULTIPLE_COMPRESSIONS,
     )
     assert_request_compressed(request_dict, REQUEST_BODY_COMPRESSED)
