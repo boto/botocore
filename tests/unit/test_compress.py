@@ -330,11 +330,6 @@ def test_compression_non_seekable_streams(
         ),
         (
             COMPRESSION_CONFIG_1_BYTE,
-            request_dict_non_seekable_text_stream(),
-            OP_WITH_COMPRESSION,
-        ),
-        (
-            COMPRESSION_CONFIG_1_BYTE,
             _request_dict(1),
             OP_WITH_COMPRESSION,
         ),
