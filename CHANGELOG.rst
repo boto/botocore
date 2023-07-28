@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.31.14
+=======
+
+* enhancement:compression: Adds support for the ``requestcompression`` operation trait.
+* api-change:``sqs``: Documentation changes related to SQS APIs.
+
+
 1.31.13
 =======
 
