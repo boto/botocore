@@ -206,6 +206,20 @@ class Config:
         creating new connections if set to True.
 
         Defaults to False.
+
+    :type request_min_compression_size_bytes: int
+    :param request_min_compression_bytes: The minimum size in bytes that a
+    request body should be to trigger compression. All requests with streaming
+    input that don't contain the `requiresLength` trait will be compressed
+    regardless of this setting.
+
+        Defaults to None.
+
+    :type disable_request_compression: bool
+    :param disable_request_compression: Disables request body compression if
+    set to True.
+
+        Defaults to None.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -231,6 +245,8 @@ class Config:
             ('ignore_configured_endpoint_urls', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
+            ('request_min_compression_size_bytes', None),
+            ('disable_request_compression', None),
         ]
     )
 
