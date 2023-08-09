@@ -14,14 +14,21 @@ import platform
 
 import pytest
 
+import botocore.useragent
 from botocore import __version__ as botocore_version
 from botocore.config import Config
 from botocore.useragent import (
     UserAgentString,
     sanitize_user_agent_string_component,
 )
+from tests import mock
 
 from .. import requires_crt
+
+
+# Returns a list of unmodified User-Agent components.
+def unmodified_components(components):
+    return components
 
 
 @pytest.mark.parametrize(
@@ -52,6 +59,9 @@ def test_sanitize_ua_string_component(raw_str, allow_hash, expected_str):
     assert actual_str == expected_str
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_basic_user_agent_string():
     ua = UserAgentString(
         platform_name='linux',
@@ -65,22 +75,20 @@ def test_basic_user_agent_string():
         Config(retries={'mode': 'legacy'}, user_agent_appid='fooapp')
     )
 
-    actual = ua.to_string().split(' ')
-    expected_in_exact_order = [
-        f'Botocore/{botocore_version}',
-        'md/awscrt#Unknown',
-        'ua/2.0',
-        'os/linux#1.2.3-foo',
-        'md/arch#x86_64',
-        'lang/python#3.8.20',
-        'md/pyimpl#Dpython',
-        'exec-env/AWS_Lambda_python3.8',
-        'cfg/retry-mode#legacy',
-        'app/fooapp',
-    ]
-
-    indices = [actual.index(el) for el in expected_in_exact_order]
-    assert indices == list(sorted(indices)), 'Elements were found out of order'
+    actual = ua.to_string()
+    expected = (
+        f'Botocore/{botocore_version} '
+        'md/awscrt#Unknown '
+        'ua/2.0 '
+        'os/linux#1.2.3-foo '
+        'md/arch#x86_64 '
+        'lang/python#3.8.20 '
+        'md/pyimpl#Dpython '
+        'exec-env/AWS_Lambda_python3.8 '
+        'cfg/retry-mode#legacy '
+        'app/fooapp'
+    )
+    assert actual == expected
 
 
 def test_shared_test_case():
@@ -115,6 +123,9 @@ def test_shared_test_case():
     assert indices == list(sorted(indices)), 'Elements were found out of order'
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_user_agent_string_with_missing_information():
     # Even when collecting information from the environment fails completely,
     # some minimal string should be generated.
@@ -127,16 +138,8 @@ def test_user_agent_string_with_missing_information():
         execution_env=None,
         crt_version=None,
     ).with_client_config(Config())
-    actual = uas.to_string().split(' ')
-    expected_in_exact_order = [
-        f"Botocore/{botocore_version}",
-        "ua/2.0",
-        "os/other",
-        "lang/python",
-    ]
-
-    indices = [actual.index(el) for el in expected_in_exact_order]
-    assert indices == list(sorted(indices)), 'Elements were found out of order'
+    actual = uas.to_string()
+    assert actual == f'Botocore/{botocore_version} ua/2.0 os/other lang/python'
 
 
 def test_from_environment(monkeypatch):
