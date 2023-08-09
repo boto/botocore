@@ -115,7 +115,8 @@ class RawStringUserAgentComponent:
     def to_string(self):
         return self._value
 
-
+# This is not a public interface and is subject to abrupt breaking changes.
+# Any usage is not advised or supported in external code bases.
 try:
     from botocore.customizations.useragent import modify_components
 except ImportError:
