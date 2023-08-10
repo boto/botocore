@@ -116,6 +116,16 @@ class RawStringUserAgentComponent:
         return self._value
 
 
+# This is not a public interface and is subject to abrupt breaking changes.
+# Any usage is not advised or supported in external code bases.
+try:
+    from botocore.customizations.useragent import modify_components
+except ImportError:
+    # Default implementation that returns unmodified User-Agent components.
+    def modify_components(components):
+        return components
+
+
 class UserAgentString:
     """
     Generator for AWS SDK User-Agent header strings.
@@ -271,6 +281,9 @@ class UserAgentString:
             *self._build_app_id(),
             *self._build_extra(),
         ]
+
+        components = modify_components(components)
+
         return ' '.join([comp.to_string() for comp in components])
 
     def _build_sdk_metadata(self):

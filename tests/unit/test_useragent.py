@@ -14,14 +14,21 @@ import platform
 
 import pytest
 
+import botocore.useragent
 from botocore import __version__ as botocore_version
 from botocore.config import Config
 from botocore.useragent import (
     UserAgentString,
     sanitize_user_agent_string_component,
 )
+from tests import mock
 
 from .. import requires_crt
+
+
+# Returns a list of unmodified User-Agent components.
+def unmodified_components(components):
+    return components
 
 
 @pytest.mark.parametrize(
@@ -52,6 +59,9 @@ def test_sanitize_ua_string_component(raw_str, allow_hash, expected_str):
     assert actual_str == expected_str
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_basic_user_agent_string():
     ua = UserAgentString(
         platform_name='linux',
@@ -113,6 +123,9 @@ def test_shared_test_case():
     assert indices == list(sorted(indices)), 'Elements were found out of order'
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_user_agent_string_with_missing_information():
     # Even when collecting information from the environment fails completely,
     # some minimal string should be generated.
