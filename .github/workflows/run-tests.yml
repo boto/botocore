@@ -18,9 +18,9 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - name: 'Set up Python ${{ matrix.python-version }}'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
         with:
           python-version: '${{ matrix.python-version }}'
       - name: Install dependencies
@@ -30,7 +30,7 @@ jobs:
         run: |
           python scripts/ci/run-tests --with-cov --with-xdist
       - name: Run codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
         with:
           directory: tests
 
@@ -42,9 +42,9 @@ jobs:
       fail-fast: true
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - name: 'Set up Python 3.10'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
         with:
           python-version: '3.10'
       - name: Install dependencies
