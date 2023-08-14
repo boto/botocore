@@ -26,7 +26,7 @@ def run(command):
 
 if __name__ == "__main__":
     with cd(REPO_ROOT):
-        if sys.version_info[:2] == (3, 12):
+        if sys.version_info[:2] >= (3, 12):
             run("pip install setuptools")
 
-    run("pip install -r requirements-dev-lock.txt")
+        run("pip install -r requirements-dev-lock.txt")
