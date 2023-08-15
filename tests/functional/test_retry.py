@@ -67,7 +67,7 @@ class TestRetryHeader(BaseRetryTest):
 
         # The first, third and seventh datetime values of each
         # utcnow_side_effects list are side_effect values for when
-        # utcnow is called in SigV4 signing.
+        # datetime.now is called in SigV4 signing.
         utcnow_side_effects = [
             [
                 datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
@@ -114,7 +114,7 @@ class TestRetryHeader(BaseRetryTest):
             mock.Mock(wraps=datetime.datetime),
         )
         mocked_datetime = datetime_patcher.start()
-        mocked_datetime.utcnow.side_effect = utcnow_side_effects
+        mocked_datetime.now.side_effect = utcnow_side_effects
 
         client = self.session.create_client(
             'dynamodb', self.region, config=client_config
