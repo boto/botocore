@@ -3030,7 +3030,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def _get_datetime(self, dt=None, offset=None, offset_func=operator.add):
         if dt is None:
-            dt = datetime.datetime.now(datetime.timezone.utc)
+            dt = datetime.datetime.utcnow()
         if offset is not None:
             dt = offset_func(dt, offset)
 

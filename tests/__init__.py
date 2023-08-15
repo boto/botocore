@@ -568,12 +568,12 @@ class FreezeTime(ContextDecorator):
     :param module: reference to imported module to patch (e.g. botocore.auth.datetime)
 
     :type date: datetime.datetime
-    :param date: datetime object specifying the output for now() in UTC
+    :param date: datetime object specifying the output for utcnow()
     """
 
     def __init__(self, module, date=None):
         if date is None:
-            date = datetime.datetime.now(datetime.timezone.utc)
+            date = datetime.datetime.utcnow()
         self.date = date
         self.datetime_patcher = mock.patch.object(
             module, 'datetime', mock.Mock(wraps=datetime.datetime)
@@ -581,7 +581,7 @@ class FreezeTime(ContextDecorator):
 
     def __enter__(self, *args, **kwargs):
         mock = self.datetime_patcher.start()
-        mock.now.return_value = self.date
+        mock.utcnow.return_value = self.date
 
     def __exit__(self, *args, **kwargs):
         self.datetime_patcher.stop()
