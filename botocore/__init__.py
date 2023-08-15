@@ -16,7 +16,7 @@ import logging
 import os
 import re
 
-__version__ = '1.31.26'
+__version__ = '1.31.27'
 
 
 class NullHandler(logging.Handler):
