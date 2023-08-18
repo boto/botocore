@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.31.30
+=======
+
+* api-change:``codecommit``: Add new ListFileCommitHistory operation to retrieve commits which introduced changes to a specific file.
+* api-change:``securityhub``: Added Inspector Lambda code Vulnerability section to ASFF, including GeneratorDetails, EpssScore, ExploitAvailable, and CodeVulnerabilities.
+
+
 1.31.29
 =======
 
