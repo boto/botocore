@@ -514,7 +514,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             self.assertEqual(response.status, 200)
             response.close()
 
-            # The client send the second request, expecting 100 continue either, 
+            # The client send the second request, expecting 100 continue either,
             # using the same connection
             conn.request(
                 'PUT', '/bucket/foo', b'body', {'Expect': b'100-continue'}
