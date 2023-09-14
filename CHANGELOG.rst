@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.31.48
+=======
+
+* api-change:``appstream``: This release introduces multi-session fleets, allowing customers to provision more than one user session on a single fleet instance.
+* api-change:``cloudformation``: Documentation updates for AWS CloudFormation
+* api-change:``entityresolution``: Changed "ResolutionTechniques" and "MappedInputFields" in workflow and schema mapping operations to be required fields.
+* api-change:``lookoutequipment``: This release adds APIs for the new scheduled retraining feature.
+
+
 1.31.47
 =======
 
