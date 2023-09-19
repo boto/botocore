@@ -1113,7 +1113,7 @@ class BaseClient:
             pageable.  You can use the ``client.can_paginate`` method to
             check if an operation is pageable.
 
-        :rtype: L{botocore.paginate.Paginator}
+        :rtype: ``botocore.paginate.Paginator``
         :return: A paginator object.
 
         """
@@ -1212,7 +1212,7 @@ class BaseClient:
             section of the service docs for a list of available waiters.
 
         :returns: The specified waiter object.
-        :rtype: botocore.waiter.Waiter
+        :rtype: ``botocore.waiter.Waiter``
         """
         config = self._get_waiter_config()
         if not config:
