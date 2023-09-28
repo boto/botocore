@@ -198,7 +198,7 @@ class BaseAssumeRoleTest(BaseEnvVar):
             },
             'AssumedRoleUser': {
                 'AssumedRoleId': 'myroleid',
-                'Arn': 'arn:aws:iam::1234567890:user/myuser',
+                'Arn': f'arn:aws:iam::{credentials.account_id}:user/myuser',
             },
         }
 
@@ -209,6 +209,7 @@ class BaseAssumeRoleTest(BaseEnvVar):
             'fake-%s' % random_chars(15),
             'fake-%s' % random_chars(35),
             'fake-%s' % random_chars(45),
+            account_id='fake-%s' % random_chars(12),
         )
 
     def assert_creds_equal(self, c1, c2):
