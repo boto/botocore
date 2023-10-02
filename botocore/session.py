@@ -479,7 +479,9 @@ class Session:
         """
         self._client_config = client_config
 
-    def set_credentials(self, access_key, secret_key, token=None):
+    def set_credentials(
+        self, access_key, secret_key, token=None, account_id=None
+    ):
         """
         Manually create credentials for this session.  If you would
         prefer to use botocore without a config file, environment variables,
@@ -495,9 +497,13 @@ class Session:
         :type token: str
         :param token: An option session token used by STS session
             credentials.
+
+        :type account_id: str
+        :param account_id: An optional account ID associated with the
+            credentials.
         """
         self._credentials = botocore.credentials.Credentials(
-            access_key, secret_key, token
+            access_key, secret_key, token, account_id=account_id
         )
 
     def get_credentials(self):
