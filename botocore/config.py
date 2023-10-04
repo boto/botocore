@@ -227,6 +227,9 @@ class Config:
         the ``Client Context Parameters`` section of the service client's
         documentation. Invalid parameters or ones that are not used by the
         specified service will be ignored.
+    :type account_id_endpoint_mode: str
+    :param account_id_endpoint_mode: Enables or disables account ID based
+        endpoint routing for supported operations.
 
         Defaults to None.
     """
@@ -257,6 +260,7 @@ class Config:
             ('request_min_compression_size_bytes', None),
             ('disable_request_compression', None),
             ('client_context_params', None),
+            ('account_id_endpoint_mode', None),
         ]
     )
 

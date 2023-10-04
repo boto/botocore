@@ -26,8 +26,10 @@ from botocore.auth import AUTH_TYPE_MAPS, HAS_CRT
 from botocore.crt import CRT_SUPPORTED_AUTH_TYPES
 from botocore.endpoint_provider import EndpointProvider
 from botocore.exceptions import (
+    AccountIDNotFound,
     EndpointProviderError,
     EndpointVariantError,
+    InvalidConfigError,
     InvalidEndpointConfigurationError,
     InvalidHostLabelError,
     MissingDependencyException,
@@ -46,6 +48,12 @@ from botocore.utils import ensure_boolean, instance_cache
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
 DEFAULT_SERVICE_DATA = {'endpoints': {}}
+# Allowed values for the ``account_id_endpoint_mode`` config field.
+VALID_ACCOUNT_ID_ENDPOINT_MODES = [
+    'preferred',
+    'disabled',
+    'required',
+]
 
 
 class BaseEndpointResolver:
@@ -450,6 +458,8 @@ class EndpointResolverBuiltins(str, Enum):
     AWS_S3_DISABLE_MRAP = "AWS::S3::DisableMultiRegionAccessPoints"
     # Whether a custom endpoint has been configured (str)
     SDK_ENDPOINT = "SDK::Endpoint"
+    # An account ID sourced from the credential resolution process.
+    AWS_ACCOUNT_ID = "AWS::Auth::AccountId"
 
 
 class EndpointRulesetResolver:
@@ -465,6 +475,7 @@ class EndpointRulesetResolver:
         event_emitter,
         use_ssl=True,
         requested_auth_scheme=None,
+        credentials=None,
     ):
         self._provider = EndpointProvider(
             ruleset_data=endpoint_ruleset_data,
@@ -478,6 +489,7 @@ class EndpointRulesetResolver:
         self._use_ssl = use_ssl
         self._requested_auth_scheme = requested_auth_scheme
         self._instance_cache = {}
+        self._credentials = credentials
 
     def construct_endpoint(
         self,
@@ -546,6 +558,7 @@ class EndpointRulesetResolver:
         customized_builtins = self._get_customized_builtins(
             operation_model, call_args, request_context
         )
+        self._resolve_account_id_builtin(request_context, customized_builtins)
         for param_name, param_def in self._param_definitions.items():
             param_val = self._resolve_param_from_context(
                 param_name=param_name,
@@ -561,6 +574,71 @@ class EndpointRulesetResolver:
                 provider_params[param_name] = param_val
 
         return provider_params
+
+    def _resolve_account_id_builtin(self, request_context, builtins):
+        """Resolve the ``AWS::Auth::AccountId`` builtin if configured in the
+        ruleset, account ID based routing is enabled and it has not already
+        been resolved in a custom handler.
+        """
+        if 'AccountId' in self._param_definitions:
+            act_id_ep_mode = self._resolve_account_id_endpoint_mode(
+                request_context
+            )
+            act_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
+            if act_id_ep_mode == 'disabled':
+                # if account ID has been set with a custom handler, but the mode
+                # is disabled, we must unset it so it won't be passed to the
+                # endpoint provider.
+                builtins[act_id_builtin_key] = None
+                return
+
+            act_id_builtin = builtins.get(act_id_builtin_key)
+            if act_id_builtin is None:
+                self._do_resolve_account_id_builtin(act_id_ep_mode, builtins)
+
+    def _resolve_account_id_endpoint_mode(self, request_context):
+        """Resolve the account ID endpoint mode for the request. Account ID
+        based routing is always disabled for presigned and unsigned requests.
+        Otherwise, the mode is determined by the ``account_id_endpoint_mode``
+        config setting.
+        """
+        not_presign = not request_context.get('is_presign_request', False)
+        should_sign = self._requested_auth_scheme != UNSIGNED
+        creds_available = self._credentials is not None
+        if all((not_presign, should_sign, creds_available)):
+            config = request_context['client_config']
+            act_id_ep_mode = config.account_id_endpoint_mode
+            return self._validate_account_id_endpoint_mode(act_id_ep_mode)
+        return 'disabled'
+
+    def _validate_account_id_endpoint_mode(self, account_id_endpoint_mode):
+        if account_id_endpoint_mode not in VALID_ACCOUNT_ID_ENDPOINT_MODES:
+            valid_modes_str = ', '.join(VALID_ACCOUNT_ID_ENDPOINT_MODES)
+            error_msg = (
+                f"Invalid value '{account_id_endpoint_mode}' for "
+                "account_id_endpoint_mode. Valid values are: "
+                f"{valid_modes_str}."
+            )
+            raise InvalidConfigError(error_msg=error_msg)
+        return account_id_endpoint_mode
+
+    def _do_resolve_account_id_builtin(
+        self, account_id_endpoint_mode, builtins
+    ):
+        # This will make a call to resolve credentials if they are not already
+        # or need to be refreshed.
+        frozen_creds = self._credentials.get_frozen_credentials()
+        account_id = frozen_creds.account_id
+        if account_id is None:
+            if account_id_endpoint_mode == 'preferred':
+                LOG.debug(
+                    '`account_id_endpoint_mode` is set to `preferred`, but no '
+                    'account ID was found.'
+                )
+            elif account_id_endpoint_mode == 'required':
+                raise AccountIDNotFound()
+        else:
+            builtins[EndpointResolverBuiltins.AWS_ACCOUNT_ID] = account_id
 
     def _resolve_param_from_context(
         self, param_name, operation_model, call_args

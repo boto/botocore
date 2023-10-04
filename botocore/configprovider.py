@@ -161,6 +161,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         False,
         utils.ensure_boolean,
     ),
+    'account_id_endpoint_mode': (
+        'account_id_endpoint_mode',
+        'AWS_ACCOUNT_ID_ENDPOINT_MODE',
+        'preferred',
+        None,
+    ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
