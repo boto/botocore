@@ -627,9 +627,7 @@ class TestCreateClientArgs(unittest.TestCase):
         client_config = config['client_config']
         self.assertEqual(client_config.account_id_endpoint_mode, 'preferred')
 
-    def test_account_id_endpoint_mode_client_config_overrides_config_store(
-        self,
-    ):
+    def test_acct_id_ep_mode_client_cfg_overrides_cfg_store(self):
         self.config_store.set_config_variable(
             'account_id_endpoint_mode', 'preferred'
         )
