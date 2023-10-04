@@ -614,6 +614,30 @@ class TestCreateClientArgs(unittest.TestCase):
         config = client_args['client_config']
         self.assertFalse(config.disable_request_compression)
 
+    def test_account_id_endpoint_mode_config_store(self):
+        self.config_store.set_config_variable(
+            'account_id_endpoint_mode', 'preferred'
+        )
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'preferred')
+
+    def test_account_id_endpoint_mode_client_config(self):
+        config = Config(account_id_endpoint_mode='preferred')
+        config = self.call_get_client_args(client_config=config)
+        client_config = config['client_config']
+        self.assertEqual(client_config.account_id_endpoint_mode, 'preferred')
+
+    def test_account_id_endpoint_mode_client_config_overrides_config_store(
+        self,
+    ):
+        self.config_store.set_config_variable(
+            'account_id_endpoint_mode', 'preferred'
+        )
+        config = Config(account_id_endpoint_mode='required')
+        config = self.call_get_client_args(client_config=config)
+        client_config = config['client_config']
+        self.assertEqual(client_config.account_id_endpoint_mode, 'required')
+
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
@@ -679,6 +703,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             bins['AWS::S3::DisableMultiRegionAccessPoints'], False
         )
         self.assertEqual(bins['SDK::Endpoint'], None)
+        self.assertEqual(bins['AWS::Auth::AccountId'], None)
 
     def test_aws_region(self):
         bins = self.call_compute_endpoint_resolver_builtin_defaults(

@@ -790,7 +790,8 @@ class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
         expected_creds = self.create_random_credentials()
         response = self.create_assume_role_response(expected_creds)
         session = StubbedSession(**kwargs)
-        stubber = session.stub('sts')
+        config = Config(signature_version=UNSIGNED)
+        stubber = session.stub('sts', config=config)
         stubber.add_response(
             'assume_role_with_web_identity', response, expected_params
         )
