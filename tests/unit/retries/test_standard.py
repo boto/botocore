@@ -26,7 +26,6 @@ RETRYABLE_THROTTLED_RESPONSES = [
     (400, 'LimitExceededException', True),
     (403, 'RequestThrottled', True),
     (503, 'SlowDown', True),
-    (503, 'SlowDown', True),
     (400, 'PriorRequestNotComplete', True),
     (502, 'EC2ThrottledException', True),
     # These are some negative test cases, not in the spec but we'll use
