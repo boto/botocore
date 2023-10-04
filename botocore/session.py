@@ -479,7 +479,9 @@ class Session:
         """
         self._client_config = client_config
 
-    def set_credentials(self, access_key, secret_key, token=None):
+    def set_credentials(
+        self, access_key, secret_key, token=None, account_id=None
+    ):
         """
         Manually create credentials for this session.  If you would
         prefer to use botocore without a config file, environment variables,
@@ -495,9 +497,13 @@ class Session:
         :type token: str
         :param token: An option session token used by STS session
             credentials.
+
+        :type account_id: str
+        :param account_id: An optional account ID associated with the
+            credentials.
         """
         self._credentials = botocore.credentials.Credentials(
-            access_key, secret_key, token
+            access_key, secret_key, token, account_id=account_id
         )
 
     def get_credentials(self):
@@ -841,6 +847,7 @@ class Session:
         aws_secret_access_key=None,
         aws_session_token=None,
         config=None,
+        aws_account_id=None,
     ):
         """Create a botocore client.
 
@@ -910,6 +917,10 @@ class Session:
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
+        :type aws_account_id: string
+        :param aws_account_id: The AWS account ID to use when creating the client.
+            Same semantics as aws_access_key_id above.
+
         """
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then
@@ -945,6 +956,7 @@ class Session:
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token,
+                account_id=aws_account_id,
             )
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
