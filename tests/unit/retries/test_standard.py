@@ -21,6 +21,7 @@ RETRYABLE_THROTTLED_RESPONSES = [
     (400, 'RequestThrottledException', True),
     (400, 'TooManyRequestsException', True),
     (400, 'ProvisionedThroughputExceededException', True),
+    (400, 'TransactionInProgressException', True),
     (503, 'RequestLimitExceeded', True),
     (509, 'BandwidthLimitExceeded', True),
     (400, 'LimitExceededException', True),
