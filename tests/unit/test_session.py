@@ -549,6 +549,23 @@ class TestCreateClient(BaseSessionTest):
                 aws_secret_access_key='foo',
             )
 
+    @mock.patch('botocore.client.ClientCreator')
+    def test_credential_params(self, client_creator):
+        self.session.create_client(
+            'sts',
+            'us-west-2',
+            aws_access_key_id='foo',
+            aws_secret_access_key='bar',
+            aws_session_token='baz',
+            aws_account_id='123456789012',
+        )
+        call_args = client_creator.return_value.create_client.call_args[1]
+        credentials = call_args['credentials']
+        self.assertEqual(credentials.access_key, 'foo')
+        self.assertEqual(credentials.secret_key, 'bar')
+        self.assertEqual(credentials.token, 'baz')
+        self.assertEqual(credentials.account_id, '123456789012')
+
     def test_cred_provider_not_called_on_unsigned_client(self):
         cred_provider = mock.Mock()
         self.session.register_component('credential_provider', cred_provider)
