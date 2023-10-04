@@ -266,6 +266,7 @@ class ClientArgsCreator:
                 disable_request_compression=(
                     client_config.disable_request_compression
                 ),
+                client_context_params=client_config.client_context_params,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
@@ -641,14 +642,16 @@ class ClientArgsCreator:
             client_endpoint_url=endpoint_url,
             legacy_endpoint_url=endpoint.host,
         )
-        # botocore does not support client context parameters generically
-        # for every service. Instead, the s3 config section entries are
-        # available as client context parameters. In the future, endpoint
-        # rulesets of services other than s3/s3control may require client
-        # context parameters.
-        client_context = (
-            s3_config_raw if self._is_s3_service(service_name_raw) else {}
-        )
+        # Client context params for s3 conflict with the available settings
+        # in the `s3` parameter on the `Config` object. The s3 config will
+        # always take precedence over the client context params for s3 and
+        # s3control if set.
+        if self._is_s3_service(service_name_raw) and s3_config_raw:
+            client_context = s3_config_raw
+        elif client_config is not None and client_config.client_context_params:
+            client_context = client_config.client_context_params
+        else:
+            client_context = {}
         sig_version = (
             client_config.signature_version
             if client_config is not None
