@@ -817,4 +817,4 @@ class UnknownEndpointResolutionBuiltInName(EndpointProviderError):
 
 
 class AccountIDNotFound(EndpointResolutionError):
-    fmt = '`account_id_endpoint_mode is set to `required` but no account ID was found.'
+    fmt = '"account_id_endpoint_mode" is set to "required" but no account ID was found.'

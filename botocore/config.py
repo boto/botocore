@@ -230,8 +230,18 @@ class Config:
     :type account_id_endpoint_mode: str
     :param account_id_endpoint_mode: Enables or disables account ID based
         endpoint routing for supported operations.
+        Valid options are:
 
-        Defaults to None.
+        * ``preferred`` -- Attempt to resolve account ID during endpoint
+            resolution if supported by the service. If account ID cannot be
+            resolved, fallback to a different endpoint.
+        * ``required`` -- Require account ID to be resolved during endpoint
+            resolution. If account ID cannot be resolved, raises
+            ``AccountIDNotFound`` exception.
+        * ``disabled`` -- Disable account ID based endpoint routing. The SDK
+            will not attempt to resolve account ID during endpoint resolution.
+
+        If not specified, the default behavior is ``preferred``.
     """
 
     OPTION_DEFAULTS = OrderedDict(
