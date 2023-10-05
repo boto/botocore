@@ -228,18 +228,14 @@ class Config:
         documentation. Invalid parameters or ones that are not used by the
         specified service will be ignored.
     :type account_id_endpoint_mode: str
-    :param account_id_endpoint_mode: Enables or disables account ID based
-        endpoint routing for supported operations.
+    :param account_id_endpoint_mode: Set account ID based endpoint behavior
+        for supported operations.
         Valid options are:
 
-        * ``preferred`` -- Attempt to resolve account ID during endpoint
-            resolution if supported by the service. If account ID cannot be
-            resolved, fallback to a different endpoint.
-        * ``required`` -- Require account ID to be resolved during endpoint
-            resolution. If account ID cannot be resolved, raises
-            ``AccountIDNotFound`` exception.
-        * ``disabled`` -- Disable account ID based endpoint routing. The SDK
-            will not attempt to resolve account ID during endpoint resolution.
+        * ``preferred`` -- Use account ID based endpoint routing if available.
+        * ``required`` -- Raise ``AccountIDNotFound`` exception if account ID
+            based endpoint routing is unavailable.
+        * ``disabled`` -- Disable account ID based endpoint routing.
 
         If not specified, the default behavior is ``preferred``.
     """
