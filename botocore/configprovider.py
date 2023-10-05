@@ -47,7 +47,9 @@ logger = logging.getLogger(__name__)
 #: the ``env var`` is the OS environment variable (``os.environ``) to
 #: use, and ``default_value`` is the value to use if no value is otherwise
 #: found.
-BOTOCORE_DEFAULT_SESSION_VARIABLES = {
+#: NOTE: Fixing the spelling of this variable would be a breaking change.
+#: Please leave as is.
+BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     # logical:  config_file, env_var,        default_value, conversion_func
     'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
@@ -223,7 +225,7 @@ DEFAULT_PROXIES_CONFIG_VARS = {
 def create_botocore_default_config_mapping(session):
     chain_builder = ConfigChainFactory(session=session)
     config_mapping = _create_config_chain_mapping(
-        chain_builder, BOTOCORE_DEFAULT_SESSION_VARIABLES
+        chain_builder, BOTOCORE_DEFAUT_SESSION_VARIABLES
     )
     config_mapping['s3'] = SectionConfigProvider(
         's3',
