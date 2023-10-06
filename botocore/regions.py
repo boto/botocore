@@ -587,11 +587,11 @@ class EndpointRulesetResolver:
             request_context
         )
         acct_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
-        acct_id_builtin = builtins.get(acct_id_builtin_key)
         if acct_id_ep_mode == 'disabled':
             # Unset the account ID if endpoint mode is disabled.
             builtins[acct_id_builtin_key] = None
-        elif acct_id_builtin is None:
+
+        elif builtins.get(acct_id_builtin_key) is None:
             self._do_resolve_account_id_builtin(acct_id_ep_mode, builtins)
 
     def _resolve_account_id_endpoint_mode(self, request_context):
@@ -599,7 +599,8 @@ class EndpointRulesetResolver:
         not_presign = not request_context.get('is_presign_request', False)
         should_sign = self._requested_auth_scheme != UNSIGNED
         creds_available = self._credentials is not None
-        if all((not_presign, should_sign, creds_available)):
+
+        if not_presign and should_sign and creds_available:
             ep_mode = request_context['client_config'].account_id_endpoint_mode
             return self._validate_account_id_endpoint_mode(ep_mode)
         return 'disabled'

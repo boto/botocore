@@ -1084,9 +1084,8 @@ class ProcessProvider(CredentialProvider):
         return creds_dict
 
     def _resolve_account_id(self, parsed_response):
-        return parsed_response.get('AccountId') or self.profile_config.get(
-            'aws_account_id'
-        )
+        account_id = parsed_response.get('AccountId')
+        return account_id or self.profile_config.get('aws_account_id')
 
     @property
     def _credential_process(self):
@@ -1096,9 +1095,8 @@ class ProcessProvider(CredentialProvider):
     def profile_config(self):
         if self._loaded_config is None:
             self._loaded_config = self._load_config()
-        return self._loaded_config.get('profiles', {}).get(
-            self._profile_name, {}
-        )
+        profiles = self._loaded_config.get('profiles', {})
+        return profiles.get(self._profile_name, {})
 
 
 class InstanceMetadataProvider(CredentialProvider):

@@ -284,6 +284,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         refresher = credentials.AssumeRoleCredentialFetcher(
             client_creator, self.source_creds, self.role_arn
         )
+
         expected_response = self.get_expected_creds_from_response(response)
         response = refresher.fetch_credentials()
 
