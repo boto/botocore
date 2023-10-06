@@ -31,7 +31,7 @@ from botocore.endpoint_provider import (
     TreeRule,
 )
 from botocore.exceptions import (
-    AccountIDNotFound,
+    AccountIdNotFound,
     EndpointResolutionError,
     InvalidConfigError,
     MissingDependencyException,
@@ -721,7 +721,7 @@ def test_account_id_builtin(
             Credentials(access_key="foo", secret_key="bar", token="baz"),
             None,
             ACT_ID_REQUIRED_CONTEXT,
-            AccountIDNotFound,
+            AccountIdNotFound,
         ),
     ],
 )

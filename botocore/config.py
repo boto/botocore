@@ -233,7 +233,7 @@ class Config:
         Valid options are:
 
         * ``preferred`` -- Use account ID based endpoint routing if available.
-        * ``required`` -- Raise ``AccountIDNotFound`` exception if account ID
+        * ``required`` -- Raise ``AccountIdNotFound`` exception if account ID
             based endpoint routing is unavailable.
         * ``disabled`` -- Disable account ID based endpoint routing.
 

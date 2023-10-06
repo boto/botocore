@@ -816,5 +816,5 @@ class UnknownEndpointResolutionBuiltInName(EndpointProviderError):
     fmt = 'Unknown builtin variable name: {name}'
 
 
-class AccountIDNotFound(EndpointResolutionError):
+class AccountIdNotFound(EndpointResolutionError):
     fmt = '"account_id_endpoint_mode" is set to "required" but no account ID was found.'

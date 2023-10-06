@@ -499,7 +499,7 @@ class Session:
             credentials.
 
         :type account_id: str
-        :param account_id: The account ID part of the credentials.
+        :param account_id: The account ID for the credentials.
         """
         self._credentials = botocore.credentials.Credentials(
             access_key, secret_key, token, account_id=account_id

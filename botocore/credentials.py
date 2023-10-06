@@ -1251,10 +1251,7 @@ class EnvProvider(CredentialProvider):
                     provider=method, cred_var=mapping['expiry_time']
                 )
 
-            credentials['account_id'] = None
-            account_id = environ.get(mapping['account_id'], '')
-            if account_id:
-                credentials['account_id'] = account_id
+            credentials['account_id'] = environ.get(mapping['account_id'])
 
             return credentials
 
