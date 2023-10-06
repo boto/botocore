@@ -708,13 +708,16 @@ class CachedCredentialFetcher:
 
         creds = response['Credentials']
         expiration = _serialize_if_needed(creds['Expiration'], iso=True)
-        return {
+        creds_dict = {
             'access_key': creds['AccessKeyId'],
             'secret_key': creds['SecretAccessKey'],
             'token': creds['SessionToken'],
             'expiry_time': expiration,
-            'account_id': creds.get('AccountId'),
         }
+        account_id = creds.get('AccountId')
+        if account_id is not None:
+            creds_dict['account_id'] = account_id
+        return creds_dict
 
     def _load_from_cache(self):
         if self._cache_key in self._cache:
@@ -1037,7 +1040,7 @@ class ProcessProvider(CredentialProvider):
             secret_key=creds_dict['secret_key'],
             token=creds_dict.get('token'),
             method=self.METHOD,
-            account_id=creds_dict['account_id'],
+            account_id=creds_dict.get('account_id'),
         )
 
     def _retrieve_credentials_using(self, credential_process):
@@ -1063,18 +1066,22 @@ class ProcessProvider(CredentialProvider):
                 ),
             )
         try:
-            return {
+            creds_dict = {
                 'access_key': parsed['AccessKeyId'],
                 'secret_key': parsed['SecretAccessKey'],
                 'token': parsed.get('SessionToken'),
                 'expiry_time': parsed.get('Expiration'),
-                'account_id': self._resolve_account_id(parsed),
             }
         except KeyError as e:
             raise CredentialRetrievalError(
                 provider=self.METHOD,
                 error_msg=f"Missing required key in response: {e}",
             )
+
+        account_id = self._resolve_account_id(parsed)
+        if account_id is not None:
+            creds_dict['account_id'] = account_id
+        return creds_dict
 
     def _resolve_account_id(self, parsed_response):
         return parsed_response.get('AccountId') or self.profile_config.get(
@@ -1200,7 +1207,7 @@ class EnvProvider(CredentialProvider):
                     expiry_time,
                     refresh_using=fetcher,
                     method=self.METHOD,
-                    account_id=credentials['account_id'],
+                    account_id=credentials.get('account_id'),
                 )
 
             return Credentials(
@@ -1208,7 +1215,7 @@ class EnvProvider(CredentialProvider):
                 credentials['secret_key'],
                 credentials['token'],
                 method=self.METHOD,
-                account_id=credentials['account_id'],
+                account_id=credentials.get('account_id'),
             )
         else:
             return None
@@ -1251,7 +1258,9 @@ class EnvProvider(CredentialProvider):
                     provider=method, cred_var=mapping['expiry_time']
                 )
 
-            credentials['account_id'] = environ.get(mapping['account_id'])
+            account_id = environ.get(mapping['account_id'])
+            if account_id is not None:
+                credentials['account_id'] = account_id
 
             return credentials
 

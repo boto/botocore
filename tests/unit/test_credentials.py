@@ -265,7 +265,6 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
-            'account_id': None,
         }
 
     def some_future_time(self):
@@ -285,7 +284,6 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         refresher = credentials.AssumeRoleCredentialFetcher(
             client_creator, self.source_creds, self.role_arn
         )
-
         expected_response = self.get_expected_creds_from_response(response)
         response = refresher.fetch_credentials()
 
@@ -772,7 +770,6 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
-            'account_id': None,
         }
 
     def test_no_cache(self):
