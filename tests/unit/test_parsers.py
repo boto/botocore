@@ -553,6 +553,7 @@ class TestTaggedUnions(unittest.TestCase):
         with self.assertRaises(parsers.ResponseParserError):
             parser.parse(response, output_shape)
 
+    def test_parser_accepts_type_metadata_with_union(self):
         parser = parsers.JSONParser()
         response = b'{"Foo": "mystring", "__type": "mytype"}'
         headers = {'x-amzn-requestid': 'request-id'}
