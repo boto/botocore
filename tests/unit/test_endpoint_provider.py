@@ -103,7 +103,8 @@ def rule_lib(partitions):
     return RuleSetStandardLibrary(partitions)
 
 
-def _ruleset_dict():
+@pytest.fixture(scope="module")
+def ruleset_dict():
     path = os.path.join(
         os.path.dirname(__file__),
         "data",
@@ -113,11 +114,6 @@ def _ruleset_dict():
     )
     with open(path) as f:
         return json.load(f)
-
-
-@pytest.fixture(scope="module")
-def ruleset_dict():
-    return _ruleset_dict()
 
 
 @pytest.fixture(scope="module")
@@ -522,7 +518,8 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
     )
 
 
-def _account_id_ruleset():
+@pytest.fixture
+def account_id_ruleset():
     rule_path = os.path.join(
         os.path.dirname(__file__),
         "data",
@@ -542,7 +539,6 @@ def operation_model_empty_context_params():
     return operation_model
 
 
-ACCOUNT_ID_RULESET = _account_id_ruleset()
 BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID = {
     EndpointResolverBuiltins.AWS_REGION: "us-west-2",
     EndpointResolverBuiltins.AWS_ACCOUNT_ID: None,
@@ -551,7 +547,7 @@ BUILTINS_WITH_RESOLVED_ACCOUNT_ID = {
     EndpointResolverBuiltins.AWS_REGION: "us-west-2",
     EndpointResolverBuiltins.AWS_ACCOUNT_ID: "0987654321",
 }
-STATIC_CREDENTIALS = Credentials(
+CREDENTIALS = Credentials(
     access_key="access_key",
     secret_key="secret_key",
     token="token",
@@ -569,19 +565,18 @@ def create_ruleset_resolver(ruleset, bulitins, credentials, auth_scheme):
         builtins=bulitins,
         client_context=None,
         event_emitter=Mock(),
-        use_ssl=True,
         credentials=credentials,
         requested_auth_scheme=auth_scheme,
     )
 
 
-ACT_ID_REQUIRED_CONTEXT = {
+ACCT_ID_REQUIRED_CONTEXT = {
     "client_config": Config(account_id_endpoint_mode="required")
 }
-ACT_ID_PREFERRED_CONTEXT = {
+ACCT_ID_PREFERRED_CONTEXT = {
     "client_config": Config(account_id_endpoint_mode="preferred")
 }
-ACT_ID_DISABLED_CONTEXT = {
+ACCT_ID_DISABLED_CONTEXT = {
     "client_config": Config(account_id_endpoint_mode="disabled")
 }
 
@@ -590,98 +585,73 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
 
 
 @pytest.mark.parametrize(
-    "ruleset, builtins, credentials, auth_scheme, request_context, expected_url",
+    "builtins, credentials, auth_scheme, request_context, expected_url",
     [
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             None,
-            ACT_ID_REQUIRED_CONTEXT,
-            URL_WITH_ACCOUNT_ID,
-        ),
-        (
-            ACCOUNT_ID_RULESET,
-            BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
-            None,
-            ACT_ID_PREFERRED_CONTEXT,
+            ACCT_ID_REQUIRED_CONTEXT,
             URL_WITH_ACCOUNT_ID,
         ),
         # custom account ID takes precedence over credentials
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             None,
-            ACT_ID_REQUIRED_CONTEXT,
+            ACCT_ID_REQUIRED_CONTEXT,
             "https://0987654321.amazonaws.com",
         ),
-        # no account ID builtin in ruleset
         (
-            _ruleset_dict(),
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             None,
-            ACT_ID_REQUIRED_CONTEXT,
-            "https://us-west-2.amazonaws.com",
-        ),
-        (
-            ACCOUNT_ID_RULESET,
-            BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
-            None,
-            ACT_ID_DISABLED_CONTEXT,
+            ACCT_ID_DISABLED_CONTEXT,
             URL_NO_ACCOUNT_ID,
         ),
         # custom account ID removed if account ID mode is disabled
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             None,
-            ACT_ID_DISABLED_CONTEXT,
+            ACCT_ID_DISABLED_CONTEXT,
             URL_NO_ACCOUNT_ID,
         ),
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             UNSIGNED,
-            ACT_ID_REQUIRED_CONTEXT,
+            ACCT_ID_REQUIRED_CONTEXT,
             URL_NO_ACCOUNT_ID,
         ),
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            STATIC_CREDENTIALS,
+            CREDENTIALS,
             None,
-            {**ACT_ID_REQUIRED_CONTEXT, "is_presign_request": True},
+            {**ACCT_ID_REQUIRED_CONTEXT, "is_presign_request": True},
             URL_NO_ACCOUNT_ID,
         ),
         # no credentials
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             None,
             None,
-            ACT_ID_PREFERRED_CONTEXT,
+            ACCT_ID_PREFERRED_CONTEXT,
             URL_NO_ACCOUNT_ID,
         ),
         # no account ID in credentials
         (
-            ACCOUNT_ID_RULESET,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             Credentials(access_key="foo", secret_key="bar", token="baz"),
             None,
-            ACT_ID_PREFERRED_CONTEXT,
+            ACCT_ID_PREFERRED_CONTEXT,
             URL_NO_ACCOUNT_ID,
         ),
     ],
 )
 def test_account_id_builtin(
     operation_model_empty_context_params,
-    ruleset,
+    account_id_ruleset,
     builtins,
     credentials,
     auth_scheme,
@@ -689,7 +659,7 @@ def test_account_id_builtin(
     expected_url,
 ):
     resolver = create_ruleset_resolver(
-        ruleset, builtins, credentials, auth_scheme
+        account_id_ruleset, builtins, credentials, auth_scheme
     )
     endpoint = resolver.construct_endpoint(
         operation_model=operation_model_empty_context_params,
@@ -700,43 +670,40 @@ def test_account_id_builtin(
 
 
 @pytest.mark.parametrize(
-    "credentials, auth_scheme, request_context, expected_error",
+    "credentials, request_context, expected_error",
     [
         # invalid value for mode
         (
-            STATIC_CREDENTIALS,
-            None,
+            CREDENTIALS,
             {"client_config": Config(account_id_endpoint_mode="foo")},
             InvalidConfigError,
         ),
         # mode is case sensitive
         (
-            STATIC_CREDENTIALS,
-            None,
+            CREDENTIALS,
             {"client_config": Config(account_id_endpoint_mode="PREFERRED")},
             InvalidConfigError,
         ),
         # no account ID found but required
         (
             Credentials(access_key="foo", secret_key="bar", token="baz"),
-            None,
-            ACT_ID_REQUIRED_CONTEXT,
+            ACCT_ID_REQUIRED_CONTEXT,
             AccountIdNotFound,
         ),
     ],
 )
 def test_account_id_error_cases(
     operation_model_empty_context_params,
+    account_id_ruleset,
     credentials,
-    auth_scheme,
     request_context,
     expected_error,
 ):
     resolver = create_ruleset_resolver(
-        ACCOUNT_ID_RULESET,
+        account_id_ruleset,
         BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
         credentials,
-        auth_scheme,
+        None,
     )
     with pytest.raises(expected_error):
         resolver.construct_endpoint(
