@@ -643,15 +643,15 @@ class ClientArgsCreator:
             legacy_endpoint_url=endpoint.host,
         )
         # Client context params for s3 conflict with the available settings
-        # in the `s3` parameter on the `Config` object. The s3 config will
-        # always take precedence over the client context params for s3 and
-        # s3control if set.
-        if self._is_s3_service(service_name_raw) and s3_config_raw:
-            client_context = s3_config_raw
-        elif client_config is not None and client_config.client_context_params:
-            client_context = client_config.client_context_params
+        # in the `s3` parameter on the `Config` object. If the same parameter
+        # is set in both places, the value in the `s3` parameter takes priority.
+        if client_config is not None:
+            client_context = client_config.client_context_params or {}
         else:
             client_context = {}
+        if self._is_s3_service(service_name_raw):
+            client_context.update(s3_config_raw)
+
         sig_version = (
             client_config.signature_version
             if client_config is not None

@@ -59,6 +59,11 @@ FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM = {
             "documentation": "",
             "type": "String",
         },
+        "BarClientContextParamName": {
+            "required": False,
+            "documentation": "",
+            "type": "String",
+        },
     },
 }
 
@@ -134,7 +139,11 @@ FAKE_MODEL_WITH_CLIENT_CONTEXT_PARAM = {
         "FooClientContextParamName": {
             "documentation": "My mock client context parameter",
             "type": "string",
-        }
+        },
+        "BarClientContextParamName": {
+            "documentation": "My mock client context parameter",
+            "type": "string",
+        },
     },
 }
 
@@ -227,14 +236,30 @@ FAKE_S3CONTROL_MODEL_WITH_CLIENT_CONTEXT_PARAM = {
 CLIENT_CONTEXT_PARAM_INPUT = {
     "foo_client_context_param_name": "foo_context_param_value"
 }
+OTHER_CLIENT_CONTEXT_PARAM_INPUT = {
+    "bar_client_context_param_name": "bar_value"
+}
+
 CONFIG_WITH_S3 = Config(s3=CLIENT_CONTEXT_PARAM_INPUT)
 CONFIG_WITH_CLIENT_CONTEXT_PARAMS = Config(
     client_context_params=CLIENT_CONTEXT_PARAM_INPUT
+)
+CONFIG_WITH_S3_AND_CLIENT_CONTEXT_PARAMS = Config(
+    s3=CLIENT_CONTEXT_PARAM_INPUT,
+    client_context_params=OTHER_CLIENT_CONTEXT_PARAM_INPUT,
+)
+CONFIG_WITH_CONFLICTING_S3_AND_CLIENT_CONTEXT_PARAMS = Config(
+    s3=CLIENT_CONTEXT_PARAM_INPUT,
+    client_context_params={"foo_client_context_param_name": "bar_value"},
 )
 NO_CTX_PARAM_EXPECTED_CALL_KWARGS = {"Region": "us-east-1"}
 CTX_PARAM_EXPECTED_CALL_KWARGS = {
     **NO_CTX_PARAM_EXPECTED_CALL_KWARGS,
     "FooClientContextParamName": "foo_context_param_value",
+}
+MULTIPLE_CONTEXT_PARAMS_EXPECTED_CALL_KWARGS = {
+    **CTX_PARAM_EXPECTED_CALL_KWARGS,
+    "BarClientContextParamName": "bar_value",
 }
 
 
@@ -277,6 +302,22 @@ CTX_PARAM_EXPECTED_CALL_KWARGS = {
             CONFIG_WITH_CLIENT_CONTEXT_PARAMS,
             CTX_PARAM_EXPECTED_CALL_KWARGS,
         ),
+        # use both s3 and client_context_params when they don't overlap
+        (
+            's3',
+            FAKE_S3_MODEL_WITH_CLIENT_CONTEXT_PARAM,
+            FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM,
+            CONFIG_WITH_S3_AND_CLIENT_CONTEXT_PARAMS,
+            MULTIPLE_CONTEXT_PARAMS_EXPECTED_CALL_KWARGS,
+        ),
+        # use s3 over client_context_params when they overlap
+        (
+            's3',
+            FAKE_S3_MODEL_WITH_CLIENT_CONTEXT_PARAM,
+            FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM,
+            CONFIG_WITH_CONFLICTING_S3_AND_CLIENT_CONTEXT_PARAMS,
+            CTX_PARAM_EXPECTED_CALL_KWARGS,
+        ),
         # s3control
         (
             's3control',
@@ -311,6 +352,22 @@ CTX_PARAM_EXPECTED_CALL_KWARGS = {
             FAKE_S3CONTROL_MODEL_WITH_CLIENT_CONTEXT_PARAM,
             FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM,
             CONFIG_WITH_CLIENT_CONTEXT_PARAMS,
+            CTX_PARAM_EXPECTED_CALL_KWARGS,
+        ),
+        # use both s3 and client_context_params when they don't overlap
+        (
+            's3control',
+            FAKE_S3CONTROL_MODEL_WITH_CLIENT_CONTEXT_PARAM,
+            FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM,
+            CONFIG_WITH_S3_AND_CLIENT_CONTEXT_PARAMS,
+            MULTIPLE_CONTEXT_PARAMS_EXPECTED_CALL_KWARGS,
+        ),
+        # use s3 over client_context_params when they overlap
+        (
+            's3control',
+            FAKE_S3CONTROL_MODEL_WITH_CLIENT_CONTEXT_PARAM,
+            FAKE_RULESET_WITH_CLIENT_CONTEXT_PARAM,
+            CONFIG_WITH_CONFLICTING_S3_AND_CLIENT_CONTEXT_PARAMS,
             CTX_PARAM_EXPECTED_CALL_KWARGS,
         ),
         # otherservice

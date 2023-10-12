@@ -229,7 +229,6 @@ class Config:
         will be ignored.
 
         Defaults to None.
-
     """
 
     OPTION_DEFAULTS = OrderedDict(
