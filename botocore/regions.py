@@ -607,14 +607,12 @@ class EndpointRulesetResolver:
         return 'disabled'
 
     def _validate_account_id_endpoint_mode(self, account_id_endpoint_mode):
-        if (
-            account_id_endpoint_mode
-            not in self.VALID_ACCOUNT_ID_ENDPOINT_MODES
-        ):
+        valid_modes = self.VALID_ACCOUNT_ID_ENDPOINT_MODES
+        if account_id_endpoint_mode not in valid_modes:
             error_msg = (
-                f"Invalid value '{account_id_endpoint_mode}' for "
-                "account_id_endpoint_mode. Valid values are: "
-                f"{', '.join(self.VALID_ACCOUNT_ID_ENDPOINT_MODES)}."
+                f'Invalid value "{account_id_endpoint_mode}" for '
+                'account_id_endpoint_mode. Valid values are: '
+                f'{", ".join(valid_modes)}.'
             )
             raise InvalidConfigError(error_msg=error_msg)
         return account_id_endpoint_mode
