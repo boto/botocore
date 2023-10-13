@@ -919,7 +919,6 @@ class Session:
         :type aws_account_id: string
         :param aws_account_id: The AWS account ID to use when creating the client.
             Same semantics as aws_access_key_id above.
-
         """
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then

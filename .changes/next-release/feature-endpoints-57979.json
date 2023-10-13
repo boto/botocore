@@ -1,5 +1,5 @@
 {
   "type": "feature",
   "category": "endpoints",
-  "description": "Enables account ID endpoint routing"
+  "description": "Adds support for account ID endpoint routing"
 }

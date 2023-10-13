@@ -48,12 +48,6 @@ from botocore.utils import ensure_boolean, instance_cache
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
 DEFAULT_SERVICE_DATA = {'endpoints': {}}
-# Allowed values for the ``account_id_endpoint_mode`` config field.
-VALID_ACCOUNT_ID_ENDPOINT_MODES = (
-    'preferred',
-    'disabled',
-    'required',
-)
 
 
 class BaseEndpointResolver:
@@ -465,6 +459,13 @@ class EndpointResolverBuiltins(str, Enum):
 class EndpointRulesetResolver:
     """Resolves endpoints using a service's endpoint ruleset"""
 
+    # Allowed values for the ``account_id_endpoint_mode`` config field.
+    VALID_ACCOUNT_ID_ENDPOINT_MODES = (
+        'preferred',
+        'disabled',
+        'required',
+    )
+
     def __init__(
         self,
         endpoint_ruleset_data,
@@ -606,11 +607,14 @@ class EndpointRulesetResolver:
         return 'disabled'
 
     def _validate_account_id_endpoint_mode(self, account_id_endpoint_mode):
-        if account_id_endpoint_mode not in VALID_ACCOUNT_ID_ENDPOINT_MODES:
+        if (
+            account_id_endpoint_mode
+            not in self.VALID_ACCOUNT_ID_ENDPOINT_MODES
+        ):
             error_msg = (
                 f"Invalid value '{account_id_endpoint_mode}' for "
                 "account_id_endpoint_mode. Valid values are: "
-                f"{', '.join(VALID_ACCOUNT_ID_ENDPOINT_MODES)}."
+                f"{', '.join(self.VALID_ACCOUNT_ID_ENDPOINT_MODES)}."
             )
             raise InvalidConfigError(error_msg=error_msg)
         return account_id_endpoint_mode
@@ -621,13 +625,12 @@ class EndpointRulesetResolver:
         frozen_creds = self._credentials.get_frozen_credentials()
         account_id = frozen_creds.account_id
         if account_id is None:
-            if account_id_endpoint_mode == 'preferred':
-                LOG.debug(
-                    '`account_id_endpoint_mode` is set to `preferred`, but no '
-                    'account ID was found.'
-                )
-            elif account_id_endpoint_mode == 'required':
-                raise AccountIdNotFound()
+            acct_id_ep_mode = account_id_endpoint_mode
+            msg = f'"account_id_endpoint_mode" is set to {acct_id_ep_mode}'
+            if acct_id_ep_mode == 'preferred':
+                LOG.debug('%s, but account ID was not found.', msg)
+            elif acct_id_ep_mode == 'required':
+                raise AccountIdNotFound(msg=msg)
         else:
             builtins[EndpointResolverBuiltins.AWS_ACCOUNT_ID] = account_id
 
