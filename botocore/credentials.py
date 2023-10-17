@@ -1923,7 +1923,7 @@ class ContainerProvider(CredentialProvider):
         auth_token = None
         if self.ENV_VAR_AUTH_TOKEN_FILE in self._environ:
             auth_token_file_path = self._environ[self.ENV_VAR_AUTH_TOKEN_FILE]
-            with open(auth_token_file_path, 'r') as token_file:
+            with open(auth_token_file_path) as token_file:
                 auth_token = token_file.read()
         elif self.ENV_VAR_AUTH_TOKEN in self._environ:
             auth_token = self._environ[self.ENV_VAR_AUTH_TOKEN]
