@@ -2579,9 +2579,8 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
-        self.assert_can_retrieve_metadata_from(
-            'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS
-        )
+        uri = 'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS
+        self.assert_can_retrieve_metadata_from(uri)
 
     def test_localhost_http_is_allowed(self):
         self.assert_can_retrieve_metadata_from('http://localhost/foo')
@@ -2599,14 +2598,12 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
 
     def test_can_use_eks_ipv4_addr(self):
-        self.assert_can_retrieve_metadata_from(
-            'http://169.254.170.23/credentials'
-        )
+        uri = 'http://169.254.170.23/credentials'
+        self.assert_can_retrieve_metadata_from(uri)
 
     def test_can_use_eks_ipv6_addr(self):
-        self.assert_can_retrieve_metadata_from(
-            'http://[fd00:ec2::23]/credentials'
-        )
+        uri = 'http://[fd00:ec2::23]/credentials'
+        self.assert_can_retrieve_metadata_from(uri)
 
     def test_can_use_complex_uri(self):
         self.assert_can_retrieve_metadata_from(
