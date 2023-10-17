@@ -2598,6 +2598,24 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def test_can_use_127_ip_addr_with_port(self):
         self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
 
+    def test_can_use_eks_ipv4_addr(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://169.254.170.23/credentials'
+        )
+
+    def test_can_use_eks_ipv6_addr(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://[fd00:ec2::23]/credentials'
+        )
+
+    def test_can_use_complex_uri(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://127.0.0.1:8080/credentials?foo=bar%20baz'
+        )
+
+    def test_can_use_loopback_v6_uri(self):
+        self.assert_can_retrieve_metadata_from('http://[::1]/credentials')
+
     def test_link_local_http_is_not_allowed(self):
         self.assert_host_is_not_allowed('http://169.254.0.1/foo')
 
