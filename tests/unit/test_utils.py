@@ -2579,7 +2579,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
-        uri = 'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS
+        uri = f'http://{ContainerMetadataFetcher.IP_ADDRESS}/foo?id=1'
         self.assert_can_retrieve_metadata_from(uri)
 
     def test_localhost_http_is_allowed(self):
