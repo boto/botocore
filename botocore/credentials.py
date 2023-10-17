@@ -799,9 +799,8 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
             try:
                 account_id = self._arn_parser.parse_arn(user_arn)['account']
             except InvalidArnException:
-                logger.debug(
-                    'Unable to parse account ID from ARN: %s', user_arn
-                )
+                log_msg = 'Unable to parse account ID from ARN: %s'
+                logger.debug(log_msg, user_arn)
             else:
                 response['Credentials']['AccountId'] = account_id
 
