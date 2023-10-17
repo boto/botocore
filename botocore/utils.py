@@ -25,6 +25,7 @@ import socket
 import time
 import warnings
 import weakref
+from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
 
@@ -2903,7 +2904,12 @@ class ContainerMetadataFetcher:
     RETRY_ATTEMPTS = 3
     SLEEP_TIME = 1
     IP_ADDRESS = '169.254.170.2'
-    _ALLOWED_HOSTS = [IP_ADDRESS, 'localhost', '127.0.0.1']
+    _ALLOWED_HOSTS = [
+        IP_ADDRESS,
+        '169.254.170.23',
+        'fd00:ec2::23',
+        'localhost',
+    ]
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
@@ -2927,6 +2933,8 @@ class ContainerMetadataFetcher:
 
     def _validate_allowed_url(self, full_url):
         parsed = botocore.compat.urlparse(full_url)
+        if self._is_loopback_address(parsed.hostname):
+            return
         is_whitelisted_host = self._check_if_whitelisted_host(parsed.hostname)
         if not is_whitelisted_host:
             raise ValueError(
@@ -2934,6 +2942,13 @@ class ContainerMetadataFetcher:
                 "retrieve metadata from these hosts: %s"
                 % (parsed.hostname, ', '.join(self._ALLOWED_HOSTS))
             )
+
+    def _is_loopback_address(self, hostname):
+        try:
+            ip = ip_address(hostname)
+            return ip.is_loopback
+        except ValueError:
+            return False
 
     def _check_if_whitelisted_host(self, host):
         if host in self._ALLOWED_HOSTS:
