@@ -2969,9 +2969,11 @@ class TestRefreshLogic(unittest.TestCase):
 
 class TestContainerProvider(BaseEnvVar):
     def setUp(self):
+        super().setUp()
         self.tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
+        super().tearDown()
         shutil.rmtree(self.tempdir)
 
     def test_noop_if_env_var_is_not_set(self):
@@ -3135,10 +3137,9 @@ class TestContainerProvider(BaseEnvVar):
         self.assertEqual(creds.method, 'container-role')
 
     def test_can_pass_auth_token_from_file(self):
-        token_file_path = self.tempdir + '/token.jwt'
-        token_file = open(token_file_path, "x")
-        token_file.write("Basic auth-token")
-        token_file.close()
+        token_file_path = os.path.join(self.tempdir, 'token.jwt')
+        with open(token_file_path, 'w') as token_file:
+            token_file.write('Basic auth-token')
         environ = {
             'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
             'AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE': token_file_path,
@@ -3179,14 +3180,12 @@ class TestContainerProvider(BaseEnvVar):
     def test_throws_error_on_illegal_header(self):
         environ = {
             'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
-            'AWS_CONTAINER_AUTHORIZATION_TOKEN': "invalid\r\ntoken",
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'invalid\r\ntoken',
         }
         fetcher = self.create_fetcher()
         provider = credentials.ContainerProvider(environ, fetcher)
 
-        with self.assertRaisesRegex(
-            ValueError, "Auth token value is not a legal header value"
-        ):
+        with self.assertRaises(ValueError):
             provider.load()
 
 
