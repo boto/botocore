@@ -2218,7 +2218,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         self,
         accesspoint_name=None,
         accesspoint_context=None,
-        **s3_request_kwargs
+        **s3_request_kwargs,
     ):
         if not accesspoint_name:
             accesspoint_name = self.accesspoint_name
