@@ -1927,12 +1927,12 @@ class ContainerProvider(CredentialProvider):
                 auth_token = token_file.read()
         elif self.ENV_VAR_AUTH_TOKEN in self._environ:
             auth_token = self._environ[self.ENV_VAR_AUTH_TOKEN]
-        if auth_token:
+        if auth_token is not None:
             self._validate_auth_token(auth_token)
             return {'Authorization': auth_token}
 
     def _validate_auth_token(self, auth_token):
-        if "\r\n" in auth_token:
+        if "\r" in auth_token or "\n" in auth_token:
             raise ValueError("Auth token value is not a legal header value")
 
     def _create_fetcher(self, full_uri, headers):
