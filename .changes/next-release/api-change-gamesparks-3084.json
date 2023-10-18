@@ -1,0 +1,5 @@
+{
+  "type": "api-change",
+  "category": "``gamesparks``",
+  "description": "The gamesparks client has been removed following the deprecation of the service."
+}
