@@ -2605,6 +2605,10 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         uri = 'http://[fd00:ec2::23]/credentials'
         self.assert_can_retrieve_metadata_from(uri)
 
+    def test_can_use_eks_ipv6_addr_with_port(self):
+        uri = 'https://[fd00:ec2::23]:8000'
+        self.assert_can_retrieve_metadata_from(uri)
+
     def test_can_use_loopback_v6_uri(self):
         self.assert_can_retrieve_metadata_from('http://[::1]/credentials')
 
