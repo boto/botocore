@@ -19,7 +19,6 @@ from unittest.mock import Mock
 import pytest
 
 from botocore import UNSIGNED
-from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.endpoint_provider import (
     EndpointProvider,
@@ -553,9 +552,16 @@ CREDENTIALS = Credentials(
     token="token",
     account_id="1234567890",
 )
+REQUIRED = 'required'
+PREFERRED = 'preferred'
+DISABLED = 'disabled'
+URL_NO_ACCOUNT_ID = "https://amazonaws.com"
+URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
 
 
-def create_ruleset_resolver(ruleset, bulitins, credentials, auth_scheme):
+def create_ruleset_resolver(
+    ruleset, bulitins, credentials, auth_scheme, account_id_endpoint_mode
+):
     service_model = Mock()
     service_model.client_context_parameters = []
     return EndpointRulesetResolver(
@@ -567,31 +573,18 @@ def create_ruleset_resolver(ruleset, bulitins, credentials, auth_scheme):
         event_emitter=Mock(),
         credentials=credentials,
         requested_auth_scheme=auth_scheme,
+        account_id_endpoint_mode=account_id_endpoint_mode,
     )
 
 
-ACCT_ID_REQUIRED_CONTEXT = {
-    "client_config": Config(account_id_endpoint_mode="required")
-}
-ACCT_ID_PREFERRED_CONTEXT = {
-    "client_config": Config(account_id_endpoint_mode="preferred")
-}
-ACCT_ID_DISABLED_CONTEXT = {
-    "client_config": Config(account_id_endpoint_mode="disabled")
-}
-
-URL_NO_ACCOUNT_ID = "https://amazonaws.com"
-URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
-
-
 @pytest.mark.parametrize(
-    "builtins, credentials, auth_scheme, request_context, expected_url",
+    "builtins, credentials, auth_scheme, account_id_endpoint_mode, expected_url",
     [
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             None,
-            ACCT_ID_REQUIRED_CONTEXT,
+            REQUIRED,
             URL_WITH_ACCOUNT_ID,
         ),
         # custom account ID takes precedence over credentials
@@ -599,14 +592,14 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             None,
-            ACCT_ID_REQUIRED_CONTEXT,
+            REQUIRED,
             "https://0987654321.amazonaws.com",
         ),
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             None,
-            ACCT_ID_DISABLED_CONTEXT,
+            DISABLED,
             URL_NO_ACCOUNT_ID,
         ),
         # custom account ID removed if account ID mode is disabled
@@ -614,21 +607,21 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             None,
-            ACCT_ID_DISABLED_CONTEXT,
+            DISABLED,
+            URL_NO_ACCOUNT_ID,
+        ),
+        (
+            BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
+            CREDENTIALS,
+            UNSIGNED,
+            REQUIRED,
             URL_NO_ACCOUNT_ID,
         ),
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             UNSIGNED,
-            ACCT_ID_REQUIRED_CONTEXT,
-            URL_NO_ACCOUNT_ID,
-        ),
-        (
-            BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
-            None,
-            {**ACCT_ID_REQUIRED_CONTEXT, "is_presign_request": True},
+            REQUIRED,
             URL_NO_ACCOUNT_ID,
         ),
         # no credentials
@@ -636,7 +629,7 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             None,
             None,
-            ACCT_ID_PREFERRED_CONTEXT,
+            PREFERRED,
             URL_NO_ACCOUNT_ID,
         ),
         # no account ID in credentials
@@ -644,7 +637,7 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             Credentials(access_key="foo", secret_key="bar", token="baz"),
             None,
-            ACCT_ID_PREFERRED_CONTEXT,
+            PREFERRED,
             URL_NO_ACCOUNT_ID,
         ),
     ],
@@ -655,39 +648,43 @@ def test_account_id_builtin(
     builtins,
     credentials,
     auth_scheme,
-    request_context,
+    account_id_endpoint_mode,
     expected_url,
 ):
     resolver = create_ruleset_resolver(
-        account_id_ruleset, builtins, credentials, auth_scheme
+        account_id_ruleset,
+        builtins,
+        credentials,
+        auth_scheme,
+        account_id_endpoint_mode,
     )
     endpoint = resolver.construct_endpoint(
         operation_model=operation_model_empty_context_params,
-        request_context=request_context,
+        request_context={},
         call_args={},
     )
     assert endpoint.url == expected_url
 
 
 @pytest.mark.parametrize(
-    "credentials, request_context, expected_error",
+    "credentials, account_id_endpoint_mode, expected_error",
     [
         # invalid value for mode
         (
             CREDENTIALS,
-            {"client_config": Config(account_id_endpoint_mode="foo")},
+            "foo",
             InvalidConfigError,
         ),
         # mode is case sensitive
         (
             CREDENTIALS,
-            {"client_config": Config(account_id_endpoint_mode="PREFERRED")},
+            "PREFERRED",
             InvalidConfigError,
         ),
         # no account ID found but required
         (
             Credentials(access_key="foo", secret_key="bar", token="baz"),
-            ACCT_ID_REQUIRED_CONTEXT,
+            REQUIRED,
             AccountIdNotFound,
         ),
     ],
@@ -696,7 +693,7 @@ def test_account_id_error_cases(
     operation_model_empty_context_params,
     account_id_ruleset,
     credentials,
-    request_context,
+    account_id_endpoint_mode,
     expected_error,
 ):
     resolver = create_ruleset_resolver(
@@ -704,10 +701,11 @@ def test_account_id_error_cases(
         BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
         credentials,
         None,
+        account_id_endpoint_mode,
     )
     with pytest.raises(expected_error):
         resolver.construct_endpoint(
             operation_model=operation_model_empty_context_params,
-            request_context=request_context,
+            request_context={},
             call_args={},
         )

@@ -166,6 +166,7 @@ class ClientArgsCreator:
             endpoint_bridge,
             event_emitter,
             credentials,
+            new_config.account_id_endpoint_mode,
         )
 
         # Copy the session's user agent factory and adds client configuration.
@@ -631,6 +632,7 @@ class ClientArgsCreator:
         endpoint_bridge,
         event_emitter,
         credentials,
+        account_id_endpoint_mode,
     ):
         if endpoints_ruleset_data is None:
             return None
@@ -681,6 +683,7 @@ class ClientArgsCreator:
             use_ssl=is_secure,
             requested_auth_scheme=sig_version,
             credentials=credentials,
+            account_id_endpoint_mode=account_id_endpoint_mode,
         )
 
     def compute_endpoint_resolver_builtin_defaults(
