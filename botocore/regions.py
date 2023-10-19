@@ -583,7 +583,6 @@ class EndpointRulesetResolver:
 
     def _resolve_account_id_builtin(self, builtins):
         """Resolve the ``AWS::Auth::AccountId`` builtin."""
-        # do this check separately so mode is only validated if it's being used
         if 'AccountId' not in self._param_definitions:
             return
 
@@ -592,9 +591,8 @@ class EndpointRulesetResolver:
         if not self._should_resolve_account_id_builtin():
             # Unset the account ID if endpoint mode is disabled.
             builtins[acct_id_builtin_key] = None
-            return
 
-        if builtins.get(acct_id_builtin_key) is None:
+        elif builtins.get(acct_id_builtin_key) is None:
             self._do_resolve_account_id_builtin(builtins)
 
     def _validate_account_id_endpoint_mode(self):
