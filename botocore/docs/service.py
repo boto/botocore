@@ -20,16 +20,6 @@ from botocore.docs.paginator import PaginatorDocumenter
 from botocore.docs.waiter import WaiterDocumenter
 from botocore.exceptions import DataNotFoundError
 
-OMITTED_CONTEXT_PARAMS = {
-    's3': (
-        'Accelerate',
-        'DisableMultiRegionAccessPoints',
-        'ForcePathStyle',
-        'UseArnRegion',
-    ),
-    's3control': ('UseArnRegion',),
-}
-
 
 class ServiceDocumenter:
     def __init__(self, service_name, session, root_docs_path):
@@ -129,7 +119,8 @@ class ServiceDocumenter:
         return examples['examples']
 
     def client_context_params(self, section):
-        params_to_omit = OMITTED_CONTEXT_PARAMS.get(self._service_name, [])
+        omitted_params = ClientContextParamsDocumenter.OMITTED_CONTEXT_PARAMS
+        params_to_omit = omitted_params.get(self._service_name, [])
         service_model = self._client.meta.service_model
         raw_context_params = service_model.client_context_parameters
         context_params = [

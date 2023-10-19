@@ -408,6 +408,16 @@ class ClientContextParamsDocumenter:
         'v1/documentation/api/latest/guide/configuration.html'
     )
 
+    OMITTED_CONTEXT_PARAMS = {
+        's3': (
+            'Accelerate',
+            'DisableMultiRegionAccessPoints',
+            'ForcePathStyle',
+            'UseArnRegion',
+        ),
+        's3control': ('UseArnRegion',),
+    }
+
     def __init__(self, service_name, context_params):
         self._service_name = service_name
         self._context_params = context_params
