@@ -148,7 +148,6 @@ class TestURLLib3Session(unittest.TestCase):
 
     def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
         call_kwargs = {
-            'strict': True,
             'maxsize': mock.ANY,
             'timeout': mock.ANY,
             'ssl_context': mock.ANY,

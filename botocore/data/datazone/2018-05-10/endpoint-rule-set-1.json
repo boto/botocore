@@ -7,13 +7,6 @@
             "documentation": "The AWS region used to dispatch the request.",
             "type": "String"
         },
-        "UseDualStack": {
-            "builtIn": "AWS::UseDualStack",
-            "required": true,
-            "default": false,
-            "documentation": "When true, use the dual-stack endpoint. If the configured endpoint does not support dual-stack, dispatching the request MAY return an error.",
-            "type": "Boolean"
-        },
         "UseFIPS": {
             "builtIn": "AWS::UseFIPS",
             "required": true,
@@ -55,21 +48,6 @@
                         }
                     ],
                     "error": "Invalid Configuration: FIPS and custom endpoint are not supported",
-                    "type": "error"
-                },
-                {
-                    "conditions": [
-                        {
-                            "fn": "booleanEquals",
-                            "argv": [
-                                {
-                                    "ref": "UseDualStack"
-                                },
-                                true
-                            ]
-                        }
-                    ],
-                    "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
                     "type": "error"
                 },
                 {
@@ -117,19 +95,16 @@
                                 {
                                     "fn": "booleanEquals",
                                     "argv": [
+                                        true,
                                         {
-                                            "ref": "UseFIPS"
-                                        },
-                                        true
-                                    ]
-                                },
-                                {
-                                    "fn": "booleanEquals",
-                                    "argv": [
-                                        {
-                                            "ref": "UseDualStack"
-                                        },
-                                        true
+                                            "fn": "getAttr",
+                                            "argv": [
+                                                {
+                                                    "ref": "PartitionResult"
+                                                },
+                                                "supportsDualStack"
+                                            ]
+                                        }
                                     ]
                                 }
                             ],
@@ -140,51 +115,61 @@
                                         {
                                             "fn": "booleanEquals",
                                             "argv": [
-                                                true,
                                                 {
-                                                    "fn": "getAttr",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "PartitionResult"
-                                                        },
-                                                        "supportsFIPS"
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "fn": "booleanEquals",
-                                            "argv": [
-                                                true,
-                                                {
-                                                    "fn": "getAttr",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "PartitionResult"
-                                                        },
-                                                        "supportsDualStack"
-                                                    ]
-                                                }
+                                                    "ref": "UseFIPS"
+                                                },
+                                                true
                                             ]
                                         }
                                     ],
                                     "type": "tree",
                                     "rules": [
                                         {
+                                            "conditions": [
+                                                {
+                                                    "fn": "booleanEquals",
+                                                    "argv": [
+                                                        true,
+                                                        {
+                                                            "fn": "getAttr",
+                                                            "argv": [
+                                                                {
+                                                                    "ref": "PartitionResult"
+                                                                },
+                                                                "supportsFIPS"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "type": "tree",
+                                            "rules": [
+                                                {
+                                                    "conditions": [],
+                                                    "endpoint": {
+                                                        "url": "https://datazone-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                                        "properties": {},
+                                                        "headers": {}
+                                                    },
+                                                    "type": "endpoint"
+                                                }
+                                            ]
+                                        },
+                                        {
                                             "conditions": [],
-                                            "endpoint": {
-                                                "url": "https://gamesparks-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
+                                            "error": "FIPS is enabled but this partition does not support FIPS",
+                                            "type": "error"
                                         }
                                     ]
                                 },
                                 {
                                     "conditions": [],
-                                    "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
-                                    "type": "error"
+                                    "endpoint": {
+                                        "url": "https://datazone.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                        "properties": {},
+                                        "headers": {}
+                                    },
+                                    "type": "endpoint"
                                 }
                             ]
                         },
@@ -225,7 +210,7 @@
                                         {
                                             "conditions": [],
                                             "endpoint": {
-                                                "url": "https://gamesparks-fips.{Region}.{PartitionResult#dnsSuffix}",
+                                                "url": "https://datazone-fips.{Region}.{PartitionResult#dnsSuffix}",
                                                 "properties": {},
                                                 "headers": {}
                                             },
@@ -241,61 +226,9 @@
                             ]
                         },
                         {
-                            "conditions": [
-                                {
-                                    "fn": "booleanEquals",
-                                    "argv": [
-                                        {
-                                            "ref": "UseDualStack"
-                                        },
-                                        true
-                                    ]
-                                }
-                            ],
-                            "type": "tree",
-                            "rules": [
-                                {
-                                    "conditions": [
-                                        {
-                                            "fn": "booleanEquals",
-                                            "argv": [
-                                                true,
-                                                {
-                                                    "fn": "getAttr",
-                                                    "argv": [
-                                                        {
-                                                            "ref": "PartitionResult"
-                                                        },
-                                                        "supportsDualStack"
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    "type": "tree",
-                                    "rules": [
-                                        {
-                                            "conditions": [],
-                                            "endpoint": {
-                                                "url": "https://gamesparks.{Region}.{PartitionResult#dualStackDnsSuffix}",
-                                                "properties": {},
-                                                "headers": {}
-                                            },
-                                            "type": "endpoint"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "conditions": [],
-                                    "error": "DualStack is enabled but this partition does not support DualStack",
-                                    "type": "error"
-                                }
-                            ]
-                        },
-                        {
                             "conditions": [],
                             "endpoint": {
-                                "url": "https://gamesparks.{Region}.{PartitionResult#dnsSuffix}",
+                                "url": "https://datazone.{Region}.{PartitionResult#dnsSuffix}",
                                 "properties": {},
                                 "headers": {}
                             },
