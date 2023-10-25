@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Configuration",
+  "description": "Adds client context params support to ``Config``."
+}
