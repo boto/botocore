@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.31.71
+=======
+
+* enhancement:Configuration: Adds client context params support to ``Config``.
+* api-change:``connectcases``: Increase maximum length of CommentBody to 3000, and increase maximum length of StringValue to 1500
+* api-change:``groundstation``: This release will allow KMS alias names to be used when creating Mission Profiles
+* api-change:``iam``: Updates to GetAccessKeyLastUsed action to replace NoSuchEntity error with AccessDeniedException error.
+
+
 1.31.70
 =======
 
