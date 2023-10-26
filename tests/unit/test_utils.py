@@ -2606,9 +2606,8 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.assert_can_retrieve_metadata_from(uri)
 
     def test_can_use_complex_uri(self):
-        self.assert_can_retrieve_metadata_from(
-            'http://127.0.0.1:8080/credentials?foo=bar%20baz'
-        )
+        uri = 'http://127.0.0.1:8080/credentials?foo=bar%20baz'
+        self.assert_can_retrieve_metadata_from(uri)
 
     def test_can_use_eks_ipv6_addr_with_port(self):
         uri = 'https://[fd00:ec2::23]:8000'
