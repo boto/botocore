@@ -3005,7 +3005,7 @@ class ContainerMetadataFetcher:
                 return json.loads(response_text)
             except ValueError:
                 error_msg = "Unable to parse JSON returned from container metadata services"
-                logger.debug(f"{error_msg}: {response_text}")
+                logger.debug('%s:%s', error_msg, response_text)
                 raise MetadataRetrievalError(error_msg=error_msg)
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = (
