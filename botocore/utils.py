@@ -2938,9 +2938,8 @@ class ContainerMetadataFetcher:
         is_whitelisted_host = self._check_if_whitelisted_host(parsed.hostname)
         if not is_whitelisted_host:
             raise ValueError(
-                "Unsupported host '%s'.  Can only retrieve metadata "
-                "from a loopback address or one of these hosts: %s"
-                % (parsed.hostname, ', '.join(self._ALLOWED_HOSTS))
+                f"Unsupported host '{parsed.hostname}'.  Can only retrieve metadata "
+                f"from a loopback address or one of these hosts: {', '.join(self._ALLOWED_HOSTS)}"
             )
 
     def _is_loopback_address(self, hostname):
@@ -2998,20 +2997,20 @@ class ContainerMetadataFetcher:
             if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg=(
-                        "Received non 200 response (%s) from container metadata: %s"
+                        f"Received non 200 response {response.status_code} "
+                        f"from container metadata: {response_text}"
                     )
-                    % (response.status_code, response_text)
                 )
             try:
                 return json.loads(response_text)
             except ValueError:
                 error_msg = "Unable to parse JSON returned from container metadata services"
-                logger.debug('%s:%s', error_msg, response_text)
+                logger.debug(f"{error_msg}: {response_text}")
                 raise MetadataRetrievalError(error_msg=error_msg)
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = (
                 "Received error when attempting to retrieve "
-                "container metadata: %s" % e
+                f"container metadata: {e}"
             )
             raise MetadataRetrievalError(error_msg=error_msg)
 
