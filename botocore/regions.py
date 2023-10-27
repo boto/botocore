@@ -632,7 +632,8 @@ class EndpointRulesetResolver:
     def _resolve_credential_builtins(self, builtins):
         resolver = self._credential_builtin_resolver
         signing_enabled = self._requested_auth_scheme != UNSIGNED
-        if 'AccountId' in self._param_definitions:
+        param_def = self._param_definitions.get('AccountId')
+        if param_def is not None and param_def.builtin is not None:
             resolver.resolve_account_id_builtin(builtins, signing_enabled)
 
     def _resolve_param_from_context(
