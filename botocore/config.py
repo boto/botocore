@@ -227,6 +227,7 @@ class Config:
         the ``Client Context Parameters`` section of the service client's
         documentation. Invalid parameters or ones that are not used by the
         specified service will be ignored.
+
     :type account_id_endpoint_mode: str
     :param account_id_endpoint_mode: Set account ID based endpoint behavior
         for supported operations.
