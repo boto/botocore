@@ -18,7 +18,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from botocore import UNSIGNED
 from botocore.credentials import Credentials
 from botocore.endpoint_provider import (
     EndpointProvider,
@@ -37,7 +36,11 @@ from botocore.exceptions import (
     UnknownSignatureVersionError,
 )
 from botocore.loaders import Loader
-from botocore.regions import EndpointResolverBuiltins, EndpointRulesetResolver
+from botocore.regions import (
+    CredentialBuiltinResolver,
+    EndpointResolverBuiltins,
+    EndpointRulesetResolver,
+)
 from tests import requires_crt
 
 REGION_TEMPLATE = "{Region}"
@@ -560,10 +563,13 @@ URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
 
 
 def create_ruleset_resolver(
-    ruleset, bulitins, credentials, auth_scheme, account_id_endpoint_mode
+    ruleset, bulitins, credentials, account_id_endpoint_mode
 ):
     service_model = Mock()
     service_model.client_context_parameters = []
+    credential_builtin_resolver = CredentialBuiltinResolver(
+        credentials, account_id_endpoint_mode
+    )
     return EndpointRulesetResolver(
         endpoint_ruleset_data=ruleset,
         partition_data={},
@@ -571,19 +577,16 @@ def create_ruleset_resolver(
         builtins=bulitins,
         client_context=None,
         event_emitter=Mock(),
-        credentials=credentials,
-        requested_auth_scheme=auth_scheme,
-        account_id_endpoint_mode=account_id_endpoint_mode,
+        credential_builtin_resolver=credential_builtin_resolver,
     )
 
 
 @pytest.mark.parametrize(
-    "builtins, credentials, auth_scheme, account_id_endpoint_mode, expected_url",
+    "builtins, credentials, account_id_endpoint_mode, expected_url",
     [
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
-            None,
             REQUIRED,
             URL_WITH_ACCOUNT_ID,
         ),
@@ -591,14 +594,12 @@ def create_ruleset_resolver(
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS,
-            None,
             REQUIRED,
             "https://0987654321.amazonaws.com",
         ),
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
-            None,
             DISABLED,
             URL_NO_ACCOUNT_ID,
         ),
@@ -606,28 +607,18 @@ def create_ruleset_resolver(
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS,
-            None,
             DISABLED,
             URL_NO_ACCOUNT_ID,
         ),
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
-            UNSIGNED,
-            REQUIRED,
-            URL_NO_ACCOUNT_ID,
-        ),
-        (
-            BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
-            UNSIGNED,
+            None,
             REQUIRED,
             URL_NO_ACCOUNT_ID,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            None,
             None,
             PREFERRED,
             URL_NO_ACCOUNT_ID,
@@ -636,7 +627,6 @@ def create_ruleset_resolver(
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             Credentials(access_key="foo", secret_key="bar", token="baz"),
-            None,
             PREFERRED,
             URL_NO_ACCOUNT_ID,
         ),
@@ -647,7 +637,6 @@ def test_account_id_builtin(
     account_id_ruleset,
     builtins,
     credentials,
-    auth_scheme,
     account_id_endpoint_mode,
     expected_url,
 ):
@@ -655,7 +644,6 @@ def test_account_id_builtin(
         account_id_ruleset,
         builtins,
         credentials,
-        auth_scheme,
         account_id_endpoint_mode,
     )
     endpoint = resolver.construct_endpoint(
@@ -681,29 +669,34 @@ def test_account_id_builtin(
             "PREFERRED",
             InvalidConfigError,
         ),
-        # no account ID found but required
-        (
-            Credentials(access_key="foo", secret_key="bar", token="baz"),
-            REQUIRED,
-            AccountIdNotFound,
-        ),
     ],
 )
-def test_account_id_error_cases(
-    operation_model_empty_context_params,
+def test_account_id_endpoint_mode_input_error_cases(
     account_id_ruleset,
     credentials,
     account_id_endpoint_mode,
     expected_error,
 ):
+    with pytest.raises(expected_error):
+        create_ruleset_resolver(
+            account_id_ruleset,
+            BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
+            credentials,
+            account_id_endpoint_mode,
+        )
+
+
+def test_required_mode_no_account_id(
+    account_id_ruleset, operation_model_empty_context_params
+):
+    credentials = Credentials(access_key="a", secret_key="b", token="c")
     resolver = create_ruleset_resolver(
         account_id_ruleset,
         BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
         credentials,
-        None,
-        account_id_endpoint_mode,
+        REQUIRED,
     )
-    with pytest.raises(expected_error):
+    with pytest.raises(AccountIdNotFound):
         resolver.construct_endpoint(
             operation_model=operation_model_empty_context_params,
             request_context={},

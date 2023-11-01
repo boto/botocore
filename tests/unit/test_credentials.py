@@ -191,10 +191,18 @@ class TestRefreshableCredentials(TestCredentials):
             self.creds.access_key
 
     def test_account_id_refresh(self):
+        # set the expiry to now so the creds will need a refresh again
+        now = datetime.now(tzlocal())
+        self.mock_time.return_value = now
+        metadata = self.metadata.copy()
+        metadata['expiry_time'] = now.isoformat()
+        self.refresher.return_value = metadata
+        self.assertTrue(self.creds.refresh_needed())
+        self.assertIsNone(self.creds.account_id)
+        # set the account id in the mocked refresher
         metadata = self.metadata.copy()
         metadata['account_id'] = '123456789012'
         self.refresher.return_value = metadata
-        self.mock_time.return_value = datetime.now(tzlocal())
         self.assertTrue(self.creds.refresh_needed())
         self.assertEqual(self.creds.account_id, '123456789012')
 

@@ -25,6 +25,7 @@ import botocore.parsers
 import botocore.serialize
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
+from botocore.regions import CredentialBuiltinResolver
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
@@ -152,7 +153,10 @@ class ClientArgsCreator:
             protocol, parameter_validation
         )
         response_parser = botocore.parsers.create_parser(protocol)
-
+        credential_builtin_resolver = CredentialBuiltinResolver(
+            credentials=credentials,
+            account_id_endpoint_mode=new_config.account_id_endpoint_mode,
+        )
         ruleset_resolver = self._build_endpoint_resolver(
             endpoints_ruleset_data,
             partition_data,
@@ -165,8 +169,7 @@ class ClientArgsCreator:
             is_secure,
             endpoint_bridge,
             event_emitter,
-            credentials,
-            new_config.account_id_endpoint_mode,
+            credential_builtin_resolver,
         )
 
         # Copy the session's user agent factory and adds client configuration.
@@ -631,8 +634,7 @@ class ClientArgsCreator:
         is_secure,
         endpoint_bridge,
         event_emitter,
-        credentials,
-        account_id_endpoint_mode,
+        credential_builtin_resolver,
     ):
         if endpoints_ruleset_data is None:
             return None
@@ -682,8 +684,7 @@ class ClientArgsCreator:
             event_emitter=event_emitter,
             use_ssl=is_secure,
             requested_auth_scheme=sig_version,
-            credentials=credentials,
-            account_id_endpoint_mode=account_id_endpoint_mode,
+            credential_builtin_resolver=credential_builtin_resolver,
         )
 
     def compute_endpoint_resolver_builtin_defaults(
