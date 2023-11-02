@@ -561,7 +561,9 @@ class IMDSFetcher:
     def _check_imdsv1_disabled(self):
         if self._imds_v1_disabled:
             raise MetadataRetrievalError(
-                "Unable to retrieve token for use in IMDSv2 call and IMDSv1 has been disabled"
+                error_msg=(
+                    "Unable to retrieve token for use in IMDSv2 call and IMDSv1 has been disabled"
+                )
             )
 
 
