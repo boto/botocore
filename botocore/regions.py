@@ -466,21 +466,6 @@ class CredentialBuiltinResolver:
         'disabled',
         'required',
     )
-    REFRESHABLE_CREDENTIAL_METHODS = (
-        'custom-process',
-        'assume-role',
-        'assume-role-with-web-identity',
-        'sso',
-    )
-    STATIC_CREDENTIAL_METHODS = (
-        'explicit',
-        'env',
-        'shared-credentials-file',
-        'config-file',
-    )
-    SUPPORTED_CREDENTIAL_METHODS = (
-        REFRESHABLE_CREDENTIAL_METHODS + STATIC_CREDENTIAL_METHODS
-    )
 
     def __init__(self, credentials, account_id_endpoint_mode):
         self._credentials = credentials
@@ -503,7 +488,10 @@ class CredentialBuiltinResolver:
         frozen_creds = self._credentials.get_frozen_credentials()
         account_id = frozen_creds.account_id
         if account_id is None:
-            msg = self._create_no_account_id_message()
+            msg = (
+                f'"account_id_endpoint_mode" is set to "{acct_id_ep_mode}", '
+                'but account ID could not be resolved.'
+            )
             if acct_id_ep_mode == 'preferred':
                 LOG.debug(msg)
             elif acct_id_ep_mode == 'required':
@@ -521,31 +509,35 @@ class CredentialBuiltinResolver:
             )
             raise InvalidConfigError(error_msg=error_msg)
 
-    def _create_no_account_id_message(self):
-        acct_id_ep_mode = self._account_id_endpoint_mode
-        method = self._credentials.method
-        base_msg = (
-            f'"account_id_endpoint_mode" is set to {acct_id_ep_mode}, '
-            f'but account ID could not be resolved from source "{method}". '
+
+class EndpointBuiltinResolver:
+    """Resolves endpoint builtins during endpoint construction"""
+
+    def __init__(self, builtin_resolvers):
+        self._builtin_resolvers = builtin_resolvers
+
+    def resolve(self, param_definitions, builtins):
+        """Resolve endpoint builtins"""
+        self._resolve_credential_builtins(param_definitions, builtins)
+
+    def _resolve_credential_builtins(self, param_definitions, builtins):
+        self._resolve_account_id_builtin(param_definitions, builtins)
+
+    def _resolve_account_id_builtin(self, param_definitions, builtins):
+        builtin_configured = self._builtin_configured(
+            param_definitions, 'AccountId'
         )
-        if method in self.STATIC_CREDENTIAL_METHODS:
-            msg = (
-                f'{base_msg} Credential source "{method}" does not have '
-                'an account ID associated with it. Please check your '
-                'configuration and try again.'
-            )
-        elif method in self.REFRESHABLE_CREDENTIAL_METHODS:
-            msg = (
-                f'{base_msg} Please ensure that your credential '
-                'source is configured to return an account ID.'
-            )
-        else:
-            supported = ", ".join(self.SUPPORTED_CREDENTIAL_METHODS)
-            msg = (
-                f'{base_msg} Please change your credential source to one of: '
-                f'{supported} or set "account_id_endpoint_mode" to "disabled".'
-            )
-        return msg
+        acct_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
+        current_builtin_value = builtins.get(acct_id_builtin_key)
+        credential_resolver = self._builtin_resolvers['credentials']
+        account_id = credential_resolver.resolve_account_id_builtin(
+            builtin_configured, current_builtin_value
+        )
+        builtins[acct_id_builtin_key] = account_id
+
+    def _builtin_configured(self, param_definitions, param_name):
+        param_def = param_definitions.get(param_name)
+        return param_def is not None and param_def.builtin is not None
 
 
 class EndpointRulesetResolver:
@@ -561,7 +553,7 @@ class EndpointRulesetResolver:
         event_emitter,
         use_ssl=True,
         requested_auth_scheme=None,
-        credential_builtin_resolver=None,
+        builtin_resolver=None,
     ):
         self._provider = EndpointProvider(
             ruleset_data=endpoint_ruleset_data,
@@ -575,7 +567,7 @@ class EndpointRulesetResolver:
         self._use_ssl = use_ssl
         self._requested_auth_scheme = requested_auth_scheme
         self._instance_cache = {}
-        self._credential_builtin_resolver = credential_builtin_resolver
+        self._builtin_resolver = builtin_resolver
 
     def construct_endpoint(
         self,
@@ -644,7 +636,7 @@ class EndpointRulesetResolver:
         customized_builtins = self._get_customized_builtins(
             operation_model, call_args, request_context
         )
-        self._resolve_credential_builtins(customized_builtins)
+        self._resolve_builtins(customized_builtins)
         for param_name, param_def in self._param_definitions.items():
             param_val = self._resolve_param_from_context(
                 param_name=param_name,
@@ -661,25 +653,11 @@ class EndpointRulesetResolver:
 
         return provider_params
 
-    def _resolve_credential_builtins(self, builtins):
-        if self._credential_builtin_resolver is None:
+    def _resolve_builtins(self, builtins):
+        if self._builtin_resolver is None:
             return
 
-        self._resolve_account_id_builtin(builtins)
-
-    def _resolve_account_id_builtin(self, builtins):
-        resolver = self._credential_builtin_resolver
-        builtin_configured = self._builtin_configured('AccountId')
-        acct_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
-        current_builtin_value = builtins.get(acct_id_builtin_key)
-        account_id = resolver.resolve_account_id_builtin(
-            builtin_configured, current_builtin_value
-        )
-        builtins[acct_id_builtin_key] = account_id
-
-    def _builtin_configured(self, param_name):
-        param_def = self._param_definitions.get(param_name)
-        return param_def is not None and param_def.builtin is not None
+        self._builtin_resolver.resolve(self._param_definitions, builtins)
 
     def _resolve_param_from_context(
         self, param_name, operation_model, call_args

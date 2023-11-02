@@ -25,7 +25,7 @@ import botocore.parsers
 import botocore.serialize
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
-from botocore.regions import CredentialBuiltinResolver
+from botocore.regions import CredentialBuiltinResolver, EndpointBuiltinResolver
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
@@ -153,9 +153,8 @@ class ClientArgsCreator:
             protocol, parameter_validation
         )
         response_parser = botocore.parsers.create_parser(protocol)
-        credential_builtin_resolver = CredentialBuiltinResolver(
-            credentials=credentials,
-            account_id_endpoint_mode=new_config.account_id_endpoint_mode,
+        builtin_resolver = self._construct_builtin_resolver(
+            credentials, new_config
         )
         ruleset_resolver = self._build_endpoint_resolver(
             endpoints_ruleset_data,
@@ -169,7 +168,7 @@ class ClientArgsCreator:
             is_secure,
             endpoint_bridge,
             event_emitter,
-            credential_builtin_resolver,
+            builtin_resolver,
         )
 
         # Copy the session's user agent factory and adds client configuration.
@@ -621,6 +620,15 @@ class ClientArgsCreator:
         else:
             return val.lower() == 'true'
 
+    def _construct_builtin_resolver(self, credentials, client_config):
+        credential_builtin_resolver = CredentialBuiltinResolver(
+            credentials, client_config.account_id_endpoint_mode
+        )
+        # This only includes CredentialBuiltinResolver for now, but may grow
+        # as more endpoint builtins are added.
+        builtin_resolvers = {'credentials': credential_builtin_resolver}
+        return EndpointBuiltinResolver(builtin_resolvers)
+
     def _build_endpoint_resolver(
         self,
         endpoints_ruleset_data,
@@ -634,7 +642,7 @@ class ClientArgsCreator:
         is_secure,
         endpoint_bridge,
         event_emitter,
-        credential_builtin_resolver,
+        builtin_resolver,
     ):
         if endpoints_ruleset_data is None:
             return None
@@ -684,7 +692,7 @@ class ClientArgsCreator:
             event_emitter=event_emitter,
             use_ssl=is_secure,
             requested_auth_scheme=sig_version,
-            credential_builtin_resolver=credential_builtin_resolver,
+            builtin_resolver=builtin_resolver,
         )
 
     def compute_endpoint_resolver_builtin_defaults(

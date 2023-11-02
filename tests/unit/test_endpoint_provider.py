@@ -38,6 +38,7 @@ from botocore.exceptions import (
 from botocore.loaders import Loader
 from botocore.regions import (
     CredentialBuiltinResolver,
+    EndpointBuiltinResolver,
     EndpointResolverBuiltins,
     EndpointRulesetResolver,
 )
@@ -567,9 +568,12 @@ def create_ruleset_resolver(
 ):
     service_model = Mock()
     service_model.client_context_parameters = []
-    credential_builtin_resolver = CredentialBuiltinResolver(
-        credentials, account_id_endpoint_mode
-    )
+    builtin_resolvers = {
+        "credentials": CredentialBuiltinResolver(
+            credentials, account_id_endpoint_mode
+        )
+    }
+    builtin_resolver = EndpointBuiltinResolver(builtin_resolvers)
     return EndpointRulesetResolver(
         endpoint_ruleset_data=ruleset,
         partition_data={},
@@ -577,7 +581,7 @@ def create_ruleset_resolver(
         builtins=bulitins,
         client_context=None,
         event_emitter=Mock(),
-        credential_builtin_resolver=credential_builtin_resolver,
+        builtin_resolver=builtin_resolver,
     )
 
 
@@ -686,32 +690,17 @@ def test_account_id_endpoint_mode_input_error_cases(
         )
 
 
-@pytest.mark.parametrize(
-    "credential_method, expected_message",
-    [  # refreshable method
-        ("assume-role", "ensure that your credential source is configured"),
-        # static method
-        ("env", "check your configuration and try again"),
-        # unsupported method
-        ("foo", "change your credential source to one of"),
-    ],
-)
 def test_required_mode_no_account_id(
     account_id_ruleset,
     operation_model_empty_context_params,
-    credential_method,
-    expected_message,
 ):
-    credentials = Credentials(
-        access_key="a", secret_key="b", token="c", method=credential_method
-    )
     resolver = create_ruleset_resolver(
         account_id_ruleset,
         BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-        credentials,
+        Credentials(access_key="a", secret_key="b", token="c"),
         REQUIRED,
     )
-    with pytest.raises(AccountIdNotFound, match=expected_message):
+    with pytest.raises(AccountIdNotFound):
         resolver.construct_endpoint(
             operation_model=operation_model_empty_context_params,
             request_context={},
