@@ -3028,6 +3028,13 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         ).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
+    def test_v1_disabled_by_config(self):
+        config = {'ec2_metadata_v1_disabled': True}
+        self.add_imds_response(b'', status_code=404)
+        fetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_iam_role_credentials()
+
     def _get_datetime(self, dt=None, offset=None, offset_func=operator.add):
         if dt is None:
             dt = datetime.datetime.utcnow()

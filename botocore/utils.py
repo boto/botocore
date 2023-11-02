@@ -393,8 +393,10 @@ class IMDSFetcher:
 
         if env is None:
             env = os.environ.copy()
-        self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
-        self._disabled = self._disabled == 'true'
+        self._disabled = (
+            env.get('AWS_EC2_METADATA_DISABLED', 'false').lower() == 'true'
+        )
+        self._imds_v1_disabled = config.get('ec2_metadata_v1_disabled')
         self._user_agent = user_agent
         self._session = botocore.httpsession.URLLib3Session(
             timeout=self._timeout,
@@ -457,10 +459,12 @@ class IMDSFetcher:
                 if response.status_code == 200:
                     return response.text
                 elif response.status_code in (404, 403, 405):
+                    self._check_imdsv1_disabled()
                     return None
                 elif response.status_code in (400,):
                     raise BadIMDSRequestError(request)
             except ReadTimeoutError:
+                self._check_imdsv1_disabled()
                 return None
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
@@ -475,7 +479,7 @@ class IMDSFetcher:
                     raise InvalidIMDSEndpointError(endpoint=url, error=e)
                 else:
                     raise
-        return None
+        self._check_imdsv1_disabled()
 
     def _get_request(self, url_path, retry_func, token=None):
         """Make a get request to the Instance Metadata Service.
@@ -553,6 +557,12 @@ class IMDSFetcher:
             statement += ", content body: %s"
             logger_args.append(response.content)
         logger.debug(statement, *logger_args)
+
+    def _check_imdsv1_disabled(self):
+        if self._imds_v1_disabled:
+            raise MetadataRetrievalError(
+                "Unable to retrieve token for use in IMDSv2 call and IMDSv1 has been disabled"
+            )
 
 
 class InstanceMetadataFetcher(IMDSFetcher):
@@ -734,6 +744,9 @@ class IMDSRegionProvider:
             ),
             'ec2_metadata_service_endpoint_mode': resolve_imds_endpoint_mode(
                 self._session
+            ),
+            'ec2_metadata_v1_disabled': self._session.get_config_variable(
+                'ec2_metadata_v1_disabled'
             ),
         }
         fetcher = InstanceMetadataRegionFetcher(
