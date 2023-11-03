@@ -568,12 +568,12 @@ def create_ruleset_resolver(
 ):
     service_model = Mock()
     service_model.client_context_parameters = []
-    builtin_resolvers = {
+    resolver_map = {
         "credentials": CredentialBuiltinResolver(
             credentials, account_id_endpoint_mode
         )
     }
-    builtin_resolver = EndpointBuiltinResolver(builtin_resolvers)
+    builtin_resolver = EndpointBuiltinResolver(resolver_map)
     return EndpointRulesetResolver(
         endpoint_ruleset_data=ruleset,
         partition_data={},

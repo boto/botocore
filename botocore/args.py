@@ -626,8 +626,8 @@ class ClientArgsCreator:
         )
         # This only includes CredentialBuiltinResolver for now, but may grow
         # as more endpoint builtins are added.
-        builtin_resolvers = {'credentials': credential_builtin_resolver}
-        return EndpointBuiltinResolver(builtin_resolvers)
+        resolver_map = {'credentials': credential_builtin_resolver}
+        return EndpointBuiltinResolver(resolver_map)
 
     def _build_endpoint_resolver(
         self,

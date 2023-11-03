@@ -513,8 +513,8 @@ class CredentialBuiltinResolver:
 class EndpointBuiltinResolver:
     """Resolves endpoint builtins during endpoint construction"""
 
-    def __init__(self, builtin_resolvers):
-        self._builtin_resolvers = builtin_resolvers
+    def __init__(self, resolver_map):
+        self._resolver_map = resolver_map
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins"""
@@ -529,7 +529,7 @@ class EndpointBuiltinResolver:
         )
         acct_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
         current_builtin_value = builtins.get(acct_id_builtin_key)
-        credential_resolver = self._builtin_resolvers['credentials']
+        credential_resolver = self._resolver_map['credentials']
         account_id = credential_resolver.resolve_account_id_builtin(
             builtin_configured, current_builtin_value
         )
