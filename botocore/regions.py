@@ -490,7 +490,8 @@ class CredentialBuiltinResolver:
         if account_id is None:
             msg = (
                 f'"account_id_endpoint_mode" is set to "{acct_id_ep_mode}", '
-                'but account ID could not be resolved.'
+                'but account ID could not be resolved. Retrieved credentials '
+                f'using: "{self._credentials.method}".'
             )
             if acct_id_ep_mode == 'preferred':
                 LOG.debug(msg)
