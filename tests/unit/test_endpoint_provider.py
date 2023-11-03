@@ -556,9 +556,9 @@ CREDENTIALS = Credentials(
     token="token",
     account_id="1234567890",
 )
-REQUIRED = 'required'
-PREFERRED = 'preferred'
-DISABLED = 'disabled'
+REQUIRED = "required"
+PREFERRED = "preferred"
+DISABLED = "disabled"
 URL_NO_ACCOUNT_ID = "https://amazonaws.com"
 URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
 
