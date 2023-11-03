@@ -533,10 +533,9 @@ class IMDSFetcher:
 
     def _assert_v1_enabled(self):
         if self._imds_v1_disabled:
-            logger.debug(
-                "Access to EC2 metadata through v1 has been disabled."
+            raise MetadataRetrievalError(
+                error_msg="Unable to retrieve token for use in IMDSv2 call and IMDSv1 has been disabled"
             )
-            raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _default_retry(self, response):
         return self._is_non_ok_response(response) or self._is_empty(response)
