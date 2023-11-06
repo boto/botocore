@@ -624,8 +624,6 @@ class ClientArgsCreator:
         credential_builtin_resolver = CredentialBuiltinResolver(
             credentials, client_config.account_id_endpoint_mode
         )
-        # This only includes CredentialBuiltinResolver for now, but may grow
-        # as more endpoint builtins are added.
         resolver_map = {'credentials': credential_builtin_resolver}
         return EndpointBuiltinResolver(resolver_map)
 

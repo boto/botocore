@@ -512,13 +512,13 @@ class CredentialBuiltinResolver:
 
 
 class EndpointBuiltinResolver:
-    """Resolves endpoint builtins during endpoint construction"""
+    """Resolves endpoint builtins during endpoint construction."""
 
     def __init__(self, resolver_map):
         self._resolver_map = resolver_map
 
     def resolve(self, param_definitions, builtins):
-        """Resolve endpoint builtins"""
+        """Resolve endpoint builtins."""
         self._resolve_credential_builtins(param_definitions, builtins)
 
     def _resolve_credential_builtins(self, param_definitions, builtins):
