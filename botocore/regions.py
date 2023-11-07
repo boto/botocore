@@ -48,6 +48,7 @@ from botocore.utils import ensure_boolean, instance_cache
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
 DEFAULT_SERVICE_DATA = {'endpoints': {}}
+# Allowed values for the ``account_id_endpoint_mode`` config field.
 
 
 class BaseEndpointResolver:
@@ -454,6 +455,9 @@ class EndpointResolverBuiltins(str, Enum):
     SDK_ENDPOINT = "SDK::Endpoint"
     # An account ID sourced from the credential resolution process.
     AWS_ACCOUNT_ID = "AWS::Auth::AccountId"
+    # The AWS credential scope configured for the SDK client. Clients may not
+    # make requests to regions outside their credential scope.
+    AWS_CREDENTIAL_SCOPE = "AWS::Auth::CredentialScope"
 
 
 class CredentialBuiltinResolver:
@@ -510,12 +514,35 @@ class CredentialBuiltinResolver:
             )
             raise InvalidConfigError(error_msg=error_msg)
 
+    def resolve_credential_scope_builtin(
+        self, builtin_configured, builtin_value
+    ):
+        """Resolve the ``AWS::Auth::CredentialScope`` builtin."""
+        if not builtin_configured or self._credentials is None:
+            return None
+
+        if builtin_value is not None:
+            return builtin_value
+
+        frozen_creds = self._credentials.get_frozen_credentials()
+        return frozen_creds.scope
+
 
 class EndpointBuiltinResolver:
     """Resolves endpoint builtins during endpoint construction."""
 
-    def __init__(self, resolver_map):
+    def __init__(self, resolver_map, uses_builtin_data_path=True):
         self._resolver_map = resolver_map
+        self._uses_builtin_data_path = uses_builtin_data_path
+        self._credential_scope_set = False
+
+    @property
+    def uses_builtin_data_path(self):
+        return self._uses_builtin_data_path
+
+    @property
+    def credential_scope_set(self):
+        return self._credential_scope_set
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins."""
@@ -523,6 +550,7 @@ class EndpointBuiltinResolver:
 
     def _resolve_credential_builtins(self, param_definitions, builtins):
         self._resolve_account_id_builtin(param_definitions, builtins)
+        self._resolve_credential_scope_builtin(param_definitions, builtins)
 
     def _resolve_account_id_builtin(self, param_definitions, builtins):
         builtin_configured = self._builtin_configured(
@@ -535,6 +563,22 @@ class EndpointBuiltinResolver:
             builtin_configured, current_builtin_value
         )
         builtins[acct_id_builtin_key] = account_id
+
+    def _resolve_credential_scope_builtin(self, param_definitions, builtins):
+        builtin_configured = self._builtin_configured(
+            param_definitions, 'CredentialScope'
+        )
+        scope_builtin_key = EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE
+        current_builtin_value = builtins.get(scope_builtin_key)
+        credential_resolver = self._resolver_map['credentials']
+        scope = credential_resolver.resolve_credential_scope_builtin(
+            builtin_configured, current_builtin_value
+        )
+        if scope is not None:
+            self._credential_scope_set = True
+        else:
+            self._credential_scope_set = False
+        builtins[scope_builtin_key] = scope
 
     def _builtin_configured(self, param_definitions, param_name):
         param_def = param_definitions.get(param_name)
@@ -926,3 +970,17 @@ class EndpointRulesetResolver:
             if msg == 'EndpointId must be a valid host label.':
                 return InvalidEndpointConfigurationError(msg=msg)
         return None
+
+    @property
+    def uses_builtin_data_path(self):
+        if self._builtin_resolver is None:
+            return True
+
+        return self._builtin_resolver.uses_builtin_data_path
+
+    @property
+    def credential_scope_set(self):
+        if self._builtin_resolver is None:
+            return False
+
+        return self._builtin_resolver.credential_scope_set

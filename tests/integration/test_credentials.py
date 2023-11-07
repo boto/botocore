@@ -76,6 +76,7 @@ class TestCredentialPrecedence(BaseEnvVar):
             secret_key='code-secret',
             token=mock.ANY,
             account_id=mock.ANY,
+            scope=mock.ANY,
         )
 
     def test_profile_env_vs_code(self):
@@ -104,6 +105,7 @@ class TestCredentialPrecedence(BaseEnvVar):
             secret_key='code-secret',
             token=mock.ANY,
             account_id=mock.ANY,
+            scope=mock.ANY,
         )
 
     def test_access_secret_env_vs_profile_code(self):

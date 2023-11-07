@@ -58,8 +58,8 @@ from botocore.utils import (
 logger = logging.getLogger(__name__)
 ReadOnlyCredentials = namedtuple(
     'ReadOnlyCredentials',
-    ['access_key', 'secret_key', 'token', 'account_id'],
-    defaults=(None,),
+    ['access_key', 'secret_key', 'token', 'account_id', 'scope'],
+    defaults=(None, None),
 )
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
@@ -312,6 +312,7 @@ class Credentials:
     :param str method: A string which identifies where the credentials
         were found.
     :param str account_id: The account ID associated with the credentials.
+    :param str scope: The scope associated with the credentials.
     """
 
     def __init__(
@@ -321,6 +322,7 @@ class Credentials:
         token=None,
         method=None,
         account_id=None,
+        scope=None,
     ):
         self.access_key = access_key
         self.secret_key = secret_key
@@ -330,6 +332,7 @@ class Credentials:
             method = 'explicit'
         self.method = method
         self.account_id = account_id
+        self.scope = scope
 
         self._normalize()
 
@@ -345,7 +348,11 @@ class Credentials:
 
     def get_frozen_credentials(self):
         return ReadOnlyCredentials(
-            self.access_key, self.secret_key, self.token, self.account_id
+            self.access_key,
+            self.secret_key,
+            self.token,
+            self.account_id,
+            self.scope,
         )
 
 
@@ -363,6 +370,7 @@ class RefreshableCredentials(Credentials):
         were found.
     :param function time_fetcher: Callback function to retrieve current time.
     :param str account_id: The account ID associated with the credentials.
+    :param str scope: The scope associated with the credentials.
     """
 
     # The time at which we'll attempt to refresh, but not
@@ -382,6 +390,7 @@ class RefreshableCredentials(Credentials):
         method,
         time_fetcher=_local_now,
         account_id=None,
+        scope=None,
     ):
         self._refresh_using = refresh_using
         self._access_key = access_key
@@ -392,10 +401,11 @@ class RefreshableCredentials(Credentials):
         self._refresh_lock = threading.Lock()
         self.method = method
         self._frozen_credentials = ReadOnlyCredentials(
-            access_key, secret_key, token, account_id
+            access_key, secret_key, token, account_id, scope
         )
         self._normalize()
         self._account_id = account_id
+        self._scope = scope
 
     def _normalize(self):
         self._access_key = botocore.compat.ensure_unicode(self._access_key)
@@ -411,6 +421,7 @@ class RefreshableCredentials(Credentials):
             method=method,
             refresh_using=refresh_using,
             account_id=metadata.get('account_id'),
+            scope=metadata.get('scope'),
         )
         return instance
 
@@ -465,6 +476,19 @@ class RefreshableCredentials(Credentials):
     @account_id.setter
     def account_id(self, value):
         self._account_id = value
+
+    @property
+    def scope(self):
+        """Warning: Using this property can lead to race conditions if you
+        access another property subsequently along the refresh boundary.
+        Please use get_frozen_credentials instead.
+        """
+        self._refresh()
+        return self._scope
+
+    @scope.setter
+    def scope(self, value):
+        self._scope = value
 
     def _seconds_remaining(self):
         delta = self._expiry_time - self._time_fetcher()
@@ -562,7 +586,11 @@ class RefreshableCredentials(Credentials):
             return
         self._set_from_data(metadata)
         self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token, self._account_id
+            self._access_key,
+            self._secret_key,
+            self._token,
+            self._account_id,
+            self._scope,
         )
         if self._is_expired():
             # We successfully refreshed credentials but for whatever
@@ -603,6 +631,7 @@ class RefreshableCredentials(Credentials):
             "Retrieved credentials will expire at: %s", self._expiry_time
         )
         self.account_id = data.get('account_id')
+        self.scope = data.get('scope')
         self._normalize()
 
     def get_frozen_credentials(self):
@@ -660,6 +689,7 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self.method = method
         self._frozen_credentials = None
         self._account_id = None
+        self._scope = None
 
     def refresh_needed(self, refresh_in=None):
         if self._frozen_credentials is None:
@@ -717,6 +747,9 @@ class CachedCredentialFetcher:
         account_id = creds.get('AccountId')
         if account_id is not None:
             creds_dict['account_id'] = account_id
+        scope = creds.get('CredentialScope')
+        if scope is not None:
+            creds_dict['scope'] = scope
         return creds_dict
 
     def _load_from_cache(self):
@@ -1040,6 +1073,7 @@ class ProcessProvider(CredentialProvider):
             token=creds_dict.get('token'),
             method=self.METHOD,
             account_id=creds_dict.get('account_id'),
+            scope=creds_dict.get('scope'),
         )
 
     def _retrieve_credentials_using(self, credential_process):
@@ -1080,11 +1114,19 @@ class ProcessProvider(CredentialProvider):
         account_id = self._resolve_account_id(parsed)
         if account_id is not None:
             creds_dict['account_id'] = account_id
+        scope = self._resolve_scope(parsed)
+        if scope is not None:
+            creds_dict['scope'] = scope
+
         return creds_dict
 
     def _resolve_account_id(self, parsed_response):
         account_id = parsed_response.get('AccountId')
         return account_id or self.profile_config.get('aws_account_id')
+
+    def _resolve_scope(self, parsed_response):
+        scope = parsed_response.get('CredentialScope')
+        return scope or self.profile_config.get('aws_credential_scope')
 
     @property
     def _credential_process(self):
@@ -1137,6 +1179,7 @@ class EnvProvider(CredentialProvider):
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
     EXPIRY_TIME = 'AWS_CREDENTIAL_EXPIRATION'
     ACCOUNT_ID = 'AWS_ACCOUNT_ID'
+    SCOPE = 'AWS_CREDENTIAL_SCOPE'
 
     def __init__(self, environ=None, mapping=None):
         """
@@ -1146,8 +1189,8 @@ class EnvProvider(CredentialProvider):
         :param mapping: An optional mapping of variable names to
             environment variable names.  Use this if you want to
             change the mapping of access_key->AWS_ACCESS_KEY_ID, etc.
-            The dict can have up to 5 keys: ``access_key``, ``secret_key``,
-            ``token``, ``expiry_time``, and ``account_id``.
+            The dict can have up to 6 keys: ``access_key``, ``secret_key``,
+            ``token``, ``expiry_time``, ``account_id`` and ``scope``.
         """
         if environ is None:
             environ = os.environ
@@ -1164,6 +1207,7 @@ class EnvProvider(CredentialProvider):
             var_mapping['token'] = self.TOKENS
             var_mapping['expiry_time'] = self.EXPIRY_TIME
             var_mapping['account_id'] = self.ACCOUNT_ID
+            var_mapping['scope'] = self.SCOPE
         else:
             var_mapping['access_key'] = mapping.get(
                 'access_key', self.ACCESS_KEY
@@ -1180,6 +1224,7 @@ class EnvProvider(CredentialProvider):
             var_mapping['account_id'] = mapping.get(
                 'account_id', self.ACCOUNT_ID
             )
+            var_mapping['scope'] = mapping.get('scope', self.SCOPE)
         return var_mapping
 
     def load(self):
@@ -1205,6 +1250,7 @@ class EnvProvider(CredentialProvider):
                     refresh_using=fetcher,
                     method=self.METHOD,
                     account_id=credentials.get('account_id'),
+                    scope=credentials.get('scope'),
                 )
 
             return Credentials(
@@ -1213,6 +1259,7 @@ class EnvProvider(CredentialProvider):
                 credentials['token'],
                 method=self.METHOD,
                 account_id=credentials.get('account_id'),
+                scope=credentials.get('scope'),
             )
         else:
             return None
@@ -1258,6 +1305,10 @@ class EnvProvider(CredentialProvider):
             account_id = environ.get(mapping['account_id'])
             if account_id is not None:
                 credentials['account_id'] = account_id
+
+            scope = environ.get(mapping['scope'])
+            if scope is not None:
+                credentials['scope'] = scope
 
             return credentials
 
@@ -1310,6 +1361,7 @@ class SharedCredentialProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
     ACCOUNT_ID = 'aws_account_id'
+    SCOPE = 'aws_credential_scope'
 
     def __init__(self, creds_filename, profile_name=None, ini_parser=None):
         self._creds_filename = creds_filename
@@ -1337,12 +1389,14 @@ class SharedCredentialProvider(CredentialProvider):
                 )
                 token = self._get_session_token(config)
                 account_id = self._get_account_id(config)
+                scope = self._get_scope(config)
                 return Credentials(
                     access_key,
                     secret_key,
                     token,
                     method=self.METHOD,
                     account_id=account_id,
+                    scope=scope,
                 )
 
     def _get_session_token(self, config):
@@ -1352,6 +1406,9 @@ class SharedCredentialProvider(CredentialProvider):
 
     def _get_account_id(self, config):
         return config.get(self.ACCOUNT_ID)
+
+    def _get_scope(self, config):
+        return config.get(self.SCOPE)
 
 
 class ConfigProvider(CredentialProvider):
@@ -1367,6 +1424,7 @@ class ConfigProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
     ACCOUNT_ID = 'aws_account_id'
+    SCOPE = 'aws_credential_scope'
 
     def __init__(self, config_filename, profile_name, config_parser=None):
         """
@@ -1404,12 +1462,14 @@ class ConfigProvider(CredentialProvider):
                 )
                 token = self._get_session_token(profile_config)
                 account_id = self._get_account_id(profile_config)
+                scope = self._get_scope(profile_config)
                 return Credentials(
                     access_key,
                     secret_key,
                     token,
                     method=self.METHOD,
                     account_id=account_id,
+                    scope=scope,
                 )
         else:
             return None
@@ -1421,6 +1481,9 @@ class ConfigProvider(CredentialProvider):
 
     def _get_account_id(self, profile_config):
         return profile_config.get(self.ACCOUNT_ID)
+
+    def _get_scope(self, profile_config):
+        return profile_config.get(self.SCOPE)
 
 
 class BotoProvider(CredentialProvider):
@@ -2220,7 +2283,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
             raise UnauthorizedSSOTokenError()
         credentials = response['roleCredentials']
 
-        credentials = {
+        creds_dict = {
             'ProviderType': 'sso',
             'Credentials': {
                 'AccessKeyId': credentials['accessKeyId'],
@@ -2230,7 +2293,10 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
                 'AccountId': self._account_id,
             },
         }
-        return credentials
+        scope = credentials.get('credentialScope')
+        if scope is not None:
+            creds_dict['Credentials']['CredentialScope'] = scope
+        return creds_dict
 
 
 class SSOProvider(CredentialProvider):

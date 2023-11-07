@@ -535,6 +535,19 @@ def account_id_ruleset():
 
 
 @pytest.fixture
+def credential_scope_ruleset():
+    rule_path = os.path.join(
+        os.path.dirname(__file__),
+        "data",
+        "endpoints",
+        "valid-rules",
+        "aws-credential-scope.json",
+    )
+    with open(rule_path) as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def operation_model_empty_context_params():
     operation_model = Mock()
     operation_model.static_context_parameters = []
@@ -542,13 +555,23 @@ def operation_model_empty_context_params():
     return operation_model
 
 
+US_WEST_2 = "us-west-2"
+US_EAST_1 = "us-east-1"
 BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID = {
-    EndpointResolverBuiltins.AWS_REGION: "us-west-2",
+    EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
     EndpointResolverBuiltins.AWS_ACCOUNT_ID: None,
 }
 BUILTINS_WITH_RESOLVED_ACCOUNT_ID = {
-    EndpointResolverBuiltins.AWS_REGION: "us-west-2",
+    EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
     EndpointResolverBuiltins.AWS_ACCOUNT_ID: "0987654321",
+}
+BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE = {
+    EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
+    EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE: None,
+}
+BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE = {
+    EndpointResolverBuiltins.AWS_REGION: US_EAST_1,
+    EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE: US_EAST_1,
 }
 CREDENTIALS = Credentials(
     access_key="access_key",
@@ -556,15 +579,29 @@ CREDENTIALS = Credentials(
     token="token",
     account_id="1234567890",
 )
+CREDENTIALS_NO_SCOPE = CREDENTIALS
+CREDENTIALS_WITH_SCOPE = Credentials(
+    access_key="access_key",
+    secret_key="secret_key",
+    token="token",
+    account_id="1234567890",
+    scope=US_WEST_2,
+)
 REQUIRED = "required"
 PREFERRED = "preferred"
 DISABLED = "disabled"
 URL_NO_ACCOUNT_ID = "https://amazonaws.com"
 URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
+URL_NO_SCOPE = URL_NO_ACCOUNT_ID
+URL_WITH_CREDENTIAL_SCOPE = "https://us-west-2.amazonaws.com"
+URL_WITH_OTHER_CREDENTIAL_SCOPE = "https://us-east-1.amazonaws.com"
 
 
 def create_ruleset_resolver(
-    ruleset, bulitins, credentials, account_id_endpoint_mode
+    ruleset,
+    bulitins,
+    credentials,
+    account_id_endpoint_mode,
 ):
     service_model = Mock()
     service_model.client_context_parameters = []
@@ -706,3 +743,56 @@ def test_required_mode_no_account_id(
             request_context={},
             call_args={},
         )
+
+
+@pytest.mark.parametrize(
+    "builtins, credentials, scope_set, expected_url",
+    [
+        # scope matches region
+        (
+            BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
+            CREDENTIALS_WITH_SCOPE,
+            True,
+            URL_WITH_CREDENTIAL_SCOPE,
+        ),
+        # pre-resolved scope
+        (
+            BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE,
+            CREDENTIALS_WITH_SCOPE,
+            True,
+            URL_WITH_OTHER_CREDENTIAL_SCOPE,
+        ),
+        # no scope in credentials
+        (
+            BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
+            CREDENTIALS_NO_SCOPE,
+            False,
+            URL_NO_SCOPE,
+        ),
+        # no credentials
+        (
+            BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
+            None,
+            False,
+            URL_NO_SCOPE,
+        ),
+    ],
+)
+def test_credential_scope_builtin(
+    operation_model_empty_context_params,
+    credential_scope_ruleset,
+    builtins,
+    credentials,
+    scope_set,
+    expected_url,
+):
+    resolver = create_ruleset_resolver(
+        credential_scope_ruleset, builtins, credentials, PREFERRED
+    )
+    endpoint = resolver.construct_endpoint(
+        operation_model=operation_model_empty_context_params,
+        request_context={},
+        call_args={},
+    )
+    assert resolver.credential_scope_set == scope_set
+    assert endpoint.url == expected_url

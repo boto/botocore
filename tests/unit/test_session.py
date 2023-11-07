@@ -558,6 +558,7 @@ class TestCreateClient(BaseSessionTest):
             aws_secret_access_key='bar',
             aws_session_token='baz',
             aws_account_id='123456789012',
+            aws_credential_scope='us-west-2',
         )
         call_args = client_creator.return_value.create_client.call_args[1]
         credentials = call_args['credentials']
@@ -565,6 +566,7 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(credentials.secret_key, 'bar')
         self.assertEqual(credentials.token, 'baz')
         self.assertEqual(credentials.account_id, '123456789012')
+        self.assertEqual(credentials.scope, 'us-west-2')
 
     def test_cred_provider_not_called_on_unsigned_client(self):
         cred_provider = mock.Mock()

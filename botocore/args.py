@@ -153,8 +153,9 @@ class ClientArgsCreator:
             protocol, parameter_validation
         )
         response_parser = botocore.parsers.create_parser(protocol)
+        uses_builtin_data = endpoint_bridge.resolver_uses_builtin_data()
         builtin_resolver = self._construct_builtin_resolver(
-            credentials, new_config
+            credentials, new_config, uses_builtin_data
         )
         ruleset_resolver = self._build_endpoint_resolver(
             endpoints_ruleset_data,
@@ -620,12 +621,15 @@ class ClientArgsCreator:
         else:
             return val.lower() == 'true'
 
-    def _construct_builtin_resolver(self, credentials, client_config):
+    def _construct_builtin_resolver(
+        self, credentials, client_config, uses_builtin_data
+    ):
         credential_builtin_resolver = CredentialBuiltinResolver(
-            credentials, client_config.account_id_endpoint_mode
+            credentials,
+            client_config.account_id_endpoint_mode,
         )
         resolver_map = {'credentials': credential_builtin_resolver}
-        return EndpointBuiltinResolver(resolver_map)
+        return EndpointBuiltinResolver(resolver_map, uses_builtin_data)
 
     def _build_endpoint_resolver(
         self,
@@ -778,6 +782,9 @@ class ClientArgsCreator:
             # account ID is calculated later if account based routing is
             # enabled and configured for the service
             EPRBuiltins.AWS_ACCOUNT_ID: None,
+            # credential scope is calculated later if configured on the
+            # credentials
+            EPRBuiltins.AWS_CREDENTIAL_SCOPE: None,
         }
 
     def _compute_user_agent_appid_config(self, config_kwargs):

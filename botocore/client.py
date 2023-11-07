@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+import warnings
 
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
@@ -1091,12 +1092,33 @@ class BaseClient:
                 request_context['auth_type'] = auth_type
                 if 'region' in signing_context and ignore_signing_region:
                     del signing_context['region']
+                self._maybe_warn_signing_region_mismatch(signing_context)
                 if 'signing' in request_context:
                     request_context['signing'].update(signing_context)
                 else:
                     request_context['signing'] = signing_context
 
         return endpoint_url, additional_headers
+
+    def _maybe_warn_signing_region_mismatch(self, signing_context):
+        legacy_signing_region = self._request_signer.region_name
+        signing_region = signing_context.get('region')
+        if (
+            signing_region is not None
+            and legacy_signing_region != signing_region
+            and not self._ruleset_resolver.uses_builtin_data_path
+            and self._ruleset_resolver.credential_scope_set
+        ):
+            warnings.warn(
+                "Detected an endpoint resolved from a custom endpoints.json"
+                "file and credentials scoped to a single region:  "
+                f"'{signing_region}'. The signing region this file has "
+                "resolved does not match the signing region of the client. "
+                "This may cause issues with request signing.\n"
+                f"legacy signing region: '{legacy_signing_region}'\n"
+                f"current signing region: '{signing_region}'\n "
+                f"Using '{signing_region}' to sign the request."
+            )
 
     def get_paginator(self, operation_name):
         """Create a paginator for an operation.

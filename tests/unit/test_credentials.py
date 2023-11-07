@@ -203,6 +203,19 @@ class TestRefreshableCredentials(TestCredentials):
         self.assertTrue(self.creds.refresh_needed())
         self.assertEqual(self.creds.account_id, '123456789012')
 
+    def test_credentail_scope_unset(self):
+        self.mock_time.return_value = datetime.now(tzlocal())
+        self.assertTrue(self.creds.refresh_needed())
+        self.assertIsNone(self.creds.scope)
+
+    def test_credential_scope_set(self):
+        metadata = self.metadata.copy()
+        metadata['scope'] = 'us-west-2'
+        self.refresher.return_value = metadata
+        self.mock_time.return_value = datetime.now(tzlocal())
+        self.assertTrue(self.creds.refresh_needed())
+        self.assertEqual(self.creds.scope, 'us-west-2')
+
 
 class TestDeferredRefreshableCredentials(unittest.TestCase):
     def setUp(self):
@@ -744,6 +757,25 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         response = refresher.fetch_credentials()
         self.assertEqual(response, expected_response)
 
+    def test_credential_scope(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+                'CredentialScope': 'us-west-2',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleCredentialFetcher(
+            client_creator, self.source_creds, self.role_arn
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        expected_response['scope'] = 'us-west-2'
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+
 
 class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
     def setUp(self):
@@ -895,6 +927,27 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             self.role_arn,
         )
         expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+
+    def test_credential_scope(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+                'CredentialScope': 'us-west-2',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator,
+            self.load_token,
+            self.role_arn,
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        expected_response['scope'] = 'us-west-2'
         response = refresher.fetch_credentials()
         self.assertEqual(response, expected_response)
 
@@ -1131,6 +1184,22 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.account_id, '123456789012')
         self.assertEqual(creds.method, 'env')
 
+    def test_envvars_found_with_credential_scope(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_SCOPE': 'us-west-2',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.scope, 'us-west-2')
+        self.assertEqual(creds.method, 'env')
+
     def test_envvars_not_found(self):
         provider = credentials.EnvProvider(environ={})
         creds = provider.load()
@@ -1253,6 +1322,22 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
         self.assertEqual(creds.account_id, '123456789012')
+
+    def test_can_override_scope_env_var_mapping(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'FOO_CREDENTIAL_SCOPE': 'us-west-2',
+        }
+        provider = credentials.EnvProvider(
+            environ, {'scope': 'FOO_CREDENTIAL_SCOPE'}
+        )
+        creds = provider.load()
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.scope, 'us-west-2')
 
     def test_partial_creds_is_an_error(self):
         # If the user provides an access key, they must also
@@ -1547,6 +1632,28 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         self.assertEqual(creds.method, 'shared-credentials-file')
         self.assertEqual(creds.account_id, '123456789012')
 
+    def test_credentials_file_exists_with_credential_scope(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'foo',
+                'aws_secret_access_key': 'bar',
+                'aws_session_token': 'baz',
+                'aws_credential_scope': 'us-west-2',
+            }
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds',
+            profile_name='default',
+            ini_parser=self.ini_parser,
+        )
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'shared-credentials-file')
+        self.assertEqual(creds.scope, 'us-west-2')
+
 
 class TestConfigFileProvider(BaseEnvVar):
     def setUp(self):
@@ -1626,6 +1733,24 @@ class TestConfigFileProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'b')
         self.assertEqual(creds.token, 'c')
         self.assertEqual(creds.account_id, '123456789012')
+
+    def test_config_credential_scope(self):
+        profile_config = {
+            'aws_access_key_id': 'a',
+            'aws_secret_access_key': 'b',
+            'aws_session_token': 'c',
+            'aws_credential_scope': 'us-west-2',
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+        self.assertEqual(creds.scope, 'us-west-2')
 
 
 class TestBotoProvider(BaseEnvVar):
@@ -3658,6 +3783,84 @@ class TestProcessProvider(BaseEnvVar):
         self.assertEqual(creds.method, 'custom-process')
         self.assertEqual(creds.account_id, '0987654321')
 
+    def test_missing_credential_scope(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value(
+            {
+                'Version': 1,
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2999-01-01T00:00:00Z',
+                'AccountId': '0987654321',
+                # Missing CredentialScope.
+            }
+        )
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.assertEqual(creds.account_id, '0987654321')
+        self.assertIsNone(creds.scope)
+
+    def test_credential_scope_from_profile(self):
+        self.loaded_config['profiles'] = {
+            'default': {
+                'credential_process': 'my-process',
+                'aws_credential_scope': 'us-west-2',
+            }
+        }
+        self._set_process_return_value(
+            {
+                'Version': 1,
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2999-01-01T00:00:00Z',
+                # Missing CredentialScope.
+            }
+        )
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.assertEqual(creds.scope, 'us-west-2')
+
+    def test_credential_scope_from_process_takes_precedence(self):
+        self.loaded_config['profiles'] = {
+            'default': {
+                'credential_process': 'my-process',
+                'aws_credential_scope': 'us-west-2',
+            }
+        }
+        self._set_process_return_value(
+            {
+                'Version': 1,
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2999-01-01T00:00:00Z',
+                'CredentialScope': 'us-east-1',
+            }
+        )
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.assertEqual(creds.scope, 'us-east-1')
+
 
 class TestProfileProviderBuilder(unittest.TestCase):
     def setUp(self):
@@ -3764,6 +3967,47 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         with self.assertRaises(botocore.exceptions.UnauthorizedSSOTokenError):
             with self.stubber:
                 self.fetcher.fetch_credentials()
+
+    def test_can_fetch_credentials_with_scope(self):
+        expected_response = {
+            'roleCredentials': {
+                'accessKeyId': 'foo',
+                'secretAccessKey': 'bar',
+                'sessionToken': 'baz',
+                'expiration': self.now_timestamp + 1000000,
+                'credentialScope': 'us-west-2',
+            }
+        }
+        client = mock.Mock()
+        client.get_role_credentials.return_value = expected_response
+        client_creator = mock.Mock(return_value=client)
+        fetcher = SSOCredentialFetcher(
+            self.start_url,
+            self.sso_region,
+            self.role_name,
+            self.account_id,
+            client_creator,
+            token_loader=self.loader,
+            cache=self.cache,
+        )
+        credentials = fetcher.fetch_credentials()
+        self.assertEqual(credentials['access_key'], 'foo')
+        self.assertEqual(credentials['secret_key'], 'bar')
+        self.assertEqual(credentials['token'], 'baz')
+        self.assertEqual(credentials['expiry_time'], '2008-09-23T12:43:20Z')
+        cache_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
+        expected_cached_credentials = {
+            'ProviderType': 'sso',
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2008-09-23T12:43:20Z',
+                'AccountId': '1234567890',
+                'CredentialScope': 'us-west-2',
+            },
+        }
+        self.assertEqual(self.cache[cache_key], expected_cached_credentials)
 
 
 class TestSSOProvider(unittest.TestCase):

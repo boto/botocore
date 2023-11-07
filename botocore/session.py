@@ -480,7 +480,7 @@ class Session:
         self._client_config = client_config
 
     def set_credentials(
-        self, access_key, secret_key, token=None, account_id=None
+        self, access_key, secret_key, token=None, account_id=None, scope=None
     ):
         """
         Manually create credentials for this session.  If you would
@@ -500,9 +500,12 @@ class Session:
 
         :type account_id: str
         :param account_id: The account ID for the credentials.
+
+        :type scope: str
+        :param scope: The scope for the credentials.
         """
         self._credentials = botocore.credentials.Credentials(
-            access_key, secret_key, token, account_id=account_id
+            access_key, secret_key, token, account_id=account_id, scope=scope
         )
 
     def get_credentials(self):
@@ -847,6 +850,7 @@ class Session:
         aws_session_token=None,
         config=None,
         aws_account_id=None,
+        aws_credential_scope=None,
     ):
         """Create a botocore client.
 
@@ -919,6 +923,11 @@ class Session:
         :type aws_account_id: string
         :param aws_account_id: The AWS account ID to use when creating the client.
             Same semantics as aws_access_key_id above.
+
+        :type aws_credential_scope: string
+        :param aws_credential_scope: The AWS credential scope to use when creating
+            creating the client. Same semantics as aws_access_key_id above. Must be
+            equal to region_name.
         """
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then
@@ -955,6 +964,7 @@ class Session:
                 secret_key=aws_secret_access_key,
                 token=aws_session_token,
                 account_id=aws_account_id,
+                scope=aws_credential_scope,
             )
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
