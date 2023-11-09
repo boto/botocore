@@ -1062,7 +1062,7 @@ class BaseClient:
         returned.
 
         Use ignore_signing_region for generating presigned URLs or any other
-        situtation where the signing region information from the ruleset
+        situation where the signing region information from the ruleset
         resolver should be ignored.
 
         Returns tuple of URL and headers dictionary. Additionally, the
