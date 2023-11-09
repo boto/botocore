@@ -1090,7 +1090,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             parsed.pop('HostId', '')
             return {'Error': parsed, 'ResponseMetadata': metadata}
         elif 'RequestId' in parsed:
-            # Other rest-xml serivces:
+            # Other rest-xml services:
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         default = {'Error': {'Message': '', 'Code': ''}}
         merge_dicts(default, parsed)
