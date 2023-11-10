@@ -2970,7 +2970,7 @@ def _s3_addressing_test_cases():
         region="us-west-2",
         bucket=accesspoint_arn,
         key="key",
-        s3_config={"adressing_style": "auto"},
+        s3_config={"addressing_style": "auto"},
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint."
             "us-west-2.amazonaws.com/key"
@@ -2980,7 +2980,7 @@ def _s3_addressing_test_cases():
         region="us-west-2",
         bucket=accesspoint_arn,
         key="key",
-        s3_config={"adressing_style": "virtual"},
+        s3_config={"addressing_style": "virtual"},
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint."
             "us-west-2.amazonaws.com/key"
@@ -2990,7 +2990,7 @@ def _s3_addressing_test_cases():
         region="us-west-2",
         bucket=accesspoint_arn,
         key="key",
-        s3_config={"adressing_style": "path"},
+        s3_config={"addressing_style": "path"},
         expected_url=(
             "https://myendpoint-123456789012.s3-accesspoint."
             "us-west-2.amazonaws.com/key"
