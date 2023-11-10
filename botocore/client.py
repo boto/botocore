@@ -1250,6 +1250,13 @@ class BaseClient:
             self._service_model
         )
 
+    def _get_credentials(self):
+        """
+        This private interface is subject to abrupt breaking changes, including
+        removal, in any botocore release.
+        """
+        return self._request_signer._credentials
+
 
 class ClientMeta:
     """Holds additional client methods.
