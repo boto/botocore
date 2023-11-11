@@ -1158,7 +1158,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error']['Message'], 'this is a message')
         self.assertEqual(parsed['Error']['Code'], 'ValidationException')
-        assert 'QueryErrorCode' not in parsed['Error']
+        self.assertNotIn('QueryErrorCode', parsed['Error'])
         self.assertNotIn('Type', parsed['Error'])
 
     def test_response_with_incomplete_query_error_for_json_protocol(self):
