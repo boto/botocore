@@ -705,12 +705,8 @@ class BaseJSONParser(ResponseParser):
         # we need to fetch the error code from this header in that case
         query_error = headers.get('x-amzn-query-error', '')
         query_error_components = query_error.split(';')
-        code = None
-        if len(query_error_components) == 2 and query_error_components[0]:
-            code = query_error_components[0]
-            error['Error']['Type'] = query_error_components[1]
-        if code is None:
-            code = body.get('__type', response_code and str(response_code))
+
+        code = body.get('__type', response_code and str(response_code))
         if code is not None:
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
@@ -718,6 +714,10 @@ class BaseJSONParser(ResponseParser):
             if '#' in code:
                 code = code.rsplit('#', 1)[1]
             error['Error']['Code'] = code
+            if len(query_error_components) == 2 and query_error_components[0]:
+                error['Error']['QueryErrorCode'] = code
+                error['Error']['Code'] = query_error_components[0]
+                error['Error']['Type'] = query_error_components[1]
         self._inject_response_metadata(error, response['headers'])
         return error
 
