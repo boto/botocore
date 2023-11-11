@@ -19,10 +19,11 @@
       "result_key": [
         "Items",
         "Count",
-        "ScannedCount"
+        "ScannedCount",
+        "ConsumedCapacity.CapacityUnits"
       ],
       "non_aggregate_keys": [
-        "ConsumedCapacity"
+        "ConsumedCapacity.TableName"
       ]
     },
     "Scan": {
@@ -32,10 +33,11 @@
       "result_key": [
         "Items",
         "Count",
-        "ScannedCount"
+        "ScannedCount",
+        "ConsumedCapacity.CapacityUnits"
       ],
       "non_aggregate_keys": [
-        "ConsumedCapacity"
+        "ConsumedCapacity.TableName"
       ]
     },
     "ListTagsOfResource": {

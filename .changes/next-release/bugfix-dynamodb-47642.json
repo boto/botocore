@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "dynamodb",
+  "description": "fixes a bug where ConsumedCapacity would only display the value for the last page in the CLI"
+}
