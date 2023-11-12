@@ -20,7 +20,6 @@
         "Items",
         "Count",
         "ScannedCount",
-        "ConsumedCapacity",
         "ConsumedCapacity.CapacityUnits"
       ],
       "non_aggregate_keys": [
@@ -35,7 +34,6 @@
         "Items",
         "Count",
         "ScannedCount",
-        "ConsumedCapacity",
         "ConsumedCapacity.CapacityUnits"
       ],
       "non_aggregate_keys": [

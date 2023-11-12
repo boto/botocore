@@ -49,6 +49,8 @@ KNOWN_EXTRA_OUTPUT_KEYS = [
     'codedeploy.ListDeploymentGroups.applicationName',
     'dms.DescribeTableStatistics.ReplicationTaskArn',
     'dms.DescribeReplicationTaskAssessmentResults.BucketName',
+    'dynamodb.Query.ConsumedCapacity',
+    'dynamodb.Scan.ConsumedCapacity',
     'ec2.DescribeSpotFleetInstances.SpotFleetRequestId',
     'ec2.DescribeVpcEndpointServices.ServiceNames',
     'efs.DescribeFileSystems.Marker',
