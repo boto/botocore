@@ -2218,7 +2218,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         self,
         accesspoint_name=None,
         accesspoint_context=None,
-        **s3_request_kwargs
+        **s3_request_kwargs,
     ):
         if not accesspoint_name:
             accesspoint_name = self.accesspoint_name
@@ -2579,9 +2579,8 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
-        self.assert_can_retrieve_metadata_from(
-            'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS
-        )
+        uri = f'http://{ContainerMetadataFetcher.IP_ADDRESS}/foo?id=1'
+        self.assert_can_retrieve_metadata_from(uri)
 
     def test_localhost_http_is_allowed(self):
         self.assert_can_retrieve_metadata_from('http://localhost/foo')
@@ -2597,6 +2596,21 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def test_can_use_127_ip_addr_with_port(self):
         self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
+
+    def test_can_use_eks_ipv4_addr(self):
+        uri = 'http://169.254.170.23/credentials'
+        self.assert_can_retrieve_metadata_from(uri)
+
+    def test_can_use_eks_ipv6_addr(self):
+        uri = 'http://[fd00:ec2::23]/credentials'
+        self.assert_can_retrieve_metadata_from(uri)
+
+    def test_can_use_eks_ipv6_addr_with_port(self):
+        uri = 'https://[fd00:ec2::23]:8000'
+        self.assert_can_retrieve_metadata_from(uri)
+
+    def test_can_use_loopback_v6_uri(self):
+        self.assert_can_retrieve_metadata_from('http://[::1]/credentials')
 
     def test_link_local_http_is_not_allowed(self):
         self.assert_host_is_not_allowed('http://169.254.0.1/foo')
