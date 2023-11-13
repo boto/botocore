@@ -48,7 +48,6 @@ from botocore.utils import ensure_boolean, instance_cache
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
 DEFAULT_SERVICE_DATA = {'endpoints': {}}
-# Allowed values for the ``account_id_endpoint_mode`` config field.
 
 
 class BaseEndpointResolver:
@@ -455,8 +454,8 @@ class EndpointResolverBuiltins(str, Enum):
     SDK_ENDPOINT = "SDK::Endpoint"
     # An account ID sourced from the credential resolution process.
     AWS_ACCOUNT_ID = "AWS::Auth::AccountId"
-    # The AWS credential scope configured for the SDK client. Clients may not
-    # make requests to regions outside their credential scope.
+    # The AWS credential scope configured for the SDK client. If set,
+    # credentials are not valid outside of their credential scope region.
     AWS_CREDENTIAL_SCOPE = "AWS::Auth::CredentialScope"
 
 

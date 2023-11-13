@@ -59,7 +59,10 @@ logger = logging.getLogger(__name__)
 ReadOnlyCredentials = namedtuple(
     'ReadOnlyCredentials',
     ['access_key', 'secret_key', 'token', 'account_id', 'scope'],
-    defaults=(None, None),
+    defaults=(
+        None,
+        None,
+    ),
 )
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
