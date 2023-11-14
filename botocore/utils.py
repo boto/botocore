@@ -1049,11 +1049,7 @@ def datetime2timestamp(dt, default_timezone=None):
             default_timezone = tzutc()
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
-    if hasattr(d, "total_seconds"):
-        return d.total_seconds()  # Works in Python 3.6+
-    return (
-        d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6
-    ) / 10**6
+    return d.total_seconds()
 
 
 def calculate_sha256(body, as_hex=False):
