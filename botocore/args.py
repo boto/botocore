@@ -153,9 +153,8 @@ class ClientArgsCreator:
             protocol, parameter_validation
         )
         response_parser = botocore.parsers.create_parser(protocol)
-        uses_builtin_data = endpoint_bridge.resolver_uses_builtin_data()
         builtin_resolver = self._construct_builtin_resolver(
-            credentials, new_config, uses_builtin_data
+            credentials, new_config
         )
         ruleset_resolver = self._build_endpoint_resolver(
             endpoints_ruleset_data,
@@ -621,15 +620,13 @@ class ClientArgsCreator:
         else:
             return val.lower() == 'true'
 
-    def _construct_builtin_resolver(
-        self, credentials, client_config, uses_builtin_data
-    ):
+    def _construct_builtin_resolver(self, credentials, client_config):
         credential_builtin_resolver = CredentialBuiltinResolver(
             credentials,
             client_config.account_id_endpoint_mode,
         )
         resolver_map = {'credentials': credential_builtin_resolver}
-        return EndpointBuiltinResolver(resolver_map, uses_builtin_data)
+        return EndpointBuiltinResolver(resolver_map)
 
     def _build_endpoint_resolver(
         self,

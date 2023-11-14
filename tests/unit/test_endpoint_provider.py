@@ -746,34 +746,30 @@ def test_required_mode_no_account_id(
 
 
 @pytest.mark.parametrize(
-    "builtins, credentials, scope_set, expected_url",
+    "builtins, credentials, expected_url",
     [
         # scope matches region
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
-            True,
             URL_WITH_CREDENTIAL_SCOPE,
         ),
         # pre-resolved scope
         (
             BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
-            True,
             URL_WITH_OTHER_CREDENTIAL_SCOPE,
         ),
         # no scope in credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_NO_SCOPE,
-            False,
             URL_NO_SCOPE,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             None,
-            False,
             URL_NO_SCOPE,
         ),
     ],
@@ -783,7 +779,6 @@ def test_credential_scope_builtin(
     credential_scope_ruleset,
     builtins,
     credentials,
-    scope_set,
     expected_url,
 ):
     resolver = create_ruleset_resolver(
@@ -794,5 +789,4 @@ def test_credential_scope_builtin(
         request_context={},
         call_args={},
     )
-    assert resolver.credential_scope_set == scope_set
     assert endpoint.url == expected_url

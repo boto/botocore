@@ -14,7 +14,6 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-from unittest import mock
 
 import pytest
 
@@ -306,28 +305,3 @@ def test_end_to_end_test_cases_yielding_errors(
             except (ClientError, ResponseParserError):
                 pass
         assert len(http_stubber.requests) == 0
-
-
-@mock.patch('botocore.signers.RequestSigner.region_name', 'us-east-1')
-@mock.patch(
-    'botocore.regions.EndpointRulesetResolver.auth_schemes_to_signing_ctx',
-    return_value=('v4', {'region': 'us-west-2'}),
-)
-@mock.patch(
-    'botocore.regions.EndpointRulesetResolver.uses_builtin_data_path', False
-)
-@mock.patch(
-    'botocore.regions.EndpointRulesetResolver.credential_scope_set', True
-)
-def test_signing_region_mismatch_warns(auth_schemes_mock, patched_session):
-    patched_session.set_credentials(
-        access_key='foo', secret_key='bar', token='baz', scope='us-west-2'
-    )
-    client = patched_session.create_client('iam', region_name='us-west-2')
-    body = b'<ListRolesResponse><ListRolesResult></ListRolesResult></ListRolesResponse>'
-    with ClientHTTPStubber(client) as http_stubber:
-        http_stubber.add_response(status=200, body=body)
-        with pytest.warns(
-            UserWarning, match='does not match the signing region'
-        ):
-            client.list_roles()

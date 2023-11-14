@@ -545,3 +545,31 @@ def test_endpoint_resolver_knows_its_datasource(patched_session, is_builtin):
     with mock.patch.object(loader, 'is_builtin_path', return_value=is_builtin):
         resolver = session._get_internal_component('endpoint_resolver')
         assert resolver.uses_builtin_data == is_builtin
+
+
+@pytest.fixture
+def mock_resolved_endpoint():
+    return {
+        'credentialScope': {'region': 'us-east-2'},
+        'endpointName': 'us-east-2',
+        'signatureVersions': ['v4'],
+    }
+
+
+@mock.patch('botocore.regions.EndpointResolver.construct_endpoint')
+@pytest.mark.parametrize(
+    'is_builtin, num_expected_warnings', [(True, 0), (False, 1)]
+)
+def test_custom_endpoints_file_signing_region_warns(
+    construct_endpoint_mock,
+    is_builtin,
+    num_expected_warnings,
+    mock_resolved_endpoint,
+    patched_session,
+    recwarn,
+):
+    construct_endpoint_mock.return_value = mock_resolved_endpoint
+    loader = patched_session.get_component('data_loader')
+    with mock.patch.object(loader, 'is_builtin_path', return_value=is_builtin):
+        patched_session.create_client('iam')
+        assert len(recwarn) == num_expected_warnings

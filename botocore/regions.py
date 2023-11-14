@@ -530,18 +530,8 @@ class CredentialBuiltinResolver:
 class EndpointBuiltinResolver:
     """Resolves endpoint builtins during endpoint construction."""
 
-    def __init__(self, resolver_map, uses_builtin_data_path=True):
+    def __init__(self, resolver_map):
         self._resolver_map = resolver_map
-        self._uses_builtin_data_path = uses_builtin_data_path
-        self._credential_scope_set = False
-
-    @property
-    def uses_builtin_data_path(self):
-        return self._uses_builtin_data_path
-
-    @property
-    def credential_scope_set(self):
-        return self._credential_scope_set
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins."""
@@ -573,10 +563,6 @@ class EndpointBuiltinResolver:
         scope = credential_resolver.resolve_credential_scope_builtin(
             builtin_configured, current_builtin_value
         )
-        if scope is not None:
-            self._credential_scope_set = True
-        else:
-            self._credential_scope_set = False
         builtins[scope_builtin_key] = scope
 
     def _builtin_configured(self, param_definitions, param_name):
@@ -969,17 +955,3 @@ class EndpointRulesetResolver:
             if msg == 'EndpointId must be a valid host label.':
                 return InvalidEndpointConfigurationError(msg=msg)
         return None
-
-    @property
-    def uses_builtin_data_path(self):
-        if self._builtin_resolver is None:
-            return True
-
-        return self._builtin_resolver.uses_builtin_data_path
-
-    @property
-    def credential_scope_set(self):
-        if self._builtin_resolver is None:
-            return False
-
-        return self._builtin_resolver.credential_scope_set
