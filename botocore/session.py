@@ -926,8 +926,7 @@ class Session:
 
         :type aws_credential_scope: string
         :param aws_credential_scope: The AWS credential scope to use when creating
-            creating the client. Same semantics as aws_access_key_id above. Must be
-            equal to region_name.
+            creating the client. Same semantics as aws_access_key_id above.
         """
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then

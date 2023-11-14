@@ -590,9 +590,8 @@ CREDENTIALS_WITH_SCOPE = Credentials(
 REQUIRED = "required"
 PREFERRED = "preferred"
 DISABLED = "disabled"
-URL_NO_ACCOUNT_ID = "https://amazonaws.com"
+URL_NO_ACCOUNT_ID_OR_SCOPE = "https://amazonaws.com"
 URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
-URL_NO_SCOPE = URL_NO_ACCOUNT_ID
 URL_WITH_CREDENTIAL_SCOPE = "https://us-west-2.amazonaws.com"
 URL_WITH_OTHER_CREDENTIAL_SCOPE = "https://us-east-1.amazonaws.com"
 
@@ -642,34 +641,34 @@ def create_ruleset_resolver(
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             DISABLED,
-            URL_NO_ACCOUNT_ID,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # custom account ID removed if account ID mode is disabled
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS,
             DISABLED,
-            URL_NO_ACCOUNT_ID,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             None,
             REQUIRED,
-            URL_NO_ACCOUNT_ID,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             None,
             PREFERRED,
-            URL_NO_ACCOUNT_ID,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # no account ID in credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             Credentials(access_key="foo", secret_key="bar", token="baz"),
             PREFERRED,
-            URL_NO_ACCOUNT_ID,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
     ],
 )
@@ -764,13 +763,13 @@ def test_required_mode_no_account_id(
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_NO_SCOPE,
-            URL_NO_SCOPE,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             None,
-            URL_NO_SCOPE,
+            URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
     ],
 )

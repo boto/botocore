@@ -789,10 +789,10 @@ class ClientEndpointBridge:
                 and 'region' in resolved['credentialScope']
             ):
                 signing_region = resolved['credentialScope']['region']
-                self._maybe_warn_custom_signing_region(signing_region)
+                self._warn_custom_signing_region(signing_region)
         return region_name, signing_region
 
-    def _maybe_warn_custom_signing_region(self, signing_region):
+    def _warn_custom_signing_region(self, signing_region):
         if not self.resolver_uses_builtin_data():
             warnings.warn(
                 "Detected a signing region resolved from a custom "
