@@ -26,6 +26,7 @@ import time
 import warnings
 import weakref
 from datetime import datetime as _DatetimeClass
+from email.utils import parsedate_to_datetime
 from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
@@ -658,7 +659,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
         if expiration is None:
             return
         try:
-            expiration = datetime.datetime.strptime(
+            expiration = _DatetimeClass.strptime(
                 expiration, "%Y-%m-%dT%H:%M:%SZ"
             )
             refresh_interval = self._config.get(
@@ -666,6 +667,8 @@ class InstanceMetadataFetcher(IMDSFetcher):
             )
             jitter = random.randint(120, 600)  # Between 2 to 10 minutes
             refresh_interval_with_jitter = refresh_interval + jitter
+            # NB: may not be replaced with `_DatetimeClass.utcnow()` lest tests
+            #     that mock `datetime` in this module fail
             current_time = datetime.datetime.utcnow()
             refresh_offset = datetime.timedelta(
                 seconds=refresh_interval_with_jitter
@@ -924,7 +927,7 @@ def _epoch_seconds_to_datetime(value):
     :param value: The Unix timestamps as number.
     """
     try:
-        return datetime.datetime.fromtimestamp(value, tz=tzutc())
+        return _DatetimeClass.fromtimestamp(value, tz=tzutc())
     except (OverflowError, OSError):
         # For numeric values attempt fallback to using fromtimestamp-free method.
         # From Python's ``datetime.datetime.fromtimestamp`` documentation: "This
@@ -945,8 +948,22 @@ def parse_timestamp(value):
         * epoch (value is an integer)
 
     This will return a ``datetime.datetime`` object.
-
     """
+    if isinstance(value, str):
+        if value.endswith("GMT"):
+            # Fast path: assume RFC822-with-GMT
+            try:
+                return parsedate_to_datetime(value).replace(tzinfo=tzutc())
+            except Exception:
+                pass
+        if value.endswith(("Z", "+00:00", "+0000")):
+            # Fast path: looks like ISO8601 UTC
+            try:
+                # New in version 3.7
+                return _DatetimeClass.fromisoformat(value)
+            except Exception:
+                pass
+
     if isinstance(value, (int, float)):
         try:
             # Possibly an epoch time.
