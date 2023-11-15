@@ -959,12 +959,18 @@ def _epoch_seconds_to_datetime(value, tzinfo):
 
 def _parse_timestamp_with_tzinfo(value, tzinfo):
     """Parse timestamp with pluggable tzinfo options."""
+    # For numeric values attempt fallback to using fromtimestamp-free method.
+    # From Python's ``datetime.datetime.fromtimestamp`` documentation: "This
+    # may raise ``OverflowError``, if the timestamp is out of the range of
+    # values supported by the platform C localtime() function, and ``OSError``
+    # on localtime() failure. It's common for this to be restricted to years
+    # from 1970 through 2038."
     if isinstance(value, (int, float)):
         # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzinfo())
+        return _epoch_seconds_to_datetime(value, tzinfo)
     else:
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzinfo())
+            return _epoch_seconds_to_datetime(float(value), tzinfo)
         except (TypeError, ValueError):
             pass
     try:
@@ -998,30 +1004,7 @@ def parse_timestamp(value):
                 tzinfo.__name__,
                 exc_info=e,
             )
-    # For numeric values attempt fallback to using fromtimestamp-free method.
-    # From Python's ``datetime.datetime.fromtimestamp`` documentation: "This
-    # may raise ``OverflowError``, if the timestamp is out of the range of
-    # values supported by the platform C localtime() function, and ``OSError``
-    # on localtime() failure. It's common for this to be restricted to years
-    # from 1970 through 2038."
-    try:
-        numeric_value = float(value)
-    except (TypeError, ValueError):
-        pass
-    else:
-        try:
-            for tzinfo in tzinfo_options:
-                return _epoch_seconds_to_datetime(numeric_value, tzinfo=tzinfo)
-        except (OSError, OverflowError) as e:
-            logger.debug(
-                'Unable to parse timestamp using fallback method with "%s" '
-                'timezone info.',
-                tzinfo.__name__,
-                exc_info=e,
-            )
-    raise RuntimeError(
-        f'Unable to calculate correct timezone offset for "{value}"'
-    )
+    raise RuntimeError(f'Unable to parse timestamp {value!r}')
 
 
 def parse_to_aware_datetime(value):
