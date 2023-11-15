@@ -541,18 +541,6 @@ class TestParseTimestamps(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
 
-    def test_parse_timestamp_fails_with_bad_tzinfo(self):
-        mock_tzinfo = mock.Mock()
-        mock_tzinfo.__name__ = 'tzinfo'
-        mock_tzinfo.side_effect = OSError()
-        mock_get_tzinfo_options = mock.MagicMock(return_value=(mock_tzinfo,))
-
-        with mock.patch(
-            'botocore.utils.get_tzinfo_options', mock_get_tzinfo_options
-        ):
-            with self.assertRaises(RuntimeError):
-                parse_timestamp(0)
-
     @contextmanager
     def mocked_fromtimestamp_that_raises(self, exception_type):
         class MockDatetime(datetime.datetime):

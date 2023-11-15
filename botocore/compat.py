@@ -269,6 +269,8 @@ def _windows_shell_split(s):
 
 
 def get_tzinfo_options():
+    # This function is not used internally anymore.
+
     # Due to dateutil/dateutil#197, Windows may fail to parse times in the past
     # with the system clock. We can alternatively fallback to tzwininfo when
     # this happens, which will get time info from the Windows registry.
