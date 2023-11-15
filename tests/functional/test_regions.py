@@ -10,10 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import json
+import os
+import tempfile
+
 import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
+from botocore.session import Session
 from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
@@ -548,28 +553,44 @@ def test_endpoint_resolver_knows_its_datasource(patched_session, is_builtin):
 
 
 @pytest.fixture
-def mock_resolved_endpoint():
-    return {
-        'credentialScope': {'region': 'us-east-2'},
-        'endpointName': 'us-east-2',
-        'signatureVersions': ['v4'],
+def custom_endpoints_file():
+    contents = {
+        'partitions': [
+            {
+                'partition': 'aws',
+                'dnsSuffix': 'amazonaws.com',
+                'regions': {'us-east-1': {}},
+                'services': {
+                    'iam': {
+                        'endpoints': {
+                            'us-east-1': {
+                                'hostname': 'iam-custom.us-east-2.amazonaws.com',
+                                'credentialScope': {'region': 'us-east-2'},
+                                'signatureVersions': ['v4'],
+                            }
+                        }
+                    }
+                },
+            }
+        ]
     }
+    return json.dumps(contents)
 
 
-@mock.patch('botocore.regions.EndpointResolver.construct_endpoint')
 @pytest.mark.parametrize(
-    'is_builtin, num_expected_warnings', [(True, 0), (False, 1)]
+    'file_name, warning_expected',
+    [('endpoints', True), ('not_endpoints', False)],
 )
 def test_custom_endpoints_file_signing_region_warns(
-    construct_endpoint_mock,
-    is_builtin,
-    num_expected_warnings,
-    mock_resolved_endpoint,
-    patched_session,
-    recwarn,
+    monkeypatch, recwarn, custom_endpoints_file, file_name, warning_expected
 ):
-    construct_endpoint_mock.return_value = mock_resolved_endpoint
-    loader = patched_session.get_component('data_loader')
-    with mock.patch.object(loader, 'is_builtin_path', return_value=is_builtin):
-        patched_session.create_client('iam')
-        assert len(recwarn) == num_expected_warnings
+    with tempfile.TemporaryDirectory() as tempdir:
+        custom_endpoints_file_path = os.path.join(tempdir, f'{file_name}.json')
+        with open(custom_endpoints_file_path, 'w') as f:
+            f.write(custom_endpoints_file)
+        monkeypatch.setenv('AWS_DATA_PATH', tempdir)
+        session = Session()
+        match = 'signing region resolved from a custom endpoints.json file'
+        session.create_client('iam', region_name='us-east-1')
+        matched_warnings = [w for w in recwarn if match in str(w.message)]
+        assert (len(matched_warnings) > 0) == warning_expected
