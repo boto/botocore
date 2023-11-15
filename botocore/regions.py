@@ -477,7 +477,9 @@ class CredentialBuiltinResolver:
         self._account_id_endpoint_mode = account_id_endpoint_mode
         self._validate_account_id_endpoint_mode()
 
-    def resolve_account_id_builtin(self, builtin_configured, builtin_value):
+    def resolve_account_id_builtin(
+        self, builtin_configured, builtin_value, frozen_creds_cache
+    ):
         """Resolve the ``AWS::Auth::AccountId`` builtin."""
         acct_id_ep_mode = self._account_id_endpoint_mode
         mode_disabled = acct_id_ep_mode == 'disabled'
@@ -488,7 +490,7 @@ class CredentialBuiltinResolver:
         if builtin_value is not None:
             return builtin_value
 
-        frozen_creds = self._credentials.get_frozen_credentials()
+        frozen_creds = self._resolve_frozen_credentials(frozen_creds_cache)
         account_id = frozen_creds.account_id
         if account_id is None:
             msg = (
@@ -503,6 +505,13 @@ class CredentialBuiltinResolver:
 
         return account_id
 
+    def _resolve_frozen_credentials(self, frozen_creds_cache):
+        frozen_creds = frozen_creds_cache.get('frozen_creds')
+        if frozen_creds is None:
+            frozen_creds = self._credentials.get_frozen_credentials()
+            frozen_creds_cache['frozen_creds'] = frozen_creds
+        return frozen_creds
+
     def _validate_account_id_endpoint_mode(self):
         valid_modes = self.VALID_ACCOUNT_ID_ENDPOINT_MODES
         if self._account_id_endpoint_mode not in valid_modes:
@@ -514,7 +523,7 @@ class CredentialBuiltinResolver:
             raise InvalidConfigError(error_msg=error_msg)
 
     def resolve_credential_scope_builtin(
-        self, builtin_configured, builtin_value
+        self, builtin_configured, builtin_value, frozen_creds_cache
     ):
         """Resolve the ``AWS::Auth::CredentialScope`` builtin."""
         if not builtin_configured or self._credentials is None:
@@ -523,7 +532,7 @@ class CredentialBuiltinResolver:
         if builtin_value is not None:
             return builtin_value
 
-        frozen_creds = self._credentials.get_frozen_credentials()
+        frozen_creds = self._resolve_frozen_credentials(frozen_creds_cache)
         return frozen_creds.scope
 
 
@@ -538,10 +547,17 @@ class EndpointBuiltinResolver:
         self._resolve_credential_builtins(param_definitions, builtins)
 
     def _resolve_credential_builtins(self, param_definitions, builtins):
-        self._resolve_account_id_builtin(param_definitions, builtins)
-        self._resolve_credential_scope_builtin(param_definitions, builtins)
+        frozen_creds_cache = {}
+        self._resolve_account_id_builtin(
+            param_definitions, builtins, frozen_creds_cache
+        )
+        self._resolve_credential_scope_builtin(
+            param_definitions, builtins, frozen_creds_cache
+        )
 
-    def _resolve_account_id_builtin(self, param_definitions, builtins):
+    def _resolve_account_id_builtin(
+        self, param_definitions, builtins, frozen_creds_cache
+    ):
         builtin_configured = self._builtin_configured(
             param_definitions, 'AccountId'
         )
@@ -549,11 +565,13 @@ class EndpointBuiltinResolver:
         current_builtin_value = builtins.get(acct_id_builtin_key)
         credential_resolver = self._resolver_map['credentials']
         account_id = credential_resolver.resolve_account_id_builtin(
-            builtin_configured, current_builtin_value
+            builtin_configured, current_builtin_value, frozen_creds_cache
         )
         builtins[acct_id_builtin_key] = account_id
 
-    def _resolve_credential_scope_builtin(self, param_definitions, builtins):
+    def _resolve_credential_scope_builtin(
+        self, param_definitions, builtins, frozen_creds_cache
+    ):
         builtin_configured = self._builtin_configured(
             param_definitions, 'CredentialScope'
         )
@@ -561,7 +579,7 @@ class EndpointBuiltinResolver:
         current_builtin_value = builtins.get(scope_builtin_key)
         credential_resolver = self._resolver_map['credentials']
         scope = credential_resolver.resolve_credential_scope_builtin(
-            builtin_configured, current_builtin_value
+            builtin_configured, current_builtin_value, frozen_creds_cache
         )
         builtins[scope_builtin_key] = scope
 
