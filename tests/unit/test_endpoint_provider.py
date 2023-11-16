@@ -522,26 +522,13 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
 
 
 @pytest.fixture
-def account_id_ruleset():
+def credentials_ruleset():
     rule_path = os.path.join(
         os.path.dirname(__file__),
         "data",
         "endpoints",
         "valid-rules",
-        "aws-account-id.json",
-    )
-    with open(rule_path) as f:
-        return json.load(f)
-
-
-@pytest.fixture
-def credential_scope_ruleset():
-    rule_path = os.path.join(
-        os.path.dirname(__file__),
-        "data",
-        "endpoints",
-        "valid-rules",
-        "aws-credential-scope.json",
+        "credentials.json",
     )
     with open(rule_path) as f:
         return json.load(f)
@@ -573,18 +560,19 @@ BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE = {
     EndpointResolverBuiltins.AWS_REGION: US_EAST_1,
     EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE: US_EAST_1,
 }
-CREDENTIALS = Credentials(
+CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE = Credentials(
+    access_key="access_key", secret_key="secret_key", token="token"
+)
+CREDENTIALS_WITH_ACCOUNT_ID = Credentials(
     access_key="access_key",
     secret_key="secret_key",
     token="token",
     account_id="1234567890",
 )
-CREDENTIALS_NO_SCOPE = CREDENTIALS
 CREDENTIALS_WITH_SCOPE = Credentials(
     access_key="access_key",
     secret_key="secret_key",
     token="token",
-    account_id="1234567890",
     scope=US_WEST_2,
 )
 REQUIRED = "required"
@@ -626,27 +614,27 @@ def create_ruleset_resolver(
     [
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             REQUIRED,
             URL_WITH_ACCOUNT_ID,
         ),
         # custom account ID takes precedence over credentials
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             REQUIRED,
             "https://0987654321.amazonaws.com",
         ),
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             DISABLED,
             URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # custom account ID removed if account ID mode is disabled
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             DISABLED,
             URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
@@ -666,7 +654,7 @@ def create_ruleset_resolver(
         # no account ID in credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-            Credentials(access_key="foo", secret_key="bar", token="baz"),
+            CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE,
             PREFERRED,
             URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
@@ -674,14 +662,14 @@ def create_ruleset_resolver(
 )
 def test_account_id_builtin(
     operation_model_empty_context_params,
-    account_id_ruleset,
+    credentials_ruleset,
     builtins,
     credentials,
     account_id_endpoint_mode,
     expected_url,
 ):
     resolver = create_ruleset_resolver(
-        account_id_ruleset,
+        credentials_ruleset,
         builtins,
         credentials,
         account_id_endpoint_mode,
@@ -699,27 +687,27 @@ def test_account_id_builtin(
     [
         # invalid value for mode
         (
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             "foo",
             InvalidConfigError,
         ),
         # mode is case sensitive
         (
-            CREDENTIALS,
+            CREDENTIALS_WITH_ACCOUNT_ID,
             "PREFERRED",
             InvalidConfigError,
         ),
     ],
 )
 def test_account_id_endpoint_mode_input_error_cases(
-    account_id_ruleset,
+    credentials_ruleset,
     credentials,
     account_id_endpoint_mode,
     expected_error,
 ):
     with pytest.raises(expected_error):
         create_ruleset_resolver(
-            account_id_ruleset,
+            credentials_ruleset,
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             credentials,
             account_id_endpoint_mode,
@@ -727,13 +715,13 @@ def test_account_id_endpoint_mode_input_error_cases(
 
 
 def test_required_mode_no_account_id(
-    account_id_ruleset,
+    credentials_ruleset,
     operation_model_empty_context_params,
 ):
     resolver = create_ruleset_resolver(
-        account_id_ruleset,
+        credentials_ruleset,
         BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
-        Credentials(access_key="a", secret_key="b", token="c"),
+        CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE,
         REQUIRED,
     )
     with pytest.raises(AccountIdNotFound):
@@ -762,7 +750,7 @@ def test_required_mode_no_account_id(
         # no scope in credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
-            CREDENTIALS_NO_SCOPE,
+            CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE,
             URL_NO_ACCOUNT_ID_OR_SCOPE,
         ),
         # no credentials
@@ -775,13 +763,13 @@ def test_required_mode_no_account_id(
 )
 def test_credential_scope_builtin(
     operation_model_empty_context_params,
-    credential_scope_ruleset,
+    credentials_ruleset,
     builtins,
     credentials,
     expected_url,
 ):
     resolver = create_ruleset_resolver(
-        credential_scope_ruleset, builtins, credentials, PREFERRED
+        credentials_ruleset, builtins, credentials, PREFERRED
     )
     endpoint = resolver.construct_endpoint(
         operation_model=operation_model_empty_context_params,
@@ -798,11 +786,11 @@ def test_credential_scope_builtin(
 def test_frozen_creds_called_once_per_resolved_endpoint(
     mock_get_frozen_credentials,
     operation_model_empty_context_params,
-    credential_scope_ruleset,
+    credentials_ruleset,
 ):
     for _ in range(5):
         resolver = create_ruleset_resolver(
-            credential_scope_ruleset,
+            credentials_ruleset,
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
             PREFERRED,
