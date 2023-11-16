@@ -14,7 +14,7 @@
 import json
 import logging
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -789,3 +789,27 @@ def test_credential_scope_builtin(
         call_args={},
     )
     assert endpoint.url == expected_url
+
+
+@patch(
+    'botocore.credentials.Credentials.get_frozen_credentials',
+    return_value=CREDENTIALS_WITH_SCOPE.get_frozen_credentials(),
+)
+def test_frozen_creds_called_once_per_resolved_endpoint(
+    mock_get_frozen_credentials,
+    operation_model_empty_context_params,
+    credential_scope_ruleset,
+):
+    for _ in range(5):
+        resolver = create_ruleset_resolver(
+            credential_scope_ruleset,
+            BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
+            CREDENTIALS_WITH_SCOPE,
+            PREFERRED,
+        )
+        resolver.construct_endpoint(
+            operation_model=operation_model_empty_context_params,
+            request_context={},
+            call_args={},
+        )
+    assert mock_get_frozen_credentials.call_count == 5
