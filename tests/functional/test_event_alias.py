@@ -218,7 +218,6 @@ SERVICES = {
         "endpoint_prefix": "machinelearning",
         "service_id": "machine-learning",
     },
-    "macie": {"endpoint_prefix": "macie", "service_id": "macie"},
     "marketplace-entitlement": {
         "endpoint_prefix": "entitlement.marketplace",
         "service_id": "marketplace-entitlement-service",
