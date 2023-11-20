@@ -477,6 +477,7 @@ class IMDSFetcher:
                     raise InvalidIMDSEndpointError(endpoint=url, error=e)
                 else:
                     raise
+        return None
 
     def _get_request(self, url_path, retry_func, token=None):
         """Make a get request to the Instance Metadata Service.
