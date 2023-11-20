@@ -3968,47 +3968,6 @@ class TestSSOCredentialFetcher(unittest.TestCase):
             with self.stubber:
                 self.fetcher.fetch_credentials()
 
-    def test_can_fetch_credentials_with_scope(self):
-        expected_response = {
-            'roleCredentials': {
-                'accessKeyId': 'foo',
-                'secretAccessKey': 'bar',
-                'sessionToken': 'baz',
-                'expiration': self.now_timestamp + 1000000,
-                'credentialScope': 'us-west-2',
-            }
-        }
-        client = mock.Mock()
-        client.get_role_credentials.return_value = expected_response
-        client_creator = mock.Mock(return_value=client)
-        fetcher = SSOCredentialFetcher(
-            self.start_url,
-            self.sso_region,
-            self.role_name,
-            self.account_id,
-            client_creator,
-            token_loader=self.loader,
-            cache=self.cache,
-        )
-        credentials = fetcher.fetch_credentials()
-        self.assertEqual(credentials['access_key'], 'foo')
-        self.assertEqual(credentials['secret_key'], 'bar')
-        self.assertEqual(credentials['token'], 'baz')
-        self.assertEqual(credentials['expiry_time'], '2008-09-23T12:43:20Z')
-        cache_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
-        expected_cached_credentials = {
-            'ProviderType': 'sso',
-            'Credentials': {
-                'AccessKeyId': 'foo',
-                'SecretAccessKey': 'bar',
-                'SessionToken': 'baz',
-                'Expiration': '2008-09-23T12:43:20Z',
-                'AccountId': '1234567890',
-                'CredentialScope': 'us-west-2',
-            },
-        }
-        self.assertEqual(self.cache[cache_key], expected_cached_credentials)
-
 
 class TestSSOProvider(unittest.TestCase):
     def setUp(self):

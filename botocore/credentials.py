@@ -2296,9 +2296,6 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
                 'AccountId': self._account_id,
             },
         }
-        scope = credentials.get('credentialScope')
-        if scope is not None:
-            creds_dict['Credentials']['CredentialScope'] = scope
         return creds_dict
 
 
