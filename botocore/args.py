@@ -625,8 +625,7 @@ class ClientArgsCreator:
             credentials,
             client_config.account_id_endpoint_mode,
         )
-        resolver_map = {'credentials': credential_builtin_resolver}
-        return EndpointBuiltinResolver(resolver_map)
+        return EndpointBuiltinResolver([credential_builtin_resolver])
 
     def _build_endpoint_resolver(
         self,

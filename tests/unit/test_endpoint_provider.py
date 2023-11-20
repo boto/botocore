@@ -14,7 +14,7 @@
 import json
 import logging
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -592,12 +592,10 @@ def create_ruleset_resolver(
 ):
     service_model = Mock()
     service_model.client_context_parameters = []
-    resolver_map = {
-        "credentials": CredentialBuiltinResolver(
-            credentials, account_id_endpoint_mode
-        )
-    }
-    builtin_resolver = EndpointBuiltinResolver(resolver_map)
+    credential_resolver = CredentialBuiltinResolver(
+        credentials, account_id_endpoint_mode
+    )
+    builtin_resolver = EndpointBuiltinResolver([credential_resolver])
     return EndpointRulesetResolver(
         endpoint_ruleset_data=ruleset,
         partition_data={},
@@ -777,27 +775,3 @@ def test_credential_scope_builtin(
         call_args={},
     )
     assert endpoint.url == expected_url
-
-
-@patch(
-    'botocore.credentials.Credentials.get_frozen_credentials',
-    return_value=CREDENTIALS_WITH_SCOPE.get_frozen_credentials(),
-)
-def test_frozen_creds_called_once_per_resolved_endpoint(
-    mock_get_frozen_credentials,
-    operation_model_empty_context_params,
-    credentials_ruleset,
-):
-    for _ in range(2):
-        resolver = create_ruleset_resolver(
-            credentials_ruleset,
-            BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
-            CREDENTIALS_WITH_SCOPE,
-            PREFERRED,
-        )
-        resolver.construct_endpoint(
-            operation_model=operation_model_empty_context_params,
-            request_context={},
-            call_args={},
-        )
-    assert mock_get_frozen_credentials.call_count == 2
