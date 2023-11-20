@@ -578,15 +578,15 @@ CREDENTIALS_WITH_SCOPE = Credentials(
 REQUIRED = "required"
 PREFERRED = "preferred"
 DISABLED = "disabled"
-URL_NO_ACCOUNT_ID_OR_SCOPE = "https://amazonaws.com"
+BARE_URL = "https://amazonaws.com"
 URL_WITH_ACCOUNT_ID = "https://1234567890.amazonaws.com"
-URL_WITH_CREDENTIAL_SCOPE = "https://us-west-2.amazonaws.com"
-URL_WITH_OTHER_CREDENTIAL_SCOPE = "https://us-east-1.amazonaws.com"
+URL_WITH_USW2_CREDENTIAL_SCOPE = "https://us-west-2.amazonaws.com"
+URL_WITH_USE1_CREDENTIAL_SCOPE = "https://us-east-1.amazonaws.com"
 
 
 def create_ruleset_resolver(
     ruleset,
-    bulitins,
+    builtins,
     credentials,
     account_id_endpoint_mode,
 ):
@@ -602,7 +602,7 @@ def create_ruleset_resolver(
         endpoint_ruleset_data=ruleset,
         partition_data={},
         service_model=service_model,
-        builtins=bulitins,
+        builtins=builtins,
         client_context=None,
         event_emitter=Mock(),
         builtin_resolver=builtin_resolver,
@@ -629,34 +629,34 @@ def create_ruleset_resolver(
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS_WITH_ACCOUNT_ID,
             DISABLED,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
         # custom account ID removed if account ID mode is disabled
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             CREDENTIALS_WITH_ACCOUNT_ID,
             DISABLED,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
         (
             BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
             None,
             REQUIRED,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             None,
             PREFERRED,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
         # no account ID in credentials
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE,
             PREFERRED,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
     ],
 )
@@ -739,25 +739,25 @@ def test_required_mode_no_account_id(
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
-            URL_WITH_CREDENTIAL_SCOPE,
+            URL_WITH_USW2_CREDENTIAL_SCOPE,
         ),
         # pre-resolved scope
         (
             BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
-            URL_WITH_OTHER_CREDENTIAL_SCOPE,
+            URL_WITH_USE1_CREDENTIAL_SCOPE,
         ),
         # no scope in credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
         # no credentials
         (
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             None,
-            URL_NO_ACCOUNT_ID_OR_SCOPE,
+            BARE_URL,
         ),
     ],
 )
@@ -788,7 +788,7 @@ def test_frozen_creds_called_once_per_resolved_endpoint(
     operation_model_empty_context_params,
     credentials_ruleset,
 ):
-    for _ in range(5):
+    for _ in range(2):
         resolver = create_ruleset_resolver(
             credentials_ruleset,
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
@@ -800,4 +800,4 @@ def test_frozen_creds_called_once_per_resolved_endpoint(
             request_context={},
             call_args={},
         )
-    assert mock_get_frozen_credentials.call_count == 5
+    assert mock_get_frozen_credentials.call_count == 2

@@ -13,6 +13,7 @@
 import json
 import os
 import tempfile
+import warnings
 
 import pytest
 
@@ -552,45 +553,56 @@ def test_endpoint_resolver_knows_its_datasource(patched_session, is_builtin):
         assert resolver.uses_builtin_data == is_builtin
 
 
-@pytest.fixture
-def custom_endpoints_file():
-    contents = {
-        'partitions': [
-            {
-                'partition': 'aws',
-                'dnsSuffix': 'amazonaws.com',
-                'regions': {'us-east-1': {}},
-                'services': {
-                    'iam': {
-                        'endpoints': {
-                            'us-east-1': {
-                                'hostname': 'iam-custom.us-east-2.amazonaws.com',
-                                'credentialScope': {'region': 'us-east-2'},
-                                'signatureVersions': ['v4'],
+class TestCustomEndpointsFile(BaseSessionTest):
+    def setUp(self):
+        super().setUp()
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.environ['AWS_DATA_PATH'] = self.tempdir.name
+        self.session = Session()
+        self.session.set_config_variable(
+            'credentials_file', 'noexist/foo/botocore'
+        )
+        self.session.config_filename = 'no-exist-foo'
+
+    def tearDown(self):
+        super().tearDown()
+        self.tempdir.cleanup()
+
+    def create_custom_endpoints_file(self, filename):
+        custom_endpoints_file_path = os.path.join(self.tempdir.name, filename)
+        contents = {
+            'partitions': [
+                {
+                    'partition': 'aws',
+                    'dnsSuffix': 'amazonaws.com',
+                    'regions': {'us-east-1': {}},
+                    'services': {
+                        'iam': {
+                            'endpoints': {
+                                'us-east-1': {
+                                    'hostname': 'iam-custom.us-east-2.amazonaws.com',
+                                    'credentialScope': {'region': 'us-east-2'},
+                                    'signatureVersions': ['v4'],
+                                }
                             }
                         }
-                    }
-                },
-            }
-        ]
-    }
-    return json.dumps(contents)
-
-
-@pytest.mark.parametrize(
-    'file_name, warning_expected',
-    [('endpoints', True), ('not_endpoints', False)],
-)
-def test_custom_endpoints_file_signing_region_warns(
-    monkeypatch, recwarn, custom_endpoints_file, file_name, warning_expected
-):
-    with tempfile.TemporaryDirectory() as tempdir:
-        custom_endpoints_file_path = os.path.join(tempdir, f'{file_name}.json')
+                    },
+                }
+            ]
+        }
         with open(custom_endpoints_file_path, 'w') as f:
-            f.write(custom_endpoints_file)
-        monkeypatch.setenv('AWS_DATA_PATH', tempdir)
-        session = Session()
-        match = 'signing region resolved from a custom endpoints.json file'
-        session.create_client('iam', region_name='us-east-1')
-        matched_warnings = [w for w in recwarn if match in str(w.message)]
-        assert (len(matched_warnings) > 0) == warning_expected
+            f.write(json.dumps(contents))
+
+    def _assert_custom_endpoints_warning(self, expected_count):
+        with warnings.catch_warnings(record=True) as recwarn:
+            self.session.create_client('iam', region_name='us-east-1')
+            match = 'signing region resolved from a custom endpoints.json file'
+            matched_warnings = [w for w in recwarn if match in str(w.message)]
+            self.assertEqual(len(matched_warnings), expected_count)
+
+    def test_custom_endpoints_file(self):
+        self.create_custom_endpoints_file('endpoints.json')
+        self._assert_custom_endpoints_warning(1)
+
+    def test_no_custom_endpoints_file(self):
+        self._assert_custom_endpoints_warning(0)
