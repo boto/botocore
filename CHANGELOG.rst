@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.32.6
+======
+
+* bugfix:sqs: Rolled back recent change to wire format protocol
+* api-change:``kinesis``: This release adds support for resource based policies on streams and consumers.
+* api-change:``s3control``: Amazon S3 Batch Operations now manages buckets or prefixes in a single step.
+* api-change:``sagemaker``: This feature adds the end user license agreement status as a model access configuration parameter.
+* api-change:``endpoint-rules``: Update endpoint-rules client to latest version
+
+
 1.32.5
 ======
 
