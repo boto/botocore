@@ -563,7 +563,7 @@ class CredentialBuiltinResolver:
         self, param_definitions, builtin_value, frozen_creds
     ):
         """Resolve the ``AWS::Auth::CredentialScope`` builtin."""
-        if not self._builtin_configured(param_definitions, 'CredentialScope'):
+        if not self._should_resolve_credential_scope(param_definitions):
             return None
 
         if builtin_value is not None:
