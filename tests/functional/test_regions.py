@@ -19,7 +19,7 @@ import pytest
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
-from botocore.session import Session
+from botocore.loaders import create_loader
 from tests import BaseSessionTest, ClientHTTPStubber, mock
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
@@ -555,14 +555,8 @@ def test_endpoint_resolver_knows_its_datasource(patched_session, is_builtin):
 
 class TestCustomEndpointsFile(BaseSessionTest):
     def setUp(self):
-        super().setUp()
         self.tempdir = tempfile.TemporaryDirectory()
-        self.environ['AWS_DATA_PATH'] = self.tempdir.name
-        self.session = Session()
-        self.session.set_config_variable(
-            'credentials_file', 'noexist/foo/botocore'
-        )
-        self.session.config_filename = 'no-exist-foo'
+        super().setUp(loader=create_loader(self.tempdir.name))
 
     def tearDown(self):
         super().tearDown()
@@ -596,9 +590,9 @@ class TestCustomEndpointsFile(BaseSessionTest):
     def _assert_custom_endpoints_warning(self, expected_count):
         with warnings.catch_warnings(record=True) as recwarn:
             self.session.create_client('iam', region_name='us-east-1')
-            match = 'signing region resolved from a custom endpoints.json file'
-            matched_warnings = [w for w in recwarn if match in str(w.message)]
-            self.assertEqual(len(matched_warnings), expected_count)
+        match = 'signing region resolved from a custom endpoints.json file'
+        matched_warnings = [w for w in recwarn if match in str(w.message)]
+        self.assertEqual(len(matched_warnings), expected_count)
 
     def test_custom_endpoints_file(self):
         self.create_custom_endpoints_file('endpoints.json')
