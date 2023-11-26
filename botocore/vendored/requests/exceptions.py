@@ -10,7 +10,7 @@ This module contains the set of Requests' exceptions.
 from .packages.urllib3.exceptions import HTTPError as BaseHTTPError
 
 
-class RequestException(IOError):
+class RequestException(OSError):
     """There was an ambiguous exception that occurred while handling your
     request."""
 
