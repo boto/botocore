@@ -32,7 +32,7 @@ repos:
     hooks:
       - id: pyupgrade
         args:
-          - '--py36-plus'
+          - '--py38-plus'
   - repo: 'https://github.com/psf/black'
     rev: 23.3.0
     hooks:
