@@ -838,4 +838,6 @@ def _should_use_global_endpoint(client):
             and client.meta.config.region_name == 'us-east-1'
         ):
             return False
+        if s3_config.get('addressing_style') == 'virtual':
+            return False
     return True
