@@ -481,6 +481,16 @@ class CredentialBuiltinResolver:
         self._account_id_endpoint_mode = account_id_endpoint_mode
         self._validate_account_id_endpoint_mode()
 
+    def _validate_account_id_endpoint_mode(self):
+        valid_modes = self.VALID_ACCOUNT_ID_ENDPOINT_MODES
+        if self._account_id_endpoint_mode not in valid_modes:
+            error_msg = (
+                f'Invalid value "{self._account_id_endpoint_mode}" '
+                'for account_id_endpoint_mode. Valid values are: '
+                f'{", ".join(valid_modes)}.'
+            )
+            raise InvalidConfigError(error_msg=error_msg)
+
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins sourced from credentials."""
         if not self._should_resolve_credentials(param_definitions):
@@ -556,16 +566,6 @@ class CredentialBuiltinResolver:
                 LOG.debug(msg)
             elif acct_id_ep_mode == 'required':
                 raise AccountIdNotFound(msg=msg)
-
-    def _validate_account_id_endpoint_mode(self):
-        valid_modes = self.VALID_ACCOUNT_ID_ENDPOINT_MODES
-        if self._account_id_endpoint_mode not in valid_modes:
-            error_msg = (
-                f'Invalid value "{self._account_id_endpoint_mode}" '
-                'for account_id_endpoint_mode. Valid values are: '
-                f'{", ".join(valid_modes)}.'
-            )
-            raise InvalidConfigError(error_msg=error_msg)
 
 
 class EndpointBuiltinResolver:
