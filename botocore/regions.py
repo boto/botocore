@@ -469,7 +469,10 @@ class CredentialBuiltinResolver:
         'disabled',
         'required',
     )
-    CREDENTIAL_BUILTINS = ('account_id', 'credential_scope')
+    CREDENTIAL_BUILTINS = {
+        'account_id': EndpointResolverBuiltins.AWS_ACCOUNT_ID,
+        'scope': EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE,
+    }
 
     def __init__(self, credentials, account_id_endpoint_mode):
         self._credentials = credentials
@@ -480,36 +483,53 @@ class CredentialBuiltinResolver:
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins sourced from credentials."""
-        acct_id_builtin_key = EndpointResolverBuiltins.AWS_ACCOUNT_ID
-        scope_builtin_key = EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE
-        account_id, scope = None, None
-        if self._should_resolve_credentials(param_definitions):
-            frozen_creds = self._credentials.get_frozen_credentials()
-            account_id = self._resolve_account_id_builtin(
+        if not self._should_resolve_credentials(param_definitions):
+            self._unset_credential_builtins(builtins)
+            return
+
+        frozen_creds = self._credentials.get_frozen_credentials()
+        for builtin_name, builtin_key in self.CREDENTIAL_BUILTINS.items():
+            builtins[builtin_key] = self._resolve_builtin(
+                builtin_name,
                 param_definitions,
-                builtins.get(acct_id_builtin_key),
+                builtins.get(builtin_key),
                 frozen_creds,
             )
-            scope = self._resolve_credential_scope_builtin(
-                param_definitions,
-                builtins.get(scope_builtin_key),
-                frozen_creds,
-            )
-        builtins[acct_id_builtin_key] = account_id
-        builtins[scope_builtin_key] = scope
 
     def _should_resolve_credentials(self, param_definitions):
         if self._credentials is None:
             return False
 
-        for builtin_name in self.CREDENTIAL_BUILTINS:
-            should_resolve_checker = getattr(
-                self, f'_should_resolve_{builtin_name}'
-            )
-            if should_resolve_checker(param_definitions):
+        for builtin_name in self.CREDENTIAL_BUILTINS.keys():
+            if self._should_resolve_builtin(builtin_name, param_definitions):
                 return True
 
         return False
+
+    def _unset_credential_builtins(self, builtins):
+        for builtin_key in self.CREDENTIAL_BUILTINS.values():
+            builtins[builtin_key] = None
+
+    def _resolve_builtin(
+        self,
+        builtin_name,
+        param_definitions,
+        custom_builtin_value,
+        frozen_creds,
+    ):
+        if not self._should_resolve_builtin(builtin_name, param_definitions):
+            return None
+
+        credential_value = getattr(frozen_creds, builtin_name)
+        builtin_value = custom_builtin_value or credential_value
+        validator = getattr(self, f'_validate_{builtin_name}', None)
+        if validator is not None:
+            validator(builtin_value)
+        return builtin_value
+
+    def _should_resolve_builtin(self, builtin_name, param_definitions):
+        should_resolve = getattr(self, f'_should_resolve_{builtin_name}')
+        return should_resolve(param_definitions)
 
     def _should_resolve_account_id(self, param_definitions):
         return (
@@ -517,25 +537,15 @@ class CredentialBuiltinResolver:
             and self._account_id_endpoint_mode != 'disabled'
         )
 
-    def _should_resolve_credential_scope(self, param_definitions):
+    def _should_resolve_scope(self, param_definitions):
         return self._builtin_configured(param_definitions, 'CredentialScope')
 
     def _builtin_configured(self, param_definitions, param_name):
         param_def = param_definitions.get(param_name)
         return param_def is not None and param_def.builtin is not None
 
-    def _resolve_account_id_builtin(
-        self, param_definitions, builtin_value, frozen_creds
-    ):
-        """Resolve the ``AWS::Auth::AccountId`` builtin."""
-        if not self._should_resolve_account_id(param_definitions):
-            return None
-
-        if builtin_value is not None:
-            return builtin_value
-
+    def _validate_account_id(self, account_id):
         acct_id_ep_mode = self._account_id_endpoint_mode
-        account_id = frozen_creds.account_id
         if account_id is None:
             msg = (
                 f'"account_id_endpoint_mode" is set to "{acct_id_ep_mode}", '
@@ -547,8 +557,6 @@ class CredentialBuiltinResolver:
             elif acct_id_ep_mode == 'required':
                 raise AccountIdNotFound(msg=msg)
 
-        return account_id
-
     def _validate_account_id_endpoint_mode(self):
         valid_modes = self.VALID_ACCOUNT_ID_ENDPOINT_MODES
         if self._account_id_endpoint_mode not in valid_modes:
@@ -558,18 +566,6 @@ class CredentialBuiltinResolver:
                 f'{", ".join(valid_modes)}.'
             )
             raise InvalidConfigError(error_msg=error_msg)
-
-    def _resolve_credential_scope_builtin(
-        self, param_definitions, builtin_value, frozen_creds
-    ):
-        """Resolve the ``AWS::Auth::CredentialScope`` builtin."""
-        if not self._should_resolve_credential_scope(param_definitions):
-            return None
-
-        if builtin_value is not None:
-            return builtin_value
-
-        return frozen_creds.scope
 
 
 class EndpointBuiltinResolver:
