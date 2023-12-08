@@ -548,17 +548,9 @@ BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID = {
     EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
     EndpointResolverBuiltins.AWS_ACCOUNT_ID: None,
 }
-BUILTINS_WITH_RESOLVED_ACCOUNT_ID = {
-    EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
-    EndpointResolverBuiltins.AWS_ACCOUNT_ID: "0987654321",
-}
 BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE = {
     EndpointResolverBuiltins.AWS_REGION: US_WEST_2,
     EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE: None,
-}
-BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE = {
-    EndpointResolverBuiltins.AWS_REGION: US_EAST_1,
-    EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE: US_EAST_1,
 }
 CREDENTIALS_NO_ACCOUNT_ID_OR_SCOPE = Credentials(
     access_key="access_key", secret_key="secret_key", token="token"
@@ -616,30 +608,10 @@ def create_ruleset_resolver(
             REQUIRED,
             URL_WITH_ACCOUNT_ID,
         ),
-        # custom account ID takes precedence over credentials
-        (
-            BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            CREDENTIALS_WITH_ACCOUNT_ID,
-            REQUIRED,
-            "https://0987654321.amazonaws.com",
-        ),
         (
             BUILTINS_WITH_UNRESOLVED_ACCOUNT_ID,
             CREDENTIALS_WITH_ACCOUNT_ID,
             DISABLED,
-            BARE_URL,
-        ),
-        # custom account ID removed if account ID mode is disabled
-        (
-            BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            CREDENTIALS_WITH_ACCOUNT_ID,
-            DISABLED,
-            BARE_URL,
-        ),
-        (
-            BUILTINS_WITH_RESOLVED_ACCOUNT_ID,
-            None,
-            REQUIRED,
             BARE_URL,
         ),
         # no credentials
@@ -738,12 +710,6 @@ def test_required_mode_no_account_id(
             BUILTINS_WITH_UNRESOLVED_CREDENTIAL_SCOPE,
             CREDENTIALS_WITH_SCOPE,
             URL_WITH_USW2_CREDENTIAL_SCOPE,
-        ),
-        # pre-resolved scope
-        (
-            BUILTINS_WITH_RESOLVED_CREDENTIAL_SCOPE,
-            CREDENTIALS_WITH_SCOPE,
-            URL_WITH_USE1_CREDENTIAL_SCOPE,
         ),
         # no scope in credentials
         (

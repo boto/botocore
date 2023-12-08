@@ -474,7 +474,7 @@ class CredentialBuiltinResolver:
         'scope': EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE,
     }
 
-    def __init__(self, credentials, account_id_endpoint_mode):
+    def __init__(self, credentials, account_id_endpoint_mode=None):
         self._credentials = credentials
         if account_id_endpoint_mode is None:
             account_id_endpoint_mode = self.DEFAULT_ACCOUNT_ID_ENDPOINT_MODE
@@ -493,59 +493,37 @@ class CredentialBuiltinResolver:
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins sourced from credentials."""
-        if not self._should_resolve_credentials(param_definitions):
-            self._unset_credential_builtins(builtins)
+        builtins_to_resolve = self._builtins_to_resolve(param_definitions)
+        if not builtins_to_resolve:
             return
 
         frozen_creds = self._credentials.get_frozen_credentials()
-        for builtin_name, builtin_key in self.CREDENTIAL_BUILTINS.items():
-            builtins[builtin_key] = self._resolve_builtin(
-                builtin_name,
-                param_definitions,
-                builtins.get(builtin_key),
-                frozen_creds,
+        for builtin_name, builtin_key in builtins_to_resolve.items():
+            credential_value = getattr(frozen_creds, builtin_name)
+            builtin_value = builtins.get(builtin_key) or credential_value
+            builtins[builtin_key] = self._validate_builtin(
+                builtin_name, builtin_value
             )
 
-    def _should_resolve_credentials(self, param_definitions):
+    def _builtins_to_resolve(self, param_definitions):
+        builtins_to_resolve = {}
         if self._credentials is None:
-            return False
+            return builtins_to_resolve
 
-        for builtin_name in self.CREDENTIAL_BUILTINS.keys():
+        for builtin_name, builtin_key in self.CREDENTIAL_BUILTINS.items():
             if self._should_resolve_builtin(builtin_name, param_definitions):
-                return True
+                builtins_to_resolve[builtin_name] = builtin_key
 
-        return False
-
-    def _unset_credential_builtins(self, builtins):
-        for builtin_key in self.CREDENTIAL_BUILTINS.values():
-            builtins[builtin_key] = None
-
-    def _resolve_builtin(
-        self,
-        builtin_name,
-        param_definitions,
-        custom_builtin_value,
-        frozen_creds,
-    ):
-        if not self._should_resolve_builtin(builtin_name, param_definitions):
-            return None
-
-        credential_value = getattr(frozen_creds, builtin_name)
-        builtin_value = custom_builtin_value or credential_value
-        validator = getattr(self, f'_validate_{builtin_name}', None)
-        if validator is not None:
-            validator(builtin_value)
-        return builtin_value
+        return builtins_to_resolve
 
     def _should_resolve_builtin(self, builtin_name, param_definitions):
         should_resolve = getattr(self, f'_should_resolve_{builtin_name}')
         return should_resolve(param_definitions)
 
     def _should_resolve_account_id(self, param_definitions):
-        return (
-            self._builtin_configured(param_definitions, 'AccountId')
-            and self._account_id_endpoint_mode != 'disabled'
-        )
+        has_builtin = self._builtin_configured(param_definitions, 'AccountId')
+        mode_enabled = self._account_id_endpoint_mode != 'disabled'
+        return has_builtin and mode_enabled
 
     def _should_resolve_scope(self, param_definitions):
         return self._builtin_configured(param_definitions, 'CredentialScope')
@@ -553,6 +531,13 @@ class CredentialBuiltinResolver:
     def _builtin_configured(self, param_definitions, param_name):
         param_def = param_definitions.get(param_name)
         return param_def is not None and param_def.builtin is not None
+
+    def _validate_builtin(self, builtin_name, value):
+        def noop_validator(value):
+            return value
+
+        validator = getattr(self, f'_validate_{builtin_name}', noop_validator)
+        return validator(value)
 
     def _validate_account_id(self, account_id):
         acct_id_ep_mode = self._account_id_endpoint_mode
@@ -566,6 +551,7 @@ class CredentialBuiltinResolver:
                 LOG.debug(msg)
             elif acct_id_ep_mode == 'required':
                 raise AccountIdNotFound(msg=msg)
+        return account_id
 
 
 class EndpointBuiltinResolver:
