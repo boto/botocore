@@ -3506,6 +3506,46 @@ def _addressing_for_presigned_url_test_cases():
         expected_url="https://s3.us-west-2.amazonaws.com/foo.b.biz/key",
     )
 
+    # virtual style addressing expicitly requested always uses
+    # regional endpoints except for us-east-1 and aws-global
+    yield dict(
+        region="us-west-2",
+        bucket="bucket",
+        key="key",
+        signature_version="s3",
+        s3_config={"addressing_style": "virtual"},
+        expected_url="https://bucket.s3.us-west-2.amazonaws.com/key",
+    )
+    yield dict(
+        region="us-east-2",
+        bucket="bucket",
+        key="key",
+        signature_version="s3v4",
+        s3_config={"addressing_style": "virtual"},
+        expected_url="https://bucket.s3.us-east-2.amazonaws.com/key",
+    )
+    yield dict(
+        region="us-west-2",
+        bucket="bucket",
+        key="key",
+        s3_config={"addressing_style": "virtual"},
+        expected_url="https://bucket.s3.us-west-2.amazonaws.com/key",
+    )
+    yield dict(
+        region="us-east-1",
+        bucket="bucket",
+        key="key",
+        s3_config={"addressing_style": "virtual"},
+        expected_url="https://bucket.s3.amazonaws.com/key",
+    )
+    yield dict(
+        region="aws-global",
+        bucket="bucket",
+        key="key",
+        s3_config={"addressing_style": "virtual"},
+        expected_url="https://bucket.s3.amazonaws.com/key",
+    )
+
 
 @pytest.mark.parametrize(
     "test_case", _addressing_for_presigned_url_test_cases()
