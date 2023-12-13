@@ -14,7 +14,7 @@ Notices
 -------
 
 On 2023-12-13, support was dropped for Python 3.7. This follows the
-Python Software Foundation `end of support <https://www.python.org/dev/peps/pep-0494/#lifespan>`__
+Python Software Foundation `end of support <https://www.python.org/dev/peps/pep-0537/#lifespan>`__
 for the runtime which occurred on 2023-06-27.
 For more information, see this `blog post <https://aws.amazon.com/blogs/developer/python-support-policy-updates-for-aws-sdks-and-tools/>`__.
 
