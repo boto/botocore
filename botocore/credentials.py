@@ -59,10 +59,7 @@ logger = logging.getLogger(__name__)
 ReadOnlyCredentials = namedtuple(
     'ReadOnlyCredentials',
     ['access_key', 'secret_key', 'token', 'account_id', 'scope'],
-    defaults=(
-        None,
-        None,
-    ),
+    defaults=(None, None),
 )
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
@@ -2286,7 +2283,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
             raise UnauthorizedSSOTokenError()
         credentials = response['roleCredentials']
 
-        creds_dict = {
+        credentials = {
             'ProviderType': 'sso',
             'Credentials': {
                 'AccessKeyId': credentials['accessKeyId'],
@@ -2296,7 +2293,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
                 'AccountId': self._account_id,
             },
         }
-        return creds_dict
+        return credentials
 
 
 class SSOProvider(CredentialProvider):
