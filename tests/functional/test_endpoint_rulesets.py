@@ -49,7 +49,7 @@ def partitions():
     return LOADER.load_data('partitions')
 
 
-@lru_cache()
+@lru_cache
 def get_endpoint_tests_for_service(service_name):
     file_path = ENDPOINT_TESTDATA_DIR / service_name / 'endpoint-tests-1.json'
     if not file_path.is_file():
