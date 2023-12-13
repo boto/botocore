@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.34.0
+======
+
+* feature:Python: End of support for Python 3.7
+* api-change:``drs``: Adding AgentVersion to SourceServer and RecoveryInstance structures
+
+
 1.33.13
 =======
 
