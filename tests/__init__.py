@@ -573,7 +573,7 @@ class FreezeTime(ContextDecorator):
 
     def __init__(self, module, date=None):
         if date is None:
-            date = datetime.datetime.utcnow()
+            date = datetime.datetime.now(datetime.UTC)
         self.date = date
         self.datetime_patcher = mock.patch.object(
             module, 'datetime', mock.Mock(wraps=datetime.datetime)

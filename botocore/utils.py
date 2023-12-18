@@ -673,7 +673,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
             )
             jitter = random.randint(120, 600)  # Between 2 to 10 minutes
             refresh_interval_with_jitter = refresh_interval + jitter
-            current_time = datetime.datetime.utcnow()
+            current_time = datetime.datetime.now(datetime.UTC)
             refresh_offset = datetime.timedelta(
                 seconds=refresh_interval_with_jitter
             )
