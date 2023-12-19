@@ -470,8 +470,14 @@ class CredentialBuiltinResolver:
         'required',
     )
     CREDENTIAL_BUILTINS = {
-        'account_id': EndpointResolverBuiltins.AWS_ACCOUNT_ID,
-        'scope': EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE,
+        'account_id': {
+            'param_key': 'AccountId',
+            'builtin_key': EndpointResolverBuiltins.AWS_ACCOUNT_ID,
+        },
+        'scope': {
+            'param_key': 'CredentialScope',
+            'builtin_key': EndpointResolverBuiltins.AWS_CREDENTIAL_SCOPE,
+        },
     }
 
     def __init__(self, credentials, account_id_endpoint_mode=None):
@@ -493,6 +499,9 @@ class CredentialBuiltinResolver:
 
     def resolve(self, param_definitions, builtins):
         """Resolve endpoint builtins sourced from credentials."""
+        if self._credentials is None:
+            return
+
         builtins_to_resolve = self._builtins_to_resolve(param_definitions)
         if not builtins_to_resolve:
             return
@@ -506,36 +515,30 @@ class CredentialBuiltinResolver:
             )
 
     def _builtins_to_resolve(self, param_definitions):
-        builtins_to_resolve = {}
-        if self._credentials is None:
-            return builtins_to_resolve
+        return {
+            builtin_name: config['builtin_key']
+            for builtin_name, config in self.CREDENTIAL_BUILTINS.items()
+            if self._should_resolve_builtin(
+                builtin_name, config['param_key'], param_definitions
+            )
+        }
 
-        for builtin_name, builtin_key in self.CREDENTIAL_BUILTINS.items():
-            if self._should_resolve_builtin(builtin_name, param_definitions):
-                builtins_to_resolve[builtin_name] = builtin_key
+    def _should_resolve_builtin(
+        self, builtin_name, param_name, param_definitions
+    ):
+        has_builtin = self._builtin_configured(param_definitions, param_name)
+        if not has_builtin:
+            return False
 
-        return builtins_to_resolve
-
-    def _should_resolve_builtin(self, builtin_name, param_definitions):
-        should_resolve = getattr(self, f'_should_resolve_{builtin_name}')
-        return should_resolve(param_definitions)
-
-    def _should_resolve_account_id(self, param_definitions):
-        has_builtin = self._builtin_configured(param_definitions, 'AccountId')
-        mode_enabled = self._account_id_endpoint_mode != 'disabled'
-        return has_builtin and mode_enabled
-
-    def _should_resolve_scope(self, param_definitions):
-        return self._builtin_configured(param_definitions, 'CredentialScope')
+        acct_id_ep_mode = self._account_id_endpoint_mode
+        return builtin_name != 'account_id' or acct_id_ep_mode != 'disabled'
 
     def _builtin_configured(self, param_definitions, param_name):
         param_def = param_definitions.get(param_name)
         return param_def is not None and param_def.builtin is not None
 
     def _validate_builtin(self, builtin_name, value):
-        def noop_validator(value):
-            return value
-
+        noop_validator = lambda value: value
         validator = getattr(self, f'_validate_{builtin_name}', noop_validator)
         return validator(value)
 
