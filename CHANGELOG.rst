@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.34.8
+======
+
+* api-change:``iam``: Documentation updates for AWS Identity and Access Management (IAM).
+* api-change:``endpoint-rules``: Update endpoint-rules client to latest version
+
+
 1.34.7
 ======
 
