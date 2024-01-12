@@ -125,8 +125,13 @@ ACCESSPOINT_ARN_TEST_CASES = [
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
         'config': {'s3': {'use_dualstack_endpoint': True}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
-        },
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts.us-west-2.api.aws',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
+        }
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -252,8 +257,13 @@ BUCKET_ARN_TEST_CASES = [
         'region': 'us-west-2',
         'config': {'s3': {'use_dualstack_endpoint': True}},
         'assertions': {
-            'exception': 'UnsupportedS3ControlConfigurationError',
-        },
+            'signing_name': 's3-outposts',
+            'netloc': 's3-outposts.us-west-2.api.aws',
+            'headers': {
+                'x-amz-outpost-id': 'op-01234567890123456',
+                'x-amz-account-id': '123456789012',
+            },
+        }
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost',
@@ -399,8 +409,12 @@ class TestS3ControlRedirection(unittest.TestCase):
     def test_outpost_id_redirection_dualstack(self):
         config = Config(s3={'use_dualstack_endpoint': True})
         self._bootstrap_client(config=config)
-        with self.assertRaises(UnsupportedS3ControlConfigurationError):
+        self.stubber.add_response()
+        with self.stubber:
             self.client.create_bucket(Bucket='foo', OutpostId='op-123')
+        _assert_netloc(self.stubber, 's3-outposts.us-west-2.api.aws')
+        _assert_header(self.stubber, 'x-amz-outpost-id', 'op-123')
+
 
     def test_outpost_id_redirection_create_bucket(self):
         self.stubber.add_response()
