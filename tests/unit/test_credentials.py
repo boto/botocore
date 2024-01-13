@@ -3225,6 +3225,13 @@ class TestProcessProvider(BaseEnvVar):
         provider = self.create_process_provider()
         self.assertIsNone(provider.load())
 
+    def test_process_not_invoked_if_set_to_empty_string(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': ''}
+        }
+        provider = self.create_process_provider()
+        self.assertIsNone(provider.load())
+
     def test_can_retrieve_via_process(self):
         self.loaded_config['profiles'] = {
             'default': {'credential_process': 'my-process'}
