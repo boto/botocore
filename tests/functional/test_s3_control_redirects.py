@@ -22,7 +22,6 @@ from botocore.exceptions import (
     InvalidHostLabelError,
     ParamValidationError,
     UnsupportedS3ControlArnError,
-    UnsupportedS3ControlConfigurationError,
 )
 from botocore.session import Session
 from tests import ClientHTTPStubber, unittest
@@ -131,7 +130,7 @@ ACCESSPOINT_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint',
@@ -263,7 +262,7 @@ BUCKET_ARN_TEST_CASES = [
                 'x-amz-outpost-id': 'op-01234567890123456',
                 'x-amz-account-id': '123456789012',
             },
-        }
+        },
     },
     {
         'arn': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost',
@@ -414,7 +413,6 @@ class TestS3ControlRedirection(unittest.TestCase):
             self.client.create_bucket(Bucket='foo', OutpostId='op-123')
         _assert_netloc(self.stubber, 's3-outposts.us-west-2.api.aws')
         _assert_header(self.stubber, 'x-amz-outpost-id', 'op-123')
-
 
     def test_outpost_id_redirection_create_bucket(self):
         self.stubber.add_response()
