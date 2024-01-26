@@ -3239,7 +3239,7 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
 
 
 def calculate_md5(body, **kwargs):
-    if isinstance(body, (bytes, bytearray)):
+    if isinstance(body, (bytes, bytearray, memoryview)):
         binary_md5 = _calculate_md5_from_bytes(body)
     else:
         binary_md5 = _calculate_md5_from_file(body)

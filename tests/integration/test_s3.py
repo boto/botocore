@@ -426,6 +426,11 @@ class TestS3Objects(TestS3BaseWithBucket):
         body = bytearray(body_bytes)
         self.assert_can_put_object(body)
 
+    def test_can_put_object_memoryview(self):
+        body_bytes = b'*' * 1024
+        body = memoryview(body_bytes)
+        self.assert_can_put_object(body)
+
     def test_get_object_stream_wrapper(self):
         self.create_object('foobarbaz', body='body contents')
         response = self.client.get_object(
