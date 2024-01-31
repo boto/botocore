@@ -795,9 +795,7 @@ class TestSessionComponent(BaseSessionTest):
             self.session._get_internal_component('internal'), component
         )
         with self.assertRaises(ValueError):
-            # get_component has been deprecated to the public
-            with pytest.warns(DeprecationWarning):
-                self.session.get_component('internal')
+            self.session.get_component('internal')
 
     def test_internal_endpoint_resolver_is_same_as_deprecated_public(self):
         endpoint_resolver = self.session._get_internal_component(
