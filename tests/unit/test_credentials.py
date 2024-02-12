@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -3164,6 +3165,46 @@ class TestContainerProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'secret_key')
         self.assertEqual(creds.token, 'token')
         self.assertEqual(creds.method, 'container-role')
+
+    def test_reloads_auth_token_from_file(self):
+        token_file_path = os.path.join(self.tempdir, 'token.jwt')
+        with open(token_file_path, 'w') as token_file:
+            token_file.write('First auth token')
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE': token_file_path,
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        fetcher.retrieve_full_uri.side_effect = [
+            {
+                "AccessKeyId": "first_key",
+                "SecretAccessKey": "first_secret",
+                "Token": "first_token",
+                "Expiration": (timeobj + timedelta(seconds=2)).isoformat(),
+            },
+            {
+                "AccessKeyId": "second_key",
+                "SecretAccessKey": "second_secret",
+                "Token": "second_token",
+                "Expiration": (timeobj + timedelta(minutes=5)).isoformat(),
+            },
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        provider.load()
+        fetcher.retrieve_full_uri.assert_called_with(
+            'http://localhost/foo',
+            headers={'Authorization': 'First auth token'},
+        )
+        time.sleep(3)
+        with open(token_file_path, 'w') as token_file:
+            token_file.write('Second auth token')
+        provider = credentials.ContainerProvider(environ, fetcher)
+        provider.load()
+        fetcher.retrieve_full_uri.assert_called_with(
+            'http://localhost/foo',
+            headers={'Authorization': 'Second auth token'},
+        )
 
     def test_throws_error_on_invalid_token_file(self):
         token_file_path = '/some/path/token.jwt'
