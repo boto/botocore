@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.34.40
+=======
+
+* api-change:``appsync``: Adds support for new options on GraphqlAPIs, Resolvers and  Data Sources for emitting Amazon CloudWatch metrics for enhanced monitoring of AppSync APIs.
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``neptune-graph``: Adding a new option "parameters" for data plane api ExecuteQuery to support running parameterized query via SDK.
+* api-change:``route53domains``: This release adds bill contact support for RegisterDomain, TransferDomain, UpdateDomainContact and GetDomainDetail API.
+
+
 1.34.39
 =======
 
