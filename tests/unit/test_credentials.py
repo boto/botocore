@@ -3191,7 +3191,7 @@ class TestContainerProvider(BaseEnvVar):
             },
         ]
         provider = credentials.ContainerProvider(environ, fetcher)
-        provider.load()
+        creds = provider.load()
         fetcher.retrieve_full_uri.assert_called_with(
             'http://localhost/foo',
             headers={'Authorization': 'First auth token'},
@@ -3199,7 +3199,7 @@ class TestContainerProvider(BaseEnvVar):
         time.sleep(3)
         with open(token_file_path, 'w') as token_file:
             token_file.write('Second auth token')
-        provider.load()
+        creds._refresh()
         fetcher.retrieve_full_uri.assert_called_with(
             'http://localhost/foo',
             headers={'Authorization': 'Second auth token'},
