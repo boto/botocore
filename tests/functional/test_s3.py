@@ -3619,3 +3619,31 @@ class TestS3XMLPayloadEscape(BaseS3OperationTest):
         self.assertNotIn(b"my\r\n\rprefix", request.body)
         self.assertIn(b"my&#xD;&#xA;&#xD;prefix", request.body)
         self.assert_correct_content_md5(request)
+
+
+class TestExpectContinueBehavior(BaseSessionTest):
+    def test_sets_100_continute_with_body(self):
+        op_kwargs = {
+            "Bucket": "mybucket",
+            "Key": "mykey",
+            "Body": b"foo",
+        }
+        s3 = _create_s3_client()
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response()
+            s3.put_object(**op_kwargs)
+            expect_header = http_stubber.requests[-1].headers.get("Expect")
+            self.assertIsNotNone(expect_header)
+            self.assertEqual(expect_header, b"100-continue")
+
+    def test_does_not_set_100_continute_with_empty_body(self):
+        environ = {'BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE': "True"}
+        self.environ_patch = mock.patch('os.environ', environ)
+        self.environ_patch.start()
+        op_kwargs = {"Bucket": "mybucket", "Key": "mykey", "Body": ""}
+        s3 = _create_s3_client()
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response()
+            s3.put_object(**op_kwargs)
+            expect_header = http_stubber.requests[-1].headers.get("Expect")
+            self.assertIsNone(expect_header)
