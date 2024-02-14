@@ -346,6 +346,12 @@ def add_expect_header(model, params, **kwargs):
     if 'body' in params:
         body = params['body']
         if hasattr(body, 'read'):
+            check_body = os.environ.get(
+                'BOTO_EXPERIMENTAL__CHECK_BODY_BEFORE_CONTINUE',
+                '',
+            )
+            if check_body and utils.determine_content_length(body) != 0:
+                return
             # Any file like object will use an expect 100-continue
             # header regardless of size.
             logger.debug("Adding expect 100 continue header to request.")
