@@ -349,7 +349,7 @@ def add_expect_header(model, params, **kwargs):
             check_body = utils.ensure_boolean(
                 os.environ.get(
                     'BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE',
-                    '',
+                    False,
                 )
             )
             if check_body and utils.determine_content_length(body) == 0:
