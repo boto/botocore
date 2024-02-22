@@ -89,7 +89,11 @@ class AWSConnection:
             headers = {}
         self._response_received = False
         if headers.get('Expect', b'') == b'100-continue':
-            self._expect_header_set = True
+            # From RFC: https://tools.ietf.org/html/rfc7231#section-5.1.1
+            # Requirement for clients:
+            # - A client MUST NOT generate a 100-continue expectation
+            #   in a request that does not include a message body.
+            self._expect_header_set = headers.get('Content-Length') != '0' 
         else:
             self._expect_header_set = False
             self.response_class = self._original_response_cls
