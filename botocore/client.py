@@ -461,7 +461,7 @@ class ClientCreator:
 
     def _inject_s3_input_parameters(self, params, context, **kwargs):
         context['input_params'] = {}
-        inject_parameters = ['Bucket', 'Delete', 'Key', 'Prefix']
+        inject_parameters = ('Bucket', 'Delete', 'Key', 'Prefix')
         for inject_parameter in inject_parameters:
             if inject_parameter in params:
                 context['input_params'][inject_parameter] = params[
