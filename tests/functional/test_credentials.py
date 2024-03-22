@@ -1155,16 +1155,12 @@ class TestContextCredentials(unittest.TestCase):
             self.ACCESS_KEY, self.SECRET_KEY
         )
 
-    def _verify_bucket_and_key_in_context(self, request, **kwargs):
-        assert self.ACCESS_KEY in request.headers.get('Authorization')
-
     def test_credential_context_override(self):
         session = StubbedSession()
         with SessionHTTPStubber(session) as stubber:
             s3 = session.create_client('s3')
             s3.meta.events.register('before-sign', self._add_fake_creds)
-            s3.meta.events.register(
-                'request-created', self._verify_bucket_and_key_in_context
-            )
             stubber.add_response()
             s3.list_buckets()
+            request = stubber.requests[0]
+            assert self.ACCESS_KEY in str(request.headers.get('Authorization'))
