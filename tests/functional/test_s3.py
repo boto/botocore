@@ -3664,3 +3664,25 @@ class TestExpectContinueBehavior(BaseSessionTest):
             s3.put_object(**op_kwargs)
             expect_header = http_stubber.requests[-1].headers.get("Expect")
             self.assertIsNone(expect_header)
+
+
+class TestParameterInjection(BaseS3OperationTest):
+    BUCKET = "foo"
+    KEY = "bar"
+
+    def test_parameter_injection(self):
+        self.http_stubber.add_response()
+        self.client.meta.events.register(
+            'before-sign.s3', self._verify_bucket_and_key_in_context
+        )
+        with self.http_stubber:
+            self.client.put_object(
+                Bucket=self.BUCKET,
+                Key=self.KEY,
+            )
+
+    def _verify_bucket_and_key_in_context(self, request, **kwargs):
+        self.assertEqual(
+            request.context['input_params']['Bucket'], self.BUCKET
+        )
+        self.assertEqual(request.context['input_params']['Key'], self.KEY)
