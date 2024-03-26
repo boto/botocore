@@ -318,7 +318,7 @@ class ParamValidator:
         range_check(name, param, shape, 'invalid range', errors)
 
     def _validate_blob(self, param, shape, errors, name):
-        if isinstance(param, (bytes, bytearray, str)):
+        if isinstance(param, (bytes, bytearray, str, memoryview)):
             return
         elif hasattr(param, 'read'):
             # File like objects are also allowed for blob types.
@@ -328,7 +328,13 @@ class ParamValidator:
                 name,
                 'invalid type',
                 param=param,
-                valid_types=[str(bytes), str(bytearray), 'file-like object'],
+                valid_types=[
+                    str(bytes),
+                    str(bytearray),
+                    str(str),
+                    str(memoryview),
+                    'file-like object',
+                ],
             )
 
     @type_check(valid_types=(bool,))
