@@ -15,7 +15,13 @@ import datetime
 import botocore.session
 from botocore.compat import parse_qs, urlparse
 from botocore.stub import ANY, Stubber
-from tests import BaseSessionTest, ClientHTTPStubber, mock, unittest
+from tests import (
+    BaseSessionTest,
+    ClientHTTPStubber,
+    mock,
+    unittest,
+    now_patcher_factory,
+)
 
 
 class TestIdempotencyToken(unittest.TestCase):
@@ -91,14 +97,16 @@ class TestCopySnapshotCustomization(BaseSessionTest):
             '<snapshotId>%s</snapshotId>\n'
             '</CopySnapshotResponse>\n'
         )
-        self.now = datetime.datetime(2011, 9, 9, 23, 36)
+        self.now = datetime.datetime(
+            2011, 9, 9, 23, 36, tzinfo=datetime.timezone.utc
+        )
         self.datetime_patch = mock.patch.object(
             botocore.auth.datetime,
             'datetime',
             mock.Mock(wraps=datetime.datetime),
         )
         self.mocked_datetime = self.datetime_patch.start()
-        self.mocked_datetime.utcnow.return_value = self.now
+        self.mocked_datetime.now.side_effect = now_patcher_factory(self.now)
 
     def tearDown(self):
         super().tearDown()

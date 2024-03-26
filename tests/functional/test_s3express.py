@@ -20,7 +20,7 @@ from botocore.auth import S3ExpressAuth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials, RefreshableCredentials
 from botocore.utils import S3ExpressIdentityCache
-from tests import ClientHTTPStubber, mock
+from tests import ClientHTTPStubber, mock, now_patcher_factory
 
 ACCESS_KEY = "AKIDEXAMPLE"
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
@@ -107,8 +107,7 @@ class TestS3ExpressAuth:
 
 class TestS3ExpressIdentityCache:
     def test_default_s3_express_cache(self, default_s3_client, mock_datetime):
-        mock_datetime.now.return_value = DATE
-        mock_datetime.utcnow.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
 
         identity_cache = S3ExpressIdentityCache(
             default_s3_client,
@@ -125,8 +124,7 @@ class TestS3ExpressIdentityCache:
     def test_s3_express_cache_one_network_call(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
-        mock_datetime.utcnow.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
         bucket = 'my_bucket'
 
         identity_cache = S3ExpressIdentityCache(
@@ -150,8 +148,7 @@ class TestS3ExpressIdentityCache:
     def test_s3_express_cache_multiple_buckets(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
-        mock_datetime.utcnow.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
         bucket = 'my_bucket'
         other_bucket = 'other_bucket'
 
@@ -204,7 +201,7 @@ class TestS3ExpressRequests:
         )
 
     def test_create_bucket(self, default_s3_client, mock_datetime):
-        mock_datetime.utcnow.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
 
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response()
@@ -228,8 +225,7 @@ class TestS3ExpressRequests:
         self._assert_standard_sigv4_signature(stubber.requests[0].headers)
 
     def test_get_object(self, default_s3_client, mock_datetime):
-        mock_datetime.utcnow.return_value = DATE
-        mock_datetime.now.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
 
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
@@ -250,8 +246,7 @@ class TestS3ExpressRequests:
     def test_cache_with_multiple_requests(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.utcnow.return_value = DATE
-        mock_datetime.now.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
 
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
@@ -275,8 +270,7 @@ class TestS3ExpressRequests:
     def test_delete_objects_injects_correct_checksum(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.utcnow.return_value = DATE
-        mock_datetime.now.return_value = DATE
+        mock_datetime.now.side_effect = now_patcher_factory(DATE)
 
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)

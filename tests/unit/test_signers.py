@@ -37,7 +37,7 @@ from botocore.signers import (
     S3PostPresigner,
     generate_db_auth_token,
 )
-from tests import assert_url_equal, mock, unittest
+from tests import assert_url_equal, mock, unittest, now_patcher_factory
 
 
 @pytest.fixture
@@ -689,9 +689,14 @@ class TestS3PostPresigner(BaseSignerTest):
 
         self.datetime_patch = mock.patch('botocore.signers.datetime')
         self.datetime_mock = self.datetime_patch.start()
-        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
+        self.fixed_date = datetime.datetime(
+            2014, 3, 10, 17, 2, 55, 0, tzinfo=datetime.timezone.utc
+        )
         self.fixed_delta = datetime.timedelta(seconds=3600)
-        self.datetime_mock.datetime.utcnow.return_value = self.fixed_date
+        self.datetime_mock.datetime.now.side_effect = now_patcher_factory(
+            self.fixed_date
+        )
+        self.datetime_mock.timezone.utc = datetime.timezone.utc
         self.datetime_mock.timedelta.return_value = self.fixed_delta
 
     def tearDown(self):
@@ -749,7 +754,7 @@ class TestS3PostPresigner(BaseSignerTest):
             service_name='signing_name',
         )
 
-    def test_generate_presigne_post_choose_signer_override_known(self):
+    def test_generate_presigned_post_choose_signer_override_known(self):
         auth = mock.Mock()
         self.emitter.emit_until_response.return_value = (
             None,
@@ -1143,10 +1148,12 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         hostname = 'prod-instance.us-east-1.rds.amazonaws.com'
         port = 3306
         username = 'someusername'
-        clock = datetime.datetime(2016, 11, 7, 17, 39, 33, tzinfo=tzutc())
+        clock = datetime.datetime(
+            2016, 11, 7, 17, 39, 33, tzinfo=datetime.timezone.utc
+        )
 
         with mock.patch('datetime.datetime') as dt:
-            dt.utcnow.return_value = clock
+            dt.now.side_effect = now_patcher_factory(clock)
             result = generate_db_auth_token(
                 self.client, hostname, port, username
             )

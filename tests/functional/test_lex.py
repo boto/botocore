@@ -10,9 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from datetime import datetime
+from datetime import datetime, UTC
 
-from tests import BaseSessionTest, ClientHTTPStubber, mock
+from tests import BaseSessionTest, ClientHTTPStubber, mock, now_patcher_factory
 
 
 class TestLex(BaseSessionTest):
@@ -31,10 +31,10 @@ class TestLex(BaseSessionTest):
             'inputStream': b'',
         }
 
-        timestamp = datetime(2017, 3, 22, 0, 0)
+        timestamp = datetime(2017, 3, 22, 0, 0, tzinfo=UTC)
 
         with mock.patch('botocore.auth.datetime.datetime') as _datetime:
-            _datetime.utcnow.return_value = timestamp
+            _datetime.now.side_effect = now_patcher_factory(timestamp)
             self.http_stubber.add_response(body=b'{}')
             with self.http_stubber:
                 self.client.post_content(**params)

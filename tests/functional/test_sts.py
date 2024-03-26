@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 
 from botocore.config import Config
 from botocore.stub import Stubber
@@ -21,6 +21,7 @@ from tests import (
     assert_url_equal,
     mock,
     temporary_file,
+    now_patcher_factory,
 )
 
 _V4_SIGNING_REGION_REGEX = re.compile(
@@ -37,9 +38,9 @@ class TestSTSPresignedUrl(BaseSessionTest):
         self.stubber.activate()
 
     def test_presigned_url_contains_no_content_type(self):
-        timestamp = datetime(2017, 3, 22, 0, 0)
+        timestamp = datetime(2017, 3, 22, 0, 0, tzinfo=UTC)
         with mock.patch('botocore.auth.datetime.datetime') as _datetime:
-            _datetime.utcnow.return_value = timestamp
+            _datetime.now.side_effect = now_patcher_factory(timestamp)
             url = self.client.generate_presigned_url('get_caller_identity', {})
 
         # There should be no 'content-type' in x-amz-signedheaders
