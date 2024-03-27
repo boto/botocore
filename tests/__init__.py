@@ -559,6 +559,22 @@ class StubbedSession(botocore.session.Session):
             stub.assert_no_pending_responses()
 
 
+def now_patcher_factory(date):
+    """
+    Factory for creating a datetime.datetime.now() patcher.
+
+    :type date: datetime.datetime
+    :param date: datetime object specifying the default output for now()
+    """
+
+    def _now_patcher(tz=None):
+        if tz is None:
+            return date
+        return date.astimezone(tz)
+
+    return _now_patcher
+
+
 class FreezeTime(ContextDecorator):
     """
     Context manager for mocking out datetime in arbitrary modules when creating
@@ -568,12 +584,12 @@ class FreezeTime(ContextDecorator):
     :param module: reference to imported module to patch (e.g. botocore.auth.datetime)
 
     :type date: datetime.datetime
-    :param date: datetime object specifying the output for utcnow()
+    :param date: datetime object specifying the output for now(datetime.timezone.utc)
     """
 
     def __init__(self, module, date=None):
         if date is None:
-            date = datetime.datetime.utcnow()
+            date = datetime.datetime.now(datetime.timezone.utc)
         self.date = date
         self.datetime_patcher = mock.patch.object(
             module, 'datetime', mock.Mock(wraps=datetime.datetime)
@@ -581,7 +597,7 @@ class FreezeTime(ContextDecorator):
 
     def __enter__(self, *args, **kwargs):
         mock = self.datetime_patcher.start()
-        mock.utcnow.return_value = self.date
+        mock.now.side_effect = now_patcher_factory(self.date)
 
     def __exit__(self, *args, **kwargs):
         self.datetime_patcher.stop()

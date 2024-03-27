@@ -667,13 +667,13 @@ class InstanceMetadataFetcher(IMDSFetcher):
         try:
             expiration = datetime.datetime.strptime(
                 expiration, "%Y-%m-%dT%H:%M:%SZ"
-            )
+            ).replace(tzinfo=datetime.timezone.utc)
             refresh_interval = self._config.get(
                 "ec2_credential_refresh_window", 60 * 10
             )
             jitter = random.randint(120, 600)  # Between 2 to 10 minutes
             refresh_interval_with_jitter = refresh_interval + jitter
-            current_time = datetime.datetime.utcnow()
+            current_time = datetime.datetime.now(datetime.timezone.utc)
             refresh_offset = datetime.timedelta(
                 seconds=refresh_interval_with_jitter
             )
