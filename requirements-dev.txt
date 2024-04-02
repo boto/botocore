@@ -1,6 +1,6 @@
-wheel==0.38.1
+wheel==0.43.0
 behave==1.2.5
-jsonschema==2.5.1
+jsonschema==4.21.1
 coverage==7.2.7
 setuptools==67.8.0;python_version>="3.12"
 
