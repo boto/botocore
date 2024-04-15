@@ -36,6 +36,10 @@ def process_args(args):
         test_args += "-n auto --dist=loadfile --maxprocesses=4 "
     if args.with_cov:
         test_args += f"--cov={PACKAGE} --cov-report xml "
+    if args.junitxmlfile:
+        test_args += f"--junitxml={args.junitxmlfile} "
+    if args.marker:
+        test_args += f"-m {args.marker} "
     dirs = " ".join(args.test_dirs)
 
     return runner, test_args, dirs
@@ -68,6 +72,16 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
         help="Run default test-runner with parallelization.",
+    )
+    parser.add_argument(
+        "-j",
+        "--junitxmlfile",
+        help="Run default test-runner with junix xml output at given path.",
+    )
+    parser.add_argument(
+        "-m",
+        "--marker",
+        help="Run only tests with a given marker.",
     )
     raw_args = parser.parse_args()
     test_runner, test_args, test_dirs = process_args(raw_args)
