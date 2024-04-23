@@ -13,6 +13,7 @@ CHANGELOG
 * api-change:``ec2``: This release introduces EC2 AMI Deregistration Protection, a new AMI property that can be enabled by customers to protect an AMI against an unintended deregistration. This release also enables the AMI owners to view the AMI 'LastLaunchedTime' in DescribeImages API.
 * api-change:``pi``: Clarifies how aggregation works for GetResourceMetrics in the Performance Insights API.
 * api-change:``rds``: Fix the example ARN for ModifyActivityStreamRequest
+* api-change:``sqs``: This release enables customers to call SQS using AWS JSON-1.0 protocol
 * api-change:``workspaces-web``: Added InstanceType and MaxConcurrentSessions parameters on CreatePortal and UpdatePortal Operations as well as the ability to read Customer Managed Key & Additional Encryption Context parameters on supported resources (Portal, BrowserSettings, UserSettings, IPAccessSettings)
 
 
