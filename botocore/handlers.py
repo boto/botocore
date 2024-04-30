@@ -1023,6 +1023,12 @@ def remove_lex_v2_start_conversation(class_attributes, **kwargs):
         del class_attributes['start_conversation']
 
 
+def remove_qbusiness_chat(class_attributes, **kwargs):
+    """Operation requires h2 which is currently unsupported in Python"""
+    if 'chat' in class_attributes:
+        del class_attributes['chat']
+
+
 def add_retry_headers(request, **kwargs):
     retries_context = request.context.get('retries')
     if not retries_context:
@@ -1185,6 +1191,7 @@ BUILTIN_HANDLERS = [
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('creating-client-class.lex-runtime-v2', remove_lex_v2_start_conversation),
+    ('creating-client-class.qbusiness', remove_qbusiness_chat),
     ('after-call.iam', json_decode_policies),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
