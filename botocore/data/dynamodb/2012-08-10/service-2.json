@@ -3663,7 +3663,7 @@
         },
         "ExportViewType":{
           "shape":"ExportViewType",
-          "documentation":"<p>The view type that was chosen for the export. Valid values are <code>NEW_AND_OLD_IMAGES</code> and <code>NEW_IMAGES</code>. The default value is <code>NEW_AND_OLD_IMAGES</code>.</p>"
+          "documentation":"<p>The view type that was chosen for the export. Valid values are <code>NEW_AND_OLD_IMAGES</code> and <code>NEW_IMAGE</code>. The default value is <code>NEW_AND_OLD_IMAGES</code>.</p>"
         }
       },
       "documentation":"<p>Optional object containing the parameters specific to an incremental export.</p>"
