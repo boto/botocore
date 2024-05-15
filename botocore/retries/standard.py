@@ -263,7 +263,7 @@ class ExponentialBackoff(BaseRetryBackoff):
         This class implements truncated binary exponential backoff
         with jitter::
 
-            t_i = min(rand(0, 1) * 2 ** attempt, MAX_BACKOFF)
+            t_i = rand(0, 1) * min(2 ** attempt, MAX_BACKOFF)
 
         where ``i`` is the request attempt (0 based).
 
@@ -271,8 +271,8 @@ class ExponentialBackoff(BaseRetryBackoff):
         # The context.attempt_number is a 1-based value, but we have
         # to calculate the delay based on i based a 0-based value.  We
         # want the first delay to just be ``rand(0, 1)``.
-        return min(
-            self._random() * (self._base ** (context.attempt_number - 1)),
+        return self._random() * min(
+            (self._base ** (context.attempt_number - 1)),
             self._max_backoff,
         )
 
