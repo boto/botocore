@@ -1,3 +1,5 @@
+from collections import Counter
+
 import pytest
 
 from botocore import model
@@ -465,6 +467,33 @@ class TestExponentialBackoff(unittest.TestCase):
         # so we can assert all the backoff values are within that range.
         for x in backoffs:
             self.assertTrue(0 <= x <= 4)
+
+    def test_uniform_rand_dist_on_max_attempts(self):
+        backoff = standard.ExponentialBackoff()
+        num_datapoints = 10_000
+        backoffs = [
+            backoff.delay_amount(standard.RetryContext(attempt_number=10))
+            for i in range(num_datapoints)
+        ]
+        self._assert_looks_like_uniform_distribution(backoffs)
+
+    def _assert_looks_like_uniform_distribution(self, backoffs):
+        histogram = Counter(int(el) for el in backoffs)
+        expected_value = len(backoffs) / len(histogram)
+        # This is an arbitrarily chosen tolerance, but we're being fairly
+        # lenient here and giving a 20% tolerance.  We're only interested
+        # in cases where it's obviously broken and not a uniform distribution.
+        tolerance = 0.20
+        low = expected_value - (expected_value * tolerance)
+        high = expected_value + (expected_value * tolerance)
+        out_of_range = [
+            str(i) for i in histogram.values() if not low <= i <= high
+        ]
+        if out_of_range:
+            raise AssertionError(
+                "Backoff values outside of uniform distribution range "
+                f"({low} - {high}): {', '.join(out_of_range)}"
+            )
 
 
 class TestRetryQuotaChecker(unittest.TestCase):
