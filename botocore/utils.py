@@ -3510,7 +3510,7 @@ class JSONFileCache:
             with open(actual_key) as f:
                 return json.load(f)
         except (OSError, ValueError):
-            raise KeyError(cache_key)
+            raise KeyError(f'Cache file {actual_key} may be corrupt, please delete it.')
 
     def __delitem__(self, cache_key):
         actual_key = self._convert_cache_key(cache_key)
