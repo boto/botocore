@@ -8,10 +8,6 @@ from botocore.session import Session
 SERVICES = {
     "acm": {"endpoint_prefix": "acm", "service_id": "acm"},
     "acm-pca": {"endpoint_prefix": "acm-pca", "service_id": "acm-pca"},
-    "alexaforbusiness": {
-        "endpoint_prefix": "a4b",
-        "service_id": "alexa-for-business",
-    },
     "apigateway": {
         "endpoint_prefix": "apigateway",
         "service_id": "api-gateway",
