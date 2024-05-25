@@ -172,7 +172,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
 # vars that typically go in the s3 section of the config file. This mapping
 # follows the same schema as the previous session variable mapping.
 DEFAULT_S3_CONFIG_VARS = {
-    'addressing_style': (('s3', 'addressing_style'), None, None, None),
+    'addressing_style': (
+        ('s3', 'addressing_style'),
+        'AWS_S3_ADDRESSING_STYLE',
+        None,
+        None,
+    ),
     'use_accelerate_endpoint': (
         ('s3', 'use_accelerate_endpoint'),
         None,
