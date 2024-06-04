@@ -163,7 +163,7 @@ def document_wait_method(
     wait_description = (
         'Polls :py:meth:`{}.Client.{}` every {} '
         'seconds until a successful state is reached. An error is '
-        'returned after {} failed checks.'.format(
+        'raised after {} failed checks.'.format(
             get_service_module_name(service_model),
             xform_name(waiter_model.operation),
             waiter_model.delay,
