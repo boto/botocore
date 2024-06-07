@@ -186,7 +186,7 @@ class TestCreateClientArgs(unittest.TestCase):
             {
                 'region_name': 'us-west-2',
                 'signature_version': 's3v4',
-                'enpoint_url': 'https://s3-us-west-2.amazonaws.com',
+                'endpoint_url': 'https://s3-us-west-2.amazonaws.com',
                 'signing_name': 's3',
                 'signing_region': 'us-west-2',
                 'metadata': {},
