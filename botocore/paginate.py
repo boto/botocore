@@ -17,12 +17,18 @@ import logging
 from itertools import tee
 
 import jmespath
-
+from decimal import Decimal
 from botocore.exceptions import PaginationError
 from botocore.utils import merge_dicts, set_value_from_jmespath
 
 log = logging.getLogger(__name__)
 
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return int(o)
+        return json.JSONEncoder.default(o)
 
 class TokenEncoder:
     """Encodes dictionaries into opaque strings.
@@ -49,7 +55,7 @@ class TokenEncoder:
         try:
             # Try just using json dumps first to avoid having to traverse
             # and encode the dict. In 99.9999% of cases this will work.
-            json_string = json.dumps(token)
+            json_string = json.dumps(token, cls=DecimalEncoder)
         except (TypeError, UnicodeDecodeError):
             # If normal dumping failed, go through and base64 encode all bytes.
             encoded_token, encoded_keys = self._encode(token, [])
@@ -59,7 +65,7 @@ class TokenEncoder:
             encoded_token['boto_encoded_keys'] = encoded_keys
 
             # Now that the bytes are all encoded, dump the json.
-            json_string = json.dumps(encoded_token)
+            json_string = json.dumps(encoded_token, cls=DecimalEncoder)
 
         # base64 encode the json string to produce an opaque token string.
         return base64.b64encode(json_string.encode('utf-8')).decode('utf-8')
