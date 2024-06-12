@@ -431,7 +431,7 @@ class IMDSFetcher:
         else:
             chosen_base_url = METADATA_BASE_URL
 
-        logger.debug("IMDS ENDPOINT: %s" % chosen_base_url)
+        logger.debug(f"IMDS ENDPOINT: {chosen_base_url}")
         if not is_valid_uri(chosen_base_url):
             raise InvalidIMDSEndpointError(endpoint=chosen_base_url)
 
@@ -996,7 +996,7 @@ def parse_timestamp(value):
                 exc_info=e,
             )
     raise RuntimeError(
-        'Unable to calculate correct timezone offset for "%s"' % value
+        f'Unable to calculate correct timezone offset for "{value}"'
     )
 
 
@@ -1793,17 +1793,16 @@ class S3RegionRedirectorv2:
 
         if new_region is None:
             logger.debug(
-                "S3 client configured for region %s but the bucket %s is not "
-                "in that region and the proper region could not be "
-                "automatically determined." % (client_region, bucket)
+                f"S3 client configured for region {client_region} but the "
+                f"bucket {bucket} is not in that region and the proper region "
+                "could not be automatically determined."
             )
             return
 
         logger.debug(
-            "S3 client configured for region %s but the bucket %s is in region"
-            " %s; Please configure the proper region to avoid multiple "
-            "unnecessary redirects and signing attempts."
-            % (client_region, bucket, new_region)
+            f"S3 client configured for region {client_region} but the bucket {bucket} "
+            f"is in region {new_region}; Please configure the proper region to "
+            f"avoid multiple unnecessary redirects and signing attempts."
         )
         # Adding the new region to _cache will make construct_endpoint() to
         # use the new region as value for the AWS::Region builtin parameter.
@@ -1992,17 +1991,16 @@ class S3RegionRedirector:
 
         if new_region is None:
             logger.debug(
-                "S3 client configured for region %s but the bucket %s is not "
+                f"S3 client configured for region {client_region} but the bucket {bucket} is not "
                 "in that region and the proper region could not be "
-                "automatically determined." % (client_region, bucket)
+                "automatically determined."
             )
             return
 
         logger.debug(
-            "S3 client configured for region %s but the bucket %s is in region"
-            " %s; Please configure the proper region to avoid multiple "
+            f"S3 client configured for region {client_region} but the bucket {bucket} is in region"
+            f" {new_region}; Please configure the proper region to avoid multiple "
             "unnecessary redirects and signing attempts."
-            % (client_region, bucket, new_region)
         )
         endpoint = self._endpoint_resolver.resolve('s3', new_region)
         endpoint = endpoint['endpoint_url']
@@ -2087,8 +2085,8 @@ class ArnParser:
         arn_parts = arn.split(':', 5)
         if len(arn_parts) < 6:
             raise InvalidArnException(
-                'Provided ARN: %s must be of the format: '
-                'arn:partition:service:region:account:resource' % arn
+                f'Provided ARN: {arn} must be of the format: '
+                'arn:partition:service:region:account:resource'
             )
         return {
             'partition': arn_parts[1],
@@ -2271,8 +2269,8 @@ class S3EndpointSetter:
                 raise UnsupportedS3ConfigurationError(
                     msg=(
                         'Client is configured to use the FIPS psuedo region '
-                        'for "%s", but S3 Accelerate does not have any FIPS '
-                        'compatible endpoints.' % (self._region)
+                        f'for "{self._region}", but S3 Accelerate does not have any FIPS '
+                        'compatible endpoints.'
                     )
                 )
             switch_host_s3_accelerate(request=request, **kwargs)
@@ -2292,9 +2290,8 @@ class S3EndpointSetter:
         if 'outpost_name' in request.context['s3_accesspoint']:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
-                    'Client is configured to use the FIPS psuedo-region "%s", '
+                    f'Client is configured to use the FIPS psuedo-region "{self._region}", '
                     'but outpost ARNs do not support FIPS endpoints.'
-                    % (self._region)
                 )
             )
         # Transforming psuedo region to actual region
@@ -2306,11 +2303,10 @@ class S3EndpointSetter:
                 raise UnsupportedS3AccesspointConfigurationError(
                     msg=(
                         'Client is configured to use the FIPS psuedo-region '
-                        'for "%s", but the access-point ARN provided is for '
-                        'the "%s" region. For clients using a FIPS '
+                        f'for "{self._region}", but the access-point ARN provided is for '
+                        f'the "{accesspoint_region}" region. For clients using a FIPS '
                         'psuedo-region calls to access-point ARNs in another '
                         'region are not allowed.'
-                        % (self._region, accesspoint_region)
                     )
                 )
 
@@ -2321,8 +2317,8 @@ class S3EndpointSetter:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
                     'Client is configured to use the global psuedo-region '
-                    '"%s". When providing access-point ARNs a regional '
-                    'endpoint must be specified.' % self._region
+                    f'"{self._region}". When providing access-point ARNs a regional '
+                    'endpoint must be specified.'
                 )
             )
 
@@ -2338,10 +2334,9 @@ class S3EndpointSetter:
         if request_partition != self._partition:
             raise UnsupportedS3AccesspointConfigurationError(
                 msg=(
-                    'Client is configured for "%s" partition, but access-point'
-                    ' ARN provided is for "%s" partition. The client and '
+                    f'Client is configured for "{self._partition}" partition, but access-point'
+                    f' ARN provided is for "{request_partition}" partition. The client and '
                     ' access-point partition must be the same.'
-                    % (self._partition, request_partition)
                 )
             )
         s3_service = request.context['s3_accesspoint'].get('service')
@@ -2486,7 +2481,7 @@ class S3EndpointSetter:
 
     def _inject_fips_if_needed(self, component, request_context):
         if self._use_fips_endpoint:
-            return '%s-fips' % component
+            return f'{component}-fips'
         return component
 
     def _get_accesspoint_path(self, original_path, request_context):
@@ -2663,18 +2658,17 @@ class S3ControlEndpointSetter:
             if arn_region != self._region:
                 error_msg = (
                     'The use_arn_region configuration is disabled but '
-                    'received arn for "%s" when the client is configured '
-                    'to use "%s"'
-                ) % (arn_region, self._region)
+                    f'received arn for "{arn_region}" when the client is configured '
+                    f'to use "{self._region}"'
+                )
                 raise UnsupportedS3ControlConfigurationError(msg=error_msg)
         request_partion = request.context['arn_details']['partition']
         if request_partion != self._partition:
             raise UnsupportedS3ControlConfigurationError(
                 msg=(
-                    'Client is configured for "%s" partition, but arn '
-                    'provided is for "%s" partition. The client and '
+                    f'Client is configured for "{self._partition}" partition, but arn '
+                    f'provided is for "{request_partion}" partition. The client and '
                     'arn partition must be the same.'
-                    % (self._partition, request_partion)
                 )
             )
         if self._s3_config.get('use_accelerate_endpoint'):
@@ -2874,8 +2868,8 @@ class S3ControlArnParamHandler:
         if 'AccountId' in params and params['AccountId'] != account_id:
             error_msg = (
                 'Account ID in arn does not match the AccountId parameter '
-                'provided: "%s"'
-            ) % params['AccountId']
+                'provided: "{}"'
+            ).format(params['AccountId'])
             raise UnsupportedS3ControlArnError(
                 arn=arn_details['original'],
                 msg=error_msg,

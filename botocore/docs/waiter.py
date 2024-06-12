@@ -72,7 +72,7 @@ class WaiterDocumenter:
         waiter_section.style.start_codeblock()
         waiter_section.style.new_line()
         waiter_section.write(
-            'waiter = client.get_waiter(\'%s\')' % xform_name(waiter_name)
+            f'waiter = client.get_waiter(\'{xform_name(waiter_name)}\')'
         )
         waiter_section.style.end_codeblock()
 

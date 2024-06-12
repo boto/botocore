@@ -84,7 +84,7 @@ def then_expected_type_is_list(context, expression):
     # the response is a dict to ensure it made it through
     # our response parser properly.
     if not isinstance(context.response, dict):
-        raise AssertionError("Response is not a dict: %s" % context.response)
+        raise AssertionError(f"Response is not a dict: {context.response}")
 
 
 @then('the response should contain a "{}"')
@@ -93,13 +93,12 @@ def then_should_contain_key(context, key):
     # We really just care that the request succeeded for these
     # smoke tests.
     if not isinstance(context.response, dict):
-        raise AssertionError("Response is not a dict: %s" % context.response)
+        raise AssertionError(f"Response is not a dict: {context.response}")
 
 
 @then('I expect the response error to contain a message')
 def then_error_has_message(context):
     if 'Message' not in context.error_response.response['Error']:
         raise AssertionError(
-            "Message key missing from error response: %s"
-            % context.error_response.response
+            f"Message key missing from error response: {context.error_response.response}"
         )

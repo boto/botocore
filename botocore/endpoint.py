@@ -397,7 +397,7 @@ class EndpointCreator:
         if not is_valid_endpoint_url(
             endpoint_url
         ) and not is_valid_ipv6_endpoint_url(endpoint_url):
-            raise ValueError("Invalid endpoint: %s" % endpoint_url)
+            raise ValueError(f"Invalid endpoint: {endpoint_url}")
 
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)

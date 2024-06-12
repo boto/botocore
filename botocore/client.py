@@ -199,7 +199,7 @@ class ClientCreator:
         bases = [BaseClient]
         service_id = service_model.service_id.hyphenize()
         self._event_emitter.emit(
-            'creating-client-class.%s' % service_id,
+            f'creating-client-class.{service_id}',
             class_attributes=class_attributes,
             base_classes=bases,
         )
@@ -223,10 +223,10 @@ class ClientCreator:
                 else:
                     client_config = config_use_fips_endpoint
                 logger.warning(
-                    'transforming region from %s to %s and setting '
+                    f'transforming region from {region_name} to '
+                    f'{normalized_region_name} and setting '
                     'use_fips_endpoint to true. client should not '
                     'be configured with a fips psuedo region.'
-                    % (region_name, normalized_region_name)
                 )
                 region_name = normalized_region_name
         return region_name, client_config
@@ -289,7 +289,7 @@ class ClientCreator:
         handler = self._retry_handler_factory.create_retry_handler(
             retry_config, endpoint_prefix
         )
-        unique_id = 'retry-config-%s' % service_event_name
+        unique_id = f'retry-config-{service_event_name}'
         client.meta.events.register(
             f"needs-retry.{service_event_name}", handler, unique_id=unique_id
         )
@@ -573,7 +573,7 @@ class ClientCreator:
             method_name=operation_name,
             event_emitter=self._event_emitter,
             method_description=operation_model.documentation,
-            example_prefix='response = client.%s' % py_operation_name,
+            example_prefix=f'response = client.{py_operation_name}',
             include_signature=False,
         )
         _api_call.__doc__ = docstring
@@ -1252,13 +1252,13 @@ class BaseClient:
         """
         config = self._get_waiter_config()
         if not config:
-            raise ValueError("Waiter does not exist: %s" % waiter_name)
+            raise ValueError(f"Waiter does not exist: {waiter_name}")
         model = waiter.WaiterModel(config)
         mapping = {}
         for name in model.waiter_names:
             mapping[xform_name(name)] = name
         if waiter_name not in mapping:
-            raise ValueError("Waiter does not exist: %s" % waiter_name)
+            raise ValueError(f"Waiter does not exist: {waiter_name}")
 
         return waiter.create_waiter_with_client(
             mapping[waiter_name], model, self

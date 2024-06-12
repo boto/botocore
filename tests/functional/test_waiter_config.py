@@ -118,23 +118,20 @@ def _lint_single_waiter(client, waiter_name, service_model):
     # Needs to reference an existing operation name.
     if operation_name not in service_model.operation_names:
         raise AssertionError(
-            "Waiter config references unknown "
-            "operation: %s" % operation_name
+            "Waiter config references unknown " f"operation: {operation_name}"
         )
     # Needs to have at least one acceptor.
     if not waiter.config.acceptors:
         raise AssertionError(
             "Waiter config must have at least "
-            "one acceptor state: %s" % waiter.name
+            f"one acceptor state: {waiter.name}"
         )
     op_model = service_model.operation_model(operation_name)
     for acceptor in acceptors:
         _validate_acceptor(acceptor, op_model, waiter.name)
 
     if not waiter.name.isalnum():
-        raise AssertionError(
-            "Waiter name %s is not alphanumeric." % waiter_name
-        )
+        raise AssertionError(f"Waiter name {waiter_name} is not alphanumeric.")
 
 
 def _validate_schema(validator, waiter_json):

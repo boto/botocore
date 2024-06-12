@@ -53,9 +53,8 @@ def assert_valid_values(service_name, operation_model, example_config):
 
     if input_shape is None and example_input:
         raise AssertionError(
-            "Input found in example for %s from %s with id %s, but no input "
-            "shape is defined."
-            % (operation_model.name, service_name, example_id)
+            f"Input found in example for {operation_model.name} from {service_name} "
+            f"with id {example_id}, but no input shape is defined."
         )
 
     example_output = example_config.get('output')
@@ -63,9 +62,8 @@ def assert_valid_values(service_name, operation_model, example_config):
 
     if output_shape is None and example_output:
         raise AssertionError(
-            "Output found in example for %s from %s with id %s, but no output "
-            "shape is defined."
-            % (operation_model.name, service_name, example_id)
+            f"Output found in example for {operation_model.name} from {service_name} "
+            f"with id {example_id}, but no output shape is defined."
         )
 
     try:

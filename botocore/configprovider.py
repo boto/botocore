@@ -698,7 +698,7 @@ class ChainProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return '[%s]' % ', '.join([str(p) for p in self._providers])
+        return '[{}]'.format(', '.join([str(p) for p in self._providers]))
 
 
 class InstanceVarProvider(BaseProvider):
@@ -873,7 +873,7 @@ class ConstantProvider(BaseProvider):
         return self._value
 
     def __repr__(self):
-        return 'ConstantProvider(value=%s)' % self._value
+        return f'ConstantProvider(value={self._value})'
 
 
 class ConfiguredEndpointProvider(BaseProvider):

@@ -262,7 +262,7 @@ class EndpointResolver(BaseEndpointResolver):
         ):
             error_msg = (
                 "Dualstack endpoints are currently not supported"
-                " for %s partition" % partition_name
+                f" for {partition_name} partition"
             )
             raise EndpointVariantError(tags=['dualstack'], error_msg=error_msg)
 
@@ -358,8 +358,7 @@ class EndpointResolver(BaseEndpointResolver):
 
         if endpoint_data.get('deprecated'):
             LOG.warning(
-                'Client is configured with the deprecated endpoint: %s'
-                % (endpoint_name)
+                f'Client is configured with the deprecated endpoint: {endpoint_name}'
             )
 
         service_defaults = service_data.get('defaults', {})
@@ -497,7 +496,7 @@ class EndpointRulesetResolver:
             operation_model, call_args, request_context
         )
         LOG.debug(
-            'Calling endpoint provider with parameters: %s' % provider_params
+            f'Calling endpoint provider with parameters: {provider_params}'
         )
         try:
             provider_result = self._provider.resolve_endpoint(
@@ -511,7 +510,7 @@ class EndpointRulesetResolver:
                 raise
             else:
                 raise botocore_exception from ex
-        LOG.debug('Endpoint provider result: %s' % provider_result.url)
+        LOG.debug(f'Endpoint provider result: {provider_result.url}')
 
         # The endpoint provider does not support non-secure transport.
         if not self._use_ssl and provider_result.url.startswith('https://'):
@@ -634,7 +633,7 @@ class EndpointRulesetResolver:
         customized_builtins = copy.copy(self._builtins)
         # Handlers are expected to modify the builtins dict in place.
         self._event_emitter.emit(
-            'before-endpoint-resolution.%s' % service_id,
+            f'before-endpoint-resolution.{service_id}',
             builtins=customized_builtins,
             model=operation_model,
             params=call_args,

@@ -43,4 +43,4 @@ if __name__ == "__main__":
         package = os.path.join('dist', wheel_dist)
         if args.extras:
             package = f"\"{package}[{args.extras}]\""
-        run('pip install %s' % package)
+        run(f'pip install {package}')

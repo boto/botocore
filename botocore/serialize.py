@@ -278,7 +278,7 @@ class QuerySerializer(Serializer):
         if self._is_shape_flattened(shape):
             full_prefix = prefix
         else:
-            full_prefix = '%s.entry' % prefix
+            full_prefix = f'{prefix}.entry'
         template = full_prefix + '.{i}.{suffix}'
         key_shape = shape.key
         value_shape = shape.value
@@ -357,7 +357,7 @@ class JSONSerializer(Serializer):
         )
         serialized['headers'] = {
             'X-Amz-Target': target,
-            'Content-Type': 'application/x-amz-json-%s' % json_version,
+            'Content-Type': f'application/x-amz-json-{json_version}',
         }
         body = self.MAP_TYPE()
         input_shape = operation_model.input_shape
@@ -374,7 +374,7 @@ class JSONSerializer(Serializer):
     def _serialize(self, serialized, value, shape, key=None):
         method = getattr(
             self,
-            '_serialize_type_%s' % shape.type_name,
+            f'_serialize_type_{shape.type_name}',
             self._default_serialize,
         )
         method(serialized, value, shape, key)
@@ -714,7 +714,7 @@ class RestXMLSerializer(BaseRestSerializer):
     def _serialize(self, shape, params, xmlnode, name):
         method = getattr(
             self,
-            '_serialize_type_%s' % shape.type_name,
+            f'_serialize_type_{shape.type_name}',
             self._default_serialize,
         )
         method(xmlnode, params, shape, name)
@@ -726,7 +726,7 @@ class RestXMLSerializer(BaseRestSerializer):
             namespace_metadata = shape.serialization['xmlNamespace']
             attribute_name = 'xmlns'
             if namespace_metadata.get('prefix'):
-                attribute_name += ':%s' % namespace_metadata['prefix']
+                attribute_name += f":{namespace_metadata['prefix']}"
             structure_node.attrib[attribute_name] = namespace_metadata['uri']
         for key, value in params.items():
             member_shape = shape.members[key]

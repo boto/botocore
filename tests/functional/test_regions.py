@@ -447,7 +447,7 @@ def test_single_service_region_endpoint(
     resolver = patched_session._get_internal_component('endpoint_resolver')
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
-    expected = 'https://%s' % expected_endpoint
+    expected = f'https://{expected_endpoint}'
     assert result['endpoint_url'] == expected
 
 

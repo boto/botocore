@@ -53,7 +53,7 @@ H2_SERVICES, H2_OPERATIONS = _all_test_cases()
 @pytest.mark.parametrize("h2_service", H2_SERVICES)
 def test_all_uses_of_h2_are_known(h2_service):
     # Validates that a service that requires HTTP 2 for all operations is known
-    message = 'Found unknown HTTP 2 service: %s' % h2_service
+    message = f'Found unknown HTTP 2 service: {h2_service}'
     assert _KNOWN_SERVICES.get(h2_service) is _H2_REQUIRED, message
 
 

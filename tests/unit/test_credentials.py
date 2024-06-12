@@ -2780,9 +2780,9 @@ class ProfileProvider:
 
     def load(self):
         return Credentials(
-            '%s-access-key' % self._profile_name,
-            '%s-secret-key' % self._profile_name,
-            '%s-token' % self._profile_name,
+            f'{self._profile_name}-access-key',
+            f'{self._profile_name}-secret-key',
+            f'{self._profile_name}-token',
             self.METHOD,
         )
 

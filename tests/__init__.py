@@ -521,8 +521,9 @@ class ConsistencyWaiter:
         raise ConsistencyWaiterException(fail_msg)
 
     def _fail_message(self, attempts, successes):
-        format_args = (attempts, successes)
-        return 'Failed after %s attempts, only had %s successes' % format_args
+        return (
+            f'Failed after {attempts} attempts, only had {successes} successes'
+        )
 
 
 class StubbedSession(botocore.session.Session):

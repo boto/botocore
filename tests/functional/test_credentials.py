@@ -127,9 +127,8 @@ class TestCredentialRefreshRaces(unittest.TestCase):
         max_calls_allowed = math.ceil((end - start) / 2.0) + 1
         self.assertTrue(
             creds.refresh_counter <= max_calls_allowed,
-            "Too many cred refreshes, max: %s, actual: %s, "
-            "time_delta: %.4f"
-            % (max_calls_allowed, creds.refresh_counter, (end - start)),
+            f"Too many cred refreshes, max: {max_calls_allowed}, actual: "
+            f"{creds.refresh_counter}, time_delta: {end - start:.4f}",
         )
 
     def test_no_race_for_immediate_advisory_expiration(self):
@@ -206,9 +205,9 @@ class BaseAssumeRoleTest(BaseEnvVar):
 
     def create_random_credentials(self):
         return Credentials(
-            'fake-%s' % random_chars(15),
-            'fake-%s' % random_chars(35),
-            'fake-%s' % random_chars(45),
+            f'fake-{random_chars(15)}',
+            f'fake-{random_chars(35)}',
+            f'fake-{random_chars(45)}',
         )
 
     def assert_creds_equal(self, c1, c2):
@@ -485,7 +484,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'source_profile = B\n'
             '[profile B]\n'
-            'credential_process = %s\n' % self.credential_process
+            f'credential_process = {self.credential_process}\n'
         )
         self.write_config(config)
 
@@ -518,7 +517,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
             'source_profile = B\n'
             '[profile B]\n'
             'role_arn = arn:aws:iam::123456789:role/RoleB\n'
-            'web_identity_token_file = %s\n' % token_path
+            f'web_identity_token_file = {token_path}\n'
         )
         self.write_config(config)
 
@@ -559,7 +558,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'source_profile = B\n'
             '[profile B]\n'
-            'web_identity_token_file = %s\n' % token_path
+            f'web_identity_token_file = {token_path}\n'
         )
         self.write_config(config)
 
@@ -801,8 +800,8 @@ class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
             '[profile A]\n'
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'role_session_name = sname\n'
-            'web_identity_token_file = %s\n'
-        ) % self.token_file
+            f'web_identity_token_file = {self.token_file}\n'
+        )
         self.write_config(config)
         expected_params = {
             'RoleArn': 'arn:aws:iam::123456789:role/RoleA',
@@ -830,8 +829,8 @@ class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
             '[profile A]\n'
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
             'role_session_name = aname\n'
-            'web_identity_token_file = %s\n'
-        ) % self.token_file
+            f'web_identity_token_file = {self.token_file}\n'
+        )
         self.write_config(config)
 
         different_token = os.path.join(self.tempdir, str(uuid.uuid4()))
@@ -972,11 +971,11 @@ class TestSTSRegional(BaseAssumeRoleTest):
             '[profile A]\n'
             'sts_regional_endpoints = regional\n'
             'role_arn = arn:aws:iam::123456789:role/RoleA\n'
-            'web_identity_token_file = %s\n'
+            f'web_identity_token_file = {token_file}\n'
             'source_profile = B\n\n'
             '[profile B]\n'
             'aws_access_key_id = abc123\n'
-            'aws_secret_access_key = def456\n' % token_file
+            'aws_secret_access_key = def456\n'
         )
         self.write_config(config)
         # Make an arbitrary client and API call as we are really only
