@@ -151,10 +151,7 @@ def _validate_acceptor(acceptor, op_model, waiter_name):
         output_shape = op_model.output_shape
         assert (
             output_shape is not None
-        ), "Waiter '{}' has JMESPath expression with no output shape: {}".format(
-            waiter_name,
-            op_model,
-        )
+        ), f"Waiter '{waiter_name}' has JMESPath expression with no output shape: {op_model}"
         # We want to check if the JMESPath expression makes sense.
         # To do this, we'll generate sample output and evaluate the
         # JMESPath expression against the output.  We'll then

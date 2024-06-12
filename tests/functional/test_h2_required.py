@@ -61,7 +61,5 @@ def test_all_uses_of_h2_are_known(h2_service):
 def test_all_h2_operations_are_known(h2_service, operation):
     # Validates that an operation that requires HTTP 2 is known
     known_operations = _KNOWN_SERVICES.get(h2_service, [])
-    message = 'Found unknown HTTP 2 operation: {}.{}'.format(
-        h2_service, operation
-    )
+    message = f'Found unknown HTTP 2 operation: {h2_service}.{operation}'
     assert operation in known_operations, message

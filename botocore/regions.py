@@ -16,6 +16,7 @@ This module implements endpoint resolution, including resolving endpoints for a
 given service and region and resolving the available endpoints for a service
 in a specific AWS partition.
 """
+
 import copy
 import logging
 import re

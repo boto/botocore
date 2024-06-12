@@ -121,9 +121,7 @@ def temporary_file(mode):
 
     """
     temporary_directory = tempfile.mkdtemp()
-    basename = 'tmpfile-{}-{}'.format(
-        int(time.time()), random.randint(1, 1000)
-    )
+    basename = f'tmpfile-{int(time.time())}-{random.randint(1, 1000)}'
     full_filename = os.path.join(temporary_directory, basename)
     open(full_filename, 'w').close()
     try:

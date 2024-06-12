@@ -37,6 +37,7 @@ The input to the serializers should be text (str/unicode), not bytes,
 with the exception of blob types.  Those are assumed to be binary,
 and if a str/unicode type is passed in, it will be encoded as utf-8.
 """
+
 import base64
 import calendar
 import datetime

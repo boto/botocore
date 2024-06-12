@@ -50,6 +50,7 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
     BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
 
 """
+
 import copy
 import os
 from base64 import b64decode
@@ -373,15 +374,9 @@ def assert_equal(first, second, prefix):
         assert first == second
     except Exception:
         try:
-            better = "{} (actual != expected)\n{} !=\n{}".format(
-                prefix,
-                json.dumps(first, indent=2),
-                json.dumps(second, indent=2),
-            )
+            better = f"{prefix} (actual != expected)\n{json.dumps(first, indent=2)} !=\n{json.dumps(second, indent=2)}"
         except (ValueError, TypeError):
-            better = "{} (actual != expected)\n{} !=\n{}".format(
-                prefix, first, second
-            )
+            better = f"{prefix} (actual != expected)\n{first} !=\n{second}"
         raise AssertionError(better)
 
 

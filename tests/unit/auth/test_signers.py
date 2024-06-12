@@ -704,9 +704,7 @@ class TestS3SigV2Presign(BasePresignTest):
         self.request = AWSRequest()
         self.bucket = 'mybucket'
         self.key = 'myobject'
-        self.path = 'https://s3.amazonaws.com/{}/{}'.format(
-            self.bucket, self.key
-        )
+        self.path = f'https://s3.amazonaws.com/{self.bucket}/{self.key}'
         self.request.url = self.path
         self.request.method = 'GET'
 
@@ -986,9 +984,9 @@ class TestSigV4Presign(BasePresignTest):
         request = AWSRequest()
         request.method = 'GET'
         request.url = 'https://myservice.us-east-1.amazonaws.com/'
-        request.headers[
-            'Content-Type'
-        ] = 'application/x-www-form-urlencoded; charset=utf-8'
+        request.headers['Content-Type'] = (
+            'application/x-www-form-urlencoded; charset=utf-8'
+        )
         self.auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
         signed_headers = query_string.get('X-Amz-SignedHeaders')

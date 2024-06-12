@@ -1619,10 +1619,10 @@ class TestPrependToHost(unittest.TestCase):
         (
             {
                 'AWS_LAMBDA_FUNCTION_NAME': 'foo',
-                '_X_AMZN_TRACE_ID': 'test123-=;:+&[]{}\"\'',
+                '_X_AMZN_TRACE_ID': 'test123-=;:+&[]{}"\'',
             },
             {},
-            {'X-Amzn-Trace-Id': 'test123-=;:+&[]{}\"\''},
+            {'X-Amzn-Trace-Id': 'test123-=;:+&[]{}"\''},
         ),
     ],
 )

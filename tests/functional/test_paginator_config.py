@@ -243,9 +243,7 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
             output_members.remove(output_key)
 
     for member in list(output_members):
-        key = "{}.{}.{}".format(
-            service_model.service_name, operation_name, member
-        )
+        key = f"{service_model.service_name}.{operation_name}.{member}"
         if key in KNOWN_EXTRA_OUTPUT_KEYS:
             output_members.remove(member)
 

@@ -22,6 +22,7 @@ placed in ./aws4_testsuite, and we're using those to dynamically
 generate testcases based on these files.
 
 """
+
 import datetime
 import io
 import logging

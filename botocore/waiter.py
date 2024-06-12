@@ -178,10 +178,7 @@ class AcceptorConfig:
     @property
     def explanation(self):
         if self.matcher == 'path':
-            return 'For expression "{}" we matched expected path: "{}"'.format(
-                self.argument,
-                self.expected,
-            )
+            return f'For expression "{self.argument}" we matched expected path: "{self.expected}"'
         elif self.matcher == 'pathAll':
             return (
                 'For expression "%s" all members matched excepted path: "%s"'

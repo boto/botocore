@@ -10,6 +10,7 @@ Otherwise, the ``REGION`` variable specifies the default region
 to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
 
 """
+
 import logging
 import os
 import warnings

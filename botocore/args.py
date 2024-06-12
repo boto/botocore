@@ -16,6 +16,7 @@ This module (and all function/classes within this module) should be
 considered internal, and *not* a public API.
 
 """
+
 import copy
 import logging
 import socket

@@ -152,9 +152,7 @@ class RequestSigner:
 
         # Allow mutating request before signing
         self._event_emitter.emit(
-            'before-sign.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name
-            ),
+            f'before-sign.{self._service_id.hyphenize()}.{operation_name}',
             request=request,
             signing_name=signing_name,
             region_name=self._region_name,
@@ -231,9 +229,7 @@ class RequestSigner:
             signature_version += suffix
 
         handler, response = self._event_emitter.emit_until_response(
-            'choose-signer.{}.{}'.format(
-                self._service_id.hyphenize(), operation_name
-            ),
+            f'choose-signer.{self._service_id.hyphenize()}.{operation_name}',
             signing_name=signing_name,
             region_name=region_name,
             signature_version=signature_version,

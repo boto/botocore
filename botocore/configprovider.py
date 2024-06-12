@@ -13,6 +13,7 @@
 """This module contains the interface for controlling how configuration
 is loaded.
 """
+
 import copy
 import logging
 import os
@@ -728,10 +729,7 @@ class InstanceVarProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return 'InstanceVarProvider(instance_var={}, session={})'.format(
-            self._instance_var,
-            self._session,
-        )
+        return f'InstanceVarProvider(instance_var={self._instance_var}, session={self._session})'
 
 
 class ScopedConfigProvider(BaseProvider):
@@ -767,10 +765,7 @@ class ScopedConfigProvider(BaseProvider):
         return scoped_config.get(self._config_var_name)
 
     def __repr__(self):
-        return 'ScopedConfigProvider(config_var_name={}, session={})'.format(
-            self._config_var_name,
-            self._session,
-        )
+        return f'ScopedConfigProvider(config_var_name={self._config_var_name}, session={self._session})'
 
 
 class EnvironmentProvider(BaseProvider):

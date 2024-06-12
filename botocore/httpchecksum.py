@@ -11,13 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-""" The interfaces in this module are not intended for public use.
+"""The interfaces in this module are not intended for public use.
 
 This module defines interfaces for applying checksums to HTTP requests within
 the context of botocore. This involves both resolving the checksum to be used
 based on client configuration and environment, as well as application of the
 checksum to the request.
 """
+
 import base64
 import io
 import logging

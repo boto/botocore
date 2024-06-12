@@ -23,6 +23,7 @@ This allows us to define an API that has minimal coupling to the event
 based API used by botocore.
 
 """
+
 import logging
 import random
 

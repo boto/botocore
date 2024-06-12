@@ -982,9 +982,7 @@ class BaseClient:
 
         service_id = self._service_model.service_id.hyphenize()
         handler, event_response = self.meta.events.emit_until_response(
-            'before-call.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'before-call.{service_id}.{operation_name}',
             model=operation_model,
             params=request_dict,
             request_signer=self._request_signer,
@@ -1003,9 +1001,7 @@ class BaseClient:
             )
 
         self.meta.events.emit(
-            'after-call.{service_id}.{operation_name}'.format(
-                service_id=service_id, operation_name=operation_name
-            ),
+            f'after-call.{service_id}.{operation_name}',
             http_response=http,
             parsed=parsed_response,
             model=operation_model,
@@ -1027,10 +1023,7 @@ class BaseClient:
             return self._endpoint.make_request(operation_model, request_dict)
         except Exception as e:
             self.meta.events.emit(
-                'after-call-error.{service_id}.{operation_name}'.format(
-                    service_id=self._service_model.service_id.hyphenize(),
-                    operation_name=operation_model.name,
-                ),
+                f'after-call-error.{self._service_model.service_id.hyphenize()}.{operation_model.name}',
                 exception=e,
                 context=request_context,
             )

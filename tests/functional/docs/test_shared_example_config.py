@@ -80,9 +80,8 @@ def assert_valid_values(service_name, operation_model, example_config):
             )
     except AssertionError as e:
         raise AssertionError(
-            "Invalid value in example for {} from {} with id {}: {}".format(
-                operation_model.name, service_name, example_id, e
-            )
+            f"Invalid value in example for {operation_model.name} from "
+            f"{service_name} with id {example_id}: {e}"
         )
 
 
@@ -104,9 +103,7 @@ def _assert_valid_structure_values(shape, example_dict, path):
     if invalid_members:
         dotted_path = '.'.join(path)
         raise AssertionError(
-            "Invalid members found for {}: {}".format(
-                dotted_path, invalid_members
-            )
+            f"Invalid members found for {dotted_path}: {invalid_members}"
         )
 
     for member_name, example_value in example_dict.items():
@@ -133,9 +130,7 @@ def _assert_valid_timestamp(timestamp, path):
     except Exception as e:
         dotted_path = '.'.join(path)
         raise AssertionError(
-            'Failed to parse timestamp {} for {}: {}'.format(
-                timestamp, dotted_path, e
-            )
+            f'Failed to parse timestamp {timestamp} for {dotted_path}: {e}'
         )
 
 
@@ -144,7 +139,6 @@ def assert_operation_exists(service_model, operation_name):
         service_model.operation_model(operation_name)
     except OperationNotFoundError:
         raise AssertionError(
-            "Examples found in {} for operation {} that does not exist.".format(
-                service_model.service_name, operation_name
-            )
+            f"Examples found in {service_model.service_name} for operation "
+            f"{operation_name} that does not exist."
         )

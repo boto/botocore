@@ -120,9 +120,7 @@ class ClientDocumenter:
         section.style.start_codeblock()
         section.style.new_line()
         section.write(
-            'client = session.create_client(\'{service}\')'.format(
-                service=self._service_name
-            )
+            f'client = session.create_client(\'{self._service_name}\')'
         )
         section.style.end_codeblock()
 

@@ -288,9 +288,7 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
                 # Sleep and try again.
                 time.sleep(2)
         self.fail(
-            "Expected to see {} uploads, instead saw: {}".format(
-                num_uploads, amount_seen
-            )
+            f"Expected to see {num_uploads} uploads, instead saw: {amount_seen}"
         )
 
     def create_client(self):
@@ -714,9 +712,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         )
         self.assertTrue(
             presigned_url.startswith(
-                'https://{}.s3.amazonaws.com/{}'.format(
-                    self.bucket_name, self.key
-                )
+                f'https://{self.bucket_name}.s3.amazonaws.com/{self.key}'
             ),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url,
@@ -750,9 +746,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         )
         self.assertTrue(
             presigned_url.startswith(
-                'https://{}.s3.amazonaws.com/{}'.format(
-                    self.bucket_name, self.key
-                )
+                f'https://{self.bucket_name}.s3.amazonaws.com/{self.key}'
             ),
             "Host was suppose to be the us-east-1 endpoint, instead "
             "got: %s" % presigned_url,
@@ -854,9 +848,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         )
         self.assertTrue(
             presigned_url.startswith(
-                'https://{}.s3.amazonaws.com/{}'.format(
-                    self.bucket_name, self.key
-                )
+                f'https://{self.bucket_name}.s3.amazonaws.com/{self.key}'
             ),
             "Host was suppose to use DNS style, instead "
             "got: %s" % presigned_url,
@@ -882,9 +874,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
         self.assertTrue(
             presigned_url.startswith(
-                'https://s3.us-west-2.amazonaws.com/{}/{}'.format(
-                    self.bucket_name, self.key
-                )
+                f'https://s3.us-west-2.amazonaws.com/{self.bucket_name}/{self.key}'
             ),
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url,

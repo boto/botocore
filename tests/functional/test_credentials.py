@@ -241,9 +241,7 @@ class TestAssumeRole(BaseAssumeRoleTest):
         credential_process = os.path.join(
             current_dir, 'utils', 'credentialprocess.py'
         )
-        self.credential_process = '{} {}'.format(
-            sys.executable, credential_process
-        )
+        self.credential_process = f'{sys.executable} {credential_process}'
 
     def mock_provider(self, provider_cls):
         mock_instance = mock.Mock(spec=provider_cls)
@@ -856,9 +854,7 @@ class TestProcessProvider(unittest.TestCase):
         credential_process = os.path.join(
             current_dir, 'utils', 'credentialprocess.py'
         )
-        self.credential_process = '{} {}'.format(
-            sys.executable, credential_process
-        )
+        self.credential_process = f'{sys.executable} {credential_process}'
         self.environ = os.environ.copy()
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
@@ -921,8 +917,8 @@ class TestSTSRegional(BaseAssumeRoleTest):
     def _get_assume_role_body(self, method_name):
         expiration = self.some_future_time()
         body = (
-            '<{method_name}Response>'
-            '  <{method_name}Result>'
+            f'<{method_name}Response>'
+            f'  <{method_name}Result>'
             '    <AssumedRoleUser>'
             '      <Arn>arn:aws:sts::0123456:user</Arn>'
             '      <AssumedRoleId>AKID:mysession-1567020004</AssumedRoleId>'
@@ -931,11 +927,11 @@ class TestSTSRegional(BaseAssumeRoleTest):
             '      <AccessKeyId>AccessKey</AccessKeyId>'
             '      <SecretAccessKey>SecretKey</SecretAccessKey>'
             '      <SessionToken>SessionToken</SessionToken>'
-            '      <Expiration>{expiration}</Expiration>'
+            f'      <Expiration>{expiration}</Expiration>'
             '    </Credentials>'
-            '  </{method_name}Result>'
-            '</{method_name}Response>'
-        ).format(method_name=method_name, expiration=expiration)
+            f'  </{method_name}Result>'
+            f'</{method_name}Response>'
+        )
         return body.encode('utf-8')
 
     def make_stubbed_client_call_to_region(self, session, stubber, region):
