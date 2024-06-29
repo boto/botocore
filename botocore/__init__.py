@@ -13,7 +13,6 @@
 # language governing permissions and limitations under the License.
 
 import logging
-import os
 import re
 
 __version__ = '1.34.136'
@@ -60,8 +59,6 @@ _xform_cache = {
 # common mis-translation can be fixed without having to call out each
 # individual case.
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
-
-BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 # Used to specify anonymous (unsigned) request signature

@@ -104,7 +104,8 @@ which don't represent the actual service api.
 import logging
 import os
 
-from botocore import BOTOCORE_ROOT
+import pkg_resources
+
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
@@ -233,7 +234,7 @@ class Loader:
 
     FILE_LOADER_CLASS = JSONFileLoader
     # The included models in botocore/data/ that we ship with botocore.
-    BUILTIN_DATA_PATH = os.path.join(BOTOCORE_ROOT, 'data')
+    BUILTIN_DATA_PATH = pkg_resources.resource_filename('botocore', 'data')
     # For convenience we automatically add ~/.aws/models to the data path.
     CUSTOMER_DATA_PATH = os.path.join(
         os.path.expanduser('~'), '.aws', 'models'
