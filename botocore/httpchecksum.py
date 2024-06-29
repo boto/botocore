@@ -64,7 +64,7 @@ class BaseChecksum:
         fileobj.seek(start_position)
 
     def handle(self, body):
-        if isinstance(body, (bytes, bytearray)):
+        if isinstance(body, (bytes, bytearray, memoryview)):
             self.update(body)
         else:
             self._handle_fileobj(body)
