@@ -20,7 +20,6 @@ go to any `endpoint-rule-set.json` file in /botocore/data/<service>/<api version
 or you can look at the test files in /tests/unit/data/endpoints/valid-rules/
 """
 
-
 import logging
 import re
 from enum import Enum

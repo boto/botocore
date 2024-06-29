@@ -285,10 +285,7 @@ def test_s3transfer_user_agent(patched_session):
 
 def test_chalice_user_agent(patched_session):
     # emulate behavior from chalice's cli.factory._add_chalice_user_agent
-    suffix = '{}/{}'.format(
-        patched_session.user_agent_name,
-        patched_session.user_agent_version,
-    )
+    suffix = f'{patched_session.user_agent_name}/{patched_session.user_agent_version}'
     patched_session.user_agent_name = 'aws-chalice'
     patched_session.user_agent_version = '0.1.2'
     patched_session.user_agent_extra = suffix

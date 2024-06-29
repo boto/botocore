@@ -432,12 +432,12 @@ class SigV4Auth(BaseSigner):
         self._inject_signature_to_request(request, signature)
 
     def _inject_signature_to_request(self, request, signature):
-        auth_str = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
+        auth_str = [f'AWS4-HMAC-SHA256 Credential={self.scope(request)}']
         headers_to_sign = self.headers_to_sign(request)
         auth_str.append(
             f"SignedHeaders={self.signed_headers(headers_to_sign)}"
         )
-        auth_str.append('Signature=%s' % signature)
+        auth_str.append(f'Signature={signature}')
         request.headers['Authorization'] = ', '.join(auth_str)
         return request
 
@@ -685,7 +685,7 @@ class S3ExpressQueryAuth(S3ExpressAuth):
         # Rather than calculating an "Authorization" header, for the query
         # param quth, we just append an 'X-Amz-Signature' param to the end
         # of the query string.
-        request.url += '&X-Amz-Signature=%s' % signature
+        request.url += f'&X-Amz-Signature={signature}'
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
@@ -777,7 +777,7 @@ class SigV4QueryAuth(SigV4Auth):
         # Rather than calculating an "Authorization" header, for the query
         # param quth, we just append an 'X-Amz-Signature' param to the end
         # of the query string.
-        request.url += '&X-Amz-Signature=%s' % signature
+        request.url += f'&X-Amz-Signature={signature}'
 
 
 class S3SigV4QueryAuth(SigV4QueryAuth):
@@ -990,7 +990,7 @@ class HmacV1Auth(BaseSigner):
         string_to_sign = self.canonical_string(
             method, split, headers, auth_path=auth_path
         )
-        logger.debug('StringToSign:\n%s', string_to_sign)
+        logger.debug(f'StringToSign:\n{string_to_sign}')
         return self.sign_string(string_to_sign)
 
     def add_auth(self, request):
@@ -998,7 +998,7 @@ class HmacV1Auth(BaseSigner):
             raise NoCredentialsError
         logger.debug("Calculating signature using hmacv1 auth.")
         split = urlsplit(request.url)
-        logger.debug('HTTP request method: %s', request.method)
+        logger.debug(f'HTTP request method: {request.method}')
         signature = self.get_signature(
             request.method, split, request.headers, auth_path=request.auth_path
         )

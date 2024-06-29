@@ -22,6 +22,7 @@ placed in ./aws4_testsuite, and we're using those to dynamically
 generate testcases based on these files.
 
 """
+
 import datetime
 import io
 import logging
@@ -164,9 +165,9 @@ def _test_signature_version_4(test_case):
 
 def assert_equal(actual, expected, raw_request, part):
     if actual != expected:
-        message = "The %s did not match" % part
+        message = f"The {part} did not match"
         message += f"\nACTUAL:{actual!r} !=\nEXPECT:{expected!r}"
-        message += '\nThe raw request was:\n%s' % raw_request
+        message += f'\nThe raw request was:\n{raw_request}'
         raise AssertionError(message)
 
 

@@ -11,6 +11,7 @@ spec.  This can happen for a number of reasons:
   may result in a a coverage gap that would otherwise be untested.
 
 """
+
 import base64
 import datetime
 import io
@@ -430,7 +431,7 @@ class TestInstanceCreation(unittest.TestCase):
         except ParamValidationError as e:
             self.fail(
                 "Shouldn't fail serializing valid parameter without "
-                "validation: {}".format(e)
+                f"validation: {e}"
             )
 
         try:
@@ -438,7 +439,7 @@ class TestInstanceCreation(unittest.TestCase):
         except ParamValidationError as e:
             self.fail(
                 "Shouldn't fail serializing invalid parameter without "
-                "validation: {}".format(e)
+                f"validation: {e}"
             )
 
     def test_instantiate_with_validation(self):
@@ -450,7 +451,7 @@ class TestInstanceCreation(unittest.TestCase):
         except ParamValidationError as e:
             self.fail(
                 "Shouldn't fail serializing invalid parameter without "
-                "validation: {}".format(e)
+                f"validation: {e}"
             )
 
         with self.assertRaises(ParamValidationError):

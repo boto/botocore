@@ -16,6 +16,7 @@ This module (and all function/classes within this module) should be
 considered internal, and *not* a public API.
 
 """
+
 import copy
 import logging
 import socket
@@ -460,7 +461,7 @@ class ClientArgsCreator:
 
     def _set_global_sts_endpoint(self, endpoint_config, is_secure):
         scheme = 'https' if is_secure else 'http'
-        endpoint_config['endpoint_url'] = '%s://sts.amazonaws.com' % scheme
+        endpoint_config['endpoint_url'] = f'{scheme}://sts.amazonaws.com'
         endpoint_config['signing_region'] = 'us-east-1'
 
     def _resolve_endpoint(

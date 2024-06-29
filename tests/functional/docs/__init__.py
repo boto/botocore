@@ -89,7 +89,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
     def get_parameter_document_block(self, param_name, contents):
         contents = contents.decode('utf-8')
-        start_param_document = '  :type %s:' % param_name
+        start_param_document = f'  :type {param_name}:'
         start_index = contents.find(start_param_document)
         self.assertNotEqual(start_index, -1, 'Param is not found in contents')
         contents = contents[start_index:]
@@ -126,7 +126,7 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
         # Ensure it is not in the example.
         self.assert_not_contains_line(
-            '%s=\'string\'' % param_name, method_contents
+            f'{param_name}=\'string\'', method_contents
         )
 
         # Ensure it is in the params.

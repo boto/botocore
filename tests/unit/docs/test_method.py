@@ -352,9 +352,9 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
     def test_streaming_body_in_output(self):
         self.add_shape_to_params('Body', 'Blob')
         self.json_model['shapes']['Blob'] = {'type': 'blob'}
-        self.json_model['shapes']['SampleOperationInputOutput'][
-            'payload'
-        ] = 'Body'
+        self.json_model['shapes']['SampleOperationInputOutput']['payload'] = (
+            'Body'
+        )
         document_model_driven_method(
             self.doc_structure,
             'foo',
@@ -367,9 +367,9 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
 
     def test_event_stream_body_in_output(self):
         self.add_shape_to_params('Payload', 'EventStream')
-        self.json_model['shapes']['SampleOperationInputOutput'][
-            'payload'
-        ] = 'Payload'
+        self.json_model['shapes']['SampleOperationInputOutput']['payload'] = (
+            'Payload'
+        )
         self.json_model['shapes']['EventStream'] = {
             'type': 'structure',
             'eventstream': True,
@@ -416,9 +416,9 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         del self.json_model['operations']['SampleOperation']['output']
         self.add_shape_to_params('Body', 'Blob')
         self.json_model['shapes']['Blob'] = {'type': 'blob'}
-        self.json_model['shapes']['SampleOperationInputOutput'][
-            'payload'
-        ] = 'Body'
+        self.json_model['shapes']['SampleOperationInputOutput']['payload'] = (
+            'Body'
+        )
         document_model_driven_method(
             self.doc_structure,
             'foo',
