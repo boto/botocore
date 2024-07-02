@@ -22,15 +22,19 @@ import botocore.auth
 import botocore.credentials
 from botocore.awsrequest import AWSRequest
 from botocore.compat import HTTPHeaders, parse_qs, urlsplit
-from tests import mock, unittest
+from tests import mock, unittest, now_patcher_factory
 
 
 class BaseTestWithFixedDate(unittest.TestCase):
     def setUp(self):
-        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
+        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0).replace(
+            tzinfo=datetime.timezone.utc
+        )
         self.datetime_patch = mock.patch('botocore.auth.datetime.datetime')
         self.datetime_mock = self.datetime_patch.start()
-        self.datetime_mock.utcnow.return_value = self.fixed_date
+        self.datetime_mock.now.side_effect = now_patcher_factory(
+            self.fixed_date
+        )
         self.datetime_mock.strptime.return_value = self.fixed_date
 
     def tearDown(self):
@@ -521,9 +525,11 @@ class TestSigV4(unittest.TestCase):
             'datetime',
             mock.Mock(wraps=datetime.datetime),
         ) as mock_datetime:
-            original_utcnow = datetime.datetime(2014, 1, 1, 0, 0)
-
-            mock_datetime.utcnow.return_value = original_utcnow
+            mock_datetime.now.side_effect = now_patcher_factory(
+                datetime.datetime(2014, 1, 1, 0, 0).replace(
+                    tzinfo=datetime.timezone.utc
+                )
+            )
             # Go through the add_auth process once. This will attach
             # a timestamp to the request at the beginning of auth.
             auth.add_auth(request)
@@ -531,8 +537,10 @@ class TestSigV4(unittest.TestCase):
             # Ensure the date is in the Authorization header
             self.assertIn('20140101', request.headers['Authorization'])
             # Now suppose the utc time becomes the next day all of a sudden
-            mock_datetime.utcnow.return_value = datetime.datetime(
-                2014, 1, 2, 0, 0
+            mock_datetime.now.side_effect = now_patcher_factory(
+                datetime.datetime(2014, 1, 2, 0, 0).replace(
+                    tzinfo=datetime.timezone.utc
+                )
             )
             # Smaller methods like the canonical request and string_to_sign
             # should  have the timestamp attached to the request in their
@@ -798,8 +806,8 @@ class TestSigV4Presign(BasePresignTest):
             mock.Mock(wraps=datetime.datetime),
         )
         mocked_datetime = self.datetime_patcher.start()
-        mocked_datetime.utcnow.return_value = datetime.datetime(
-            2014, 1, 1, 0, 0
+        mocked_datetime.now.side_effect = now_patcher_factory(
+            datetime.datetime(2014, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
         )
 
     def tearDown(self):
@@ -986,9 +994,9 @@ class TestSigV4Presign(BasePresignTest):
         request = AWSRequest()
         request.method = 'GET'
         request.url = 'https://myservice.us-east-1.amazonaws.com/'
-        request.headers[
-            'Content-Type'
-        ] = 'application/x-www-form-urlencoded; charset=utf-8'
+        request.headers['Content-Type'] = (
+            'application/x-www-form-urlencoded; charset=utf-8'
+        )
         self.auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
         signed_headers = query_string.get('X-Amz-SignedHeaders')
@@ -1102,8 +1110,8 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
             mock.Mock(wraps=datetime.datetime),
         )
         mocked_datetime = self.datetime_patcher.start()
-        mocked_datetime.utcnow.return_value = datetime.datetime(
-            2014, 1, 1, 0, 0
+        mocked_datetime.now.side_effect = now_patcher_factory(
+            datetime.datetime(2014, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
         )
 
     def tearDown(self):
