@@ -37,11 +37,11 @@ failed test.
 To run tests from only a single file, you can set the
 BOTOCORE_TEST env var::
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json pytest tests/unit/test_protocols.py
+    BOTOCORE_TEST=tests/unit/protocols/input/json.json pytest tests/unit/test_protocols.py
 
 To run a single test suite you can set the BOTOCORE_TEST_ID env var:
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json BOTOCORE_TEST_ID=5 \
+    BOTOCORE_TEST=tests/unit/protocols/input/json.json BOTOCORE_TEST_ID=5 \
         pytest tests/unit/test_protocols.py
 
 To run a single test case in a suite (useful when debugging a single test), you
@@ -462,7 +462,7 @@ def _get_suite_test_id():
         if len(split) == 2:
             suite_id, test_id = int(split[0]), int(split[1])
         else:
-            suite_id = int(split([0]))
+            suite_id = int(split[0])
     except TypeError:
         # Same exception, just give a better error message.
         raise TypeError(
