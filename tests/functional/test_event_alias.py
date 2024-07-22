@@ -248,7 +248,6 @@ SERVICES = {
         "service_id": "marketplace-metering",
     },
     "mgh": {"endpoint_prefix": "mgh", "service_id": "migration-hub"},
-    "mobile": {"endpoint_prefix": "mobile", "service_id": "mobile"},
     "mq": {"endpoint_prefix": "mq", "service_id": "mq"},
     "mturk": {"endpoint_prefix": "mturk-requester", "service_id": "mturk"},
     "neptune": {"service_id": "neptune"},
