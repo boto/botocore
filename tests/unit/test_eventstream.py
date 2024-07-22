@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-"""Unit tests for the binary event stream decoder. """
+"""Unit tests for the binary event stream decoder."""
+
 import pytest
 
 from botocore.eventstream import (
@@ -214,7 +215,7 @@ POSITIVE_CASES = [
 
 CORRUPTED_HEADER_LENGTH = (
     (
-        b"\x00\x00\x00=\xFF\x00\x01\x02\x07\xfd\x83\x96\x0ccontent-type\x07\x00"
+        b"\x00\x00\x00=\xff\x00\x01\x02\x07\xfd\x83\x96\x0ccontent-type\x07\x00"
         b"\x10application/json{'foo':'bar'}\x8d\x9c\x08\xb1"
     ),
     InvalidHeadersLength,
@@ -375,37 +376,37 @@ def test_message_to_response_dict_error():
 
 
 def test_unpack_uint8():
-    (value, bytes_consumed) = DecodeUtils.unpack_uint8(b'\xDE')
+    (value, bytes_consumed) = DecodeUtils.unpack_uint8(b'\xde')
     assert bytes_consumed == 1
     assert value == 0xDE
 
 
 def test_unpack_uint32():
-    (value, bytes_consumed) = DecodeUtils.unpack_uint32(b'\xDE\xAD\xBE\xEF')
+    (value, bytes_consumed) = DecodeUtils.unpack_uint32(b'\xde\xad\xbe\xef')
     assert bytes_consumed == 4
     assert value == 0xDEADBEEF
 
 
 def test_unpack_int8():
-    (value, bytes_consumed) = DecodeUtils.unpack_int8(b'\xFE')
+    (value, bytes_consumed) = DecodeUtils.unpack_int8(b'\xfe')
     assert bytes_consumed == 1
     assert value == -2
 
 
 def test_unpack_int16():
-    (value, bytes_consumed) = DecodeUtils.unpack_int16(b'\xFF\xFE')
+    (value, bytes_consumed) = DecodeUtils.unpack_int16(b'\xff\xfe')
     assert bytes_consumed == 2
     assert value == -2
 
 
 def test_unpack_int32():
-    (value, bytes_consumed) = DecodeUtils.unpack_int32(b'\xFF\xFF\xFF\xFE')
+    (value, bytes_consumed) = DecodeUtils.unpack_int32(b'\xff\xff\xff\xfe')
     assert bytes_consumed == 4
     assert value == -2
 
 
 def test_unpack_int64():
-    test_bytes = b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE'
+    test_bytes = b'\xff\xff\xff\xff\xff\xff\xff\xfe'
     (value, bytes_consumed) = DecodeUtils.unpack_int64(test_bytes)
     assert bytes_consumed == 8
     assert value == -2
