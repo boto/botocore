@@ -128,9 +128,7 @@ class Endpoint:
                 ]
             )
             service_id = operation_model.service_model.service_id.hyphenize()
-            event_name = 'request-created.{service_id}.{op_name}'.format(
-                service_id=service_id, op_name=operation_model.name
-            )
+            event_name = f'request-created.{service_id}.{operation_model.name}'
             self._event_emitter.emit(
                 event_name,
                 request=request,
@@ -224,9 +222,9 @@ class Endpoint:
         ):
             # We want to share num retries, not num attempts.
             total_retries = attempts - 1
-            success_response[1]['ResponseMetadata'][
-                'RetryAttempts'
-            ] = total_retries
+            success_response[1]['ResponseMetadata']['RetryAttempts'] = (
+                total_retries
+            )
         if exception is not None:
             raise exception
         else:
@@ -298,9 +296,9 @@ class Endpoint:
         )
 
         http_response_record_dict = response_dict.copy()
-        http_response_record_dict[
-            'streaming'
-        ] = operation_model.has_streaming_output
+        http_response_record_dict['streaming'] = (
+            operation_model.has_streaming_output
+        )
         history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
 
         protocol = operation_model.metadata['protocol']
@@ -399,7 +397,7 @@ class EndpointCreator:
         if not is_valid_endpoint_url(
             endpoint_url
         ) and not is_valid_ipv6_endpoint_url(endpoint_url):
-            raise ValueError("Invalid endpoint: %s" % endpoint_url)
+            raise ValueError(f"Invalid endpoint: {endpoint_url}")
 
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)

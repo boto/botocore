@@ -251,8 +251,7 @@ def generate_idempotent_uuid(params, model, **kwargs):
         if name not in params:
             params[name] = str(uuid.uuid4())
             logger.debug(
-                "injecting idempotency token (%s) into param '%s'."
-                % (params[name], name)
+                f"injecting idempotency token ({params[name]}) into param '{name}'."
             )
 
 
@@ -454,7 +453,7 @@ def _quote_source_header_from_dict(source_dict):
         )
     final = percent_encode(final, safe=SAFE_CHARS + '/')
     if version_id is not None:
-        final += '?versionId=%s' % version_id
+        final += f'?versionId={version_id}'
     return final
 
 
@@ -632,8 +631,8 @@ def validate_ascii_metadata(params, **kwargs):
         except UnicodeEncodeError:
             error_msg = (
                 'Non ascii characters found in S3 metadata '
-                'for key "%s", value: "%s".  \nS3 metadata can only '
-                'contain ASCII characters. ' % (key, value)
+                f'for key "{key}", value: "{value}".  \nS3 metadata can only '
+                'contain ASCII characters. '
             )
             raise ParamValidationError(report=error_msg)
 
@@ -761,10 +760,10 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
         openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
         if openssl_version_tuple < (1, 0, 1):
             warnings.warn(
-                'Currently installed openssl version: %s does not '
+                f'Currently installed openssl version: {ssl.OPENSSL_VERSION} does not '
                 'support TLS 1.2, which is required for use of iot-data. '
                 'Please use python installed with openssl version 1.0.1 or '
-                'higher.' % (ssl.OPENSSL_VERSION),
+                'higher.',
                 UnsupportedTLSVersionWarning,
             )
     # We cannot check the openssl version on python2.6, so we should just

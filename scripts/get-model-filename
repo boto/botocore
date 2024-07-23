@@ -21,6 +21,7 @@ will be created if it does not exist.
   Copied: /tmp/myfile.json -> /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.normal.json
 
 """
+
 import json
 
 # Note we're using optparse for 2.6 compat.
@@ -127,12 +128,14 @@ class TestDeterminePath(unittest.TestCase):
         )
 
         # The special casing of elasticloadbalancing -> elb.
-        self.given_metadata(
-            {
-                'apiVersion': '2015-01-01',
-                'endpointPrefix': 'elasticloadbalancing',
-            }
-        ),
+        (
+            self.given_metadata(
+                {
+                    'apiVersion': '2015-01-01',
+                    'endpointPrefix': 'elasticloadbalancing',
+                }
+            ),
+        )
         self.assert_filename_is('botocore/data/aws/elb/2015-01-01.normal.json')
 
 

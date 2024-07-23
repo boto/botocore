@@ -381,7 +381,7 @@ def _assert_handler_called(client_name, event_part):
         hook_calls.append(kwargs['event_name'])
 
     session = _get_session()
-    session.register('creating-client-class.%s' % event_part, _hook)
+    session.register(f'creating-client-class.{event_part}', _hook)
     session.create_client(client_name)
     assert len(hook_calls) == 1
 

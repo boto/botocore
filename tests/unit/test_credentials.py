@@ -2111,9 +2111,9 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             },
         }
         cache = {}
-        self.fake_config['profiles']['development'][
-            'role_arn'
-        ] = 'arn:aws:iam::foo-role'
+        self.fake_config['profiles']['development']['role_arn'] = (
+            'arn:aws:iam::foo-role'
+        )
 
         client_creator = self.create_client_creator(with_response=response)
         provider = credentials.AssumeRoleProvider(
@@ -2140,12 +2140,12 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             },
         }
         cache = {}
-        self.fake_config['profiles']['development'][
-            'role_arn'
-        ] = 'arn:aws:iam::foo-role'
-        self.fake_config['profiles']['development'][
-            'role_session_name'
-        ] = 'foo_role_session_name'
+        self.fake_config['profiles']['development']['role_arn'] = (
+            'arn:aws:iam::foo-role'
+        )
+        self.fake_config['profiles']['development']['role_session_name'] = (
+            'foo_role_session_name'
+        )
 
         client_creator = self.create_client_creator(with_response=response)
         provider = credentials.AssumeRoleProvider(
@@ -2277,9 +2277,9 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         )
 
     def test_assume_role_with_bad_duration(self):
-        self.fake_config['profiles']['development'][
-            'duration_seconds'
-        ] = 'garbage value'
+        self.fake_config['profiles']['development']['duration_seconds'] = (
+            'garbage value'
+        )
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
@@ -2780,9 +2780,9 @@ class ProfileProvider:
 
     def load(self):
         return Credentials(
-            '%s-access-key' % self._profile_name,
-            '%s-secret-key' % self._profile_name,
-            '%s-token' % self._profile_name,
+            f'{self._profile_name}-access-key',
+            f'{self._profile_name}-secret-key',
+            f'{self._profile_name}-token',
             self.METHOD,
         )
 
