@@ -54,7 +54,6 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 import copy
 import os
 from base64 import b64decode
-from calendar import timegm
 from enum import Enum
 
 import pytest
@@ -181,7 +180,7 @@ class MockRawResponse:
 )
 def test_output_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
-    operation_name = case.get('name', 'OperationName')
+    operation_name = case.get('given', {}).get('name', 'OperationName')
     service_description['operations'] = {
         operation_name: case,
     }
@@ -194,11 +193,17 @@ def test_output_compliance(json_description, case, basename):
         )
         # We load the json as utf-8, but the response parser is at the
         # botocore boundary, so it expects to work with bytes.
-        body_bytes = case['response']['body'].encode('utf-8')
-        case['response']['body'] = body_bytes
+        # If a test case doesn't define a response body, set it to `None`.
+        if 'body' in case['response']:
+            body_bytes = case['response']['body'].encode('utf-8')
+            case['response']['body'] = body_bytes
+        else:
+            case['response']['body'] = None
         # We need the headers to be case insensitive
-        headers = HeadersDict(case['response']['headers'])
-        case['response']['headers'] = headers
+        # If a test case doesn't define response headers, set it to an empty `HeadersDict`.
+        case['response']['headers'] = HeadersDict(
+            case['response'].get('headers', {})
+        )
         # If this is an event stream fake the raw streamed response
         if operation_model.has_event_stream_output:
             case['response']['body'] = MockRawResponse(body_bytes)
@@ -206,7 +211,8 @@ def test_output_compliance(json_description, case, basename):
             output_shape = operation_model.output_shape
             parsed = parser.parse(case['response'], output_shape)
             try:
-                error_shape = model.shape_for(parsed['Error']['Code'])
+                error_code = parsed.get("Error", {}).get("Code")
+                error_shape = model.shape_for_error_code(error_code)
             except NoShapeFoundError:
                 error_shape = None
             if error_shape is not None:
@@ -279,24 +285,47 @@ def _fixup_parsed_result(parsed):
         for key in error_keys:
             if key not in ['Code', 'Message']:
                 del parsed['Error'][key]
+    # 5. Special float types. In the protocol test suite, certain special float
+    # types are represented as strings: "Infinity", "-Infinity", and "NaN".
+    # However, we parse these values as actual floats types, so we need to convert
+    # them back to their string representation.
+    parsed = _convert_special_floats_to_string(parsed)
     return parsed
 
 
-def _convert_bytes_to_str(parsed):
-    if isinstance(parsed, dict):
-        new_dict = {}
-        for key, value in parsed.items():
-            new_dict[key] = _convert_bytes_to_str(value)
-        return new_dict
-    elif isinstance(parsed, bytes):
-        return parsed.decode('utf-8')
-    elif isinstance(parsed, list):
-        new_list = []
-        for item in parsed:
-            new_list.append(_convert_bytes_to_str(item))
-        return new_list
+def _convert(obj, conversion_funcs):
+    if isinstance(obj, dict):
+        return {k: _convert(v, conversion_funcs) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert(item, conversion_funcs) for item in obj]
     else:
-        return parsed
+        for conv_type, conv_func in conversion_funcs:
+            if isinstance(obj, conv_type):
+                return conv_func(obj)
+    return obj
+
+
+def _bytes_to_str(value):
+    if isinstance(value, bytes):
+        return value.decode('utf-8')
+    return value
+
+
+def _convert_bytes_to_str(parsed):
+    return _convert(parsed, [(bytes, _bytes_to_str)])
+
+
+def _special_floats_to_str(value):
+    if isinstance(value, float):
+        if value in [float('Infinity'), float('-Infinity')] or math.isnan(
+            value
+        ):
+            return json.dumps(value)
+    return value
+
+
+def _convert_special_floats_to_string(parsed):
+    return _convert(parsed, [(float, _special_floats_to_str)])
 
 
 def _compliance_timestamp_parser(value):
@@ -304,7 +333,7 @@ def _compliance_timestamp_parser(value):
     # Convert from our time zone to UTC
     datetime = datetime.astimezone(tzutc())
     # Convert to epoch.
-    return int(timegm(datetime.timetuple()))
+    return datetime.timestamp()
 
 
 def _output_failure_message(
