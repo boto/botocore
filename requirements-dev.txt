@@ -2,7 +2,8 @@ wheel==0.43.0
 behave==1.2.5
 jsonschema==4.21.1
 coverage==7.2.7
-setuptools==67.8.0;python_version>="3.12"
+setuptools==71.1.0;python_version>="3.12"
+packaging==24.1;python_version>="3.12"  # Requirement for setuptools>=71
 
 # Pytest specific deps
 pytest==8.1.1
