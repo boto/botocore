@@ -52,7 +52,9 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 """
 
 import copy
+import math
 import os
+import xml.etree.ElementTree as ET
 from base64 import b64decode
 from enum import Enum
 
@@ -97,7 +99,9 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
+PROTOCOL_TEST_BLACKLIST = [
+    "Test cases for QueryIdempotencyTokenAutoFill operation",
+]
 
 
 class TestType(Enum):
@@ -129,7 +133,7 @@ def _compliance_tests(test_type=None):
 def test_input_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
     service_description['operations'] = {
-        case.get('name', 'OperationName'): case,
+        case.get('given', {}).get('name', 'OperationName'): case,
     }
     model = ServiceModel(service_description)
     protocol_type = model.metadata['protocol']
@@ -145,7 +149,7 @@ def test_input_compliance(json_description, case, basename):
     client_endpoint = service_description.get('clientEndpoint')
     try:
         _assert_request_body_is_bytes(request['body'])
-        _assert_requests_equal(request, case['serialized'])
+        _assert_requests_equal(request, case['serialized'], protocol_type)
         _assert_endpoints_equal(request, case['serialized'], client_endpoint)
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
@@ -423,11 +427,32 @@ def _serialize_request_description(request_dict):
                 request_dict['url_path'] += f'&{encoded}'
 
 
-def _assert_requests_equal(actual, expected):
-    assert_equal(
-        actual['body'], expected.get('body', '').encode('utf-8'), 'Body value'
-    )
+def _assert_requests_equal(actual, expected, protocol_type):
+    expected_body = expected.get('body', '').encode('utf-8')
+    actual_body = actual['body']
+    # The expected bodies in our consumed protocol tests have extra
+    # whitespace and newlines that need to handled. We need to normalize
+    # the expected and actual response bodies before evaluating equivalence.
+    try:
+        if protocol_type in ['json', 'rest-json']:
+            assert_equal(
+                json.loads(actual_body),
+                json.loads(expected_body),
+                'Body value',
+            )
+        elif protocol_type in ['rest-xml']:
+            tree1 = ET.canonicalize(actual_body, strip_text=True)
+            tree2 = ET.canonicalize(expected_body, strip_text=True)
+            assert_equal(tree1, tree2, 'Body value')
+        else:
+            assert_equal(actual_body, expected_body, 'Body value')
+    except (json.JSONDecodeError, ET.ParseError):
+        assert_equal(actual_body, expected_body, 'Body value')
+
     actual_headers = HeadersDict(actual['headers'])
+    if protocol_type in ['query', 'ec2']:
+        if expected.get('headers', {}).get('Content-Type'):
+            expected['headers']['Content-Type'] += '; charset=utf-8'
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
     _assert_expected_headers_in_request(
@@ -460,7 +485,7 @@ def _walk_files():
 
 
 def _load_cases(full_path):
-    # During developement, you can set the BOTOCORE_TEST_ID
+    # During development, you can set the BOTOCORE_TEST_ID
     # to run a specific test suite or even a specific test case.
     # The format is BOTOCORE_TEST_ID=suite_id:test_id or
     # BOTOCORE_TEST_ID=suite_id
