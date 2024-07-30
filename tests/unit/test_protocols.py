@@ -100,7 +100,10 @@ PROTOCOL_PARSERS = {
     'rest-xml': RestXMLParser,
 }
 PROTOCOL_TEST_BLACKLIST = [
+    # These cases test functionality outside the serializers and parsers.
     "Test cases for QueryIdempotencyTokenAutoFill operation",
+    "Test cases for PutWithContentEncoding operation",
+    "Test cases for HttpChecksumRequired operation",
 ]
 
 
