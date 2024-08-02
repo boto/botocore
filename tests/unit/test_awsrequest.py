@@ -222,6 +222,13 @@ class TestAWSRequest(unittest.TestCase):
         # assert the request body doesn't change after reset_stream is called
         self.assertEqual(self.prepared_request.body, contents)
 
+    def test_can_reset_stream_handles_memoryview(self):
+        contents = memoryview(b'notastream')
+        self.prepared_request.body = contents
+        self.prepared_request.reset_stream()
+        # assert the request body doesn't change after reset_stream is called
+        self.assertEqual(self.prepared_request.body, contents)
+
     def test_can_reset_stream(self):
         contents = b'foobarbaz'
         with open(self.filename, 'wb') as f:
