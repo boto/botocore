@@ -17,7 +17,7 @@ import re
 import pytest
 
 import botocore.session
-from botocore import UNSIGNED
+from botocore import UNSIGNED, xform_name
 from botocore.compat import get_md5, parse_qs, urlsplit
 from botocore.config import Config
 from botocore.exceptions import (
@@ -1338,6 +1338,41 @@ class TestS3PutObject(BaseS3OperationTest):
                 response["ResponseMetadata"]["HTTPStatusCode"], 200
             )
             self.assertEqual(len(http_stubber.requests), 2)
+
+
+class TestS3ExpiresHeader(BaseS3OperationTest):
+    # Test that operations which model the Expires header
+    # always return the value in a top-level header.
+    def get_operations_with_expires(self):
+        s3 = self.session.create_client("s3")
+        service_model = s3.meta.service_model
+        operations_with_expires = []
+        operations = service_model.operation_names
+        for operation in operations:
+            operation_model = service_model.operation_model(operation)
+            output_shape = operation_model.output_shape
+            if output_shape and 'Expires' in output_shape.members:
+                operations_with_expires.append(operation)
+        return operations_with_expires
+
+    def test_expires_header_is_top_level(self):
+        operations_with_expires = self.get_operations_with_expires()
+        expected_expires_header = "Thu, 01 Jan 1970 00:00:00 GMT"
+        for operation in operations_with_expires:
+            mock_headers = {'expires': expected_expires_header}
+            s3 = self.session.create_client("s3")
+            with ClientHTTPStubber(s3) as http_stubber:
+                http_stubber.add_response(
+                    headers=mock_headers
+                )
+                try:
+                    response = getattr(s3, xform_name(operation))(Bucket="mybucket", Key="mykey")
+                except ClientError as e:
+                    self.fail(f"Operation {operation} failed with error: {e}")
+                headers = response['ResponseMetadata']['HTTPHeaders']
+                self.assertIn('expires', headers, "Expires header is not present at the top level.")
+                self.assertEqual(headers['expires'], expected_expires_header)
+                self.assertEqual(len(http_stubber.requests), 1)
 
 
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
