@@ -1362,15 +1362,19 @@ class TestS3ExpiresHeader(BaseS3OperationTest):
             mock_headers = {'expires': expected_expires_header}
             s3 = self.session.create_client("s3")
             with ClientHTTPStubber(s3) as http_stubber:
-                http_stubber.add_response(
-                    headers=mock_headers
-                )
+                http_stubber.add_response(headers=mock_headers)
                 try:
-                    response = getattr(s3, xform_name(operation))(Bucket="mybucket", Key="mykey")
+                    response = getattr(s3, xform_name(operation))(
+                        Bucket="mybucket", Key="mykey"
+                    )
                 except ClientError as e:
                     self.fail(f"Operation {operation} failed with error: {e}")
                 headers = response['ResponseMetadata']['HTTPHeaders']
-                self.assertIn('expires', headers, "Expires header is not present at the top level.")
+                self.assertIn(
+                    'expires',
+                    headers,
+                    "Expires header is not present at the top level.",
+                )
                 self.assertEqual(headers['expires'], expected_expires_header)
                 self.assertEqual(len(http_stubber.requests), 1)
 

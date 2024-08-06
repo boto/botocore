@@ -622,8 +622,8 @@ def customize_s3_expires_shape(service_model, **kwargs):
                     'type': 'string',
                     'documentation': '<p>Please use this member instead of ``Expires``.</p>',
                     'location': 'header',
-                    'locationName': 'Expires'
-                }
+                    'locationName': 'Expires',
+                },
             )
 
 
@@ -650,8 +650,10 @@ def document_s3_expires_shape(section, event_name, **kwargs):
         type_section.clear_text()
         type_section.write('(*datetime*) --')
         doc_section = param_section.get_section('param-documentation')
-        doc_section.write('*This member has been deprecated*. Please use ``ExpiresString`` which '
-                          'contains the raw, unparsed value of this field instead.')
+        doc_section.write(
+            '*This member has been deprecated*. Please use ``ExpiresString`` which '
+            'contains the raw, unparsed value of this field instead.'
+        )
 
 
 def base64_encode_user_data(params, **kwargs):

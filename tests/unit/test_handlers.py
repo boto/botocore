@@ -16,8 +16,10 @@ import copy
 import io
 import json
 import os
+from datetime import datetime
 
 import pytest
+from dateutil.tz import tzutc
 
 import botocore
 import botocore.session
@@ -39,12 +41,11 @@ from botocore.model import (
     DenormalizedStructureBuilder,
     OperationModel,
     ServiceId,
-    ServiceModel, StringShape,
+    ServiceModel,
+    StringShape,
 )
 from botocore.signers import RequestSigner
 from botocore.utils import conditionally_calculate_md5
-from datetime import datetime
-from dateutil.tz import tzutc
 from tests import BaseSessionTest, mock, unittest
 
 
@@ -1078,9 +1079,7 @@ class TestHandlers(BaseSessionTest):
     def test_parse_s3_expires_timestamp_response_valid(self):
         parsed = {
             'ResponseMetadata': {
-                'HTTPHeaders': {
-                    'expires': 'Thu, 01 Jan 1970 00:00:00 GMT'
-                }
+                'HTTPHeaders': {'expires': 'Thu, 01 Jan 1970 00:00:00 GMT'}
             }
         }
         model = mock.Mock()
@@ -1088,15 +1087,13 @@ class TestHandlers(BaseSessionTest):
         model.output_shape.members = {'Expires': mock.Mock()}
         handlers.parse_s3_expires_timestamp_response(parsed, model)
         self.assertIsInstance(parsed['Expires'], datetime)
-        self.assertEqual(parsed['Expires'], datetime(1970, 1, 1, 0, 0, tzinfo=tzutc()))
+        self.assertEqual(
+            parsed['Expires'], datetime(1970, 1, 1, 0, 0, tzinfo=tzutc())
+        )
 
     def test_parse_s3_expires_timestamp_response_invalid(self):
         parsed = {
-            'ResponseMetadata': {
-                'HTTPHeaders': {
-                    'expires': 'invalid-date'
-                }
-            }
+            'ResponseMetadata': {'HTTPHeaders': {'expires': 'invalid-date'}}
         }
         model = mock.Mock()
         model.output_shape = mock.Mock()
@@ -1117,15 +1114,17 @@ class TestHandlers(BaseSessionTest):
         handlers.customize_s3_expires_shape(service_model)
         self.assertEqual(output_shape.members['Expires'].type_name, 'string')
         self.assertIn('ExpiresString', output_shape.members)
-        self.assertIsInstance(output_shape.members['ExpiresString'], StringShape)
+        self.assertIsInstance(
+            output_shape.members['ExpiresString'], StringShape
+        )
         self.assertEqual(
             output_shape.members['ExpiresString']._shape_model,
             {
                 'type': 'string',
                 'documentation': '<p>Please use this member instead of ``Expires``.</p>',
                 'location': 'header',
-                'locationName': 'Expires'
-            }
+                'locationName': 'Expires',
+            },
         )
 
     def test_customize_s3_no_expires_shape(self):
@@ -1590,12 +1589,18 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
         self.param_section_mock = mock.Mock()
         self.type_section_mock = mock.Mock()
         self.doc_section_mock = mock.Mock()
-        self.response_example_event = 'docs.response-example.s3.TestOperation.complete-section'
-        self.response_params_event = 'docs.response-params.s3.TestOperation.complete-section'
+        self.response_example_event = (
+            'docs.response-example.s3.TestOperation.complete-section'
+        )
+        self.response_params_event = (
+            'docs.response-params.s3.TestOperation.complete-section'
+        )
 
     def test_response_example_structure_value_missing(self):
         self.section_mock.has_section.return_value = False
-        handlers.document_s3_expires_shape(self.section_mock, self.response_example_event)
+        handlers.document_s3_expires_shape(
+            self.section_mock, self.response_example_event
+        )
         self.section_mock.get_section.assert_not_called()
         self.parent_mock.get_section.assert_not_called()
         self.param_line_mock.get_section.assert_not_called()
@@ -1606,8 +1611,12 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
         self.section_mock.has_section.return_value = True
         self.section_mock.get_section.return_value = self.parent_mock
         self.parent_mock.has_section.return_value = False
-        handlers.document_s3_expires_shape(self.section_mock, self.response_example_event)
-        self.section_mock.get_section.assert_called_once_with('structure-value')
+        handlers.document_s3_expires_shape(
+            self.section_mock, self.response_example_event
+        )
+        self.section_mock.get_section.assert_called_once_with(
+            'structure-value'
+        )
         self.parent_mock.get_section.assert_not_called()
         self.param_line_mock.get_section.assert_not_called()
         self.value_portion_mock.clear_text.assert_not_called()
@@ -1619,16 +1628,26 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
         self.parent_mock.has_section.return_value = True
         self.parent_mock.get_section.return_value = self.param_line_mock
         self.param_line_mock.get_section.return_value = self.value_portion_mock
-        handlers.document_s3_expires_shape(self.section_mock, self.response_example_event)
-        self.section_mock.get_section.assert_called_once_with('structure-value')
+        handlers.document_s3_expires_shape(
+            self.section_mock, self.response_example_event
+        )
+        self.section_mock.get_section.assert_called_once_with(
+            'structure-value'
+        )
         self.parent_mock.get_section.assert_called_once_with('Expires')
-        self.param_line_mock.get_section.assert_called_once_with('member-value')
+        self.param_line_mock.get_section.assert_called_once_with(
+            'member-value'
+        )
         self.value_portion_mock.clear_text.assert_called_once()
-        self.value_portion_mock.write.assert_called_once_with('datetime(2015, 1, 1)')
+        self.value_portion_mock.write.assert_called_once_with(
+            'datetime(2015, 1, 1)'
+        )
 
     def test_response_params_expires_missing(self):
         self.section_mock.has_section.return_value = False
-        handlers.document_s3_expires_shape(self.section_mock, self.response_params_event)
+        handlers.document_s3_expires_shape(
+            self.section_mock, self.response_params_event
+        )
         self.section_mock.get_section.assert_not_called()
         self.param_line_mock.get_section.assert_not_called()
         self.value_portion_mock.clear_text.assert_not_called()
@@ -1639,9 +1658,11 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
         self.section_mock.get_section.return_value = self.param_section_mock
         self.param_section_mock.get_section.side_effect = {
             'param-type': self.type_section_mock,
-            'param-documentation': self.doc_section_mock
+            'param-documentation': self.doc_section_mock,
         }.get
-        handlers.document_s3_expires_shape(self.section_mock, self.response_params_event)
+        handlers.document_s3_expires_shape(
+            self.section_mock, self.response_params_event
+        )
         self.type_section_mock.clear_text.assert_called_once()
         self.type_section_mock.write.assert_called_once_with('(*datetime*) --')
         self.doc_section_mock.write.assert_called_once_with(
