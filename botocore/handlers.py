@@ -210,7 +210,11 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         if auth_type == 'v4a':
             # If sigv4a is chosen, we must add additional signing config for
             # global signature.
-            signing = {'region': '*', 'signing_name': signing_name}
+            region = _resolve_sigv4a_region(context)
+            signing = {
+                'region': region,
+                'signing_name': signing_name
+            }
             if 'signing' in context:
                 context['signing'].update(signing)
             else:
@@ -231,6 +235,14 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
 
         return signature_version
 
+
+def _resolve_sigv4a_region(context):
+    region = None
+    if 'client_config' in context:
+        region = context['client_config'].sigv4a_signing_region_set
+    if not region and context.get('signing', {}).get('region'):
+        region = context['signing']['region']
+    return region or '*'
 
 def decode_console_output(parsed, **kwargs):
     if 'Output' in parsed:

@@ -21,6 +21,7 @@ from botocore.exceptions import (
     UndefinedModelAttributeError,
 )
 from botocore.utils import CachedProperty, hyphenize_service_id, instance_cache
+from botocore.auth import resolve_auth_type
 
 NOT_SET = object()
 
@@ -624,8 +625,18 @@ class OperationModel:
         return self._operation_model.get('requestcompression')
 
     @CachedProperty
+    def auth(self):
+        return self._operation_model.get('auth')
+
+    @CachedProperty
     def auth_type(self):
+        if self.auth:
+            return resolve_auth_type(self.auth)
         return self._operation_model.get('authtype')
+
+    @CachedProperty
+    def unsigned_payload(self):
+        return self._operation_model.get('unsignedPayload')
 
     @CachedProperty
     def error_shapes(self):

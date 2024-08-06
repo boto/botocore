@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "signing",
+  "description": "Adds support for the new 'auth' trait on our models that will allow a priority list of auth types for a service or operation"
+}

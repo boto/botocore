@@ -35,7 +35,8 @@ from botocore.compat import (
     urlsplit,
     urlunsplit,
 )
-from botocore.exceptions import NoAuthTokenError, NoCredentialsError
+from botocore.exceptions import NoAuthTokenError, NoCredentialsError, UnknownSignatureVersionError
+
 from botocore.utils import (
     is_valid_ipv6_endpoint_url,
     normalize_url_path,
@@ -1160,3 +1161,23 @@ else:
             's3v4-query': S3SigV4QueryAuth,
         }
     )
+
+AUTH_TYPE_TO_SIGNATURE_VERSION = {
+    'aws.auth#sigv4': 'v4',
+    'aws.auth#sigv4a': 'v4a',
+    'smithy.api#httpBearerAuth': 'bearer',
+    'smithy.api#noAuth': 'none',
+}
+
+def resolve_auth_type(auth_trait):
+    for auth_type in auth_trait:
+        if auth_type == 'smithy.api#noAuth':
+            return 'none'
+        elif auth_type in AUTH_TYPE_TO_SIGNATURE_VERSION:
+            signature_version = AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
+            if signature_version in AUTH_TYPE_MAPS:
+                return signature_version
+        else:
+            raise UnknownSignatureVersionError(
+                signature_version=auth_type
+            )
