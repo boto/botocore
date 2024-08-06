@@ -14,17 +14,17 @@ import pytest
 
 from botocore.session import get_session
 
-
 # In the future, some services may have a list of credentials requirements where one signature may fail and others may
 # succeed, for instance a service may want to use bearer by default but fall back to sigv4 if a token isn't found.
 # There currently is not a way to do this in botocore, so we added this test to make sure that we handle this gracefully
 # when the need arises.
-AUTH_TYPE_REQUIREMENTS={
+AUTH_TYPE_REQUIREMENTS = {
     'aws.auth#sigv4': ['credentials'],
     'aws.auth#sigv4a': ['credentials'],
     'smithy.api#httpBearerAuth': ['bearer_token'],
     'smithy.api#noAuth': [],
 }
+
 
 def _all_test_cases():
     session = get_session()
@@ -48,12 +48,14 @@ def _all_test_cases():
 
 AUTH_SERVICES, AUTH_OPERATIONS = _all_test_cases()
 
+
 @pytest.mark.validates_models
 @pytest.mark.parametrize("auth_service, auth_config", AUTH_SERVICES)
 def test_all_requirements_match_for_service(auth_service, auth_config):
     # Validates that all service-level signature types have the same requirements
     message = f'Found mixed signer requirements for service: {auth_service}'
     assert_all_requirements_match(auth_config, message)
+
 
 @pytest.mark.validates_models
 @pytest.mark.parametrize("auth_service, operation_model", AUTH_OPERATIONS)
@@ -63,8 +65,12 @@ def test_all_requirements_match_for_operation(auth_service, operation_model):
     auth_config = operation_model.auth
     assert_all_requirements_match(auth_config, message)
 
+
 def assert_all_requirements_match(auth_config, message):
     if len(auth_config) > 1:
         first_auth = auth_config.pop()
         first_auth_reqs = AUTH_TYPE_REQUIREMENTS[first_auth]
-        assert all(first_auth_reqs == AUTH_TYPE_REQUIREMENTS[req] for req in auth_config), message
+        assert all(
+            first_auth_reqs == AUTH_TYPE_REQUIREMENTS[req]
+            for req in auth_config
+        ), message

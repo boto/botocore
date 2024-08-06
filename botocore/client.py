@@ -152,7 +152,9 @@ class ClientCreator:
         if auth:
             service_signature_version = resolve_auth_type(auth)
         else:
-            service_signature_version = service_model.metadata.get('signatureVersion')
+            service_signature_version = service_model.metadata.get(
+                'signatureVersion'
+            )
         endpoint_bridge = ClientEndpointBridge(
             self._endpoint_resolver,
             scoped_config,

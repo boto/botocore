@@ -211,10 +211,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
             # If sigv4a is chosen, we must add additional signing config for
             # global signature.
             region = _resolve_sigv4a_region(context)
-            signing = {
-                'region': region,
-                'signing_name': signing_name
-            }
+            signing = {'region': region, 'signing_name': signing_name}
             if 'signing' in context:
                 context['signing'].update(signing)
             else:
@@ -243,6 +240,7 @@ def _resolve_sigv4a_region(context):
     if not region and context.get('signing', {}).get('region'):
         region = context['signing']['region']
     return region or '*'
+
 
 def decode_console_output(parsed, **kwargs):
     if 'Output' in parsed:

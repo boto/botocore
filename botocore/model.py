@@ -15,13 +15,13 @@
 from collections import defaultdict
 from typing import NamedTuple, Union
 
+from botocore.auth import resolve_auth_type
 from botocore.compat import OrderedDict
 from botocore.exceptions import (
     MissingServiceIdError,
     UndefinedModelAttributeError,
 )
 from botocore.utils import CachedProperty, hyphenize_service_id, instance_cache
-from botocore.auth import resolve_auth_type
 
 NOT_SET = object()
 

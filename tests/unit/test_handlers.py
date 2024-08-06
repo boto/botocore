@@ -1087,12 +1087,15 @@ class TestHandlers(BaseSessionTest):
         signing_name = 'myservice'
         context = {
             'auth_type': 'v4a',
-            'client_config': Config(sigv4a_signing_region_set="region_1,region_2")
+            'client_config': Config(
+                sigv4a_signing_region_set="region_1,region_2"
+            ),
         }
         handlers.set_operation_specific_signer(
             context=context, signing_name=signing_name
         )
         self.assertEqual(context['signing']['region'], 'region_1,region_2')
+
 
 @pytest.mark.parametrize(
     'auth_type, expected_response', [('v4', 's3v4'), ('v4a', 's3v4a')]
