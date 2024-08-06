@@ -17,13 +17,11 @@ from botocore.auth import (
     BaseSigner,
     resolve_auth_type,
 )
-from botocore.exceptions import (
-    UnknownSignatureVersionError,
-)
+from botocore.exceptions import UnknownSignatureVersionError
 from tests import mock, unittest
 
-class TestAuthTraitResolution(unittest.TestCase):
 
+class TestAuthTraitResolution(unittest.TestCase):
     def test_auth_resolves_first_available(self):
         auth = ['aws.auth#foo', 'aws.auth#bar']
         bar_signer = mock.Mock(spec=BaseSigner)
