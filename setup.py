@@ -33,7 +33,7 @@ requires = [
 ]
 
 extras_require = {
-    'crt': ['awscrt==0.20.11'],
+    'crt': ['awscrt==0.21.2'],
 }
 
 setup(
