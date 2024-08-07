@@ -202,6 +202,7 @@ class ClientCreator:
             f'creating-client-class.{service_id}',
             class_attributes=class_attributes,
             base_classes=bases,
+            service_model=service_model,
         )
         class_name = get_service_module_name(service_model)
         cls = type(str(class_name), tuple(bases), class_attributes)
