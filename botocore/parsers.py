@@ -201,6 +201,10 @@ class ResponseParser:
 
     DEFAULT_ENCODING = 'utf-8'
     EVENT_STREAM_PARSER_CLS = None
+    # This is a list of known values for the "location" key in the
+    # serialization dict. The location key tells us where in the response
+    # to parse the value.
+    KNOWN_LOCATIONS = ['statusCode', 'header', 'headers']
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
@@ -363,7 +367,11 @@ class ResponseParser:
                 )
                 raise ResponseParserError(error_msg % shape.name)
             tag = self._get_first_key(cleaned_value)
-            if tag not in shape.members:
+            serialized_member_names = [
+                shape.members[member].serialization.get('name', member)
+                for member in shape.members
+            ]
+            if tag not in serialized_member_names:
                 msg = (
                     "Received a tagged union response with member "
                     "unknown to client: %s. Please upgrade SDK for full "
@@ -427,11 +435,13 @@ class BaseXMLResponseParser(ResponseParser):
             return self._handle_unknown_tagged_union_member(tag)
         for member_name in members:
             member_shape = members[member_name]
+            location = member_shape.serialization.get('location')
             if (
-                'location' in member_shape.serialization
+                location
+                and location in self.KNOWN_LOCATIONS
                 or member_shape.serialization.get('eventheader')
             ):
-                # All members with locations have already been handled,
+                # All members with know locations have already been handled,
                 # so we don't need to parse these members.
                 continue
             xml_name = self._member_key_name(member_shape, member_name)
@@ -460,20 +470,7 @@ class BaseXMLResponseParser(ResponseParser):
         return original_root
 
     def _member_key_name(self, shape, member_name):
-        # This method is needed because we have to special case flattened list
-        # with a serialization name.  If this is the case we use the
-        # locationName from the list's member shape as the key name for the
-        # surrounding structure.
-        if shape.type_name == 'list' and shape.serialization.get('flattened'):
-            list_member_serialized_name = shape.member.serialization.get(
-                'name'
-            )
-            if list_member_serialized_name is not None:
-                return list_member_serialized_name
-        serialized_name = shape.serialization.get('name')
-        if serialized_name is not None:
-            return serialized_name
-        return member_name
+        return shape.serialization.get('name', member_name)
 
     def _build_name_to_xml_node(self, parent_node):
         # If the parent node is actually a list. We should not be trying
@@ -574,6 +571,8 @@ class QueryParser(BaseXMLResponseParser):
         return self._parse_body_as_xml(response, shape, inject_metadata=False)
 
     def _do_parse(self, response, shape):
+        if not response.get('body'):
+            return {}
         return self._parse_body_as_xml(response, shape, inject_metadata=True)
 
     def _parse_body_as_xml(self, response, shape, inject_metadata=True):
@@ -586,6 +585,16 @@ class QueryParser(BaseXMLResponseParser):
                 start = self._find_result_wrapped_shape(
                     shape.serialization['resultWrapper'], root
                 )
+            else:
+                operation_name = response.get("context", {}).get(
+                    "operation_name", ""
+                )
+                inferred_wrapper_name = operation_name + "Result"
+                inferred_wrapper = self._find_result_wrapped_shape(
+                    inferred_wrapper_name, root
+                )
+                if inferred_wrapper is not None:
+                    start = inferred_wrapper
             parsed = self._parse_shape(shape, start)
         if inject_metadata:
             self._inject_response_metadata(root, parsed)
@@ -593,7 +602,7 @@ class QueryParser(BaseXMLResponseParser):
 
     def _find_result_wrapped_shape(self, element_name, xml_root_node):
         mapping = self._build_name_to_xml_node(xml_root_node)
-        return mapping[element_name]
+        return mapping.get(element_name)
 
     def _inject_response_metadata(self, node, inject_into):
         mapping = self._build_name_to_xml_node(node)
@@ -704,11 +713,19 @@ class BaseJSONParser(ResponseParser):
 
         code = body.get('__type', response_code and str(response_code))
         if code is not None:
+            # The "Code" value can come from either a response
+            # header or a value in the JSON body.
+            if 'x-amzn-errortype' in response['headers']:
+                code = response['headers']['x-amzn-errortype']
+            elif 'code' in body or 'Code' in body:
+                code = body.get('code', body.get('Code', ''))
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
             # * "ResourceNotFoundException"
+            if ':' in code:
+                code = code.split(':', 1)[0]
             if '#' in code:
-                code = code.rsplit('#', 1)[1]
+                code = code.split('#', 1)[1]
             if 'x-amzn-query-error' in headers:
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
@@ -743,7 +760,16 @@ class BaseJSONParser(ResponseParser):
             return {}
         body = body_contents.decode(self.DEFAULT_ENCODING)
         try:
-            original_parsed = json.loads(body)
+            # Function to remove null values from a JSON object.
+            def remove_nulls(obj):
+                if isinstance(obj, dict):
+                    return {k: v for k, v in obj.items() if v is not None}
+                elif isinstance(obj, list):
+                    return [v for v in obj if v is not None]
+                else:
+                    return obj
+
+            original_parsed = json.loads(body, object_hook=remove_nulls)
             return original_parsed
         except ValueError:
             # if the body cannot be parsed, include
@@ -953,7 +979,7 @@ class BaseRestParser(ResponseParser):
         for name in member_shapes:
             member_shape = member_shapes[name]
             location = member_shape.serialization.get('location')
-            if location is None:
+            if location is None or location not in self.KNOWN_LOCATIONS:
                 continue
             elif location == 'statusCode':
                 final_parsed[name] = self._parse_shape(
@@ -994,14 +1020,28 @@ class BaseRestParser(ResponseParser):
         parsed = value
         if is_json_value_header(shape):
             decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
-            parsed = json.loads(decoded)
+            parsed = json.dumps(json.loads(decoded))
         return parsed
+
+    def _handle_list_header(self, node):
+        # TODO: Clean up and consider timestamps.
+        TOKEN_PATTERN = r'[!#$%&\'*+\-.^_`|~\w]+'
+        QUOTED_STRING_PATTERN = r'"(?:[^"\\]|\\.)*"'
+        PATTERN = rf'({QUOTED_STRING_PATTERN}|{TOKEN_PATTERN})'
+        matches = re.findall(PATTERN, node)
+        parsed_values = []
+        for match in matches:
+            if match.startswith('"') and match.endswith('"'):
+                parsed_values.append(match[1:-1].replace('\\"', '"'))
+            else:
+                parsed_values.append(match)
+        return parsed_values
 
     def _handle_list(self, shape, node):
         location = shape.serialization.get('location')
         if location == 'header' and not isinstance(node, list):
             # List in headers may be a comma separated string as per RFC7230
-            node = [e.strip() for e in node.split(',')]
+            node = self._handle_list_header(node)
         return super()._handle_list(shape, node)
 
 
@@ -1011,28 +1051,23 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
     def _initial_body_parse(self, body_contents):
         return self._parse_body_as_json(body_contents)
 
-    def _do_error_parse(self, response, shape):
-        error = super()._do_error_parse(response, shape)
-        self._inject_error_code(error, response)
-        return error
-
-    def _inject_error_code(self, error, response):
-        # The "Code" value can come from either a response
-        # header or a value in the JSON body.
-        body = self._initial_body_parse(response['body'])
-        if 'x-amzn-errortype' in response['headers']:
-            code = response['headers']['x-amzn-errortype']
-            # Could be:
-            # x-amzn-errortype: ValidationException:
-            code = code.split(':')[0]
-            error['Error']['Code'] = code
-        elif 'code' in body or 'Code' in body:
-            error['Error']['Code'] = body.get('code', body.get('Code', ''))
+    def _handle_boolean(self, shape, value):
+        # It's possible to receive a boolean as a string
+        if isinstance(value, str):
+            if value == 'true':
+                return True
+            else:
+                return False
+        return value
 
     def _handle_integer(self, shape, value):
         return int(value)
 
+    def _handle_float(self, shape, value):
+        return float(value)
+
     _handle_long = _handle_integer
+    _handle_double = _handle_float
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
