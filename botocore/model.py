@@ -630,9 +630,13 @@ class OperationModel:
 
     @CachedProperty
     def auth_type(self):
+        return self._operation_model.get('authtype')
+
+    @CachedProperty
+    def resolved_auth_type(self):
         if self.auth:
             return resolve_auth_type(self.auth)
-        return self._operation_model.get('authtype')
+        return self.auth_type
 
     @CachedProperty
     def unsigned_payload(self):

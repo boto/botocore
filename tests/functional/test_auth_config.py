@@ -18,11 +18,15 @@ from botocore.session import get_session
 # signature may fail and others may succeed. e.g. a service may want to use bearer
 # auth but fall back to sigv4 if a token isn't available. There's currently no way to do
 # this in botocore, so this test ensures we handle this gracefully when the need arises.
+
+
+# The dictionary's value here needs to be hashable to be added to the set below; any
+# new auth types with multiple requirements should be added in a comma-separated list
 AUTH_TYPE_REQUIREMENTS = {
-    'aws.auth#sigv4': ['credentials'],
-    'aws.auth#sigv4a': ['credentials'],
-    'smithy.api#httpBearerAuth': ['bearer_token'],
-    'smithy.api#noAuth': [],
+    'aws.auth#sigv4': 'credentials',
+    'aws.auth#sigv4a': 'credentials',
+    'smithy.api#httpBearerAuth': 'bearer_token',
+    'smithy.api#noAuth': 'none',
 }
 
 
@@ -67,10 +71,7 @@ def test_all_requirements_match_for_operation(auth_service, operation_model):
 
 
 def assert_all_requirements_match(auth_config, message):
-    if len(auth_config) > 1:
-        first_auth = auth_config.pop()
-        first_auth_reqs = AUTH_TYPE_REQUIREMENTS[first_auth]
-        assert all(
-            first_auth_reqs == AUTH_TYPE_REQUIREMENTS[req]
-            for req in auth_config
-        ), message
+    auth_requirements = set()
+    for auth_type in auth_config:
+        auth_requirements.add(AUTH_TYPE_REQUIREMENTS[auth_type])
+    assert len(auth_requirements) == 1

@@ -11,12 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from botocore.auth import (
-    AUTH_TYPE_MAPS,
-    AUTH_TYPE_TO_SIGNATURE_VERSION,
-    BaseSigner,
-    resolve_auth_type,
-)
+from botocore.auth import BaseSigner, resolve_auth_type
 from botocore.exceptions import UnknownSignatureVersionError
 from tests import mock, unittest
 

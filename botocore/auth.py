@@ -1136,6 +1136,18 @@ class BearerAuth(TokenSigner):
         request.headers['Authorization'] = auth_header
 
 
+def resolve_auth_type(auth_trait):
+    for auth_type in auth_trait:
+        if auth_type == 'smithy.api#noAuth':
+            return AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
+        elif auth_type in AUTH_TYPE_TO_SIGNATURE_VERSION:
+            signature_version = AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
+            if signature_version in AUTH_TYPE_MAPS:
+                return signature_version
+        else:
+            raise UnknownSignatureVersionError(signature_version=auth_type)
+
+
 AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v3': SigV3Auth,
@@ -1171,15 +1183,3 @@ AUTH_TYPE_TO_SIGNATURE_VERSION = {
     'smithy.api#httpBearerAuth': 'bearer',
     'smithy.api#noAuth': 'none',
 }
-
-
-def resolve_auth_type(auth_trait):
-    for auth_type in auth_trait:
-        if auth_type == 'smithy.api#noAuth':
-            return AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
-        elif auth_type in AUTH_TYPE_TO_SIGNATURE_VERSION:
-            signature_version = AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
-            if signature_version in AUTH_TYPE_MAPS:
-                return signature_version
-        else:
-            raise UnknownSignatureVersionError(signature_version=auth_type)

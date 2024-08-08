@@ -958,11 +958,9 @@ class BaseClient:
             'client_region': self.meta.region_name,
             'client_config': self.meta.config,
             'has_streaming_input': operation_model.has_streaming_input,
-            'auth_type': operation_model.auth_type,
+            'auth_type': operation_model.resolved_auth_type,
+            'unsigned_payload': operation_model.unsigned_payload,
         }
-
-        if operation_model.unsigned_payload:
-            request_context['payload_signing_enabled'] = False
 
         api_params = self._emit_api_params(
             api_params=api_params,

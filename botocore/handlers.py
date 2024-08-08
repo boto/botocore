@@ -203,6 +203,11 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
     if auth_type == 'bearer':
         return 'bearer'
 
+    # If the operation needs an unsigned body, we set additional context
+    # allowing the signer to be aware of this.
+    if context.get('unsigned_payload') or auth_type == 'v4-unsigned-body':
+        context['payload_signing_enabled'] = False
+
     if auth_type.startswith('v4'):
         if auth_type == 'v4-s3express':
             return auth_type
@@ -219,11 +224,6 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
             signature_version = 'v4a'
         else:
             signature_version = 'v4'
-
-        # If the operation needs an unsigned body, we set additional context
-        # allowing the signer to be aware of this.
-        if auth_type == 'v4-unsigned-body':
-            context['payload_signing_enabled'] = False
 
         # Signing names used by s3 and s3-control use customized signers "s3v4"
         # and "s3v4a".
