@@ -24,14 +24,9 @@ from tests import mock, unittest
 class TestAuthTraitResolution(unittest.TestCase):
     def test_auth_resolves_first_available(self):
         auth = ['aws.auth#foo', 'aws.auth#bar']
-        bar_signer = mock.Mock(spec=BaseSigner)
-
-        auth_types = AUTH_TYPE_MAPS.copy()
-        auth_types['bar'] = bar_signer
-
-        auth_type_conversions = AUTH_TYPE_TO_SIGNATURE_VERSION.copy()
-        auth_type_conversions['aws.auth#foo'] = "foo"
-        auth_type_conversions['aws.auth#bar'] = "bar"
+        # Don't declare a signer for "foo"
+        auth_types = {'bar': mock.Mock(spec=BaseSigner)}
+        auth_type_conversions = {'aws.auth#foo': 'foo', 'aws.auth#bar': 'bar'}
 
         with mock.patch('botocore.auth.AUTH_TYPE_MAPS', auth_types):
             with mock.patch(

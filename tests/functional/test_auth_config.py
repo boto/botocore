@@ -14,10 +14,10 @@ import pytest
 
 from botocore.session import get_session
 
-# In the future, some services may have a list of credentials requirements where one signature may fail and others may
-# succeed, for instance a service may want to use bearer by default but fall back to sigv4 if a token isn't found.
-# There currently is not a way to do this in botocore, so we added this test to make sure that we handle this gracefully
-# when the need arises.
+# In the future, a service may have a list of credentials requirements where one
+# signature may fail and others may succeed. e.g. a service may want to use bearer
+# auth but fall back to sigv4 if a token isn't available. There's currently no way to do
+# this in botocore, so this test ensures we handle this gracefully when the need arises.
 AUTH_TYPE_REQUIREMENTS = {
     'aws.auth#sigv4': ['credentials'],
     'aws.auth#sigv4a': ['credentials'],

@@ -1176,7 +1176,7 @@ AUTH_TYPE_TO_SIGNATURE_VERSION = {
 def resolve_auth_type(auth_trait):
     for auth_type in auth_trait:
         if auth_type == 'smithy.api#noAuth':
-            return 'none'
+            return AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
         elif auth_type in AUTH_TYPE_TO_SIGNATURE_VERSION:
             signature_version = AUTH_TYPE_TO_SIGNATURE_VERSION[auth_type]
             if signature_version in AUTH_TYPE_MAPS:
