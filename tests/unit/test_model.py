@@ -182,6 +182,7 @@ class TestOperationModelFromService(unittest.TestCase):
                     'errors': [{'shape': 'NoSuchResourceException'}],
                     'documentation': 'Docs for OperationName',
                     'authtype': 'v4',
+                    'auth': ['aws.auth#sigv4'],
                 },
                 'OperationTwo': {
                     'http': {
@@ -395,6 +396,22 @@ class TestOperationModelFromService(unittest.TestCase):
         self.assertEqual(
             operation.error_shapes[0].name, 'NoSuchResourceException'
         )
+
+    def test_has_auth(self):
+        operation = self.service_model.operation_model('OperationName')
+        self.assertEqual(operation.auth, ["aws.auth#sigv4"])
+
+    def test_auth_not_set(self):
+        operation = self.service_model.operation_model('OperationTwo')
+        self.assertIsNone(operation.auth)
+
+    def test_has_resolved_auth_type(self):
+        operation = self.service_model.operation_model('OperationName')
+        self.assertEqual(operation.resolved_auth_type, 'v4')
+
+    def test_resolved_auth_type_not_set(self):
+        operation = self.service_model.operation_model('OperationTwo')
+        self.assertIsNone(operation.resolved_auth_type)
 
     def test_has_auth_type(self):
         operation = self.service_model.operation_model('OperationName')

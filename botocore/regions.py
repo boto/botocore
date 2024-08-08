@@ -722,7 +722,9 @@ class EndpointRulesetResolver:
             signing_context['region'] = scheme['signingRegion']
         elif 'signingRegionSet' in scheme:
             if len(scheme['signingRegionSet']) > 0:
-                signing_context['region'] = scheme['signingRegionSet'][0]
+                signing_context['region'] = ','.join(
+                    scheme['signingRegionSet']
+                )
         if 'signingName' in scheme:
             signing_context.update(signing_name=scheme['signingName'])
         if 'disableDoubleEncoding' in scheme:
