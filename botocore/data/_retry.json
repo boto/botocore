@@ -1,4 +1,14 @@
-{
+import botocore
+import boto3
+
+client = boto3.resource('s3')
+
+try:
+    client.create_bucket(BucketName='myTestBucket')
+
+except client.meta.client.exceptions.BucketAlreadyExists as err:
+    print("Bucket {} already exists!".format(err.response['Error']['BucketName']))
+    raise err{
   "definitions": {
     "throttling": {
       "applies_when": {
