@@ -71,7 +71,7 @@ def test_all_requirements_match_for_operation(auth_service, operation_model):
 
 
 def assert_all_requirements_match(auth_config, message):
-    auth_requirements = set()
-    for auth_type in auth_config:
-        auth_requirements.add(AUTH_TYPE_REQUIREMENTS[auth_type])
+    auth_requirements = set(
+        AUTH_TYPE_REQUIREMENTS[auth_type] for auth_type in auth_config
+    )
     assert len(auth_requirements) == 1
