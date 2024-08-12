@@ -38,6 +38,7 @@ from botocore.compat import (
 from botocore.exceptions import (
     NoAuthTokenError,
     NoCredentialsError,
+    NoSupportedSignatureVersionError,
     UnknownSignatureVersionError,
 )
 from botocore.utils import (
@@ -1146,6 +1147,7 @@ def resolve_auth_type(auth_trait):
                 return signature_version
         else:
             raise UnknownSignatureVersionError(signature_version=auth_type)
+    raise NoSupportedSignatureVersionError(auth=auth_trait)
 
 
 AUTH_TYPE_MAPS = {

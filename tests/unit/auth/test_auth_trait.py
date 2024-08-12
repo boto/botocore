@@ -12,7 +12,10 @@
 # language governing permissions and limitations under the License.
 
 from botocore.auth import BaseSigner, resolve_auth_type
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import (
+    NoSupportedSignatureVersionError,
+    UnknownSignatureVersionError,
+)
 from tests import mock, unittest
 
 
@@ -31,6 +34,9 @@ class TestAuthTraitResolution(unittest.TestCase):
                 assert resolve_auth_type(auth) == 'bar'
 
     def test_invalid_auth_type_error(self):
-        auth = ['aws.auth#invalidAuth']
         with self.assertRaises(UnknownSignatureVersionError):
-            resolve_auth_type(auth)
+            resolve_auth_type(['aws.auth#invalidAuth'])
+
+    def test_no_known_auth_type(self):
+        with self.assertRaises(NoSupportedSignatureVersionError):
+            resolve_auth_type([])
