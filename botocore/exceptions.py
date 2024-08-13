@@ -219,16 +219,6 @@ class UnknownSignatureVersionError(BotoCoreError):
     fmt = 'Unknown Signature Version: {signature_version}.'
 
 
-class NoSupportedSignatureVersionError(BotoCoreError):
-    """
-    None of the requested signature versions are supported by this version of botocore
-
-    :ivar auth: The list of requested signature versions.
-    """
-
-    fmt = 'No supported signatures in requested versions: {auth}.'
-
-
 class ServiceNotInRegionError(BotoCoreError):
     """
     The service is not available in requested region.
@@ -524,7 +514,7 @@ class UnknownClientMethodError(BotoCoreError):
 class UnsupportedSignatureVersionError(BotoCoreError):
     """Error when trying to use an unsupported Signature Version."""
 
-    fmt = 'Signature version is not supported: {signature_version}'
+    fmt = 'Signature version(s) are not supported: {signature_version}'
 
 
 class ClientError(Exception):

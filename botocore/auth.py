@@ -38,8 +38,8 @@ from botocore.compat import (
 from botocore.exceptions import (
     NoAuthTokenError,
     NoCredentialsError,
-    NoSupportedSignatureVersionError,
     UnknownSignatureVersionError,
+    UnsupportedSignatureVersionError,
 )
 from botocore.utils import (
     is_valid_ipv6_endpoint_url,
@@ -1147,7 +1147,7 @@ def resolve_auth_type(auth_trait):
                 return signature_version
         else:
             raise UnknownSignatureVersionError(signature_version=auth_type)
-    raise NoSupportedSignatureVersionError(auth=auth_trait)
+    raise UnsupportedSignatureVersionError(signature_version=auth_trait)
 
 
 AUTH_TYPE_MAPS = {

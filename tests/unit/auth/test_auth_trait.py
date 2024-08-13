@@ -13,8 +13,8 @@
 
 from botocore.auth import BaseSigner, resolve_auth_type
 from botocore.exceptions import (
-    NoSupportedSignatureVersionError,
     UnknownSignatureVersionError,
+    UnsupportedSignatureVersionError,
 )
 from tests import mock, unittest
 
@@ -38,5 +38,5 @@ class TestAuthTraitResolution(unittest.TestCase):
             resolve_auth_type(['aws.auth#invalidAuth'])
 
     def test_no_known_auth_type(self):
-        with self.assertRaises(NoSupportedSignatureVersionError):
+        with self.assertRaises(UnsupportedSignatureVersionError):
             resolve_auth_type([])
