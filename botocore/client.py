@@ -148,8 +148,7 @@ class ClientCreator:
         region_name, client_config = self._normalize_fips_region(
             region_name, client_config
         )
-        auth = service_model.metadata.get('auth')
-        if auth:
+        if auth := service_model.metadata.get('auth'):
             service_signature_version = resolve_auth_type(auth)
         else:
             service_signature_version = service_model.metadata.get(
