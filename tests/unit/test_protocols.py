@@ -52,7 +52,6 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 """
 
 import copy
-import math
 import os
 import xml.etree.ElementTree as ET
 from base64 import b64decode
@@ -99,12 +98,12 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLACKLIST = [
+PROTOCOL_TEST_BLOCKLIST = (
     # These cases test functionality outside the serializers and parsers.
     "Test cases for QueryIdempotencyTokenAutoFill operation",
     "Test cases for PutWithContentEncoding operation",
     "Test cases for HttpChecksumRequired operation",
-]
+)
 
 
 class TestType(Enum):
@@ -122,7 +121,7 @@ def _compliance_tests(test_type=None):
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
-                if model.get('description') in PROTOCOL_TEST_BLACKLIST:
+                if model.get('description') in PROTOCOL_TEST_BLOCKLIST:
                     continue
                 if 'params' in case and inp:
                     yield model, case, basename
@@ -324,9 +323,7 @@ def _convert_bytes_to_str(parsed):
 
 def _special_floats_to_str(value):
     if isinstance(value, float):
-        if value in [float('Infinity'), float('-Infinity')] or math.isnan(
-            value
-        ):
+        if value in [float('Infinity'), float('-Infinity')] or value != value:
             return json.dumps(value)
     return value
 

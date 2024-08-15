@@ -559,7 +559,10 @@ class BaseRestSerializer(Serializer):
                     body_params, shape_members[payload_member]
                 )
             else:
-                serialized['body'] = self._serialize_empty_body()
+                if shape_members[payload_member].is_tagged_union:
+                    serialized['body'] = b''
+                else:
+                    serialized['body'] = self._serialize_empty_body()
         elif partitioned['body_kwargs']:
             serialized['body'] = self._serialize_body_params(
                 partitioned['body_kwargs'], shape

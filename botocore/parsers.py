@@ -124,6 +124,7 @@ import re
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 from botocore.utils import (
+    ensure_boolean,
     is_json_value_header,
     lowercase_dict,
     merge_dicts,
@@ -204,7 +205,7 @@ class ResponseParser:
     # This is a list of known values for the "location" key in the
     # serialization dict. The location key tells us where in the response
     # to parse the value.
-    KNOWN_LOCATIONS = ['statusCode', 'header', 'headers']
+    KNOWN_LOCATIONS = ('statusCode', 'header', 'headers')
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
@@ -437,11 +438,10 @@ class BaseXMLResponseParser(ResponseParser):
             member_shape = members[member_name]
             location = member_shape.serialization.get('location')
             if (
-                location
-                and location in self.KNOWN_LOCATIONS
+                location in self.KNOWN_LOCATIONS
                 or member_shape.serialization.get('eventheader')
             ):
-                # All members with know locations have already been handled,
+                # All members with known locations have already been handled,
                 # so we don't need to parse these members.
                 continue
             xml_name = self._member_key_name(member_shape, member_name)
@@ -551,6 +551,8 @@ class BaseXMLResponseParser(ResponseParser):
 
 
 class QueryParser(BaseXMLResponseParser):
+    ROOT_NODE_SUFFIX = 'Result'
+
     def _do_error_parse(self, response, shape):
         xml_contents = response['body']
         root = self._parse_xml_string_to_dom(xml_contents)
@@ -589,9 +591,8 @@ class QueryParser(BaseXMLResponseParser):
                 operation_name = response.get("context", {}).get(
                     "operation_name", ""
                 )
-                inferred_wrapper_name = operation_name + "Result"
                 inferred_wrapper = self._find_result_wrapped_shape(
-                    inferred_wrapper_name, root
+                    f"{operation_name}{self.ROOT_NODE_SUFFIX}", root
                 )
                 if inferred_wrapper is not None:
                     start = inferred_wrapper
@@ -615,6 +616,8 @@ class QueryParser(BaseXMLResponseParser):
 
 
 class EC2QueryParser(QueryParser):
+    ROOT_NODE_SUFFIX = 'Response'
+
     def _inject_response_metadata(self, node, inject_into):
         mapping = self._build_name_to_xml_node(node)
         child_node = mapping.get('requestId')
@@ -979,7 +982,7 @@ class BaseRestParser(ResponseParser):
         for name in member_shapes:
             member_shape = member_shapes[name]
             location = member_shape.serialization.get('location')
-            if location is None or location not in self.KNOWN_LOCATIONS:
+            if location is None:
                 continue
             elif location == 'statusCode':
                 final_parsed[name] = self._parse_shape(
@@ -1052,13 +1055,7 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         return self._parse_body_as_json(body_contents)
 
     def _handle_boolean(self, shape, value):
-        # It's possible to receive a boolean as a string
-        if isinstance(value, str):
-            if value == 'true':
-                return True
-            else:
-                return False
-        return value
+        return ensure_boolean(value)
 
     def _handle_integer(self, shape, value):
         return int(value)
