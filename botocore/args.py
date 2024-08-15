@@ -268,6 +268,9 @@ class ClientArgsCreator:
                     client_config.disable_request_compression
                 ),
                 client_context_params=client_config.client_context_params,
+                sigv4a_signing_region_set=(
+                    client_config.sigv4a_signing_region_set
+                ),
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
