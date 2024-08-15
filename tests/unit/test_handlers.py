@@ -16,10 +16,8 @@ import copy
 import io
 import json
 import os
-from datetime import datetime
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore
 import botocore.session
@@ -42,7 +40,6 @@ from botocore.model import (
     OperationModel,
     ServiceId,
     ServiceModel,
-    StringShape,
 )
 from botocore.signers import RequestSigner
 from botocore.utils import conditionally_calculate_md5
@@ -1076,67 +1073,6 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(response, 's3v4')
         self.assertEqual(context.get('payload_signing_enabled'), False)
 
-    def test_parse_s3_expires_timestamp_response_valid(self):
-        parsed = {
-            'ResponseMetadata': {
-                'HTTPHeaders': {'expires': 'Thu, 01 Jan 1970 00:00:00 GMT'}
-            }
-        }
-        model = mock.Mock()
-        model.output_shape = mock.Mock()
-        model.output_shape.members = {'Expires': mock.Mock()}
-        handlers.parse_s3_expires_timestamp_response(parsed, model)
-        self.assertIsInstance(parsed['Expires'], datetime)
-        self.assertEqual(
-            parsed['Expires'], datetime(1970, 1, 1, 0, 0, tzinfo=tzutc())
-        )
-
-    def test_parse_s3_expires_timestamp_response_invalid(self):
-        parsed = {
-            'ResponseMetadata': {'HTTPHeaders': {'expires': 'invalid-date'}}
-        }
-        model = mock.Mock()
-        model.output_shape = mock.Mock()
-        model.output_shape.members = {'Expires': mock.Mock()}
-        with mock.patch('logging.Logger.warning') as mock_warning:
-            handlers.parse_s3_expires_timestamp_response(parsed, model)
-            self.assertIsNone(parsed['Expires'])
-            mock_warning.assert_called_once()
-
-    def test_customize_s3_expires_shape(self):
-        output_shape = mock.Mock()
-        output_shape.members = {'Expires': mock.Mock()}
-        operation_model = mock.Mock()
-        operation_model.output_shape = output_shape
-        service_model = mock.Mock()
-        service_model.operation_names = ['TestOperation']
-        service_model.operation_model = mock.Mock(return_value=operation_model)
-        handlers.customize_s3_expires_shape(service_model)
-        self.assertEqual(output_shape.members['Expires'].type_name, 'string')
-        self.assertIn('ExpiresString', output_shape.members)
-        self.assertIsInstance(
-            output_shape.members['ExpiresString'], StringShape
-        )
-        self.assertEqual(
-            output_shape.members['ExpiresString']._shape_model,
-            {
-                'type': 'string',
-                'documentation': '<p>Please use this member instead of ``Expires``.</p>',
-                'location': 'header',
-                'locationName': 'Expires',
-            },
-        )
-
-    def test_customize_s3_no_expires_shape(self):
-        operation_model = mock.Mock()
-        operation_model.output_shape = mock.Mock()
-        operation_model.output_shape.members = {}
-        service_model = mock.Mock()
-        service_model.operation_names = ['TestOperation']
-        service_model.operation_model = mock.Mock(return_value=operation_model)
-        handlers.customize_s3_expires_shape(service_model)
-        self.assertNotIn('ExpiresString', operation_model.output_shape.members)
-
 
 @pytest.mark.parametrize(
     'auth_type, expected_response', [('v4', 's3v4'), ('v4a', 's3v4a')]
@@ -1582,13 +1518,14 @@ class TestParameterAlias(unittest.TestCase):
 
 class TestDocumentS3ExpiresShape(unittest.TestCase):
     def setUp(self):
-        self.section_mock = mock.Mock()
-        self.parent_mock = mock.Mock()
-        self.param_line_mock = mock.Mock()
-        self.value_portion_mock = mock.Mock()
-        self.param_section_mock = mock.Mock()
-        self.type_section_mock = mock.Mock()
-        self.doc_section_mock = mock.Mock()
+        self.section = mock.Mock()
+        self.parent = mock.Mock()
+        self.param_line = mock.Mock()
+        self.param_section = mock.Mock()
+        self.doc_section = mock.Mock()
+        self.new_param_line = mock.Mock()
+        self.new_param = mock.Mock()
+
         self.response_example_event = (
             'docs.response-example.s3.TestOperation.complete-section'
         )
@@ -1596,79 +1533,70 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
             'docs.response-params.s3.TestOperation.complete-section'
         )
 
-    def test_response_example_structure_value_missing(self):
-        self.section_mock.has_section.return_value = False
+    def test_response_example_with_expires(self):
+        self.section.has_section.return_value = True
+        self.section.get_section.return_value = self.parent
+        self.parent.has_section.return_value = True
+        self.parent.get_section.return_value = self.param_line
+        self.param_line.has_section.return_value = True
+        self.param_line.get_section.return_value = self.new_param_line
         handlers.document_s3_expires_shape(
-            self.section_mock, self.response_example_event
+            self.section, self.response_example_event
         )
-        self.section_mock.get_section.assert_not_called()
-        self.parent_mock.get_section.assert_not_called()
-        self.param_line_mock.get_section.assert_not_called()
-        self.value_portion_mock.clear_text.assert_not_called()
-        self.value_portion_mock.write.assert_not_called()
+        self.param_line.add_new_section.assert_called_once_with(
+            'ExpiresString'
+        )
+        self.new_param_line.write.assert_called_once_with(
+            "'ExpiresString': 'string',"
+        )
+        self.new_param_line.style.new_line.assert_called_once()
 
-    def test_response_example_expires_missing(self):
-        self.section_mock.has_section.return_value = True
-        self.section_mock.get_section.return_value = self.parent_mock
-        self.parent_mock.has_section.return_value = False
+    def test_response_example_without_expires(self):
+        self.section.has_section.return_value = True
+        self.section.get_section.return_value = self.parent
+        self.parent.has_section.return_value = False
         handlers.document_s3_expires_shape(
-            self.section_mock, self.response_example_event
+            self.section, self.response_example_event
         )
-        self.section_mock.get_section.assert_called_once_with(
-            'structure-value'
-        )
-        self.parent_mock.get_section.assert_not_called()
-        self.param_line_mock.get_section.assert_not_called()
-        self.value_portion_mock.clear_text.assert_not_called()
-        self.value_portion_mock.write.assert_not_called()
+        self.parent.add_new_section.assert_not_called()
+        self.parent.get_section.assert_not_called()
+        self.new_param_line.write.assert_not_called()
 
-    def test_response_example_success(self):
-        self.section_mock.has_section.return_value = True
-        self.section_mock.get_section.return_value = self.parent_mock
-        self.parent_mock.has_section.return_value = True
-        self.parent_mock.get_section.return_value = self.param_line_mock
-        self.param_line_mock.get_section.return_value = self.value_portion_mock
+    def test_response_params_with_expires(self):
+        self.section.has_section.return_value = True
+        self.section.get_section.return_value = self.param_section
+        self.param_section.get_section.side_effect = [
+            self.doc_section,
+            self.new_param,
+        ]
+        self.new_param.style = mock.Mock()
         handlers.document_s3_expires_shape(
-            self.section_mock, self.response_example_event
+            self.section, self.response_params_event
         )
-        self.section_mock.get_section.assert_called_once_with(
-            'structure-value'
+        self.param_section.get_section.assert_any_call('param-documentation')
+        self.param_section.get_section.assert_any_call('ExpiresString')
+        self.doc_section.write.assert_called_once_with(
+            '*This member has been deprecated*. Please use ``ExpiresString`` instead.'
         )
-        self.parent_mock.get_section.assert_called_once_with('Expires')
-        self.param_line_mock.get_section.assert_called_once_with(
-            'member-value'
+        self.param_section.add_new_section.assert_called_once_with(
+            'ExpiresString'
         )
-        self.value_portion_mock.clear_text.assert_called_once()
-        self.value_portion_mock.write.assert_called_once_with(
-            'datetime(2015, 1, 1)'
+        self.new_param.style.start_li.assert_called_once()
+        self.new_param.write.assert_any_call('**ExpiresString** (*string*) --')
+        self.new_param.style.end_li.assert_called_once()
+        self.new_param.style.new_line.assert_called_once()
+        self.new_param.write.assert_any_call(
+            '\tThe raw unparsed value of the ``Expires`` field.'
         )
 
-    def test_response_params_expires_missing(self):
-        self.section_mock.has_section.return_value = False
+    def test_response_params_without_expires(self):
+        self.section.has_section.return_value = False
         handlers.document_s3_expires_shape(
-            self.section_mock, self.response_params_event
+            self.section, self.response_params_event
         )
-        self.section_mock.get_section.assert_not_called()
-        self.param_line_mock.get_section.assert_not_called()
-        self.value_portion_mock.clear_text.assert_not_called()
-        self.value_portion_mock.write.assert_not_called()
-
-    def test_response_params_success(self):
-        self.section_mock.has_section.return_value = True
-        self.section_mock.get_section.return_value = self.param_section_mock
-        self.param_section_mock.get_section.side_effect = {
-            'param-type': self.type_section_mock,
-            'param-documentation': self.doc_section_mock,
-        }.get
-        handlers.document_s3_expires_shape(
-            self.section_mock, self.response_params_event
-        )
-        self.type_section_mock.clear_text.assert_called_once()
-        self.type_section_mock.write.assert_called_once_with('(*datetime*) --')
-        self.doc_section_mock.write.assert_called_once_with(
-            '*This member has been deprecated*. Please use ``ExpiresString`` which '
-            'contains the raw, unparsed value of this field instead.'
-        )
+        self.section.get_section.assert_not_called()
+        self.param_section.add_new_section.assert_not_called()
+        self.doc_section.write.assert_not_called()
 
 
 class TestCommandAlias(unittest.TestCase):

@@ -804,6 +804,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
 SERIALIZERS = {
     'ec2': EC2Serializer,
+    's3': RestXMLSerializer,
     'query': QuerySerializer,
     'json': JSONSerializer,
     'rest-json': RestJSONSerializer,

@@ -52,7 +52,6 @@ from botocore.exceptions import (
     ParamValidationError,
     UnsupportedTLSVersionWarning,
 )
-from botocore.model import StringShape
 from botocore.regions import EndpointResolverBuiltins
 from botocore.signers import (
     add_generate_db_auth_token,
@@ -64,7 +63,6 @@ from botocore.utils import (
     ArnParser,
     conditionally_calculate_checksum,
     conditionally_calculate_md5,
-    parse_timestamp,
     percent_encode,
     switch_host_with_param,
 )
@@ -588,50 +586,10 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     parsed['LocationConstraint'] = region
 
 
-def parse_s3_expires_timestamp_response(parsed, model, **kwargs):
-    # Handles the conversion of the 'Expires' HTTP header from a
-    # string to a datetime object. Due to the change where 'Expires'
-    # will be modeled as a string, this handler ensures backwards compatibility
-    # by parsing 'Expires' into a datetime object. If parsing fails, 'Expires'
-    # is set to None and a warning is logged.
-    output_shape = model.output_shape
-    if not output_shape or 'Expires' not in output_shape.members:
-        return
-    http_headers = parsed.get('ResponseMetadata', {}).get('HTTPHeaders', {})
-    expires_header = http_headers.get('expires')
-    try:
-        parsed['Expires'] = parse_timestamp(expires_header)
-    except ValueError as e:
-        parsed['Expires'] = None
-        logger.warning(f"Failed to parse Expires as a timestamp: {e}")
-
-
-def customize_s3_expires_shape(service_model, **kwargs):
-    # Customizes the shape of the output 'Expires' member in S3 operations.
-    # This handler modifies the 'Expires' member to be a string to bypass parser
-    # errors and adds a synthetic 'ExpiresString' member to retain the raw header
-    # value.
-    operations = service_model.operation_names
-    for operation in operations:
-        output_shape = service_model.operation_model(operation).output_shape
-        if output_shape and 'Expires' in output_shape.members:
-            output_shape.members['Expires'].type_name = 'string'
-            output_shape.members['ExpiresString'] = StringShape(
-                shape_name='ExpiresString',
-                shape_model={
-                    'type': 'string',
-                    'documentation': '<p>Please use this member instead of ``Expires``.</p>',
-                    'location': 'header',
-                    'locationName': 'Expires',
-                },
-            )
-
-
 def document_s3_expires_shape(section, event_name, **kwargs):
-    # Updates the documentation for S3 operations that include the 'Expires' member in their
-    # response structure. Adjusts the response example value to maintain its original value
-    # regardless of model change and adds a deprecation notice to the parameter descriptions
-    # to reflect the transition to using 'ExpiresString' instead of 'Expires'.
+    # Updates the documentation for S3 operations that include the 'Expires' member
+    # in their response structure. Documents a synthetic member 'ExpiresString' and
+    # includes a deprecation notice for 'Expires'.
     if 'response-example' in event_name:
         if not section.has_section('structure-value'):
             return
@@ -639,21 +597,25 @@ def document_s3_expires_shape(section, event_name, **kwargs):
         if not parent.has_section('Expires'):
             return
         param_line = parent.get_section('Expires')
-        value_portion = param_line.get_section('member-value')
-        value_portion.clear_text()
-        value_portion.write('datetime(2015, 1, 1)')
+        param_line.add_new_section('ExpiresString')
+        new_param_line = param_line.get_section('ExpiresString')
+        new_param_line.write("'ExpiresString': 'string',")
+        new_param_line.style.new_line()
     elif 'response-params' in event_name:
         if not section.has_section('Expires'):
             return
         param_section = section.get_section('Expires')
-        type_section = param_section.get_section('param-type')
-        type_section.clear_text()
-        type_section.write('(*datetime*) --')
         doc_section = param_section.get_section('param-documentation')
         doc_section.write(
-            '*This member has been deprecated*. Please use ``ExpiresString`` which '
-            'contains the raw, unparsed value of this field instead.'
+            '*This member has been deprecated*. Please use ``ExpiresString`` instead.'
         )
+        param_section.add_new_section('ExpiresString')
+        new_param = param_section.get_section('ExpiresString')
+        new_param.style.start_li()
+        new_param.write('**ExpiresString** (*string*) --')
+        new_param.style.end_li()
+        new_param.style.new_line()
+        new_param.write('\tThe raw unparsed value of the ``Expires`` field.')
 
 
 def base64_encode_user_data(params, **kwargs):
@@ -1258,7 +1220,6 @@ BUILTIN_HANDLERS = [
     ),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
-    ('creating-client-class.s3', customize_s3_expires_shape),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('creating-client-class.lex-runtime-v2', remove_lex_v2_start_conversation),
     ('creating-client-class.qbusiness', remove_qbusiness_chat),
@@ -1266,7 +1227,6 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
-    ('after-call.s3', parse_s3_expires_timestamp_response),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),

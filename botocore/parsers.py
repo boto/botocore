@@ -1113,8 +1113,39 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         return text
 
 
+class S3Parser(RestXMLParser):
+    def parse(self, response, shape):
+        parsed = super().parse(response, shape)
+        if 'Expires' in parsed:
+            parsed['ExpiresString'] = (
+                parsed.get('ResponseMetadata', {})
+                .get('HTTPHeaders', {})
+                .get('expires')
+            )
+            if parsed['Expires'] is None:
+                del parsed['Expires']
+        return parsed
+
+    def _parse_shape(self, shape, node):
+        if shape.name == 'Expires':
+            handler = getattr(self, '_handle_expires_timestamp')
+            return handler(shape, node)
+        return super()._parse_shape(shape, node)
+
+    def _handle_expires_timestamp(self, shape, timestamp):
+        try:
+            return self._timestamp_parser(timestamp)
+        except ValueError as e:
+            LOG.warning(
+                f"Failed to parse Expires as a timestamp: {e}. "
+                f"The unparsed value is available in ExpiresString."
+            )
+            return None
+
+
 PROTOCOL_PARSERS = {
     'ec2': EC2QueryParser,
+    's3': S3Parser,
     'query': QueryParser,
     'json': JSONParser,
     'rest-json': RestJSONParser,
