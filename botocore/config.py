@@ -221,6 +221,12 @@ class Config:
 
         Defaults to None.
 
+    :type sigv4a_signing_region_set: string
+    :param sigv4a_signing_region_set: A set of AWS regions to apply the signature for
+        when using SigV4a for signing. Set to ``*`` to represent all regions.
+
+        Defaults to None.
+
     :type client_context_params: dict
     :param client_context_params: A dictionary of parameters specific to
         individual services. If available, valid parameters can be found in
@@ -257,6 +263,7 @@ class Config:
             ('request_min_compression_size_bytes', None),
             ('disable_request_compression', None),
             ('client_context_params', None),
+            ('sigv4a_signing_region_set', None),
         ]
     )
 
