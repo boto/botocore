@@ -47,7 +47,7 @@ class TestWaiterDocumenter(BaseDocsTest):
                 (
                     '    Polls :py:meth:`MyService.Client.sample_operation` '
                     'every 15 seconds until a successful state is reached. An error '
-                    'is returned after 40 failed checks.'
+                    'is raised after 40 failed checks.'
                 ),
                 '    **Request Syntax**',
                 '    ::',

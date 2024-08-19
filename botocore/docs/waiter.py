@@ -164,7 +164,7 @@ def document_wait_method(
         f'Polls :py:meth:`{get_service_module_name(service_model)}.Client.'
         f'{xform_name(waiter_model.operation)}` every {waiter_model.delay} '
         'seconds until a successful state is reached. An error is '
-        f'returned after {waiter_model.max_attempts} failed checks.'
+        f'raised after {waiter_model.max_attempts} failed checks.'
     )
 
     document_model_driven_method(
