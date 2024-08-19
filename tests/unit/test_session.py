@@ -245,7 +245,10 @@ class SessionTest(BaseSessionTest):
 
     def test_emit_delegates_to_emitter(self):
         calls = []
-        handler = lambda **kwargs: calls.append(kwargs)
+
+        def handler(**kwargs):
+            return calls.append(kwargs)
+
         self.session.register('foo', handler)
         self.session.emit('foo')
         self.assertEqual(len(calls), 1)
@@ -255,7 +258,10 @@ class SessionTest(BaseSessionTest):
         events = HierarchicalEmitter()
         session = create_session(event_hooks=events)
         calls = []
-        handler = lambda **kwargs: calls.append(kwargs)
+
+        def handler(**kwargs):
+            return calls.append(kwargs)
+
         events.register('foo', handler)
 
         session.emit('foo')
@@ -289,7 +295,10 @@ class SessionTest(BaseSessionTest):
 
     def test_register_with_unique_id(self):
         calls = []
-        handler = lambda **kwargs: calls.append(kwargs)
+
+        def handler(**kwargs):
+            return calls.append(kwargs)
+
         self.session.register('foo', handler, unique_id='bar')
         self.session.emit('foo')
         self.assertEqual(calls[0]['event_name'], 'foo')
@@ -711,7 +720,7 @@ class TestCreateClient(BaseSessionTest):
             f.write('[default]\n')
             f.write(
                 'foo_api_versions =\n'
-                '    myservice = %s\n' % config_api_version
+                f'    myservice = {config_api_version}\n'
             )
             f.flush()
 
@@ -760,7 +769,7 @@ class TestCreateClient(BaseSessionTest):
             f.write('[default]\n')
             f.write(
                 'foo_api_versions =\n'
-                '    myservice = %s\n' % config_api_version
+                f'    myservice = {config_api_version}\n'
             )
             f.flush()
 
@@ -901,14 +910,20 @@ class TestComponentLocator(unittest.TestCase):
 
     def test_can_lazy_register_a_component(self):
         component = object()
-        lazy = lambda: component
+
+        def lazy():
+            return component
+
         self.components.lazy_register_component('foo', lazy)
         self.assertIs(self.components.get_component('foo'), component)
 
     def test_latest_registration_wins_even_if_lazy(self):
         first = object()
         second = object()
-        lazy_second = lambda: second
+
+        def lazy_second():
+            return second
+
         self.components.register_component('foo', first)
         self.components.lazy_register_component('foo', lazy_second)
         self.assertIs(self.components.get_component('foo'), second)
@@ -916,7 +931,10 @@ class TestComponentLocator(unittest.TestCase):
     def test_latest_registration_overrides_lazy(self):
         first = object()
         second = object()
-        lazy_first = lambda: first
+
+        def lazy_first():
+            return first
+
         self.components.lazy_register_component('foo', lazy_first)
         self.components.register_component('foo', second)
         self.assertIs(self.components.get_component('foo'), second)
@@ -996,6 +1014,8 @@ class TestInitializationHooks(BaseSessionTest):
         self.assertEqual(call_args, [])
 
     def test_unregister_hook_raises_value_error(self):
-        not_registered = lambda session: None
+        def not_registered(session):
+            return None
+
         with self.assertRaises(ValueError):
             self.assertRaises(unregister_initializer(not_registered))

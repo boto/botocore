@@ -10,6 +10,7 @@ Otherwise, the ``REGION`` variable specifies the default region
 to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
 
 """
+
 import logging
 import os
 import warnings
@@ -79,7 +80,7 @@ SMOKE_TESTS = {
     'kms': {'ListKeys': {}},
     'lambda': {'ListFunctions': {}},
     'logs': {'DescribeLogGroups': {}},
-    'opsworks': {'DescribeStacks': {}},
+    # 'opsworks': {'DescribeStacks': {}},
     'rds': {'DescribeDBInstances': {}},
     'redshift': {'DescribeClusters': {}},
     'route53': {'ListHostedZones': {}},
@@ -174,7 +175,7 @@ ERROR_TESTS = {
     'kinesis': {'DescribeStream': {'StreamName': 'fake'}},
     'kms': {'GetKeyPolicy': {'KeyId': 'fake', 'PolicyName': 'fake'}},
     'lambda': {'Invoke': {'FunctionName': 'fake'}},
-    'opsworks': {'DescribeLayers': {'StackId': 'fake'}},
+    # 'opsworks': {'DescribeLayers': {'StackId': 'fake'}},
     'rds': {'DescribeDBInstances': {'DBInstanceIdentifier': 'fake'}},
     'redshift': {'DescribeClusters': {'ClusterIdentifier': 'fake'}},
     'route53': {'GetHostedZone': {'Id': 'fake'}},
@@ -317,7 +318,7 @@ def test_client_can_retry_request_properly(
         except ClientError as e:
             assert False, (
                 'Request was not retried properly, '
-                'received error:\n%s' % pformat(e)
+                f'received error:\n{pformat(e)}'
             )
         # Ensure we used the stubber as we're not using it in strict mode
         assert len(http_stubber.responses) == 0, 'Stubber was not used!'

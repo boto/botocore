@@ -203,6 +203,11 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
     if auth_type == 'bearer':
         return 'bearer'
 
+    # If the operation needs an unsigned body, we set additional context
+    # allowing the signer to be aware of this.
+    if context.get('unsigned_payload') or auth_type == 'v4-unsigned-body':
+        context['payload_signing_enabled'] = False
+
     if auth_type.startswith('v4'):
         if auth_type == 'v4-s3express':
             return auth_type
@@ -210,7 +215,8 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         if auth_type == 'v4a':
             # If sigv4a is chosen, we must add additional signing config for
             # global signature.
-            signing = {'region': '*', 'signing_name': signing_name}
+            region = _resolve_sigv4a_region(context)
+            signing = {'region': region, 'signing_name': signing_name}
             if 'signing' in context:
                 context['signing'].update(signing)
             else:
@@ -219,17 +225,21 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         else:
             signature_version = 'v4'
 
-        # If the operation needs an unsigned body, we set additional context
-        # allowing the signer to be aware of this.
-        if auth_type == 'v4-unsigned-body':
-            context['payload_signing_enabled'] = False
-
         # Signing names used by s3 and s3-control use customized signers "s3v4"
         # and "s3v4a".
         if signing_name in S3_SIGNING_NAMES:
             signature_version = f's3{signature_version}'
 
         return signature_version
+
+
+def _resolve_sigv4a_region(context):
+    region = None
+    if 'client_config' in context:
+        region = context['client_config'].sigv4a_signing_region_set
+    if not region and context.get('signing', {}).get('region'):
+        region = context['signing']['region']
+    return region or '*'
 
 
 def decode_console_output(parsed, **kwargs):
@@ -251,8 +261,7 @@ def generate_idempotent_uuid(params, model, **kwargs):
         if name not in params:
             params[name] = str(uuid.uuid4())
             logger.debug(
-                "injecting idempotency token (%s) into param '%s'."
-                % (params[name], name)
+                f"injecting idempotency token ({params[name]}) into param '{name}'."
             )
 
 
@@ -454,7 +463,7 @@ def _quote_source_header_from_dict(source_dict):
         )
     final = percent_encode(final, safe=SAFE_CHARS + '/')
     if version_id is not None:
-        final += '?versionId=%s' % version_id
+        final += f'?versionId={version_id}'
     return final
 
 
@@ -632,8 +641,8 @@ def validate_ascii_metadata(params, **kwargs):
         except UnicodeEncodeError:
             error_msg = (
                 'Non ascii characters found in S3 metadata '
-                'for key "%s", value: "%s".  \nS3 metadata can only '
-                'contain ASCII characters. ' % (key, value)
+                f'for key "{key}", value: "{value}".  \nS3 metadata can only '
+                'contain ASCII characters. '
             )
             raise ParamValidationError(report=error_msg)
 
@@ -761,10 +770,10 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
         openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
         if openssl_version_tuple < (1, 0, 1):
             warnings.warn(
-                'Currently installed openssl version: %s does not '
+                f'Currently installed openssl version: {ssl.OPENSSL_VERSION} does not '
                 'support TLS 1.2, which is required for use of iot-data. '
                 'Please use python installed with openssl version 1.0.1 or '
-                'higher.' % (ssl.OPENSSL_VERSION),
+                'higher.',
                 UnsupportedTLSVersionWarning,
             )
     # We cannot check the openssl version on python2.6, so we should just

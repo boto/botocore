@@ -101,6 +101,7 @@ information that doesn't quite fit in the original models, but is still needed
 for the sdk. For instance, additional operation parameters might be added here
 which don't represent the actual service api.
 """
+
 import logging
 import os
 

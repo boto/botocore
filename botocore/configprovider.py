@@ -13,6 +13,7 @@
 """This module contains the interface for controlling how configuration
 is loaded.
 """
+
 import copy
 import logging
 import os
@@ -166,6 +167,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'AWS_DISABLE_REQUEST_COMPRESSION',
         False,
         utils.ensure_boolean,
+    ),
+    'sigv4a_signing_region_set': (
+        'sigv4a_signing_region_set',
+        'AWS_SIGV4A_SIGNING_REGION_SET',
+        None,
+        None,
     ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
@@ -697,7 +704,7 @@ class ChainProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return '[%s]' % ', '.join([str(p) for p in self._providers])
+        return '[{}]'.format(', '.join([str(p) for p in self._providers]))
 
 
 class InstanceVarProvider(BaseProvider):
@@ -728,10 +735,7 @@ class InstanceVarProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return 'InstanceVarProvider(instance_var={}, session={})'.format(
-            self._instance_var,
-            self._session,
-        )
+        return f'InstanceVarProvider(instance_var={self._instance_var}, session={self._session})'
 
 
 class ScopedConfigProvider(BaseProvider):
@@ -767,10 +771,7 @@ class ScopedConfigProvider(BaseProvider):
         return scoped_config.get(self._config_var_name)
 
     def __repr__(self):
-        return 'ScopedConfigProvider(config_var_name={}, session={})'.format(
-            self._config_var_name,
-            self._session,
-        )
+        return f'ScopedConfigProvider(config_var_name={self._config_var_name}, session={self._session})'
 
 
 class EnvironmentProvider(BaseProvider):
@@ -878,7 +879,7 @@ class ConstantProvider(BaseProvider):
         return self._value
 
     def __repr__(self):
-        return 'ConstantProvider(value=%s)' % self._value
+        return f'ConstantProvider(value={self._value})'
 
 
 class ConfiguredEndpointProvider(BaseProvider):

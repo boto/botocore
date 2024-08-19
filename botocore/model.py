@@ -11,9 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
+
 from collections import defaultdict
 from typing import NamedTuple, Union
 
+from botocore.auth import resolve_auth_type
 from botocore.compat import OrderedDict
 from botocore.exceptions import (
     MissingServiceIdError,
@@ -623,8 +625,22 @@ class OperationModel:
         return self._operation_model.get('requestcompression')
 
     @CachedProperty
+    def auth(self):
+        return self._operation_model.get('auth')
+
+    @CachedProperty
     def auth_type(self):
         return self._operation_model.get('authtype')
+
+    @CachedProperty
+    def resolved_auth_type(self):
+        if self.auth:
+            return resolve_auth_type(self.auth)
+        return self.auth_type
+
+    @CachedProperty
+    def unsigned_payload(self):
+        return self._operation_model.get('unsignedPayload')
 
     @CachedProperty
     def error_shapes(self):

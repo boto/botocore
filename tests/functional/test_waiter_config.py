@@ -118,23 +118,20 @@ def _lint_single_waiter(client, waiter_name, service_model):
     # Needs to reference an existing operation name.
     if operation_name not in service_model.operation_names:
         raise AssertionError(
-            "Waiter config references unknown "
-            "operation: %s" % operation_name
+            "Waiter config references unknown " f"operation: {operation_name}"
         )
     # Needs to have at least one acceptor.
     if not waiter.config.acceptors:
         raise AssertionError(
             "Waiter config must have at least "
-            "one acceptor state: %s" % waiter.name
+            f"one acceptor state: {waiter.name}"
         )
     op_model = service_model.operation_model(operation_name)
     for acceptor in acceptors:
         _validate_acceptor(acceptor, op_model, waiter.name)
 
     if not waiter.name.isalnum():
-        raise AssertionError(
-            "Waiter name %s is not alphanumeric." % waiter_name
-        )
+        raise AssertionError(f"Waiter name {waiter_name} is not alphanumeric.")
 
 
 def _validate_schema(validator, waiter_json):
@@ -151,10 +148,7 @@ def _validate_acceptor(acceptor, op_model, waiter_name):
         output_shape = op_model.output_shape
         assert (
             output_shape is not None
-        ), "Waiter '{}' has JMESPath expression with no output shape: {}".format(
-            waiter_name,
-            op_model,
-        )
+        ), f"Waiter '{waiter_name}' has JMESPath expression with no output shape: {op_model}"
         # We want to check if the JMESPath expression makes sense.
         # To do this, we'll generate sample output and evaluate the
         # JMESPath expression against the output.  We'll then

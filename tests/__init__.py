@@ -121,9 +121,7 @@ def temporary_file(mode):
 
     """
     temporary_directory = tempfile.mkdtemp()
-    basename = 'tmpfile-{}-{}'.format(
-        int(time.time()), random.randint(1, 1000)
-    )
+    basename = f'tmpfile-{int(time.time())}-{random.randint(1, 1000)}'
     full_filename = os.path.join(temporary_directory, basename)
     open(full_filename, 'w').close()
     try:
@@ -523,8 +521,9 @@ class ConsistencyWaiter:
         raise ConsistencyWaiterException(fail_msg)
 
     def _fail_message(self, attempts, successes):
-        format_args = (attempts, successes)
-        return 'Failed after %s attempts, only had %s successes' % format_args
+        return (
+            f'Failed after {attempts} attempts, only had {successes} successes'
+        )
 
 
 class StubbedSession(botocore.session.Session):
