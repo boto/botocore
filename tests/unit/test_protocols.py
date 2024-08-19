@@ -98,12 +98,10 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLOCKLIST = (
-    # These cases test functionality outside the serializers and parsers.
-    "Test cases for QueryIdempotencyTokenAutoFill operation",
-    "Test cases for PutWithContentEncoding operation",
-    "Test cases for HttpChecksumRequired operation",
-)
+IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
+PROTOCOL_TEST_IGNORE_LIST_PATH = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
+with open(PROTOCOL_TEST_IGNORE_LIST_PATH) as f:
+    PROTOCOL_TEST_IGNORE_LIST = json.load(f)
 
 
 class TestType(Enum):
@@ -121,7 +119,13 @@ def _compliance_tests(test_type=None):
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
-                if model.get('description') in PROTOCOL_TEST_BLOCKLIST:
+                protocol = basename.replace('.json', '')
+                if _should_ignore_test(
+                    protocol,
+                    "input" if inp else "output",
+                    model['description'],
+                    case['id'],
+                ):
                     continue
                 if 'params' in case and inp:
                     yield model, case, basename
@@ -431,7 +435,7 @@ def _assert_requests_equal(actual, expected, protocol_type):
     expected_body = expected.get('body', '').encode('utf-8')
     actual_body = actual['body']
     # The expected bodies in our consumed protocol tests have extra
-    # whitespace and newlines that need to handled. We need to normalize
+    # whitespace and newlines that need to be handled. We need to normalize
     # the expected and actual response bodies before evaluating equivalence.
     try:
         if protocol_type in ['json', 'rest-json']:
@@ -481,6 +485,8 @@ def _walk_files():
     else:
         for root, _, filenames in os.walk(TEST_DIR):
             for filename in filenames:
+                if filename == IGNORE_LIST_FILENAME:
+                    continue
                 yield os.path.join(root, filename)
 
 
@@ -525,3 +531,53 @@ def _get_suite_test_id():
             "integers."
         )
     return suite_id, test_id
+
+
+def _should_ignore_test(protocol, test_type, suite, case):
+    """
+    Determines if a protocol test should be ignored.
+
+    This function checks the following, in order:
+    1. General test suites to ignore across all protocols.
+    2. General test cases to ignore across all protocols.
+    3. Protocol-specific test suites to ignore
+    4. Protocol-specific test cases to ignore
+
+    :type protocol: str
+    :param protocol: The protocol name as represented by its corresponding
+        protocol test file name (without the .json extension).
+
+    :type test_type: str
+    :param test_type: The protocol test type ("input" or "output").
+
+    :type suite: str
+    :param suite: The "description" attribute of a protocol test suite.
+
+    :type case: str
+    :param case: The "id" attribute of a specific protocol test case.
+
+    :return: True if the protocol test should be ignored, False otherwise.
+    :rtype: bool
+    """
+    general_ignore_list = PROTOCOL_TEST_IGNORE_LIST['general']
+    general_suites_to_ignore = general_ignore_list.get(test_type, {}).get(
+        'suites', []
+    )
+    general_cases_to_ignore = general_ignore_list.get(test_type, {}).get(
+        'cases', []
+    )
+    if suite in general_suites_to_ignore or case in general_cases_to_ignore:
+        return True
+
+    protocol_ignore_list = PROTOCOL_TEST_IGNORE_LIST['protocols'].get(
+        protocol, {}
+    )
+    protocol_suites_to_ignore = protocol_ignore_list.get(test_type, {}).get(
+        'suites', []
+    )
+    protocol_cases_to_ignore = protocol_ignore_list.get(test_type, {}).get(
+        'cases', []
+    )
+    return (
+        suite in protocol_suites_to_ignore or case in protocol_cases_to_ignore
+    )
