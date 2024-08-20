@@ -625,7 +625,7 @@ def document_s3_expires_shape(section, event_name, **kwargs):
         new_param.write('**ExpiresString** (*string*) --')
         new_param.style.end_li()
         new_param.style.new_line()
-        new_param.write('\tThe raw unparsed value of the ``Expires`` field.')
+        new_param.write('\tThe raw, unparsed value of the ``Expires`` field.')
 
 
 def base64_encode_user_data(params, **kwargs):

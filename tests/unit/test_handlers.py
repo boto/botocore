@@ -1639,7 +1639,7 @@ class TestDocumentS3ExpiresShape(unittest.TestCase):
         self.new_param.style.end_li.assert_called_once()
         self.new_param.style.new_line.assert_called_once()
         self.new_param.write.assert_any_call(
-            '\tThe raw unparsed value of the ``Expires`` field.'
+            '\tThe raw, unparsed value of the ``Expires`` field.'
         )
 
     def test_response_params_without_expires(self):

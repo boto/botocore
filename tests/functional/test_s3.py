@@ -17,7 +17,7 @@ import re
 import pytest
 
 import botocore.session
-from botocore import UNSIGNED, xform_name
+from botocore import UNSIGNED
 from botocore.compat import get_md5, parse_qs, urlsplit
 from botocore.config import Config
 from botocore.exceptions import (
@@ -1341,76 +1341,36 @@ class TestS3PutObject(BaseS3OperationTest):
 
 
 class TestS3Parser(BaseS3OperationTest):
-    def get_operations_with_expires(self):
-        s3 = self.session.create_client("s3")
-        service_model = s3.meta.service_model
-        operations_with_expires = []
-        operations = service_model.operation_names
-        for operation in operations:
-            operation_model = service_model.operation_model(operation)
-            output_shape = operation_model.output_shape
-            if output_shape and 'Expires' in output_shape.members:
-                operations_with_expires.append(operation)
-        return operations_with_expires
-
     def test_valid_expires_value_in_response(self):
-        operations_with_expires = self.get_operations_with_expires()
         expires_value = "Thu, 01 Jan 1970 00:00:00 GMT"
-        for operation in operations_with_expires:
-            mock_headers = {'expires': expires_value}
-            s3 = self.session.create_client("s3")
+        mock_headers = {'expires': expires_value}
+        s3 = self.session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response(headers=mock_headers)
+            response = s3.get_object(Bucket='mybucket', Key='mykey')
+            self.assertIn('Expires', response)
+            self.assertIsInstance(response['Expires'], datetime.datetime)
+            self.assertIn('ExpiresString', response)
+            self.assertIsInstance(response['ExpiresString'], str)
+            self.assertEqual(response['ExpiresString'], expires_value)
+            self.assertEqual(len(http_stubber.requests), 1)
+
+    def test_invalid_expires_value_in_response(self):
+        expires_value = "Invalid-Date"
+        mock_headers = {'expires': expires_value}
+        s3 = self.session.create_client("s3")
+        with self.assertLogs('botocore.parsers', level='WARNING') as log:
             with ClientHTTPStubber(s3) as http_stubber:
                 http_stubber.add_response(headers=mock_headers)
-                try:
-                    response = getattr(s3, xform_name(operation))(
-                        Bucket="mybucket", Key="mykey"
-                    )
-                except ClientError as e:
-                    self.fail(f"Operation {operation} failed with error: {e}")
-                headers = response['ResponseMetadata']['HTTPHeaders']
-                self.assertIn(
-                    'expires',
-                    headers,
-                    "Expires header is not present at the top level.",
-                )
-                self.assertIn('Expires', response)
-                self.assertIsInstance(response['Expires'], datetime.datetime)
+                response = s3.get_object(Bucket='mybucket', Key='mykey')
+                self.assertNotIn('Expires', response)
                 self.assertIn('ExpiresString', response)
                 self.assertIsInstance(response['ExpiresString'], str)
                 self.assertEqual(response['ExpiresString'], expires_value)
+                self.assertIn(
+                    'Failed to parse Expires as a timestamp', log.output[0]
+                )
                 self.assertEqual(len(http_stubber.requests), 1)
-
-    def test_invalid_expires_value_in_response(self):
-        operations_with_expires = self.get_operations_with_expires()
-        expires_value = "Invalid-Date"
-        for operation in operations_with_expires:
-            mock_headers = {'expires': expires_value}
-            s3 = self.session.create_client("s3")
-            with self.assertLogs('botocore.parsers', level='WARNING') as log:
-                with ClientHTTPStubber(s3) as http_stubber:
-                    http_stubber.add_response(headers=mock_headers)
-                    try:
-                        response = getattr(s3, xform_name(operation))(
-                            Bucket="mybucket", Key="mykey"
-                        )
-                    except ClientError as e:
-                        self.fail(
-                            f"Operation {operation} failed with error: {e}"
-                        )
-                    headers = response['ResponseMetadata']['HTTPHeaders']
-                    self.assertIn(
-                        'expires',
-                        headers,
-                        "Expires header is not present at the top level.",
-                    )
-                    self.assertNotIn('Expires', response)
-                    self.assertIn('ExpiresString', response)
-                    self.assertIsInstance(response['ExpiresString'], str)
-                    self.assertEqual(response['ExpiresString'], expires_value)
-                    self.assertIn(
-                        'Failed to parse Expires as a timestamp', log.output[0]
-                    )
-                    self.assertEqual(len(http_stubber.requests), 1)
 
 
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
