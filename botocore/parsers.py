@@ -1128,17 +1128,16 @@ class S3Parser(RestXMLParser):
 
     def _parse_shape(self, shape, node):
         if shape.name == 'Expires':
-            handler = getattr(self, '_handle_expires_timestamp')
-            return handler(shape, node)
+            return self._handle_expires_timestamp(shape, node)
         return super()._parse_shape(shape, node)
 
     def _handle_expires_timestamp(self, shape, timestamp):
         try:
-            return self._timestamp_parser(timestamp)
+            return self._handle_timestamp(shape, timestamp)
         except ValueError as e:
             LOG.warning(
-                f"Failed to parse Expires as a timestamp: {e}. "
-                f"The unparsed value is available in ExpiresString."
+                f'Failed to parse the "Expires" member as a timestamp: {e}. '
+                f'The unparsed value is available in the response under "ExpiresString".'
             )
             return None
 
