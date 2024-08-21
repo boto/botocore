@@ -432,42 +432,63 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected, protocol_type):
-    expected_body = expected.get('body', '').encode('utf-8')
-    actual_body = actual['body']
-    # The expected bodies in our consumed protocol tests have extra
-    # whitespace and newlines that need to be handled. We need to normalize
-    # the expected and actual response bodies before evaluating equivalence.
-    try:
-        if protocol_type in ['json', 'rest-json']:
-            assert_equal(
-                json.loads(actual_body),
-                json.loads(expected_body),
-                'Body value',
-            )
-        elif protocol_type in ['rest-xml']:
-            tree1 = ET.canonicalize(actual_body, strip_text=True)
-            tree2 = ET.canonicalize(expected_body, strip_text=True)
-            assert_equal(tree1, tree2, 'Body value')
-        else:
-            assert_equal(actual_body, expected_body, 'Body value')
-    except (json.JSONDecodeError, ET.ParseError):
-        assert_equal(actual_body, expected_body, 'Body value')
+    if 'body' in expected:
+        expected_body = expected['body'].encode('utf-8')
+        actual_body = actual['body']
+        _assert_request_body(actual_body, expected_body, protocol_type)
 
     actual_headers = HeadersDict(actual['headers'])
-    if protocol_type in ['query', 'ec2']:
-        if expected.get('headers', {}).get('Content-Type'):
-            expected['headers']['Content-Type'] += '; charset=utf-8'
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
     _assert_expected_headers_in_request(
-        actual_headers, expected_headers, excluded_headers
+        actual_headers, expected_headers, excluded_headers, protocol_type
     )
     assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
     if 'method' in expected:
         assert_equal(actual['method'], expected['method'], "Method")
 
 
-def _assert_expected_headers_in_request(actual, expected, excluded_headers):
+def _assert_request_body(actual, expected, protocol_type):
+    """
+    Asserts the equivalence of actual and expected request bodies based
+    on protocol type.
+
+    The expected bodies in our consumed protocol tests have extra
+    whitespace and newlines that need to be handled. We need to normalize
+    the expected and actual response bodies before evaluating equivalence.
+    """
+    if protocol_type in ['json', 'rest-json']:
+        _assert_json_bodies(actual, expected, protocol_type)
+    elif protocol_type == 'rest-xml':
+        _assert_xml_bodies(actual, expected)
+    else:
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_json_bodies(actual, expected, protocol_type):
+    try:
+        assert_equal(json.loads(actual), json.loads(expected), 'Body value')
+    except json.JSONDecodeError as e:
+        if protocol_type == 'json':
+            raise e
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_xml_bodies(actual, expected):
+    try:
+        tree1 = ET.canonicalize(actual, strip_text=True)
+        tree2 = ET.canonicalize(expected, strip_text=True)
+        assert_equal(tree1, tree2, 'Body value')
+    except ET.ParseError:
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_expected_headers_in_request(
+    actual, expected, excluded_headers, protocol_type
+):
+    if protocol_type in ['query', 'ec2']:
+        if expected.get('Content-Type'):
+            expected['Content-Type'] += '; charset=utf-8'
     for header, value in expected.items():
         assert header in actual
         assert actual[header] == value
@@ -537,12 +558,6 @@ def _should_ignore_test(protocol, test_type, suite, case):
     """
     Determines if a protocol test should be ignored.
 
-    This function checks the following, in order:
-    1. General test suites to ignore across all protocols.
-    2. General test cases to ignore across all protocols.
-    3. Protocol-specific test suites to ignore
-    4. Protocol-specific test cases to ignore
-
     :type protocol: str
     :param protocol: The protocol name as represented by its corresponding
         protocol test file name (without the .json extension).
@@ -559,25 +574,20 @@ def _should_ignore_test(protocol, test_type, suite, case):
     :return: True if the protocol test should be ignored, False otherwise.
     :rtype: bool
     """
-    general_ignore_list = PROTOCOL_TEST_IGNORE_LIST['general']
-    general_suites_to_ignore = general_ignore_list.get(test_type, {}).get(
-        'suites', []
+    ignore_list = PROTOCOL_TEST_IGNORE_LIST.get('general', {}).get(
+        test_type, {}
     )
-    general_cases_to_ignore = general_ignore_list.get(test_type, {}).get(
-        'cases', []
-    )
-    if suite in general_suites_to_ignore or case in general_cases_to_ignore:
+    ignore_suites = ignore_list.get('suites', [])
+    ignore_cases = ignore_list.get('cases', [])
+
+    if suite in ignore_suites or case in ignore_cases:
         return True
 
-    protocol_ignore_list = PROTOCOL_TEST_IGNORE_LIST['protocols'].get(
-        protocol, {}
+    protocol_ignore_list = (
+        PROTOCOL_TEST_IGNORE_LIST.get('protocols', {})
+        .get(protocol, {})
+        .get(test_type, {})
     )
-    protocol_suites_to_ignore = protocol_ignore_list.get(test_type, {}).get(
-        'suites', []
-    )
-    protocol_cases_to_ignore = protocol_ignore_list.get(test_type, {}).get(
-        'cases', []
-    )
-    return (
-        suite in protocol_suites_to_ignore or case in protocol_cases_to_ignore
-    )
+    protocol_ignore_suites = protocol_ignore_list.get('suites', [])
+    protocol_ignore_cases = protocol_ignore_list.get('cases', [])
+    return suite in protocol_ignore_suites or case in protocol_ignore_cases

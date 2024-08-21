@@ -35,12 +35,6 @@
       }
     },
     "json" : {
-      "input" : {
-        "cases": [
-          "sends_requests_to_slash",
-          "includes_x_amz_target_and_content_type"
-        ]
-      },
       "output" : {
         "cases": [
           "AwsJson11FooErrorUsingXAmznErrorTypeWithUriAndNamespace",
@@ -71,7 +65,8 @@
           "RestJsonFooErrorUsingXAmznErrorTypeWithUriAndNamespace",
           "RestJsonHttpPayloadTraitsWithNoBlobBody",
           "RestJsonHttpPayloadWithUnsetUnion",
-          "RestJsonInputAndOutputWithTimestampHeaders"
+          "RestJsonInputAndOutputWithTimestampHeaders",
+          "RestJsonDeserializesDenseSetMapAndSkipsNull"
         ]
       }
     },

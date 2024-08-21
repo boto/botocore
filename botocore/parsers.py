@@ -361,6 +361,9 @@ class ResponseParser:
         if shape.is_tagged_union:
             cleaned_value = value.copy()
             cleaned_value.pop("__type", None)
+            cleaned_value = {
+                k: v for k, v in cleaned_value.items() if v is not None
+            }
             if len(cleaned_value) != 1:
                 error_msg = (
                     "Invalid service response: %s must have one and only "
@@ -573,8 +576,6 @@ class QueryParser(BaseXMLResponseParser):
         return self._parse_body_as_xml(response, shape, inject_metadata=False)
 
     def _do_parse(self, response, shape):
-        if not response.get('body'):
-            return {}
         return self._parse_body_as_xml(response, shape, inject_metadata=True)
 
     def _parse_body_as_xml(self, response, shape, inject_metadata=True):
@@ -763,16 +764,7 @@ class BaseJSONParser(ResponseParser):
             return {}
         body = body_contents.decode(self.DEFAULT_ENCODING)
         try:
-            # Function to remove null values from a JSON object.
-            def remove_nulls(obj):
-                if isinstance(obj, dict):
-                    return {k: v for k, v in obj.items() if v is not None}
-                elif isinstance(obj, list):
-                    return [v for v in obj if v is not None]
-                else:
-                    return obj
-
-            original_parsed = json.loads(body, object_hook=remove_nulls)
+            original_parsed = json.loads(body)
             return original_parsed
         except ValueError:
             # if the body cannot be parsed, include
