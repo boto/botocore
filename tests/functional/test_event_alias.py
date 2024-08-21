@@ -71,7 +71,6 @@ SERVICES = {
         "endpoint_prefix": "codepipeline",
         "service_id": "codepipeline",
     },
-    "codestar": {"endpoint_prefix": "codestar", "service_id": "codestar"},
     "cognito-identity": {
         "endpoint_prefix": "cognito-identity",
         "service_id": "cognito-identity",
