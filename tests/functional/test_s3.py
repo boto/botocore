@@ -15,6 +15,7 @@ import datetime
 import re
 
 import pytest
+from dateutil.tz import tzutc
 
 import botocore.session
 from botocore import UNSIGNED
@@ -1349,9 +1350,11 @@ class TestS3Parser(BaseS3OperationTest):
             http_stubber.add_response(headers=mock_headers)
             response = s3.get_object(Bucket='mybucket', Key='mykey')
             self.assertIn('Expires', response)
-            self.assertIsInstance(response['Expires'], datetime.datetime)
+            self.assertEqual(
+                response['Expires'],
+                datetime.datetime(1970, 1, 1, tzinfo=tzutc()),
+            )
             self.assertIn('ExpiresString', response)
-            self.assertIsInstance(response['ExpiresString'], str)
             self.assertEqual(response['ExpiresString'], expires_value)
             self.assertEqual(len(http_stubber.requests), 1)
 
@@ -1371,7 +1374,6 @@ class TestS3Parser(BaseS3OperationTest):
                     response = s3.get_object(Bucket='mybucket', Key='mykey')
                     self.assertNotIn('Expires', response)
                     self.assertIn('ExpiresString', response)
-                    self.assertIsInstance(response['ExpiresString'], str)
                     self.assertEqual(response['ExpiresString'], expires)
                     self.assertIn(
                         'Failed to parse the "Expires" member as a timestamp',
