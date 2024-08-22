@@ -1641,10 +1641,10 @@ class TestS3ExpiresResponses(unittest.TestCase):
         )
 
     def test_valid_expires_response_parsed(self):
-        expires_value = 'Thu, 01 Jan 2015 00:00:00 GMT'
+        expires = 'Thu, 01 Jan 2015 00:00:00 GMT'
         parsed = self.parser.parse(
             {
-                'headers': {'Expires': expires_value},
+                'headers': {'Expires': expires},
                 'body': b'',
                 'status_code': 200,
             },
@@ -1653,31 +1653,37 @@ class TestS3ExpiresResponses(unittest.TestCase):
         expected = {
             'ResponseMetadata': {
                 'HTTPStatusCode': 200,
-                'HTTPHeaders': {'expires': expires_value},
+                'HTTPHeaders': {'expires': expires},
             },
             'Expires': datetime.datetime(2015, 1, 1, tzinfo=tzutc()),
-            'ExpiresString': expires_value,
+            'ExpiresString': expires,
         }
         self.assertEqual(parsed, expected)
 
     def test_invalid_expires_response_parsed(self):
-        expires_value = 'Invalid-Date'
-        parsed = self.parser.parse(
-            {
-                'headers': {'Expires': expires_value},
-                'body': b'',
-                'status_code': 200,
-            },
-            self.output_shape,
-        )
-        expected = {
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': {'expires': 'Invalid-Date'},
-            },
-            'ExpiresString': expires_value,
-        }
-        self.assertEqual(parsed, expected)
+        invalid_expires_values = """\
+        Invalid Date
+        access plus 1 month
+        Expires: Thu, 9 Sep 2013 14:19:41 GMT
+        {ts '2023-10-10 09:27:14'}
+        """
+        for expires in invalid_expires_values.splitlines():
+            parsed = self.parser.parse(
+                {
+                    'headers': {'Expires': expires},
+                    'body': b'',
+                    'status_code': 200,
+                },
+                self.output_shape,
+            )
+            expected = {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': {'expires': expires},
+                },
+                'ExpiresString': expires,
+            }
+            self.assertEqual(parsed, expected)
 
 
 class TestS3ParseShapes(unittest.TestCase):
