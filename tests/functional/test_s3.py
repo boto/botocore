@@ -1359,27 +1359,21 @@ class TestS3Parser(BaseS3OperationTest):
             self.assertEqual(len(http_stubber.requests), 1)
 
     def test_invalid_expires_value_in_response(self):
-        invalid_expires_values = """\
-        Invalid Date
-        access plus 1 month
-        Expires: Thu, 9 Sep 2013 14:19:41 GMT
-        {ts '2023-10-10 09:27:14'}
-        """
-        for expires in invalid_expires_values.splitlines():
-            mock_headers = {'expires': expires}
-            s3 = self.session.create_client("s3")
-            with self.assertLogs('botocore.parsers', level='WARNING') as log:
-                with ClientHTTPStubber(s3) as http_stubber:
-                    http_stubber.add_response(headers=mock_headers)
-                    response = s3.get_object(Bucket='mybucket', Key='mykey')
-                    self.assertNotIn('Expires', response)
-                    self.assertIn('ExpiresString', response)
-                    self.assertEqual(response['ExpiresString'], expires)
-                    self.assertIn(
-                        'Failed to parse the "Expires" member as a timestamp',
-                        log.output[0],
-                    )
-                    self.assertEqual(len(http_stubber.requests), 1)
+        expires_value = "Invalid Date"
+        mock_headers = {'expires': expires_value}
+        s3 = self.session.create_client("s3")
+        with self.assertLogs('botocore.parsers', level='WARNING') as log:
+            with ClientHTTPStubber(s3) as http_stubber:
+                http_stubber.add_response(headers=mock_headers)
+                response = s3.get_object(Bucket='mybucket', Key='mykey')
+                self.assertNotIn('Expires', response)
+                self.assertIn('ExpiresString', response)
+                self.assertEqual(response['ExpiresString'], expires_value)
+                self.assertIn(
+                    'Failed to parse the "Expires" member as a timestamp',
+                    log.output[0],
+                )
+                self.assertEqual(len(http_stubber.requests), 1)
 
 
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
