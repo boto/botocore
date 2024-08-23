@@ -1351,13 +1351,11 @@ class TestS3Parser(BaseS3OperationTest):
         with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.add_response(headers=mock_headers)
             response = s3.get_object(Bucket='mybucket', Key='mykey')
-            self.assertIn('Expires', response)
             self.assertEqual(
-                response['Expires'],
+                response.get('Expires'),
                 datetime.datetime(1970, 1, 1, tzinfo=tzutc()),
             )
-            self.assertIn('ExpiresString', response)
-            self.assertEqual(response['ExpiresString'], expires_value)
+            self.assertEqual(response.get('ExpiresString'), expires_value)
             self.assertEqual(len(http_stubber.requests), 1)
 
     def test_invalid_expires_value_in_response(self):
