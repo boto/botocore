@@ -12,13 +12,15 @@
 # language governing permissions and limitations under the License.
 import base64
 import datetime
+import json
+import os
 import re
 
 import pytest
 from dateutil.tz import tzutc
 
 import botocore.session
-from botocore import UNSIGNED
+from botocore import BOTOCORE_ROOT, UNSIGNED
 from botocore.compat import get_md5, parse_qs, urlsplit
 from botocore.config import Config
 from botocore.exceptions import (
@@ -1361,6 +1363,7 @@ class TestS3Parser(BaseS3OperationTest):
     def test_invalid_expires_value_in_response(self):
         expires_value = "Invalid Date"
         mock_headers = {'expires': expires_value}
+        warning_msg = 'Failed to parse the "Expires" member as a timestamp'
         s3 = self.session.create_client("s3")
         with self.assertLogs('botocore.parsers', level='WARNING') as log:
             with ClientHTTPStubber(s3) as http_stubber:
@@ -1369,9 +1372,9 @@ class TestS3Parser(BaseS3OperationTest):
                 self.assertNotIn('Expires', response)
                 self.assertIn('ExpiresString', response)
                 self.assertEqual(response['ExpiresString'], expires_value)
-                self.assertIn(
-                    'Failed to parse the "Expires" member as a timestamp',
-                    log.output[0],
+                self.assertTrue(
+                    any(warning_msg in entry for entry in log.output),
+                    f'Expected warning message not found in logs. Logs: {log.output}',
                 )
                 self.assertEqual(len(http_stubber.requests), 1)
 
@@ -2113,6 +2116,22 @@ class TestGeneratePresigned(BaseS3OperationTest):
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
         self.assert_is_v2_presigned_url(url)
+
+
+def test_s3_protocols_unchanged():
+    # Test to ensure that the protocols list in the base S3 model remains unchanged.
+    # This is important to verify because updates to the protocol occur in the
+    # service-2.sdk-extras.json file.
+    file_path = os.path.join(
+        BOTOCORE_ROOT, 'data/s3/2006-03-01/service-2.json'
+    )
+    with open(file_path) as file:
+        s3_model = json.load(file)
+    protocols = s3_model.get('metadata', {}).get('protocols', [])
+    expected_protocols = ['rest-xml']
+    assert (
+        protocols == expected_protocols
+    ), f"Expected protocols list: {expected_protocols}, but got: {protocols}"
 
 
 CHECKSUM_TEST_CASES = [

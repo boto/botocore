@@ -1622,103 +1622,6 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertEqual(error['Message'], '')
 
 
-class TestS3ExpiresResponses(unittest.TestCase):
-    def setUp(self):
-        self.parser = parsers.S3Parser()
-        self.output_shape = model.StructureShape(
-            'OutputShape',
-            {
-                'type': 'structure',
-                'members': {
-                    'Expires': {
-                        'shape': 'Expires',
-                        'location': 'header',
-                        'locationName': 'Expires',
-                    }
-                },
-            },
-            model.ShapeResolver({'Expires': {'type': 'timestamp'}}),
-        )
-
-    def test_valid_expires_response_parsed(self):
-        expires = 'Thu, 01 Jan 2015 00:00:00 GMT'
-        parsed = self.parser.parse(
-            {
-                'headers': {'Expires': expires},
-                'body': b'',
-                'status_code': 200,
-            },
-            self.output_shape,
-        )
-        expected = {
-            'ResponseMetadata': {
-                'HTTPStatusCode': 200,
-                'HTTPHeaders': {'expires': expires},
-            },
-            'Expires': datetime.datetime(2015, 1, 1, tzinfo=tzutc()),
-            'ExpiresString': expires,
-        }
-        self.assertEqual(parsed, expected)
-
-    def test_invalid_expires_response_parsed(self):
-        invalid_expires_values = """\
-        Invalid Date
-        access plus 1 month
-        Expires: Thu, 9 Sep 2013 14:19:41 GMT
-        {ts '2023-10-10 09:27:14'}
-        """
-        for expires in invalid_expires_values.splitlines():
-            parsed = self.parser.parse(
-                {
-                    'headers': {'Expires': expires},
-                    'body': b'',
-                    'status_code': 200,
-                },
-                self.output_shape,
-            )
-            expected = {
-                'ResponseMetadata': {
-                    'HTTPStatusCode': 200,
-                    'HTTPHeaders': {'expires': expires},
-                },
-                'ExpiresString': expires,
-            }
-            self.assertEqual(parsed, expected)
-
-
-class TestS3ParseShapes(unittest.TestCase):
-    def setUp(self):
-        self.parser = parsers.S3Parser()
-
-    def test_parse_valid_expires_shape(self):
-        shape = model.Shape('Expires', {'type': 'timestamp'})
-        node = 'Thu, 01 Jan 2015 00:00:00 GMT'
-        result = self.parser._parse_shape(shape, node)
-        self.assertEqual(result, datetime.datetime(2015, 1, 1, tzinfo=tzutc()))
-
-    def test_parse_invalid_expires_shape(self):
-        shape = model.Shape('Expires', {'type': 'timestamp'})
-        node = 'Invalid-Date'
-        result = self.parser._parse_shape(shape, node)
-        self.assertEqual(result, None)
-
-    def test_parse_other_shapes(self):
-        shape = model.StringShape('StringType', {'type': 'string'})
-        node = 'str'
-        result = self.parser._parse_shape(shape, node)
-        self.assertEqual(result, 'str')
-
-        shape = model.Shape('IntegerType', {'type': 'integer'})
-        node = 123
-        result = self.parser._parse_shape(shape, node)
-        self.assertEqual(result, 123)
-
-        shape = model.Shape('BooleanType', {'type': 'boolean'})
-        node = 'true'
-        result = self.parser._parse_shape(shape, node)
-        self.assertEqual(result, True)
-
-
 def _generic_test_bodies():
     generic_html_body = (
         b'<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
@@ -1743,3 +1646,92 @@ def test_can_handle_generic_error_message(parser, body):
     )
     assert parsed['Error'] == {'Code': '503', 'Message': 'Service Unavailable'}
     assert parsed['ResponseMetadata']['HTTPStatusCode'] == 503
+
+
+@pytest.fixture
+def s3_parser():
+    return parsers.S3Parser()
+
+
+@pytest.fixture
+def expires_output_shape():
+    output_shape = model.StructureShape(
+        'OutputShape',
+        {
+            'type': 'structure',
+            'members': {
+                'Expires': {
+                    'shape': 'Expires',
+                    'location': 'header',
+                    'locationName': 'Expires',
+                }
+            },
+        },
+        model.ShapeResolver({'Expires': {'type': 'timestamp'}}),
+    )
+    return output_shape
+
+
+@pytest.mark.parametrize(
+    "expires, expected_expires",
+    [
+        (
+            'Thu, 01 Jan 2015 00:00:00 GMT',
+            datetime.datetime(2015, 1, 1, tzinfo=tzutc()),
+        ),
+    ],
+)
+def test_s3_valid_expires_response_parsed(
+    s3_parser, expires_output_shape, expires, expected_expires
+):
+    parser = s3_parser
+    output_shape = expires_output_shape
+    parsed = parser.parse(
+        {
+            'headers': {'Expires': expires},
+            'body': b'',
+            'status_code': 200,
+        },
+        output_shape,
+    )
+    expected = {
+        'ResponseMetadata': {
+            'HTTPStatusCode': 200,
+            'HTTPHeaders': {'expires': expires},
+        },
+        'Expires': datetime.datetime(2015, 1, 1, tzinfo=tzutc()),
+        'ExpiresString': expires,
+    }
+    assert parsed == expected
+
+
+@pytest.mark.parametrize(
+    "expires",
+    [
+        "Invalid Date",
+        "access plus 1 month",
+        "Expires: Thu, 9 Sep 2013 14:19:41 GMT",
+        "{ts '2023-10-10 09:27:14'}",
+    ],
+)
+def test_s3_invalid_expires_response_parsed(
+    s3_parser, expires_output_shape, expires
+):
+    parser = s3_parser
+    output_shape = expires_output_shape
+    parsed = parser.parse(
+        {
+            'headers': {'Expires': expires},
+            'body': b'',
+            'status_code': 200,
+        },
+        output_shape,
+    )
+    expected = {
+        'ResponseMetadata': {
+            'HTTPStatusCode': 200,
+            'HTTPHeaders': {'expires': expires},
+        },
+        'ExpiresString': expires,
+    }
+    assert parsed == expected

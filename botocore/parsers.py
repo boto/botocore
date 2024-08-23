@@ -964,11 +964,14 @@ class BaseRestParser(ResponseParser):
                     member_shape, headers
                 )
             elif location == 'header':
-                header_name = member_shape.serialization.get('name', name)
-                if header_name in headers:
-                    final_parsed[name] = self._parse_shape(
-                        member_shape, headers[header_name]
-                    )
+                self._parse_headers(final_parsed, headers, member_shape, name)
+
+    def _parse_headers(self, final_parsed, headers, member_shape, name):
+        header_name = member_shape.serialization.get('name', name)
+        if header_name in headers:
+            final_parsed[name] = self._parse_shape(
+                member_shape, headers[header_name]
+            )
 
     def _parse_header_map(self, shape, headers):
         # Note that headers are case insensitive, so we .lower()
@@ -1114,22 +1117,20 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
 
 
 class S3Parser(RestXMLParser):
-    def parse(self, response, shape):
-        parsed = super().parse(response, shape)
-        if 'Expires' in parsed:
-            parsed['ExpiresString'] = (
-                parsed.get('ResponseMetadata', {})
-                .get('HTTPHeaders', {})
-                .get('expires')
-            )
-            if parsed['Expires'] is None:
-                del parsed['Expires']
-        return parsed
-
-    def _parse_shape(self, shape, node):
-        if shape.name == 'Expires':
-            return self._handle_expires_timestamp(shape, node)
-        return super()._parse_shape(shape, node)
+    def _parse_headers(self, final_parsed, headers, member_shape, name):
+        header_name = member_shape.serialization.get('name', name)
+        if header_name in headers:
+            if header_name == 'Expires':
+                final_parsed[name] = self._handle_expires_timestamp(
+                    member_shape, headers[header_name]
+                )
+                final_parsed['ExpiresString'] = headers[header_name]
+                if final_parsed[name] is None:
+                    del final_parsed[name]
+            else:
+                super()._parse_headers(
+                    final_parsed, headers, member_shape, name
+                )
 
     def _handle_expires_timestamp(self, shape, timestamp):
         try:
