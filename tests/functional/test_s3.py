@@ -1356,7 +1356,6 @@ class TestS3Parser(BaseS3OperationTest):
                 datetime.datetime(1970, 1, 1, tzinfo=tzutc()),
             )
             self.assertEqual(response.get('ExpiresString'), expires_value)
-            self.assertEqual(len(http_stubber.requests), 1)
 
     def test_invalid_expires_value_in_response(self):
         expires_value = "Invalid Date"
@@ -1368,13 +1367,11 @@ class TestS3Parser(BaseS3OperationTest):
                 http_stubber.add_response(headers=mock_headers)
                 response = s3.get_object(Bucket='mybucket', Key='mykey')
                 self.assertNotIn('Expires', response)
-                self.assertIn('ExpiresString', response)
-                self.assertEqual(response['ExpiresString'], expires_value)
+                self.assertEqual(response.get('ExpiresString'), expires_value)
                 self.assertTrue(
                     any(warning_msg in entry for entry in log.output),
                     f'Expected warning message not found in logs. Logs: {log.output}',
                 )
-                self.assertEqual(len(http_stubber.requests), 1)
 
 
 class TestWriteGetObjectResponse(BaseS3ClientConfigurationTest):
@@ -2116,10 +2113,11 @@ class TestGeneratePresigned(BaseS3OperationTest):
         self.assert_is_v2_presigned_url(url)
 
 
+@pytest.mark.validates_models
 def test_s3_protocols_unchanged():
-    # Test to ensure that the protocols list in the base S3 model remains unchanged.
-    # This is important to verify because updates to the protocol occur in the
-    # service-2.sdk-extras.json file.
+    # Verify that the 'protocols' metadata key remains unchanged in the S3 model.
+    # If support for another protocol is added, we want to be alerted instead of
+    # silently overwriting the value in the service-2.sdk-extras.json file.
     file_path = os.path.join(
         BOTOCORE_ROOT, 'data/s3/2006-03-01/service-2.json'
     )

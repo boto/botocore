@@ -622,7 +622,7 @@ def document_s3_expires_shape(section, event_name, **kwargs):
         param_section.add_new_section('ExpiresString')
         new_param = param_section.get_section('ExpiresString')
         new_param.style.start_li()
-        new_param.write('**ExpiresString** (*string*) --')
+        new_param.write('**ExpiresString** *(string) --*')
         new_param.style.end_li()
         new_param.style.new_line()
         new_param.write('\tThe raw, unparsed value of the ``Expires`` field.')

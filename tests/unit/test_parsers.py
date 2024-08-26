@@ -1712,6 +1712,7 @@ def test_s3_valid_expires_response_parsed(
         "access plus 1 month",
         "Expires: Thu, 9 Sep 2013 14:19:41 GMT",
         "{ts '2023-10-10 09:27:14'}",
+        -33702800404003370280040400,
     ],
 )
 def test_s3_invalid_expires_response_parsed(
