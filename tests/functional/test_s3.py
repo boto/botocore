@@ -12,15 +12,13 @@
 # language governing permissions and limitations under the License.
 import base64
 import datetime
-import json
-import os
 import re
 
 import pytest
 from dateutil.tz import tzutc
 
 import botocore.session
-from botocore import BOTOCORE_ROOT, UNSIGNED
+from botocore import UNSIGNED
 from botocore.compat import get_md5, parse_qs, urlsplit
 from botocore.config import Config
 from botocore.exceptions import (
@@ -1343,7 +1341,7 @@ class TestS3PutObject(BaseS3OperationTest):
             self.assertEqual(len(http_stubber.requests), 2)
 
 
-class TestS3Parser(BaseS3OperationTest):
+class TestS3ExpiresHeaderResponse(BaseS3OperationTest):
     def test_valid_expires_value_in_response(self):
         expires_value = "Thu, 01 Jan 1970 00:00:00 GMT"
         mock_headers = {'expires': expires_value}
@@ -2111,23 +2109,6 @@ class TestGeneratePresigned(BaseS3OperationTest):
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
         self.assert_is_v2_presigned_url(url)
-
-
-@pytest.mark.validates_models
-def test_s3_protocols_unchanged():
-    # Verify that the 'protocols' metadata key remains unchanged in the S3 model.
-    # If support for another protocol is added, we want to be alerted instead of
-    # silently overwriting the value in the service-2.sdk-extras.json file.
-    file_path = os.path.join(
-        BOTOCORE_ROOT, 'data/s3/2006-03-01/service-2.json'
-    )
-    with open(file_path) as file:
-        s3_model = json.load(file)
-    protocols = s3_model.get('metadata', {}).get('protocols', [])
-    expected_protocols = ['rest-xml']
-    assert (
-        protocols == expected_protocols
-    ), f"Expected protocols list: {expected_protocols}, but got: {protocols}"
 
 
 CHECKSUM_TEST_CASES = [

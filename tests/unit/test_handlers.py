@@ -1790,7 +1790,7 @@ def document_s3_expires_mocks():
     param_section = mock.Mock()
     doc_section = mock.Mock()
     new_param_line = mock.Mock()
-    new_param = mock.Mock()
+    new_param_section = mock.Mock()
     response_example_event = (
         'docs.response-example.s3.TestOperation.complete-section'
     )
@@ -1804,7 +1804,7 @@ def document_s3_expires_mocks():
         'param_section': param_section,
         'doc_section': doc_section,
         'new_param_line': new_param_line,
-        'new_param': new_param,
+        'new_param_section': new_param_section,
         'response_example_event': response_example_event,
         'response_params_event': response_params_event,
     }
@@ -1849,26 +1849,31 @@ def test_document_response_params_with_expires(document_s3_expires_mocks):
     mocks['section'].get_section.return_value = mocks['param_section']
     mocks['param_section'].get_section.side_effect = [
         mocks['doc_section'],
-        mocks['new_param'],
     ]
-    mocks['new_param'].style = mock.Mock()
+    mocks['param_section'].add_new_section.side_effect = [
+        mocks['new_param_section'],
+    ]
+    mocks['doc_section'].style = mock.Mock()
+    mocks['new_param_section'].style = mock.Mock()
     handlers.document_s3_expires_shape(
         mocks['section'], mocks['response_params_event']
     )
     mocks['param_section'].get_section.assert_any_call('param-documentation')
-    mocks['param_section'].get_section.assert_any_call('ExpiresString')
+    mocks['doc_section'].style.start_note.assert_called_once()
     mocks['doc_section'].write.assert_called_once_with(
-        '*This member has been deprecated*. Please use ``ExpiresString`` instead.'
+        'This member has been deprecated. Please use ``ExpiresString`` instead.'
     )
+    mocks['doc_section'].style.end_note.assert_called_once()
     mocks['param_section'].add_new_section.assert_called_once_with(
         'ExpiresString'
     )
-    mocks['new_param'].style.start_li.assert_called_once()
-    mocks['new_param'].write.assert_any_call('**ExpiresString** *(string) --*')
-    mocks['new_param'].style.end_li.assert_called_once()
-    mocks['new_param'].style.new_line.assert_called_once()
-    mocks['new_param'].write.assert_any_call(
-        '\tThe raw, unparsed value of the ``Expires`` field.'
+    mocks['new_param_section'].style.new_paragraph.assert_any_call()
+    mocks['new_param_section'].write.assert_any_call(
+        '- **ExpiresString** *(string) --*'
+    )
+    mocks['new_param_section'].style.indent.assert_called_once()
+    mocks['new_param_section'].write.assert_any_call(
+        'The raw, unparsed value of the ``Expires`` field.'
     )
 
 

@@ -615,17 +615,22 @@ def document_s3_expires_shape(section, event_name, **kwargs):
         if not section.has_section('Expires'):
             return
         param_section = section.get_section('Expires')
+        # Add a deprecation notice for the "Expires" param
         doc_section = param_section.get_section('param-documentation')
+        doc_section.style.start_note()
         doc_section.write(
-            '*This member has been deprecated*. Please use ``ExpiresString`` instead.'
+            'This member has been deprecated. Please use ``ExpiresString`` instead.'
         )
-        param_section.add_new_section('ExpiresString')
-        new_param = param_section.get_section('ExpiresString')
-        new_param.style.start_li()
-        new_param.write('**ExpiresString** *(string) --*')
-        new_param.style.end_li()
-        new_param.style.new_line()
-        new_param.write('\tThe raw, unparsed value of the ``Expires`` field.')
+        doc_section.style.end_note()
+        # Document the "ExpiresString" param
+        new_param_section = param_section.add_new_section('ExpiresString')
+        new_param_section.style.new_paragraph()
+        new_param_section.write('- **ExpiresString** *(string) --*')
+        new_param_section.style.indent()
+        new_param_section.style.new_paragraph()
+        new_param_section.write(
+            'The raw, unparsed value of the ``Expires`` field.'
+        )
 
 
 def base64_encode_user_data(params, **kwargs):

@@ -1649,11 +1649,6 @@ def test_can_handle_generic_error_message(parser, body):
 
 
 @pytest.fixture
-def s3_parser():
-    return parsers.S3Parser()
-
-
-@pytest.fixture
 def expires_output_shape():
     output_shape = model.StructureShape(
         'OutputShape',
@@ -1681,10 +1676,10 @@ def expires_output_shape():
         ),
     ],
 )
-def test_s3_valid_expires_response_parsed(
-    s3_parser, expires_output_shape, expires, expected_expires
+def test_valid_expires_header_response_parsed(
+    expires_output_shape, expires, expected_expires
 ):
-    parser = s3_parser
+    parser = parsers.RestXMLParser()
     output_shape = expires_output_shape
     parsed = parser.parse(
         {
@@ -1715,10 +1710,8 @@ def test_s3_valid_expires_response_parsed(
         -33702800404003370280040400,
     ],
 )
-def test_s3_invalid_expires_response_parsed(
-    s3_parser, expires_output_shape, expires
-):
-    parser = s3_parser
+def test_invalid_expires_header_response_parsed(expires_output_shape, expires):
+    parser = parsers.RestXMLParser()
     output_shape = expires_output_shape
     parsed = parser.parse(
         {

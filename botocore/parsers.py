@@ -537,6 +537,17 @@ class BaseXMLResponseParser(ResponseParser):
         return self._timestamp_parser(text)
 
     @_text_content
+    def _handle_expires_timestamp(self, shape, text):
+        try:
+            return self._handle_timestamp(shape, text)
+        except (ValueError, RuntimeError):
+            LOG.warning(
+                f'Failed to parse the "Expires" member as a timestamp: {text}. '
+                f'The unparsed value is available in the response under "ExpiresString".'
+            )
+            return None
+
+    @_text_content
     def _handle_integer(self, shape, text):
         return int(text)
 
@@ -964,14 +975,19 @@ class BaseRestParser(ResponseParser):
                     member_shape, headers
                 )
             elif location == 'header':
-                self._parse_header(final_parsed, headers, member_shape, name)
-
-    def _parse_header(self, final_parsed, headers, member_shape, name):
-        header_name = member_shape.serialization.get('name', name)
-        if header_name in headers:
-            final_parsed[name] = self._parse_shape(
-                member_shape, headers[header_name]
-            )
+                header_name = member_shape.serialization.get('name', name)
+                if header_name in headers:
+                    if header_name == 'Expires':
+                        final_parsed[name] = self._handle_expires_timestamp(
+                            member_shape, headers[header_name]
+                        )
+                        if final_parsed[name] is None:
+                            del final_parsed[name]
+                        final_parsed['ExpiresString'] = headers[header_name]
+                    else:
+                        final_parsed[name] = self._parse_shape(
+                            member_shape, headers[header_name]
+                        )
 
     def _parse_header_map(self, shape, headers):
         # Note that headers are case insensitive, so we .lower()
@@ -1116,36 +1132,8 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         return text
 
 
-class S3Parser(RestXMLParser):
-    def _parse_header(self, final_parsed, headers, member_shape, name):
-        header_name = member_shape.serialization.get('name', name)
-        if header_name in headers:
-            if header_name == 'Expires':
-                final_parsed['ExpiresString'] = headers[header_name]
-                final_parsed[name] = self._handle_expires_timestamp(
-                    member_shape, headers[header_name]
-                )
-                if final_parsed[name] is None:
-                    del final_parsed[name]
-            else:
-                super()._parse_header(
-                    final_parsed, headers, member_shape, name
-                )
-
-    def _handle_expires_timestamp(self, shape, timestamp):
-        try:
-            return self._handle_timestamp(shape, timestamp)
-        except (ValueError, RuntimeError):
-            LOG.warning(
-                f'Failed to parse the "Expires" member as a timestamp: {timestamp}. '
-                f'The unparsed value is available in the response under "ExpiresString".'
-            )
-            return None
-
-
 PROTOCOL_PARSERS = {
     'ec2': EC2QueryParser,
-    's3': S3Parser,
     'query': QueryParser,
     'json': JSONParser,
     'rest-json': RestJSONParser,
