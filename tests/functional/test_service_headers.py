@@ -33,7 +33,11 @@ def test_only_s3_targets_expires_header():
             if output_shape := operation_model.output_shape:
                 if _shape_targets_expires_header(output_shape):
                     services_that_target_expires_header.add(service)
-    assert services_that_target_expires_header == {'s3'}
+    assert services_that_target_expires_header == {'s3'}, (
+        f"Expected only 's3' to target the 'Expires' header.\n"
+        f"Actual services that target the 'Expires' header: {services_that_target_expires_header}\n"
+        f"Please review the service models to verify this change."
+    )
 
 
 def _shape_targets_expires_header(shape):
