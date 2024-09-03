@@ -81,7 +81,7 @@ class CrtSigV4Auth(BaseSigner):
         else:
             explicit_payload = UNSIGNED_PAYLOAD
 
-        if self._should_add_content_sha256_header(explicit_payload):
+        if self._should_add_content_sha256_header(existing_sha256, explicit_payload):
             body_header = (
                 awscrt.auth.AwsSignedBodyHeaderType.X_AMZ_CONTENT_SHA_256
             )
@@ -169,7 +169,7 @@ class CrtSigV4Auth(BaseSigner):
         # bit of metadata through the request context.
         return request.context.get('payload_signing_enabled', True)
 
-    def _should_add_content_sha256_header(self, explicit_payload):
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
         # only add X-Amz-Content-SHA256 header if payload is explicitly set
         return explicit_payload is not None
 
@@ -278,7 +278,7 @@ class CrtSigV4AsymAuth(BaseSigner):
         else:
             explicit_payload = UNSIGNED_PAYLOAD
 
-        if self._should_add_content_sha256_header(explicit_payload):
+        if self._should_add_content_sha256_header(existing_sha256, explicit_payload):
             body_header = (
                 awscrt.auth.AwsSignedBodyHeaderType.X_AMZ_CONTENT_SHA_256
             )
@@ -371,7 +371,7 @@ class CrtSigV4AsymAuth(BaseSigner):
         # bit of metadata through the request context.
         return request.context.get('payload_signing_enabled', True)
 
-    def _should_add_content_sha256_header(self, explicit_payload):
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
         # only add X-Amz-Content-SHA256 header if payload is explicitly set
         return explicit_payload is not None
 
@@ -421,7 +421,7 @@ class CrtS3SigV4AsymAuth(CrtSigV4AsymAuth):
         # checks.
         return super()._should_sha256_sign_payload(request)
 
-    def _should_add_content_sha256_header(self, explicit_payload):
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
         # Always add X-Amz-Content-SHA256 header
         return True
 
@@ -494,6 +494,10 @@ class CrtSigV4AsymQueryAuth(CrtSigV4AsymAuth):
         # fragment - 4
         aws_request.url = urlunsplit((p[0], p[1], p[2], signed_query, p[4]))
 
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
+        # only add X-Amz-Content-SHA256 header if header already exists.
+        return existing_sha256 is not None
+
 
 class CrtS3SigV4AsymQueryAuth(CrtSigV4AsymQueryAuth):
     """S3 SigV4A auth using query parameters.
@@ -512,7 +516,7 @@ class CrtS3SigV4AsymQueryAuth(CrtSigV4AsymQueryAuth):
         # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
         return False
 
-    def _should_add_content_sha256_header(self, explicit_payload):
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
         # Never add X-Amz-Content-SHA256 header
         return False
 
@@ -591,6 +595,10 @@ class CrtSigV4QueryAuth(CrtSigV4Auth):
         # fragment - 4
         aws_request.url = urlunsplit((p[0], p[1], p[2], signed_query, p[4]))
 
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
+        # only add X-Amz-Content-SHA256 header if header already exists.
+        return existing_sha256 is not None
+
 
 class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
     """S3 SigV4 auth using query parameters.
@@ -611,7 +619,7 @@ class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
         # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
         return False
 
-    def _should_add_content_sha256_header(self, explicit_payload):
+    def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
         # Never add X-Amz-Content-SHA256 header
         return False
 
