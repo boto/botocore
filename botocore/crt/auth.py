@@ -495,8 +495,8 @@ class CrtSigV4AsymQueryAuth(CrtSigV4AsymAuth):
         aws_request.url = urlunsplit((p[0], p[1], p[2], signed_query, p[4]))
 
     def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
-        # only add X-Amz-Content-SHA256 header if header already exists.
-        return existing_sha256 is not None
+        # only add X-Amz-Content-SHA256 header if header already set to UNSIGNED_PAYLOAD
+        return existing_sha256 == UNSIGNED_PAYLOAD
 
 
 class CrtS3SigV4AsymQueryAuth(CrtSigV4AsymQueryAuth):
@@ -596,8 +596,8 @@ class CrtSigV4QueryAuth(CrtSigV4Auth):
         aws_request.url = urlunsplit((p[0], p[1], p[2], signed_query, p[4]))
 
     def _should_add_content_sha256_header(self, existing_sha256, explicit_payload):
-        # only add X-Amz-Content-SHA256 header if header already exists.
-        return existing_sha256 is not None
+        # only add X-Amz-Content-SHA256 header if header already set to UNSIGNED_PAYLOAD
+        return existing_sha256 == UNSIGNED_PAYLOAD
 
 
 class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
