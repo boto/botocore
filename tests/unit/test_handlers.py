@@ -1784,29 +1784,16 @@ def test_remove_bucket_from_url_paths_from_model(
 
 @pytest.fixture()
 def document_s3_expires_mocks():
-    section = mock.Mock()
-    parent = mock.Mock()
-    param_line = mock.Mock()
-    param_section = mock.Mock()
-    doc_section = mock.Mock()
-    new_param_line = mock.Mock()
-    new_param_section = mock.Mock()
-    response_example_event = (
-        'docs.response-example.s3.TestOperation.complete-section'
-    )
-    response_params_event = (
-        'docs.response-params.s3.TestOperation.complete-section'
-    )
     return {
-        'section': section,
-        'parent': parent,
-        'param_line': param_line,
-        'param_section': param_section,
-        'doc_section': doc_section,
-        'new_param_line': new_param_line,
-        'new_param_section': new_param_section,
-        'response_example_event': response_example_event,
-        'response_params_event': response_params_event,
+        'section': mock.Mock(),
+        'parent': mock.Mock(),
+        'param_line': mock.Mock(),
+        'param_section': mock.Mock(),
+        'doc_section': mock.Mock(),
+        'new_param_line': mock.Mock(),
+        'new_param_section': mock.Mock(),
+        'response_example_event': 'docs.response-example.s3.TestOperation.complete-section',
+        'response_params_event': 'docs.response-params.s3.TestOperation.complete-section',
     }
 
 

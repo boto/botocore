@@ -537,17 +537,6 @@ class BaseXMLResponseParser(ResponseParser):
         return self._timestamp_parser(text)
 
     @_text_content
-    def _handle_expires_timestamp(self, shape, text):
-        try:
-            return self._handle_timestamp(shape, text)
-        except (ValueError, RuntimeError):
-            LOG.warning(
-                f'Failed to parse the "Expires" member as a timestamp: {text}. '
-                f'The unparsed value is available in the response under "ExpiresString".'
-            )
-            return None
-
-    @_text_content
     def _handle_integer(self, shape, text):
         return int(text)
 
@@ -1022,6 +1011,16 @@ class BaseRestParser(ResponseParser):
             # List in headers may be a comma separated string as per RFC7230
             node = [e.strip() for e in node.split(',')]
         return super()._handle_list(shape, node)
+
+    def _handle_expires_timestamp(self, shape, timestamp):
+        try:
+            return self._handle_timestamp(shape, timestamp)
+        except (ValueError, RuntimeError):
+            LOG.warning(
+                f'Failed to parse the "Expires" member as a timestamp: {timestamp}. '
+                f'The unparsed value is available in the response under "ExpiresString".'
+            )
+            return None
 
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
