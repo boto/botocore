@@ -3686,3 +3686,44 @@ class TestParameterInjection(BaseS3OperationTest):
             request.context['input_params']['Bucket'], self.BUCKET
         )
         self.assertEqual(request.context['input_params']['Key'], self.KEY)
+
+
+@pytest.mark.parametrize(
+    "bucket, key, expected_path, expected_hostname",
+    [
+        (
+            "mybucket",
+            "../key.txt",
+            "/../key.txt",
+            "mybucket.s3.us-west-2.amazonaws.com",
+        ),
+        (
+            "mybucket",
+            "foo/../key.txt",
+            "/foo/../key.txt",
+            "mybucket.s3.us-west-2.amazonaws.com",
+        ),
+        (
+            "mybucket",
+            "foo/../../key.txt",
+            "/foo/../../key.txt",
+            "mybucket.s3.us-west-2.amazonaws.com",
+        ),
+    ],
+)
+def test_dot_segments_preserved_in_url_path(
+    patched_session, bucket, key, expected_path, expected_hostname
+):
+    s3 = patched_session.create_client(
+        's3',
+        'us-west-2',
+        config=Config(
+            s3={"addressing_style": "virtual"},
+        ),
+    )
+    with ClientHTTPStubber(s3) as http_stubber:
+        http_stubber.add_response()
+        s3.get_object(Bucket=bucket, Key=key)
+        url_parts = urlsplit(http_stubber.requests[0].url)
+        assert url_parts.path == expected_path
+        assert url_parts.hostname == expected_hostname
