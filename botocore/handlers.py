@@ -596,6 +596,19 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     parsed['LocationConstraint'] = region
 
 
+def handle_expires_header(response_dict, additional_response_keys, **kwargs):
+    if expires_value := response_dict.get('headers', {}).get('Expires'):
+        additional_response_keys['ExpiresString'] = expires_value
+        try:
+            utils.parse_timestamp(expires_value)
+        except (ValueError, RuntimeError):
+            logger.warning(
+                f'Failed to parse the "Expires" member as a timestamp: {expires_value}. '
+                f'The unparsed value is available in the response under "ExpiresString".'
+            )
+            del response_dict['headers']['Expires']
+
+
 def document_s3_expires_shape(section, event_name, **kwargs):
     # Updates the documentation for S3 operations that include the 'Expires' member
     # in their response structure. Documents a synthetic member 'ExpiresString' and
@@ -1242,6 +1255,7 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
+    ('before-parse.s3.*', handle_expires_header),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),

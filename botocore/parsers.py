@@ -966,17 +966,9 @@ class BaseRestParser(ResponseParser):
             elif location == 'header':
                 header_name = member_shape.serialization.get('name', name)
                 if header_name in headers:
-                    if header_name == 'Expires':
-                        final_parsed[name] = self._handle_expires_timestamp(
-                            member_shape, headers[header_name]
-                        )
-                        if final_parsed[name] is None:
-                            del final_parsed[name]
-                        final_parsed['ExpiresString'] = headers[header_name]
-                    else:
-                        final_parsed[name] = self._parse_shape(
-                            member_shape, headers[header_name]
-                        )
+                    final_parsed[name] = self._parse_shape(
+                        member_shape, headers[header_name]
+                    )
 
     def _parse_header_map(self, shape, headers):
         # Note that headers are case insensitive, so we .lower()
@@ -1011,16 +1003,6 @@ class BaseRestParser(ResponseParser):
             # List in headers may be a comma separated string as per RFC7230
             node = [e.strip() for e in node.split(',')]
         return super()._handle_list(shape, node)
-
-    def _handle_expires_timestamp(self, shape, timestamp):
-        try:
-            return self._handle_timestamp(shape, timestamp)
-        except (ValueError, RuntimeError):
-            LOG.warning(
-                f'Failed to parse the "Expires" member as a timestamp: {timestamp}. '
-                f'The unparsed value is available in the response under "ExpiresString".'
-            )
-            return None
 
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):

@@ -15,6 +15,7 @@ import base64
 import copy
 import io
 import json
+import logging
 import os
 
 import pytest
@@ -1780,6 +1781,58 @@ def test_remove_bucket_from_url_paths_from_model(
     )
     assert model.http['requestUri'] == request_uri_after
     assert model.http['authPath'] == auth_path
+
+
+@pytest.mark.parametrize(
+    "expires, expect_expires_header",
+    [
+        # Valid expires values
+        ("Thu, 01 Jan 2015 00:00:00 GMT", True),
+        ("10/21/2018", True),
+        ("01 dec 2100", True),
+        ("2023-11-02 08:43:04 -0400", True),
+        ("Sun, 22 Oct 23 00:45:02 UTC", True),
+        # Invalid expires values
+        ("Invalid Date", False),
+        ("access plus 1 month", False),
+        ("Expires: Thu, 9 Sep 2013 14:19:41 GMT", False),
+        ("{ts '2023-10-10 09:27:14'}", False),
+        (-33702800404003370280040400, False),
+    ],
+)
+def test_handle_expires_header(expires, expect_expires_header):
+    response_dict = {
+        'headers': {
+            'Expires': expires,
+        }
+    }
+    additional_response_keys = {}
+    handlers.handle_expires_header(response_dict, additional_response_keys)
+    assert additional_response_keys.get('ExpiresString') == expires
+    assert ('Expires' in response_dict['headers']) == expect_expires_header
+
+
+def test_handle_expires_header_logs_warning(caplog):
+    response_dict = {
+        'headers': {
+            'Expires': 'Invalid Date',
+        }
+    }
+    with caplog.at_level(logging.WARNING):
+        handlers.handle_expires_header(response_dict, {})
+    assert len(caplog.records) == 1
+    assert 'Failed to parse the "Expires" member as a timestamp' in caplog.text
+
+
+def test_handle_expires_header_does_not_log_warning(caplog):
+    response_dict = {
+        'headers': {
+            'Expires': 'Thu, 01 Jan 2015 00:00:00 GMT',
+        }
+    }
+    with caplog.at_level(logging.WARNING):
+        handlers.handle_expires_header(response_dict, {})
+    assert len(caplog.records) == 0
 
 
 @pytest.fixture()

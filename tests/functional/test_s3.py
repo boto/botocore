@@ -1360,10 +1360,14 @@ class TestS3ExpiresHeaderResponse(BaseS3OperationTest):
         mock_headers = {'expires': expires_value}
         warning_msg = 'Failed to parse the "Expires" member as a timestamp'
         s3 = self.session.create_client("s3")
-        with self.assertLogs('botocore.parsers', level='WARNING') as log:
+        with self.assertLogs('botocore.handlers', level='WARNING') as log:
             with ClientHTTPStubber(s3) as http_stubber:
                 http_stubber.add_response(headers=mock_headers)
                 response = s3.get_object(Bucket='mybucket', Key='mykey')
+                self.assertNotIn(
+                    'expires',
+                    response.get('ResponseMetadata').get('HTTPHeaders'),
+                )
                 self.assertNotIn('Expires', response)
                 self.assertEqual(response.get('ExpiresString'), expires_value)
                 self.assertTrue(
@@ -3718,43 +3722,3 @@ class TestParameterInjection(BaseS3OperationTest):
             request.context['input_params']['Bucket'], self.BUCKET
         )
         self.assertEqual(request.context['input_params']['Key'], self.KEY)
-
-
-@pytest.mark.validates_models
-def test_only_s3_targets_expires_header():
-    """
-    This test verifies that S3 is the only service that uses the 'expires' header
-    in their response. If any other service is found to target this header in any
-    of their output shapes, the test will fail and alert us of the change.
-    """
-    session = botocore.session.get_session()
-    loader = session.get_component('data_loader')
-    services = loader.list_available_services('service-2')
-    services_that_target_expires_header = set()
-
-    for service in services:
-        service_model = session.get_service_model(service)
-        for operation in service_model.operation_names:
-            operation_model = service_model.operation_model(operation)
-            if output_shape := operation_model.output_shape:
-                if _shape_targets_expires_header(output_shape):
-                    services_that_target_expires_header.add(service)
-    assert services_that_target_expires_header == {'s3'}, (
-        f"Expected only 's3' to target the 'Expires' header.\n"
-        f"Actual services that target the 'Expires' header: {services_that_target_expires_header}\n"
-        f"Please review the service models to verify this change."
-    )
-
-
-def _shape_targets_expires_header(shape):
-    for member_shape in shape.members.values():
-        location = member_shape.serialization.get('location')
-        location_name = member_shape.serialization.get('name')
-        if (
-            location
-            and location.lower() == 'header'
-            and location_name
-            and location_name.lower() == 'expires'
-        ):
-            return True
-    return False
