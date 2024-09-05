@@ -250,8 +250,9 @@ class TestRetryInterface(TestEndpointBase):
         )
 
     def test_retry_on_socket_errors(self):
-        val = self.get_emitter_responses(num_retries=1, num_events=3)
-        self.event_emitter.emit.side_effect = val
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=1, num_events=3
+        )
         self.http_session.send.side_effect = HTTPClientError(error='wrapped')
         with self.assertRaises(HTTPClientError):
             self.endpoint.make_request(self._operation, request_dict())
