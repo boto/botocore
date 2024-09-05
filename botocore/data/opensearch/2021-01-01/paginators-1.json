@@ -1,3 +1,97 @@
 {
-  "pagination": {}
+  "pagination": {
+    "DescribeDomainAutoTunes": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AutoTunes"
+    },
+    "DescribeInboundConnections": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Connections"
+    },
+    "DescribeOutboundConnections": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Connections"
+    },
+    "DescribePackages": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "PackageDetailsList"
+    },
+    "DescribeReservedInstanceOfferings": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstanceOfferings"
+    },
+    "DescribeReservedInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstances"
+    },
+    "GetUpgradeHistory": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "UpgradeHistories"
+    },
+    "ListDomainMaintenances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "DomainMaintenances"
+    },
+    "ListDomainsForPackage": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "DomainPackageDetailsList"
+    },
+    "ListInstanceTypeDetails": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InstanceTypeDetails"
+    },
+    "ListPackagesForDomain": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "DomainPackageDetailsList"
+    },
+    "ListScheduledActions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ScheduledActions"
+    },
+    "ListVersions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Versions"
+    },
+    "ListVpcEndpointAccess": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "AuthorizedPrincipalList"
+    },
+    "ListVpcEndpoints": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "VpcEndpointSummaryList"
+    },
+    "ListVpcEndpointsForDomain": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "VpcEndpointSummaryList"
+    }
+  }
 }
