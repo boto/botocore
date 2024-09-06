@@ -98,7 +98,10 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
+IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
+PROTOCOL_TEST_IGNORE_LIST_PATH = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
+with open(PROTOCOL_TEST_IGNORE_LIST_PATH) as f:
+    PROTOCOL_TEST_IGNORE_LIST = json.load(f)
 
 
 class TestType(Enum):
@@ -116,7 +119,13 @@ def _compliance_tests(test_type=None):
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
-                if model.get('description') in PROTOCOL_TEST_BLACKLIST:
+                protocol = basename.replace('.json', '')
+                if _should_ignore_test(
+                        protocol,
+                        "input" if inp else "output",
+                        model['description'],
+                        case['id'],
+                ):
                     continue
                 if 'params' in case and inp:
                     yield model, case, basename
@@ -427,6 +436,8 @@ def _walk_files():
     else:
         for root, _, filenames in os.walk(TEST_DIR):
             for filename in filenames:
+                if filename == IGNORE_LIST_FILENAME:
+                    continue
                 yield os.path.join(root, filename)
 
 
@@ -471,3 +482,37 @@ def _get_suite_test_id():
             "integers."
         )
     return suite_id, test_id
+
+
+def _should_ignore_test(protocol, test_type, suite, case):
+    """
+    Determines if a protocol test should be ignored.
+    :type protocol: str
+    :param protocol: The protocol name as represented by its corresponding
+        protocol test file name (without the .json extension).
+    :type test_type: str
+    :param test_type: The protocol test type ("input" or "output").
+    :type suite: str
+    :param suite: The "description" attribute of a protocol test suite.
+    :type case: str
+    :param case: The "id" attribute of a specific protocol test case.
+    :return: True if the protocol test should be ignored, False otherwise.
+    :rtype: bool
+    """
+    ignore_list = PROTOCOL_TEST_IGNORE_LIST.get('general', {}).get(
+        test_type, {}
+    )
+    ignore_suites = ignore_list.get('suites', [])
+    ignore_cases = ignore_list.get('cases', [])
+
+    if suite in ignore_suites or case in ignore_cases:
+        return True
+
+    protocol_ignore_list = (
+        PROTOCOL_TEST_IGNORE_LIST.get('protocols', {})
+        .get(protocol, {})
+        .get(test_type, {})
+    )
+    protocol_ignore_suites = protocol_ignore_list.get('suites', [])
+    protocol_ignore_cases = protocol_ignore_list.get('cases', [])
+    return suite in protocol_ignore_suites or case in protocol_ignore_cases
