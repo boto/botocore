@@ -305,10 +305,8 @@ class Endpoint:
         additional_response_keys = {}
         self._event_emitter.emit(
             f"before-parse.{service_id}.{operation_model.name}",
-            **{
-                'response_dict': response_dict,
-                'additional_response_keys': additional_response_keys,
-            },
+            response_dict=response_dict,
+            additional_response_keys=additional_response_keys,
         )
         parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
