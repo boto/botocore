@@ -124,6 +124,7 @@ import re
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 from botocore.utils import (
+    ensure_boolean,
     is_json_value_header,
     lowercase_dict,
     merge_dicts,
@@ -1046,10 +1047,17 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
                 code = code.split('#', 1)[1]
             error['Error']['Code'] = code
 
+    def _handle_boolean(self, shape, value):
+        return ensure_boolean(value)
+
     def _handle_integer(self, shape, value):
         return int(value)
 
+    def _handle_float(self, shape, value):
+        return float(value)
+
     _handle_long = _handle_integer
+    _handle_double = _handle_float
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):

@@ -98,6 +98,7 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
+PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
 IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
 PROTOCOL_TEST_IGNORE_LIST_PATH = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
 with open(PROTOCOL_TEST_IGNORE_LIST_PATH) as f:
@@ -120,16 +121,18 @@ def _compliance_tests(test_type=None):
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
                 protocol = basename.replace('.json', '')
-                if _should_ignore_test(
-                        protocol,
-                        "input" if inp else "output",
-                        model['description'],
-                        case['id'],
-                ):
-                    continue
                 if 'params' in case and inp:
+                    if model.get('description') in PROTOCOL_TEST_BLACKLIST:
+                        continue
                     yield model, case, basename
                 elif 'response' in case and out:
+                    if _should_ignore_test(
+                            protocol,
+                            "output",
+                            model['description'],
+                            case['id'],
+                    ):
+                        continue
                     yield model, case, basename
 
 
