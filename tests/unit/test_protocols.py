@@ -190,7 +190,7 @@ class MockRawResponse:
 )
 def test_output_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
-    operation_name = case.get('name', 'OperationName')
+    operation_name = case.get('given', {}).get('name', 'OperationName')
     service_description['operations'] = {
         operation_name: case,
     }
@@ -198,16 +198,23 @@ def test_output_compliance(json_description, case, basename):
     try:
         model = ServiceModel(service_description)
         operation_model = OperationModel(case['given'], model)
-        parser = PROTOCOL_PARSERS[model.metadata['protocol']](
+        protocol = model.metadata['protocol']
+        parser = PROTOCOL_PARSERS[protocol](
             timestamp_parser=_compliance_timestamp_parser
         )
         # We load the json as utf-8, but the response parser is at the
         # botocore boundary, so it expects to work with bytes.
-        body_bytes = case['response']['body'].encode('utf-8')
-        case['response']['body'] = body_bytes
+        # If a test case doesn't define a response body, set it to `None`.
+        if 'body' in case['response']:
+            body_bytes = case['response']['body'].encode('utf-8')
+            case['response']['body'] = body_bytes
+        else:
+            case['response']['body'] = b''
         # We need the headers to be case insensitive
-        headers = HeadersDict(case['response']['headers'])
-        case['response']['headers'] = headers
+        # If a test case doesn't define response headers, set it to an empty `HeadersDict`.
+        case['response']['headers'] = HeadersDict(
+            case['response'].get('headers', {})
+        )
         # If this is an event stream fake the raw streamed response
         if operation_model.has_event_stream_output:
             case['response']['body'] = MockRawResponse(body_bytes)
@@ -215,7 +222,8 @@ def test_output_compliance(json_description, case, basename):
             output_shape = operation_model.output_shape
             parsed = parser.parse(case['response'], output_shape)
             try:
-                error_shape = model.shape_for(parsed['Error']['Code'])
+                error_code = parsed.get("Error", {}).get("Code")
+                error_shape = model.shape_for_error_code(error_code)
             except NoShapeFoundError:
                 error_shape = None
             if error_shape is not None:
@@ -223,6 +231,8 @@ def test_output_compliance(json_description, case, basename):
                 parsed.update(error_parse)
         else:
             output_shape = operation_model.output_shape
+            if protocol == 'query' and output_shape and output_shape.members:
+                output_shape.serialization['resultWrapper'] = f'{operation_name}Result'
             parsed = parser.parse(case['response'], output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
@@ -288,6 +298,11 @@ def _fixup_parsed_result(parsed):
         for key in error_keys:
             if key not in ['Code', 'Message']:
                 del parsed['Error'][key]
+    # 5. Special float types. In the protocol test suite, certain special float
+    # types are represented as strings: "Infinity", "-Infinity", and "NaN".
+    # However, we parse these values as actual floats types, so we need to convert
+    # them back to their string representation.
+    parsed = _convert_special_floats_to_string(parsed)
     return parsed
 
 
@@ -308,12 +323,23 @@ def _convert_bytes_to_str(parsed):
         return parsed
 
 
+def _convert_special_floats_to_string(parsed):
+    for key, value in parsed.items():
+        if value == float('Infinity'):
+            parsed[key] = 'Infinity'
+        elif value == float('-Infinity'):
+            parsed[key] = '-Infinity'
+        elif value != value:
+            parsed[key] = 'NaN'
+    return parsed
+
+
 def _compliance_timestamp_parser(value):
     datetime = parse_timestamp(value)
     # Convert from our time zone to UTC
     datetime = datetime.astimezone(tzutc())
     # Convert to epoch.
-    return int(timegm(datetime.timetuple()))
+    return datetime.timestamp()
 
 
 def _output_failure_message(

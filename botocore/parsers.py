@@ -201,6 +201,10 @@ class ResponseParser:
 
     DEFAULT_ENCODING = 'utf-8'
     EVENT_STREAM_PARSER_CLS = None
+    # This is a list of known values for the "location" key in the
+    # serialization dict. The location key tells us where in the response
+    # to parse the value.
+    KNOWN_LOCATIONS = ('statusCode', 'header', 'headers')
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
@@ -356,6 +360,9 @@ class ResponseParser:
         if shape.is_tagged_union:
             cleaned_value = value.copy()
             cleaned_value.pop("__type", None)
+            cleaned_value = {
+                k: v for k, v in cleaned_value.items() if v is not None
+            }
             if len(cleaned_value) != 1:
                 error_msg = (
                     "Invalid service response: %s must have one and only "
@@ -363,7 +370,11 @@ class ResponseParser:
                 )
                 raise ResponseParserError(error_msg % shape.name)
             tag = self._get_first_key(cleaned_value)
-            if tag not in shape.members:
+            serialized_member_names = [
+                shape.members[member].serialization.get('name', member)
+                for member in shape.members
+            ]
+            if tag not in serialized_member_names:
                 msg = (
                     "Received a tagged union response with member "
                     "unknown to client: %s. Please upgrade SDK for full "
@@ -427,11 +438,12 @@ class BaseXMLResponseParser(ResponseParser):
             return self._handle_unknown_tagged_union_member(tag)
         for member_name in members:
             member_shape = members[member_name]
+            location = member_shape.serialization.get('location')
             if (
-                'location' in member_shape.serialization
+                location in self.KNOWN_LOCATIONS
                 or member_shape.serialization.get('eventheader')
             ):
-                # All members with locations have already been handled,
+                # All members with known locations have already been handled,
                 # so we don't need to parse these members.
                 continue
             xml_name = self._member_key_name(member_shape, member_name)
@@ -577,7 +589,7 @@ class QueryParser(BaseXMLResponseParser):
         return self._parse_body_as_xml(response, shape, inject_metadata=True)
 
     def _parse_body_as_xml(self, response, shape, inject_metadata=True):
-        xml_contents = response['body']
+        xml_contents = response['body'] or b'<xml/>'
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = {}
         if shape is not None:
@@ -707,8 +719,10 @@ class BaseJSONParser(ResponseParser):
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
             # * "ResourceNotFoundException"
+            if ':' in code:
+                code = code.split(':', 1)[0]
             if '#' in code:
-                code = code.rsplit('#', 1)[1]
+                code = code.split('#', 1)[1]
             if 'x-amzn-query-error' in headers:
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
@@ -1020,14 +1034,17 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         # The "Code" value can come from either a response
         # header or a value in the JSON body.
         body = self._initial_body_parse(response['body'])
+        code = None
         if 'x-amzn-errortype' in response['headers']:
             code = response['headers']['x-amzn-errortype']
-            # Could be:
-            # x-amzn-errortype: ValidationException:
-            code = code.split(':')[0]
-            error['Error']['Code'] = code
         elif 'code' in body or 'Code' in body:
-            error['Error']['Code'] = body.get('code', body.get('Code', ''))
+            code = body.get('code', body.get('Code', ''))
+        if code is not None:
+            if ':' in code:
+                code = code.split(':', 1)[0]
+            if '#' in code:
+                code = code.split('#', 1)[1]
+            error['Error']['Code'] = code
 
     def _handle_integer(self, shape, value):
         return int(value)
