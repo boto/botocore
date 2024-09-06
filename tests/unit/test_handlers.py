@@ -1806,9 +1806,9 @@ def test_handle_expires_header(expires, expect_expires_header):
             'Expires': expires,
         }
     }
-    additional_response_keys = {}
-    handlers.handle_expires_header(response_dict, additional_response_keys)
-    assert additional_response_keys.get('ExpiresString') == expires
+    customized_response_dict = {}
+    handlers.handle_expires_header(response_dict, customized_response_dict)
+    assert customized_response_dict.get('ExpiresString') == expires
     assert ('Expires' in response_dict['headers']) == expect_expires_header
 
 

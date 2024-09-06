@@ -596,9 +596,9 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     parsed['LocationConstraint'] = region
 
 
-def handle_expires_header(response_dict, additional_response_keys, **kwargs):
+def handle_expires_header(response_dict, customized_response_dict, **kwargs):
     if expires_value := response_dict.get('headers', {}).get('Expires'):
-        additional_response_keys['ExpiresString'] = expires_value
+        customized_response_dict['ExpiresString'] = expires_value
         try:
             utils.parse_timestamp(expires_value)
         except (ValueError, RuntimeError):

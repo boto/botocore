@@ -302,17 +302,17 @@ class Endpoint:
         history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
 
         protocol = operation_model.metadata['protocol']
-        additional_response_keys = {}
+        customized_response_dict = {}
         self._event_emitter.emit(
             f"before-parse.{service_id}.{operation_model.name}",
             response_dict=response_dict,
-            additional_response_keys=additional_response_keys,
+            customized_response_dict=customized_response_dict,
         )
         parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape
         )
-        parsed_response.update(additional_response_keys)
+        parsed_response.update(customized_response_dict)
         # Do a second parsing pass to pick up on any modeled error fields
         # NOTE: Ideally, we would push this down into the parser classes but
         # they currently have no reference to the operation or service model
