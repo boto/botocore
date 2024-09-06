@@ -305,6 +305,7 @@ class Endpoint:
         customized_response_dict = {}
         self._event_emitter.emit(
             f"before-parse.{service_id}.{operation_model.name}",
+            operation_model=operation_model,
             response_dict=response_dict,
             customized_response_dict=customized_response_dict,
         )

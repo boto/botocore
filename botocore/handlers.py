@@ -596,56 +596,6 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     parsed['LocationConstraint'] = region
 
 
-def handle_expires_header(response_dict, customized_response_dict, **kwargs):
-    if expires_value := response_dict.get('headers', {}).get('Expires'):
-        customized_response_dict['ExpiresString'] = expires_value
-        try:
-            utils.parse_timestamp(expires_value)
-        except (ValueError, RuntimeError):
-            logger.warning(
-                f'Failed to parse the "Expires" member as a timestamp: {expires_value}. '
-                f'The unparsed value is available in the response under "ExpiresString".'
-            )
-            del response_dict['headers']['Expires']
-
-
-def document_s3_expires_shape(section, event_name, **kwargs):
-    # Updates the documentation for S3 operations that include the 'Expires' member
-    # in their response structure. Documents a synthetic member 'ExpiresString' and
-    # includes a deprecation notice for 'Expires'.
-    if 'response-example' in event_name:
-        if not section.has_section('structure-value'):
-            return
-        parent = section.get_section('structure-value')
-        if not parent.has_section('Expires'):
-            return
-        param_line = parent.get_section('Expires')
-        param_line.add_new_section('ExpiresString')
-        new_param_line = param_line.get_section('ExpiresString')
-        new_param_line.write("'ExpiresString': 'string',")
-        new_param_line.style.new_line()
-    elif 'response-params' in event_name:
-        if not section.has_section('Expires'):
-            return
-        param_section = section.get_section('Expires')
-        # Add a deprecation notice for the "Expires" param
-        doc_section = param_section.get_section('param-documentation')
-        doc_section.style.start_note()
-        doc_section.write(
-            'This member has been deprecated. Please use ``ExpiresString`` instead.'
-        )
-        doc_section.style.end_note()
-        # Document the "ExpiresString" param
-        new_param_section = param_section.add_new_section('ExpiresString')
-        new_param_section.style.new_paragraph()
-        new_param_section.write('- **ExpiresString** *(string) --*')
-        new_param_section.style.indent()
-        new_param_section.style.new_paragraph()
-        new_param_section.write(
-            'The raw, unparsed value of the ``Expires`` field.'
-        )
-
-
 def base64_encode_user_data(params, **kwargs):
     if 'UserData' in params:
         if isinstance(params['UserData'], str):
@@ -1226,6 +1176,69 @@ def remove_content_type_header_for_presigning(request, **kwargs):
         del request.headers['Content-Type']
 
 
+def handle_expires_header(
+    operation_model, response_dict, customized_response_dict, **kwargs
+):
+    if _has_expires_shape(operation_model.output_shape):
+        if expires_value := response_dict.get('headers', {}).get('Expires'):
+            customized_response_dict['ExpiresString'] = expires_value
+            try:
+                utils.parse_timestamp(expires_value)
+            except (ValueError, RuntimeError):
+                logger.warning(
+                    f'Failed to parse the "Expires" member as a timestamp: {expires_value}. '
+                    f'The unparsed value is available in the response under "ExpiresString".'
+                )
+                del response_dict['headers']['Expires']
+
+
+def _has_expires_shape(shape):
+    if not shape:
+        return False
+    return any(
+        member_shape.name == 'Expires'
+        and member_shape.serialization.get('name') == 'Expires'
+        for member_shape in shape.members.values()
+    )
+
+
+def document_expires_shape(section, event_name, **kwargs):
+    # Updates the documentation for S3 operations that include the 'Expires' member
+    # in their response structure. Documents a synthetic member 'ExpiresString' and
+    # includes a deprecation notice for 'Expires'.
+    if 'response-example' in event_name:
+        if not section.has_section('structure-value'):
+            return
+        parent = section.get_section('structure-value')
+        if not parent.has_section('Expires'):
+            return
+        param_line = parent.get_section('Expires')
+        param_line.add_new_section('ExpiresString')
+        new_param_line = param_line.get_section('ExpiresString')
+        new_param_line.write("'ExpiresString': 'string',")
+        new_param_line.style.new_line()
+    elif 'response-params' in event_name:
+        if not section.has_section('Expires'):
+            return
+        param_section = section.get_section('Expires')
+        # Add a deprecation notice for the "Expires" param
+        doc_section = param_section.get_section('param-documentation')
+        doc_section.style.start_note()
+        doc_section.write(
+            'This member has been deprecated. Please use ``ExpiresString`` instead.'
+        )
+        doc_section.style.end_note()
+        # Document the "ExpiresString" param
+        new_param_section = param_section.add_new_section('ExpiresString')
+        new_param_section.style.new_paragraph()
+        new_param_section.write('- **ExpiresString** *(string) --*')
+        new_param_section.style.indent()
+        new_param_section.style.new_paragraph()
+        new_param_section.write(
+            'The raw, unparsed value of the ``Expires`` field.'
+        )
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1282,8 +1295,8 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.s3-control', remove_accid_host_prefix_from_model),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
     ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
-    ('docs.response-example.s3.*.complete-section', document_s3_expires_shape),
-    ('docs.response-params.s3.*.complete-section', document_s3_expires_shape),
+    ('docs.response-example.s3.*.complete-section', document_expires_shape),
+    ('docs.response-params.s3.*.complete-section', document_expires_shape),
     ('before-endpoint-resolution.s3', customize_endpoint_resolver_builtins),
     ('before-call', add_recursion_detection_header),
     ('before-call.s3', add_expect_header),

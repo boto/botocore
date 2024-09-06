@@ -1783,6 +1783,18 @@ def test_remove_bucket_from_url_paths_from_model(
     assert model.http['authPath'] == auth_path
 
 
+@pytest.fixture()
+def operation_model_mock():
+    operation_model = mock.Mock()
+    operation_model.output_shape = mock.Mock()
+    operation_model.output_shape.members = {'Expires': mock.Mock()}
+    operation_model.output_shape.members['Expires'].name = 'Expires'
+    operation_model.output_shape.members['Expires'].serialization = {
+        'name': 'Expires'
+    }
+    return operation_model
+
+
 @pytest.mark.parametrize(
     "expires, expect_expires_header",
     [
@@ -1800,43 +1812,49 @@ def test_remove_bucket_from_url_paths_from_model(
         (-33702800404003370280040400, False),
     ],
 )
-def test_handle_expires_header(expires, expect_expires_header):
+def test_handle_expires_header(
+    expires, expect_expires_header, operation_model_mock
+):
     response_dict = {
         'headers': {
             'Expires': expires,
         }
     }
     customized_response_dict = {}
-    handlers.handle_expires_header(response_dict, customized_response_dict)
+    handlers.handle_expires_header(
+        operation_model_mock, response_dict, customized_response_dict
+    )
     assert customized_response_dict.get('ExpiresString') == expires
     assert ('Expires' in response_dict['headers']) == expect_expires_header
 
 
-def test_handle_expires_header_logs_warning(caplog):
+def test_handle_expires_header_logs_warning(operation_model_mock, caplog):
     response_dict = {
         'headers': {
             'Expires': 'Invalid Date',
         }
     }
     with caplog.at_level(logging.WARNING):
-        handlers.handle_expires_header(response_dict, {})
+        handlers.handle_expires_header(operation_model_mock, response_dict, {})
     assert len(caplog.records) == 1
     assert 'Failed to parse the "Expires" member as a timestamp' in caplog.text
 
 
-def test_handle_expires_header_does_not_log_warning(caplog):
+def test_handle_expires_header_does_not_log_warning(
+    operation_model_mock, caplog
+):
     response_dict = {
         'headers': {
             'Expires': 'Thu, 01 Jan 2015 00:00:00 GMT',
         }
     }
     with caplog.at_level(logging.WARNING):
-        handlers.handle_expires_header(response_dict, {})
+        handlers.handle_expires_header(operation_model_mock, response_dict, {})
     assert len(caplog.records) == 0
 
 
 @pytest.fixture()
-def document_s3_expires_mocks():
+def document_expires_mocks():
     return {
         'section': mock.Mock(),
         'parent': mock.Mock(),
@@ -1850,15 +1868,15 @@ def document_s3_expires_mocks():
     }
 
 
-def test_document_response_example_with_expires(document_s3_expires_mocks):
-    mocks = document_s3_expires_mocks
+def test_document_response_example_with_expires(document_expires_mocks):
+    mocks = document_expires_mocks
     mocks['section'].has_section.return_value = True
     mocks['section'].get_section.return_value = mocks['parent']
     mocks['parent'].has_section.return_value = True
     mocks['parent'].get_section.return_value = mocks['param_line']
     mocks['param_line'].has_section.return_value = True
     mocks['param_line'].get_section.return_value = mocks['new_param_line']
-    handlers.document_s3_expires_shape(
+    handlers.document_expires_shape(
         mocks['section'], mocks['response_example_event']
     )
     mocks['param_line'].add_new_section.assert_called_once_with(
@@ -1870,12 +1888,12 @@ def test_document_response_example_with_expires(document_s3_expires_mocks):
     mocks['new_param_line'].style.new_line.assert_called_once()
 
 
-def test_document_response_example_without_expires(document_s3_expires_mocks):
-    mocks = document_s3_expires_mocks
+def test_document_response_example_without_expires(document_expires_mocks):
+    mocks = document_expires_mocks
     mocks['section'].has_section.return_value = True
     mocks['section'].get_section.return_value = mocks['parent']
     mocks['parent'].has_section.return_value = False
-    handlers.document_s3_expires_shape(
+    handlers.document_expires_shape(
         mocks['section'], mocks['response_example_event']
     )
     mocks['parent'].add_new_section.assert_not_called()
@@ -1883,8 +1901,8 @@ def test_document_response_example_without_expires(document_s3_expires_mocks):
     mocks['new_param_line'].write.assert_not_called()
 
 
-def test_document_response_params_with_expires(document_s3_expires_mocks):
-    mocks = document_s3_expires_mocks
+def test_document_response_params_with_expires(document_expires_mocks):
+    mocks = document_expires_mocks
     mocks['section'].has_section.return_value = True
     mocks['section'].get_section.return_value = mocks['param_section']
     mocks['param_section'].get_section.side_effect = [
@@ -1895,7 +1913,7 @@ def test_document_response_params_with_expires(document_s3_expires_mocks):
     ]
     mocks['doc_section'].style = mock.Mock()
     mocks['new_param_section'].style = mock.Mock()
-    handlers.document_s3_expires_shape(
+    handlers.document_expires_shape(
         mocks['section'], mocks['response_params_event']
     )
     mocks['param_section'].get_section.assert_any_call('param-documentation')
@@ -1917,10 +1935,10 @@ def test_document_response_params_with_expires(document_s3_expires_mocks):
     )
 
 
-def test_document_response_params_without_expires(document_s3_expires_mocks):
-    mocks = document_s3_expires_mocks
+def test_document_response_params_without_expires(document_expires_mocks):
+    mocks = document_expires_mocks
     mocks['section'].has_section.return_value = False
-    handlers.document_s3_expires_shape(
+    handlers.document_expires_shape(
         mocks['section'], mocks['response_params_event']
     )
     mocks['section'].get_section.assert_not_called()
