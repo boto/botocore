@@ -517,15 +517,20 @@ def _get_suite_test_id():
 def _should_ignore_test(protocol, test_type, suite, case):
     """
     Determines if a protocol test should be ignored.
+
     :type protocol: str
     :param protocol: The protocol name as represented by its corresponding
         protocol test file name (without the .json extension).
+
     :type test_type: str
     :param test_type: The protocol test type ("input" or "output").
+
     :type suite: str
     :param suite: The "description" attribute of a protocol test suite.
+
     :type case: str
     :param case: The "id" attribute of a specific protocol test case.
+
     :return: True if the protocol test should be ignored, False otherwise.
     :rtype: bool
     """
