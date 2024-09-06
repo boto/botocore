@@ -54,7 +54,6 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 import copy
 import os
 from base64 import b64decode
-from calendar import timegm
 from enum import Enum
 
 import pytest
@@ -127,10 +126,10 @@ def _compliance_tests(test_type=None):
                     yield model, case, basename
                 elif 'response' in case and out:
                     if _should_ignore_test(
-                            protocol,
-                            "output",
-                            model['description'],
-                            case['id'],
+                        protocol,
+                        "output",
+                        model['description'],
+                        case['id'],
                     ):
                         continue
                     yield model, case, basename
@@ -235,7 +234,9 @@ def test_output_compliance(json_description, case, basename):
         else:
             output_shape = operation_model.output_shape
             if protocol == 'query' and output_shape and output_shape.members:
-                output_shape.serialization['resultWrapper'] = f'{operation_name}Result'
+                output_shape.serialization['resultWrapper'] = (
+                    f'{operation_name}Result'
+                )
             parsed = parser.parse(case['response'], output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
