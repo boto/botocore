@@ -2,7 +2,6 @@ Botocore Development
 ********************
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   changesfor10
    designnotes
