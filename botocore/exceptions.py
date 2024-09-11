@@ -553,6 +553,31 @@ class ClientError(Exception):
         # module. So at the very least return a ClientError back.
         return ClientError, (self.response, self.operation_name)
 
+    @property
+    def code(self):
+        """The error code returned by the AWS service."""
+        return self.response.get('Error', {}).get('Code', 'Unknown')
+
+    @property
+    def message(self):
+        """The error message returned by the AWS service."""
+        return self.response.get('Error', {}).get('Message', 'Unknown')
+
+    @property
+    def request_id(self):
+        """The request ID returned by the AWS service."""
+        return self.response.get('ResponseMetadata').get('RequestId')
+
+    @property
+    def http_status_code(self):
+        """The HTTP status code returned by the AWS service."""
+        return self.response.get('ResponseMetadata', {}).get('HTTPStatusCode')
+
+    @property
+    def http_headers(self):
+        """The HTTP headers returned by the AWS service."""
+        return self.response.get('ResponseMetadata', {}).get('HTTPHeaders', {})
+
 
 class EventStreamError(ClientError):
     pass
