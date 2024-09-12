@@ -466,9 +466,9 @@ class EventStreamBuffer:
         prelude_bytes = self._data[:_PRELUDE_LENGTH]
         raw_prelude, _ = DecodeUtils.unpack_prelude(prelude_bytes)
         prelude = MessagePrelude(*raw_prelude)
-        self._validate_prelude(prelude)
         # The minus 4 removes the prelude crc from the bytes to be checked
         _validate_checksum(prelude_bytes[: _PRELUDE_LENGTH - 4], prelude.crc)
+        self._validate_prelude(prelude)
         return prelude
 
     def _parse_headers(self):
