@@ -687,6 +687,10 @@ class Paginator:
                     page_size = str(page_size)
             else:
                 page_size = int(page_size)
+                metadata = limit_key_shape.metadata or {}
+                page_size = max(page_size, metadata.get("min", page_size))
+                page_size = min(page_size, metadata.get("max", page_size))
+
         return {
             'MaxItems': max_items,
             'StartingToken': pagination_config.get('StartingToken', None),
