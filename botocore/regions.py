@@ -454,6 +454,7 @@ class EndpointResolverBuiltins(str, Enum):
     ACCOUNT_ID = "AWS::Auth::AccountId"
     ACCOUNT_ID_ENDPOINT_MODE = "AWS::Auth::AccountIdEndpointMode"
 
+
 class EndpointRulesetResolver:
     """Resolves endpoints using a service's endpoint ruleset"""
 
