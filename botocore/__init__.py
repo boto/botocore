@@ -55,10 +55,6 @@ _xform_cache = {
     ('ExecutePartiQLBatch', '_'): 'execute_partiql_batch',
     ('ExecutePartiQLBatch', '-'): 'execute-partiql-batch',
 }
-# The items in this dict represent partial renames to apply globally to all
-# services which might have a matching argument or operation. This way a
-# common mis-translation can be fixed without having to call out each
-# individual case.
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
