@@ -235,6 +235,13 @@ class Config:
         specified service will be ignored.
 
         Defaults to None.
+
+    :type source_address: tuple
+    :param source_address: A tuple with 2 values (host, port) for the socket to
+        bind to as its source address before connecting. If host or port are '' or 0
+        respectively the OS default behaviour will be used.
+
+        Defaults to None.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -264,6 +271,7 @@ class Config:
             ('disable_request_compression', None),
             ('client_context_params', None),
             ('sigv4a_signing_region_set', None),
+            ('source_address', None),
         ]
     )
 
