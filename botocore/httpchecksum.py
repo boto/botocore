@@ -23,6 +23,7 @@ import base64
 import io
 import logging
 from binascii import crc32
+from enum import Enum
 from hashlib import sha1, sha256
 
 from botocore.compat import HAS_CRT
@@ -43,6 +44,24 @@ else:
     crt_checksums = None
 
 logger = logging.getLogger(__name__)
+
+
+class ResponseChecksumValidation(str, Enum):
+    WHEN_SUPPORTED = "when_supported"
+    WHEN_REQUIRED = "when_required"
+
+    @classmethod
+    def values(cls):
+        return tuple(member.value for member in cls)
+
+
+class RequestChecksumCalculation(str, Enum):
+    WHEN_SUPPORTED = "when_supported"
+    WHEN_REQUIRED = "when_required"
+
+    @classmethod
+    def values(cls):
+        return tuple(member.value for member in cls)
 
 
 class BaseChecksum:

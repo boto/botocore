@@ -26,6 +26,10 @@ import botocore.parsers
 import botocore.serialize
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
+from botocore.httpchecksum import (
+    RequestChecksumCalculation,
+    ResponseChecksumValidation,
+)
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
@@ -271,11 +275,18 @@ class ClientArgsCreator:
                 sigv4a_signing_region_set=(
                     client_config.sigv4a_signing_region_set
                 ),
+                request_checksum_calculation=(
+                    client_config.request_checksum_calculation
+                ),
+                response_checksum_validation=(
+                    client_config.response_checksum_validation
+                ),
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
         self._compute_user_agent_appid_config(config_kwargs)
         self._compute_request_compression_config(config_kwargs)
+        self._compute_checksum_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -771,3 +782,40 @@ class ClientArgsCreator:
                 f'maximum length of {USERAGENT_APPID_MAXLEN} characters.'
             )
         config_kwargs['user_agent_appid'] = user_agent_appid
+
+    def _compute_checksum_config(self, config_kwargs):
+        self._handle_checksum_config(
+            config_kwargs,
+            config_key="request_checksum_calculation",
+            default_value="when_supported",
+            valid_options_enum=RequestChecksumCalculation,
+        )
+        self._handle_checksum_config(
+            config_kwargs,
+            config_key="response_checksum_validation",
+            default_value="when_supported",
+            valid_options_enum=ResponseChecksumValidation,
+        )
+
+    def _handle_checksum_config(
+        self,
+        config_kwargs,
+        config_key,
+        default_value,
+        valid_options_enum,
+    ):
+        value = config_kwargs.get(config_key)
+        if value is None:
+            value = (
+                self._config_store.get_config_variable(config_key)
+                or default_value
+            )
+        value = value.lower()
+        valid_options = valid_options_enum.values()
+        if value not in valid_options:
+            raise botocore.exceptions.InvalidChecksumConfigError(
+                config_key=config_key,
+                config_value=value,
+                valid_options=valid_options,
+            )
+        config_kwargs[config_key] = value
