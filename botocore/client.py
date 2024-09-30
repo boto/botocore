@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 import logging
 
+from typing import Dict
+
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS, resolve_auth_type
@@ -864,7 +866,7 @@ class BaseClient:
     # snake_case name, but we need to know the ListObjects form.
     # xform_name() does the ListObjects->list_objects conversion, but
     # we need the reverse mapping here.
-    _PY_TO_OP_NAME = {}
+    _PY_TO_OP_NAME : Dict[str, str] = {}
 
     def __init__(
         self,

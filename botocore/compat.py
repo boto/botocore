@@ -35,7 +35,19 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPHeaders(HTTPMessage):
-    pass
+    @classmethod
+    def from_dict(cls, d):
+        new_instance = cls()
+        for key, value in d.items():
+            new_instance[key] = value
+        return new_instance
+
+    @classmethod
+    def from_pairs(cls, pairs):
+        new_instance = cls()
+        for key, value in pairs:
+            new_instance[key] = value
+        return new_instance
 
 from urllib.parse import (
     quote,
@@ -86,9 +98,9 @@ def ensure_bytes(s, encoding='utf-8', errors='strict'):
     raise ValueError(f"Expected str or bytes, received {type(s)}.")
 
 
-try:
+if sys.version_info < (3,9):
     import xml.etree.cElementTree as ETree
-except ImportError:
+else:
     # cElementTree does not exist from Python3.9+
     import xml.etree.ElementTree as ETree
 XMLParseError = ETree.ParseError
@@ -103,27 +115,6 @@ def filter_ssl_warnings():
         category=exceptions.InsecurePlatformWarning,
         module=r".*urllib3\.util\.ssl_",
     )
-
-
-@classmethod
-def from_dict(cls, d):
-    new_instance = cls()
-    for key, value in d.items():
-        new_instance[key] = value
-    return new_instance
-
-
-@classmethod
-def from_pairs(cls, pairs):
-    new_instance = cls()
-    for key, value in pairs:
-        new_instance[key] = value
-    return new_instance
-
-
-HTTPHeaders.from_dict = from_dict
-HTTPHeaders.from_pairs = from_pairs
-
 
 def copy_kwargs(kwargs):
     """

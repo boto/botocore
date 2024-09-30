@@ -4,6 +4,7 @@ import os.path
 import socket
 import sys
 import warnings
+
 from base64 import b64encode
 
 from urllib3 import PoolManager, Timeout, proxy_from_url
@@ -85,7 +86,7 @@ try:
     from certifi import where
 except ImportError:
 
-    def where():
+    def where() -> str:
         return DEFAULT_CA_BUNDLE
 
 

@@ -61,7 +61,7 @@ BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 # Used to specify anonymous (unsigned) request signature
-class UNSIGNED:
+class _UNSIGNED:
     def __copy__(self):
         return self
 
@@ -69,7 +69,7 @@ class UNSIGNED:
         return self
 
 
-UNSIGNED = UNSIGNED()
+UNSIGNED = _UNSIGNED()
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):
