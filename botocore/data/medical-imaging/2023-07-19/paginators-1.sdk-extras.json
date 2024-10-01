@@ -1,12 +1,12 @@
 {
-  "version": 1.0,
-  "merge": {
-    "pagination": {
-      "SearchImageSets": {
-        "non_aggregate_keys": [
-          "sort"
-        ]
-      }
-    }
-  }
+	"version":1.0,
+	"merge":{
+		"pagination":{
+			"SearchImageSets":{
+				"non_aggregate_keys":[
+					"sort"
+				]
+			}
+		}
+	}
 }
