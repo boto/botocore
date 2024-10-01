@@ -22,11 +22,10 @@ import time
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
+from typing import Optional
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal, tzutc
-
-from typing import Optional
 
 import botocore.compat
 import botocore.configloader

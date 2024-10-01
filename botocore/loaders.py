@@ -104,8 +104,7 @@ which don't represent the actual service api.
 
 import logging
 import os
-
-from typing import Callable, Dict, IO
+from typing import IO, Callable, Dict
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json

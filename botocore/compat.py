@@ -13,23 +13,24 @@
 
 import copy
 import datetime
-import sys
-import inspect
-import warnings
 import hashlib
-from http.client import HTTPMessage
+import inspect
 import logging
-import shlex
-import re
 import os
+import re
+import shlex
+import sys
+import warnings
 from collections import OrderedDict
 from collections.abc import MutableMapping
+from http.client import HTTPMessage
 from math import floor
 
-from botocore.vendored import six
-from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
+
+from botocore.exceptions import MD5UnavailableError
+from botocore.vendored import six
 
 logger = logging.getLogger(__name__)
 
@@ -50,23 +51,23 @@ class HTTPHeaders(HTTPMessage):
         return new_instance
 
 
+from base64 import encodebytes
+from email.utils import formatdate
+from http.client import HTTPResponse
+from io import IOBase as _IOBase
+from itertools import zip_longest
 from urllib.parse import (
+    parse_qs,
+    parse_qsl,
     quote,
-    urlencode,
     unquote,
     unquote_plus,
+    urlencode,
+    urljoin,
     urlparse,
     urlsplit,
     urlunsplit,
-    urljoin,
-    parse_qsl,
-    parse_qs,
 )
-from http.client import HTTPResponse
-from io import IOBase as _IOBase
-from base64 import encodebytes
-from email.utils import formatdate
-from itertools import zip_longest
 
 file_type = _IOBase
 zip = zip

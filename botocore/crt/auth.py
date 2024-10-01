@@ -14,6 +14,7 @@
 import datetime
 from io import BytesIO
 from typing import Dict, Type
+
 from botocore.auth import (
     SIGNED_HEADERS_BLACKLIST,
     STREAMING_UNSIGNED_PAYLOAD_TRAILER,

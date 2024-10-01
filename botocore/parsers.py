@@ -120,7 +120,6 @@ import http.client
 import json
 import logging
 import re
-
 from typing import Optional, Type
 
 from botocore.compat import ETree, XMLParseError
