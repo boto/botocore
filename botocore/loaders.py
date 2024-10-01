@@ -112,7 +112,7 @@ from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 
-_JSON_OPEN_METHODS : Dict[str, Callable[..., IO[str]]] = {
+_JSON_OPEN_METHODS: Dict[str, Callable[..., IO[str]]] = {
     '.json': open,
 }
 

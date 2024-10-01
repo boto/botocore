@@ -47,7 +47,7 @@ from botocore.utils import ensure_boolean, instance_cache
 
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'  # noqa
-DEFAULT_SERVICE_DATA : Dict[str, Dict[str, str]] = {'endpoints': {}}
+DEFAULT_SERVICE_DATA: Dict[str, Dict[str, str]] = {'endpoints': {}}
 
 
 class BaseEndpointResolver:

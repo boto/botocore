@@ -202,7 +202,7 @@ class ResponseParser:
     """
 
     DEFAULT_ENCODING = 'utf-8'
-    EVENT_STREAM_PARSER_CLS : Optional[Type['BaseEventStreamParser']] = None
+    EVENT_STREAM_PARSER_CLS: Optional[Type['BaseEventStreamParser']] = None
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:

@@ -49,6 +49,7 @@ class HTTPHeaders(HTTPMessage):
             new_instance[key] = value
         return new_instance
 
+
 from urllib.parse import (
     quote,
     urlencode,
@@ -66,12 +67,14 @@ from io import IOBase as _IOBase
 from base64 import encodebytes
 from email.utils import formatdate
 from itertools import zip_longest
+
 file_type = _IOBase
 zip = zip
 
 # In python3, unquote takes a str() object, url decodes it,
 # then takes the bytestring and decodes it to utf-8.
 unquote_str = unquote_plus
+
 
 def set_socket_timeout(http_response, timeout):
     """Set the timeout of the socket from an HTTPResponse.
@@ -81,14 +84,17 @@ def set_socket_timeout(http_response, timeout):
     """
     http_response._fp.fp.raw._sock.settimeout(timeout)
 
+
 def accepts_kwargs(func):
     # In python3.4.1, there's backwards incompatible
     # changes when using getargspec with functools.partials.
     return inspect.getfullargspec(func)[2]
 
+
 def ensure_unicode(s, encoding=None, errors=None):
     # NOOP in Python 3, because every string is already unicode
     return s
+
 
 def ensure_bytes(s, encoding='utf-8', errors='strict'):
     if isinstance(s, str):
@@ -98,7 +104,7 @@ def ensure_bytes(s, encoding='utf-8', errors='strict'):
     raise ValueError(f"Expected str or bytes, received {type(s)}.")
 
 
-if sys.version_info < (3,9):
+if sys.version_info < (3, 9):
     import xml.etree.cElementTree as ETree
 else:
     # cElementTree does not exist from Python3.9+
@@ -115,6 +121,7 @@ def filter_ssl_warnings():
         category=exceptions.InsecurePlatformWarning,
         module=r".*urllib3\.util\.ssl_",
     )
+
 
 def copy_kwargs(kwargs):
     """
@@ -333,6 +340,7 @@ UNSAFE_URL_CHARS = frozenset('\t\r\n')
 # Detect if gzip is available for use
 try:
     import gzip
+
     HAS_GZIP = True
 except ImportError:
     HAS_GZIP = False

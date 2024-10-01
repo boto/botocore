@@ -866,7 +866,7 @@ class BaseClient:
     # snake_case name, but we need to know the ListObjects form.
     # xform_name() does the ListObjects->list_objects conversion, but
     # we need the reverse mapping here.
-    _PY_TO_OP_NAME : Dict[str, str] = {}
+    _PY_TO_OP_NAME: Dict[str, str] = {}
 
     def __init__(
         self,
