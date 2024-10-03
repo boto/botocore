@@ -26,10 +26,6 @@ import botocore.parsers
 import botocore.serialize
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
-from botocore.httpchecksum import (
-    RequestChecksumCalculation,
-    ResponseChecksumValidation,
-)
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
@@ -64,6 +60,15 @@ LEGACY_GLOBAL_STS_REGIONS = [
 # Maximum allowed length of the ``user_agent_appid`` config field. Longer
 # values result in a warning-level log message.
 USERAGENT_APPID_MAXLEN = 50
+
+VALID_REQUEST_CHECKSUM_CALCULATION_CONFIG = (
+    "when_supported",
+    "when_required",
+)
+VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG = (
+    "when_supported",
+    "when_required",
+)
 
 
 class ClientArgsCreator:
@@ -788,13 +793,13 @@ class ClientArgsCreator:
             config_kwargs,
             config_key="request_checksum_calculation",
             default_value="when_supported",
-            valid_options_enum=RequestChecksumCalculation,
+            valid_options=VALID_REQUEST_CHECKSUM_CALCULATION_CONFIG,
         )
         self._handle_checksum_config(
             config_kwargs,
             config_key="response_checksum_validation",
             default_value="when_supported",
-            valid_options_enum=ResponseChecksumValidation,
+            valid_options=VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG,
         )
 
     def _handle_checksum_config(
@@ -802,7 +807,7 @@ class ClientArgsCreator:
         config_kwargs,
         config_key,
         default_value,
-        valid_options_enum,
+        valid_options,
     ):
         value = config_kwargs.get(config_key)
         if value is None:
@@ -811,7 +816,6 @@ class ClientArgsCreator:
                 or default_value
             )
         value = value.lower()
-        valid_options = valid_options_enum.values()
         if value not in valid_options:
             raise botocore.exceptions.InvalidChecksumConfigError(
                 config_key=config_key,
