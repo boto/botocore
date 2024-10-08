@@ -14,6 +14,7 @@
 
 import pytest
 
+from botocore.compat import HAS_CRT
 from tests import ClientHTTPStubber, patch_load_service_model
 
 TEST_CHECKSUM_SERVICE_MODEL = {
@@ -147,29 +148,13 @@ TEST_CHECKSUM_RULESET = {
 
 def _request_checksum_calculation_cases():
     request_payload = "Hello world"
-    return (
+    cases = [
         (
             "CRC32",
             request_payload,
             {
                 "x-amz-request-algorithm": "CRC32",
                 "x-amz-checksum-crc32": "i9aeUg==",
-            },
-        ),
-        (
-            "CRC32C",
-            request_payload,
-            {
-                "x-amz-request-algorithm": "CRC32C",
-                "x-amz-checksum-crc32c": "crUfeA==",
-            },
-        ),
-        (
-            "CRC64NVME",
-            request_payload,
-            {
-                "x-amz-request-algorithm": "CRC64NVME",
-                "x-amz-checksum-crc64nvme": "OOJZ0D8xKts=",
             },
         ),
         (
@@ -188,7 +173,27 @@ def _request_checksum_calculation_cases():
                 "x-amz-checksum-sha256": "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw=",
             },
         ),
-    )
+    ]
+    if HAS_CRT:
+        cases.append(
+            (
+                "CRC32C",
+                request_payload,
+                {
+                    "x-amz-request-algorithm": "CRC32C",
+                    "x-amz-checksum-crc32c": "crUfeA==",
+                },
+            ),
+            (
+                "CRC64NVME",
+                request_payload,
+                {
+                    "x-amz-request-algorithm": "CRC64NVME",
+                    "x-amz-checksum-crc64nvme": "OOJZ0D8xKts=",
+                },
+            ),
+        )
+    return cases
 
 
 @pytest.mark.parametrize(
@@ -225,7 +230,7 @@ def test_request_checksum_calculation(
 
 def _streaming_request_checksum_calculation_cases():
     request_payload = "Hello world"
-    return (
+    cases = [
         (
             "CRC32",
             request_payload,
@@ -234,24 +239,6 @@ def _streaming_request_checksum_calculation_cases():
                 "x-amz-trailer": "x-amz-checksum-crc32",
             },
             {"x-amz-checksum-crc32": "i9aeUg=="},
-        ),
-        (
-            "CRC32C",
-            request_payload,
-            {
-                "content-encoding": "aws-chunked",
-                "x-amz-trailer": "x-amz-checksum-crc32c",
-            },
-            {"x-amz-checksum-crc32c": "crUfeA=="},
-        ),
-        (
-            "CRC64NVME",
-            request_payload,
-            {
-                "content-encoding": "aws-chunked",
-                "x-amz-trailer": "x-amz-checksum-crc64nvme",
-            },
-            {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
         ),
         (
             "SHA1",
@@ -273,7 +260,29 @@ def _streaming_request_checksum_calculation_cases():
                 "x-amz-checksum-sha256": "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw="
             },
         ),
-    )
+    ]
+    if HAS_CRT:
+        cases.append(
+            (
+                "CRC32C",
+                request_payload,
+                {
+                    "content-encoding": "aws-chunked",
+                    "x-amz-trailer": "x-amz-checksum-crc32c",
+                },
+                {"x-amz-checksum-crc32c": "crUfeA=="},
+            ),
+            (
+                "CRC64NVME",
+                request_payload,
+                {
+                    "content-encoding": "aws-chunked",
+                    "x-amz-trailer": "x-amz-checksum-crc64nvme",
+                },
+                {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
+            ),
+        )
+    return cases
 
 
 @pytest.mark.parametrize(
