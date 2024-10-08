@@ -1880,9 +1880,7 @@ def test_document_response_params_without_expires(document_expires_mocks):
 def operation_model_for_200_error():
     operation_model = mock.Mock()
     operation_model.has_streaming_output = False
-    operation_model.output_shape = mock.Mock()
-    operation_model.output_shape.members = {'member': mock.Mock()}
-    operation_model.output_shape.members['member'].serialization = {}
+    operation_model.has_modeled_body_output = True
     return operation_model
 
 
@@ -1944,9 +1942,7 @@ def test_200_response_with_streaming_output_left_untouched(
 def test_200_response_with_no_body_left_untouched(
     operation_model_for_200_error, response_dict, http_response
 ):
-    operation_model_for_200_error.output_shape.members[
-        'member'
-    ].serialization = {'location': 'header'}
+    operation_model_for_200_error.has_modeled_body_output = False
     handlers.check_for_200_error(
         operation_model_for_200_error, response_dict, http_response
     )

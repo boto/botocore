@@ -27,7 +27,7 @@ class UACapHTTPStubber(ClientHTTPStubber):
 
     def __init__(self, obj_with_event_emitter):
         super().__init__(obj_with_event_emitter, strict=False)
-        self.add_response(body=b'<Test></Test>')  # expect exactly one request
+        self.add_response(body=b'<Test/>')  # expect exactly one request
 
     @property
     def captured_ua_string(self):

@@ -49,7 +49,7 @@ class TestS3Addressing(BaseSessionTest):
     def test_list_objects_dns_name(self):
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, force_hmacv1=True, body=b'<Test></Test>'
+            'list_objects', params, force_hmacv1=True, body=b'<Test/>'
         )
         self.assertEqual(
             prepared_request.url, 'https://safename.s3.amazonaws.com/'
@@ -58,7 +58,7 @@ class TestS3Addressing(BaseSessionTest):
     def test_list_objects_non_dns_name(self):
         params = {'Bucket': 'un_safe_name'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, force_hmacv1=True, body=b'<Test></Test>'
+            'list_objects', params, force_hmacv1=True, body=b'<Test/>'
         )
         self.assertEqual(
             prepared_request.url, 'https://s3.amazonaws.com/un_safe_name'
@@ -68,7 +68,7 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'us-west-2'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, force_hmacv1=True, body=b'<Test></Test>'
+            'list_objects', params, force_hmacv1=True, body=b'<Test/>'
         )
         self.assertEqual(
             prepared_request.url,
@@ -81,7 +81,7 @@ class TestS3Addressing(BaseSessionTest):
             [('Bucket', 'safename'), ('Marker', '\xe4\xf6\xfc-01.txt')]
         )
         prepared_request = self.get_prepared_request(
-            'list_objects', params, body=b'<Test></Test>'
+            'list_objects', params, body=b'<Test/>'
         )
         self.assertEqual(
             prepared_request.url,
@@ -95,7 +95,7 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'us-gov-west-1'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, body=b'<Test></Test>'
+            'list_objects', params, body=b'<Test/>'
         )
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
@@ -107,7 +107,7 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'fips-us-gov-west-1'
         params = {'Bucket': 'safename'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, body=b'<Test></Test>'
+            'list_objects', params, body=b'<Test/>'
         )
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
@@ -119,7 +119,7 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'us-west-2'
         params = {'Bucket': 'un_safe_name'}
         prepared_request = self.get_prepared_request(
-            'list_objects', params, body=b'<Test></Test>'
+            'list_objects', params, body=b'<Test/>'
         )
         self.assertEqual(
             prepared_request.url,

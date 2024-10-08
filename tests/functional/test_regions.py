@@ -502,7 +502,7 @@ class TestEndpointResolution(BaseSessionTest):
 
     def test_regionalized_client_endpoint_resolution(self):
         client, stubber = self.create_stubbed_client('s3', 'us-east-2')
-        stubber.add_response(body=b'<Test></Test>')
+        stubber.add_response(body=b'<Test/>')
         client.list_buckets()
         self.assertEqual(
             stubber.requests[0].url, 'https://s3.us-east-2.amazonaws.com/'
@@ -510,7 +510,7 @@ class TestEndpointResolution(BaseSessionTest):
 
     def test_regionalized_client_with_unknown_region(self):
         client, stubber = self.create_stubbed_client('s3', 'not-real')
-        stubber.add_response(body=b'<Test></Test>')
+        stubber.add_response(body=b'<Test/>')
         client.list_buckets()
         # Validate we don't fall back to partition endpoint for
         # regionalized services.

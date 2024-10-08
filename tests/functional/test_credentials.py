@@ -1060,7 +1060,7 @@ class SSOSessionTest(BaseEnvVar):
         session = Session(profile='sso-test')
         with SessionHTTPStubber(session) as stubber:
             self.add_credential_response(stubber)
-            stubber.add_response(body=b'<Test></Test>')
+            stubber.add_response(body=b'<Test/>')
             with mock.patch.object(
                 SSOTokenProvider, 'DEFAULT_CACHE_CLS', MockCache
             ):
@@ -1155,7 +1155,7 @@ class TestContextCredentials(unittest.TestCase):
         with SessionHTTPStubber(session) as stubber:
             s3 = session.create_client('s3')
             s3.meta.events.register('before-sign', self._add_fake_creds)
-            stubber.add_response(body=b'<Test></Test>')
+            stubber.add_response(body=b'<Test/>')
             s3.list_buckets()
             request = stubber.requests[0]
             assert self.ACCESS_KEY in str(request.headers.get('Authorization'))

@@ -152,7 +152,7 @@ def check_for_200_error(
     if (
         http_response is None
         or operation_model.has_streaming_output
-        or not _has_modeled_body(operation_model)
+        or not operation_model.has_modeled_body_output
     ):
         # A None response can happen if an exception is raised while
         # trying to retrieve the response.  See Endpoint._get_response().
@@ -187,16 +187,6 @@ def _looks_like_special_case_error(http_response):
             return True
         if root.tag == 'Error':
             return True
-    return False
-
-
-def _has_modeled_body(operation_model):
-    if output_shape := operation_model.output_shape:
-        for member_shape in output_shape.members.values():
-            if not member_shape.serialization.get('location'):
-                # If any member is not bound to a location,
-                # we can expect a body
-                return True
     return False
 
 
