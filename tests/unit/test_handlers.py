@@ -1934,7 +1934,7 @@ def test_200_response_with_streaming_output_left_untouched(
     operation_model.has_streaming_output = True
     http_response.content = "<Error></Error>"
     handlers.check_for_200_error(operation_model, response_dict, http_response)
-    # We don't touch the status code on streaming operations
+    # We don't touch the status code on streaming operations.
     assert http_response.status_code == 200
     assert response_dict['status_code'] == 200
 
