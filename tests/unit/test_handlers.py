@@ -501,33 +501,6 @@ class TestHandlers(BaseSessionTest):
         )
         self.assertIn('X-Amz-Signature', params['PreSignedUrl'])
 
-    def test_500_status_code_set_for_200_response(self):
-        http_response = mock.Mock()
-        http_response.status_code = 200
-        http_response.content = """
-            <Error>
-              <Code>AccessDenied</Code>
-              <Message>Access Denied</Message>
-              <RequestId>id</RequestId>
-              <HostId>hostid</HostId>
-            </Error>
-        """
-        handlers.check_for_200_error((http_response, {}))
-        self.assertEqual(http_response.status_code, 500)
-
-    def test_200_response_with_no_error_left_untouched(self):
-        http_response = mock.Mock()
-        http_response.status_code = 200
-        http_response.content = "<NotAnError></NotAnError>"
-        handlers.check_for_200_error((http_response, {}))
-        # We don't touch the status code since there are no errors present.
-        self.assertEqual(http_response.status_code, 200)
-
-    def test_500_response_can_be_none(self):
-        # A 500 response can raise an exception, which means the response
-        # object is None.  We need to handle this case.
-        handlers.check_for_200_error(None)
-
     def test_route53_resource_id(self):
         event = 'before-parameter-build.route53.GetHostedZone'
         params = {
@@ -1172,49 +1145,6 @@ class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
     def test_non_ascii_characters(self):
         self.assert_converts_to_file_like_object_with_bytes(
             '\u2713', b'\xe2\x9c\x93'
-        )
-
-
-class TestRetryHandlerOrder(BaseSessionTest):
-    def get_handler_names(self, responses):
-        names = []
-        for response in responses:
-            handler = response[0]
-            if hasattr(handler, '__name__'):
-                names.append(handler.__name__)
-            elif hasattr(handler, '__class__'):
-                names.append(handler.__class__.__name__)
-            else:
-                names.append(str(handler))
-        return names
-
-    def test_s3_special_case_is_before_other_retry(self):
-        client = self.session.create_client('s3')
-        service_model = self.session.get_service_model('s3')
-        operation = service_model.operation_model('CopyObject')
-        responses = client.meta.events.emit(
-            'needs-retry.s3.CopyObject',
-            request_dict={'context': {}},
-            response=(mock.Mock(), mock.Mock()),
-            endpoint=mock.Mock(),
-            operation=operation,
-            attempts=1,
-            caught_exception=None,
-        )
-        # This is implementation specific, but we're trying to verify that
-        # the check_for_200_error is before any of the retry logic in
-        # botocore.retryhandlers.
-        # Technically, as long as the relative order is preserved, we don't
-        # care about the absolute order.
-        names = self.get_handler_names(responses)
-        self.assertIn('check_for_200_error', names)
-        self.assertIn('RetryHandler', names)
-        s3_200_handler = names.index('check_for_200_error')
-        general_retry_handler = names.index('RetryHandler')
-        self.assertTrue(
-            s3_200_handler < general_retry_handler,
-            "S3 200 error handler was supposed to be before "
-            "the general retry handler, but it was not.",
         )
 
 
@@ -1944,3 +1874,88 @@ def test_document_response_params_without_expires(document_expires_mocks):
     mocks['section'].get_section.assert_not_called()
     mocks['param_section'].add_new_section.assert_not_called()
     mocks['doc_section'].write.assert_not_called()
+
+
+@pytest.fixture()
+def operation_model_for_200_error():
+    operation_model = mock.Mock()
+    operation_model.has_streaming_output = False
+    operation_model.output_shape = mock.Mock()
+    operation_model.output_shape.members = {'member': mock.Mock()}
+    operation_model.output_shape.members['member'].serialization = {}
+    return operation_model
+
+
+@pytest.fixture()
+def http_response():
+    http_response = mock.Mock()
+    http_response.status_code = 200
+    http_response.content = ""
+    return http_response
+
+
+@pytest.fixture()
+def response_dict():
+    return {'status_code': 200}
+
+
+def test_500_status_code_set_for_200_response(
+    operation_model_for_200_error, response_dict, http_response
+):
+    http_response.content = """
+        <Error>
+          <Code>AccessDenied</Code>
+          <Message>Access Denied</Message>
+          <RequestId>id</RequestId>
+          <HostId>hostid</HostId>
+        </Error>
+    """
+    handlers.check_for_200_error(
+        operation_model_for_200_error, response_dict, http_response
+    )
+    assert http_response.status_code == 500
+    assert response_dict['status_code'] == 500
+
+
+def test_200_response_with_no_error_left_untouched(
+    operation_model_for_200_error, response_dict, http_response
+):
+    http_response.content = "<NotAnError></NotAnError>"
+    handlers.check_for_200_error(
+        operation_model_for_200_error, response_dict, http_response
+    )
+    # We don't touch the status code since there are no errors present.
+    assert http_response.status_code == 200
+    assert response_dict['status_code'] == 200
+
+
+def test_200_response_with_streaming_output_left_untouched(
+    response_dict, http_response
+):
+    operation_model = mock.Mock()
+    operation_model.has_streaming_output = True
+    http_response.content = "<Error></Error>"
+    handlers.check_for_200_error(operation_model, response_dict, http_response)
+    # We don't touch the status code on streaming operations
+    assert http_response.status_code == 200
+    assert response_dict['status_code'] == 200
+
+
+def test_200_response_with_no_body_left_untouched(
+    operation_model_for_200_error, response_dict, http_response
+):
+    operation_model_for_200_error.output_shape.members[
+        'member'
+    ].serialization = {'location': 'header'}
+    handlers.check_for_200_error(
+        operation_model_for_200_error, response_dict, http_response
+    )
+    assert http_response.status_code == 200
+    assert response_dict['status_code'] == 200
+
+
+def test_500_response_can_be_none():
+    # A 500 response can raise an exception, which means the response
+    # object is None.  We need to handle this case.
+    operation_model = mock.Mock()
+    handlers.check_for_200_error(operation_model, None, None)

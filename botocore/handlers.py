@@ -131,7 +131,9 @@ def escape_xml_payload(params, **kwargs):
     params['body'] = body
 
 
-def check_for_200_error(response, **kwargs):
+def check_for_200_error(
+    operation_model, response_dict, http_response, **kwargs
+):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
     # can occur when Amazon S3 receives the copy request and the other can
@@ -147,19 +149,27 @@ def check_for_200_error(response, **kwargs):
     # 500 response (with respect to raising exceptions, retries, etc.)
     # We're connected *before* all the other retry logic handlers, so as long
     # as we switch the error code to 500, we'll retry the error as expected.
-    if response is None:
+    if (
+        http_response is None
+        or operation_model.has_streaming_output
+        or not _has_modeled_body(operation_model)
+    ):
         # A None response can happen if an exception is raised while
         # trying to retrieve the response.  See Endpoint._get_response().
+        # Operations with streaming response blobs should be excluded as they
+        # may contain customer content which mimics the form of an S3 error.
         return
-    http_response, parsed = response
     if _looks_like_special_case_error(http_response):
         logger.debug(
             "Error found for response with 200 status code, "
             "errors: %s, changing status code to "
             "500.",
-            parsed,
+            http_response.content,
         )
         http_response.status_code = 500
+        # The response_dict status code must also be changed
+        # for it to be parsed as a 500 response.
+        response_dict['status_code'] = 500
 
 
 def _looks_like_special_case_error(http_response):
@@ -177,6 +187,16 @@ def _looks_like_special_case_error(http_response):
             return True
         if root.tag == 'Error':
             return True
+    return False
+
+
+def _has_modeled_body(operation_model):
+    if output_shape := operation_model.output_shape:
+        for member_shape in output_shape.members.values():
+            if not member_shape.serialization.get('location'):
+                # If any member is not bound to a location,
+                # we can expect a body
+                return True
     return False
 
 
@@ -1268,6 +1288,7 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
+    ('before-parse.s3.*', check_for_200_error, REGISTER_FIRST),
     ('before-parse.s3.*', handle_expires_header),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build.s3', validate_bucket_name),
@@ -1312,13 +1333,6 @@ BUILTIN_HANDLERS = [
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
     ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
-    ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
-    ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
-    (
-        'needs-retry.s3.CompleteMultipartUpload',
-        check_for_200_error,
-        REGISTER_FIRST,
-    ),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),

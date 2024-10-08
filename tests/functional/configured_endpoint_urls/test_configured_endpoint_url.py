@@ -147,7 +147,9 @@ def assert_endpoint_url_used_for_operation(
 ):
     http_stubber = ClientHTTPStubber(client)
     http_stubber.start()
-    http_stubber.add_response()
+    http_stubber.add_response(
+        body=(b'<Test></Test>' if operation == 'list_buckets' else None)
+    )
 
     # Call an operation on the client
     getattr(client, operation)(**params)

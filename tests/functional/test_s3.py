@@ -28,7 +28,6 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError,
     UnsupportedS3ConfigurationError,
 )
-from botocore.parsers import ResponseParserError
 from tests import (
     BaseSessionTest,
     ClientHTTPStubber,
@@ -462,19 +461,35 @@ class TestS3Copy(BaseS3OperationTest):
         self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
         self.assertTrue("CopyObjectResult" in response)
 
-    def test_s3_copy_object_with_incomplete_response(self):
+    def test_s3_copy_object_with_200_error_response(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
-
-        incomplete_body = b'<?xml version="1.0" encoding="UTF-8"?>\n\n\n'
-        self.http_stubber.add_response(status=200, body=incomplete_body)
-        with self.assertRaises(ResponseParserError):
+        error_body = (
+            b"<Error>"
+            b"<Code>SlowDown</Code>"
+            b"<Message>Please reduce your request rate.</Message>"
+            b"</Error>"
+        )
+        self.http_stubber.add_response(status=200, body=error_body)
+        self.http_stubber.add_response(status=200, body=error_body)
+        self.http_stubber.add_response(status=200, body=error_body)
+        self.http_stubber.add_response(status=200, body=error_body)
+        self.http_stubber.add_response(status=200, body=error_body)
+        with self.assertRaises(botocore.exceptions.ClientError) as context:
             self.client.copy_object(
                 Bucket="bucket",
                 CopySource="other-bucket/test.txt",
                 Key="test.txt",
             )
+        self.assertEqual(len(self.http_stubber.requests), 5)
+        self.assertEqual(
+            context.exception.response["ResponseMetadata"]["HTTPStatusCode"],
+            500,
+        )
+        self.assertEqual(
+            context.exception.response["Error"]["Code"], "SlowDown"
+        )
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
@@ -538,7 +553,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, http_stubber = self.create_stubbed_s3_client(
             endpoint_url="https://custom.com"
         )
-        http_stubber.add_response()
+        http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=accesspoint_arn)
         expected_endpoint = "myendpoint-123456789012.custom.com"
         self.assert_endpoint(http_stubber.requests[0], expected_endpoint)
@@ -551,7 +566,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             endpoint_url="https://custom.com",
             config=Config(s3={"use_dualstack_endpoint": True}),
         )
-        http_stubber.add_response()
+        http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=accesspoint_arn)
         expected_endpoint = "myendpoint-123456789012.custom.com"
         self.assert_endpoint(http_stubber.requests[0], expected_endpoint)
@@ -600,7 +615,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=accesspoint_arn)
         self.assert_signing_region(self.http_stubber.requests[0], "us-west-2")
 
@@ -724,7 +739,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=outpost_arn)
         request = self.http_stubber.requests[0]
         self.assert_signing_name(request, "s3-outposts")
@@ -746,7 +761,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             endpoint_url="https://custom.com", region_name="us-east-1"
         )
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=outpost_arn)
         request = self.http_stubber.requests[0]
         self.assert_signing_name(request, "s3-outposts")
@@ -950,7 +965,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             region_name="us-east-1",
             config=Config(s3={"use_arn_region": False}),
         )
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=s3_object_lambda_arn)
         request = self.http_stubber.requests[0]
         self.assert_signing_name(request, "s3-object-lambda")
@@ -968,7 +983,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=s3_object_lambda_arn)
         request = self.http_stubber.requests[0]
         self.assert_signing_name(request, "s3-object-lambda")
@@ -1036,7 +1051,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             config=Config(s3={"use_arn_region": True}),
         )
 
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=s3_accesspoint_arn)
         request = self.http_stubber.requests[0]
         expected_endpoint = (
@@ -1050,7 +1065,7 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
             region_name="s3-external-1",
         )
 
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         self.client.list_objects(Bucket=s3_accesspoint_arn)
         request = self.http_stubber.requests[0]
         expected_endpoint = (
@@ -1530,7 +1545,7 @@ class TestS3SigV4(BaseS3OperationTest):
             "s3", self.region, config=config
         )
         self.http_stubber = ClientHTTPStubber(self.client)
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         with self.http_stubber:
             self.client.list_objects(Bucket="foo")
         sent_headers = self.get_sent_headers()
@@ -1548,7 +1563,7 @@ class TestS3SigV4(BaseS3OperationTest):
             "s3", self.region, config=config
         )
         self.http_stubber = ClientHTTPStubber(self.client)
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         with self.http_stubber:
             self.client.list_objects(Bucket=bucket)
         sent_headers = self.get_sent_headers()
@@ -2197,7 +2212,7 @@ def test_checksums_included_in_expected_operations(
     """Validate expected calls include Content-MD5 header"""
     client = _create_s3_client()
     with ClientHTTPStubber(client) as stub:
-        stub.add_response()
+        stub.add_response(body=b'<Test></Test>')
         call = getattr(client, operation)
         call(**operation_kwargs)
         assert "Content-MD5" in stub.requests[-1].headers
@@ -3643,7 +3658,7 @@ class TestS3XMLPayloadEscape(BaseS3OperationTest):
         self.assertEqual(content_md5, request.headers["Content-MD5"])
 
     def test_escape_keys_in_xml_delete_objects(self):
-        self.http_stubber.add_response()
+        self.http_stubber.add_response(body=b'<Test></Test>')
         with self.http_stubber:
             self.client.delete_objects(
                 Bucket="mybucket",

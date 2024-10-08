@@ -280,7 +280,7 @@ class TestS3ExpressRequests:
 
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
-            stubber.add_response()
+            stubber.add_response(body=b'<Test></Test>')
 
             default_s3_client.delete_objects(
                 Bucket=S3EXPRESS_BUCKET,
