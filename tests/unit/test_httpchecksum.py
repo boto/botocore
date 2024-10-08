@@ -26,6 +26,7 @@ from botocore.httpchecksum import (
     Crc32Checksum,
     CrtCrc32cChecksum,
     CrtCrc32Checksum,
+    CrtCrc64NvmeChecksum,
     Sha1Checksum,
     Sha256Checksum,
     StreamingChecksumBody,
@@ -190,6 +191,24 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             )
             self.assertIn(
                 "Using CRC32C requires an additional dependency",
+                str(context.exception),
+            )
+
+    @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
+    def test_request_checksum_algorithm_model_no_crt_crc64nvme_unsupported(
+        self,
+    ):
+        request = self._build_request(b"")
+        operation_model = self._make_operation_model(
+            http_checksum={"requestAlgorithmMember": "Algorithm"},
+        )
+        params = {"Algorithm": "crc64nvme"}
+        with self.assertRaises(MissingDependencyException) as context:
+            resolve_request_checksum_algorithm(
+                request, operation_model, params
+            )
+            self.assertIn(
+                "Using CRC64NVME requires an additional dependency",
                 str(context.exception),
             )
 
@@ -691,6 +710,10 @@ class TestChecksumImplementations(unittest.TestCase):
     def test_crt_crc32c(self):
         self.assert_base64_checksum(CrtCrc32cChecksum, "yZRlqg==")
 
+    @requires_crt()
+    def test_crt_crc64nvme(self):
+        self.assert_base64_checksum(CrtCrc64NvmeChecksum, "jSnVw/bqjr4=")
+
 
 class TestCrtChecksumOverrides(unittest.TestCase):
     @requires_crt()
@@ -702,6 +725,11 @@ class TestCrtChecksumOverrides(unittest.TestCase):
     def test_crt_crc32c_available(self):
         actual_cls = _CHECKSUM_CLS.get("crc32c")
         self.assertEqual(actual_cls, CrtCrc32cChecksum)
+
+    @requires_crt()
+    def test_crt_crc64nvme_available(self):
+        actual_cls = _CHECKSUM_CLS.get("crc64nvme")
+        self.assertEqual(actual_cls, CrtCrc64NvmeChecksum)
 
 
 class TestStreamingChecksumBody(unittest.TestCase):
