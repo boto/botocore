@@ -52,6 +52,7 @@ from botocore.exceptions import (
     ParamValidationError,
     UnsupportedTLSVersionWarning,
 )
+from botocore.httpchecksum import DEFAULT_CHECKSUM_ALGORITHM
 from botocore.regions import EndpointResolverBuiltins
 from botocore.signers import (
     add_generate_db_auth_token,
@@ -61,8 +62,6 @@ from botocore.signers import (
 from botocore.utils import (
     SAFE_CHARS,
     ArnParser,
-    conditionally_calculate_checksum,
-    conditionally_calculate_md5,
     percent_encode,
     switch_host_with_param,
 )
@@ -1287,6 +1286,15 @@ def _update_status_code(response, **kwargs):
         http_response.status_code = parsed_status_code
 
 
+def set_default_multipart_checksum_algorithm(params, **kwargs):
+    """Sets the ``ChecksumAlgorithm`` parameter to the SDKs default checksum.
+
+    The ``CreateMultipartUpload`` operation isn't modeled with the ``httpchecksum``
+    trait and requires us to set a default checksum algorithm when none is provided.
+    """
+    params.setdefault('ChecksumAlgorithm', DEFAULT_CHECKSUM_ALGORITHM)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1341,6 +1349,10 @@ BUILTIN_HANDLERS = [
         'before-parameter-build.s3.CreateMultipartUpload',
         validate_ascii_metadata,
     ),
+    (
+        'before-parameter-build.s3.CreateMultipartUpload',
+        set_default_multipart_checksum_algorithm,
+    ),
     ('before-parameter-build.s3-control', remove_accid_host_prefix_from_model),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
     ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
@@ -1351,10 +1363,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
-    ('before-call.s3.PutObject', conditionally_calculate_checksum),
-    ('before-call.s3.UploadPart', conditionally_calculate_md5),
     ('before-call.s3.DeleteObjects', escape_xml_payload),
-    ('before-call.s3.DeleteObjects', conditionally_calculate_checksum),
     ('before-call.s3.PutBucketLifecycleConfiguration', escape_xml_payload),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
