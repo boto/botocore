@@ -1126,6 +1126,16 @@ class TestHandlers(BaseSessionTest):
         )
         self.assertNotIn('payload_signing_enabled', context)
 
+    def test_set_default_multipart_checksum_algorithm(self):
+        params = {}
+        handlers.set_default_multipart_checksum_algorithm(params)
+        self.assertEqual(params["ChecksumAlgorithm"], "CRC32")
+
+    def test_does_not_set_default_multipart_checksum_algorithm(self):
+        params = {"ChecksumAlgorithm": "SHA256"}
+        handlers.set_default_multipart_checksum_algorithm(params)
+        self.assertEqual(params["ChecksumAlgorithm"], "SHA256")
+
 
 @pytest.mark.parametrize(
     'auth_type, expected_response', [('v4', 's3v4'), ('v4a', 's3v4a')]
