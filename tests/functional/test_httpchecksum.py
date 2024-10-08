@@ -175,23 +175,25 @@ def _request_checksum_calculation_cases():
         ),
     ]
     if HAS_CRT:
-        cases.append(
-            (
-                "CRC32C",
-                request_payload,
-                {
-                    "x-amz-request-algorithm": "CRC32C",
-                    "x-amz-checksum-crc32c": "crUfeA==",
-                },
-            ),
-            (
-                "CRC64NVME",
-                request_payload,
-                {
-                    "x-amz-request-algorithm": "CRC64NVME",
-                    "x-amz-checksum-crc64nvme": "OOJZ0D8xKts=",
-                },
-            ),
+        cases.extend(
+            [
+                (
+                    "CRC32C",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "CRC32C",
+                        "x-amz-checksum-crc32c": "crUfeA==",
+                    },
+                ),
+                (
+                    "CRC64NVME",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "CRC64NVME",
+                        "x-amz-checksum-crc64nvme": "OOJZ0D8xKts=",
+                    },
+                ),
+            ]
         )
     return cases
 
@@ -262,25 +264,27 @@ def _streaming_request_checksum_calculation_cases():
         ),
     ]
     if HAS_CRT:
-        cases.append(
-            (
-                "CRC32C",
-                request_payload,
-                {
-                    "content-encoding": "aws-chunked",
-                    "x-amz-trailer": "x-amz-checksum-crc32c",
-                },
-                {"x-amz-checksum-crc32c": "crUfeA=="},
-            ),
-            (
-                "CRC64NVME",
-                request_payload,
-                {
-                    "content-encoding": "aws-chunked",
-                    "x-amz-trailer": "x-amz-checksum-crc64nvme",
-                },
-                {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
-            ),
+        cases.extend(
+            [
+                (
+                    "CRC32C",
+                    request_payload,
+                    {
+                        "content-encoding": "aws-chunked",
+                        "x-amz-trailer": "x-amz-checksum-crc32c",
+                    },
+                    {"x-amz-checksum-crc32c": "crUfeA=="},
+                ),
+                (
+                    "CRC64NVME",
+                    request_payload,
+                    {
+                        "content-encoding": "aws-chunked",
+                        "x-amz-trailer": "x-amz-checksum-crc64nvme",
+                    },
+                    {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
+                ),
+            ]
         )
     return cases
 
