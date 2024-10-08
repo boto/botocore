@@ -492,4 +492,4 @@ if HAS_CRT:
         name in _CRT_CHECKSUM_ALGORITHMS for name in _CRT_CHECKSUM_CLS.keys()
     )
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
-_ALGORITHMS_PRIORITY_LIST = ['crc32c', 'crc32', 'crc64nvme', 'sha1', 'sha256']
+_ALGORITHMS_PRIORITY_LIST = ['crc64nvme', 'crc32c', 'crc32', 'sha1', 'sha256']
