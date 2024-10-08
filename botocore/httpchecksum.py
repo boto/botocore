@@ -109,6 +109,19 @@ class CrtCrc32cChecksum(BaseChecksum):
         return self._int_crc32c.to_bytes(4, byteorder="big")
 
 
+class CrtCrc64NvmeChecksum(BaseChecksum):
+    # Note: This class is only used if the CRT is available
+    def __init__(self):
+        self._int_crc64nvme = 0
+
+    def update(self, chunk):
+        new_checksum = crt_checksums.crc64nvme(chunk, self._int_crc64nvme)
+        self._int_crc64nvme = new_checksum & 0xFFFFFFFFFFFFFFFF
+
+    def digest(self):
+        return self._int_crc64nvme.to_bytes(8, byteorder="big")
+
+
 class Sha1Checksum(BaseChecksum):
     def __init__(self):
         self._checksum = sha1()
@@ -465,12 +478,13 @@ _CHECKSUM_CLS = {
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
 }
-_CRT_CHECKSUM_ALGORITHMS = ["crc32", "crc32c"]
+_CRT_CHECKSUM_ALGORITHMS = ["crc32", "crc32c", "crc64nvme"]
 if HAS_CRT:
     # Use CRT checksum implementations if available
     _CRT_CHECKSUM_CLS = {
         "crc32": CrtCrc32Checksum,
         "crc32c": CrtCrc32cChecksum,
+        "crc64nvme": CrtCrc64NvmeChecksum,
     }
     _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
     # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
@@ -478,4 +492,4 @@ if HAS_CRT:
         name in _CRT_CHECKSUM_ALGORITHMS for name in _CRT_CHECKSUM_CLS.keys()
     )
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
-_ALGORITHMS_PRIORITY_LIST = ['crc32c', 'crc32', 'sha1', 'sha256']
+_ALGORITHMS_PRIORITY_LIST = ['crc64nvme', 'crc32c', 'crc32', 'sha1', 'sha256']
