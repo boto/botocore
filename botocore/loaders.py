@@ -104,13 +104,14 @@ which don't represent the actual service api.
 
 import logging
 import os
+from typing import IO, Callable, Dict
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 
-_JSON_OPEN_METHODS = {
+_JSON_OPEN_METHODS: Dict[str, Callable[..., IO[str]]] = {
     '.json': open,
 }
 
