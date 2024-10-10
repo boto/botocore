@@ -40,7 +40,7 @@ from tests import (
     unittest,
 )
 
-DATE = datetime.datetime(2021, 8, 27, 0, 0, 0)
+DATE = datetime.datetime(2021, 8, 27, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class TestS3BucketValidation(unittest.TestCase):
