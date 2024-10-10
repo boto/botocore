@@ -16,7 +16,7 @@ import logging
 import os
 import re
 
-__version__ = '1.35.37'
+__version__ = '1.35.38'
 
 
 class NullHandler(logging.Handler):
@@ -54,6 +54,62 @@ _xform_cache = {
     ('ExecutePartiQLTransaction', '-'): 'execute-partiql-transaction',
     ('ExecutePartiQLBatch', '_'): 'execute_partiql_batch',
     ('ExecutePartiQLBatch', '-'): 'execute-partiql-batch',
+    (
+        'AssociateWhatsAppBusinessAccount',
+        '_',
+    ): 'associate_whatsapp_business_account',
+    (
+        'AssociateWhatsAppBusinessAccount',
+        '-',
+    ): 'associate-whatsapp-business-account',
+    ('DeleteWhatsAppMessageMedia', '_'): 'delete_whatsapp_media_message',
+    ('DeleteWhatsAppMessageMedia', '-'): 'delete-whatsapp-media-message',
+    (
+        'DisassociateWhatsAppBusinessAccount',
+        '_',
+    ): 'disassociate_whatsapp_business_account',
+    (
+        'DisassociateWhatsAppBusinessAccount',
+        '-',
+    ): 'disassociate-whatsapp-business-account',
+    (
+        'GetLinkedWhatsAppBusinessAccount',
+        '_',
+    ): 'get_linked_whatsapp_business_account',
+    (
+        'GetLinkedWhatsAppBusinessAccount',
+        '-',
+    ): 'get-linked-whatsapp-business-account',
+    (
+        'GetLinkedWhatsAppBusinessAccountPhoneNumber',
+        '_',
+    ): 'get_linked_whatsapp_business_account_phone_number',
+    (
+        'GetLinkedWhatsAppBusinessAccountPhoneNumber',
+        '-',
+    ): 'get-linked-whatsapp-business-account-phone-number',
+    ('GetWhatsAppMessageMedia', '_'): 'get_whatsapp_message_media',
+    ('GetWhatsAppMessageMedia', '-'): 'get-whatsapp-message-media',
+    (
+        'ListLinkedWhatsAppBusinessAccounts',
+        '_',
+    ): 'list_linked_whatsapp_business_accounts',
+    (
+        'ListLinkedWhatsAppBusinessAccounts',
+        '-',
+    ): 'list-linked-whatsapp-business-accounts',
+    ('PostWhatsAppMessageMedia', '_'): 'post_whatsapp_message_media',
+    ('PostWhatsAppMessageMedia', '-'): 'post-whatsapp-message-media',
+    (
+        'PutWhatsAppBusinessAccountEventDestinations',
+        '_',
+    ): 'put_whatsapp_business_account_event_destinations',
+    (
+        'PutWhatsAppBusinessAccountEventDestinations',
+        '-',
+    ): 'put-whatsapp-business-account-event-destinations',
+    ('SendWhatsAppMessage', '_'): 'send_whatsapp_message',
+    ('SendWhatsAppMessage', '-'): 'send-whatsapp-message',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
