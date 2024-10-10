@@ -707,6 +707,26 @@ class OperationModel:
                 return payload_shape
         return None
 
+    @CachedProperty
+    def has_modeled_body_input(self):
+        return self._has_modeled_body(self.input_shape)
+
+    @CachedProperty
+    def has_modeled_body_output(self):
+        return self._has_modeled_body(self.output_shape)
+
+    def _has_modeled_body(self, shape):
+        """
+        Determines if an operation has a modeled body.
+        If any member is not bound to a location, we can expect a body.
+        """
+        if shape is None:
+            return False
+        for member_shape in shape.members.values():
+            if not member_shape.serialization.get('location'):
+                return True
+        return False
+
     def __repr__(self):
         return f'{self.__class__.__name__}(name={self.name})'
 

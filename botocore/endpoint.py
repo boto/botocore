@@ -308,6 +308,7 @@ class Endpoint:
             operation_model=operation_model,
             response_dict=response_dict,
             customized_response_dict=customized_response_dict,
+            http_response=http_response,
         )
         parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(

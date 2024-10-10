@@ -737,6 +737,91 @@ class TestOperationModelStreamingTypes(unittest.TestCase):
         self.assertEqual(operation.get_streaming_output(), None)
 
 
+class TestOperationModelBody(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.model = {
+            'operations': {
+                'OperationName': {
+                    'name': 'OperationName',
+                    'input': {
+                        'shape': 'OperationRequest',
+                    },
+                    'output': {
+                        'shape': 'OperationResponse',
+                    },
+                },
+                'NoBodyOperation': {
+                    'name': 'NoBodyOperation',
+                    'input': {'shape': 'NoBodyOperationRequest'},
+                    'output': {'shape': 'NoBodyOperationResponse'},
+                },
+            },
+            'shapes': {
+                'OperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                        "Body": {
+                            'shape': 'blobType',
+                        },
+                    },
+                    'payload': 'Body',
+                },
+                'OperationResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                        "Body": {
+                            'shape': 'blobType',
+                        },
+                    },
+                    'payload': 'Body',
+                },
+                'NoBodyOperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'data': {
+                            'location': 'header',
+                            'locationName': 'x-amz-data',
+                            'shape': 'stringType',
+                        }
+                    },
+                },
+                'NoBodyOperationResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'data': {
+                            'location': 'header',
+                            'locationName': 'x-amz-data',
+                            'shape': 'stringType',
+                        }
+                    },
+                },
+                'stringType': {
+                    'type': 'string',
+                },
+                'blobType': {'type': 'blob'},
+            },
+        }
+
+    def test_modeled_body_for_operation_with_body(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_modeled_body_input)
+        self.assertTrue(operation.has_modeled_body_output)
+
+    def test_modeled_body_for_operation_with_no_body(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('NoBodyOperation')
+        self.assertFalse(operation.has_modeled_body_input)
+        self.assertFalse(operation.has_modeled_body_output)
+
+
 class TestDeepMerge(unittest.TestCase):
     def setUp(self):
         self.shapes = {
