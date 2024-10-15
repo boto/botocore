@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from botocore.session import get_session
+from tests import create_session, mock
 
 # In the future, a service may have a list of credentials requirements where one
 # signature may fail and others may succeed. e.g. a service may want to use bearer
@@ -31,7 +31,7 @@ AUTH_TYPE_REQUIREMENTS = {
 
 
 def _all_test_cases():
-    session = get_session()
+    session = create_session()
     loader = session.get_component('data_loader')
 
     services = loader.list_available_services('service-2')
@@ -75,3 +75,17 @@ def assert_all_requirements_match(auth_config, message):
         AUTH_TYPE_REQUIREMENTS[auth_type] for auth_type in auth_config
     )
     assert len(auth_requirements) == 1
+
+
+def test_sigv4a_signing_region_set_config_from_environment():
+    environ = {
+        'AWS_CONFIG_FILE': 'no-exist-foo',
+        'AWS_SIGV4A_SIGNING_REGION_SET': 'foo',
+    }
+    with mock.patch('os.environ', environ):
+        session = create_session()
+        session.config_filename = 'no-exist-foo'
+        session.create_client('s3')
+        assert (
+            session.get_config_variable('sigv4a_signing_region_set') == 'foo'
+        )

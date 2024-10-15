@@ -781,8 +781,4 @@ class ClientArgsCreator:
             sigv4a_signing_region_set = self._config_store.get_config_variable(
                 'sigv4a_signing_region_set'
             )
-        if not sigv4a_signing_region_set:
-            raise botocore.exceptions.InvalidConfigError(
-                error_msg="sigv4a_signing_region_set configuration must be non-empty"
-            )
         config_kwargs['sigv4a_signing_region_set'] = sigv4a_signing_region_set
