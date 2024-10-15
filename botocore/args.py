@@ -774,12 +774,15 @@ class ClientArgsCreator:
         config_kwargs['user_agent_appid'] = user_agent_appid
 
     def _compute_sigv4a_signing_region_set(self, config_kwargs):
-        sigv4a_signing_region_set = config_kwargs.get('sigv4a_signing_region_set')
+        sigv4a_signing_region_set = config_kwargs.get(
+            'sigv4a_signing_region_set'
+        )
         if sigv4a_signing_region_set is None:
             sigv4a_signing_region_set = self._config_store.get_config_variable(
                 'sigv4a_signing_region_set'
             )
         if not sigv4a_signing_region_set:
             raise botocore.exceptions.InvalidConfigError(
-                error_msg="sigv4a_signing_region_set configuration must be non-empty")
+                error_msg="sigv4a_signing_region_set configuration must be non-empty"
+            )
         config_kwargs['sigv4a_signing_region_set'] = sigv4a_signing_region_set
