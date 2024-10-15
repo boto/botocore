@@ -86,6 +86,4 @@ def test_sigv4a_signing_region_set_config_from_environment():
         session = create_session()
         session.config_filename = 'no-exist-foo'
         s3 = session.create_client('s3')
-        assert (
-            s3.meta.config.sigv4a_signing_region_set == 'foo'
-        )
+        assert s3.meta.config.sigv4a_signing_region_set == 'foo'
