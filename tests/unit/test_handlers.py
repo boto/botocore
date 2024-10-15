@@ -1885,73 +1885,69 @@ def operation_model_for_200_error():
 
 
 @pytest.fixture()
-def http_response():
-    http_response = mock.Mock()
-    http_response.status_code = 200
-    http_response.content = ""
-    return http_response
-
-
-@pytest.fixture()
-def response_dict():
-    return {'status_code': 200}
+def response_dict_for_200_error():
+    return {
+        'status_code': 200,
+        'body': (
+            b"<Error>"
+            b"<Code>SlowDown</Code>"
+            b"<Message>Please reduce your request rate.</Message>"
+            b"</Error>"
+        ),
+    }
 
 
 def test_500_status_code_set_for_200_response(
-    operation_model_for_200_error, response_dict, http_response
+    operation_model_for_200_error, response_dict_for_200_error
 ):
-    http_response.content = """
-        <Error>
-          <Code>AccessDenied</Code>
-          <Message>Access Denied</Message>
-          <RequestId>id</RequestId>
-          <HostId>hostid</HostId>
-        </Error>
-    """
-    handlers.check_for_200_error(
-        operation_model_for_200_error, response_dict, http_response
+    customized_response_dict = {}
+    handlers._handle_200_error(
+        operation_model_for_200_error,
+        response_dict_for_200_error,
+        customized_response_dict,
     )
-    assert http_response.status_code == 500
-    assert response_dict['status_code'] == 500
+    assert response_dict_for_200_error['status_code'] == 500
+    assert customized_response_dict.get('updated_status_code') == 500
 
 
 def test_200_response_with_no_error_left_untouched(
-    operation_model_for_200_error, response_dict, http_response
+    operation_model_for_200_error, response_dict_for_200_error
 ):
-    http_response.content = "<NotAnError></NotAnError>"
-    handlers.check_for_200_error(
-        operation_model_for_200_error, response_dict, http_response
+    response_dict_for_200_error['body'] = b"<NotAnError/>"
+    customized_response_dict = {}
+    handlers._handle_200_error(
+        operation_model_for_200_error,
+        response_dict_for_200_error,
+        customized_response_dict,
     )
     # We don't touch the status code since there are no errors present.
-    assert http_response.status_code == 200
-    assert response_dict['status_code'] == 200
+    assert response_dict_for_200_error['status_code'] == 200
+    assert customized_response_dict == {}
 
 
 def test_200_response_with_streaming_output_left_untouched(
-    response_dict, http_response
+    response_dict_for_200_error,
 ):
     operation_model = mock.Mock()
     operation_model.has_streaming_output = True
-    http_response.content = "<Error></Error>"
-    handlers.check_for_200_error(operation_model, response_dict, http_response)
+    customized_response_dict = {}
+    handlers._handle_200_error(
+        operation_model, response_dict_for_200_error, customized_response_dict
+    )
     # We don't touch the status code on streaming operations.
-    assert http_response.status_code == 200
-    assert response_dict['status_code'] == 200
+    assert response_dict_for_200_error['status_code'] == 200
+    assert customized_response_dict == {}
 
 
 def test_200_response_with_no_body_left_untouched(
-    operation_model_for_200_error, response_dict, http_response
+    operation_model_for_200_error, response_dict_for_200_error
 ):
     operation_model_for_200_error.has_modeled_body_output = False
-    handlers.check_for_200_error(
-        operation_model_for_200_error, response_dict, http_response
+    customized_response_dict = {}
+    handlers._handle_200_error(
+        operation_model_for_200_error,
+        response_dict_for_200_error,
+        customized_response_dict,
     )
-    assert http_response.status_code == 200
-    assert response_dict['status_code'] == 200
-
-
-def test_500_response_can_be_none():
-    # A 500 response can raise an exception, which means the response
-    # object is None.  We need to handle this case.
-    operation_model = mock.Mock()
-    handlers.check_for_200_error(operation_model, None, None)
+    assert response_dict_for_200_error['status_code'] == 200
+    assert customized_response_dict == {}

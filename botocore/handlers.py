@@ -131,9 +131,8 @@ def escape_xml_payload(params, **kwargs):
     params['body'] = body
 
 
-def check_for_200_error(
-    operation_model, response_dict, http_response, **kwargs
-):
+def check_for_200_error(response, **kwargs):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
     # can occur when Amazon S3 receives the copy request and the other can
@@ -149,36 +148,28 @@ def check_for_200_error(
     # 500 response (with respect to raising exceptions, retries, etc.)
     # We're connected *before* all the other retry logic handlers, so as long
     # as we switch the error code to 500, we'll retry the error as expected.
-    if (
-        http_response is None
-        or operation_model.has_streaming_output
-        or not operation_model.has_modeled_body_output
-    ):
+    if response is None:
         # A None response can happen if an exception is raised while
         # trying to retrieve the response.  See Endpoint._get_response().
-        # Operations with streaming response blobs should be excluded as they
-        # may contain customer content which mimics the form of an S3 error.
         return
+    http_response, parsed = response
     if _looks_like_special_case_error(http_response):
         logger.debug(
             "Error found for response with 200 status code, "
             "errors: %s, changing status code to "
             "500.",
-            http_response.content,
+            parsed,
         )
         http_response.status_code = 500
-        # The response_dict status code must also be changed
-        # for it to be parsed as a 500 response.
-        response_dict['status_code'] = 500
 
 
-def _looks_like_special_case_error(http_response):
-    if http_response.status_code == 200:
+def _looks_like_special_case_error(status_code, body):
+    if status_code == 200:
         try:
             parser = ETree.XMLParser(
                 target=ETree.TreeBuilder(), encoding='utf-8'
             )
-            parser.feed(http_response.content)
+            parser.feed(body)
             root = parser.close()
         except XMLParseError:
             # In cases of network disruptions, we may end up with a partial
@@ -1249,6 +1240,29 @@ def document_expires_shape(section, event_name, **kwargs):
         )
 
 
+def _handle_200_error(
+    operation_model, response_dict, customized_response_dict, **kwargs
+):
+    if (
+        not response_dict
+        or operation_model.has_streaming_output
+        or not operation_model.has_modeled_body_output
+    ):
+        # Operations with streaming response blobs should be excluded as they
+        # may contain customer content which mimics the form of an S3 error.
+        return
+    if _looks_like_special_case_error(
+        response_dict['status_code'], response_dict['body']
+    ):
+        # The response_dict status code must be changed to be parsed as a 500 response.
+        response_dict['status_code'] = 500
+        customized_response_dict['updated_status_code'] = 500
+        logger.debug(
+            f"Error found for response with 200 status code: {response_dict['body']}. "
+            f"Changing status code to 500."
+        )
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1278,8 +1292,8 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
-    ('before-parse.s3.*', check_for_200_error, REGISTER_FIRST),
     ('before-parse.s3.*', handle_expires_header),
+    ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),
