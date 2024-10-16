@@ -276,6 +276,7 @@ class ClientArgsCreator:
         self._compute_connect_timeout(config_kwargs)
         self._compute_user_agent_appid_config(config_kwargs)
         self._compute_request_compression_config(config_kwargs)
+        self._compute_sigv4a_signing_region_set_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -771,3 +772,13 @@ class ClientArgsCreator:
                 f'maximum length of {USERAGENT_APPID_MAXLEN} characters.'
             )
         config_kwargs['user_agent_appid'] = user_agent_appid
+
+    def _compute_sigv4a_signing_region_set_config(self, config_kwargs):
+        sigv4a_signing_region_set = config_kwargs.get(
+            'sigv4a_signing_region_set'
+        )
+        if sigv4a_signing_region_set is None:
+            sigv4a_signing_region_set = self._config_store.get_config_variable(
+                'sigv4a_signing_region_set'
+            )
+        config_kwargs['sigv4a_signing_region_set'] = sigv4a_signing_region_set
