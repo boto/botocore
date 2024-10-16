@@ -12,7 +12,8 @@
 # language governing permissions and limitations under the License.
 import pytest
 
-from botocore.session import get_session
+from botocore.config import Config
+from tests import create_session, mock
 
 # In the future, a service may have a list of credentials requirements where one
 # signature may fail and others may succeed. e.g. a service may want to use bearer
@@ -31,7 +32,7 @@ AUTH_TYPE_REQUIREMENTS = {
 
 
 def _all_test_cases():
-    session = get_session()
+    session = create_session()
     loader = session.get_component('data_loader')
 
     services = loader.list_available_services('service-2')
@@ -74,4 +75,49 @@ def assert_all_requirements_match(auth_config, message):
     auth_requirements = set(
         AUTH_TYPE_REQUIREMENTS[auth_type] for auth_type in auth_config
     )
-    assert len(auth_requirements) == 1
+    assert len(auth_requirements) == 1, message
+
+
+def get_config_file_path(base_path, value):
+    if value is None:
+        return "file-does-not-exist"
+
+    tmp_config_file_path = base_path / "config"
+    tmp_config_file_path.write_text(
+        f"[default]\nsigv4a_signing_region_set={value}\n"
+    )
+    return tmp_config_file_path
+
+
+def get_environ_mock(
+    request,
+    env_var_value=None,
+    config_file_value=None,
+):
+    base_path = request.getfixturevalue("tmp_path")
+    config_file_path = get_config_file_path(base_path, config_file_value)
+    return {
+        "AWS_CONFIG_FILE": str(config_file_path),
+        "AWS_SIGV4A_SIGNING_REGION_SET": env_var_value,
+    }
+
+
+@pytest.mark.parametrize(
+    "client_config, env_var_val, config_file_val, expected",
+    [
+        (Config(sigv4a_signing_region_set="foo"), "bar", "baz", "foo"),
+        (Config(sigv4a_signing_region_set="foo"), None, None, "foo"),
+        (None, "bar", "baz", "bar"),
+        (None, None, "baz", "baz"),
+        (Config(sigv4a_signing_region_set="foo"), None, "baz", "foo"),
+        (None, None, None, None),
+    ],
+)
+def test_sigv4a_signing_region_set_config_from_environment(
+    client_config, env_var_val, config_file_val, expected, request
+):
+    environ_mock = get_environ_mock(request, env_var_val, config_file_val)
+    with mock.patch('os.environ', environ_mock):
+        session = create_session()
+        s3 = session.create_client('s3', config=client_config)
+        assert s3.meta.config.sigv4a_signing_region_set == expected
