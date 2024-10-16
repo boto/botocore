@@ -1,5 +1,5 @@
 {
   "type": "bugfix",
   "category": "Config",
-  "description": "Properly picks up sigv4a_signing_region_set settings from environment or config file"
+  "description": "Fixed sigv4a_signing_region_set resolution when set in environment or config file."
 }
