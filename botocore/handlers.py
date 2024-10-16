@@ -1256,7 +1256,6 @@ def _handle_200_error(
     ):
         # The response_dict status code must be changed to be parsed as a 500 response.
         response_dict['status_code'] = 500
-        customized_response_dict['updated_status_code'] = 500
         logger.debug(
             f"Error found for response with 200 status code: {response_dict['body']}. "
             f"Changing status code to 500."
