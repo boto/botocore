@@ -471,11 +471,9 @@ class TestS3Copy(BaseS3OperationTest):
             b"<Message>Please reduce your request rate.</Message>"
             b"</Error>"
         )
-        self.http_stubber.add_response(status=200, body=error_body)
-        self.http_stubber.add_response(status=200, body=error_body)
-        self.http_stubber.add_response(status=200, body=error_body)
-        self.http_stubber.add_response(status=200, body=error_body)
-        self.http_stubber.add_response(status=200, body=error_body)
+        # Populate 5 retries for SlowDown
+        for i in range(5):
+            self.http_stubber.add_response(status=200, body=error_body)
         with self.assertRaises(botocore.exceptions.ClientError) as context:
             self.client.copy_object(
                 Bucket="bucket",
