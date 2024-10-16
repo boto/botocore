@@ -75,7 +75,7 @@ def assert_all_requirements_match(auth_config, message):
     auth_requirements = set(
         AUTH_TYPE_REQUIREMENTS[auth_type] for auth_type in auth_config
     )
-    assert len(auth_requirements) == 1
+    assert len(auth_requirements) == 1, message
 
 
 @pytest.mark.parametrize(
