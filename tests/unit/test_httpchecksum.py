@@ -254,6 +254,30 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         apply_request_checksum(request)
         self.assertIn("x-amz-checksum-crc32", request["headers"])
 
+    def test_apply_request_checksum_flex_header_bytearray(self):
+        request = self._build_request(bytearray(b""))
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "header",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            }
+        }
+        apply_request_checksum(request)
+        self.assertIn("x-amz-checksum-crc32", request["headers"])
+
+    def test_apply_request_checksum_flex_header_memoryview(self):
+        request = self._build_request(memoryview(b""))
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "header",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            }
+        }
+        apply_request_checksum(request)
+        self.assertIn("x-amz-checksum-crc32", request["headers"])
+
     def test_apply_request_checksum_flex_header_readable(self):
         request = self._build_request(BytesIO(b""))
         request["context"]["checksum"] = {
