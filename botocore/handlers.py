@@ -164,7 +164,7 @@ def check_for_200_error(response, **kwargs):
 
 
 def _looks_like_special_case_error(status_code, body):
-    if status_code == 200:
+    if status_code == 200 and body:
         try:
             parser = ETree.XMLParser(
                 target=ETree.TreeBuilder(), encoding='utf-8'
