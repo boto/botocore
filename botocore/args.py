@@ -147,6 +147,7 @@ class ClientArgsCreator:
             socket_options=socket_options,
             client_cert=new_config.client_cert,
             proxies_config=new_config.proxies_config,
+            source_address=new_config.source_address,
         )
 
         serializer = botocore.serialize.create_serializer(
@@ -271,6 +272,7 @@ class ClientArgsCreator:
                 sigv4a_signing_region_set=(
                     client_config.sigv4a_signing_region_set
                 ),
+                source_address=client_config.source_address,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
