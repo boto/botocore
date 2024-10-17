@@ -1241,11 +1241,8 @@ def document_expires_shape(section, event_name, **kwargs):
 
 
 def _handle_200_error(operation_model, response_dict, **kwargs):
-    # S3 can return a 200 OK response with an error embedded in the body.
-    # Conceptually, this should be handled like a 500 response in terms of
-    # raising exceptions and retries which we handle in _retry_200_error.
-    # This handler converts the 200 response to a 500 response to ensure
-    # correct error handling.
+    # S3 can return a 200 response with an error embedded in the body.
+    # Convert the 200 to a 500 for retry resolution in ``_retry_200_error``.
     if not response_dict or operation_model.has_streaming_output:
         # Operations with streaming response blobs are excluded as they
         # can't be reliably distinguished from an S3 error.
