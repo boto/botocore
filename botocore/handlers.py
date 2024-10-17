@@ -1255,9 +1255,7 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
     ):
         response_dict['status_code'] = 500
         logger.debug(
-            f"Error found for response with 200 status code: {response_dict['body']}. "
-            f"Changing the http_response status code to 500 will be propagated in "
-            f"the _retry_200_error handler."
+            f"Error found for response with 200 status code: {response_dict['body']}."
         )
 
 
