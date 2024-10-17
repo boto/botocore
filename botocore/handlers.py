@@ -1247,8 +1247,8 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
     # This handler converts the 200 response to a 500 response to ensure
     # correct error handling.
     if not response_dict or operation_model.has_streaming_output:
-        # Operations with streaming response blobs should be excluded as they
-        # may contain customer content which mimics the form of an S3 error.
+        # Operations with streaming response blobs are excluded as they
+        # can't be reliably distinguished from an S3 error.
         return
     if _looks_like_special_case_error(
         response_dict['status_code'], response_dict['body']
