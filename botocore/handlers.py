@@ -1257,12 +1257,8 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
 
 
 def _retry_200_error(response, **kwargs):
-    # Adjusts the HTTP status code for responses that may contain errors
-    # embedded in a 200 OK response body. The _handle_200_error function
-    # modifies the parsed response status code to 500 if it detects an error.
-    # This function checks if the HTTP status code differs from the parsed
-    # status code and updates the HTTP response accordingly, ensuring
-    # correct handling for retries.
+    # Update the http_response status code when the parsed response has been
+    # modified in a handler. This enables retries for cases like ``_handle_200_error``.
     if response is None:
         return
     http_response, parsed = response
