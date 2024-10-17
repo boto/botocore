@@ -314,11 +314,6 @@ class Endpoint:
             response_dict, operation_model.output_shape
         )
         parsed_response.update(customized_response_dict)
-        if updated_status_code := customized_response_dict.get(
-            'updated_status_code'
-        ):
-            http_response.status_code = updated_status_code
-            del parsed_response['updated_status_code']
         # Do a second parsing pass to pick up on any modeled error fields
         # NOTE: Ideally, we would push this down into the parser classes but
         # they currently have no reference to the operation or service model

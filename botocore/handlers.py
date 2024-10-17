@@ -1240,26 +1240,42 @@ def document_expires_shape(section, event_name, **kwargs):
         )
 
 
-def _handle_200_error(
-    operation_model, response_dict, customized_response_dict, **kwargs
-):
-    if (
-        not response_dict
-        or operation_model.has_streaming_output
-        or not operation_model.has_modeled_body_output
-    ):
+def _handle_200_error(operation_model, response_dict, **kwargs):
+    # S3 can return a 200 OK response with an error embedded in the body.
+    # Conceptually, this should be handled like a 500 response in terms of
+    # raising exceptions and retries which we handle in _retry_200_error.
+    # This handler converts the 200 response to a 500 response to ensure
+    # correct error handling.
+    if not response_dict or operation_model.has_streaming_output:
         # Operations with streaming response blobs should be excluded as they
         # may contain customer content which mimics the form of an S3 error.
         return
     if _looks_like_special_case_error(
         response_dict['status_code'], response_dict['body']
     ):
-        # The response_dict status code must be changed to be parsed as a 500 response.
         response_dict['status_code'] = 500
         logger.debug(
             f"Error found for response with 200 status code: {response_dict['body']}. "
-            f"Changing status code to 500."
+            f"Changing the http_response status code to 500 will be propagated in "
+            f"the _retry_200_error handler."
         )
+
+
+def _retry_200_error(response, **kwargs):
+    # Adjusts the HTTP status code for responses that may contain errors
+    # embedded in a 200 OK response body. The _handle_200_error function
+    # modifies the parsed response status code to 500 if it detects an error.
+    # This function checks if the HTTP status code differs from the parsed
+    # status code and updates the HTTP response accordingly, ensuring
+    # correct handling for retries.
+    if response is None:
+        return
+    http_response, parsed = response
+    parsed_status_code = parsed.get('ResponseMetadata', {}).get(
+        'HTTPStatusCode'
+    )
+    if http_response.status_code != parsed_status_code:
+        http_response.status_code = parsed_status_code
 
 
 # This is a list of (event_name, handler).
@@ -1336,6 +1352,7 @@ BUILTIN_HANDLERS = [
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
     ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
+    ('needs-retry.s3.*', _retry_200_error, REGISTER_FIRST),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),

@@ -1148,6 +1148,49 @@ class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
         )
 
 
+class TestRetryHandlerOrder(BaseSessionTest):
+    def get_handler_names(self, responses):
+        names = []
+        for response in responses:
+            handler = response[0]
+            if hasattr(handler, '__name__'):
+                names.append(handler.__name__)
+            elif hasattr(handler, '__class__'):
+                names.append(handler.__class__.__name__)
+            else:
+                names.append(str(handler))
+        return names
+
+    def test_s3_special_case_is_before_other_retry(self):
+        client = self.session.create_client('s3')
+        service_model = self.session.get_service_model('s3')
+        operation = service_model.operation_model('CopyObject')
+        responses = client.meta.events.emit(
+            'needs-retry.s3.CopyObject',
+            request_dict={'context': {}},
+            response=(mock.Mock(), mock.Mock()),
+            endpoint=mock.Mock(),
+            operation=operation,
+            attempts=1,
+            caught_exception=None,
+        )
+        # This is implementation specific, but we're trying to verify that
+        # the _retry_200_error is before any of the retry logic in
+        # botocore.retryhandlers.
+        # Technically, as long as the relative order is preserved, we don't
+        # care about the absolute order.
+        names = self.get_handler_names(responses)
+        self.assertIn('_retry_200_error', names)
+        self.assertIn('RetryHandler', names)
+        s3_200_handler = names.index('_retry_200_error')
+        general_retry_handler = names.index('RetryHandler')
+        self.assertTrue(
+            s3_200_handler < general_retry_handler,
+            "S3 200 error handler was supposed to be before "
+            "the general retry handler, but it was not.",
+        )
+
+
 class BaseMD5Test(BaseSessionTest):
     def setUp(self, **environ):
         super().setUp(**environ)
@@ -1880,7 +1923,6 @@ def test_document_response_params_without_expires(document_expires_mocks):
 def operation_model_for_200_error():
     operation_model = mock.Mock()
     operation_model.has_streaming_output = False
-    operation_model.has_modeled_body_output = True
     return operation_model
 
 
@@ -1900,54 +1942,55 @@ def response_dict_for_200_error():
 def test_500_status_code_set_for_200_response(
     operation_model_for_200_error, response_dict_for_200_error
 ):
-    customized_response_dict = {}
     handlers._handle_200_error(
-        operation_model_for_200_error,
-        response_dict_for_200_error,
-        customized_response_dict,
+        operation_model_for_200_error, response_dict_for_200_error
     )
     assert response_dict_for_200_error['status_code'] == 500
-    assert customized_response_dict.get('updated_status_code') == 500
 
 
 def test_200_response_with_no_error_left_untouched(
     operation_model_for_200_error, response_dict_for_200_error
 ):
     response_dict_for_200_error['body'] = b"<NotAnError/>"
-    customized_response_dict = {}
     handlers._handle_200_error(
-        operation_model_for_200_error,
-        response_dict_for_200_error,
-        customized_response_dict,
+        operation_model_for_200_error, response_dict_for_200_error
     )
     # We don't touch the status code since there are no errors present.
     assert response_dict_for_200_error['status_code'] == 200
-    assert customized_response_dict == {}
 
 
 def test_200_response_with_streaming_output_left_untouched(
+    operation_model_for_200_error,
     response_dict_for_200_error,
 ):
-    operation_model = mock.Mock()
-    operation_model.has_streaming_output = True
-    customized_response_dict = {}
+    operation_model_for_200_error.has_streaming_output = True
     handlers._handle_200_error(
-        operation_model, response_dict_for_200_error, customized_response_dict
+        operation_model_for_200_error, response_dict_for_200_error
     )
     # We don't touch the status code on streaming operations.
     assert response_dict_for_200_error['status_code'] == 200
-    assert customized_response_dict == {}
 
 
 def test_200_response_with_no_body_left_untouched(
     operation_model_for_200_error, response_dict_for_200_error
 ):
-    operation_model_for_200_error.has_modeled_body_output = False
-    customized_response_dict = {}
+    response_dict_for_200_error['body'] = b""
     handlers._handle_200_error(
-        operation_model_for_200_error,
-        response_dict_for_200_error,
-        customized_response_dict,
+        operation_model_for_200_error, response_dict_for_200_error
     )
     assert response_dict_for_200_error['status_code'] == 200
-    assert customized_response_dict == {}
+
+
+def test_http_status_code_updated_to_retry_200_response():
+    http_response = mock.Mock()
+    http_response.status_code = 200
+    parsed = {}
+    parsed.setdefault('ResponseMetadata', {})['HTTPStatusCode'] = 500
+    handlers._retry_200_error((http_response, parsed))
+    assert http_response.status_code == 500
+
+
+def test_500_response_can_be_none():
+    # A 500 response can raise an exception, which means the response
+    # object is None.  We need to handle this case.
+    handlers._retry_200_error(None)
