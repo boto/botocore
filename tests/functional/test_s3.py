@@ -28,7 +28,6 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError,
     UnsupportedS3ConfigurationError,
 )
-from botocore.parsers import ResponseParserError
 from tests import (
     BaseSessionTest,
     ClientHTTPStubber,
@@ -435,12 +434,12 @@ class TestS3Copy(BaseS3OperationTest):
         http_stubber.start()
         return client, http_stubber
 
-    def test_s3_copy_object_with_empty_response(self):
+    def test_s3_copy_object_with_incomplete_response(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
 
-        empty_body = b""
+        incomplete_body = b'<?xml version="1.0" encoding="UTF-8"?>\n\n\n'
         complete_body = (
             b'<?xml version="1.0" encoding="UTF-8"?>\n\n'
             b"<CopyObjectResult "
@@ -448,8 +447,7 @@ class TestS3Copy(BaseS3OperationTest):
             b"<LastModified>2020-04-21T21:03:31.000Z</LastModified>"
             b"<ETag>&quot;s0mEcH3cK5uM&quot;</ETag></CopyObjectResult>"
         )
-
-        self.http_stubber.add_response(status=200, body=empty_body)
+        self.http_stubber.add_response(status=200, body=incomplete_body)
         self.http_stubber.add_response(status=200, body=complete_body)
         response = self.client.copy_object(
             Bucket="bucket",
@@ -462,19 +460,33 @@ class TestS3Copy(BaseS3OperationTest):
         self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
         self.assertTrue("CopyObjectResult" in response)
 
-    def test_s3_copy_object_with_incomplete_response(self):
+    def test_s3_copy_object_with_200_error_response(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
-
-        incomplete_body = b'<?xml version="1.0" encoding="UTF-8"?>\n\n\n'
-        self.http_stubber.add_response(status=200, body=incomplete_body)
-        with self.assertRaises(ResponseParserError):
+        error_body = (
+            b"<Error>"
+            b"<Code>SlowDown</Code>"
+            b"<Message>Please reduce your request rate.</Message>"
+            b"</Error>"
+        )
+        # Populate 5 retries for SlowDown
+        for i in range(5):
+            self.http_stubber.add_response(status=200, body=error_body)
+        with self.assertRaises(botocore.exceptions.ClientError) as context:
             self.client.copy_object(
                 Bucket="bucket",
                 CopySource="other-bucket/test.txt",
                 Key="test.txt",
             )
+        self.assertEqual(len(self.http_stubber.requests), 5)
+        self.assertEqual(
+            context.exception.response["ResponseMetadata"]["HTTPStatusCode"],
+            500,
+        )
+        self.assertEqual(
+            context.exception.response["Error"]["Code"], "SlowDown"
+        )
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
