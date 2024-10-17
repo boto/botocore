@@ -1256,7 +1256,7 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
         )
 
 
-def _retry_200_error(response, **kwargs):
+def _update_status_code(response, **kwargs):
     # Update the http_response status code when the parsed response has been
     # modified in a handler. This enables retries for cases like ``_handle_200_error``.
     if response is None:
