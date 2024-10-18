@@ -505,13 +505,13 @@ class TestHandlers(BaseSessionTest):
         http_response = mock.Mock()
         http_response.status_code = 200
         http_response.content = """
-             <Error>
-               <Code>AccessDenied</Code>
-               <Message>Access Denied</Message>
-               <RequestId>id</RequestId>
-               <HostId>hostid</HostId>
-             </Error>
-         """
+            <Error>
+              <Code>AccessDenied</Code>
+              <Message>Access Denied</Message>
+              <RequestId>id</RequestId>
+              <HostId>hostid</HostId>
+            </Error>
+        """
         handlers.check_for_200_error((http_response, {}))
         self.assertEqual(http_response.status_code, 500)
 
