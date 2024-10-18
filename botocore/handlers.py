@@ -1265,7 +1265,7 @@ def _update_status_code(response, **kwargs):
         return
     http_response, parsed = response
     parsed_status_code = parsed.get('ResponseMetadata', {}).get(
-        'HTTPStatusCode'
+        'HTTPStatusCode', http_response.status_code
     )
     if http_response.status_code != parsed_status_code:
         http_response.status_code = parsed_status_code
