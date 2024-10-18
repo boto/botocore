@@ -153,7 +153,9 @@ def check_for_200_error(response, **kwargs):
         # trying to retrieve the response.  See Endpoint._get_response().
         return
     http_response, parsed = response
-    if _looks_like_special_case_error(http_response):
+    if _looks_like_special_case_error(
+        http_response.status_code, http_response.content
+    ):
         logger.debug(
             "Error found for response with 200 status code, "
             "errors: %s, changing status code to "
@@ -1343,7 +1345,7 @@ BUILTIN_HANDLERS = [
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
     ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
-    ('needs-retry.s3.*', _retry_200_error, REGISTER_FIRST),
+    ('needs-retry.s3.*', _update_status_code, REGISTER_FIRST),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),

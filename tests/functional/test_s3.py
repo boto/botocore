@@ -460,7 +460,20 @@ class TestS3Copy(BaseS3OperationTest):
         self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
         self.assertTrue("CopyObjectResult" in response)
 
-    def test_s3_copy_object_with_200_error_response(self):
+
+class TestS3200ErrorResponse(BaseS3OperationTest):
+    def create_s3_client(self, **kwargs):
+        client_kwargs = {"region_name": self.region}
+        client_kwargs.update(kwargs)
+        return self.session.create_client("s3", **client_kwargs)
+
+    def create_stubbed_s3_client(self, **kwargs):
+        client = self.create_s3_client(**kwargs)
+        http_stubber = ClientHTTPStubber(client)
+        http_stubber.start()
+        return client, http_stubber
+
+    def test_s3_200_with_error_response(self):
         self.client, self.http_stubber = self.create_stubbed_s3_client(
             region_name="us-east-1"
         )
@@ -470,7 +483,8 @@ class TestS3Copy(BaseS3OperationTest):
             b"<Message>Please reduce your request rate.</Message>"
             b"</Error>"
         )
-        # Populate 5 retries for SlowDown
+        # Populate 5 attempts for SlowDown to validate
+        # we reached four max retries and raised an exception.
         for i in range(5):
             self.http_stubber.add_response(status=200, body=error_body)
         with self.assertRaises(botocore.exceptions.ClientError) as context:
@@ -487,6 +501,45 @@ class TestS3Copy(BaseS3OperationTest):
         self.assertEqual(
             context.exception.response["Error"]["Code"], "SlowDown"
         )
+
+    def test_s3_200_with_no_error_response(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name="us-east-1"
+        )
+        self.http_stubber.add_response(status=200, body=b"<NotAnError/>")
+
+        response = self.client.copy_object(
+            Bucket="bucket",
+            CopySource="other-bucket/test.txt",
+            Key="test.txt",
+        )
+
+        # Validate that the status code remains 200.
+        self.assertEqual(len(self.http_stubber.requests), 1)
+        self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
+
+    def test_s3_200_with_error_response_on_streaming_operation(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name="us-east-1"
+        )
+        self.http_stubber.add_response(status=200, body=b"<Error/>")
+        response = self.client.get_object(Bucket="bucket", Key="test.txt")
+
+        # Validate that the status code remains 200 because we don't
+        # process 200-with-error responses on streaming operations.
+        self.assertEqual(len(self.http_stubber.requests), 1)
+        self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
+
+    def test_s3_200_response_with_no_body(self):
+        self.client, self.http_stubber = self.create_stubbed_s3_client(
+            region_name="us-east-1"
+        )
+        self.http_stubber.add_response(status=200)
+        response = self.client.head_object(Bucket="bucket", Key="test.txt")
+
+        # Validate that the status code remains 200 on operations without a body.
+        self.assertEqual(len(self.http_stubber.requests), 1)
+        self.assertEqual(response["ResponseMetadata"]["HTTPStatusCode"], 200)
 
 
 class TestAccesspointArn(BaseS3ClientConfigurationTest):
