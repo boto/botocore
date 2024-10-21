@@ -132,6 +132,7 @@ def escape_xml_payload(params, **kwargs):
 
 
 def check_for_200_error(response, **kwargs):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
     # can occur when Amazon S3 receives the copy request and the other can
@@ -152,7 +153,9 @@ def check_for_200_error(response, **kwargs):
         # trying to retrieve the response.  See Endpoint._get_response().
         return
     http_response, parsed = response
-    if _looks_like_special_case_error(http_response):
+    if _looks_like_special_case_error(
+        http_response.status_code, http_response.content
+    ):
         logger.debug(
             "Error found for response with 200 status code, "
             "errors: %s, changing status code to "
@@ -162,13 +165,13 @@ def check_for_200_error(response, **kwargs):
         http_response.status_code = 500
 
 
-def _looks_like_special_case_error(http_response):
-    if http_response.status_code == 200:
+def _looks_like_special_case_error(status_code, body):
+    if status_code == 200 and body:
         try:
             parser = ETree.XMLParser(
                 target=ETree.TreeBuilder(), encoding='utf-8'
             )
-            parser.feed(http_response.content)
+            parser.feed(body)
             root = parser.close()
         except XMLParseError:
             # In cases of network disruptions, we may end up with a partial
@@ -1239,6 +1242,35 @@ def document_expires_shape(section, event_name, **kwargs):
         )
 
 
+def _handle_200_error(operation_model, response_dict, **kwargs):
+    # S3 can return a 200 response with an error embedded in the body.
+    # Convert the 200 to a 500 for retry resolution in ``_update_status_code``.
+    if not response_dict or operation_model.has_streaming_output:
+        # Operations with streaming response blobs are excluded as they
+        # can't be reliably distinguished from an S3 error.
+        return
+    if _looks_like_special_case_error(
+        response_dict['status_code'], response_dict['body']
+    ):
+        response_dict['status_code'] = 500
+        logger.debug(
+            f"Error found for response with 200 status code: {response_dict['body']}."
+        )
+
+
+def _update_status_code(response, **kwargs):
+    # Update the http_response status code when the parsed response has been
+    # modified in a handler. This enables retries for cases like ``_handle_200_error``.
+    if response is None:
+        return
+    http_response, parsed = response
+    parsed_status_code = parsed.get('ResponseMetadata', {}).get(
+        'HTTPStatusCode', http_response.status_code
+    )
+    if http_response.status_code != parsed_status_code:
+        http_response.status_code = parsed_status_code
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1269,6 +1301,7 @@ BUILTIN_HANDLERS = [
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
     ('before-parse.s3.*', handle_expires_header),
+    ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),
@@ -1312,13 +1345,7 @@ BUILTIN_HANDLERS = [
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
     ('request-created', add_retry_headers),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
-    ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
-    ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
-    (
-        'needs-retry.s3.CompleteMultipartUpload',
-        check_for_200_error,
-        REGISTER_FIRST,
-    ),
+    ('needs-retry.s3.*', _update_status_code, REGISTER_FIRST),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),

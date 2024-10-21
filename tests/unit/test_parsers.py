@@ -429,16 +429,17 @@ class TestTaggedUnions(unittest.TestCase):
         expected_parsed_response,
         expected_log,
     ):
+        warning_message = (
+            'Received a tagged union response with member unknown to client'
+        )
         with self.assertLogs() as captured_log:
             parsed = parser.parse(response, output_shape)
             self.assertEqual(parsed, expected_parsed_response)
-            self.assertEqual(len(captured_log.records), 1)
-            self.assertIn(
-                (
-                    'Received a tagged union response with member '
-                    'unknown to client'
-                ),
-                captured_log.records[0].getMessage(),
+            log_messages = [
+                record.getMessage() for record in captured_log.records
+            ]
+            self.assertTrue(
+                any(warning_message in log for log in log_messages)
             )
 
     def test_base_json_parser_handles_unknown_member(self):
