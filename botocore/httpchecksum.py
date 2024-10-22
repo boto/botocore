@@ -25,7 +25,7 @@ import logging
 from binascii import crc32
 from hashlib import sha1, sha256
 
-from botocore.compat import HAS_CRT
+from botocore.compat import HAS_CRT, urlparse
 from botocore.exceptions import (
     AwsChunkedWrapperError,
     FlexibleChecksumError,
@@ -293,14 +293,14 @@ def resolve_request_checksum_algorithm(
     elif request_checksum_required or (
         algorithm_member and request_checksum_calculation == "when_supported"
     ):
-        algorithm_name = "crc32"
+        algorithm_name = DEFAULT_CHECKSUM_ALGORITHM.lower()
     else:
         return
 
     location_type = "header"
     if operation_model.has_streaming_input:
         # Operations with streaming input must support trailers.
-        if request["url"].startswith("https:"):
+        if urlparse(request["url"]).scheme == "https":
             # We only support unsigned trailer checksums currently. As this
             # disables payload signing we'll only use trailers over TLS.
             location_type = "trailer"
