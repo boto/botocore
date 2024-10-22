@@ -52,7 +52,6 @@ from botocore.exceptions import (
     ParamValidationError,
     UnsupportedTLSVersionWarning,
 )
-from botocore.httpchecksum import DEFAULT_CHECKSUM_ALGORITHM
 from botocore.regions import EndpointResolverBuiltins
 from botocore.signers import (
     add_generate_db_auth_token,
@@ -1286,15 +1285,6 @@ def _update_status_code(response, **kwargs):
         http_response.status_code = parsed_status_code
 
 
-def set_default_multipart_checksum_algorithm(params, **kwargs):
-    """Sets the ``ChecksumAlgorithm`` parameter to the SDKs default checksum.
-
-    The ``CreateMultipartUpload`` operation isn't modeled with the ``httpchecksum``
-    trait and requires us to set a default checksum algorithm when none is provided.
-    """
-    params.setdefault('ChecksumAlgorithm', DEFAULT_CHECKSUM_ALGORITHM)
-
-
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1348,10 +1338,6 @@ BUILTIN_HANDLERS = [
     (
         'before-parameter-build.s3.CreateMultipartUpload',
         validate_ascii_metadata,
-    ),
-    (
-        'before-parameter-build.s3.CreateMultipartUpload',
-        set_default_multipart_checksum_algorithm,
     ),
     ('before-parameter-build.s3-control', remove_accid_host_prefix_from_model),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),

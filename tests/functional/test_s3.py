@@ -27,7 +27,7 @@ from botocore.exceptions import (
     UnsupportedS3AccesspointConfigurationError,
     UnsupportedS3ConfigurationError,
 )
-from botocore.httpchecksum import _CHECKSUM_CLS
+from botocore.httpchecksum import HAS_CRT, Crc32Checksum, CrtCrc32Checksum
 from tests import (
     BaseSessionTest,
     ClientHTTPStubber,
@@ -1533,6 +1533,8 @@ class TestS3SigV4(BaseS3OperationTest):
             sent_headers["x-amz-content-sha256"],
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
+        body = self.http_stubber.requests[0].body.read()
+        self.assertIn(b"x-amz-checksum-crc32", body)
 
     def test_trailing_checksum_set_empty_body(self):
         with self.http_stubber:
@@ -1548,12 +1550,15 @@ class TestS3SigV4(BaseS3OperationTest):
             sent_headers["x-amz-content-sha256"],
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
+        body = self.http_stubber.requests[0].body.read()
+        self.assertIn(b"x-amz-checksum-crc32", body)
 
     def test_trailing_checksum_set_empty_file(self):
         with self.http_stubber:
             with temporary_file("rb") as f:
                 assert f.read() == b""
                 self.client.put_object(Bucket="foo", Key="bar", Body=f)
+                body = self.http_stubber.requests[0].body.read()
         sent_headers = self.get_sent_headers()
         self.assertEqual(sent_headers["Content-Encoding"], b"aws-chunked")
         self.assertEqual(sent_headers["Transfer-Encoding"], b"chunked")
@@ -1565,6 +1570,7 @@ class TestS3SigV4(BaseS3OperationTest):
             sent_headers["x-amz-content-sha256"],
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
+        self.assertIn(b"x-amz-checksum-crc32", body)
 
     def test_content_sha256_not_set_if_config_value_is_true(self):
         # By default, put_object() provides a trailing checksum and includes the
@@ -1584,7 +1590,6 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.put_object(Bucket="foo", Key="bar", Body="baz")
         sent_headers = self.get_sent_headers()
         sha_header = sent_headers.get("x-amz-content-sha256")
-        self.assertIsNotNone(sha_header)
         self.assertEqual(sha_header, b"STREAMING-UNSIGNED-PAYLOAD-TRAILER")
 
     def test_content_sha256_not_set_if_config_value_is_false(self):
@@ -1605,7 +1610,6 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.put_object(Bucket="foo", Key="bar", Body="baz")
         sent_headers = self.get_sent_headers()
         sha_header = sent_headers.get("x-amz-content-sha256")
-        self.assertIsNotNone(sha_header)
         self.assertEqual(sha_header, b"STREAMING-UNSIGNED-PAYLOAD-TRAILER")
 
     def test_content_sha256_not_set_if_config_value_not_set_put_object(self):
@@ -1625,7 +1629,6 @@ class TestS3SigV4(BaseS3OperationTest):
             self.client.put_object(Bucket="foo", Key="bar", Body="baz")
         sent_headers = self.get_sent_headers()
         sha_header = sent_headers.get("x-amz-content-sha256")
-        self.assertIsNotNone(sha_header)
         self.assertEqual(sha_header, b"STREAMING-UNSIGNED-PAYLOAD-TRAILER")
 
     def test_content_sha256_set_if_config_value_not_set_list_objects(self):
@@ -3735,7 +3738,7 @@ def _verify_presigned_url_addressing(
 
 class TestS3XMLPayloadEscape(BaseS3OperationTest):
     def assert_correct_crc32_checksum(self, request):
-        checksum = _CHECKSUM_CLS.get("crc32")()
+        checksum = CrtCrc32Checksum() if HAS_CRT else Crc32Checksum()
         crc32_checksum = checksum.handle(request.body).encode()
         self.assertEqual(
             crc32_checksum, request.headers["x-amz-checksum-crc32"]
