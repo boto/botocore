@@ -1245,7 +1245,11 @@ def document_expires_shape(section, event_name, **kwargs):
 def _handle_200_error(operation_model, response_dict, **kwargs):
     # S3 can return a 200 response with an error embedded in the body.
     # Convert the 200 to a 500 for retry resolution in ``_update_status_code``.
-    if not response_dict or operation_model.has_streaming_output:
+    if (
+        not response_dict
+        or operation_model.has_streaming_output
+        or operation_model.has_event_stream_output
+    ):
         # Operations with streaming response blobs are excluded as they
         # can't be reliably distinguished from an S3 error.
         return
