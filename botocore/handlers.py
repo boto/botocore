@@ -1245,11 +1245,7 @@ def document_expires_shape(section, event_name, **kwargs):
 def _handle_200_error(operation_model, response_dict, **kwargs):
     # S3 can return a 200 response with an error embedded in the body.
     # Convert the 200 to a 500 for retry resolution in ``_update_status_code``.
-    if (
-        not response_dict
-        or operation_model.has_streaming_output
-        or operation_model.has_event_stream_output
-    ):
+    if not _should_handle_200_error(operation_model, response_dict):
         # Operations with streaming response blobs are excluded as they
         # can't be reliably distinguished from an S3 error.
         return
@@ -1260,6 +1256,22 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
         logger.debug(
             f"Error found for response with 200 status code: {response_dict['body']}."
         )
+
+
+def _should_handle_200_error(operation_model, response_dict):
+    output_shape = operation_model.output_shape
+    if (
+        not response_dict
+        or operation_model.has_event_stream_output
+        or not output_shape
+    ):
+        return False
+    payload = output_shape.serialization.get('payload')
+    if payload is not None:
+        payload_shape = output_shape.members[payload]
+        if payload_shape.type_name in ('blob', 'string'):
+            return False
+    return True
 
 
 def _update_status_code(response, **kwargs):
