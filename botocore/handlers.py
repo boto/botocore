@@ -1269,10 +1269,7 @@ def _should_handle_200_error(operation_model, response_dict):
     payload = output_shape.serialization.get('payload')
     if payload is not None:
         payload_shape = output_shape.members[payload]
-        if (
-            payload_shape.type_name == 'blob'
-            or payload_shape.type_name == 'string'
-        ):
+        if payload_shape.type_name in ('blob', 'string'):
             return False
     return True
 
