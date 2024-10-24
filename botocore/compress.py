@@ -71,7 +71,7 @@ def _is_compressible_type(request_dict):
     if isinstance(body, dict):
         body = urlencode(body, doseq=True, encoding='utf-8').encode('utf-8')
         request_dict['body'] = body
-    is_supported_type = isinstance(body, (str, bytes, bytearray))
+    is_supported_type = isinstance(body, (str, bytes, bytearray, memoryview))
     return is_supported_type or hasattr(body, 'read')
 
 
@@ -90,7 +90,7 @@ def _get_body_size(body):
 def _gzip_compress_body(body):
     if isinstance(body, str):
         return gzip_compress(body.encode('utf-8'))
-    elif isinstance(body, (bytes, bytearray)):
+    elif isinstance(body, (bytes, bytearray, memoryview)):
         return gzip_compress(body)
     elif hasattr(body, 'read'):
         if hasattr(body, 'seek') and hasattr(body, 'tell'):
