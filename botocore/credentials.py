@@ -22,6 +22,7 @@ import time
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
+from typing import Optional
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal, tzutc
@@ -939,7 +940,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
 
 class CredentialProvider:
     # A short name to identify the provider within botocore.
-    METHOD = None
+    METHOD: Optional[str] = None
 
     # A name to identify the provider for use in cross-sdk features like
     # assume role's `credential_source` configuration option. These names
@@ -947,7 +948,7 @@ class CredentialProvider:
     # implemented in botocore MUST prefix their canonical names with
     # 'custom' or we DO NOT guarantee that it will work with any features
     # that this provides.
-    CANONICAL_NAME = None
+    CANONICAL_NAME: Optional[str] = None
 
     def __init__(self, session=None):
         self.session = session

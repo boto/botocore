@@ -17,6 +17,7 @@ is loaded.
 import copy
 import logging
 import os
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from botocore import utils
 from botocore.exceptions import InvalidConfigError
@@ -50,7 +51,17 @@ logger = logging.getLogger(__name__)
 #: found.
 #: NOTE: Fixing the spelling of this variable would be a breaking change.
 #: Please leave as is.
-BOTOCORE_DEFAUT_SESSION_VARIABLES = {
+BOTOCORE_DEFAUT_SESSION_VARIABLES: Dict[
+    str,
+    Tuple[
+        Optional[str],  # Config key (or None)
+        Union[str, List[str], None],  # Env var or list of env vars
+        Union[str, int, dict, None],  # Default value (None, str, int, or dict)
+        Optional[
+            Callable[[str], Union[str, int, None]]
+        ],  # Conversion function (e.g., int) or None
+    ],
+] = {
     # logical:  config_file, env_var,        default_value, conversion_func
     'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
