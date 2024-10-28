@@ -259,28 +259,6 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         self.assertEqual(actual_algorithm, expected_algorithm)
 
-    def test_x_amz_checksum_algorithm_header_is_ignored(self):
-        request = self._build_request(b"")
-        request["headers"]["x-amz-checksum-algorithm"] = "some_value"
-        operation_model = self._make_operation_model(
-            http_checksum={"requestAlgorithmMember": "Algorithm"}
-        )
-        params = {}
-
-        resolve_request_checksum_algorithm(request, operation_model, params)
-        self.assertIn("checksum", request["context"])
-
-    def test_non_x_amz_checksum_algorithm_header_is_not_ignored(self):
-        request = self._build_request(b"")
-        request["headers"]["x-amz-checksum-someChecksum"] = "some_value"
-        operation_model = self._make_operation_model(
-            http_checksum={"requestAlgorithmMember": "Algorithm"}
-        )
-        params = {}
-
-        resolve_request_checksum_algorithm(request, operation_model, params)
-        self.assertNotIn("checksum", request["context"])
-
     def test_apply_request_checksum_handles_no_checksum_context(self):
         request = self._build_request(b"")
         apply_request_checksum(request)

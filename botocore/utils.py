@@ -185,7 +185,7 @@ EVENT_ALIASES = {
 
 # This pattern can be used to detect if a header is a flexible checksum header
 CHECKSUM_HEADER_PATTERN = re.compile(
-    r'^x-amz-checksum-(?!algorithm\b)([a-z0-9]*)$',
+    r'^X-Amz-Checksum-([a-z0-9]*)$',
     flags=re.IGNORECASE,
 )
 
