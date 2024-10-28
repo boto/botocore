@@ -1285,6 +1285,17 @@ def _update_status_code(response, **kwargs):
         http_response.status_code = parsed_status_code
 
 
+def handle_request_validation_mode_member(params, model, **kwargs):
+    client_config = kwargs.get("context", {}).get("client_config")
+    if client_config is None:
+        return
+    response_checksum_validation = client_config.response_checksum_validation
+    http_checksum = model.http_checksum
+    mode_member = http_checksum.get("requestValidationModeMember")
+    if mode_member and response_checksum_validation == "when_supported":
+        params.setdefault(mode_member, "ENABLED")
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1317,6 +1328,7 @@ BUILTIN_HANDLERS = [
     ('before-parse.s3.*', handle_expires_header),
     ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
+    ('before-parameter-build', handle_request_validation_mode_member),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),
     (
