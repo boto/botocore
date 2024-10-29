@@ -3255,7 +3255,9 @@ def _is_s3express_request(params):
     return endpoint_properties.get('backend') == 'S3Express'
 
 
-def _has_checksum_header(params):
+# This is not a public interface and is subject to abrupt breaking changes.
+# Any usage is not advised or supported in external code bases.
+def has_checksum_header(params):
     headers = params['headers']
 
     # If a header matching the x-amz-checksum-* pattern is present, we
@@ -3269,7 +3271,7 @@ def _has_checksum_header(params):
 
 def conditionally_calculate_checksum(params, **kwargs):
     """This function has been deprecated, but is kept for backwards compatibility."""
-    if not _has_checksum_header(params):
+    if not has_checksum_header(params):
         conditionally_calculate_md5(params, **kwargs)
         conditionally_enable_crc32(params, **kwargs)
 
@@ -3305,7 +3307,7 @@ def conditionally_calculate_md5(params, **kwargs):
         # Skip for requests that will have a flexible checksum applied
         return
 
-    if _has_checksum_header(params):
+    if has_checksum_header(params):
         # Don't add a new header if one is already available.
         return
 

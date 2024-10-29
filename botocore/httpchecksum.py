@@ -32,7 +32,7 @@ from botocore.exceptions import (
     MissingDependencyException,
 )
 from botocore.response import StreamingBody
-from botocore.utils import _has_checksum_header, determine_content_length
+from botocore.utils import determine_content_length, has_checksum_header
 
 if HAS_CRT:
     from awscrt import checksums as crt_checksums
@@ -259,7 +259,7 @@ def resolve_request_checksum_algorithm(
     supported_algorithms=None,
 ):
     # If the header is already set by the customer, skip calculation
-    if _has_checksum_header(request):
+    if has_checksum_header(request):
         return
 
     request_checksum_calculation = request["context"][

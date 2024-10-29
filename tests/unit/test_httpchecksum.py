@@ -106,7 +106,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_request_checksum_algorithm(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_request_checksum_algorithm_model_opt_in(self):
+    def test_request_checksum_algorithm_model_default(self):
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"}
         )
@@ -142,7 +142,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_request_checksum_algorithm(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_request_checksum_algorithm_model_opt_in_streaming(self):
+    def test_request_checksum_algorithm_model_default_streaming(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"},
@@ -395,7 +395,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_response_checksum_algorithms(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_response_checksum_algorithm_model_opt_in(self):
+    def test_response_checksum_algorithm_model_default(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={
