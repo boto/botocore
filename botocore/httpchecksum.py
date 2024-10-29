@@ -298,12 +298,14 @@ def resolve_request_checksum_algorithm(
         return
 
     location_type = "header"
-    if operation_model.has_streaming_input:
+    if (
+        operation_model.has_streaming_input
+        and urlparse(request["url"]).scheme == "https"
+    ):
         # Operations with streaming input must support trailers.
-        if urlparse(request["url"]).scheme == "https":
-            # We only support unsigned trailer checksums currently. As this
-            # disables payload signing we'll only use trailers over TLS.
-            location_type = "trailer"
+        # We only support unsigned trailer checksums currently. As this
+        # disables payload signing we'll only use trailers over TLS.
+        location_type = "trailer"
 
     algorithm = {
         "algorithm": algorithm_name,

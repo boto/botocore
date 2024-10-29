@@ -3255,9 +3255,13 @@ def _is_s3express_request(params):
     return endpoint_properties.get('backend') == 'S3Express'
 
 
-# This is not a public interface and is subject to abrupt breaking changes.
-# Any usage is not advised or supported in external code bases.
 def has_checksum_header(params):
+    """
+    Checks if a header starting with "x-amz-checksum-" is provided in a request.
+
+    This class is considered private and subject to abrupt breaking changes or
+    removal without prior announcement. Please do not use it directly.
+    """
     headers = params['headers']
 
     # If a header matching the x-amz-checksum-* pattern is present, we
