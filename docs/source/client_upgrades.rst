@@ -21,7 +21,7 @@ Below is an example of the old interface:
     s3 = session.get_service('s3')
     endpoint = s3.get_endpoint('us-west-2')
     list_objects = s3.get_operation('ListObjects')
-    http, response = list_objects.call(endpoint, Bucket='mybucket')
+    http, response = list_objects.call(endpoint, Bucket='amzn-s3-demo-bucket')
     if http.status_code == 200:
         print("Contents: %s" % response['Contents])
     else:
@@ -36,7 +36,7 @@ Here's an example of the newer (preferred) client interface:
     import botocore.session
     session = botocore.session.get_session()
     s3 = session.create_client('s3', 'us-west-2')
-    response = s3.list_objects(Bucket='mybucket')
+    response = s3.list_objects(Bucket='amzn-s3-demo-bucket')
     print("Contents: %s" % response['Contents'])
 
 
@@ -132,22 +132,22 @@ Use a single client to make multiple API calls.
     endpoint = service.get_endpoint('us-west-2')
     operation = service.get_operation('ListObjects')
     head_object = service.get_operation('HeadObject')
-    parsed = operation.call(endpoint, Bucket='mybucket')[1]
+    parsed = operation.call(endpoint, Bucket='amzn-s3-demo-bucket')[1]
     for obj in parsed['Contents']:
         name = obj['Key']
         # Use existing connection be passing in the same endpoint.
-        print(head_object.call(endpoint, Bucket='mybucket', Key=name))
+        print(head_object.call(endpoint, Bucket='amzn-s3-demo-bucket', Key=name))
 
 **New**
 
 .. code-block:: python
 
     s3 = session.get_client('s3', 'us-west-2')
-    for obj in s3.list_objects(Bucket='mybucket')['Contents']:
+    for obj in s3.list_objects(Bucket='amzn-s3-demo-bucket')['Contents']:
         name = obj['Key']
         # Using the same client will reuse any existing HTTP
         # connections the client was using.
-        print(s3.head_object(Bucket='mybucket', Key=name))
+        print(s3.head_object(Bucket='amzn-s3-demo-bucket', Key=name))
 
 
 Operation and Method Names

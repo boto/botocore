@@ -33,7 +33,7 @@ underlying API operation. The ``paginate`` method then returns an iterable
     paginator = client.get_paginator('list_objects')
 
     # Create a PageIterator from the Paginator
-    page_iterator = paginator.paginate(Bucket='my-bucket')
+    page_iterator = paginator.paginate(Bucket='amzn-s3-demo-bucket')
 
     for page in page_iterator:
         print(page['Contents'])
@@ -48,7 +48,7 @@ the pages of API operation results. The ``paginate`` method accepts a
 pagination::
 
     paginator = client.get_paginator('list_objects')
-    page_iterator = paginator.paginate(Bucket='my-bucket',
+    page_iterator = paginator.paginate(Bucket='amzn-s3-demo-bucket',
                                        PaginationConfig={'MaxItems': 10})
 
 ``MaxItems``
@@ -83,7 +83,7 @@ to the client::
     session = botocore.session.get_session()
     client = session.create_client('s3', region_name='us-west-2')
     paginator = client.get_paginator('list_objects')
-    operation_parameters = {'Bucket': 'my-bucket',
+    operation_parameters = {'Bucket': 'amzn-s3-demo-bucket',
                             'Prefix': 'foo/baz'}
     page_iterator = paginator.paginate(**operation_parameters)
     for page in page_iterator:
@@ -101,7 +101,7 @@ JMESPath expressions that are applied to each page of results through the
 .. code-block:: python
 
     paginator = client.get_paginator('list_objects')
-    page_iterator = paginator.paginate(Bucket='my-bucket')
+    page_iterator = paginator.paginate(Bucket='amzn-s3-demo-bucket')
     filtered_iterator = page_iterator.search("Contents[?Size > `100`][]")
     for key_data in filtered_iterator:
         print(key_data)
