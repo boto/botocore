@@ -598,17 +598,17 @@ class S3PostPresigner:
             the form fields and respective values to use when submitting the
             post. For example:
 
-        .. code:: python
+            .. code:: python
 
-            {
-                'url': 'https://amzn-s3-demo-bucket.s3.amazonaws.com',
-                'fields': {
-                    'acl': 'public-read',
-                    'key': 'mykey',
-                    'signature': 'mysignature',
-                    'policy': 'mybase64 encoded policy'
+                {
+                    'url': 'https://amzn-s3-demo-bucket.s3.amazonaws.com',
+                    'fields': {
+                        'acl': 'public-read',
+                        'key': 'mykey',
+                        'signature': 'mysignature',
+                        'policy': 'mybase64 encoded policy'
+                    }
                 }
-            }
         """
         if fields is None:
             fields = {}
