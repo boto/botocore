@@ -576,6 +576,7 @@ class S3PostPresigner:
         :type conditions: list
         :param conditions: A list of conditions to include in the policy. Each
             element can be either a list or a structure. For example:
+
             .. code:: python
 
                 [
