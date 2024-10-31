@@ -107,7 +107,7 @@ class HTTPClientError(BotoCoreError):
         )
 
 
-class ConnectionError(BotoCoreError):
+class ConnectionError(BotoCoreError, ConnectionError):
     fmt = 'An HTTP Client failed to establish a connection: {error}'
 
 
