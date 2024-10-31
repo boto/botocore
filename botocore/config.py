@@ -115,10 +115,10 @@ class Config:
 
           * ``virtual`` -- Addressing style is always virtual. The name of the
             bucket must be DNS compatible or an exception will be thrown.
-            Endpoints will be addressed as such: ``mybucket.s3.amazonaws.com``
+            Endpoints will be addressed as such: ``amzn-s3-demo-bucket.s3.amazonaws.com``
 
           * ``path`` -- Addressing style is always by path. Endpoints will be
-            addressed as such: ``s3.amazonaws.com/mybucket``
+            addressed as such: ``s3.amazonaws.com/amzn-s3-demo-bucket``
 
         * ``us_east_1_regional_endpoint`` -- Refers to what S3 endpoint to use
           when the region is configured to be us-east-1. Values must be a

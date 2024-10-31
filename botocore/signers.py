@@ -576,11 +576,14 @@ class S3PostPresigner:
         :type conditions: list
         :param conditions: A list of conditions to include in the policy. Each
             element can be either a list or a structure. For example:
-            [
-             {"acl": "public-read"},
-             {"bucket": "mybucket"},
-             ["starts-with", "$key", "mykey"]
-            ]
+
+            .. code:: python
+
+                [
+                    {"acl": "public-read"},
+                    {"bucket": "amzn-s3-demo-bucket"},
+                    ["starts-with", "$key", "mykey"]
+                ]
 
         :type expires_in: int
         :param expires_in: The number of seconds the presigned post is valid
@@ -595,12 +598,17 @@ class S3PostPresigner:
             the form fields and respective values to use when submitting the
             post. For example:
 
-            {'url': 'https://mybucket.s3.amazonaws.com
-             'fields': {'acl': 'public-read',
+            .. code:: python
+
+                {
+                    'url': 'https://amzn-s3-demo-bucket.s3.amazonaws.com',
+                    'fields': {
+                        'acl': 'public-read',
                         'key': 'mykey',
                         'signature': 'mysignature',
-                        'policy': 'mybase64 encoded policy'}
-            }
+                        'policy': 'mybase64 encoded policy'
+                    }
+                }
         """
         if fields is None:
             fields = {}
@@ -751,11 +759,13 @@ def generate_presigned_post(
     :param Conditions: A list of conditions to include in the policy. Each
         element can be either a list or a structure. For example:
 
-        [
-         {"acl": "public-read"},
-         ["content-length-range", 2, 5],
-         ["starts-with", "$success_action_redirect", ""]
-        ]
+        .. code:: python
+
+            [
+                {"acl": "public-read"},
+                ["content-length-range", 2, 5],
+                ["starts-with", "$success_action_redirect", ""]
+            ]
 
         Conditions that are included may pertain to acl,
         content-length-range, Cache-Control, Content-Type,
@@ -764,7 +774,7 @@ def generate_presigned_post(
         and/or x-amz-meta-.
 
         Note that if you include a condition, you must specify
-        the a valid value in the fields dictionary as well. A value will
+        a valid value in the fields dictionary as well. A value will
         not be added automatically to the fields dictionary based on the
         conditions.
 
@@ -778,12 +788,17 @@ def generate_presigned_post(
         the form fields and respective values to use when submitting the
         post. For example:
 
-        {'url': 'https://mybucket.s3.amazonaws.com
-         'fields': {'acl': 'public-read',
+        .. code:: python
+
+            {
+                'url': 'https://amzn-s3-demo-bucket.s3.amazonaws.com',
+                'fields': {
+                    'acl': 'public-read',
                     'key': 'mykey',
                     'signature': 'mysignature',
-                    'policy': 'mybase64 encoded policy'}
-        }
+                    'policy': 'mybase64 encoded policy'
+                }
+            }
     """
     bucket = Bucket
     key = Key
