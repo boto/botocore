@@ -22,7 +22,6 @@ from botocore.exceptions import (
     MissingDependencyException,
 )
 from botocore.httpchecksum import (
-    _CHECKSUM_CLS,
     AwsChunkedWrapper,
     Crc32Checksum,
     CrtCrc32cChecksum,
@@ -37,7 +36,7 @@ from botocore.httpchecksum import (
     resolve_response_checksum_algorithms,
 )
 from botocore.model import OperationModel
-from tests import mock, requires_crt
+from tests import get_checksum_cls, mock, requires_crt
 
 
 class TestHttpChecksumHandlers(unittest.TestCase):
@@ -737,17 +736,17 @@ class TestChecksumImplementations(unittest.TestCase):
 class TestCrtChecksumOverrides(unittest.TestCase):
     @requires_crt()
     def test_crt_crc32_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc32")
+        actual_cls = get_checksum_cls("crc32")
         self.assertEqual(actual_cls, CrtCrc32Checksum)
 
     @requires_crt()
     def test_crt_crc32c_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc32c")
+        actual_cls = get_checksum_cls("crc32c")
         self.assertEqual(actual_cls, CrtCrc32cChecksum)
 
     @requires_crt()
     def test_crt_crc64nvme_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc64nvme")
+        actual_cls = get_checksum_cls("crc64nvme")
         self.assertEqual(actual_cls, CrtCrc64NvmeChecksum)
 
 
