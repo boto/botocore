@@ -1,5 +1,5 @@
 {
   "type": "enhancement",
   "category": "Query Compatibility Mode Header",
-  "description": "Adds logic for custom header to support services migrating away from the AWS Query protocol."
+  "description": "Added support for header enabling service migration off the AWS Query protocol."
 }
