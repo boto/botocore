@@ -46,3 +46,11 @@ class SQSQueryCompatibleTest(BaseSQSOperationTest):
                 self.client.delete_queue(
                     QueueUrl="not-a-real-queue-botocore",
                 )
+
+    def test_query_compatibility_mode_header_sent(self):
+        with self.http_stubber as stub:
+            stub.add_response()
+            self.client.delete_queue(QueueUrl="not-a-real-queue-botocore")
+            request = self.http_stubber.requests[0]
+            assert 'x-amzn-query-mode' in request.headers
+            assert request.headers['x-amzn-query-mode'] == b'true'

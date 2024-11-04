@@ -478,6 +478,10 @@ class ServiceModel:
     def signature_version(self, value):
         self._signature_version = value
 
+    @CachedProperty
+    def is_query_compatible(self):
+        return 'awsQueryCompatible' in self.metadata
+
     def __repr__(self):
         return f'{self.__class__.__name__}({self.service_name})'
 
