@@ -1285,6 +1285,12 @@ def _update_status_code(response, **kwargs):
         http_response.status_code = parsed_status_code
 
 
+def add_query_compatibility_header(model, params, **kwargs):
+    if not model.service_model.is_query_compatible:
+        return
+    params['headers']['x-amzn-query-mode'] = 'true'
+
+
 def handle_request_validation_mode_member(params, model, **kwargs):
     client_config = kwargs.get("context", {}).get("client_config")
     if client_config is None:
@@ -1358,6 +1364,7 @@ BUILTIN_HANDLERS = [
     ('docs.response-params.s3.*.complete-section', document_expires_shape),
     ('before-endpoint-resolution.s3', customize_endpoint_resolver_builtins),
     ('before-call', add_recursion_detection_header),
+    ('before-call', add_query_compatibility_header),
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
