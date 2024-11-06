@@ -638,7 +638,7 @@ class ParameterDefinition:
                 return self.default
             if self.required:
                 raise EndpointResolutionError(
-                    f"Cannot find value for required parameter {self.name}"
+                    msg=f"Cannot find value for required parameter {self.name}"
                 )
             # in all other cases, the parameter will keep the value None
         else:
