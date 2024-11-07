@@ -78,7 +78,7 @@ def get_official_service_name(service_model):
 
 
 _DocumentedShape = namedtuple(
-    'DocumentedShape',
+    '_DocumentedShape',
     [
         'name',
         'type_name',

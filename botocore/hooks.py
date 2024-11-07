@@ -20,7 +20,7 @@ from botocore.utils import EVENT_ALIASES
 logger = logging.getLogger(__name__)
 
 
-_NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
+_NodeList = namedtuple('_NodeList', ['first', 'middle', 'last'])
 _FIRST = 0
 _MIDDLE = 1
 _LAST = 2
