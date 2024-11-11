@@ -40,6 +40,7 @@ KNOWN_EXTRA_OUTPUT_KEYS = [
     'cloudfront.ListCloudFrontOriginAccessIdentities.CloudFrontOriginAccessIdentityList',
     'cloudfront.ListDistributions.DistributionList',
     'cloudfront.ListInvalidations.InvalidationList',
+    'cloudfront.ListPublicKeys.PublicKeyList',
     'cloudfront.ListStreamingDistributions.StreamingDistributionList',
     'cloudfront.ListKeyValueStores.KeyValueStoreList',
     'codedeploy.ListDeploymentGroups.applicationName',
