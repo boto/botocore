@@ -2,6 +2,66 @@
 CHANGELOG
 =========
 
+1.35.59
+=======
+
+* api-change:``codebuild``: AWS CodeBuild now supports non-containerized Linux and Windows builds on Reserved Capacity.
+* api-change:``controltower``: Added ResetEnabledControl API.
+* api-change:``fis``: This release adds support for generating experiment reports with the experiment report configuration
+* api-change:``gamelift``: Amazon GameLift releases container fleets support for general availability. Deploy Linux-based containerized game server software for hosting on Amazon GameLift.
+* api-change:``payment-cryptography``: Updated ListAliases API with KeyArn filter.
+* api-change:``rds``: Updates Amazon RDS documentation for Amazon RDS Extended Support for Amazon Aurora MySQL.
+
+
+1.35.58
+=======
+
+* api-change:``cloudfront``: No API changes from previous release. This release migrated the model to Smithy keeping all features unchanged.
+* api-change:``inspector2``: Adds support for filePath filter.
+* api-change:``lambda``: Add Python 3.13 (python3.13) support to AWS Lambda
+* api-change:``opensearch``: Adds Support for new AssociatePackages and DissociatePackages API in Amazon OpenSearch Service that allows association and dissociation operations to be carried out on multiple packages at the same time.
+* api-change:``outposts``: This release updates StartCapacityTask to allow an active Outpost to be modified. It also adds a new API to list all running EC2 instances on the Outpost.
+
+
+1.35.57
+=======
+
+* api-change:``batch``: This feature allows override LaunchTemplates to be specified in an AWS Batch Compute Environment.
+* api-change:``bedrock-agent-runtime``: This release adds trace functionality to Bedrock Prompt Flows
+* api-change:``chime-sdk-media-pipelines``: Added support for Media Capture Pipeline and Media Concatenation Pipeline for customer managed server side encryption. Now Media Capture Pipeline can use IAM sink role to get access to KMS key and encrypt/decrypt recorded artifacts. KMS key ID can also be supplied with encryption context.
+* api-change:``controlcatalog``: AWS Control Catalog GetControl public API returns additional data in output, including Implementation and Parameters
+* api-change:``eks``: Adds new error code `Ec2InstanceTypeDoesNotExist` for Amazon EKS managed node groups
+* api-change:``firehose``: Amazon Data Firehose / Features : Adds support for a new DeliveryStreamType, DatabaseAsSource. DatabaseAsSource hoses allow customers to stream CDC events from their RDS and Amazon EC2 hosted databases, running MySQL and PostgreSQL database engines, to Iceberg Table destinations.
+* api-change:``lambda``: This release adds support for using AWS KMS customer managed keys to encrypt AWS Lambda .zip deployment packages.
+* api-change:``pinpoint-sms-voice-v2``: Added the RequiresAuthenticationTimestamp field to the RegistrationVersionStatusHistory data type.
+* api-change:``qbusiness``: Adds S3 path option to pass group member list for PutGroup API.
+
+
+1.35.56
+=======
+
+* api-change:``autoscaling``: Auto Scaling groups now support the ability to strictly balance instances across Availability Zones by configuring the AvailabilityZoneDistribution parameter. If balanced-only is configured for a group, launches will always be attempted in the under scaled Availability Zone even if it is unhealthy.
+* api-change:``bedrock-agent``: Add prompt support for chat template configuration and agent generative AI resource. Add support for configuring an optional guardrail in Prompt and Knowledge Base nodes in Prompt Flows. Add API to validate flow definition
+* api-change:``bedrock-runtime``: Add Prompt management support to Bedrock runtime APIs: Converse, ConverseStream, InvokeModel, InvokeModelWithStreamingResponse
+* api-change:``cleanrooms``: This release introduces support for Custom Models in AWS Clean Rooms ML.
+* api-change:``cleanroomsml``: This release introduces support for Custom Models in AWS Clean Rooms ML.
+* api-change:``quicksight``: Add Client Credentials based OAuth support for Snowflake and Starburst
+* api-change:``resource-explorer-2``: Add GetManagedView, ListManagedViews APIs.
+* api-change:``synthetics``: Add support to toggle if a canary will automatically delete provisioned canary resources such as Lambda functions and layers when a canary is deleted.  This behavior can be controlled via the new ProvisionedResourceCleanup property exposed in the CreateCanary and UpdateCanary APIs.
+
+
+1.35.55
+=======
+
+* api-change:``codebuild``: AWS CodeBuild now adds additional compute types for reserved capacity fleet.
+* api-change:``guardduty``: GuardDuty RDS Protection expands support for Amazon Aurora PostgreSQL Limitless Databases.
+* api-change:``lakeformation``: API changes for new named tag expressions feature.
+* api-change:``qapps``: Introduces category apis in AmazonQApps. Web experience users use Categories to tag and filter library items.
+* api-change:``s3control``: Fix ListStorageLensConfigurations and ListStorageLensGroups deserialization for Smithy SDKs.
+* api-change:``verifiedpermissions``: Adding BatchGetPolicy API which supports the retrieval of multiple policies across multiple policy stores within a single request.
+* enhancement:protocol: Added support for header enabling service migration off the AWS Query protocol.
+
+
 1.35.54
 =======
 
