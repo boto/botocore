@@ -577,6 +577,7 @@ class ParameterType(Enum):
 
     string = str
     boolean = bool
+    stringarray = tuple
 
 
 class ParameterDefinition:

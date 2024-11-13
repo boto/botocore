@@ -137,6 +137,7 @@ def endpoint_rule():
 
 def ruleset_testcases():
     filenames = [
+        "array-index",
         "aws-region",
         "default-values",
         "eventbridge",
@@ -161,6 +162,9 @@ def ruleset_testcases():
 
         for test in tests["testCases"]:
             input_params = test["params"]
+            for key, value in input_params.items():
+                if type(value) == list:
+                    input_params[key] = tuple(value)
             expected_object = test["expect"]
             if "error" in expected_object:
                 error_cases.append(

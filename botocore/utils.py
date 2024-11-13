@@ -1479,7 +1479,7 @@ def lru_cache_weakref(*cache_args, **cache_kwargs):
     functools implementation which offers ``max_size`` and ``typed`` properties.
 
     lru_cache is a global cache even when used on a method. The cache's
-    reference to ``self`` will prevent garbace collection of the object. This
+    reference to ``self`` will prevent garbage collection of the object. This
     wrapper around functools.lru_cache replaces the reference to ``self`` with
     a weak reference to not interfere with garbage collection.
     """
