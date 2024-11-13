@@ -21,15 +21,15 @@
           "fn": "getAttr",
           "argv": [
             {
-              "ref": "bucketArn"
+              "ref": "ResourceList"
             },
-            "resourceId[2]"
+            "[0]"
           ],
-          "assign": "outpostId"
+          "assign": "resourceid"
         }
       ],
       "endpoint": {
-        "url": "https://{firstResourceId}.example.com"
+        "url": "https://www.{resourceid}.example.com"
       },
       "type": "endpoint"
     }

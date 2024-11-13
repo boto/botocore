@@ -4,19 +4,11 @@
     {
       "documentation": "Access an array index at index 0",
       "params": {
-        "Input": ["first index"]
+        "ResourceList": ["resource"]
       },
       "expect": {
         "endpoint": {
-          "url": "https://www.example.com",
-          "headers": {
-            "x-uri": [
-              "https://www.example.com"
-            ],
-            "x-arn-region": [
-              "us-east-2"
-            ]
-          }
+          "url": "https://www.resource.example.com"
         }
       }
     }
