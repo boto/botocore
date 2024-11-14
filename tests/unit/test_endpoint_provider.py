@@ -163,7 +163,7 @@ def ruleset_testcases():
         for test in tests["testCases"]:
             input_params = test["params"]
             for key, value in input_params.items():
-                if type(value) == list:
+                if isinstance(value, list):
                     input_params[key] = tuple(value)
             expected_object = test["expect"]
             if "error" in expected_object:

@@ -20,9 +20,9 @@ in a specific AWS partition.
 import copy
 import logging
 import re
-import jmespath
-
 from enum import Enum
+
+import jmespath
 
 from botocore import UNSIGNED, xform_name
 from botocore.auth import AUTH_TYPE_MAPS, HAS_CRT
@@ -580,8 +580,10 @@ class EndpointRulesetResolver:
         )
         if dynamic is not None:
             return dynamic
-        operation_context_params = self._resolve_param_as_operation_context_param(
-            param_name, operation_model, call_args
+        operation_context_params = (
+            self._resolve_param_as_operation_context_param(
+                param_name, operation_model, call_args
+            )
         )
         if operation_context_params is not None:
             return operation_context_params
@@ -607,11 +609,11 @@ class EndpointRulesetResolver:
             client_ctx_varname = client_ctx_params[param_name]
             return self._client_context.get(client_ctx_varname)
 
-    def _resolve_param_as_operation_context_param(self, param_name, operation_model,
-                                                  call_args):
+    def _resolve_param_as_operation_context_param(
+        self, param_name, operation_model, call_args
+    ):
         operation_ctx_params = operation_model.operation_context_parameters
         if param_name in operation_ctx_params:
-            #TODO confirm this will always exist
             path = operation_ctx_params[param_name]['path']
             return tuple(jmespath.search(path, call_args))
 
