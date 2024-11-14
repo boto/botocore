@@ -32,6 +32,14 @@
         "url": "https://www.{resourceid}.example.com"
       },
       "type": "endpoint"
+    },
+    {
+      "documentation": "Fallback when array is unset",
+      "conditions": [],
+      "endpoint": {
+        "url": "https://www.example.com"
+      },
+      "type": "endpoint"
     }
   ]
 }

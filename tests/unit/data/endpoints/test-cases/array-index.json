@@ -11,6 +11,17 @@
           "url": "https://www.resource.example.com"
         }
       }
+    },
+    {
+      "documentation": "Fallback when array is unset",
+      "params": {
+        "ResourceList": []
+      },
+      "expect": {
+        "endpoint": {
+          "url": "https://www.example.com"
+        }
+      }
     }
   ]
 }
