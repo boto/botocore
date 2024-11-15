@@ -173,12 +173,14 @@ class RuleSetStandardLibrary:
         :type path: str
         :rtype: Any
         """
+        if value is None:
+            return None
         for part in path.split("."):
             match = GET_ATTR_RE.search(part)
             if match is not None:
                 name, index = match.groups()
                 index = int(index)
-                if name and value is not None:
+                if name:
                     value = value.get(name)
                 if index >= len(value):
                     return None

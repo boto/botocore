@@ -511,9 +511,11 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
         == expected_value
     )
 
+
 def test_get_attr_can_get_dictionary_index(rule_lib):
     result = rule_lib.get_attr({"foo": ['bar']}, 'foo[0]')
     assert result == "bar"
+
 
 def test_get_attr_can_get_list_index(rule_lib):
     result = rule_lib.get_attr(("foo",), '[0]')
