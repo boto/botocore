@@ -516,5 +516,5 @@ def test_get_attr_can_get_dictionary_index(rule_lib):
     assert result == "bar"
 
 def test_get_attr_can_get_list_index(rule_lib):
-    result = rule_lib.get_attr(("foo"), '[0]')
+    result = rule_lib.get_attr(("foo",), '[0]')
     assert result == "foo"

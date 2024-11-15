@@ -178,10 +178,10 @@ class RuleSetStandardLibrary:
             if match is not None:
                 name, index = match.groups()
                 index = int(index)
-                if value is None or index >= len(value):
-                    return None
-                if name:
+                if name and value is not None:
                     value = value.get(name)
+                if index >= len(value):
+                    return None
                 return value[index]
             else:
                 value = value[part]
