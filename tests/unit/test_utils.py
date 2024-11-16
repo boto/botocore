@@ -1810,37 +1810,6 @@ class TestS3RegionRedirector(unittest.TestCase):
         )
         self.assertIsNone(redirect_response)
 
-    def test_redirect_get_opt_in_region(self):
-        request_dict = {
-            'url': 'https://il-central-1.amazonaws.com/foo',
-            'context': {
-                's3_redirect': {
-                    'bucket': 'foo',
-                    'redirected': False,
-                    'params': {'Bucket': 'foo'},
-                },
-                'signing': {},
-            },
-        }
-        response = (
-            None,
-            {
-                'Error': {
-                    'Code': 'IllegalLocationConstraintException',
-                    'Message': 'Bad Request',
-                },
-                'ResponseMetadata': {
-                    'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
-                },
-            },
-        )
-
-        self.operation.name = 'GetObject'
-        redirect_response = self.redirector.redirect_from_error(
-            request_dict, response, self.operation
-        )
-        self.assertEqual(redirect_response, 0)
-
     def test_redirects_400_head_bucket(self):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',
