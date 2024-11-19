@@ -42,7 +42,7 @@
     "ServicesStable": {
       "delay": 15,
       "operation": "DescribeServices",
-      "maxAttempts": 40,
+      "maxAttempts": 120,
       "acceptors": [
         {
           "expected": "MISSING",
