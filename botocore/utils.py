@@ -1778,7 +1778,7 @@ class S3RegionRedirectorv2:
         is_permanent_redirect = error_code == 'PermanentRedirect'
         is_opt_in_region = (
             error_code == 'IllegalLocationConstraintException'
-            and operation.name == 'GetObject'
+            and operation.name != 'CreateBucket'
         )
         if not any(
             [

@@ -1879,7 +1879,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         )
         self.assertIsNone(redirect_response)
 
-    def test_redirect_in_get_opt_in_region(self):
+    def test_redirects_on_illegal_location_constraint_from_opt_in_region(self):
         request_dict = {
             'url': 'https://il-central-1.amazonaws.com/foo',
             'context': {
@@ -1907,7 +1907,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         )
         self.assertEqual(redirect_response, 0)
 
-    def test_no_redirect_if_create_bucket_IllegalLocationConstraintException(
+    def test_no_redirect_on_illegal_location_constraint_from_bad_location_constraint(
         self,
     ):
         request_dict = {
