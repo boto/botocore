@@ -293,6 +293,7 @@ class URLLib3Session:
         socket_options=None,
         client_cert=None,
         proxies_config=None,
+        source_address=None,
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(
@@ -319,6 +320,7 @@ class URLLib3Session:
         self._socket_options = socket_options
         if socket_options is None:
             self._socket_options = []
+        self._source_address = source_address
         self._proxy_managers = {}
         self._manager = PoolManager(**self._get_pool_manager_kwargs())
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
@@ -342,6 +344,8 @@ class URLLib3Session:
             'cert_file': self._cert_file,
             'key_file': self._key_file,
         }
+        if self._source_address:
+            pool_manager_kwargs['source_address'] = self._source_address
         pool_manager_kwargs.update(**extra_kwargs)
         return pool_manager_kwargs
 
