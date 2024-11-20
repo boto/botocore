@@ -153,6 +153,14 @@ def _request_checksum_calculation_cases():
     request_payload = "Hello world"
     cases = [
         (
+            None,
+            request_payload,
+            {
+                "x-amz-request-algorithm": "CRC32",
+                "x-amz-checksum-crc32": "i9aeUg==",
+            },
+        ),
+        (
             "CRC32",
             request_payload,
             {
@@ -224,9 +232,10 @@ def test_request_checksum_calculation(
     )
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(status=200, body=b"<response/>")
-        client.http_checksum_operation(
-            body=request_payload, checksumAlgorithm=checksum_algorithm
-        )
+        operation_kwargs = {"body": request_payload}
+        if checksum_algorithm:
+            operation_kwargs["checksumAlgorithm"] = checksum_algorithm
+        client.http_checksum_operation(**operation_kwargs)
         actual_headers = http_stubber.requests[0].headers
         for key, val in expected_headers.items():
             assert key in actual_headers
@@ -237,9 +246,20 @@ def _streaming_request_checksum_calculation_cases():
     request_payload = "Hello world"
     cases = [
         (
+            None,
+            request_payload,
+            {
+                "x-amz-request-algorithm": "CRC32",
+                "content-encoding": "aws-chunked",
+                "x-amz-trailer": "x-amz-checksum-crc32",
+            },
+            {"x-amz-checksum-crc32": "i9aeUg=="},
+        ),
+        (
             "CRC32",
             request_payload,
             {
+                "x-amz-request-algorithm": "CRC32",
                 "content-encoding": "aws-chunked",
                 "x-amz-trailer": "x-amz-checksum-crc32",
             },
@@ -249,6 +269,7 @@ def _streaming_request_checksum_calculation_cases():
             "SHA1",
             request_payload,
             {
+                "x-amz-request-algorithm": "SHA1",
                 "content-encoding": "aws-chunked",
                 "x-amz-trailer": "x-amz-checksum-sha1",
             },
@@ -258,6 +279,7 @@ def _streaming_request_checksum_calculation_cases():
             "SHA256",
             request_payload,
             {
+                "x-amz-request-algorithm": "SHA256",
                 "content-encoding": "aws-chunked",
                 "x-amz-trailer": "x-amz-checksum-sha256",
             },
@@ -273,6 +295,7 @@ def _streaming_request_checksum_calculation_cases():
                     "CRC32C",
                     request_payload,
                     {
+                        "x-amz-request-algorithm": "CRC32C",
                         "content-encoding": "aws-chunked",
                         "x-amz-trailer": "x-amz-checksum-crc32c",
                     },
@@ -282,6 +305,7 @@ def _streaming_request_checksum_calculation_cases():
                     "CRC64NVME",
                     request_payload,
                     {
+                        "x-amz-request-algorithm": "CRC64NVME",
                         "content-encoding": "aws-chunked",
                         "x-amz-trailer": "x-amz-checksum-crc64nvme",
                     },
@@ -316,9 +340,10 @@ def test_streaming_request_checksum_calculation(
     )
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(status=200, body=b"<response/>")
-        client.http_checksum_streaming_operation(
-            body=request_payload, checksumAlgorithm=checksum_algorithm
-        )
+        operation_kwargs = {"body": request_payload}
+        if checksum_algorithm:
+            operation_kwargs["checksumAlgorithm"] = checksum_algorithm
+        client.http_checksum_streaming_operation(**operation_kwargs)
         request = http_stubber.requests[0]
         actual_headers = request.headers
         for key, val in expected_headers.items():

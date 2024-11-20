@@ -31,6 +31,7 @@ from botocore.exceptions import (
     FlexibleChecksumError,
     MissingDependencyException,
 )
+from botocore.model import StructureShape
 from botocore.response import StreamingBody
 from botocore.utils import determine_content_length, has_checksum_header
 
@@ -294,6 +295,9 @@ def resolve_request_checksum_algorithm(
         algorithm_member and request_checksum_calculation == "when_supported"
     ):
         algorithm_name = DEFAULT_CHECKSUM_ALGORITHM.lower()
+        _set_request_algorithm_member_header(
+            operation_model, request, algorithm_member
+        )
     else:
         return
 
@@ -316,6 +320,27 @@ def resolve_request_checksum_algorithm(
     checksum_context = request["context"].get("checksum", {})
     checksum_context["request_algorithm"] = algorithm
     request["context"]["checksum"] = checksum_context
+
+
+def _set_request_algorithm_member_header(
+    operation_model, request, algorithm_member
+):
+    """Set the header targeted by the "requestAlgorithmMember" to the default checksum algorithm."""
+    operation_input_shape = operation_model.input_shape
+    if not isinstance(operation_input_shape, StructureShape):
+        return
+
+    algorithm_member_shape = operation_input_shape.members.get(
+        algorithm_member
+    )
+    if not algorithm_member_shape:
+        return
+
+    field_name = algorithm_member_shape.serialization.get("name")
+    if not field_name:
+        return
+
+    request["headers"].setdefault(field_name, DEFAULT_CHECKSUM_ALGORITHM)
 
 
 def apply_request_checksum(request):

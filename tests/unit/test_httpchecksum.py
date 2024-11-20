@@ -35,7 +35,7 @@ from botocore.httpchecksum import (
     resolve_request_checksum_algorithm,
     resolve_response_checksum_algorithms,
 )
-from botocore.model import OperationModel
+from botocore.model import OperationModel, StringShape
 from tests import get_checksum_cls, mock, requires_crt
 
 
@@ -54,6 +54,12 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         operation.http_checksum_required = required
         operation.has_streaming_output = streaming_output
         operation.has_streaming_input = streaming_input
+        if http_checksum and "requestAlgorithmMember" in http_checksum:
+            shape = mock.Mock(spec=StringShape)
+            shape.serialization = {"name": "x-amz-request-algorithm"}
+            operation.input_shape.members = {
+                http_checksum["requestAlgorithmMember"]: shape
+            }
         return operation
 
     def _make_http_response(
