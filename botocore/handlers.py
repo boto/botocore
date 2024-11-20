@@ -1291,7 +1291,7 @@ def add_query_compatibility_header(model, params, **kwargs):
     params['headers']['x-amzn-query-mode'] = 'true'
 
 
-def handle_request_validation_mode_member(params, model, **kwargs):
+def _handle_request_validation_mode_member(params, model, **kwargs):
     client_config = kwargs.get("context", {}).get("client_config")
     if client_config is None:
         return
@@ -1334,7 +1334,7 @@ BUILTIN_HANDLERS = [
     ('before-parse.s3.*', handle_expires_header),
     ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
-    ('before-parameter-build', handle_request_validation_mode_member),
+    ('before-parameter-build', _handle_request_validation_mode_member),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),
     (

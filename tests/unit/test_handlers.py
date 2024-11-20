@@ -1987,7 +1987,7 @@ def create_checksum_context(
 
 def test_request_validation_mode_member_default(checksum_operation_model):
     params = {}
-    handlers.handle_request_validation_mode_member(
+    handlers._handle_request_validation_mode_member(
         params, checksum_operation_model, context=create_checksum_context()
     )
     assert params["ChecksumMode"] == "ENABLED"
@@ -2000,7 +2000,7 @@ def test_request_validation_mode_member_when_required(
     context = create_checksum_context(
         response_checksum_validation="when_required"
     )
-    handlers.handle_request_validation_mode_member(
+    handlers._handle_request_validation_mode_member(
         params, checksum_operation_model, context=context
     )
     assert "ChecksumMode" not in params
@@ -2010,7 +2010,7 @@ def test_request_validation_mode_member_is_not_enabled(
     checksum_operation_model,
 ):
     params = {"ChecksumMode": "FAKE_VALUE"}
-    handlers.handle_request_validation_mode_member(
+    handlers._handle_request_validation_mode_member(
         params, checksum_operation_model, context=create_checksum_context()
     )
     assert params["ChecksumMode"] == "FAKE_VALUE"
