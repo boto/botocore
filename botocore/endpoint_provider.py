@@ -173,9 +173,9 @@ class RuleSetStandardLibrary:
         :type path: str
         :rtype: Any
         """
-        if value is None:
-            return None
         for part in path.split("."):
+            if value is None:
+                return None
             match = GET_ATTR_RE.search(part)
             if match is not None:
                 name, index = match.groups()
