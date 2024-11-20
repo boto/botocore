@@ -605,6 +605,7 @@ def get_checksum_cls(algorithm=DEFAULT_CHECKSUM_ALGORITHM.lower()):
     This pass through is grabbing our internally supported list of checksums
     to ensure we stay in sync, while not exposing them publicly.
 
-    Returns the default checksum algorithm class if none is specified.
+    Returns a checksum algorithm class. The default checksum class is used
+    if one isn't specified.
     """
     return _CHECKSUM_CLS[algorithm]

@@ -35,7 +35,7 @@ from botocore.httpchecksum import (
     resolve_request_checksum_algorithm,
     resolve_response_checksum_algorithms,
 )
-from botocore.model import OperationModel, StringShape
+from botocore.model import OperationModel, StringShape, StructureShape
 from tests import get_checksum_cls, mock, requires_crt
 
 
@@ -57,6 +57,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         if http_checksum and "requestAlgorithmMember" in http_checksum:
             shape = mock.Mock(spec=StringShape)
             shape.serialization = {"name": "x-amz-request-algorithm"}
+            operation.input_shape = mock.Mock(spec=StructureShape)
             operation.input_shape.members = {
                 http_checksum["requestAlgorithmMember"]: shape
             }
@@ -127,6 +128,9 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            request["headers"]["x-amz-request-algorithm"], "CRC32"
+        )
 
         # Param is present, sha256 checksum will be set
         params = {"Algorithm": "sha256"}
@@ -164,6 +168,9 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            request["headers"]["x-amz-request-algorithm"], "CRC32"
+        )
 
         # Param is present, sha256 checksum will be set in the trailer
         params = {"Algorithm": "sha256"}

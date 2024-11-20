@@ -2006,7 +2006,7 @@ def test_request_validation_mode_member_when_required(
     assert "ChecksumMode" not in params
 
 
-def test_request_validation_mode_member_is_not_enabled(
+def test_request_validation_mode_member_set_by_user(
     checksum_operation_model,
 ):
     params = {"ChecksumMode": "FAKE_VALUE"}
