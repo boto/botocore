@@ -125,12 +125,10 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             "algorithm": "crc32",
             "in": "header",
             "name": "x-amz-checksum-crc32",
+            "extra_headers": {'x-amz-request-algorithm': 'CRC32'},
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
-        self.assertEqual(
-            request["headers"]["x-amz-request-algorithm"], "CRC32"
-        )
 
         # Param is present, sha256 checksum will be set
         params = {"Algorithm": "sha256"}
@@ -165,12 +163,10 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             "algorithm": "crc32",
             "in": "trailer",
             "name": "x-amz-checksum-crc32",
+            "extra_headers": {'x-amz-request-algorithm': 'CRC32'},
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
-        self.assertEqual(
-            request["headers"]["x-amz-request-algorithm"], "CRC32"
-        )
 
         # Param is present, sha256 checksum will be set in the trailer
         params = {"Algorithm": "sha256"}
@@ -399,6 +395,19 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         apply_request_checksum(request)
         self.assertEqual(request["headers"]["Content-Encoding"], "aws-chunked")
+
+    def test_apply_request_checksum_extra_headers(self):
+        request = self._build_request(b"")
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "trailer",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+                "extra_headers": {"foo": "bar"},
+            }
+        }
+        apply_request_checksum(request)
+        self.assertEqual(request["headers"]["foo"], "bar")
 
     def test_response_checksum_algorithm_no_model(self):
         request = self._build_request(b"")

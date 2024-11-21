@@ -263,6 +263,7 @@ def resolve_request_checksum_algorithm(
     if has_checksum_header(request):
         return
 
+    extra_headers = {}
     request_checksum_calculation = request["context"][
         "client_config"
     ].request_checksum_calculation
@@ -295,9 +296,11 @@ def resolve_request_checksum_algorithm(
         algorithm_member and request_checksum_calculation == "when_supported"
     ):
         algorithm_name = DEFAULT_CHECKSUM_ALGORITHM.lower()
-        _set_request_algorithm_member_header(
+        algorithm_member_header = _get_request_algorithm_member_header(
             operation_model, request, algorithm_member
         )
+        if algorithm_member_header is not None:
+            extra_headers[algorithm_member_header] = DEFAULT_CHECKSUM_ALGORITHM
     else:
         return
 
@@ -310,22 +313,25 @@ def resolve_request_checksum_algorithm(
         # We only support unsigned trailer checksums currently. As this
         # disables payload signing we'll only use trailers over TLS.
         location_type = "trailer"
+        pass
 
     algorithm = {
         "algorithm": algorithm_name,
         "in": location_type,
         "name": f"x-amz-checksum-{algorithm_name}",
     }
+    if extra_headers:
+        algorithm["extra_headers"] = extra_headers
 
     checksum_context = request["context"].get("checksum", {})
     checksum_context["request_algorithm"] = algorithm
     request["context"]["checksum"] = checksum_context
 
 
-def _set_request_algorithm_member_header(
+def _get_request_algorithm_member_header(
     operation_model, request, algorithm_member
 ):
-    """Set the header targeted by the "requestAlgorithmMember" to the default checksum algorithm."""
+    """Get the name of the header targeted by the "requestAlgorithmMember"."""
     operation_input_shape = operation_model.input_shape
     if not isinstance(operation_input_shape, StructureShape):
         return
@@ -333,14 +339,12 @@ def _set_request_algorithm_member_header(
     algorithm_member_shape = operation_input_shape.members.get(
         algorithm_member
     )
-    if not algorithm_member_shape:
-        return
 
-    field_name = algorithm_member_shape.serialization.get("name")
-    if not field_name:
-        return
-
-    request["headers"].setdefault(field_name, DEFAULT_CHECKSUM_ALGORITHM)
+    return (
+        algorithm_member_shape.serialization.get("name")
+        if algorithm_member_shape
+        else None
+    )
 
 
 def apply_request_checksum(request):
@@ -358,6 +362,8 @@ def apply_request_checksum(request):
         raise FlexibleChecksumError(
             error_msg="Unknown checksum variant: {}".format(algorithm["in"])
         )
+    if "extra_headers" in algorithm:
+        request["headers"].update(algorithm["extra_headers"])
 
 
 def _apply_request_header_checksum(request):
