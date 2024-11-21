@@ -512,21 +512,19 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
     )
 
 
-def test_get_attr_can_get_dictionary_index(rule_lib):
-    result = rule_lib.get_attr({"foo": ['bar']}, 'foo[0]')
-    assert result == "bar"
-
-
-def test_get_attr_returns_none_on_missing_key(rule_lib):
-    result = rule_lib.get_attr({"foo": ['bar']}, 'baz[0]')
-    assert result is None
-
-
-def test_get_attr_returns_none_on_too_high_index(rule_lib):
-    result = rule_lib.get_attr({"foo": ['bar']}, 'foo[1]')
-    assert result is None
-
-
-def test_get_attr_can_get_list_index(rule_lib):
-    result = rule_lib.get_attr(("foo",), '[0]')
-    assert result == "foo"
+@pytest.mark.parametrize(
+    "value, path, expected_value",
+    [
+        ({"foo": ['bar']}, 'baz[0]', None),  # Missing index
+        ({"foo": ['bar']}, 'foo[1]', None),  # Out of range index
+        ({"foo": ['bar']}, 'foo[0]', "bar"),  # Named index
+        (("foo",), '[0]', "foo"),  # Bare index
+        ({"foo": {'bar': []}}, 'foo.baz[0]', None),  # Missing subindex
+        ({"foo": {'bar': []}}, 'foo.bar[0]', None),  # Out of range subindex
+        ({"foo": {"bar": "baz"}}, 'foo.bar', "baz"),  # Subindex with named index
+        ({"foo": {"bar": ["baz"]}}, 'foo.bar[0]', "baz"),  # Subindex with numeric index
+    ],
+)
+def test_get_attr(rule_lib, value, path, expected_value):
+    result = rule_lib.get_attr(value, path)
+    assert result == expected_value
