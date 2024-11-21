@@ -519,10 +519,22 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
         ({"foo": ['bar']}, 'foo[1]', None),  # Out of range index
         ({"foo": ['bar']}, 'foo[0]', "bar"),  # Named index
         (("foo",), '[0]', "foo"),  # Bare index
-        ({"foo": {'bar': []}}, 'foo.baz[0]', None),  # Missing subindex
-        ({"foo": {'bar': []}}, 'foo.bar[0]', None),  # Out of range subindex
-        ({"foo": {"bar": "baz"}}, 'foo.bar', "baz"),  # Subindex with named index
-        ({"foo": {"bar": ["baz"]}}, 'foo.bar[0]', "baz"),  # Subindex with numeric index
+        ({"foo": {}}, 'foo.bar[0]', None),  # Missing index from split path
+        (
+            {"foo": {'bar': []}},
+            'foo.bar[0]',
+            None,
+        ),  # Out of range from split path
+        (
+            {"foo": {"bar": "baz"}},
+            'foo.bar',
+            "baz",
+        ),  # Split path with named index
+        (
+            {"foo": {"bar": ["baz"]}},
+            'foo.bar[0]',
+            "baz",
+        ),  # Split path with numeric index
     ],
 )
 def test_get_attr(rule_lib, value, path, expected_value):
