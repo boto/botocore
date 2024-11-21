@@ -517,6 +517,16 @@ def test_get_attr_can_get_dictionary_index(rule_lib):
     assert result == "bar"
 
 
+def test_get_attr_returns_none_on_missing_key(rule_lib):
+    result = rule_lib.get_attr({"foo": ['bar']}, 'baz[0]')
+    assert result is None
+
+
+def test_get_attr_returns_none_on_too_high_index(rule_lib):
+    result = rule_lib.get_attr({"foo": ['bar']}, 'foo[1]')
+    assert result is None
+
+
 def test_get_attr_can_get_list_index(rule_lib):
     result = rule_lib.get_attr(("foo",), '[0]')
     assert result == "foo"
