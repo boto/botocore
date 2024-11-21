@@ -1491,6 +1491,9 @@ def lru_cache_weakref(*cache_args, **cache_kwargs):
 
         @functools.wraps(func)
         def inner(self, *args, **kwargs):
+            for kwarg_key, kwarg_value in kwargs.items():
+                if isinstance(kwarg_value, list):
+                    kwargs[kwarg_key] = tuple(kwarg_value)
             return func_with_weakref(weakref.ref(self), *args, **kwargs)
 
         inner.cache_info = func_with_weakref.cache_info

@@ -615,7 +615,7 @@ class EndpointRulesetResolver:
         operation_ctx_params = operation_model.operation_context_parameters
         if param_name in operation_ctx_params:
             path = operation_ctx_params[param_name]['path']
-            return tuple(jmespath.search(path, call_args))
+            return jmespath.search(path, call_args)
 
     def _resolve_param_as_builtin(self, builtin_name, builtins):
         if builtin_name not in EndpointResolverBuiltins.__members__.values():
