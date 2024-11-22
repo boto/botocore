@@ -393,18 +393,21 @@ class TestCreateClientArgs(unittest.TestCase):
             client_args['endpoint'].host, 'http://sts.amazonaws.com'
         )
 
-    def test_sts_regional_endpoints_defaults_to_legacy_if_not_set(self):
+    def test_sts_regional_endpoints_defaults_to_regional_if_not_set(self):
+        resolved_endpoint = 'https://resolved-endpoint'
+        resolved_region = 'resolved-region'
+        self._set_endpoint_bridge_resolve(
+            endpoint_url=resolved_endpoint, signing_region=resolved_region
+        )
         self.config_store.set_config_variable('sts_regional_endpoints', None)
         client_args = self.call_get_client_args(
             service_model=self._get_service_model('sts'),
             region_name='us-west-2',
             endpoint_url=None,
         )
+        self.assertEqual(client_args['endpoint'].host, resolved_endpoint)
         self.assertEqual(
-            client_args['endpoint'].host, 'https://sts.amazonaws.com'
-        )
-        self.assertEqual(
-            client_args['request_signer'].region_name, 'us-east-1'
+            client_args['request_signer'].region_name, resolved_region
         )
 
     def test_invalid_sts_regional_endpoints(self):
@@ -669,7 +672,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
         self.assertEqual(bins['AWS::Region'], 'ca-central-1')
         self.assertEqual(bins['AWS::UseFIPS'], False)
         self.assertEqual(bins['AWS::UseDualStack'], False)
-        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], True)
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
         self.assertEqual(bins['AWS::S3::UseGlobalEndpoint'], False)
         self.assertEqual(bins['AWS::S3::Accelerate'], False)
         self.assertEqual(bins['AWS::S3::ForcePathStyle'], False)
@@ -723,7 +726,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
         bins = self.call_compute_endpoint_resolver_builtin_defaults(
             region_name='us-west-2',
         )
-        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], True)
+        self.assertEqual(bins['AWS::STS::UseGlobalEndpoint'], False)
 
     def test_aws_sts_global_endpoint_with_default_and_nonlegacy_region(self):
         bins = self.call_compute_endpoint_resolver_builtin_defaults(
