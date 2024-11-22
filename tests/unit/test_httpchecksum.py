@@ -125,10 +125,19 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             "algorithm": "crc32",
             "in": "header",
             "name": "x-amz-checksum-crc32",
-            "extra_headers": {'x-amz-request-algorithm': 'CRC32'},
+        }
+        expected_request_algorithm_header = {
+            "name": "x-amz-request-algorithm",
+            "value": "CRC32",
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        actual_request_algorithm_header = request["context"]["checksum"][
+            "request_algorithm_header"
+        ]
         self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            actual_request_algorithm_header, expected_request_algorithm_header
+        )
 
         # Param is present, sha256 checksum will be set
         params = {"Algorithm": "sha256"}
@@ -163,10 +172,19 @@ class TestHttpChecksumHandlers(unittest.TestCase):
             "algorithm": "crc32",
             "in": "trailer",
             "name": "x-amz-checksum-crc32",
-            "extra_headers": {'x-amz-request-algorithm': 'CRC32'},
+        }
+        expected_request_algorithm_header = {
+            "name": "x-amz-request-algorithm",
+            "value": "CRC32",
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        actual_request_algorithm_header = request["context"]["checksum"][
+            "request_algorithm_header"
+        ]
         self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            actual_request_algorithm_header, expected_request_algorithm_header
+        )
 
         # Param is present, sha256 checksum will be set in the trailer
         params = {"Algorithm": "sha256"}
@@ -403,8 +421,11 @@ class TestHttpChecksumHandlers(unittest.TestCase):
                 "in": "trailer",
                 "algorithm": "crc32",
                 "name": "x-amz-checksum-crc32",
-                "extra_headers": {"foo": "bar"},
-            }
+            },
+            "request_algorithm_header": {
+                "name": "foo",
+                "value": "bar",
+            },
         }
         apply_request_checksum(request)
         self.assertEqual(request["headers"]["foo"], "bar")

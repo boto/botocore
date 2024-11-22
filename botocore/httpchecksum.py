@@ -263,7 +263,7 @@ def resolve_request_checksum_algorithm(
     if has_checksum_header(request):
         return
 
-    extra_headers = {}
+    checksum_context = request["context"].get("checksum", {})
     request_checksum_calculation = request["context"][
         "client_config"
     ].request_checksum_calculation
@@ -299,8 +299,10 @@ def resolve_request_checksum_algorithm(
         algorithm_member_header = _get_request_algorithm_member_header(
             operation_model, request, algorithm_member
         )
-        if algorithm_member_header is not None:
-            extra_headers[algorithm_member_header] = DEFAULT_CHECKSUM_ALGORITHM
+        checksum_context["request_algorithm_header"] = {
+            "name": algorithm_member_header,
+            "value": DEFAULT_CHECKSUM_ALGORITHM,
+        }
     else:
         return
 
@@ -313,17 +315,13 @@ def resolve_request_checksum_algorithm(
         # We only support unsigned trailer checksums currently. As this
         # disables payload signing we'll only use trailers over TLS.
         location_type = "trailer"
-        pass
 
     algorithm = {
         "algorithm": algorithm_name,
         "in": location_type,
         "name": f"x-amz-checksum-{algorithm_name}",
     }
-    if extra_headers:
-        algorithm["extra_headers"] = extra_headers
 
-    checksum_context = request["context"].get("checksum", {})
     checksum_context["request_algorithm"] = algorithm
     request["context"]["checksum"] = checksum_context
 
@@ -362,8 +360,11 @@ def apply_request_checksum(request):
         raise FlexibleChecksumError(
             error_msg="Unknown checksum variant: {}".format(algorithm["in"])
         )
-    if "extra_headers" in algorithm:
-        request["headers"].update(algorithm["extra_headers"])
+    if "request_algorithm_header" in checksum_context:
+        request_algorithm_header = checksum_context["request_algorithm_header"]
+        request["headers"][request_algorithm_header["name"]] = (
+            request_algorithm_header["value"]
+        )
 
 
 def _apply_request_header_checksum(request):
