@@ -42,7 +42,7 @@ from botocore.utils import (
 logger = logging.getLogger(__name__)
 
 TEMPLATE_STRING_RE = re.compile(r"\{[a-zA-Z#]+\}")
-GET_ATTR_RE = re.compile(r"(\w+)\[(\d+)\]")
+GET_ATTR_RE = re.compile(r"(\w*)\[(\d+)\]")
 VALID_HOST_LABEL_RE = re.compile(
     r"^(?!-)[a-zA-Z\d-]{1,63}(?<!-)$",
 )
@@ -169,7 +169,7 @@ class RuleSetStandardLibrary:
         names indicates the one to the right is nested. The index will always occur at
         the end of the path.
 
-        :type value: dict or list
+        :type value: dict or tuple
         :type path: str
         :rtype: Any
         """
@@ -178,7 +178,8 @@ class RuleSetStandardLibrary:
             if match is not None:
                 name, index = match.groups()
                 index = int(index)
-                value = value.get(name)
+                if name:
+                    value = value.get(name)
                 if value is None or index >= len(value):
                     return None
                 return value[index]
