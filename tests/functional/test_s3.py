@@ -1534,7 +1534,7 @@ class TestS3SigV4(BaseS3OperationTest):
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
         body = self.http_stubber.requests[0].body.read()
-        self.assertIn(b"x-amz-checksum-crc32", body)
+        self.assertIn(b"x-amz-checksum-crc32:eCQEmA==", body)
 
     def test_trailing_checksum_set_empty_body(self):
         with self.http_stubber:
@@ -1551,7 +1551,7 @@ class TestS3SigV4(BaseS3OperationTest):
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
         body = self.http_stubber.requests[0].body.read()
-        self.assertIn(b"x-amz-checksum-crc32", body)
+        self.assertIn(b"x-amz-checksum-crc32:AAAAAA==", body)
 
     def test_trailing_checksum_set_empty_file(self):
         with self.http_stubber:
@@ -1570,7 +1570,7 @@ class TestS3SigV4(BaseS3OperationTest):
             sent_headers["x-amz-content-sha256"],
             b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
         )
-        self.assertIn(b"x-amz-checksum-crc32", body)
+        self.assertIn(b"x-amz-checksum-crc32:AAAAAA==", body)
 
     def test_content_sha256_not_set_if_config_value_is_true(self):
         # By default, put_object() provides a trailing checksum and includes the

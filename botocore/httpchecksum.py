@@ -299,10 +299,11 @@ def resolve_request_checksum_algorithm(
         algorithm_member_header = _get_request_algorithm_member_header(
             operation_model, request, algorithm_member
         )
-        checksum_context["request_algorithm_header"] = {
-            "name": algorithm_member_header,
-            "value": DEFAULT_CHECKSUM_ALGORITHM,
-        }
+        if algorithm_member_header is not None:
+            checksum_context["request_algorithm_header"] = {
+                "name": algorithm_member_header,
+                "value": DEFAULT_CHECKSUM_ALGORITHM,
+            }
     else:
         return
 
