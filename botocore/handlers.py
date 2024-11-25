@@ -61,8 +61,6 @@ from botocore.signers import (
 from botocore.utils import (
     SAFE_CHARS,
     ArnParser,
-    conditionally_calculate_checksum,
-    conditionally_calculate_md5,
     percent_encode,
     switch_host_with_param,
 )
@@ -1293,6 +1291,17 @@ def add_query_compatibility_header(model, params, **kwargs):
     params['headers']['x-amzn-query-mode'] = 'true'
 
 
+def _handle_request_validation_mode_member(params, model, **kwargs):
+    client_config = kwargs.get("context", {}).get("client_config")
+    if client_config is None:
+        return
+    response_checksum_validation = client_config.response_checksum_validation
+    http_checksum = model.http_checksum
+    mode_member = http_checksum.get("requestValidationModeMember")
+    if mode_member and response_checksum_validation == "when_supported":
+        params.setdefault(mode_member, "ENABLED")
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1325,6 +1334,7 @@ BUILTIN_HANDLERS = [
     ('before-parse.s3.*', handle_expires_header),
     ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
+    ('before-parameter-build', _handle_request_validation_mode_member),
     ('before-parameter-build.s3', validate_bucket_name),
     ('before-parameter-build.s3', remove_bucket_from_url_paths_from_model),
     (
@@ -1358,10 +1368,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
-    ('before-call.s3.PutObject', conditionally_calculate_checksum),
-    ('before-call.s3.UploadPart', conditionally_calculate_md5),
     ('before-call.s3.DeleteObjects', escape_xml_payload),
-    ('before-call.s3.DeleteObjects', conditionally_calculate_checksum),
     ('before-call.s3.PutBucketLifecycleConfiguration', escape_xml_payload),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),

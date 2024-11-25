@@ -13,15 +13,16 @@
 import unittest
 from io import BytesIO
 
+from botocore import UNSIGNED
 from botocore.awsrequest import AWSResponse
 from botocore.compat import HAS_CRT
+from botocore.config import Config
 from botocore.exceptions import (
     AwsChunkedWrapperError,
     FlexibleChecksumError,
     MissingDependencyException,
 )
 from botocore.httpchecksum import (
-    _CHECKSUM_CLS,
     AwsChunkedWrapper,
     Crc32Checksum,
     CrtCrc32cChecksum,
@@ -35,8 +36,8 @@ from botocore.httpchecksum import (
     resolve_request_checksum_algorithm,
     resolve_response_checksum_algorithms,
 )
-from botocore.model import OperationModel
-from tests import mock, requires_crt
+from botocore.model import OperationModel, StringShape, StructureShape
+from tests import get_checksum_cls, mock, requires_crt
 
 
 class TestHttpChecksumHandlers(unittest.TestCase):
@@ -54,6 +55,13 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         operation.http_checksum_required = required
         operation.has_streaming_output = streaming_output
         operation.has_streaming_input = streaming_input
+        if http_checksum and "requestAlgorithmMember" in http_checksum:
+            shape = mock.Mock(spec=StringShape)
+            shape.serialization = {"name": "x-amz-request-algorithm"}
+            operation.input_shape = mock.Mock(spec=StructureShape)
+            operation.input_shape.members = {
+                http_checksum["requestAlgorithmMember"]: shape
+            }
         return operation
 
     def _make_http_response(
@@ -89,7 +97,11 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         request = {
             "headers": {},
             "body": body,
-            "context": {},
+            "context": {
+                "client_config": Config(
+                    request_checksum_calculation="when_supported",
+                )
+            },
             "url": "https://example.com",
         }
         return request
@@ -101,25 +113,41 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_request_checksum_algorithm(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_request_checksum_algorithm_model_opt_in(self):
+    def test_request_checksum_algorithm_model_default(self):
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"}
         )
 
-        # Param is not present, no checksum will be set
+        # Param is not present, crc32 checksum will be set by default
         params = {}
-        request = self._build_request(b"")
-        resolve_request_checksum_algorithm(request, operation_model, params)
-        self.assertNotIn("checksum", request["context"])
-
-        # Param is present, crc32 checksum will be set
-        params = {"Algorithm": "crc32"}
         request = self._build_request(b"")
         resolve_request_checksum_algorithm(request, operation_model, params)
         expected_algorithm = {
             "algorithm": "crc32",
             "in": "header",
             "name": "x-amz-checksum-crc32",
+        }
+        expected_request_algorithm_header = {
+            "name": "x-amz-request-algorithm",
+            "value": "CRC32",
+        }
+        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        actual_request_algorithm_header = request["context"]["checksum"][
+            "request_algorithm_header"
+        ]
+        self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            actual_request_algorithm_header, expected_request_algorithm_header
+        )
+
+        # Param is present, sha256 checksum will be set
+        params = {"Algorithm": "sha256"}
+        request = self._build_request(b"")
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        expected_algorithm = {
+            "algorithm": "sha256",
+            "in": "header",
+            "name": "x-amz-checksum-sha256",
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
@@ -131,25 +159,41 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_request_checksum_algorithm(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_request_checksum_algorithm_model_opt_in_streaming(self):
+    def test_request_checksum_algorithm_model_default_streaming(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={"requestAlgorithmMember": "Algorithm"},
             streaming_input=True,
         )
 
-        # Param is not present, no checksum will be set
+        # Param is not present, crc32 checksum will be set
         params = {}
-        resolve_request_checksum_algorithm(request, operation_model, params)
-        self.assertNotIn("checksum", request["context"])
-
-        # Param is present, crc32 checksum will be set in the trailer
-        params = {"Algorithm": "crc32"}
         resolve_request_checksum_algorithm(request, operation_model, params)
         expected_algorithm = {
             "algorithm": "crc32",
             "in": "trailer",
             "name": "x-amz-checksum-crc32",
+        }
+        expected_request_algorithm_header = {
+            "name": "x-amz-request-algorithm",
+            "value": "CRC32",
+        }
+        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        actual_request_algorithm_header = request["context"]["checksum"][
+            "request_algorithm_header"
+        ]
+        self.assertEqual(actual_algorithm, expected_algorithm)
+        self.assertEqual(
+            actual_request_algorithm_header, expected_request_algorithm_header
+        )
+
+        # Param is present, sha256 checksum will be set in the trailer
+        params = {"Algorithm": "sha256"}
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        expected_algorithm = {
+            "algorithm": "sha256",
+            "in": "trailer",
+            "name": "x-amz-checksum-sha256",
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
@@ -159,12 +203,47 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         request["url"] = "http://example.com"
         resolve_request_checksum_algorithm(request, operation_model, params)
         expected_algorithm = {
+            "algorithm": "sha256",
+            "in": "header",
+            "name": "x-amz-checksum-sha256",
+        }
+        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        self.assertEqual(actual_algorithm, expected_algorithm)
+
+    def test_request_checksum_algorithm_s3_signature_version_input_streaming(
+        self,
+    ):
+        config = Config(signature_version="s3")
+        request = self._build_request(b"")
+        request["context"]["client_config"] = config
+        operation_model = self._make_operation_model(
+            http_checksum={"requestChecksumRequired": True},
+            streaming_input=True,
+        )
+
+        params = {}
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        # Operations with streaming input using the "s3" signature_version should send
+        # checksums in the header, not trailer.
+        expected_algorithm = {
             "algorithm": "crc32",
             "in": "header",
             "name": "x-amz-checksum-crc32",
         }
-        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
+
+    def test_request_checksum_algorithm_presigned_request(self):
+        request = self._build_request(b"")
+        request["context"]["is_presign_request"] = True
+        operation_model = self._make_operation_model(
+            http_checksum={"requestChecksumRequired": True},
+        )
+
+        params = {}
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        # Presigned requests shouldn't use flexible checksums by default.
+        self.assertNotIn("checksum", request["context"])
 
     def test_request_checksum_algorithm_model_unsupported_algorithm(self):
         request = self._build_request(b"")
@@ -212,17 +291,21 @@ class TestHttpChecksumHandlers(unittest.TestCase):
                 str(context.exception),
             )
 
-    def test_request_checksum_algorithm_model_legacy_md5(self):
+    def test_request_checksum_algorithm_model_legacy_crc32(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(required=True)
         params = {}
 
         resolve_request_checksum_algorithm(request, operation_model, params)
+        expected_algorithm = {
+            "algorithm": "crc32",
+            "in": "header",
+            "name": "x-amz-checksum-crc32",
+        }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
-        expected_algorithm = "conditional-md5"
         self.assertEqual(actual_algorithm, expected_algorithm)
 
-    def test_request_checksum_algorithm_model_new_md5(self):
+    def test_request_checksum_algorithm_model_new_crc32(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={"requestChecksumRequired": True}
@@ -231,7 +314,11 @@ class TestHttpChecksumHandlers(unittest.TestCase):
 
         resolve_request_checksum_algorithm(request, operation_model, params)
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
-        expected_algorithm = "conditional-md5"
+        expected_algorithm = {
+            "algorithm": "crc32",
+            "in": "header",
+            "name": "x-amz-checksum-crc32",
+        }
         self.assertEqual(actual_algorithm, expected_algorithm)
 
     def test_apply_request_checksum_handles_no_checksum_context(self):
@@ -239,7 +326,9 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         apply_request_checksum(request)
         # Build another request and assert the original request is the same
         expected_request = self._build_request(b"")
-        self.assertEqual(request, expected_request)
+        self.assertEqual(request["headers"], expected_request["headers"])
+        self.assertEqual(request["body"], expected_request["body"])
+        self.assertEqual(request["url"], expected_request["url"])
 
     def test_apply_request_checksum_handles_invalid_context(self):
         request = self._build_request(b"")
@@ -252,14 +341,6 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         with self.assertRaises(FlexibleChecksumError):
             apply_request_checksum(request)
-
-    def test_apply_request_checksum_conditional_md5(self):
-        request = self._build_request(b"")
-        request["context"]["checksum"] = {
-            "request_algorithm": "conditional-md5"
-        }
-        apply_request_checksum(request)
-        self.assertIn("Content-MD5", request["headers"])
 
     def test_apply_request_checksum_flex_header_bytes(self):
         request = self._build_request(b"")
@@ -369,6 +450,39 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         apply_request_checksum(request)
         self.assertEqual(request["headers"]["Content-Encoding"], "aws-chunked")
 
+    def test_apply_request_checksum_extra_headers(self):
+        request = self._build_request(b"")
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "trailer",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            },
+            "request_algorithm_header": {
+                "name": "foo",
+                "value": "bar",
+            },
+        }
+        apply_request_checksum(request)
+        self.assertEqual(request["headers"]["foo"], "bar")
+
+    def test_apply_request_checksum_unsigned_request(self):
+        request = self._build_request(b"")
+        config = Config(signature_version=UNSIGNED)
+        request["context"]["client_config"] = config
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "trailer",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            },
+        }
+        apply_request_checksum(request)
+        self.assertEqual(
+            request["headers"]["X-Amz-Content-SHA256"],
+            "STREAMING-UNSIGNED-PAYLOAD-TRAILER",
+        )
+
     def test_response_checksum_algorithm_no_model(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model()
@@ -376,7 +490,7 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         resolve_response_checksum_algorithms(request, operation_model, params)
         self.assertNotIn("checksum", request["context"])
 
-    def test_response_checksum_algorithm_model_opt_in(self):
+    def test_response_checksum_algorithm_model_default(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={
@@ -718,17 +832,17 @@ class TestChecksumImplementations(unittest.TestCase):
 class TestCrtChecksumOverrides(unittest.TestCase):
     @requires_crt()
     def test_crt_crc32_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc32")
+        actual_cls = get_checksum_cls("crc32")
         self.assertEqual(actual_cls, CrtCrc32Checksum)
 
     @requires_crt()
     def test_crt_crc32c_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc32c")
+        actual_cls = get_checksum_cls("crc32c")
         self.assertEqual(actual_cls, CrtCrc32cChecksum)
 
     @requires_crt()
     def test_crt_crc64nvme_available(self):
-        actual_cls = _CHECKSUM_CLS.get("crc64nvme")
+        actual_cls = get_checksum_cls("crc64nvme")
         self.assertEqual(actual_cls, CrtCrc64NvmeChecksum)
 
 
