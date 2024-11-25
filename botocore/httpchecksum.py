@@ -25,6 +25,7 @@ import logging
 from binascii import crc32
 from hashlib import sha1, sha256
 
+from botocore import UNSIGNED
 from botocore.compat import HAS_CRT, urlparse
 from botocore.exceptions import (
     AwsChunkedWrapperError,
@@ -295,6 +296,9 @@ def resolve_request_checksum_algorithm(
     elif request_checksum_required or (
         algorithm_member and request_checksum_calculation == "when_supported"
     ):
+        # Don't use a default checksum for presigned requests.
+        if request["context"].get("is_presign_request"):
+            return
         algorithm_name = DEFAULT_CHECKSUM_ALGORITHM.lower()
         algorithm_member_header = _get_request_algorithm_member_header(
             operation_model, request, algorithm_member
@@ -312,10 +316,11 @@ def resolve_request_checksum_algorithm(
         operation_model.has_streaming_input
         and urlparse(request["url"]).scheme == "https"
     ):
-        # Operations with streaming input must support trailers.
-        # We only support unsigned trailer checksums currently. As this
-        # disables payload signing we'll only use trailers over TLS.
-        location_type = "trailer"
+        if request["context"]["client_config"].signature_version != 's3':
+            # Operations with streaming input must support trailers.
+            # We only support unsigned trailer checksums currently. As this
+            # disables payload signing we'll only use trailers over TLS.
+            location_type = "trailer"
 
     algorithm = {
         "algorithm": algorithm_name,
@@ -407,6 +412,9 @@ def _apply_request_trailer_checksum(request):
         # Send the decoded content length if we can determine it. Some
         # services such as S3 may require the decoded content length
         headers["X-Amz-Decoded-Content-Length"] = str(content_length)
+
+    if request["context"]["client_config"].signature_version == UNSIGNED:
+        headers["X-Amz-Content-SHA256"] = "STREAMING-UNSIGNED-PAYLOAD-TRAILER"
 
     if isinstance(body, (bytes, bytearray)):
         body = io.BytesIO(body)

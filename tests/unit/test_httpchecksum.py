@@ -13,6 +13,7 @@
 import unittest
 from io import BytesIO
 
+from botocore import UNSIGNED
 from botocore.awsrequest import AWSResponse
 from botocore.compat import HAS_CRT
 from botocore.config import Config
@@ -208,6 +209,41 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         actual_algorithm = request["context"]["checksum"]["request_algorithm"]
         self.assertEqual(actual_algorithm, expected_algorithm)
+
+    def test_request_checksum_algorithm_s3_signature_version_input_streaming(
+        self,
+    ):
+        config = Config(signature_version="s3")
+        request = self._build_request(b"")
+        request["context"]["client_config"] = config
+        operation_model = self._make_operation_model(
+            http_checksum={"requestChecksumRequired": True},
+            streaming_input=True,
+        )
+
+        params = {}
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        actual_algorithm = request["context"]["checksum"]["request_algorithm"]
+        # Operations with streaming input using the "s3" signature_version should send
+        # checksums in the header, not trailer.
+        expected_algorithm = {
+            "algorithm": "crc32",
+            "in": "header",
+            "name": "x-amz-checksum-crc32",
+        }
+        self.assertEqual(actual_algorithm, expected_algorithm)
+
+    def test_request_checksum_algorithm_presigned_request(self):
+        request = self._build_request(b"")
+        request["context"]["is_presign_request"] = True
+        operation_model = self._make_operation_model(
+            http_checksum={"requestChecksumRequired": True},
+        )
+
+        params = {}
+        resolve_request_checksum_algorithm(request, operation_model, params)
+        # Presigned requests shouldn't use flexible checksums by default.
+        self.assertNotIn("checksum", request["context"])
 
     def test_request_checksum_algorithm_model_unsupported_algorithm(self):
         request = self._build_request(b"")
@@ -429,6 +465,23 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         }
         apply_request_checksum(request)
         self.assertEqual(request["headers"]["foo"], "bar")
+
+    def test_apply_request_checksum_unsigned_request(self):
+        request = self._build_request(b"")
+        config = Config(signature_version=UNSIGNED)
+        request["context"]["client_config"] = config
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "trailer",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            },
+        }
+        apply_request_checksum(request)
+        self.assertEqual(
+            request["headers"]["X-Amz-Content-SHA256"],
+            "STREAMING-UNSIGNED-PAYLOAD-TRAILER",
+        )
 
     def test_response_checksum_algorithm_no_model(self):
         request = self._build_request(b"")
