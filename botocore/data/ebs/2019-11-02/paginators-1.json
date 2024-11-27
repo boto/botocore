@@ -1,3 +1,16 @@
 {
-  "pagination": {}
+  "pagination": {
+    "ListSnapshotBlocks": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Blocks"
+    },
+    "ListChangedBlocks": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ChangedBlocks"
+    }
+  }
 }
