@@ -12,6 +12,12 @@
       "input_token": "PageToken",
       "limit_key": "PageSize"
     },
+    "SearchProvisionedProducts": {
+      "result_key": "ProvisionedProducts",
+      "output_token": "NextPageToken",
+      "input_token": "PageToken",
+      "limit_key": "PageSize"
+    },
     "ListAcceptedPortfolioShares": {
       "result_key": "PortfolioDetails",
       "output_token": "NextPageToken",
