@@ -1,5 +1,11 @@
 {
   "pagination": {
+    "SearchProducts": {
+      "result_key": "ProductViewSummaries",
+      "output_token": "NextPageToken",
+      "input_token": "PageToken",
+      "limit_key": "PageSize"
+    },
     "SearchProductsAsAdmin": {
       "result_key": "ProductViewDetails",
       "output_token": "NextPageToken",
