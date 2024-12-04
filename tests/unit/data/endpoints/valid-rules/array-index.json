@@ -2,6 +2,8 @@
   "version": "1.3",
   "parameters": {
     "ResourceList": {
+      "required": true,
+      "default": ["default1", "default2"],
       "type": "stringArray"
     }
   },
