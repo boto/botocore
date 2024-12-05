@@ -110,7 +110,7 @@
     "outputs" : {
       "dnsSuffix" : "amazonaws.com.cn",
       "dualStackDnsSuffix" : "api.amazonwebservices.com.cn",
-      "implicitGlobalRegion" : "cn-northwest-1",
+      "implicitGlobalRegion" : "cn-north-1",
       "name" : "aws-cn",
       "supportsDualStack" : true,
       "supportsFIPS" : true
