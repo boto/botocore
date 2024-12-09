@@ -32,7 +32,7 @@ jobs:
         run: |
           python scripts/ci/run-tests --with-cov --with-xdist
       - name: Run codecov
-        uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a
+        uses: codecov/codecov-action@7f8b4b4bde536c465e797be725718b88c5d95e0e
         with:
           directory: tests
 
