@@ -137,6 +137,7 @@ def endpoint_rule():
 
 def ruleset_testcases():
     filenames = [
+        "array-index",
         "aws-region",
         "default-values",
         "eventbridge",

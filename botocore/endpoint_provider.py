@@ -577,6 +577,7 @@ class ParameterType(Enum):
 
     string = str
     boolean = bool
+    stringarray = tuple
 
 
 class ParameterDefinition:
@@ -600,7 +601,7 @@ class ParameterDefinition:
         except AttributeError:
             raise EndpointResolutionError(
                 msg=f"Unknown parameter type: {parameter_type}. "
-                "A parameter must be of type string or boolean."
+                "A parameter must be of type string, boolean, or stringarray."
             )
         self.documentation = documentation
         self.builtin = builtIn

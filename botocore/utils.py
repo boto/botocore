@@ -1479,7 +1479,7 @@ def lru_cache_weakref(*cache_args, **cache_kwargs):
     functools implementation which offers ``max_size`` and ``typed`` properties.
 
     lru_cache is a global cache even when used on a method. The cache's
-    reference to ``self`` will prevent garbace collection of the object. This
+    reference to ``self`` will prevent garbage collection of the object. This
     wrapper around functools.lru_cache replaces the reference to ``self`` with
     a weak reference to not interfere with garbage collection.
     """
@@ -1491,6 +1491,9 @@ def lru_cache_weakref(*cache_args, **cache_kwargs):
 
         @functools.wraps(func)
         def inner(self, *args, **kwargs):
+            for kwarg_key, kwarg_value in kwargs.items():
+                if isinstance(kwarg_value, list):
+                    kwargs[kwarg_key] = tuple(kwarg_value)
             return func_with_weakref(weakref.ref(self), *args, **kwargs)
 
         inner.cache_info = func_with_weakref.cache_info
