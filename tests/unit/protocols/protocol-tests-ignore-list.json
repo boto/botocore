@@ -1,0 +1,95 @@
+{
+  "general": {
+    "input": {
+      "suites": [
+        "Test cases for PutWithContentEncoding operation",
+        "Test cases for QueryIdempotencyTokenAutoFill operation",
+        "Test cases for HostWithPathOperation operation"
+      ]
+    }
+  },
+  "protocols": {
+    "ec2" : {
+      "input" : {
+        "cases": [
+          "Ec2QueryEndpointTraitWithHostLabel",
+          "Ec2Lists",
+          "Ec2TimestampsInput"
+        ]
+      },
+      "output": {
+        "cases": [
+          "Ec2ComplexError"
+        ]
+      }
+    },
+    "query" : {
+      "output": {
+        "cases": [
+          "QueryEmptyInputAndEmptyOutput",
+          "QueryCustomizedError",
+          "QueryComplexError",
+          "QueryNoInputAndNoOutput",
+          "QueryNoInputAndOutput"
+        ]
+      }
+    },
+    "json" : {
+      "output" : {
+        "cases": [
+          "AwsJson11FooErrorUsingXAmznErrorTypeWithUriAndNamespace",
+          "AwsJson11FooErrorUsingXAmznErrorTypeWithUri"
+        ]
+      }
+    },
+    "json_1_0" : {
+      "output" : {
+        "cases": [
+          "AwsJson10FooErrorUsingXAmznErrorType",
+          "AwsJson10FooErrorUsingXAmznErrorTypeWithUri",
+          "AwsJson10FooErrorUsingXAmznErrorTypeWithUriAndNamespace"
+        ]
+      }
+    },
+    "rest-json" : {
+      "input" : {
+        "cases": [
+          "MediaTypeHeaderInputBase64",
+          "RestJsonHttpChecksumRequired"
+        ]
+      },
+      "output" : {
+        "cases": [
+          "RestJsonFooErrorUsingXAmznErrorType",
+          "RestJsonFooErrorUsingXAmznErrorTypeWithUri",
+          "RestJsonFooErrorUsingXAmznErrorTypeWithUriAndNamespace",
+          "RestJsonHttpPayloadTraitsWithNoBlobBody",
+          "RestJsonHttpPayloadWithUnsetUnion",
+          "RestJsonInputAndOutputWithTimestampHeaders",
+          "RestJsonDeserializesDenseSetMapAndSkipsNull"
+        ]
+      }
+    },
+    "rest-xml": {
+      "input": {
+        "cases": [
+          "BodyWithXmlName",
+          "RestXmlHttpPayloadWithUnion",
+          "HttpPayloadWithXmlName",
+          "HttpPayloadWithXmlNamespace",
+          "HttpPayloadWithXmlNamespaceAndPrefix",
+          "XmlAttributesOnPayload"
+        ]
+      },
+      "output": {
+        "cases": [
+          "InputAndOutputWithTimestampHeaders",
+          "RestXmlHttpPayloadWithUnsetUnion",
+          "HttpPayloadTraitsWithNoBlobBody",
+          "ComplexError",
+          "BodyWithXmlName"
+        ]
+      }
+    }
+  }
+}
