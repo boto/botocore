@@ -12,8 +12,6 @@ furnished to do so, subject to the following conditions:
 {%- extends "!page.html" %}
 
 {%- block extrahead %}
-<script src="https://prod.assets.shortbread.aws.dev/shortbread.js"></script>
-<link href="https://prod.assets.shortbread.aws.dev/shortbread.css" rel="stylesheet">
 <script src="https://a0.awsstatic.com/s_code/js/3.0/awshome_s_code.js"></script>
 {% endblock %}
 
@@ -182,6 +180,7 @@ furnished to do so, subject to the following conditions:
             {%- endif %}
             {# start of AWS modification of Furo template #}
             <div class="legal-info">
+                <script type="text/javascript" src="{{ pathto('_static/shortbreadv1.js',1 ) }}"></script>
                 <script type="text/javascript">
                         const shortbread = AWSCShortbread({
                             domain: ".amazonaws.com",
