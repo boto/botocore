@@ -2,6 +2,93 @@
 CHANGELOG
 =========
 
+1.35.85
+=======
+
+* api-change:``appstream``: Added support for Rocky Linux 8 on Amazon AppStream 2.0
+* api-change:``mediaconvert``: This release adds support for inserting timecode tracks into MP4 container outputs.
+* api-change:``medialive``: MediaLive is releasing ListVersions api
+* api-change:``qconnect``: Amazon Q in Connect enables agents to ask Q for assistance in multiple languages and Q will provide answers and recommended step-by-step guides in those languages. Qs default language is English (United States) and you can switch this by setting the locale configuration on the AI Agent.
+* api-change:``ssm-sap``: AWS Systems Manager for SAP added support for registration and discovery of distributed ABAP applications
+* api-change:``workspaces``: Added AWS Global Accelerator (AGA) support for WorkSpaces Personal.
+
+
+1.35.84
+=======
+
+* api-change:``amplify``: Added WAF Configuration to Amplify Apps
+* api-change:``budgets``: Releasing minor partition endpoint updates
+* api-change:``connect``: This release adds support for the UpdateParticipantAuthentication API used for customer authentication within Amazon Connect chats.
+* api-change:``connectparticipant``: This release adds support for the GetAuthenticationUrl and CancelParticipantAuthentication APIs used for customer authentication within Amazon Connect chats. There are also minor updates to the GetAttachment API.
+* api-change:``datasync``: AWS DataSync introduces the ability to update attributes for in-cloud locations.
+* api-change:``iot``: Release connectivity status query API which is a dedicated high throughput(TPS) API to query a specific device's most recent connectivity state and metadata.
+* api-change:``mwaa``: Added support for Apache Airflow version 2.10.3 to MWAA.
+* api-change:``quicksight``: Add support for PerformanceConfiguration attribute to Dataset entity. Allow PerformanceConfiguration specification in CreateDataset and UpdateDataset APIs.
+* api-change:``resiliencehub``: AWS Resilience Hub now automatically detects already configured CloudWatch alarms and FIS experiments as part of the assessment process and returns the discovered resources in the corresponding list API responses. It also allows you to include or exclude test recommendations for an AppComponent.
+* api-change:``transfer``: Added AS2 agreement configurations to control filename preservation and message signing enforcement. Added AS2 connector configuration to preserve content type from S3 objects.
+
+
+1.35.83
+=======
+
+* api-change:``account``: Update endpoint configuration.
+* api-change:``backup``: Add Support for Backup Indexing
+* api-change:``backupsearch``: Add support for searching backups
+* api-change:``batch``: This feature allows AWS Batch on Amazon EKS to support configuration of Pod Annotations, overriding Namespace on which the Batch job's Pod runs on, and allows Subpath and Persistent Volume claim to be set for AWS Batch on Amazon EKS jobs.
+* api-change:``cleanroomsml``: Add support for SQL compute configuration for StartAudienceGenerationJob API.
+* api-change:``cloudfront``: Adds support for OriginReadTimeout and OriginKeepaliveTimeout to create CloudFront Distributions with VPC Origins.
+* api-change:``codepipeline``: AWS CodePipeline V2 type pipelines now support Managed Compute Rule.
+* api-change:``ecs``: Added support for enableFaultInjection task definition parameter which can be used to enable Fault Injection feature on ECS tasks.
+* api-change:``m2``: This release adds support for AWS Mainframe Modernization(M2) Service to allow specifying network type(ipv4, dual) for the environment instances. For dual network type, m2 environment applications will serve both IPv4 and IPv6 requests, whereas for ipv4 it will serve only IPv4 requests.
+* api-change:``synthetics``: Add support to toggle outbound IPv6 traffic on canaries connected to dualstack subnets.  This behavior can be controlled via the new Ipv6AllowedForDualStack parameter of the VpcConfig input object in CreateCanary and UpdateCanary APIs.
+
+
+1.35.82
+=======
+
+* api-change:``cloud9``: Added information about Ubuntu 18.04 will be removed from the available imageIds for Cloud9 because Ubuntu 18.04 has ended standard support on May 31, 2023.
+* api-change:``dlm``: This release adds support for Local Zones in Amazon Data Lifecycle Manager EBS snapshot lifecycle policies.
+* api-change:``ec2``: This release adds support for EBS local snapshots in AWS Dedicated Local Zones, which allows you to store snapshots of EBS volumes locally in Dedicated Local Zones.
+* api-change:``greengrassv2``: Add support for runtime in GetCoreDevice and ListCoreDevices APIs.
+* api-change:``medialive``: AWS Elemental MediaLive adds three new features: MediaPackage v2 endpoint support for live stream delivery, KLV metadata passthrough in CMAF Ingest output groups, and Metadata Name Modifier in CMAF Ingest output groups for customizing metadata track names in output streams.
+* api-change:``rds``: This release adds support for the "MYSQL_CACHING_SHA2_PASSWORD" enum value for RDS Proxy ClientPasswordAuthType.
+
+
+1.35.81
+=======
+
+* api-change:``cloudhsmv2``: Add support for Dual-Stack hsm2m.medium clusters. The customers will now be able to create hsm2m.medium clusters having both IPv4 and IPv6 connection capabilities by specifying a new param called NetworkType=DUALSTACK during cluster creation.
+* api-change:``ec2``: This release adds GroupId to the response for DeleteSecurityGroup.
+* api-change:``eks``: Add NodeRepairConfig in CreateNodegroupRequest and UpdateNodegroupConfigRequest
+* api-change:``logs``: Limit PutIntegration IntegrationName and ListIntegrations IntegrationNamePrefix parameters to 50 characters
+* api-change:``mediaconnect``: AWS Elemental MediaConnect Gateway now supports Source Specific Multicast (SSM) for ingress bridges. This enables you to specify a source IP address in addition to a multicast IP when creating or updating an ingress bridge source.
+* api-change:``networkmanager``: There was a sentence fragment in UpdateDirectConnectGatewayAttachment that was causing customer confusion as to whether it's an incomplete sentence or if it was a typo. Removed the fragment.
+* api-change:``servicediscovery``: AWS Cloud Map now supports service-level attributes, allowing you to associate custom metadata directly with services. These attributes can be retrieved, updated, and deleted using the new GetServiceAttributes, UpdateServiceAttributes, and DeleteServiceAttributes API calls.
+
+
+1.35.80
+=======
+
+* api-change:``connect``: Configure holidays and other overrides to hours of operation in advance. During contact handling, Amazon Connect automatically checks for overrides and provides customers with an appropriate flow path. After an override period passes call center automatically reverts to standard hours of operation.
+* api-change:``dms``: Add parameters to support for kerberos authentication. Add parameter for disabling the Unicode source filter with PostgreSQL settings. Add parameter to use large integer value with Kinesis/Kafka settings.
+* api-change:``glue``: To support customer-managed encryption in Data Quality to allow customers encrypt data with their own KMS key, we will add a DataQualityEncryption field to the SecurityConfiguration API where customers can provide their KMS keys.
+* api-change:``guardduty``: Improved descriptions for certain APIs.
+* api-change:``route53domains``: This release includes the following API updates: added the enumeration type RESTORE_DOMAIN to the OperationType; constrained the Price attribute to non-negative values; updated the LangCode to allow 2 or 3 alphabetical characters.
+
+
+1.35.79
+=======
+
+* api-change:``artifact``: Add support for listing active customer agreements for the calling AWS Account.
+* api-change:``cloudtrail``: Doc-only updates for CloudTrail.
+* api-change:``cognito-idp``: Updated descriptions for some API operations and parameters, corrected some errors in Cognito user pools
+* api-change:``controlcatalog``: Minor documentation updates to the content of ImplementationDetails object part of the Control Catalog GetControl API
+* api-change:``emr-serverless``: This release adds support for accessing system profile logs in Lake Formation-enabled jobs.
+* api-change:``mgh``: API and documentation updates for AWS MigrationHub related to adding support for listing migration task updates and associating, disassociating and listing source resources
+* api-change:``sesv2``: Introduces support for multi-region endpoint.
+* api-change:``timestream-influxdb``: Adds networkType parameter to CreateDbInstance API which allows IPv6 support to the InfluxDB endpoint
+
+
 1.35.78
 =======
 
