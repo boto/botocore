@@ -120,6 +120,7 @@ import http.client
 import json
 import logging
 import re
+from typing import Optional, Type
 
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
@@ -200,7 +201,7 @@ class ResponseParser:
     """
 
     DEFAULT_ENCODING = 'utf-8'
-    EVENT_STREAM_PARSER_CLS = None
+    EVENT_STREAM_PARSER_CLS: Optional[Type['BaseEventStreamParser']] = None
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:

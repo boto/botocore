@@ -13,53 +13,69 @@
 
 import copy
 import datetime
-import sys
-import inspect
-import warnings
 import hashlib
-from http.client import HTTPMessage
+import inspect
 import logging
-import shlex
-import re
 import os
+import re
+import shlex
+import sys
+import warnings
 from collections import OrderedDict
 from collections.abc import MutableMapping
+from http.client import HTTPMessage
 from math import floor
 
-from botocore.vendored import six
-from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
+
+from botocore.exceptions import MD5UnavailableError
+from botocore.vendored import six
 
 logger = logging.getLogger(__name__)
 
 
 class HTTPHeaders(HTTPMessage):
-    pass
+    @classmethod
+    def from_dict(cls, d):
+        new_instance = cls()
+        for key, value in d.items():
+            new_instance[key] = value
+        return new_instance
 
+    @classmethod
+    def from_pairs(cls, pairs):
+        new_instance = cls()
+        for key, value in pairs:
+            new_instance[key] = value
+        return new_instance
+
+
+from base64 import encodebytes
+from email.utils import formatdate
+from http.client import HTTPResponse
+from io import IOBase as _IOBase
+from itertools import zip_longest
 from urllib.parse import (
+    parse_qs,
+    parse_qsl,
     quote,
-    urlencode,
     unquote,
     unquote_plus,
+    urlencode,
+    urljoin,
     urlparse,
     urlsplit,
     urlunsplit,
-    urljoin,
-    parse_qsl,
-    parse_qs,
 )
-from http.client import HTTPResponse
-from io import IOBase as _IOBase
-from base64 import encodebytes
-from email.utils import formatdate
-from itertools import zip_longest
+
 file_type = _IOBase
 zip = zip
 
 # In python3, unquote takes a str() object, url decodes it,
 # then takes the bytestring and decodes it to utf-8.
 unquote_str = unquote_plus
+
 
 def set_socket_timeout(http_response, timeout):
     """Set the timeout of the socket from an HTTPResponse.
@@ -69,14 +85,17 @@ def set_socket_timeout(http_response, timeout):
     """
     http_response._fp.fp.raw._sock.settimeout(timeout)
 
+
 def accepts_kwargs(func):
     # In python3.4.1, there's backwards incompatible
     # changes when using getargspec with functools.partials.
     return inspect.getfullargspec(func)[2]
 
+
 def ensure_unicode(s, encoding=None, errors=None):
     # NOOP in Python 3, because every string is already unicode
     return s
+
 
 def ensure_bytes(s, encoding='utf-8', errors='strict'):
     if isinstance(s, str):
@@ -86,9 +105,9 @@ def ensure_bytes(s, encoding='utf-8', errors='strict'):
     raise ValueError(f"Expected str or bytes, received {type(s)}.")
 
 
-try:
+if sys.version_info < (3, 9):
     import xml.etree.cElementTree as ETree
-except ImportError:
+else:
     # cElementTree does not exist from Python3.9+
     import xml.etree.ElementTree as ETree
 XMLParseError = ETree.ParseError
@@ -103,26 +122,6 @@ def filter_ssl_warnings():
         category=exceptions.InsecurePlatformWarning,
         module=r".*urllib3\.util\.ssl_",
     )
-
-
-@classmethod
-def from_dict(cls, d):
-    new_instance = cls()
-    for key, value in d.items():
-        new_instance[key] = value
-    return new_instance
-
-
-@classmethod
-def from_pairs(cls, pairs):
-    new_instance = cls()
-    for key, value in pairs:
-        new_instance[key] = value
-    return new_instance
-
-
-HTTPHeaders.from_dict = from_dict
-HTTPHeaders.from_pairs = from_pairs
 
 
 def copy_kwargs(kwargs):
@@ -342,6 +341,7 @@ UNSAFE_URL_CHARS = frozenset('\t\r\n')
 # Detect if gzip is available for use
 try:
     import gzip
+
     HAS_GZIP = True
 except ImportError:
     HAS_GZIP = False

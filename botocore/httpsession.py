@@ -85,7 +85,7 @@ try:
     from certifi import where
 except ImportError:
 
-    def where():
+    def where() -> str:
         return DEFAULT_CA_BUNDLE
 
 

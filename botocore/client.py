@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+from typing import Dict
 
 from botocore import waiter, xform_name
 from botocore.args import ClientArgsCreator
@@ -864,7 +865,7 @@ class BaseClient:
     # snake_case name, but we need to know the ListObjects form.
     # xform_name() does the ListObjects->list_objects conversion, but
     # we need the reverse mapping here.
-    _PY_TO_OP_NAME = {}
+    _PY_TO_OP_NAME: Dict[str, str] = {}
 
     def __init__(
         self,

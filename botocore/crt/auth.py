@@ -13,6 +13,7 @@
 
 import datetime
 from io import BytesIO
+from typing import Dict, Type
 
 from botocore.auth import (
     SIGNED_HEADERS_BLACKLIST,
@@ -618,7 +619,7 @@ class CrtS3SigV4QueryAuth(CrtSigV4QueryAuth):
 
 # Defined at the bottom of module to ensure all Auth
 # classes are defined.
-CRT_AUTH_TYPE_MAPS = {
+CRT_AUTH_TYPE_MAPS: Dict[str, Type[BaseSigner]] = {
     'v4': CrtSigV4Auth,
     'v4-query': CrtSigV4QueryAuth,
     'v4a': CrtSigV4AsymAuth,
