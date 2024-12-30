@@ -636,6 +636,14 @@ class TestValidateTypeBlob(BaseTestValidate):
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
+    def test_validates_memoryview(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'Blob': memoryview(b'12345')},
+        )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
+
     def test_validates_file_like_object(self):
         value = io.BytesIO(b'foo')
 
