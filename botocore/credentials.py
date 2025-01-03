@@ -423,7 +423,7 @@ class RefreshableCredentials(Credentials):
             expiry_time=cls._expiry_datetime(metadata['expiry_time']),
             method=method,
             refresh_using=refresh_using,
-            account_id=metadata['account_id'],
+            account_id=metadata.get('account_id'),
             **kwargs,
         )
         return instance
@@ -601,7 +601,6 @@ class RefreshableCredentials(Credentials):
             'secret_key',
             'token',
             'expiry_time',
-            'account_id',
         ]
         if not data:
             missing_keys = expected_keys
@@ -619,7 +618,7 @@ class RefreshableCredentials(Credentials):
         self.secret_key = data['secret_key']
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
-        self.account_id = data['account_id']
+        self.account_id = data.get('account_id')
         logger.debug(
             "Retrieved credentials will expire at: %s", self._expiry_time
         )
