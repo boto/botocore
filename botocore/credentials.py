@@ -55,7 +55,9 @@ from botocore.utils import (
 
 logger = logging.getLogger(__name__)
 ReadOnlyCredentials = namedtuple(
-    'ReadOnlyCredentials', ['access_key', 'secret_key', 'token']
+    'ReadOnlyCredentials',
+    ['access_key', 'secret_key', 'token', 'account_id'],
+    defaults=(None,),
 )
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
@@ -312,7 +314,9 @@ class Credentials:
         were found.
     """
 
-    def __init__(self, access_key, secret_key, token=None, method=None):
+    def __init__(
+        self, access_key, secret_key, token=None, method=None, account_id=None
+    ):
         self.access_key = access_key
         self.secret_key = secret_key
         self.token = token
@@ -320,6 +324,7 @@ class Credentials:
         if method is None:
             method = 'explicit'
         self.method = method
+        self.account_id = account_id
 
         self._normalize()
 
@@ -335,7 +340,7 @@ class Credentials:
 
     def get_frozen_credentials(self):
         return ReadOnlyCredentials(
-            self.access_key, self.secret_key, self.token
+            self.access_key, self.secret_key, self.token, self.account_id
         )
 
 
@@ -372,17 +377,19 @@ class RefreshableCredentials(Credentials):
         time_fetcher=_local_now,
         advisory_timeout=None,
         mandatory_timeout=None,
+        account_id=None,
     ):
         self._refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
+        self._account_id = account_id
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self.method = method
         self._frozen_credentials = ReadOnlyCredentials(
-            access_key, secret_key, token
+            access_key, secret_key, token, account_id
         )
         self._normalize()
         if advisory_timeout is not None:
@@ -416,6 +423,7 @@ class RefreshableCredentials(Credentials):
             expiry_time=cls._expiry_datetime(metadata['expiry_time']),
             method=method,
             refresh_using=refresh_using,
+            account_id=metadata.get('account_id'),
             **kwargs,
         )
         return instance
@@ -458,6 +466,19 @@ class RefreshableCredentials(Credentials):
     @token.setter
     def token(self, value):
         self._token = value
+
+    @property
+    def account_id(self):
+        """Warning: Using this property can lead to race conditions if you
+        access another property subsequently along the refresh boundary.
+        Please use get_frozen_credentials instead.
+        """
+        self._refresh()
+        return self._account_id
+
+    @account_id.setter
+    def account_id(self, value):
+        self._account_id = value
 
     def _seconds_remaining(self):
         delta = self._expiry_time - self._time_fetcher()
@@ -555,7 +576,7 @@ class RefreshableCredentials(Credentials):
             return
         self._set_from_data(metadata)
         self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token
+            self._access_key, self._secret_key, self._token, self._account_id
         )
         if self._is_expired():
             # We successfully refreshed credentials but for whatever
@@ -592,6 +613,7 @@ class RefreshableCredentials(Credentials):
         self.secret_key = data['secret_key']
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
+        self.account_id = data.get('account_id')
         logger.debug(
             "Retrieved credentials will expire at: %s", self._expiry_time
         )
@@ -646,6 +668,7 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._access_key = None
         self._secret_key = None
         self._token = None
+        self._account_id = None
         self._expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
