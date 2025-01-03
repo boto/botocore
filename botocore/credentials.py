@@ -596,12 +596,7 @@ class RefreshableCredentials(Credentials):
         return parse(time_str)
 
     def _set_from_data(self, data):
-        expected_keys = [
-            'access_key',
-            'secret_key',
-            'token',
-            'expiry_time',
-        ]
+        expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
         if not data:
             missing_keys = expected_keys
         else:
