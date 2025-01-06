@@ -172,14 +172,6 @@ SERVICES = {
         "endpoint_prefix": "data.jobs.iot",
         "service_id": "iot-jobs-data-plane",
     },
-    "iot1click-devices": {
-        "endpoint_prefix": "devices.iot1click",
-        "service_id": "iot-1click-devices-service",
-    },
-    "iot1click-projects": {
-        "endpoint_prefix": "projects.iot1click",
-        "service_id": "iot-1click-projects",
-    },
     "iotanalytics": {
         "endpoint_prefix": "iotanalytics",
         "service_id": "iotanalytics",
