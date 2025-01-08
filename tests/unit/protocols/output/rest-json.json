@@ -1360,12 +1360,12 @@
                     "foo": {
                         "shape": "String",
                         "location": "header",
-                        "locationName": "X-Foo"
+                        "locationName": "x-foo"
                     },
                     "fooMap": {
                         "shape": "StringMap",
                         "location": "headers",
-                        "locationName": "X-Foo-"
+                        "locationName": "x-foo-"
                     }
                 }
             },
@@ -1401,16 +1401,16 @@
                 "result": {
                     "foo": "Foo",
                     "fooMap": {
-                        "Abc": "Abc value",
-                        "Def": "Def value"
+                        "abc": "Abc value",
+                        "def": "Def value"
                     }
                 },
                 "response": {
                     "status_code": 200,
                     "headers": {
-                        "X-Foo": "Foo",
-                        "X-Foo-Abc": "Abc value",
-                        "X-Foo-Def": "Def value"
+                        "x-foo": "Foo",
+                        "x-foo-abc": "Abc value",
+                        "x-foo-def": "Def value"
                     }
                 }
             }
@@ -1467,15 +1467,15 @@
                 "description": "(de)serializes all response headers",
                 "result": {
                     "prefixHeaders": {
-                        "X-Foo": "Foo",
-                        "Hello": "Hello"
+                        "x-foo": "Foo",
+                        "hello": "Hello"
                     }
                 },
                 "response": {
                     "status_code": 200,
                     "headers": {
-                        "Hello": "Hello",
-                        "X-Foo": "Foo"
+                        "hello": "Hello",
+                        "x-foo": "Foo"
                     }
                 }
             }

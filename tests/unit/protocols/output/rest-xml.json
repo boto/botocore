@@ -1214,12 +1214,12 @@
                     "foo": {
                         "shape": "String",
                         "location": "header",
-                        "locationName": "X-Foo"
+                        "locationName": "x-foo"
                     },
                     "fooMap": {
                         "shape": "FooPrefixHeaders",
                         "location": "headers",
-                        "locationName": "X-Foo-"
+                        "locationName": "x-foo-"
                     }
                 }
             },
@@ -1255,16 +1255,16 @@
                 "result": {
                     "foo": "Foo",
                     "fooMap": {
-                        "Abc": "Abc value",
-                        "Def": "Def value"
+                        "abc": "Abc value",
+                        "def": "Def value"
                     }
                 },
                 "response": {
                     "status_code": 200,
                     "headers": {
-                        "X-Foo": "Foo",
-                        "X-Foo-Abc": "Abc value",
-                        "X-Foo-Def": "Def value"
+                        "x-foo": "Foo",
+                        "x-foo-abc": "Abc value",
+                        "x-foo-def": "Def value"
                     },
                     "body": ""
                 }
@@ -1291,7 +1291,7 @@
                 "response": {
                     "status_code": 200,
                     "headers": {
-                        "X-Foo": "Foo"
+                        "x-foo": "Foo"
                     },
                     "body": ""
                 }
@@ -1995,6 +1995,87 @@
                         "Content-Type": "application/xml"
                     },
                     "body": "<NestedXmlMapsResponse>\n    <flatNestedMap>\n        <key>foo</key>\n        <value>\n            <entry>\n                <key>bar</key>\n                <value>Bar</value>\n            </entry>\n        </value>\n    </flatNestedMap>\n</NestedXmlMapsResponse>"
+                }
+            }
+        ]
+    },
+    {
+        "description": "Test cases for NestedXmlMapWithXmlName operation",
+        "metadata": {
+            "protocol": "rest-xml",
+            "protocols": [
+                "rest-xml"
+            ],
+            "apiVersion": "2019-12-16"
+        },
+        "shapes": {
+            "NestedXmlMapWithXmlNameInputOutput": {
+                "type": "structure",
+                "members": {
+                    "nestedXmlMapWithXmlNameMap": {
+                        "shape": "NestedXmlMapWithXmlNameMap"
+                    }
+                }
+            },
+            "NestedXmlMapWithXmlNameMap": {
+                "type": "map",
+                "key": {
+                    "shape": "String",
+                    "locationName": "OuterKey"
+                },
+                "value": {
+                    "shape": "NestedXmlMapWithXmlNameInnerMap"
+                }
+            },
+            "NestedXmlMapWithXmlNameInnerMap": {
+                "type": "map",
+                "key": {
+                    "shape": "String",
+                    "locationName": "InnerKey"
+                },
+                "value": {
+                    "shape": "String",
+                    "locationName": "InnerValue"
+                }
+            },
+            "String": {
+                "type": "string"
+            }
+        },
+        "cases": [
+            {
+                "id": "NestedXmlMapWithXmlNameDeserializes",
+                "given": {
+                    "name": "NestedXmlMapWithXmlName",
+                    "http": {
+                        "method": "POST",
+                        "requestUri": "/NestedXmlMapWithXmlName",
+                        "responseCode": 200
+                    },
+                    "output": {
+                        "shape": "NestedXmlMapWithXmlNameInputOutput"
+                    },
+                    "documentation": "<p>Nested Xml Maps with key/values with @xmlName</p>"
+                },
+                "description": "Serializes nested XML maps in responses that have xmlName on members",
+                "result": {
+                    "nestedXmlMapWithXmlNameMap": {
+                        "foo": {
+                            "bar": "Baz",
+                            "fizz": "Buzz"
+                        },
+                        "qux": {
+                            "foobar": "Bar",
+                            "fizzbuzz": "Buzz"
+                        }
+                    }
+                },
+                "response": {
+                    "status_code": 200,
+                    "headers": {
+                        "Content-Type": "application/xml"
+                    },
+                    "body": "    <NestedXmlMapWithXmlNameInputOutput>\n        <nestedXmlMapWithXmlNameMap>\n            <entry>\n                <OuterKey>foo</OuterKey>\n                <value>\n                    <entry>\n                        <InnerKey>bar</InnerKey>\n                        <InnerValue>Baz</InnerValue>\n                    </entry>\n                    <entry>\n                        <InnerKey>fizz</InnerKey>\n                        <InnerValue>Buzz</InnerValue>\n                    </entry>\n                </value>\n            </entry>\n            <entry>\n                <OuterKey>qux</OuterKey>\n                <value>\n                    <entry>\n                        <InnerKey>foobar</InnerKey>\n                        <InnerValue>Bar</InnerValue>\n                    </entry>\n                    <entry>\n                        <InnerKey>fizzbuzz</InnerKey>\n                        <InnerValue>Buzz</InnerValue>\n                    </entry>\n                </value>\n            </entry>\n        </nestedXmlMapWithXmlNameMap>\n    </NestedXmlMapWithXmlNameInputOutput>\n"
                 }
             }
         ]
