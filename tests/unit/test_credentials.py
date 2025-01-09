@@ -1020,6 +1020,20 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.token, 'baz')
         self.assertEqual(creds.method, 'env')
 
+    def test_envvars_found_with_account_id(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_ACCOUNT_ID': 'baz',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.account_id, 'baz')
+        self.assertEqual(creds.method, 'env')
+
     def test_envvars_not_found(self):
         provider = credentials.EnvProvider(environ={})
         creds = provider.load()
@@ -1126,6 +1140,22 @@ class TestEnvVar(BaseEnvVar):
         )
         with self.assertRaisesRegex(RuntimeError, error_message):
             creds.get_frozen_credentials()
+
+    def test_can_override_account_id_env_var_mapping(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'FOO_ACCOUNT_ID': 'bin',
+        }
+        provider = credentials.EnvProvider(
+            environ, {'account_id': 'FOO_ACCOUNT_ID'}
+        )
+        creds = provider.load()
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.account_id, 'bin')
 
     def test_partial_creds_is_an_error(self):
         # If the user provides an access key, they must also
