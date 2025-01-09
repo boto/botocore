@@ -312,7 +312,7 @@ class Credentials:
     :param str token: The security token, valid only for session credentials.
     :param str method: A string which identifies where the credentials
         were found.
-    :param str account_id: The account ID associated with the credentials.
+    :param str account_id: (optional) An account ID associated with the credentials.
     """
 
     def __init__(
