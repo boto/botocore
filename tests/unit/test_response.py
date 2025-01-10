@@ -110,6 +110,24 @@ class TestStreamWrapper(unittest.TestCase):
         chunks = [b'1234567890\n', b'1234567890\n', b'12345']
         self.assertEqual(stream.readlines(), chunks)
 
+    def test_streaming_body_readinto(self):
+        body = BytesIO(b'123456789')
+        stream = response.StreamingBody(body, content_length=9)
+        chunk = bytearray(b'\x00\x00\x00\x00\x00')
+        self.assertEqual(5, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b'\x31\x32\x33\x34\x35'))
+        self.assertEqual(4, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b'\x36\x37\x38\x39\x35'))
+
+    def test_streaming_body_readinto_with_invalid_length(self):
+        body = BytesIO(b'12')
+        stream = response.StreamingBody(body, content_length=9)
+        chunk = bytearray(b'\xDE\xAD\xBE\xEF')
+        self.assertEqual(2, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b'\x31\x32\xBE\xEF'))
+        with self.assertRaises(IncompleteReadError):
+            stream.readinto(chunk)
+
     def test_streaming_body_tell(self):
         body = BytesIO(b'1234567890')
         stream = response.StreamingBody(body, content_length=10)
