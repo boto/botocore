@@ -447,6 +447,25 @@ class TestURLLib3Session(unittest.TestCase):
             socket_options=socket_options,
         )
 
+    def test_session_forwards_source_address_to_pool_manager(self):
+        source_address = ('192.168.1.1', 1234)
+        URLLib3Session(source_address=source_address)
+        self.assert_pool_manager_call(source_address=source_address)
+
+    def test_session_forwards_source_address_to_proxy_manager(self):
+        proxies = {'http': 'http://proxy.com'}
+        source_address = ('192.168.1.1', 1234)
+        session = URLLib3Session(
+            proxies=proxies,
+            source_address=source_address,
+        )
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['http'],
+            proxy_headers={},
+            source_address=source_address,
+        )
+
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error
         session = URLLib3Session()
