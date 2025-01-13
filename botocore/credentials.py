@@ -312,6 +312,7 @@ class Credentials:
     :param str token: The security token, valid only for session credentials.
     :param str method: A string which identifies where the credentials
         were found.
+    :param str account_id: (optional) An account ID associated with the credentials.
     """
 
     def __init__(
@@ -1118,6 +1119,7 @@ class EnvProvider(CredentialProvider):
     # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
     EXPIRY_TIME = 'AWS_CREDENTIAL_EXPIRATION'
+    ACCOUNT_ID = 'AWS_ACCOUNT_ID'
 
     def __init__(self, environ=None, mapping=None):
         """
@@ -1127,8 +1129,12 @@ class EnvProvider(CredentialProvider):
         :param mapping: An optional mapping of variable names to
             environment variable names.  Use this if you want to
             change the mapping of access_key->AWS_ACCESS_KEY_ID, etc.
-            The dict can have up to 3 keys: ``access_key``, ``secret_key``,
-            ``session_token``.
+            The dict can have up to 5 keys:
+            * ``access_key``
+            * ``secret_key``
+            * ``token``
+            * ``expiry_time``
+            * ``account_id``
         """
         if environ is None:
             environ = os.environ
@@ -1144,6 +1150,7 @@ class EnvProvider(CredentialProvider):
             var_mapping['secret_key'] = self.SECRET_KEY
             var_mapping['token'] = self.TOKENS
             var_mapping['expiry_time'] = self.EXPIRY_TIME
+            var_mapping['account_id'] = self.ACCOUNT_ID
         else:
             var_mapping['access_key'] = mapping.get(
                 'access_key', self.ACCESS_KEY
@@ -1156,6 +1163,9 @@ class EnvProvider(CredentialProvider):
                 var_mapping['token'] = [var_mapping['token']]
             var_mapping['expiry_time'] = mapping.get(
                 'expiry_time', self.EXPIRY_TIME
+            )
+            var_mapping['account_id'] = mapping.get(
+                'account_id', self.ACCOUNT_ID
             )
         return var_mapping
 
@@ -1181,6 +1191,7 @@ class EnvProvider(CredentialProvider):
                     expiry_time,
                     refresh_using=fetcher,
                     method=self.METHOD,
+                    account_id=credentials['account_id'],
                 )
 
             return Credentials(
@@ -1188,6 +1199,7 @@ class EnvProvider(CredentialProvider):
                 credentials['secret_key'],
                 credentials['token'],
                 method=self.METHOD,
+                account_id=credentials['account_id'],
             )
         else:
             return None
@@ -1229,6 +1241,11 @@ class EnvProvider(CredentialProvider):
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['expiry_time']
                 )
+
+            credentials['account_id'] = None
+            account_id = environ.get(mapping['account_id'], '')
+            if account_id:
+                credentials['account_id'] = account_id
 
             return credentials
 
