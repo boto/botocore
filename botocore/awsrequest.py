@@ -528,7 +528,7 @@ class AWSPreparedRequest:
         # the entire body contents again if we need to).
         # Same case if the body is a string/bytes/bytearray type.
 
-        non_seekable_types = (bytes, str, bytearray)
+        non_seekable_types = (bytes, str, bytearray, memoryview)
         if self.body is None or isinstance(self.body, non_seekable_types):
             return
         try:

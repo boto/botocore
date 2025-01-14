@@ -160,6 +160,10 @@ def assert_request_compressed(request_dict, expected_body):
             OP_WITH_COMPRESSION,
         ),
         (
+            _request_dict(memoryview(REQUEST_BODY)),
+            OP_WITH_COMPRESSION,
+        ),
+        (
             _request_dict(headers={'Content-Encoding': 'identity'}),
             OP_WITH_COMPRESSION,
         ),
