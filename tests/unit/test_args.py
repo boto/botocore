@@ -20,13 +20,14 @@ from botocore.configprovider import ConfigValueStore
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.useragent import UserAgentString
-from tests import mock, unittest
+from tests import get_botocore_default_config_mapping, mock, unittest
 
 
 class TestCreateClientArgs(unittest.TestCase):
     def setUp(self):
         self.event_emitter = mock.Mock(HierarchicalEmitter)
-        self.config_store = ConfigValueStore()
+        default_config_mapping = get_botocore_default_config_mapping()
+        self.config_store = ConfigValueStore(mapping=default_config_mapping)
         user_agent_creator = UserAgentString(
             platform_name=None,
             platform_version=None,
