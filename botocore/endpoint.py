@@ -401,6 +401,7 @@ class EndpointCreator:
         socket_options=None,
         client_cert=None,
         proxies_config=None,
+        source_address=None,
     ):
         if not is_valid_endpoint_url(
             endpoint_url
@@ -420,6 +421,7 @@ class EndpointCreator:
             socket_options=socket_options,
             client_cert=client_cert,
             proxies_config=proxies_config,
+            source_address=source_address,
         )
 
         return Endpoint(

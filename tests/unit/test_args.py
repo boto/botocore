@@ -117,6 +117,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'proxies_config': None,
             'socket_options': self.default_socket_options,
             'client_cert': None,
+            'source_address': None,
         }
         call_kwargs.update(**override_kwargs)
         mock_endpoint.return_value.create_endpoint.assert_called_with(
