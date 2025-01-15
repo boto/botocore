@@ -14,13 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const nonResourceSubHeadings = [
-	"client",
-	"waiters",
-	"paginators",
-	"resources",
-	"examples",
-];
 // Checks if an html doc name matches a service class name.
 function isValidServiceName(serviceClassName) {
 	const pageTitle = document.getElementsByTagName("h1")[0];
@@ -37,14 +30,7 @@ function isValidFragment(splitFragment) {
 			return false;
 		}
 	}
-	return splitFragment.length >= 1 && splitFragment.length < 5;
-}
-// Checks if a name is a possible resource name.
-function isValidResource(name, serviceDocName) {
-	return (
-		name !== serviceDocName.replaceAll("-", "") &&
-		!nonResourceSubHeadings.includes(name)
-	);
+	return splitFragment.length > 2 && splitFragment.length < 6;
 }
 // Reroutes previously existing links to the new path.
 // Old: <root_url>/reference/services/s3.html#S3.Client.delete_bucket
@@ -54,40 +40,36 @@ function isValidResource(name, serviceDocName) {
 (function () {
 	const currentPath = window.location.pathname.split("/");
 	const fragment = window.location.hash.substring(1);
-	const splitFragment = fragment
-		.split(".")
-		.map((part) => part.replace(/serviceresource/i, "service-resource"));
 	// Only redirect when viewing a top-level service page.
-	if (
-		isValidFragment(splitFragment) &&
-		currentPath[currentPath.length - 2] === "services"
-	) {
+	if (fragment && currentPath[currentPath.length - 2] === "services") {
 		const serviceDocName = currentPath[currentPath.length - 1].replace(
 			".html",
 			"",
 		);
-		if (splitFragment.length > 1) {
-			splitFragment[0] = splitFragment[0].toLowerCase();
-			splitFragment[1] = splitFragment[1].toLowerCase();
-		}
-		let newPath;
-		if (splitFragment.length >= 3 && isValidServiceName(splitFragment[0])) {
+		const splitFragment = fragment.split(".");
+		splitFragment[0] = splitFragment[0].toLowerCase();
+		if (
+			isValidFragment(splitFragment) &&
+			isValidServiceName(splitFragment[0])
+		) {
+			// Replace class name with doc name
 			splitFragment[0] = serviceDocName;
-			newPath = `${splitFragment.slice(0, 3).join("/")}.html#${splitFragment.length > 3 ? fragment : ""}`;
-		} else if (
-			splitFragment.length == 2 &&
-			isValidResource(splitFragment[1].toLowerCase(), serviceDocName)
-		) {
-			newPath = `${splitFragment.join("/")}/index.html#${fragment}`;
-		} else if (
-			splitFragment.length == 1 &&
-			isValidResource(splitFragment[0], serviceDocName)
-		) {
-			newPath = `${serviceDocName}/${splitFragment.join("/")}/index.html`;
-		} else {
-			return;
+			splitFragment[1] = splitFragment[1].toLowerCase();
+			// Exceptions have a longer sub-path (<service>/client/exceptions/<exception>.html)
+			const isException = splitFragment[2] === "exceptions";
+			const sliceLocation = isException ? 4 : 3;
+			var newPath = `${splitFragment.slice(0, sliceLocation).join("/")}.html`;
+			if (
+				(splitFragment.length > 3 && !isException) ||
+				(splitFragment.length > 4 && isException)
+			) {
+				// Redirect with the fragment
+				window.location.assign(`${newPath}#${fragment}`);
+			} else {
+				// Redirect without the fragment
+				window.location.assign(newPath);
+			}
 		}
-		window.location.assign(newPath);
 	}
 })();
 // Given a service name, we apply the html classes which indicate a current page to the corresponsing list item.
@@ -101,7 +83,7 @@ function makeServiceLinkCurrent(serviceName) {
 		`a[href*="../${serviceName}.html"]`,
 	);
 	if (linkElement.length === 0) {
-		linkElement = servicesSection.querySelectorAll(`a[href="#"]`)[0];
+		linkElement = servicesSection.querySelectorAll(`a[href*="#"]`)[0];
 	} else {
 		linkElement = linkElement[0];
 	}
@@ -115,7 +97,7 @@ const codeBlockSelector = "div.highlight pre";
 // nested doc pages and highlights the corresponding service list item.
 function expandSubMenu() {
 	if (currentPagePath.includes("services")) {
-		document.getElementById("toctree-checkbox-11").checked = true;
+		document.getElementById("toctree-checkbox-1").checked = true;
 		// Example Nested Path: /reference/services/<service_name>/client/<operation_name>.html
 		const serviceNameIndex = currentPagePath.indexOf("services") + 1;
 		const serviceName = currentPagePath[serviceNameIndex];
@@ -238,7 +220,6 @@ function loadShortbread() {
 		console.error("AWSCShortbread failed to load!!!");
 	}
 }
-
 // Functions to run after the DOM loads.
 function runAfterDOMLoads() {
 	expandSubMenu();
@@ -247,6 +228,7 @@ function runAfterDOMLoads() {
 	loadThemeFromLocalStorage();
 	loadShortbread();
 }
+
 // Run a function after the DOM loads.
 function ready(fn) {
 	if (document.readyState !== "loading") {
