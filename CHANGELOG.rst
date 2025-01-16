@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+1.36.0
+======
+
+* api-change:``apigateway``: Documentation updates for Amazon API Gateway
+* api-change:``bedrock-agent-runtime``: Now supports streaming for inline agents.
+* api-change:``cognito-identity``: corrects the dual-stack endpoint configuration
+* api-change:``partnercentral-selling``: Add Tagging support for ResourceSnapshotJob resources
+* api-change:``s3``: This change enhances integrity protections for new SDK requests to S3. S3 SDKs now support the CRC64NVME checksum algorithm, full object checksums for multipart S3 objects, and new default integrity protections for S3 requests.
+* api-change:``security-ir``: Increase minimum length of Threat Actor IP 'userAgent' to 1.
+* api-change:``sesv2``: This release introduces a new recommendation in Virtual Deliverability Manager Advisor, which detects elevated complaint rates for customer sending identities.
+* api-change:``workspaces``: Added GeneralPurpose.4xlarge & GeneralPurpose.8xlarge ComputeTypes.
+* api-change:``workspaces-thin-client``: Mark type in MaintenanceWindow as required.
+* enhancement:AWSCRT: Update awscrt version to 0.23.4
+* feature:``s3``: The S3 client attempts to validate response checksums for all S3 API operations that support checksums. However, if the SDK has not implemented the specified checksum algorithm then this validation is skipped. Checksum validation behavior can be configured using the ``when_supported`` and ``when_required`` options - in code using the ``response_checksum_validation`` parameter for ``botocore.config.Config``, in the shared AWS config file using ``response_checksum_validation``, or as an env variable using ``AWS_RESPONSE_CHECKSUM_VALIDATION``.
+* feature:``s3``: Added support for the CRC64NVME checksum algorithm in the S3 client through the optional AWS CRT (``awscrt``) dependency.
+* feature:``s3``: S3 client behavior is updated to always calculate a CRC32 checksum by default for operations that support it (such as PutObject or UploadPart), or require it (such as DeleteObjects). Checksum behavior can be configured using ``when_supported`` and ``when_required`` options - in code using the ``request_checksum_calculation`` parameter for ``botocore.config.Config``, in the shared AWS config file using ``request_checksum_calculation``, or as an env variable using ``AWS_REQUEST_CHECKSUM_CALCULATION``. Note: Botocore will no longer automatically compute and populate the Content-MD5 header.
+
+
+1.35.99
+=======
+
+* api-change:``gamelift``: Amazon GameLift releases a new game session placement feature: PriorityConfigurationOverride. You can now override how a game session queue prioritizes placement locations for a single StartGameSessionPlacement request.
+* api-change:``route53``: Amazon Route 53 now supports the Mexico (Central) Region (mx-central-1) for latency records, geoproximity records, and private DNS for Amazon VPCs in that region
+
+
+1.35.98
+=======
+
+* api-change:``artifact``: Support resolving regional API calls to partition's leader region endpoint.
+* api-change:``bedrock``: With this release, Bedrock Evaluation will now support latency-optimized inference for foundation models.
+* api-change:``ec2``: Add support for DisconnectOnSessionTimeout flag in CreateClientVpnEndpoint and ModifyClientVpnEndpoint requests and DescribeClientVpnEndpoints responses
+* api-change:``kafkaconnect``: Support updating connector configuration via UpdateConnector API. Release Operations API to monitor the status of the connector operation.
+* api-change:``transcribe``: This update provides tagging support for Transcribe's Call Analytics Jobs and Call Analytics Categories.
+
+
 1.35.97
 =======
 

@@ -22,7 +22,7 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.hooks import HierarchicalEmitter
 from botocore.loaders import Loader
 from botocore.model import OperationModel, ServiceModel
-from tests import mock, unittest
+from tests import get_botocore_default_config_mapping, mock, unittest
 
 
 class BaseDocsTest(unittest.TestCase):
@@ -109,6 +109,7 @@ class BaseDocsTest(unittest.TestCase):
             'signatureVersions': ['v4'],
         }
 
+        default_config_mapping = get_botocore_default_config_mapping()
         self.creator = ClientCreator(
             loader=self.loader,
             endpoint_resolver=endpoint_resolver,
@@ -117,7 +118,7 @@ class BaseDocsTest(unittest.TestCase):
             retry_handler_factory=mock.Mock(),
             retry_config_translator=mock.Mock(),
             exceptions_factory=mock.Mock(),
-            config_store=ConfigValueStore(),
+            config_store=ConfigValueStore(mapping=default_config_mapping),
         )
 
         self.client = self.creator.create_client('myservice', 'us-east-1')

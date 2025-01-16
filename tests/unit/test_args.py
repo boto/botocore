@@ -20,13 +20,14 @@ from botocore.configprovider import ConfigValueStore
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.useragent import UserAgentString
-from tests import mock, unittest
+from tests import get_botocore_default_config_mapping, mock, unittest
 
 
 class TestCreateClientArgs(unittest.TestCase):
     def setUp(self):
         self.event_emitter = mock.Mock(HierarchicalEmitter)
-        self.config_store = ConfigValueStore()
+        default_config_mapping = get_botocore_default_config_mapping()
+        self.config_store = ConfigValueStore(mapping=default_config_mapping)
         user_agent_creator = UserAgentString(
             platform_name=None,
             platform_version=None,
@@ -613,6 +614,70 @@ class TestCreateClientArgs(unittest.TestCase):
         client_args = self.call_get_client_args(client_config=input_config)
         config = client_args['client_config']
         self.assertFalse(config.disable_request_compression)
+
+    def test_checksum_default_client_config(self):
+        input_config = Config()
+        client_args = self.call_get_client_args(client_config=input_config)
+        config = client_args["client_config"]
+        self.assertEqual(config.request_checksum_calculation, "when_supported")
+        self.assertEqual(config.response_checksum_validation, "when_supported")
+
+    def test_checksum_client_config(self):
+        input_config = Config(
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        )
+        client_args = self.call_get_client_args(client_config=input_config)
+        config = client_args['client_config']
+        self.assertEqual(config.request_checksum_calculation, "when_required")
+        self.assertEqual(config.response_checksum_validation, "when_required")
+
+    def test_checksum_config_store(self):
+        self.config_store.set_config_variable(
+            "request_checksum_calculation", "when_required"
+        )
+        self.config_store.set_config_variable(
+            "response_checksum_validation", "when_required"
+        )
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.request_checksum_calculation, "when_required")
+        self.assertEqual(config.response_checksum_validation, "when_required")
+
+    def test_checksum_client_config_overrides_config_store(self):
+        self.config_store.set_config_variable(
+            "request_checksum_calculation", "when_supported"
+        )
+        self.config_store.set_config_variable(
+            "response_checksum_validation", "when_supported"
+        )
+        input_config = Config(
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        )
+        client_args = self.call_get_client_args(client_config=input_config)
+        config = client_args['client_config']
+        self.assertEqual(config.request_checksum_calculation, "when_required")
+        self.assertEqual(config.response_checksum_validation, "when_required")
+
+    def test_request_checksum_calculation_invalid_client_config(self):
+        with self.assertRaises(exceptions.InvalidChecksumConfigError):
+            config = Config(request_checksum_calculation="invalid_config")
+            self.call_get_client_args(client_config=config)
+        self.config_store.set_config_variable(
+            'request_checksum_calculation', "invalid_config"
+        )
+        with self.assertRaises(exceptions.InvalidChecksumConfigError):
+            self.call_get_client_args()
+
+    def test_response_checksum_validation_invalid_client_config(self):
+        with self.assertRaises(exceptions.InvalidChecksumConfigError):
+            config = Config(response_checksum_validation="invalid_config")
+            self.call_get_client_args(client_config=config)
+        self.config_store.set_config_variable(
+            'response_checksum_validation', "invalid_config"
+        )
+        with self.assertRaises(exceptions.InvalidChecksumConfigError):
+            self.call_get_client_args()
 
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
