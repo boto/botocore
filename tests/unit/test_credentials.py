@@ -3882,3 +3882,15 @@ class TestSSOProvider(unittest.TestCase):
         # If any required configuration is missing we should get an error
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
             self.provider.load()
+
+
+@pytest.mark.parametrize(
+    "account_id, expected", [("123456789012", "123456789012"), (None, None)]
+)
+def test_get_deferred_property_account_id(account_id, expected):
+    creds = Credentials(
+        access_key='foo', secret_key='bar', token='baz', account_id=account_id
+    )
+    deferred_account_id = creds.get_deferred_property('account_id')
+    assert callable(deferred_account_id)
+    assert deferred_account_id() == expected
