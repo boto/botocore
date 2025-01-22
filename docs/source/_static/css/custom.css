@@ -110,7 +110,3 @@ h3.admonition-title::before {
 .hidden {
     display: none;
 }
-/*Sets the opacity level to 50%*/
-.opacity_50 {
-    opacity: 0.5;
-}
