@@ -1428,6 +1428,28 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_credentials_file_exists_with_account_id(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'foo',
+                'aws_secret_access_key': 'bar',
+                'aws_session_token': 'baz',
+                'aws_account_id': 'bin',
+            }
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds',
+            profile_name='default',
+            ini_parser=self.ini_parser,
+        )
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'shared-credentials-file')
+        self.assertEqual(creds.account_id, 'bin')
+
 
 class TestConfigFileProvider(BaseEnvVar):
     def setUp(self):

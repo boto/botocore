@@ -1293,6 +1293,7 @@ class SharedCredentialProvider(CredentialProvider):
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
+    ACCOUNT_ID = 'aws_account_id'
     # Same deal as the EnvProvider above.  Botocore originally supported
     # aws_security_token, but the SDKs are standardizing on aws_session_token
     # so we support both.
@@ -1323,14 +1324,22 @@ class SharedCredentialProvider(CredentialProvider):
                     config, self.ACCESS_KEY, self.SECRET_KEY
                 )
                 token = self._get_session_token(config)
+                account_id = self._get_account_id(config)
                 return Credentials(
-                    access_key, secret_key, token, method=self.METHOD
+                    access_key,
+                    secret_key,
+                    token,
+                    method=self.METHOD,
+                    account_id=account_id,
                 )
 
     def _get_session_token(self, config):
         for token_envvar in self.TOKENS:
             if token_envvar in config:
                 return config[token_envvar]
+
+    def _get_account_id(self, config):
+        return config.get(self.ACCOUNT_ID)
 
 
 class ConfigProvider(CredentialProvider):

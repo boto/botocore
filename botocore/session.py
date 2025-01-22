@@ -479,7 +479,9 @@ class Session:
         """
         self._client_config = client_config
 
-    def set_credentials(self, access_key, secret_key, token=None):
+    def set_credentials(
+        self, access_key, secret_key, token=None, account_id=None
+    ):
         """
         Manually create credentials for this session.  If you would
         prefer to use botocore without a config file, environment variables,
@@ -495,9 +497,12 @@ class Session:
         :type token: str
         :param token: An option session token used by STS session
             credentials.
+
+        :type account_id: str
+        :param account_id: An optional account ID part of the credentials.
         """
         self._credentials = botocore.credentials.Credentials(
-            access_key, secret_key, token
+            access_key, secret_key, token, account_id=account_id
         )
 
     def get_credentials(self):
@@ -840,6 +845,7 @@ class Session:
         aws_access_key_id=None,
         aws_secret_access_key=None,
         aws_session_token=None,
+        aws_account_id=None,
         config=None,
     ):
         """Create a botocore client.
@@ -898,6 +904,13 @@ class Session:
         :param aws_session_token: The session token to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
+        :type aws_account_id: string
+        :param aws_account_id: The account id to use when creating
+            the client.  This is entirely optional, and if not provided,
+            the credentials configured for the session will automatically
+            be used.  You only need to provide this argument if you want
+            to override the credentials used for this specific client.
+
         :type config: botocore.client.Config
         :param config: Advanced client configuration options. If a value
             is specified in the client config, its value will take precedence
@@ -945,6 +958,7 @@ class Session:
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token,
+                account_id=aws_account_id,
             )
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
