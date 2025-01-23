@@ -1512,6 +1512,25 @@ class TestConfigFileProvider(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
 
+    def test_config_file_with_account_id(self):
+        profile_config = {
+            'aws_access_key_id': 'foo',
+            'aws_secret_access_key': 'bar',
+            'aws_session_token': 'baz',
+            'aws_account_id': 'bin',
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'config-file')
+        self.assertEqual(creds.account_id, 'bin')
+
 
 class TestBotoProvider(BaseEnvVar):
     def setUp(self):

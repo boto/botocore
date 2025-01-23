@@ -1293,11 +1293,11 @@ class SharedCredentialProvider(CredentialProvider):
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
-    ACCOUNT_ID = 'aws_account_id'
     # Same deal as the EnvProvider above.  Botocore originally supported
     # aws_security_token, but the SDKs are standardizing on aws_session_token
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
+    ACCOUNT_ID = 'aws_account_id'
 
     def __init__(self, creds_filename, profile_name=None, ini_parser=None):
         self._creds_filename = creds_filename
@@ -1354,6 +1354,7 @@ class ConfigProvider(CredentialProvider):
     # aws_security_token, but the SDKs are standardizing on aws_session_token
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
+    ACCOUNT_ID = 'aws_account_id'
 
     def __init__(self, config_filename, profile_name, config_parser=None):
         """
@@ -1390,8 +1391,13 @@ class ConfigProvider(CredentialProvider):
                     profile_config, self.ACCESS_KEY, self.SECRET_KEY
                 )
                 token = self._get_session_token(profile_config)
+                account_id = self._get_account_id(profile_config)
                 return Credentials(
-                    access_key, secret_key, token, method=self.METHOD
+                    access_key,
+                    secret_key,
+                    token,
+                    method=self.METHOD,
+                    account_id=account_id,
                 )
         else:
             return None
@@ -1400,6 +1406,9 @@ class ConfigProvider(CredentialProvider):
         for token_name in self.TOKENS:
             if token_name in profile_config:
                 return profile_config[token_name]
+
+    def _get_account_id(self, config):
+        return config.get(self.ACCOUNT_ID)
 
 
 class BotoProvider(CredentialProvider):
