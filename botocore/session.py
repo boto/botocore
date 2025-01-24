@@ -845,8 +845,8 @@ class Session:
         aws_access_key_id=None,
         aws_secret_access_key=None,
         aws_session_token=None,
-        aws_account_id=None,
         config=None,
+        aws_account_id=None,
     ):
         """Create a botocore client.
 
@@ -904,13 +904,6 @@ class Session:
         :param aws_session_token: The session token to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
-        :type aws_account_id: string
-        :param aws_account_id: The account id to use when creating
-            the client.  This is entirely optional, and if not provided,
-            the credentials configured for the session will automatically
-            be used.  You only need to provide this argument if you want
-            to override the credentials used for this specific client.
-
         :type config: botocore.client.Config
         :param config: Advanced client configuration options. If a value
             is specified in the client config, its value will take precedence
@@ -919,6 +912,13 @@ class Session:
             object is set on the session, the config object used when creating
             the client will be the result of calling ``merge()`` on the
             default config with the config provided to this call.
+
+        :type aws_account_id: string
+        :param aws_account_id: The account id to use when creating
+            the client.  This is entirely optional, and if not provided,
+            the credentials configured for the session will automatically
+            be used.  You only need to provide this argument if you want
+            to override the credentials used for this specific client.
 
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
