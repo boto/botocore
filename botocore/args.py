@@ -61,6 +61,15 @@ LEGACY_GLOBAL_STS_REGIONS = [
 # values result in a warning-level log message.
 USERAGENT_APPID_MAXLEN = 50
 
+VALID_REQUEST_CHECKSUM_CALCULATION_CONFIG = (
+    "when_supported",
+    "when_required",
+)
+VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG = (
+    "when_supported",
+    "when_required",
+)
+
 
 class ClientArgsCreator:
     def __init__(
@@ -271,12 +280,19 @@ class ClientArgsCreator:
                 sigv4a_signing_region_set=(
                     client_config.sigv4a_signing_region_set
                 ),
+                request_checksum_calculation=(
+                    client_config.request_checksum_calculation
+                ),
+                response_checksum_validation=(
+                    client_config.response_checksum_validation
+                ),
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
         self._compute_user_agent_appid_config(config_kwargs)
         self._compute_request_compression_config(config_kwargs)
         self._compute_sigv4a_signing_region_set_config(config_kwargs)
+        self._compute_checksum_config(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -581,25 +597,24 @@ class ClientArgsCreator:
     def _validate_min_compression_size(self, min_size):
         min_allowed_min_size = 1
         max_allowed_min_size = 1048576
-        if min_size is not None:
-            error_msg_base = (
-                f'Invalid value "{min_size}" for '
-                'request_min_compression_size_bytes.'
+        error_msg_base = (
+            f'Invalid value "{min_size}" for '
+            'request_min_compression_size_bytes.'
+        )
+        try:
+            min_size = int(min_size)
+        except (ValueError, TypeError):
+            msg = (
+                f'{error_msg_base} Value must be an integer. '
+                f'Received {type(min_size)} instead.'
             )
-            try:
-                min_size = int(min_size)
-            except (ValueError, TypeError):
-                msg = (
-                    f'{error_msg_base} Value must be an integer. '
-                    f'Received {type(min_size)} instead.'
-                )
-                raise botocore.exceptions.InvalidConfigError(error_msg=msg)
-            if not min_allowed_min_size <= min_size <= max_allowed_min_size:
-                msg = (
-                    f'{error_msg_base} Value must be between '
-                    f'{min_allowed_min_size} and {max_allowed_min_size}.'
-                )
-                raise botocore.exceptions.InvalidConfigError(error_msg=msg)
+            raise botocore.exceptions.InvalidConfigError(error_msg=msg)
+        if not min_allowed_min_size <= min_size <= max_allowed_min_size:
+            msg = (
+                f'{error_msg_base} Value must be between '
+                f'{min_allowed_min_size} and {max_allowed_min_size}.'
+            )
+            raise botocore.exceptions.InvalidConfigError(error_msg=msg)
 
         return min_size
 
@@ -782,3 +797,36 @@ class ClientArgsCreator:
                 'sigv4a_signing_region_set'
             )
         config_kwargs['sigv4a_signing_region_set'] = sigv4a_signing_region_set
+
+    def _compute_checksum_config(self, config_kwargs):
+        self._handle_checksum_config(
+            config_kwargs,
+            config_key="request_checksum_calculation",
+            valid_options=VALID_REQUEST_CHECKSUM_CALCULATION_CONFIG,
+        )
+        self._handle_checksum_config(
+            config_kwargs,
+            config_key="response_checksum_validation",
+            valid_options=VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG,
+        )
+
+    def _handle_checksum_config(
+        self,
+        config_kwargs,
+        config_key,
+        valid_options,
+    ):
+        value = config_kwargs.get(config_key)
+        if value is None:
+            value = self._config_store.get_config_variable(config_key)
+
+        if isinstance(value, str):
+            value = value.lower()
+
+        if value not in valid_options:
+            raise botocore.exceptions.InvalidChecksumConfigError(
+                config_key=config_key,
+                config_value=value,
+                valid_options=valid_options,
+            )
+        config_kwargs[config_key] = value

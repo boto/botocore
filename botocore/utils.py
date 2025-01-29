@@ -128,7 +128,6 @@ EVENT_ALIASES = {
     "data.mediastore": "mediastore-data",
     "datapipeline": "data-pipeline",
     "devicefarm": "device-farm",
-    "devices.iot1click": "iot-1click-devices-service",
     "directconnect": "direct-connect",
     "discovery": "application-discovery-service",
     "dms": "database-migration-service",
@@ -148,8 +147,6 @@ EVENT_ALIASES = {
     "cloudwatch-events": "eventbridge",
     "iot-data": "iot-data-plane",
     "iot-jobs-data": "iot-jobs-data-plane",
-    "iot1click-devices": "iot-1click-devices-service",
-    "iot1click-projects": "iot-1click-projects",
     "kinesisanalytics": "kinesis-analytics",
     "kinesisvideo": "kinesis-video",
     "lex-models": "lex-model-building-service",
@@ -165,7 +162,6 @@ EVENT_ALIASES = {
     "monitoring": "cloudwatch",
     "mturk-requester": "mturk",
     "opsworks-cm": "opsworkscm",
-    "projects.iot1click": "iot-1click-projects",
     "resourcegroupstaggingapi": "resource-groups-tagging-api",
     "route53": "route-53",
     "route53domains": "route-53-domains",
@@ -3232,6 +3228,7 @@ def get_encoding_from_headers(headers, default='ISO-8859-1'):
 
 
 def calculate_md5(body, **kwargs):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     if isinstance(body, (bytes, bytearray)):
         binary_md5 = _calculate_md5_from_bytes(body)
     else:
@@ -3240,11 +3237,13 @@ def calculate_md5(body, **kwargs):
 
 
 def _calculate_md5_from_bytes(body_bytes):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     md5 = get_md5(body_bytes)
     return md5.digest()
 
 
 def _calculate_md5_from_file(fileobj):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     start_position = fileobj.tell()
     md5 = get_md5()
     for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
@@ -3260,15 +3259,17 @@ def _is_s3express_request(params):
     return endpoint_properties.get('backend') == 'S3Express'
 
 
-def _has_checksum_header(params):
+def has_checksum_header(params):
+    """
+    Checks if a header starting with "x-amz-checksum-" is provided in a request.
+
+    This function is considered private and subject to abrupt breaking changes or
+    removal without prior announcement. Please do not use it directly.
+    """
     headers = params['headers']
-    # If a user provided Content-MD5 is present,
-    # don't try to compute a new one.
-    if 'Content-MD5' in headers:
-        return True
 
     # If a header matching the x-amz-checksum-* pattern is present, we
-    # assume a checksum has already been provided and an md5 is not needed
+    # assume a checksum has already been provided by the user.
     for header in headers:
         if CHECKSUM_HEADER_PATTERN.match(header):
             return True
@@ -3277,12 +3278,14 @@ def _has_checksum_header(params):
 
 
 def conditionally_calculate_checksum(params, **kwargs):
-    if not _has_checksum_header(params):
+    """This function has been deprecated, but is kept for backwards compatibility."""
+    if not has_checksum_header(params):
         conditionally_calculate_md5(params, **kwargs)
         conditionally_enable_crc32(params, **kwargs)
 
 
 def conditionally_enable_crc32(params, **kwargs):
+    """This function has been deprecated, but is kept for backwards compatibility."""
     checksum_context = params.get('context', {}).get('checksum', {})
     checksum_algorithm = checksum_context.get('request_algorithm')
     if (
@@ -3300,7 +3303,10 @@ def conditionally_enable_crc32(params, **kwargs):
 
 
 def conditionally_calculate_md5(params, **kwargs):
-    """Only add a Content-MD5 if the system supports it."""
+    """Only add a Content-MD5 if the system supports it.
+
+    This function has been deprecated, but is kept for backwards compatibility.
+    """
     body = params['body']
     checksum_context = params.get('context', {}).get('checksum', {})
     checksum_algorithm = checksum_context.get('request_algorithm')
@@ -3308,7 +3314,7 @@ def conditionally_calculate_md5(params, **kwargs):
         # Skip for requests that will have a flexible checksum applied
         return
 
-    if _has_checksum_header(params):
+    if has_checksum_header(params):
         # Don't add a new header if one is already available.
         return
 
@@ -3598,8 +3604,6 @@ CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES = {
     'globalaccelerator': 'global-accelerator',
     'iot-data': 'iot-data-plane',
     'iot-jobs-data': 'iot-jobs-data-plane',
-    'iot1click-devices': 'iot-1click-devices-service',
-    'iot1click-projects': 'iot-1click-projects',
     'iotevents-data': 'iot-events-data',
     'iotevents': 'iot-events',
     'iotwireless': 'iot-wireless',

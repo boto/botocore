@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 #: NOTE: Fixing the spelling of this variable would be a breaking change.
 #: Please leave as is.
 BOTOCORE_DEFAUT_SESSION_VARIABLES = {
-    # logical:  config_file, env_var,        default_value, conversion_func
+    # logical:  config_file, env_var, default_value, conversion_func
     'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
     'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
@@ -166,6 +166,18 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'sigv4a_signing_region_set',
         'AWS_SIGV4A_SIGNING_REGION_SET',
         None,
+        None,
+    ),
+    'request_checksum_calculation': (
+        'request_checksum_calculation',
+        'AWS_REQUEST_CHECKSUM_CALCULATION',
+        "when_supported",
+        None,
+    ),
+    'response_checksum_validation': (
+        'response_checksum_validation',
+        'AWS_RESPONSE_CHECKSUM_VALIDATION',
+        "when_supported",
         None,
     ),
 }
@@ -468,7 +480,7 @@ class ConfigValueStore:
 
     def get_config_variable(self, logical_name):
         """
-        Retrieve the value associeated with the specified logical_name
+        Retrieve the value associated with the specified logical_name
         from the corresponding provider. If no value is found None will
         be returned.
 

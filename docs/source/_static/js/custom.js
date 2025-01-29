@@ -16,8 +16,8 @@ limitations under the License.
 
 // Checks if an html doc name matches a service class name.
 function isValidServiceName(serviceClassName) {
-	const pageTitle = document.getElementsByTagName('h1')[0];
-	const newDocName = pageTitle.innerText.replace('#', '');
+	const pageTitle = document.getElementsByTagName("h1")[0];
+	const newDocName = pageTitle.innerText.replace("#", "");
 	return newDocName.toLowerCase() === serviceClassName;
 }
 // Checks if all elements of the split fragment are valid.
@@ -38,57 +38,68 @@ function isValidFragment(splitFragment) {
 // This must be done client side since the fragment (#S3.Client.delete_bucket) is never
 // passed to the server.
 (function () {
-	const currentPath = window.location.pathname.split('/');
+	const currentPath = window.location.pathname.split("/");
 	const fragment = window.location.hash.substring(1);
 	// Only redirect when viewing a top-level service page.
-	if (fragment && currentPath[currentPath.length - 2] === 'services') {
-		const serviceDocName = currentPath[currentPath.length - 1].replace('.html', '');
-		const splitFragment = fragment.split('.');
+	if (fragment && currentPath[currentPath.length - 2] === "services") {
+		const serviceDocName = currentPath[currentPath.length - 1].replace(
+			".html",
+			"",
+		);
+		const splitFragment = fragment.split(".");
 		splitFragment[0] = splitFragment[0].toLowerCase();
-		if (isValidFragment(splitFragment) && isValidServiceName(splitFragment[0])) {
+		if (
+			isValidFragment(splitFragment) &&
+			isValidServiceName(splitFragment[0])
+		) {
 			// Replace class name with doc name
 			splitFragment[0] = serviceDocName;
 			splitFragment[1] = splitFragment[1].toLowerCase();
 			// Exceptions have a longer sub-path (<service>/client/exceptions/<exception>.html)
-			const isException = splitFragment[2] === 'exceptions';
+			const isException = splitFragment[2] === "exceptions";
 			const sliceLocation = isException ? 4 : 3;
-			var newPath = `${ splitFragment.slice(0, sliceLocation).join('/') }.html`;
-			if (splitFragment.length > 3 && !isException || splitFragment.length > 4 && isException) {
+			var newPath = `${splitFragment.slice(0, sliceLocation).join("/")}.html`;
+			if (
+				(splitFragment.length > 3 && !isException) ||
+				(splitFragment.length > 4 && isException)
+			) {
 				// Redirect with the fragment
-				window.location.assign(`${ newPath }#${ fragment }`);
+				window.location.assign(`${newPath}#${fragment}`);
 			} else {
 				// Redirect without the fragment
 				window.location.assign(newPath);
 			}
 		}
 	}
-}());
+})();
 // Given a service name, we apply the html classes which indicate a current page to the corresponsing list item.
 // Before: <li class="toctree-l2"><a class="reference internal" href="../../acm.html">ACM</a></li>
 // After: <li class="toctree-l2 current current-page"><a class="reference internal" href="../../acm.html">ACM</a></li>
 function makeServiceLinkCurrent(serviceName) {
-	const servicesSection = [...document.querySelectorAll('a')].find(
-		e => e.innerHTML.includes('Available Services')
+	const servicesSection = [...document.querySelectorAll("a")].find((e) =>
+		e.innerHTML.includes("Available Services"),
 	).parentElement;
-	var linkElement = servicesSection.querySelectorAll(`a[href*="../${ serviceName }.html"]`);
+	var linkElement = servicesSection.querySelectorAll(
+		`a[href*="../${serviceName}.html"]`,
+	);
 	if (linkElement.length === 0) {
 		linkElement = servicesSection.querySelectorAll(`a[href*="#"]`)[0];
 	} else {
 		linkElement = linkElement[0];
 	}
 	let linkParent = linkElement.parentElement;
-	linkParent.classList.add('current');
-	linkParent.classList.add('current-page');
+	linkParent.classList.add("current");
+	linkParent.classList.add("current-page");
 }
-const currentPagePath = window.location.pathname.split('/');
-const codeBlockSelector = 'div.highlight pre';
+const currentPagePath = window.location.pathname.split("/");
+const codeBlockSelector = "div.highlight pre";
 // Expands the "Available Services" sub-menu in the side-bar when viewing
 // nested doc pages and highlights the corresponding service list item.
 function expandSubMenu() {
-	if (currentPagePath.includes('services')) {
-		document.getElementById('toctree-checkbox-1').checked = true;
+	if (currentPagePath.includes("services")) {
+		document.getElementById("toctree-checkbox-1").checked = true;
 		// Example Nested Path: /reference/services/<service_name>/client/<operation_name>.html
-		const serviceNameIndex = currentPagePath.indexOf('services') + 1;
+		const serviceNameIndex = currentPagePath.indexOf("services") + 1;
 		const serviceName = currentPagePath[serviceNameIndex];
 		makeServiceLinkCurrent(serviceName);
 	}
@@ -96,93 +107,134 @@ function expandSubMenu() {
 // Allows code blocks to be scrollable by keyboard only users.
 function makeCodeBlocksScrollable() {
 	const codeCells = document.querySelectorAll(codeBlockSelector);
-	codeCells.forEach(codeCell => {
+	codeCells.forEach((codeCell) => {
 		codeCell.tabIndex = 0;
 	});
 }
 // Determines which of the two table-of-contents menu labels is visible.
 function determineVisibleTocOpenMenu() {
-  const mediaQuery = window.matchMedia('(max-width: 67em)');
-  return mediaQuery.matches ? 'toc-menu-open-sm' : 'toc-menu-open-md';
+	const mediaQuery = window.matchMedia("(max-width: 67em)");
+	return mediaQuery.matches ? "toc-menu-open-sm" : "toc-menu-open-md";
 }
 
 // A mapping of current to next focus id's. For example, We want a corresponsing
 // menu's close button to be highlighted after a menu is opened with a keyboard.
 const NEXT_FOCUS_ID_MAP = {
-  'nav-menu-open': 'nav-menu-close',
-  'nav-menu-close': 'nav-menu-open',
-  'toc-menu-open-sm': 'toc-menu-close',
-  'toc-menu-open-md': 'toc-menu-close',
-  'toc-menu-close': determineVisibleTocOpenMenu(),
+	"nav-menu-open": "nav-menu-close",
+	"nav-menu-close": "nav-menu-open",
+	"toc-menu-open-sm": "toc-menu-close",
+	"toc-menu-open-md": "toc-menu-close",
+	"toc-menu-close": determineVisibleTocOpenMenu(),
 };
 
 // Toggles the visibility of a sidebar menu to prevent keyboard focus on hidden elements.
 function toggleSidebarMenuVisibility(elementQuery, inputQuery) {
-  const sidebarElement = document.querySelector(elementQuery);
-  const sidebarInput = document.querySelector(inputQuery);
-  sidebarInput.addEventListener('change', () => {
-    setTimeout(
-      () => {
-        sidebarElement.classList.toggle('hide-sidebar', !sidebarInput.checked);
-      },
-      sidebarInput.checked ? 0 : 250,
-    );
-  });
-  window.matchMedia('(max-width: 67em)').addEventListener('change', (event) => {
-    NEXT_FOCUS_ID_MAP['toc-menu-close'] = determineVisibleTocOpenMenu();
-    if (!event.matches) {
-      document
-        .querySelector('.sidebar-drawer')
-        .classList.remove('hide-sidebar');
-    }
-  });
-  window.matchMedia('(max-width: 82em)').addEventListener('change', (event) => {
-    if (!event.matches) {
-      document.querySelector('.toc-drawer').classList.remove('hide-sidebar');
-    }
-  });
+	const sidebarElement = document.querySelector(elementQuery);
+	const sidebarInput = document.querySelector(inputQuery);
+	sidebarInput.addEventListener("change", () => {
+		setTimeout(
+			() => {
+				sidebarElement.classList.toggle(
+					"hide-sidebar",
+					!sidebarInput.checked,
+				);
+			},
+			sidebarInput.checked ? 0 : 250,
+		);
+	});
+	window
+		.matchMedia("(max-width: 67em)")
+		.addEventListener("change", (event) => {
+			NEXT_FOCUS_ID_MAP["toc-menu-close"] = determineVisibleTocOpenMenu();
+			if (!event.matches) {
+				document
+					.querySelector(".sidebar-drawer")
+					.classList.remove("hide-sidebar");
+			}
+		});
+	window
+		.matchMedia("(max-width: 82em)")
+		.addEventListener("change", (event) => {
+			if (!event.matches) {
+				document
+					.querySelector(".toc-drawer")
+					.classList.remove("hide-sidebar");
+			}
+		});
 }
 
 // Activates labels when a user focuses on them and clicks "Enter".
 // Also highlights the next appropriate input label.
 function activateLabelOnEnter() {
-  const labels = document.querySelectorAll('label');
-  labels.forEach((element) => {
-	element.setAttribute('tabindex', '0');
-    element.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter') {
-        const targetId = element.getAttribute('for');
-        document.getElementById(targetId).click();
-        const nextFocusId = NEXT_FOCUS_ID_MAP[element.id];
-        if (nextFocusId) {
-          // Timeout is needed to let the label become visible.
-          setTimeout(() => {
-            document.getElementById(nextFocusId).focus();
-          }, 250);
-        }
-      }
-    });
-  });
+	const labels = document.querySelectorAll("label");
+	labels.forEach((element) => {
+		element.setAttribute("tabindex", "0");
+		element.addEventListener("keypress", (event) => {
+			if (event.key === "Enter") {
+				const targetId = element.getAttribute("for");
+				document.getElementById(targetId).click();
+				const nextFocusId = NEXT_FOCUS_ID_MAP[element.id];
+				if (nextFocusId) {
+					// Timeout is needed to let the label become visible.
+					setTimeout(() => {
+						document.getElementById(nextFocusId).focus();
+					}, 250);
+				}
+			}
+		});
+	});
+}
+
+function loadThemeFromLocalStorage() {
+	document.body.dataset.theme = localStorage.getItem("theme") || "auto";
 }
 
 // Improves accessibility for keyboard-only users.
 function setupKeyboardFriendlyNavigation() {
-  activateLabelOnEnter();
-  toggleSidebarMenuVisibility('.toc-drawer', '#__toc');
-  toggleSidebarMenuVisibility('.sidebar-drawer', '#__navigation');
+	activateLabelOnEnter();
+	toggleSidebarMenuVisibility(".toc-drawer", "#__toc");
+	toggleSidebarMenuVisibility(".sidebar-drawer", "#__navigation");
+}
+
+function loadShortbread() {
+	if (typeof AWSCShortbread !== "undefined") {
+		const shortbread = AWSCShortbread({
+			// If you're testing in your dev environment, use ".cloudfront.net" for domain, else ".amazonaws.com"
+			domain: ".amazonaws.com",
+		});
+
+		// Check for cookie consent
+		shortbread.checkForCookieConsent();
+
+		const cookiePreferencesLink =
+			document.getElementById("cookie-button-link");
+		if (cookiePreferencesLink) {
+			cookiePreferencesLink.addEventListener("click", function (event) {
+				event.preventDefault();
+				shortbread.customizeCookies();
+			});
+		}
+
+		console.log("AWSCShortbread successfully loaded...!!!");
+	} else {
+		console.error("AWSCShortbread failed to load!!!");
+	}
 }
 // Functions to run after the DOM loads.
 function runAfterDOMLoads() {
 	expandSubMenu();
 	makeCodeBlocksScrollable();
 	setupKeyboardFriendlyNavigation();
+	loadThemeFromLocalStorage();
+	loadShortbread();
 }
+
 // Run a function after the DOM loads.
 function ready(fn) {
-	if (document.readyState !== 'loading') {
+	if (document.readyState !== "loading") {
 		fn();
 	} else {
-		document.addEventListener('DOMContentLoaded', fn);
+		document.addEventListener("DOMContentLoaded", fn);
 	}
 }
 ready(runAfterDOMLoads);

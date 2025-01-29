@@ -1708,7 +1708,7 @@
         },
         "agentAliasStatus":{
           "shape":"AgentAliasStatus",
-          "documentation":"<p>The status of the alias of the agent and whether it is ready for use. The following statuses are possible:</p> <ul> <li> <p>CREATING – The agent alias is being created.</p> </li> <li> <p>PREPARED – The agent alias is finished being created or updated and is ready to be invoked.</p> </li> <li> <p>FAILED – The agent alias API operation failed.</p> </li> <li> <p>UPDATING – The agent alias is being updated.</p> </li> <li> <p>DELETING – The agent alias is being deleted.</p> </li> </ul>"
+          "documentation":"<p>The status of the alias of the agent and whether it is ready for use. The following statuses are possible:</p> <ul> <li> <p>CREATING – The agent alias is being created.</p> </li> <li> <p>PREPARED – The agent alias is finished being created or updated and is ready to be invoked.</p> </li> <li> <p>FAILED – The agent alias API operation failed.</p> </li> <li> <p>UPDATING – The agent alias is being updated.</p> </li> <li> <p>DELETING – The agent alias is being deleted.</p> </li> <li> <p>DISSOCIATED - The agent alias has no version associated with it.</p> </li> </ul>"
         },
         "agentId":{
           "shape":"Id",
@@ -1804,7 +1804,8 @@
         "PREPARED",
         "FAILED",
         "UPDATING",
-        "DELETING"
+        "DELETING",
+        "DISSOCIATED"
       ]
     },
     "AgentAliasSummaries":{
@@ -2508,6 +2509,21 @@
       "type":"string",
       "pattern":"[a-z]{1,20}/.{1,20}"
     },
+    "CachePointBlock":{
+      "type":"structure",
+      "required":["type"],
+      "members":{
+        "type":{
+          "shape":"CachePointType",
+          "documentation":"<p>Indicates that the CachePointBlock is of the default type</p>"
+        }
+      },
+      "documentation":"<p>Indicates where a cache checkpoint is located. All information before this checkpoint is cached to be accessed on subsequent requests.</p>"
+    },
+    "CachePointType":{
+      "type":"string",
+      "enum":["default"]
+    },
     "ChatPromptTemplateConfiguration":{
       "type":"structure",
       "required":["messages"],
@@ -2678,6 +2694,10 @@
     "ContentBlock":{
       "type":"structure",
       "members":{
+        "cachePoint":{
+          "shape":"CachePointBlock",
+          "documentation":"<p>Creates a cache checkpoint within a message.</p>"
+        },
         "text":{
           "shape":"String",
           "documentation":"<p>The text in the message.</p>"
@@ -4910,7 +4930,7 @@
     "FlowNodes":{
       "type":"list",
       "member":{"shape":"FlowNode"},
-      "max":20,
+      "max":40,
       "min":0
     },
     "FlowStatus":{
@@ -5092,6 +5112,14 @@
           "shape":"UnknownConnectionTargetInputFlowValidationDetails",
           "documentation":"<p>Details about an unknown target input for a connection.</p>"
         },
+        "unknownNodeInput":{
+          "shape":"UnknownNodeInputFlowValidationDetails",
+          "documentation":"<p>Details about an unknown input for a node.</p>"
+        },
+        "unknownNodeOutput":{
+          "shape":"UnknownNodeOutputFlowValidationDetails",
+          "documentation":"<p>Details about an unknown output for a node.</p>"
+        },
         "unreachableNode":{
           "shape":"UnreachableNodeFlowValidationDetails",
           "documentation":"<p>Details about an unreachable node in the flow.</p>"
@@ -5142,7 +5170,9 @@
         "MultipleNodeInputConnections",
         "UnfulfilledNodeInput",
         "UnsatisfiedConnectionConditions",
-        "Unspecified"
+        "Unspecified",
+        "UnknownNodeInput",
+        "UnknownNodeOutput"
       ]
     },
     "FlowValidations":{
@@ -7213,6 +7243,11 @@
       },
       "documentation":"<p>Details about a malformed input expression in a node.</p>"
     },
+    "MaxRecentSessions":{
+      "type":"integer",
+      "box":true,
+      "min":1
+    },
     "MaxResults":{
       "type":"integer",
       "box":true,
@@ -7222,7 +7257,7 @@
     "MaximumLength":{
       "type":"integer",
       "box":true,
-      "max":4096,
+      "max":8192,
       "min":0
     },
     "MemoryConfiguration":{
@@ -7232,6 +7267,10 @@
         "enabledMemoryTypes":{
           "shape":"EnabledMemoryTypes",
           "documentation":"<p>The type of memory that is stored. </p>"
+        },
+        "sessionSummaryConfiguration":{
+          "shape":"SessionSummaryConfiguration",
+          "documentation":"<p>Contains the configuration for SESSION_SUMMARY memory type enabled for the agent. </p>"
         },
         "storageDays":{
           "shape":"StorageDays",
@@ -8122,7 +8161,7 @@
     "PromptInputVariablesList":{
       "type":"list",
       "member":{"shape":"PromptInputVariable"},
-      "max":5,
+      "max":10,
       "min":0,
       "sensitive":true
     },
@@ -8297,7 +8336,8 @@
         "PRE_PROCESSING",
         "ORCHESTRATION",
         "POST_PROCESSING",
-        "KNOWLEDGE_BASE_RESPONSE_GENERATION"
+        "KNOWLEDGE_BASE_RESPONSE_GENERATION",
+        "MEMORY_SUMMARIZATION"
       ]
     },
     "PromptVariant":{
@@ -9099,6 +9139,16 @@
       },
       "exception":true
     },
+    "SessionSummaryConfiguration":{
+      "type":"structure",
+      "members":{
+        "maxRecentSessions":{
+          "shape":"MaxRecentSessions",
+          "documentation":"<p>Maximum number of recent session summaries to include in the agent's prompt context.</p>"
+        }
+      },
+      "documentation":"<p>Configuration for SESSION_SUMMARY memory type enabled for the agent.</p>"
+    },
     "SessionTTL":{
       "type":"integer",
       "box":true,
@@ -9107,7 +9157,10 @@
     },
     "SharePointAuthType":{
       "type":"string",
-      "enum":["OAUTH2_CLIENT_CREDENTIALS"]
+      "enum":[
+        "OAUTH2_CLIENT_CREDENTIALS",
+        "OAUTH2_SHAREPOINT_APP_ONLY_CLIENT_CREDENTIALS"
+      ]
     },
     "SharePointCrawlerConfiguration":{
       "type":"structure",
@@ -9346,7 +9399,7 @@
     "StorageDays":{
       "type":"integer",
       "box":true,
-      "max":30,
+      "max":365,
       "min":0
     },
     "StorageFlowNodeConfiguration":{
@@ -9428,6 +9481,10 @@
     "SystemContentBlock":{
       "type":"structure",
       "members":{
+        "cachePoint":{
+          "shape":"CachePointBlock",
+          "documentation":"<p>Creates a cache checkpoint within a tool designation</p>"
+        },
         "text":{
           "shape":"NonEmptyString",
           "documentation":"<p>The text in the system prompt.</p>"
@@ -9521,6 +9578,10 @@
       "type":"structure",
       "required":["text"],
       "members":{
+        "cachePoint":{
+          "shape":"CachePointBlock",
+          "documentation":"<p>A cache checkpoint within a template configuration.</p>"
+        },
         "inputVariables":{
           "shape":"PromptInputVariablesList",
           "documentation":"<p>An array of the variables in the prompt template.</p>"
@@ -9548,6 +9609,10 @@
     "Tool":{
       "type":"structure",
       "members":{
+        "cachePoint":{
+          "shape":"CachePointBlock",
+          "documentation":"<p>Creates a cache checkpoint within a tool designation</p>"
+        },
         "toolSpec":{
           "shape":"ToolSpecification",
           "documentation":"<p>The specification for the tool.</p>"
@@ -9776,6 +9841,42 @@
         }
       },
       "documentation":"<p>Details about an unknown target input for a connection.</p>"
+    },
+    "UnknownNodeInputFlowValidationDetails":{
+      "type":"structure",
+      "required":[
+        "input",
+        "node"
+      ],
+      "members":{
+        "input":{
+          "shape":"FlowNodeInputName",
+          "documentation":"<p>The name of the node with the unknown input.</p>"
+        },
+        "node":{
+          "shape":"FlowNodeName",
+          "documentation":"<p>The name of the unknown input.</p>"
+        }
+      },
+      "documentation":"<p>Details about an unknown input for a node.</p>"
+    },
+    "UnknownNodeOutputFlowValidationDetails":{
+      "type":"structure",
+      "required":[
+        "node",
+        "output"
+      ],
+      "members":{
+        "node":{
+          "shape":"FlowNodeName",
+          "documentation":"<p>The name of the node with the unknown output.</p>"
+        },
+        "output":{
+          "shape":"FlowNodeOutputName",
+          "documentation":"<p>The name of the unknown output.</p>"
+        }
+      },
+      "documentation":"<p>Details about an unknown output for a node.</p>"
     },
     "UnreachableNodeFlowValidationDetails":{
       "type":"structure",
@@ -10506,6 +10607,12 @@
       },
       "documentation":"<p>The configuration of web URLs that you want to crawl. You should be authorized to crawl the URLs.</p>"
     },
+    "UserAgent":{
+      "type":"string",
+      "max":40,
+      "min":15,
+      "sensitive":true
+    },
     "ValidateFlowDefinitionRequest":{
       "type":"structure",
       "required":["definition"],
@@ -10625,6 +10732,10 @@
         "scope":{
           "shape":"WebScopeType",
           "documentation":"<p>The scope of what is crawled for your URLs.</p> <p>You can choose to crawl only web pages that belong to the same host or primary domain. For example, only web pages that contain the seed URL \"https://docs.aws.amazon.com/bedrock/latest/userguide/\" and no other domains. You can choose to include sub domains in addition to the host or primary domain. For example, web pages that contain \"aws.amazon.com\" can also include sub domain \"docs.aws.amazon.com\".</p>"
+        },
+        "userAgent":{
+          "shape":"UserAgent",
+          "documentation":"<p>A string used for identifying the crawler or a bot when it accesses a web server. By default, this is set to <code>bedrockbot_UUID</code> for your crawler. You can optionally append a custom string to <code>bedrockbot_UUID</code> to allowlist a specific user agent permitted to access your source URLs. </p>"
         }
       },
       "documentation":"<p>The configuration of web URLs that you want to crawl. You should be authorized to crawl the URLs.</p>"
@@ -10632,12 +10743,21 @@
     "WebCrawlerLimits":{
       "type":"structure",
       "members":{
+        "maxPages":{
+          "shape":"WebCrawlerLimitsMaxPagesInteger",
+          "documentation":"<p> The max number of web pages crawled from your source URLs, up to 25,000 pages. If the web pages exceed this limit, the data source sync will fail and no web pages will be ingested. </p>"
+        },
         "rateLimit":{
           "shape":"WebCrawlerLimitsRateLimitInteger",
           "documentation":"<p>The max rate at which pages are crawled, up to 300 per minute per host.</p>"
         }
       },
       "documentation":"<p>The rate limits for the URLs that you want to crawl. You should be authorized to crawl the URLs.</p>"
+    },
+    "WebCrawlerLimitsMaxPagesInteger":{
+      "type":"integer",
+      "box":true,
+      "min":1
     },
     "WebCrawlerLimitsRateLimitInteger":{
       "type":"integer",
