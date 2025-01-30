@@ -1538,7 +1538,9 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_trailing_checksum_set_with_content_length_removes_header(self):
         with self.http_stubber:
-            self.client.put_object(Bucket="foo", Key="bar", Body="baz", ContentLength=123)
+            self.client.put_object(
+                Bucket="foo", Key="bar", Body="baz", ContentLength=123
+            )
         sent_headers = self.get_sent_headers()
         self.assertEqual(sent_headers["Content-Encoding"], b"aws-chunked")
         self.assertEqual(sent_headers["Transfer-Encoding"], b"chunked")
