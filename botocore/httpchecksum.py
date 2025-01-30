@@ -411,8 +411,8 @@ def _apply_request_trailer_checksum(request):
 
         if "Content-Length" in headers:
             del headers["Content-Length"]
-            logger.warning(
-                "Ignoring the Content-Length header since 'chunked' is specified for Transfer-Encoding."
+            logger.debug(
+                "Removing the Content-Length header since 'chunked' is specified for Transfer-Encoding."
             )
 
     if isinstance(body, (bytes, bytearray)):
