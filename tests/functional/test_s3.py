@@ -1536,6 +1536,24 @@ class TestS3SigV4(BaseS3OperationTest):
         body = self.http_stubber.requests[0].body.read()
         self.assertIn(b"x-amz-checksum-crc32:eCQEmA==", body)
 
+    def test_trailing_checksum_set_with_content_length_removes_header(self):
+        with self.http_stubber:
+            self.client.put_object(Bucket="foo", Key="bar", Body="baz", ContentLength=123)
+        sent_headers = self.get_sent_headers()
+        self.assertEqual(sent_headers["Content-Encoding"], b"aws-chunked")
+        self.assertEqual(sent_headers["Transfer-Encoding"], b"chunked")
+        self.assertEqual(
+            sent_headers["X-Amz-Trailer"], b"x-amz-checksum-crc32"
+        )
+        self.assertEqual(sent_headers["X-Amz-Decoded-Content-Length"], b"3")
+        self.assertEqual(
+            sent_headers["x-amz-content-sha256"],
+            b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
+        )
+        body = self.http_stubber.requests[0].body.read()
+        self.assertIn(b"x-amz-checksum-crc32:eCQEmA==", body)
+        self.assertNotIn("Content-Length", sent_headers)
+
     def test_trailing_checksum_set_empty_body(self):
         with self.http_stubber:
             self.client.put_object(Bucket="foo", Key="bar", Body="")
