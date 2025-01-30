@@ -340,7 +340,6 @@ class ClientArgsCreator:
     def _compute_inject_host_prefix(self, client_config, config_kwargs):
         if config_kwargs.get("inject_host_prefix", None) is not None:
             return
-
         if (
             client_config is not None
             and client_config.inject_host_prefix is not None

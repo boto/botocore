@@ -183,7 +183,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     'disable_host_prefix_injection': (
         'disable_host_prefix_injection',
         'AWS_DISABLE_HOST_PREFIX_INJECTION',
-        None,
+        False,
         utils.ensure_boolean,
     ),
 }
