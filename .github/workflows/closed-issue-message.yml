@@ -15,7 +15,7 @@ jobs:
         - uses: actions/setup-node@v3
           with:
             node-version: '16'
-        - uses: aws-actions/closed-issue-message@37548691e7cc75ba58f85c9f873f9eee43590449
+        - uses: aws-actions/closed-issue-message@0b50d3fb9d583aabd14e88ec0639b4f6e67d882f
           with:
             # These inputs are both required
             repo-token: "${{ secrets.GITHUB_TOKEN }}"
