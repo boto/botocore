@@ -293,6 +293,8 @@ class ClientArgsCreator:
         self._compute_request_compression_config(config_kwargs)
         self._compute_sigv4a_signing_region_set_config(config_kwargs)
         self._compute_checksum_config(config_kwargs)
+        self._compute_inject_host_prefix(client_config, config_kwargs)
+
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -301,7 +303,6 @@ class ClientArgsCreator:
             if s3_config is None:
                 s3_config = {}
             s3_config['use_dualstack_endpoint'] = True
-
         return {
             'service_name': service_name,
             'parameter_validation': parameter_validation,
@@ -335,6 +336,28 @@ class ClientArgsCreator:
         return self._config_store.get_config_variable(
             'ignore_configured_endpoint_urls'
         )
+
+    def _compute_inject_host_prefix(self, client_config, config_kwargs):
+        if config_kwargs.get("inject_host_prefix", None) is not None:
+            return
+
+        if (
+            client_config is not None
+            and client_config.inject_host_prefix is not None
+        ):
+            config_kwargs['inject_host_prefix'] = (
+                client_config.inject_host_prefix
+            )
+        else:
+            configured_disable_host_prefix_injection = (
+                self._config_store.get_config_variable(
+                    'disable_host_prefix_injection'
+                )
+            )
+            if configured_disable_host_prefix_injection is not None:
+                config_kwargs[
+                    'inject_host_prefix'
+                ] = not configured_disable_host_prefix_injection
 
     def compute_s3_config(self, client_config):
         s3_configuration = self._config_store.get_config_variable('s3')
