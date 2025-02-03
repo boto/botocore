@@ -204,7 +204,7 @@ class ResponseParser:
     EVENT_STREAM_PARSER_CLS = None
     # This is a list of known values for the "location" key in the
     # serialization dict. The location key tells us where in the response
-    # to parse the value.
+    # to parse the value. Locations not in this list will be ignored.
     KNOWN_LOCATIONS = ('statusCode', 'header', 'headers')
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
@@ -590,7 +590,7 @@ class QueryParser(BaseXMLResponseParser):
         return self._parse_body_as_xml(response, shape, inject_metadata=True)
 
     def _parse_body_as_xml(self, response, shape, inject_metadata=True):
-        xml_contents = response['body'] or b'<xml/>'
+        xml_contents = response['body']
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = {}
         if shape is not None:
@@ -723,7 +723,7 @@ class BaseJSONParser(ResponseParser):
             if ':' in code:
                 code = code.split(':', 1)[0]
             if '#' in code:
-                code = code.split('#', 1)[1]
+                code = code.rsplit('#', 1)[1]
             if 'x-amzn-query-error' in headers:
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
@@ -1044,7 +1044,7 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
             if ':' in code:
                 code = code.split(':', 1)[0]
             if '#' in code:
-                code = code.split('#', 1)[1]
+                code = code.rsplit('#', 1)[1]
             error['Error']['Code'] = code
 
     def _handle_boolean(self, shape, value):

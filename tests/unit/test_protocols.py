@@ -47,7 +47,7 @@ To run a single test suite you can set the BOTOCORE_TEST_ID env var:
 To run a single test case in a suite (useful when debugging a single test), you
 can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
-    BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
+    BOTOCORE_TEST_ID=5:1 pytest tests/unit/test_protocols.py
 
 """
 
@@ -99,9 +99,6 @@ PROTOCOL_PARSERS = {
 }
 PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
 IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
-PROTOCOL_TEST_IGNORE_LIST_PATH = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
-with open(PROTOCOL_TEST_IGNORE_LIST_PATH) as f:
-    PROTOCOL_TEST_IGNORE_LIST = json.load(f)
 
 
 class TestType(Enum):
@@ -110,6 +107,12 @@ class TestType(Enum):
 
     INPUT = "input"
     OUTPUT = "output"
+
+
+def get_protocol_test_ignore_list():
+    ignore_list_path = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
+    with open(ignore_list_path) as f:
+        return json.load(f)
 
 
 def _compliance_tests(test_type=None):
@@ -211,7 +214,9 @@ def test_output_compliance(json_description, case, basename):
             body_bytes = case['response']['body'].encode('utf-8')
             case['response']['body'] = body_bytes
         else:
-            case['response']['body'] = b''
+            case['response']['body'] = (
+                b'' if protocol != "query" else b'<xml/>'
+            )
         # We need the headers to be case insensitive
         # If a test case doesn't define response headers, set it to an empty `HeadersDict`.
         case['response']['headers'] = HeadersDict(
@@ -534,20 +539,18 @@ def _should_ignore_test(protocol, test_type, suite, case):
     :return: True if the protocol test should be ignored, False otherwise.
     :rtype: bool
     """
-    ignore_list = PROTOCOL_TEST_IGNORE_LIST.get('general', {}).get(
-        test_type, {}
-    )
-    ignore_suites = ignore_list.get('suites', [])
-    ignore_cases = ignore_list.get('cases', [])
-
-    if suite in ignore_suites or case in ignore_cases:
+    # Get test suites and cases to ignore for all protocols.
+    ignore_list = get_protocol_test_ignore_list()
+    general_ignore_list = ignore_list.get('general', {}).get(test_type, {})
+    general_suites = general_ignore_list.get('suites', [])
+    general_cases = general_ignore_list.get('cases', [])
+    if suite in general_suites or case in general_cases:
         return True
 
+    # Get test suites and cases to ignore for a specific protocol.
     protocol_ignore_list = (
-        PROTOCOL_TEST_IGNORE_LIST.get('protocols', {})
-        .get(protocol, {})
-        .get(test_type, {})
+        ignore_list.get('protocols', {}).get(protocol, {}).get(test_type, {})
     )
-    protocol_ignore_suites = protocol_ignore_list.get('suites', [])
-    protocol_ignore_cases = protocol_ignore_list.get('cases', [])
-    return suite in protocol_ignore_suites or case in protocol_ignore_cases
+    protocol_suites = protocol_ignore_list.get('suites', [])
+    protocol_cases = protocol_ignore_list.get('cases', [])
+    return suite in protocol_suites or case in protocol_cases
