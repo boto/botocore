@@ -201,11 +201,12 @@ ERROR_EVENT_MESSAGE = (
 
 # Validate payloads larger than previous 16MB limit
 # work as intended.
+LARGE_PAYLOAD = b"0" * (16 * 1024**2 + 1)
 EXTENDED_PAYLOAD_LENGTH = (
     b"\x01\x00\x00\x11"  # total length
     + b"\x00\x00\x00\x00"  # headers length
     + b"\xf4\x08\x61\xc5"  # prelude crc
-    + b"0" * (16 * 1024**2 + 1)  # payload
+    + LARGE_PAYLOAD  # payload
     + b"\x2a\xb4\xc5\xa5",  # message crc
     EventStreamMessage(
         prelude=MessagePrelude(
@@ -214,7 +215,7 @@ EXTENDED_PAYLOAD_LENGTH = (
             crc=0xF40861C5,
         ),
         headers={},
-        payload=b"0" * (16 * 1024**2 + 1),
+        payload=LARGE_PAYLOAD,
         crc=0x2AB4C5A5,
     ),
 )
