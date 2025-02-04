@@ -819,7 +819,8 @@ class ClientArgsCreator:
         )
 
     def _compute_protocol(self, service_model):
-        # If we don't have a protocols trait, fall back to the legacy protocol trait
+        # If a service does not have a `protocols trait`, fall back to the legacy
+        # `protocol` trait
         if 'protocols' not in service_model.metadata:
             return service_model.metadata['protocol']
         for protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS:
