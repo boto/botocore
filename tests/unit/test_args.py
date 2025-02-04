@@ -699,6 +699,8 @@ class TestCreateClientArgs(unittest.TestCase):
             self.call_get_client_args()
 
     def test_protocol_resolution_without_protocols_trait(self):
+        del self.service_model.protocols
+        del self.service_model.metadata['protocols']
         client_args = self.call_compute_client_args()
         self.assertEqual(client_args['protocol'], 'query')
 

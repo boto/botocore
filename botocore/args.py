@@ -822,7 +822,6 @@ class ClientArgsCreator:
         # If we don't have a protocols trait, fall back to the legacy protocol trait
         if 'protocols' not in service_model.metadata:
             return service_model.metadata['protocol']
-
         for protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS:
             if protocol in service_model.protocols:
                 return protocol
