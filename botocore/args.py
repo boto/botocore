@@ -70,14 +70,12 @@ VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG = (
     "when_required",
 )
 
-PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = list(
-    (
-        'json',
-        'rest-json',
-        'rest-xml',
-        'query',
-        'ec2',
-    )
+PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = (
+    'json',
+    'rest-json',
+    'rest-xml',
+    'query',
+    'ec2',
 )
 
 

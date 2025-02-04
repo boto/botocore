@@ -14,12 +14,15 @@
 import socket
 
 from botocore import args, exceptions
+from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
 from botocore.exceptions import NoSupportedProtocolError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
+from botocore.parsers import PROTOCOL_PARSERS
+from botocore.serialize import SERIALIZERS
 from botocore.useragent import UserAgentString
 from tests import get_botocore_default_config_mapping, mock, unittest
 
@@ -940,3 +943,15 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             legacy_endpoint_url='https://my.legacy.endpoint.com',
         )
         self.assertEqual(bins['SDK::Endpoint'], None)
+
+
+class TestProtocolPriorityList:
+    def test_all_parsers_accounted_for(self):
+        assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
+            PROTOCOL_PARSERS.keys()
+        )
+
+    def test_all_serializers_accounted_for(self):
+        assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
+            SERIALIZERS.keys()
+        )
