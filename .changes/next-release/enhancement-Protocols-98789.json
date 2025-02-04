@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Protocols",
+  "description": "This version of botocore adds support for using a priority ordered list of protocols to determine which protocol to use for a service"
+}

@@ -17,6 +17,7 @@ from botocore import args, exceptions
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
+from botocore.exceptions import NoSupportedProtocolError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.useragent import UserAgentString
@@ -63,9 +64,11 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model = mock.Mock(ServiceModel)
         service_model.service_name = service_name
         service_model.endpoint_prefix = service_name
+        service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
             'protocol': 'query',
+            'protocols': ['query'],
         }
         service_model.operation_names = []
         return service_model
@@ -105,6 +108,19 @@ class TestCreateClientArgs(unittest.TestCase):
         }
         call_kwargs.update(**override_kwargs)
         return self.args_create.get_client_args(**call_kwargs)
+
+    def call_compute_client_args(self, **override_kwargs):
+        call_kwargs = {
+            'service_model': self.service_model,
+            'client_config': None,
+            'endpoint_bridge': self.bridge,
+            'region_name': self.region,
+            'is_secure': True,
+            'endpoint_url': self.endpoint_url,
+            'scoped_config': {},
+        }
+        call_kwargs.update(**override_kwargs)
+        return self.args_create.compute_client_args(**call_kwargs)
 
     def assert_create_endpoint_call(self, mock_endpoint, **override_kwargs):
         call_kwargs = {
@@ -678,6 +694,23 @@ class TestCreateClientArgs(unittest.TestCase):
         )
         with self.assertRaises(exceptions.InvalidChecksumConfigError):
             self.call_get_client_args()
+
+    def test_protocol_resolution_without_protocols_trait(self):
+        client_args = self.call_compute_client_args()
+        self.assertEqual(client_args['protocol'], 'query')
+
+    def test_protocol_resolution_picks_highest_supported(self):
+        self.service_model.protocol = 'query'
+        self.service_model.protocols = ['query', 'json']
+        client_args = self.call_compute_client_args()
+        self.assertEqual(client_args['protocol'], 'json')
+
+    def test_protocol_raises_error_for_unsupported_protocol(self):
+        self.service_model.protocols = ['wrongprotocol']
+        with self.assertRaisesRegex(
+            NoSupportedProtocolError, self.service_model.service_name
+        ):
+            self.call_compute_client_args()
 
 
 class TestEndpointResolverBuiltins(unittest.TestCase):

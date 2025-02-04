@@ -70,6 +70,16 @@ VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG = (
     "when_required",
 )
 
+PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = list(
+    (
+        'json',
+        'rest-json',
+        'rest-xml',
+        'query',
+        'ec2',
+    )
+)
+
 
 class ClientArgsCreator:
     def __init__(
@@ -210,7 +220,7 @@ class ClientArgsCreator:
         scoped_config,
     ):
         service_name = service_model.endpoint_prefix
-        protocol = service_model.metadata['protocol']
+        protocol = self._compute_protocol(service_model)
         parameter_validation = True
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
@@ -808,6 +818,20 @@ class ClientArgsCreator:
             config_kwargs,
             config_key="response_checksum_validation",
             valid_options=VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG,
+        )
+
+    def _compute_protocol(self, service_model):
+        # If we don't have a protocols trait, fall back to the legacy protocol trait
+        if 'protocols' not in service_model.metadata:
+            return service_model.metadata['protocol']
+
+        for protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS:
+            if protocol in service_model.protocols:
+                return protocol
+        raise botocore.exceptions.NoSupportedProtocolError(
+            botocore_supported_protocols=PRIORITY_ORDERED_SUPPORTED_PROTOCOLS,
+            service_supported_protocols=service_model.protocols,
+            service=service_model.service_name,
         )
 
     def _handle_checksum_config(
