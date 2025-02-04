@@ -25,7 +25,7 @@ import logging
 from binascii import crc32
 from hashlib import sha1, sha256
 
-from botocore.compat import HAS_CRT, urlparse
+from botocore.compat import HAS_CRT, has_minimum_crt_version, urlparse
 from botocore.exceptions import (
     AwsChunkedWrapperError,
     FlexibleChecksumError,
@@ -528,8 +528,12 @@ if HAS_CRT:
     _CRT_CHECKSUM_CLS = {
         "crc32": CrtCrc32Checksum,
         "crc32c": CrtCrc32cChecksum,
-        "crc64nvme": CrtCrc64NvmeChecksum,
     }
+
+    if has_minimum_crt_version((0, 23, 4)):
+        # CRC64NVME support wasn't officially added until 0.23.4
+        _CRT_CHECKSUM_CLS["crc64nvme"] = CrtCrc64NvmeChecksum
+
     _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
     # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
     assert all(
