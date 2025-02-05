@@ -13,7 +13,7 @@
 # language governing permissions and limitations under the License.
 import socket
 
-from botocore import args, exceptions
+from botocore import UNSIGNED, args, exceptions
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
@@ -649,6 +649,11 @@ class TestCreateClientArgs(unittest.TestCase):
         )
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()
+
+    def test_account_id_endpoint_mode_disabled_on_unsigned_request(self):
+        self._set_endpoint_bridge_resolve(signature_version=UNSIGNED)
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'disabled')
 
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
