@@ -218,7 +218,7 @@ class ClientArgsCreator:
         scoped_config,
     ):
         service_name = service_model.endpoint_prefix
-        protocol = self._compute_protocol(service_model)
+        protocol = self._resolve_protocol(service_model)
         parameter_validation = True
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
@@ -818,7 +818,7 @@ class ClientArgsCreator:
             valid_options=VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG,
         )
 
-    def _compute_protocol(self, service_model):
+    def _resolve_protocol(self, service_model):
         # If a service does not have a `protocols trait`, fall back to the legacy
         # `protocol` trait
         if 'protocols' not in service_model.metadata:
