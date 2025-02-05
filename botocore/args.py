@@ -819,7 +819,7 @@ class ClientArgsCreator:
         )
 
     def _resolve_protocol(self, service_model):
-        # If a service does not have a `protocols trait`, fall back to the legacy
+        # If a service does not have a `protocols` trait, fall back to the legacy
         # `protocol` trait
         if 'protocols' not in service_model.metadata:
             return service_model.metadata['protocol']
