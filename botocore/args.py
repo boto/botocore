@@ -880,19 +880,28 @@ class ClientArgsCreator:
         config_kwargs[config_key] = value
 
     def _compute_account_id_endpoint_mode_config(self, config_kwargs):
-        account_id_endpoint_mode = config_kwargs.get(
-            'account_id_endpoint_mode'
-        )
+        config_key = 'account_id_endpoint_mode'
+        account_id_endpoint_mode = config_kwargs.get(config_key)
+
         if account_id_endpoint_mode is None:
             account_id_endpoint_mode = self._config_store.get_config_variable(
-                'account_id_endpoint_mode'
+                config_key
             )
+
+        if isinstance(account_id_endpoint_mode, str):
+            account_id_endpoint_mode = account_id_endpoint_mode.lower()
+
         if (
             account_id_endpoint_mode
             not in VALID_ACCOUNT_ID_ENDPOINT_MODE_CONFIG
         ):
             raise botocore.exceptions.InvalidConfigError(
-                error_msg=f"The configured value '{account_id_endpoint_mode}' for 'account_id_endpoint_mode' is "
+                error_msg=f"The configured value '{account_id_endpoint_mode}' for '{config_key}' is "
                 f"invalid. Valid values are: {VALID_ACCOUNT_ID_ENDPOINT_MODE_CONFIG}."
             )
-        config_kwargs['account_id_endpoint_mode'] = account_id_endpoint_mode
+
+        signature_version = config_kwargs.get('signature_version')
+        if signature_version is botocore.UNSIGNED:
+            account_id_endpoint_mode = 'disabled'
+
+        config_kwargs[config_key] = account_id_endpoint_mode
