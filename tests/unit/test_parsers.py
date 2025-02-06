@@ -1047,7 +1047,7 @@ class TestEventStreamParsers(unittest.TestCase):
     def test_parses_event_json(self):
         self.parser = parsers.EventStreamJSONParser()
         headers = {':event-type': 'EventD'}
-        body = b'{' b'  "StringField": "abcde",' b'  "IntField": 1234' b'}'
+        body = b'{  "StringField": "abcde",  "IntField": 1234}'
         parsed = self.parse_event(headers, body)
         expected = {'EventD': {'StringField': 'abcde', 'IntField': 1234}}
         self.assertEqual(parsed, expected)
@@ -1503,8 +1503,7 @@ class TestParseErrorResponses(unittest.TestCase):
 
     def test_can_parse_rest_json_modeled_fields(self):
         body = (
-            b'{"ModeledField":"Some modeled field",'
-            b'"Message":"Some message"}'
+            b'{"ModeledField":"Some modeled field","Message":"Some message"}'
         )
         parser = parsers.RestJSONParser()
         response_dict = {

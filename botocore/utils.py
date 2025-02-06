@@ -681,7 +681,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
                     f"Attempting credential expiration extension due to a "
                     f"credential service availability issue. A refresh of "
                     f"these credentials will be attempted again within "
-                    f"the next {refresh_interval_with_jitter/60:.0f} minutes."
+                    f"the next {refresh_interval_with_jitter / 60:.0f} minutes."
                 )
         except ValueError:
             logger.debug(
@@ -3532,8 +3532,7 @@ class JSONFileCache:
             file_content = self._dumps(value)
         except (TypeError, ValueError):
             raise ValueError(
-                f"Value cannot be cached, must be "
-                f"JSON serializable: {value}"
+                f"Value cannot be cached, must be JSON serializable: {value}"
             )
         if not os.path.isdir(self._working_dir):
             os.makedirs(self._working_dir)

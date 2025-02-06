@@ -162,7 +162,7 @@ def main():
         return 0
     if len(args) != 1:
         sys.stderr.write(
-            "Must provide the filename of the JSON model " "as an argument.\n"
+            "Must provide the filename of the JSON model as an argument.\n"
         )
         return 1
     source_filename = args[0]

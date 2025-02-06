@@ -818,7 +818,7 @@ class TestSigV4Presign(BasePresignTest):
             {
                 'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
                 'X-Amz-Credential': (
-                    'access_key/20140101/myregion/' 'myservice/aws4_request'
+                    'access_key/20140101/myregion/myservice/aws4_request'
                 ),
                 'X-Amz-Date': '20140101T000000Z',
                 'X-Amz-Expires': '60',
@@ -911,7 +911,7 @@ class TestSigV4Presign(BasePresignTest):
             {
                 'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
                 'X-Amz-Credential': (
-                    'access_key/20140101/myregion/' 'myservice/aws4_request'
+                    'access_key/20140101/myregion/myservice/aws4_request'
                 ),
                 'X-Amz-Date': '20140101T000000Z',
                 'X-Amz-Expires': '60',

@@ -811,7 +811,7 @@ class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
         self.assert_session_credentials(expected_params, profile='A')
 
     def test_assume_role_env_vars(self):
-        config = '[profile B]\n' 'region = us-west-2\n'
+        config = '[profile B]\nregion = us-west-2\n'
         self.write_config(config)
         self.environ['AWS_ROLE_ARN'] = 'arn:aws:iam::123456789:role/RoleB'
         self.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = self.token_file
@@ -862,7 +862,7 @@ class TestProcessProvider(unittest.TestCase):
         self.environ_patch.stop()
 
     def test_credential_process(self):
-        config = '[profile processcreds]\n' 'credential_process = %s\n'
+        config = '[profile processcreds]\ncredential_process = %s\n'
         config = config % self.credential_process
         with temporary_file('w') as f:
             f.write(config)
@@ -875,8 +875,7 @@ class TestProcessProvider(unittest.TestCase):
 
     def test_credential_process_returns_error(self):
         config = (
-            '[profile processcreds]\n'
-            'credential_process = %s --raise-error\n'
+            '[profile processcreds]\ncredential_process = %s --raise-error\n'
         )
         config = config % self.credential_process
         with temporary_file('w') as f:

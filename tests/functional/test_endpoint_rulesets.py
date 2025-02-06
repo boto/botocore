@@ -266,9 +266,9 @@ def test_end_to_end_test_cases_yielding_endpoints(
             pass
         assert len(http_stubber.requests) > 0
         actual_url = http_stubber.requests[0].url
-        assert actual_url.startswith(
-            expected_endpoint['url']
-        ), f"{actual_url} does not start with {expected_endpoint['url']}"
+        assert actual_url.startswith(expected_endpoint['url']), (
+            f"{actual_url} does not start with {expected_endpoint['url']}"
+        )
 
 
 @pytest.mark.parametrize(
