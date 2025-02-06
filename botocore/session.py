@@ -915,10 +915,7 @@ class Session:
 
         :type aws_account_id: string
         :param aws_account_id: The account id to use when creating
-            the client.  This is entirely optional, and if not provided,
-            the credentials configured for the session will automatically
-            be used.  You only need to provide this argument if you want
-            to override the credentials used for this specific client.
+            the client.  Same semantics as aws_access_key_id above.
 
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
@@ -968,6 +965,13 @@ class Session:
                 ),
             )
         else:
+            if ignored_credentials := self._get_ignored_credentials(
+                aws_session_token, aws_account_id
+            ):
+                logger.debug(
+                    f"Ignoring the following credential-related values which were set without "
+                    f"an access key id and secret key on the client: {ignored_credentials}"
+                )
             credentials = self.get_credentials()
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
@@ -1139,6 +1143,14 @@ class Session:
         except UnknownServiceError:
             pass
         return results
+
+    def _get_ignored_credentials(self, aws_session_token, aws_account_id):
+        credential_inputs = []
+        if aws_session_token:
+            credential_inputs.append('aws_session_token')
+        if aws_account_id:
+            credential_inputs.append('aws_account_id')
+        return ', '.join(credential_inputs) if credential_inputs else None
 
 
 class ComponentLocator:
