@@ -825,7 +825,7 @@ class InvalidChecksumConfigError(BotoCoreError):
     )
 
 
-class NoSupportedProtocolError(BotoCoreError):
+class UnsupportedServiceProtocolsError(BotoCoreError):
     """Error when a service does not use any protocol supported by botocore."""
 
     fmt = (

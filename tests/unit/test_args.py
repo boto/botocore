@@ -18,7 +18,7 @@ from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
-from botocore.exceptions import NoSupportedProtocolError
+from botocore.exceptions import UnsupportedServiceProtocolsError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.parsers import PROTOCOL_PARSERS
@@ -67,10 +67,10 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model = mock.Mock(ServiceModel)
         service_model.service_name = service_name
         service_model.endpoint_prefix = service_name
+        service_model.protocol = 'query'
         service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
-            'protocol': 'query',
             'protocols': ['query'],
         }
         service_model.operation_names = []
@@ -713,7 +713,7 @@ class TestCreateClientArgs(unittest.TestCase):
     def test_protocol_raises_error_for_unsupported_protocol(self):
         self.service_model.protocols = ['wrongprotocol']
         with self.assertRaisesRegex(
-            NoSupportedProtocolError, self.service_model.service_name
+            UnsupportedServiceProtocolsError, self.service_model.service_name
         ):
             self.call_compute_client_args()
 
