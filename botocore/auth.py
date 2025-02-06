@@ -26,6 +26,7 @@ from operator import itemgetter
 
 from botocore.compat import (
     HAS_CRT,
+    MD5_AVAILABLE,  # noqa: F401 -- keep imported for backwards compatibility
     HTTPHeaders,
     encodebytes,
     ensure_unicode,
@@ -46,10 +47,6 @@ from botocore.utils import (
     normalize_url_path,
     percent_encode_sequence,
 )
-
-# Imports for backwards compatibility
-from botocore.compat import MD5_AVAILABLE  # noqa
-
 
 logger = logging.getLogger(__name__)
 
