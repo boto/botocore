@@ -88,7 +88,7 @@ def _host_from_url(url):
     }
     if url_parts.port is not None:
         if url_parts.port != default_ports.get(url_parts.scheme):
-            host = '%s:%d' % (host, url_parts.port)
+            host = f'{host}:{url_parts.port}'
     return host
 
 
