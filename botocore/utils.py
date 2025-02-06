@@ -976,13 +976,16 @@ def parse_timestamp(value):
 
     """
     if isinstance(value, (int, float)):
-        # Possibly an epoch time.
-        return _epoch_seconds_to_datetime(value)
+        try:
+            # Possibly an epoch time.
+            return _epoch_seconds_to_datetime(value)
+        except OverflowError:
+            pass
 
     # Possibly something we can cast to an epoch time and convert.
     try:
         return _epoch_seconds_to_datetime(float(value))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         pass
 
     try:
