@@ -239,10 +239,12 @@ class Config:
     :type account_id_endpoint_mode: str
     :param account_id_endpoint_mode: The value used to determine the client's
         behavior for account ID based endpoint routing. Valid values are:
+        
         * ``preferred`` - The endpoint should include account ID if available.
         * ``disabled`` - A resolved endpoint does not include account ID.
         * ``required`` - The endpoint must include account ID. If the account ID
           isn't available, an exception will be raised.
+
         If a value is not provided, the client will default to ``preferred``.
 
         Defaults to None.
