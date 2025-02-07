@@ -970,7 +970,7 @@ class Session:
             ):
                 logger.debug(
                     f"Ignoring the following credential-related values which were set without "
-                    f"an access key id and secret key on the client: {ignored_credentials}"
+                    f"an access key id and secret key on the session or client: {ignored_credentials}"
                 )
             credentials = self.get_credentials()
         auth_token = self.get_auth_token()
