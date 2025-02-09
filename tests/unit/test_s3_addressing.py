@@ -14,8 +14,8 @@
 # language governing permissions and limitations under the License.
 
 import os
+from collections import OrderedDict
 
-from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url
 from tests import BaseSessionTest, ClientHTTPStubber
 

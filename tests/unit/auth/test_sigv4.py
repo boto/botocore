@@ -29,12 +29,12 @@ import logging
 import os
 import re
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 
 import botocore.auth
 from botocore.awsrequest import AWSRequest
-from botocore.compat import parse_qsl, urlsplit
 from botocore.credentials import Credentials
 from tests import FreezeTime
 

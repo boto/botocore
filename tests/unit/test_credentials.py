@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import json
 import os
 import shutil
 import subprocess
@@ -25,7 +26,6 @@ from dateutil.tz import tzlocal, tzutc
 import botocore.exceptions
 import botocore.session
 from botocore import credentials
-from botocore.compat import json
 from botocore.configprovider import ConfigValueStore
 from botocore.credentials import (
     AssumeRoleProvider,
