@@ -526,7 +526,9 @@ def _load_cases(full_path):
     # The format is BOTOCORE_TEST_ID=suite_id:test_id or
     # BOTOCORE_TEST_ID=suite_id
     suite_id, test_id = _get_suite_test_id()
-    all_test_data = json.load(open(full_path), object_pairs_hook=OrderedDict)
+    all_test_data = json.load(
+        open(full_path, encoding='utf-8'), object_pairs_hook=OrderedDict
+    )
     basename = os.path.basename(full_path)
     for i, test_data in enumerate(all_test_data):
         if suite_id is not None and i != suite_id:
