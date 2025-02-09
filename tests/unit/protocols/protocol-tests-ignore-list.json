@@ -1,7 +1,20 @@
 {
-  "general": {},
+  "general": {
+     "input": {
+      "suites": [
+        "Test cases for PutWithContentEncoding operation",
+        "Test cases for QueryIdempotencyTokenAutoFill operation",
+        "Test cases for HostWithPathOperation operation"
+      ]
+    }
+  },
   "protocols": {
     "query" : {
+      "input": {
+        "cases": [
+          "QueryFlattenedListArgWithXmlName"
+        ]
+      },
       "output": {
         "cases": [
           "QueryXmlLists",
@@ -10,6 +23,13 @@
       }
     },
     "ec2" : {
+      "input" : {
+        "cases": [
+          "Ec2QueryEndpointTraitWithHostLabel",
+          "Ec2Lists",
+          "Ec2TimestampsInput"
+        ]
+      },
       "output": {
         "cases": [
           "Ec2XmlLists",
@@ -42,6 +62,12 @@
       }
     },
     "rest-json" : {
+      "input" : {
+        "cases": [
+          "MediaTypeHeaderInputBase64",
+          "RestJsonHttpChecksumRequired"
+        ]
+      },
       "output" : {
         "cases": [
           "RestJsonFooErrorUsingXAmznErrorType",
@@ -57,6 +83,17 @@
       }
     },
     "rest-xml": {
+      "input": {
+        "cases": [
+          "BodyWithXmlName",
+          "RestXmlHttpPayloadWithUnion",
+          "HttpPayloadWithXmlName",
+          "HttpPayloadWithXmlNamespace",
+          "HttpPayloadWithXmlNamespaceAndPrefix",
+          "XmlAttributesOnPayload",
+          "NestedXmlMapWithXmlNameSerializes"
+        ]
+      },
       "output": {
         "cases": [
           "InputAndOutputWithTimestampHeaders",
