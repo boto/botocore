@@ -132,7 +132,7 @@ def _compliance_tests(test_type=None):
                         protocol,
                         "output",
                         model['description'],
-                        case['id'],
+                        case.get('id'),
                     ):
                         continue
                     yield model, case, basename
