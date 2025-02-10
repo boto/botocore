@@ -820,8 +820,8 @@ class ClientArgsCreator:
 
     def _resolve_protocol(self, service_model):
         # We need to ensure `protocols` exists in the metadata before attempting to
-        #  access it directly since referencing service_model.protocols directly will
-        #  raise an UndefinedModelAttributeError if protocols is not defined
+        # access it directly since referencing service_model.protocols directly will
+        # raise an UndefinedModelAttributeError if protocols is not defined
         if service_model.metadata.get('protocols'):
             for protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS:
                 if protocol in service_model.protocols:
