@@ -3572,6 +3572,56 @@ class TestProcessProvider(BaseEnvVar):
         self.assertIsNone(creds.token)
         self.assertEqual(creds.method, 'custom-process')
 
+    def test_can_retrieve_account_id(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value(
+            {
+                'Version': 1,
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2999-01-01T00:00:00Z',
+                'AccountId': '123456789012',
+            }
+        )
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.assertEqual(creds.account_id, '123456789012')
+
+    def test_can_retrieve_account_id_via_profile_config(self):
+        self.loaded_config['profiles'] = {
+            'default': {
+                'credential_process': 'my-process',
+                'aws_account_id': '123456789012',
+            }
+        }
+        self._set_process_return_value(
+            {
+                'Version': 1,
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': '2999-01-01T00:00:00Z',
+            }
+        )
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.assertEqual(creds.account_id, '123456789012')
+
 
 class TestProfileProviderBuilder(unittest.TestCase):
     def setUp(self):
