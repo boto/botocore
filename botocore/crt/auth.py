@@ -56,7 +56,7 @@ class CrtSigV4Auth(BaseSigner):
 
         # Use utcnow() because that's what gets mocked by tests, but set
         # timezone because CRT assumes naive datetime is local time.
-        datetime_now = datetime.datetime.utcnow().replace(
+        datetime_now = datetime.datetime.now(datetime.UTC).replace(
             tzinfo=datetime.timezone.utc
         )
 
@@ -253,7 +253,7 @@ class CrtSigV4AsymAuth(BaseSigner):
 
         # Use utcnow() because that's what gets mocked by tests, but set
         # timezone because CRT assumes naive datetime is local time.
-        datetime_now = datetime.datetime.utcnow().replace(
+        datetime_now = datetime.datetime.now(datetime.UTC).replace(
             tzinfo=datetime.timezone.utc
         )
 
