@@ -3267,6 +3267,32 @@ class TestContainerProvider(BaseEnvVar):
         with self.assertRaises(ValueError):
             provider.load()
 
+    def test_can_retrieve_account_id(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId": "access_key",
+            "SecretAccessKey": "secret_key",
+            "Token": "token",
+            "Expiration": timestamp,
+            "AccountId": "account_id",
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with(
+            self.full_url('/latest/credentials?id=foo'), headers=None
+        )
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+        self.assertEqual(creds.account_id, 'account_id')
+
 
 class TestProcessProvider(BaseEnvVar):
     def setUp(self):
