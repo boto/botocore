@@ -13,35 +13,26 @@
 import pytest
 
 from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
+from botocore.loaders import Loader
 from botocore.session import get_session
 
 
-def _all_test_cases():
+def _get_services_models_by_protocols_trait(get_models_with_protocols_trait):
     session = get_session()
-    loader = session.get_component('data_loader')
-
-    services = loader.list_available_services('service-2')
-    services_models_with_protocols = []
-    services_models_without_protocols = []
-
-    for service in services:
+    service_list = Loader().list_available_services('service-2')
+    for service in service_list:
         service_model = session.get_service_model(service)
-        if 'protocols' in service_model.metadata:
-            services_models_with_protocols.append(service_model)
-        else:
-            services_models_without_protocols.append(service_model)
-    return (services_models_with_protocols, services_models_without_protocols)
-
-
-SERVICE_MODELS_WITH_PROTOCOLS, SERVICE_MODELS_WITHOUT_PROTOCOLS = (
-    _all_test_cases()
-)
+        if ('protocols' in service_model.metadata) == get_models_with_protocols_trait:
+            yield service_model
 
 
 @pytest.mark.validates_models
-@pytest.mark.parametrize("service", SERVICE_MODELS_WITH_PROTOCOLS)
+@pytest.mark.parametrize(
+    "service",
+    _get_services_models_by_protocols_trait(True),
+)
 def test_services_with_protocols_trait_have_supported_protocol(service):
-    service_supported_protocols = service.protocols
+    service_supported_protocols = service.metadata.get('protocols', [])
     message = f"No protocols supported for service {service.service_name}"
     assert any(
         protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
@@ -50,7 +41,13 @@ def test_services_with_protocols_trait_have_supported_protocol(service):
 
 
 @pytest.mark.validates_models
-@pytest.mark.parametrize("service", SERVICE_MODELS_WITHOUT_PROTOCOLS)
+@pytest.mark.parametrize(
+    "service",
+    _get_services_models_by_protocols_trait(False),
+)
 def test_services_without_protocols_trait_have_supported_protocol(service):
-    message = f"No protocols supported for service {service.service_name}"
-    assert service.protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS, message
+    message = f"Service protocol not supported for {service.service_name}"
+    assert (
+        service.metadata.get('protocol')
+        in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
+    ), message

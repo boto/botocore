@@ -71,6 +71,7 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
+            'protocol': 'query',
             'protocols': ['query'],
         }
         service_model.operation_names = []
@@ -951,9 +952,15 @@ class TestProtocolPriorityList:
     def test_all_parsers_accounted_for(self):
         assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
             PROTOCOL_PARSERS.keys()
+        ), (
+            "The map of protocol names to parsers is out of sync with the priority "
+            "ordered list of protocols supported by botocore"
         )
 
     def test_all_serializers_accounted_for(self):
         assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
             SERIALIZERS.keys()
+        ), (
+            "The map of protocol names to serializers is out of sync with the "
+            "priority ordered list of protocols supported by botocore"
         )
