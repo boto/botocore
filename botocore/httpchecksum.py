@@ -457,11 +457,16 @@ def handle_checksum_body(http_response, response, context, operation_model):
     if not algorithms:
         return
 
+    found_checksum_header = False
+
     for algorithm in algorithms:
         header_name = f"x-amz-checksum-{algorithm}"
         # If the header is not found, check the next algorithm
         if header_name not in headers:
             continue
+
+        # Mark that we found at least one checksum header.
+        found_checksum_header = True
 
         # If a - is in the checksum this is not valid Base64. S3 returns
         # checksums that include a -# suffix to indicate a checksum derived
@@ -484,10 +489,12 @@ def handle_checksum_body(http_response, response, context, operation_model):
         response["context"]["checksum"] = checksum_context
         return
 
-    logger.debug(
-        f'Skipping checksum validation. Response did not contain one of the '
-        f'following algorithms: {algorithms}.'
-    )
+    # Only log if a checksum header was found in the response.
+    if found_checksum_header:
+        logger.debug(
+            f'Skipping checksum validation. Response did not contain one of the '
+            f'following algorithms: {algorithms}.'
+        )
 
 
 def _handle_streaming_response(http_response, response, algorithm):
