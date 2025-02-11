@@ -1034,6 +1034,7 @@ class ProcessProvider(CredentialProvider):
             secret_key=creds_dict['secret_key'],
             token=creds_dict.get('token'),
             method=self.METHOD,
+            account_id=creds_dict.get('account_id'),
         )
 
     def _retrieve_credentials_using(self, credential_process):
@@ -1064,6 +1065,7 @@ class ProcessProvider(CredentialProvider):
                 'secret_key': parsed['SecretAccessKey'],
                 'token': parsed.get('SessionToken'),
                 'expiry_time': parsed.get('Expiration'),
+                'account_id': self._get_account_id(parsed),
             }
         except KeyError as e:
             raise CredentialRetrievalError(
@@ -1073,12 +1075,20 @@ class ProcessProvider(CredentialProvider):
 
     @property
     def _credential_process(self):
+        return self.profile_config.get('credential_process')
+
+    @property
+    def profile_config(self):
         if self._loaded_config is None:
             self._loaded_config = self._load_config()
         profile_config = self._loaded_config.get('profiles', {}).get(
             self._profile_name, {}
         )
-        return profile_config.get('credential_process')
+        return profile_config
+
+    def _get_account_id(self, parsed):
+        account_id = parsed.get('AccountId')
+        return account_id or self.profile_config.get('aws_account_id')
 
 
 class InstanceMetadataProvider(CredentialProvider):
