@@ -17,8 +17,12 @@ import pytest
 import botocore.useragent
 from botocore import __version__ as botocore_version
 from botocore.config import Config
+from botocore.context import get_context
 from botocore.useragent import (
+    UserAgentComponent,
+    UserAgentSizeConfig,
     UserAgentString,
+    register_feature_id,
     sanitize_user_agent_string_component,
 )
 from tests import mock
@@ -193,3 +197,48 @@ def test_from_environment_unknown_platform(monkeypatch):
     monkeypatch.setattr(platform, 'release', lambda: '0.0.1')
     uas = UserAgentString.from_environment()
     assert ' os/other md/FooOS#0.0.1 ' in uas.to_string()
+
+
+def test_user_agent_string_with_registered_features(client_context):
+    uas = UserAgentString.from_environment()
+    uas.set_client_features({'A'})
+    register_feature_id('WAITER')
+
+    uafields = uas.to_string().split(' ')
+    feature_field = [field for field in uafields if field.startswith('m/')][0]
+    feature_list = feature_field[2:].split(',')
+    assert sorted(feature_list) == ['A', 'B']
+
+
+def test_register_feature_id(client_context):
+    register_feature_id('WAITER')
+    ctx = get_context()
+    assert ctx.features == {'B'}
+
+
+def test_register_unknown_feature_id_raises(client_context):
+    with pytest.raises(ValueError) as excinfo:
+        register_feature_id('MY_FEATURE')
+    assert "Unknown feature id" in str(excinfo.value)
+
+
+def test_user_agent_truncated_string():
+    size_config = UserAgentSizeConfig(4, ',')
+    component = UserAgentComponent(
+        'm',
+        'A,BCD',
+        size_config=size_config,
+    )
+    assert component.to_string() == 'm/A'
+
+
+def test_user_agent_empty_truncated_string_raises():
+    size_config = UserAgentSizeConfig(1, ',')
+    component = UserAgentComponent(
+        'm',
+        'A,B,C',
+        size_config=size_config,
+    )
+    with pytest.raises(ValueError) as excinfo:
+        component.to_string()
+    assert "could not be truncated" in str(excinfo.value)
