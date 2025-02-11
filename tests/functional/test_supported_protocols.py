@@ -17,12 +17,12 @@ from botocore.loaders import Loader
 from botocore.session import get_session
 
 
-def _get_services_models_by_protocols_trait(get_models_with_protocols_trait):
+def _get_services_models_by_protocols_trait(has_protocol_trait):
     session = get_session()
     service_list = Loader().list_available_services('service-2')
     for service in service_list:
         service_model = session.get_service_model(service)
-        if ('protocols' in service_model.metadata) == get_models_with_protocols_trait:
+        if ('protocols' in service_model.metadata) == has_protocol_trait:
             yield service_model
 
 
