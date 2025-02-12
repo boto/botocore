@@ -267,6 +267,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
+            'account_id': response.get('Credentials', {}).get('AccountId'),
         }
 
     def some_future_time(self):
@@ -717,10 +718,9 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
             client_creator, self.source_creds, self.role_arn
         )
         expected_response = self.get_expected_creds_from_response(response)
-        expected_response['account_id'] = '123456789012'
         response = refresher.fetch_credentials()
-        self.assertIn('account_id', response)
         self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], '123456789012')
 
     def test_account_id_with_invalid_arn(self):
         response = {
@@ -741,8 +741,8 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         )
         expected_response = self.get_expected_creds_from_response(response)
         response = refresher.fetch_credentials()
-        self.assertNotIn('account_id', response)
         self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], None)
 
 
 class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
@@ -776,6 +776,7 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
+            'account_id': response.get('Credentials', {}).get('AccountId'),
         }
 
     def test_no_cache(self):
@@ -870,10 +871,9 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             client_creator, self.load_token, self.role_arn
         )
         expected_response = self.get_expected_creds_from_response(response)
-        expected_response['account_id'] = '123456789012'
         response = refresher.fetch_credentials()
-        self.assertIn('account_id', response)
         self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], '123456789012')
 
     def test_account_id_with_invalid_arn(self):
         response = {
@@ -896,8 +896,8 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
         )
         expected_response = self.get_expected_creds_from_response(response)
         response = refresher.fetch_credentials()
-        self.assertNotIn('account_id', response)
         self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], None)
 
 
 class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
@@ -4010,7 +4010,9 @@ def mock_base_assume_role_credential_fetcher():
     )
 
 
-def test_get_account_id_valid_arn(mock_base_assume_role_credential_fetcher):
+def test_add_account_id_to_response_with_valid_arn(
+    mock_base_assume_role_credential_fetcher,
+):
     response = {
         'Credentials': {},
         'AssumedRoleUser': {
@@ -4018,12 +4020,14 @@ def test_get_account_id_valid_arn(mock_base_assume_role_credential_fetcher):
             'Arn': 'arn:aws:iam::123456789012:role/RoleA',
         },
     }
-    mock_base_assume_role_credential_fetcher._get_account_id(response)
+    mock_base_assume_role_credential_fetcher._add_account_id_to_response(
+        response
+    )
     assert 'AccountId' in response['Credentials']
     assert response['Credentials']['AccountId'] == '123456789012'
 
 
-def test_get_account_id_invalid_arn(
+def test_add_account_id_to_response_with_invalid_arn(
     mock_base_assume_role_credential_fetcher, caplog
 ):
     response = {
@@ -4034,6 +4038,8 @@ def test_get_account_id_invalid_arn(
         },
     }
     with caplog.at_level(logging.DEBUG):
-        mock_base_assume_role_credential_fetcher._get_account_id(response)
+        mock_base_assume_role_credential_fetcher._add_account_id_to_response(
+            response
+        )
     assert 'AccountId' not in response['Credentials']
     assert 'Unable to extract account ID from Arn' in caplog.text

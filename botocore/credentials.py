@@ -735,9 +735,8 @@ class CachedCredentialFetcher:
             'secret_key': creds['SecretAccessKey'],
             'token': creds['SessionToken'],
             'expiry_time': expiration,
+            'account_id': creds.get('AccountId'),
         }
-        if account_id := creds.get('AccountId'):
-            credentials['account_id'] = account_id
 
         return credentials
 
@@ -814,7 +813,7 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
         argument_hash = sha1(args.encode('utf-8')).hexdigest()
         return self._make_file_safe(argument_hash)
 
-    def _get_account_id(self, response):
+    def _add_account_id_to_response(self, response):
         role_arn = response.get('AssumedRoleUser', {}).get('Arn')
         if ArnParser.is_arn(role_arn):
             arn_parser = ArnParser()
@@ -884,7 +883,7 @@ class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
         kwargs = self._assume_role_kwargs()
         client = self._create_client()
         response = client.assume_role(**kwargs)
-        self._get_account_id(response)
+        self._add_account_id_to_response(response)
         return response
 
     def _assume_role_kwargs(self):
@@ -973,7 +972,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
         config = Config(signature_version=UNSIGNED)
         client = self._client_creator('sts', config=config)
         response = client.assume_role_with_web_identity(**kwargs)
-        self._get_account_id(response)
+        self._add_account_id_to_response(response)
         return response
 
     def _assume_role_kwargs(self):
