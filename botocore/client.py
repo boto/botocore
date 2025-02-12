@@ -938,7 +938,7 @@ class BaseClient:
         # to ensure all registered features are included.
         self.meta.events.register_last(
             f"request-created.{service_id}",
-            self._rebuild_and_replace_user_agent,
+            self._user_agent_creator._rebuild_and_replace_user_agent,
         )
 
     @property
@@ -1306,12 +1306,6 @@ class BaseClient:
         removal, in any botocore release.
         """
         return self._request_signer._credentials
-
-    def _rebuild_and_replace_user_agent(
-        self, operation_name, request, **kwargs
-    ):
-        ua_string = self._user_agent_creator.to_string()
-        request.headers.replace_header('User-Agent', ua_string)
 
 
 class ClientMeta:
