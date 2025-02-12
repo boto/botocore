@@ -12,12 +12,13 @@
 # language governing permissions and limitations under the License.
 import datetime
 import itertools
+import json
 
 import pytest
 from dateutil.tz import tzutc
 
 from botocore import model, parsers
-from botocore.compat import MutableMapping, json
+from botocore.compat import MutableMapping
 from tests import RawResponse, unittest
 
 

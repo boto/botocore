@@ -16,7 +16,7 @@ import shutil
 import tempfile
 import threading
 import time
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from contextlib import closing
 from io import BytesIO
 from tarfile import TarFile
@@ -27,7 +27,7 @@ import urllib3
 import botocore.auth
 import botocore.credentials
 import botocore.session
-from botocore.compat import OrderedDict, zip_longest
+from botocore.compat import zip_longest
 from botocore.config import Config
 from botocore.exceptions import ClientError, ConnectionClosedError, WaiterError
 from tests import (

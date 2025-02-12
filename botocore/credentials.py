@@ -1024,7 +1024,7 @@ class ProcessProvider(CredentialProvider):
             raise CredentialRetrievalError(
                 provider=self.METHOD, error_msg=stderr.decode('utf-8')
             )
-        parsed = botocore.compat.json.loads(stdout.decode('utf-8'))
+        parsed = json.loads(stdout.decode('utf-8'))
         version = parsed.get('Version', '<Version key not provided>')
         if version != 1:
             raise CredentialRetrievalError(

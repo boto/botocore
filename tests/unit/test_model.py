@@ -1,7 +1,8 @@
+from collections import OrderedDict
+
 import pytest
 
 from botocore import model
-from botocore.compat import OrderedDict
 from tests import unittest
 
 

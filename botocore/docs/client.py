@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import os
+from collections import OrderedDict
 
 from botocore import xform_name
-from botocore.compat import OrderedDict
 from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.method import (

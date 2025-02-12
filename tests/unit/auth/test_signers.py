@@ -17,11 +17,12 @@ import datetime
 import io
 import json
 import time
+from urllib.parse import parse_qs, urlsplit
 
 import botocore.auth
 import botocore.credentials
 from botocore.awsrequest import AWSRequest
-from botocore.compat import HTTPHeaders, parse_qs, urlsplit
+from botocore.compat import HTTPHeaders
 from tests import mock, unittest
 
 

@@ -13,6 +13,7 @@
 import copy
 import datetime
 import io
+import json
 import operator
 from contextlib import contextmanager
 from sys import getrefcount
@@ -23,7 +24,6 @@ from dateutil.tz import tzoffset, tzutc
 import botocore
 from botocore import xform_name
 from botocore.awsrequest import AWSRequest, HeadersDict
-from botocore.compat import json
 from botocore.config import Config
 from botocore.endpoint_provider import RuleSetEndpoint
 from botocore.exceptions import (

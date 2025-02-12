@@ -17,6 +17,8 @@ import io
 import json
 import logging
 import os
+from collections import OrderedDict
+from urllib.parse import quote
 
 import pytest
 
@@ -24,7 +26,6 @@ import botocore
 import botocore.session
 from botocore import handlers
 from botocore.awsrequest import AWSRequest
-from botocore.compat import OrderedDict, quote
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.docs.bcdoc.restdoc import DocumentStructure
