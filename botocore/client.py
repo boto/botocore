@@ -1311,7 +1311,6 @@ class BaseClient:
         self, operation_name, request, **kwargs
     ):
         ua_string = self._user_agent_creator.to_string()
-        print(ua_string)
         request.headers.replace_header('User-Agent', ua_string)
 
 
