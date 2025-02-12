@@ -33,7 +33,11 @@ from botocore.exceptions import (
 )
 from botocore.model import StructureShape
 from botocore.response import StreamingBody
-from botocore.utils import determine_content_length, has_checksum_header
+from botocore.utils import (
+    conditionally_calculate_md5,
+    determine_content_length,
+    has_checksum_header,
+)
 
 if HAS_CRT:
     from awscrt import checksums as crt_checksums
@@ -354,7 +358,10 @@ def apply_request_checksum(request):
     if not algorithm:
         return
 
-    if algorithm["in"] == "header":
+    if algorithm == "conditional-md5":
+        # Special case to handle the http checksum required trait
+        conditionally_calculate_md5(request)
+    elif algorithm["in"] == "header":
         _apply_request_header_checksum(request)
     elif algorithm["in"] == "trailer":
         _apply_request_trailer_checksum(request)
