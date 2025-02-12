@@ -48,6 +48,7 @@ from botocore.configprovider import (
     SmartDefaultsConfigStoreFactory,
     create_botocore_default_config_mapping,
 )
+from botocore.context import get_context, with_current_context
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore.exceptions import (
     ConfigNotFound,
@@ -829,6 +830,7 @@ class Session:
     def lazy_register_component(self, name, component):
         self._components.lazy_register_component(name, component)
 
+    @with_current_context()
     def create_client(
         self,
         service_name,
@@ -981,6 +983,8 @@ class Session:
             client_name=service_name,
             config_store=config_store,
         )
+
+        user_agent_creator.set_client_features(get_context().features)
 
         client_creator = botocore.client.ClientCreator(
             loader,
