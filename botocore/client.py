@@ -938,7 +938,7 @@ class BaseClient:
         # to ensure all registered features are included.
         self.meta.events.register_last(
             f"request-created.{service_id}",
-            self._user_agent_creator._rebuild_and_replace_user_agent,
+            self._user_agent_creator.rebuild_and_replace_user_agent_handler,
         )
 
     @property
