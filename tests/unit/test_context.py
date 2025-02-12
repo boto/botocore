@@ -16,6 +16,7 @@ import pytest
 from botocore.context import (
     ClientContext,
     get_context,
+    reset_token,
     set_context,
     start_as_current_context,
     with_current_context,
@@ -39,9 +40,10 @@ class TestContext:
         assert ctx == client_context
 
     def test_set_context(self, custom_context):
-        set_context(custom_context)
+        token = set_context(custom_context)
         ctx = get_context()
         assert ctx == custom_context
+        reset_token(token)
 
     def test_start_as_current_context(self):
         with start_as_current_context():

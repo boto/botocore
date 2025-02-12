@@ -58,6 +58,15 @@ def set_context(ctx):
     return token
 
 
+def reset_token(token):
+    """Reset the current ``_context`` context variable.
+
+    :type token: contextvars.Token
+    :param token: Token object to reset the context variable.
+    """
+    _context.reset(token)
+
+
 @contextmanager
 def start_as_current_context(ctx=None):
     """
@@ -86,7 +95,7 @@ def start_as_current_context(ctx=None):
     try:
         yield
     finally:
-        _context.reset(token)
+        reset_token(token)
 
 
 def with_current_context(hook=None):
