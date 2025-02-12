@@ -587,6 +587,12 @@ class UserAgentString:
             components.append(self._client_config.user_agent_extra)
         return ' '.join(components)
 
+    def _rebuild_and_replace_user_agent(
+        self, operation_name, request, **kwargs
+    ):
+        ua_string = self.to_string()
+        request.headers.replace_header('User-Agent', ua_string)
+
 
 def _get_crt_version():
     """
