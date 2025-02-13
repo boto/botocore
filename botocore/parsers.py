@@ -763,9 +763,7 @@ class BaseJSONParser(ResponseParser):
             return {'message': body}
 
     # TODO sort methods, make sure they're all actually on the right clasess too
-    # TODO do we get rid of support for bignum and decimalfraction?
     # TODO audit service responses error messages
-    # TODO what is ord doing here?
     # TODO are there other cases where empty stream can be reached?
 
 
@@ -787,7 +785,7 @@ class BaseCBORParser(ResponseParser):
         if code:
             code = code.rsplit('#', 1)[-1]
             if 'x-amzn-query-error' in headers:
-                #TODO this isn't implemented yet
+                # TODO this isn't implemented yet
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
                 )
@@ -1235,7 +1233,8 @@ class BaseRestParser(ResponseParser):
             node = [e.strip() for e in node.split(',')]
         return super()._handle_list(shape, node)
 
-#TODO go through each method, checking that they're still needed
+
+# TODO go through each method, checking that they're still needed
 # Note- they are all still needed for this class, but not all necessarily in the right
 # places; go through this for all three new classes
 class BaseRpcV2Parser(ResponseParser):
@@ -1272,7 +1271,7 @@ class BaseRpcV2Parser(ResponseParser):
         body_parsed = self._parse_shape(shape, original_parsed)
         final_parsed.update(body_parsed)
 
-    #TODO do we need to add NotImplemented to parse_shape, etc.?
+    # TODO do we need to add NotImplemented to parse_shape, etc.?
     def _initial_body_parse(self, body_contents):
         # This method should do the initial CBOR parsing of the
         # body.  We still need to walk the parsed body in order
