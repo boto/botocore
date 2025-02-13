@@ -591,7 +591,8 @@ class UserAgentString:
         self, operation_name, request, **kwargs
     ):
         ua_string = self.to_string()
-        request.headers.replace_header('User-Agent', ua_string)
+        if request.headers.get('User-Agent'):
+            request.headers.replace_header('User-Agent', ua_string)
 
 
 def _get_crt_version():
