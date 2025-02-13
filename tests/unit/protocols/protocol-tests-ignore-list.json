@@ -64,7 +64,8 @@
           "HttpPayloadTraitsWithNoBlobBody",
           "ComplexError",
           "BodyWithXmlName",
-          "XmlLists"
+          "XmlLists",
+          "IgnoreQueryParamsInResponse"
         ]
       }
     }
