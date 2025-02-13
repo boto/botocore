@@ -13,7 +13,7 @@
 
 import pytest
 
-from botocore.context import ClientContext, reset_token, set_context
+from botocore.context import ClientContext, reset_context, set_context
 
 
 @pytest.fixture
@@ -21,4 +21,4 @@ def client_context():
     ctx = ClientContext()
     token = set_context(ctx)
     yield ctx
-    reset_token(token)
+    reset_context(token)
