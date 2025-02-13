@@ -33,6 +33,8 @@ pip-log.txt
 .idea/
 
 # Virtualenvs
+.venv
+venv
 env
 env2
 env3
