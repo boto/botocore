@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
+import logging
 
 from botocore.compat import OrderedDict
 from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
@@ -20,7 +21,8 @@ from botocore.exceptions import (
     InvalidRetryModeError,
     InvalidS3AddressingStyleError,
 )
-from botocore.utils import DEFAULT_TRUE
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -285,7 +287,7 @@ class Config:
             ('s3', None),
             ('retries', None),
             ('client_cert', None),
-            ('inject_host_prefix', DEFAULT_TRUE),
+            ('inject_host_prefix', None),
             ('endpoint_discovery_enabled', None),
             ('use_dualstack_endpoint', None),
             ('use_fips_endpoint', None),
@@ -310,6 +312,8 @@ class Config:
             args, kwargs
         )
 
+        self._override_user_provided_options(self._user_provided_options)
+
         # Merge the user_provided options onto the default options
         config_vars = copy.copy(self.OPTION_DEFAULTS)
         defaults_mode = self._user_provided_options.get(
@@ -327,6 +331,10 @@ class Config:
         self._validate_s3_configuration(self.s3)
 
         self._validate_retry_configuration(self.retries)
+
+    def _override_user_provided_options(self, user_provided_options):
+        if user_provided_options.get('inject_host_prefix', 'UNSET') == 'UNSET':
+            user_provided_options['inject_host_prefix'] = True
 
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
@@ -358,6 +366,9 @@ class Config:
                 )
             user_provided_options[option_order[i]] = arg
 
+        logger.debug(
+            f"user_provided_options['inject_host_prefix'] = {user_provided_options.get('inject_host_prefix', 'ITS NOT SET')}"
+        )
         return user_provided_options
 
     def _validate_s3_configuration(self, s3):

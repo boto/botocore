@@ -3633,11 +3633,3 @@ CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES = {
     'stepfunctions': 'sfn',
     'storagegateway': 'storage-gateway',
 }
-
-
-class DefaultTrue:
-    def __eq__(self, other):
-        return other == True  # noqa: E712
-
-
-DEFAULT_TRUE = DefaultTrue()
