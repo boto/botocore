@@ -13,14 +13,13 @@
 # language governing permissions and limitations under the License.
 import socket
 
-from botocore import args, exceptions
-from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore import UNSIGNED, args, exceptions
+from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
-from botocore.exceptions import UnsupportedServiceProtocolsError
 from botocore.credentials import Credentials
+from botocore.exceptions import UnsupportedServiceProtocolsError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.parsers import PROTOCOL_PARSERS
