@@ -803,7 +803,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             'client_endpoint_url': None,
             'legacy_endpoint_url': 'https://my.legacy.endpoint.com',
             'credentials': None,
-            'endpoint_mode': 'preferred',
+            'account_id_endpoint_mode': 'preferred',
         }
         kwargs = {**defaults, **overrides}
         return self.args_create.compute_endpoint_resolver_builtin_defaults(
@@ -1002,7 +1002,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
 
     def test_account_id_endpoint_mode_set_to_disabled(self):
         bins = self.call_compute_endpoint_resolver_builtin_defaults(
-            endpoint_mode='disabled'
+            account_id_endpoint_mode='disabled'
         )
         self.assertEqual(bins['AWS::Auth::AccountIdEndpointMode'], 'disabled')
 

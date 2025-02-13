@@ -142,7 +142,7 @@ class ClientArgsCreator:
         configured_endpoint_url = final_args['configured_endpoint_url']
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
-        endpoint_mode = config_kwargs['account_id_endpoint_mode']
+        account_id_endpoint_mode = config_kwargs['account_id_endpoint_mode']
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
@@ -191,7 +191,7 @@ class ClientArgsCreator:
             endpoint_bridge,
             event_emitter,
             credentials,
-            endpoint_mode,
+            account_id_endpoint_mode,
         )
 
         # Copy the session's user agent factory and adds client configuration.
@@ -657,7 +657,7 @@ class ClientArgsCreator:
         endpoint_bridge,
         event_emitter,
         credentials,
-        endpoint_mode,
+        account_id_endpoint_mode,
     ):
         if endpoints_ruleset_data is None:
             return None
@@ -683,7 +683,7 @@ class ClientArgsCreator:
             client_endpoint_url=endpoint_url,
             legacy_endpoint_url=endpoint.host,
             credentials=credentials,
-            endpoint_mode=endpoint_mode,
+            account_id_endpoint_mode=account_id_endpoint_mode,
         )
         # Client context params for s3 conflict with the available settings
         # in the `s3` parameter on the `Config` object. If the same parameter
@@ -720,7 +720,7 @@ class ClientArgsCreator:
         client_endpoint_url,
         legacy_endpoint_url,
         credentials,
-        endpoint_mode,
+        account_id_endpoint_mode,
     ):
         # EndpointRulesetResolver rulesets may accept an "SDK::Endpoint" as
         # input. If the endpoint_url argument of create_client() is set, it
@@ -800,7 +800,7 @@ class ClientArgsCreator:
             )
             if credentials
             else None,
-            EPRBuiltins.ACCOUNT_ID_ENDPOINT_MODE: endpoint_mode,
+            EPRBuiltins.ACCOUNT_ID_ENDPOINT_MODE: account_id_endpoint_mode,
         }
 
     def _compute_user_agent_appid_config(self, config_kwargs):
