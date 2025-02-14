@@ -881,8 +881,15 @@ class ClientArgsCreator:
 
     def _compute_account_id_endpoint_mode_config(self, config_kwargs):
         config_key = 'account_id_endpoint_mode'
-        account_id_endpoint_mode = config_kwargs.get(config_key)
 
+        # Disable account id based endpoint routing for unsigned requests
+        # since there are no credentials to resolve.
+        signature_version = config_kwargs.get('signature_version')
+        if signature_version is botocore.UNSIGNED:
+            config_kwargs[config_key] = 'disabled'
+            return
+
+        account_id_endpoint_mode = config_kwargs.get(config_key)
         if account_id_endpoint_mode is None:
             account_id_endpoint_mode = self._config_store.get_config_variable(
                 config_key
@@ -899,9 +906,5 @@ class ClientArgsCreator:
                 error_msg=f"The configured value '{account_id_endpoint_mode}' for '{config_key}' is "
                 f"invalid. Valid values are: {VALID_ACCOUNT_ID_ENDPOINT_MODE_CONFIG}."
             )
-
-        signature_version = config_kwargs.get('signature_version')
-        if signature_version is botocore.UNSIGNED:
-            account_id_endpoint_mode = 'disabled'
 
         config_kwargs[config_key] = account_id_endpoint_mode
