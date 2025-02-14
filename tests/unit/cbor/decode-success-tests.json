@@ -980,7 +980,11 @@
     "description": "map - {_ null}",
     "input": "bf63666f6ff6ff",
     "expect": {
-      "map": {}
+      "map": {
+        "foo": {
+          "null": {}
+        }
+      }
     }
   },
   {
@@ -1306,7 +1310,11 @@
     "description": "map - {null}",
     "input": "a163666f6ff6",
     "expect": {
-      "map": {}
+      "map": {
+        "foo": {
+          "null": {}
+        }
+      }
     }
   },
   {
@@ -1398,25 +1406,121 @@
     }
   },
   {
-    "description": "tag - 1/min",
-    "input": "c100",
+    "description": "tag - 0/min",
+    "input": "c001",
     "expect": {
       "tag": {
         "id": 0,
         "value": {
-          "uint": 0
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 1/min",
+    "input": "d80001",
+    "expect": {
+      "tag": {
+        "id": 0,
+        "value": {
+          "uint": 1
         }
       }
     }
   },
   {
     "description": "tag - 1/max",
-    "input": "c1fb424d7ffa20bf8000",
+    "input": "d8ff01",
     "expect": {
       "tag": {
-        "id": 1,
+        "id": 255,
         "value": {
-          "uint": 253402300799
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 4/min",
+    "input": "da0000000001",
+    "expect": {
+      "tag": {
+        "id": 0,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 8/min",
+    "input": "db000000000000000001",
+    "expect": {
+      "tag": {
+        "id": 0,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 0/max",
+    "input": "d701",
+    "expect": {
+      "tag": {
+        "id": 23,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 2/min",
+    "input": "d9000001",
+    "expect": {
+      "tag": {
+        "id": 0,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 2/max",
+    "input": "d9ffff01",
+    "expect": {
+      "tag": {
+        "id": 65535,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 4/max",
+    "input": "daffffffff01",
+    "expect": {
+      "tag": {
+        "id": 4294967295,
+        "value": {
+          "uint": 1
+        }
+      }
+    }
+  },
+  {
+    "description": "tag - 8/max",
+    "input": "dbffffffffffffffff01",
+    "expect": {
+      "tag": {
+        "id": 18446744073709551615,
+        "value": {
+          "uint": 1
         }
       }
     }
