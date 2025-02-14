@@ -293,7 +293,7 @@ class ClientArgsCreator:
         self._compute_request_compression_config(config_kwargs)
         self._compute_sigv4a_signing_region_set_config(config_kwargs)
         self._compute_checksum_config(config_kwargs)
-        # self._compute_inject_host_prefix(config_kwargs)
+        self._compute_inject_host_prefix(client_config, config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -316,29 +316,24 @@ class ClientArgsCreator:
             ),
         }
 
-    # def _compute_inject_host_prefix(self, config_kwargs):
-    #     # If the value isn't available, that is because the user didn't pass in a Config
-    #     # object. UNSET is used to differentiate between other currently allowed values,
-    #     #  like None.
-    #     inject_host_prefix = config_kwargs.get('inject_host_prefix', 'UNSET')
-
-    #     # A value of DEFAULT_TRUE means the user did not supply a value
-    #     # specifically for inject_host_prefix; a value of UNSET means the user
-    #     # didn't provide a Config object to the client constructor. In these
-    #     # cases we want to fall back to the order of precedence for resolving
-    #     # the value.
-    #     if inject_host_prefix is DEFAULT_TRUE or inject_host_prefix == 'UNSET':
-    #         configured_disable_host_prefix_injection = (
-    #             self._config_store.get_config_variable(
-    #                 'disable_host_prefix_injection'
-    #             )
-    #         )
-    #         if configured_disable_host_prefix_injection is not None:
-    #             config_kwargs[
-    #                 'inject_host_prefix'
-    #             ] = not configured_disable_host_prefix_injection
-    #         else:
-    #             config_kwargs['inject_host_prefix'] = True
+    def _compute_inject_host_prefix(self, client_config, config_kwargs):
+        # In the cases that a Config object was not provided, or the private value
+        # remained UNSET, we should resolve the value from the config store.
+        if (
+            client_config is None
+            or client_config._inject_host_prefix == 'UNSET'
+        ):
+            configured_disable_host_prefix_injection = (
+                self._config_store.get_config_variable(
+                    'disable_host_prefix_injection'
+                )
+            )
+            if configured_disable_host_prefix_injection is not None:
+                config_kwargs[
+                    'inject_host_prefix'
+                ] = not configured_disable_host_prefix_injection
+            else:
+                config_kwargs['inject_host_prefix'] = True
 
     def _compute_configured_endpoint_url(self, client_config, endpoint_url):
         if endpoint_url is not None:

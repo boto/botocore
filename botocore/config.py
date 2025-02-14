@@ -307,12 +307,29 @@ class Config:
         'connect_timeout': None,
     }
 
+    # We are overriding with a property so that the default value of
+    # inject_host_prefix is still True.
+    @property
+    def inject_host_prefix(self):
+        if self._inject_host_prefix == "UNSET":
+            return True
+
+        return self._inject_host_prefix
+
+    # Override the setter fo the case where the user does supply a value.
+    # So _inject_host_prefix will no longer be "UNSET".
+    @inject_host_prefix.setter
+    def inject_host_prefix(self, value):
+        self._inject_host_prefix = value
+
     def __init__(self, *args, **kwargs):
         self._user_provided_options = self._record_user_provided_options(
             args, kwargs
         )
 
-        self._override_user_provided_options(self._user_provided_options)
+        # By default, we want to have a value that indicates the user did not set it.
+        # This value should persist on the Config object to be used elsewhere.
+        self._inject_host_prefix = 'UNSET'
 
         # Merge the user_provided options onto the default options
         config_vars = copy.copy(self.OPTION_DEFAULTS)
@@ -321,20 +338,25 @@ class Config:
         )
         if defaults_mode != 'legacy':
             config_vars.update(self.NON_LEGACY_OPTION_DEFAULTS)
+
         config_vars.update(self._user_provided_options)
 
         # Set the attributes based on the config_vars
         for key, value in config_vars.items():
-            setattr(self, key, value)
+            # We don't want to apply the custom @inject_host_prefix.setter if the user did supply a value.
+            if (
+                key == 'inject_host_prefix'
+                and 'inject_host_prefix'
+                not in self._user_provided_options.keys()
+            ):
+                continue
+            else:
+                setattr(self, key, value)
 
         # Validate the s3 options
         self._validate_s3_configuration(self.s3)
 
         self._validate_retry_configuration(self.retries)
-
-    def _override_user_provided_options(self, user_provided_options):
-        if user_provided_options.get('inject_host_prefix', 'UNSET') == 'UNSET':
-            user_provided_options['inject_host_prefix'] = True
 
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
@@ -366,9 +388,6 @@ class Config:
                 )
             user_provided_options[option_order[i]] = arg
 
-        logger.debug(
-            f"user_provided_options['inject_host_prefix'] = {user_provided_options.get('inject_host_prefix', 'ITS NOT SET')}"
-        )
         return user_provided_options
 
     def _validate_s3_configuration(self, s3):
