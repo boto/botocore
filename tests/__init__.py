@@ -27,6 +27,7 @@ from contextlib import ContextDecorator
 from io import BytesIO
 from subprocess import PIPE, Popen
 from unittest import mock
+from urllib.parse import parse_qs, urlparse
 
 from dateutil.tz import tzlocal
 
@@ -34,7 +35,7 @@ import botocore.loaders
 import botocore.session
 from botocore import credentials, utils
 from botocore.awsrequest import AWSResponse
-from botocore.compat import HAS_CRT, parse_qs, urlparse
+from botocore.compat import HAS_CRT
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.httpchecksum import _CHECKSUM_CLS, DEFAULT_CHECKSUM_ALGORITHM
 from botocore.stub import Stubber

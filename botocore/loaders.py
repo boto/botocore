@@ -102,11 +102,13 @@ for the sdk. For instance, additional operation parameters might be added here
 which don't represent the actual service api.
 """
 
+import json
 import logging
 import os
+from collections import OrderedDict
 
 from botocore import BOTOCORE_ROOT
-from botocore.compat import HAS_GZIP, OrderedDict, json
+from botocore.compat import HAS_GZIP
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
 

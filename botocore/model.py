@@ -12,11 +12,10 @@
 # language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from typing import NamedTuple, Union
 
 from botocore.auth import resolve_auth_type
-from botocore.compat import OrderedDict
 from botocore.exceptions import (
     MissingServiceIdError,
     UndefinedModelAttributeError,

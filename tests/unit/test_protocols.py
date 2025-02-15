@@ -52,16 +52,18 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 """
 
 import copy
+import json
 import os
 from base64 import b64decode
 from calendar import timegm
+from collections import OrderedDict
 from enum import Enum
+from urllib.parse import urlsplit
 
 import pytest
 from dateutil.tz import tzutc
 
 from botocore.awsrequest import HeadersDict, prepare_request_dict
-from botocore.compat import OrderedDict, json, urlsplit
 from botocore.eventstream import EventStream
 from botocore.model import NoShapeFoundError, OperationModel, ServiceModel
 from botocore.parsers import (

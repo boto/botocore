@@ -14,11 +14,11 @@ import base64
 import datetime
 import json
 import weakref
+from collections import OrderedDict
 
 import botocore
 import botocore.auth
 from botocore.awsrequest import create_request_object, prepare_request_dict
-from botocore.compat import OrderedDict
 from botocore.exceptions import (
     ParamValidationError,
     UnknownClientMethodError,
