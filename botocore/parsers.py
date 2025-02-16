@@ -764,16 +764,15 @@ class BaseJSONParser(ResponseParser):
 
 
 class BaseCBORParser(ResponseParser):
-
     def parse_data_item(self, stream):
         initial_byte = self._read_next_byte_as_int(stream)
         major_type = initial_byte >> 5
         additional_info = initial_byte & 0b00011111
 
         if major_type == 0:
-            return self._parse_unsigned_integer(stream, additional_info)
+            return self._parse_integer(stream, additional_info)
         elif major_type == 1:
-            return self._parse_negative_integer(stream, additional_info)
+            return -1 - self._parse_integer(stream, additional_info)
         elif major_type == 2:
             return self._parse_byte_string(stream, additional_info)
         elif major_type == 3:
@@ -790,7 +789,7 @@ class BaseCBORParser(ResponseParser):
             raise ResponseParserError(f"Unsupported major type: {major_type}")
 
     def _parse_tag(self, stream, additional_info):
-        tag = self._parse_unsigned_integer(stream, additional_info)
+        tag = self._parse_integer(stream, additional_info)
         value = self.parse_data_item(stream)
         if tag == 1:  # Epoch-based date/time
             return self._parse_datetime(value)
@@ -802,12 +801,6 @@ class BaseCBORParser(ResponseParser):
             return self._timestamp_parser(value)
         else:
             raise ResponseParserError(f"Unable to parse datetime value: {value}")
-
-    def _parse_unsigned_integer(self, stream, additional_info):
-        return self._parse_integer(stream, additional_info)
-
-    def _parse_negative_integer(self, stream, additional_info):
-        return -1 - self._parse_unsigned_integer(stream, additional_info)
 
     def _parse_integer(self, stream, additional_info):
         if additional_info < 24:
@@ -835,7 +828,7 @@ class BaseCBORParser(ResponseParser):
                 chunks.append(chunk)
             return b''.join(chunks)
         else:
-            length = self._parse_unsigned_integer(stream, additional_info)
+            length = self._parse_integer(stream, additional_info)
             return self._read_from_stream(stream, length)
 
     def _parse_text_string(self, stream, additional_info):
@@ -852,7 +845,7 @@ class BaseCBORParser(ResponseParser):
                 items.append(self.parse_data_item(stream))
             return items
         else:
-            length = self._parse_unsigned_integer(stream, additional_info)
+            length = self._parse_integer(stream, additional_info)
             return [self.parse_data_item(stream) for _ in range(length)]
 
     def _parse_map(self, stream, additional_info):
@@ -870,7 +863,7 @@ class BaseCBORParser(ResponseParser):
             return items
         else:
             items = {}
-            length = self._parse_unsigned_integer(stream, additional_info)
+            length = self._parse_integer(stream, additional_info)
             for _ in range(length):
                 key = self.parse_data_item(stream)
                 value = self.parse_data_item(stream)
@@ -896,28 +889,26 @@ class BaseCBORParser(ResponseParser):
         elif additional_info == 27:
             return struct.unpack('>d', self._read_from_stream(stream, 8))[0]
         elif additional_info == 31:
-            return self._parse_indefinite_length(stream)
+            items = []
+            while True:
+                initial_byte = self._read_next_byte_as_int(stream)
+                if initial_byte == 0xFF:
+                    break
+                stream.seek(-1, 1)
+                items.append(self.parse_data_item(stream))
+            return items
         else:
             raise ResponseParserError(
                 "Invalid additional information for simple or floating point types"
             )
 
-    def _parse_indefinite_length(self, stream):
-        items = []
-        while True:
-            initial_byte = self._read_next_byte_as_int(stream)
-            if initial_byte == 0xFF:
-                break
-            stream.seek(-1, 1)
-            items.append(self.parse_data_item(stream))
-        return items
 
     def _read_chunk(self, stream):
         initial_byte = self._read_next_byte_as_int(stream)
         if initial_byte == 0xFF:
             return None
         additional_info = initial_byte & 0b00011111
-        length = self._parse_unsigned_integer(stream, additional_info)
+        length = self._parse_integer(stream, additional_info)
         return self._read_from_stream(stream, length)
 
     def _read_next_byte_as_int(self, stream):
@@ -1171,12 +1162,12 @@ class BaseRestParser(ResponseParser):
                 parsed[name] = headers[header_name]
         return parsed
 
-    # def _initial_body_parse(self, body_contents):
-    #     # This method should do the initial xml/json parsing of the
-    #     # body.  We still need to walk the parsed body in order
-    #     # to convert types, but this method will do the first round
-    #     # of parsing.
-    #     raise NotImplementedError("_initial_body_parse")
+    def _initial_body_parse(self, body_contents):
+        # This method should do the initial xml/json parsing of the
+        # body.  We still need to walk the parsed body in order
+        # to convert types, but this method will do the first round
+        # of parsing.
+        raise NotImplementedError("_initial_body_parse")
 
     def _handle_string(self, shape, value):
         parsed = value
