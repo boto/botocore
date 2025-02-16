@@ -24,7 +24,6 @@ showing the inheritance hierarchy of the response classes.
 ::
 
 
-#TODO
                                  +--------------+
                                  |ResponseParser|
                                  +--------------+
@@ -763,8 +762,6 @@ class BaseJSONParser(ResponseParser):
             # the literal string as the message
             return {'message': body}
 
-    # TODO sort methods, make sure they're all actually on the right classes too
-
 
 class BaseCBORParser(ResponseParser):
 
@@ -868,7 +865,6 @@ class BaseCBORParser(ResponseParser):
                 stream.seek(-1, 1)
                 key = self.parse_data_item(stream)
                 value = self.parse_data_item(stream)
-                #TODO is this breaking?  Do other parsers behave this way?
                 if value is not None:
                     items[key] = value
             return items
@@ -1208,8 +1204,9 @@ class BaseRpcV2Parser(ResponseParser):
             if event_name:
                 parsed = self._handle_event_stream(response, shape, event_name)
             else:
-                parsed = self._handle_cbor_body(response, shape)
-        parsed['ResponseMetadata'] = self._populate_response_metadata(
+                parsed = {}
+                self._parse_payload(response, shape, parsed)
+            parsed['ResponseMetadata'] = self._populate_response_metadata(
             response
         )
         return parsed
@@ -1236,7 +1233,6 @@ class BaseRpcV2Parser(ResponseParser):
         body_parsed = self._parse_shape(shape, original_parsed)
         final_parsed.update(body_parsed)
 
-    # TODO do we need to add NotImplemented to parse_shape, etc.?
     def _initial_body_parse(self, body_contents):
         # This method should do the initial parsing of the
         # body.  We still need to walk the parsed body in order
@@ -1322,7 +1318,6 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
             ]
         return error
 
-    #TODO this should probably go on the cbor parser?
     def _handle_event_stream(self, response, shape, event_name):
         event_stream_shape = shape.members[event_name]
         event_stream = self._create_event_stream(response, event_stream_shape)
@@ -1334,15 +1329,6 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
         parsed = self._initial_body_parse(event.payload)
         parsed[event_name] = event_stream
         return parsed
-
-    def _handle_cbor_body(self, response, shape):
-        #TODO add a comment explaining this method (similar to _handle_json_body)
-        if shape is None:
-            return b''
-        parsed = {}
-        #TODO is parse_payload on the right place?  This is CBOR...
-        self._parse_payload(response, shape, parsed)
-        return self._parse_shape(shape, parsed)
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
     EVENT_STREAM_PARSER_CLS = EventStreamXMLParser
