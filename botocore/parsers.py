@@ -762,10 +762,9 @@ class BaseJSONParser(ResponseParser):
             # the literal string as the message
             return {'message': body}
 
-
 class BaseCBORParser(ResponseParser):
     def parse_data_item(self, stream):
-        initial_byte = self._read_next_byte_as_int(stream)
+        initial_byte = self._read_bytes_as_int(stream, 1)
         major_type = initial_byte >> 5
         additional_info = initial_byte & 0b00011111
 
@@ -806,13 +805,13 @@ class BaseCBORParser(ResponseParser):
         if additional_info < 24:
             return additional_info
         elif additional_info == 24:
-            return self._read_next_byte_as_int(stream)
+            return self._read_bytes_as_int(stream, 1)
         elif additional_info == 25:
-            return struct.unpack('>H', self._read_from_stream(stream, 2))[0]
+            return self._read_bytes_as_int(stream, 2)
         elif additional_info == 26:
-            return struct.unpack('>I', self._read_from_stream(stream, 4))[0]
+            return self._read_bytes_as_int(stream, 4)
         elif additional_info == 27:
-            return struct.unpack('>Q', self._read_from_stream(stream, 8))[0]
+            return self._read_bytes_as_int(stream, 8)
         else:
             raise ResponseParserError(
                 "Invalid additional information for integer"
@@ -838,7 +837,7 @@ class BaseCBORParser(ResponseParser):
         if additional_info == 31:
             items = []
             while True:
-                initial_byte = self._read_next_byte_as_int(stream)
+                initial_byte = self._read_bytes_as_int(stream, 1)
                 if initial_byte == 0xFF:
                     break
                 stream.seek(-1, 1)
@@ -852,7 +851,7 @@ class BaseCBORParser(ResponseParser):
         if additional_info == 31:
             items = {}
             while True:
-                initial_byte = self._read_next_byte_as_int(stream)
+                initial_byte = self._read_bytes_as_int(stream, 1)
                 if initial_byte == 0xFF:
                     break
                 stream.seek(-1, 1)
@@ -881,7 +880,7 @@ class BaseCBORParser(ResponseParser):
         elif additional_info in [22, 23]:
             return None
         elif additional_info == 24:
-            return self._read_next_byte_as_int(stream)
+            return self._read_bytes_as_int(stream, 1)
         elif additional_info == 25:
             return struct.unpack('>e', self._read_from_stream(stream, 2))[0]
         elif additional_info == 26:
@@ -891,7 +890,7 @@ class BaseCBORParser(ResponseParser):
         elif additional_info == 31:
             items = []
             while True:
-                initial_byte = self._read_next_byte_as_int(stream)
+                initial_byte = self._read_bytes_as_int(stream, 1)
                 if initial_byte == 0xFF:
                     break
                 stream.seek(-1, 1)
@@ -904,17 +903,15 @@ class BaseCBORParser(ResponseParser):
 
 
     def _read_chunk(self, stream):
-        initial_byte = self._read_next_byte_as_int(stream)
+        initial_byte = self._read_bytes_as_int(stream, 1)
         if initial_byte == 0xFF:
             return None
         additional_info = initial_byte & 0b00011111
         length = self._parse_integer(stream, additional_info)
         return self._read_from_stream(stream, length)
 
-    def _read_next_byte_as_int(self, stream):
-        byte = stream.read(1)
-        if not byte:
-            raise ResponseParserError("End of stream reached")
+    def _read_bytes_as_int(self, stream, num_bytes):
+        byte = self._read_from_stream(stream, num_bytes)
         return int.from_bytes(byte, 'big')
 
     def _read_from_stream(self, stream, num_bytes):
@@ -1184,9 +1181,6 @@ class BaseRestParser(ResponseParser):
         return super()._handle_list(shape, node)
 
 
-# TODO go through each method, checking that they're still needed
-# Note- they are all still needed for this class, but not all necessarily in the right
-# places; go through this for all three new classes
 class BaseRpcV2Parser(ResponseParser):
     def _do_parse(self, response, shape):
         parsed = {}
