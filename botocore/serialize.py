@@ -43,6 +43,7 @@ import calendar
 import datetime
 import json
 import re
+import struct
 from xml.etree import ElementTree
 
 from botocore import validate
@@ -431,6 +432,181 @@ class JSONSerializer(Serializer):
         serialized[key] = self._get_base64(value)
 
 
+class CBORSerializer(Serializer):
+
+
+    def _serialize_data_item(self, serialized, value, shape, key=None):
+        method = getattr(self, f'_serialize_type_{shape.type_name}')
+        method(serialized, value, shape, key)
+
+    def _serialize_type_integer(self, serialized, value, shape, key):
+        if value >= 0:
+            if value < 24:
+                serialized.extend(bytes([value]))
+            elif value < 256:
+                serialized.extend(b'\x18' + value.to_bytes(1, "big"))
+            elif value < 65536:
+                serialized.extend(b'\x19' + value.to_bytes(2, "big"))
+            elif value < 4294967296:
+                serialized.extend(b'\x1a' + value.to_bytes(4, "big"))
+            else:
+                serialized.extend(b'\x1b' + value.to_bytes(8, "big"))
+        else:
+            value = -1 - value
+            if value < 24:
+                serialized.extend(bytes([0x20 + value]))
+            elif value < 256:
+                serialized.extend(b'\x38' + value.to_bytes(1, "big"))
+            elif value < 65536:
+                serialized.extend(b'\x39' + value.to_bytes(2, "big"))
+            elif value < 4294967296:
+                serialized.extend(b'\x3a' + value.to_bytes(4, "big"))
+            else:
+                serialized.extend(b'\x3b' + value.to_bytes(8, "big"))
+
+    def _serialize_type_long(self, serialized, value, shape, key):
+        self._serialize_type_integer(serialized, value, shape, key)
+
+    def _serialize_type_blob(self, serialized, value, shape, key):
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+        elif not isinstance(value, (bytes, bytearray)):
+            raise TypeError("value must be bytes, bytearray, or str")
+
+        length = len(value)
+        if length < 24:
+            serialized.extend(bytes([0x40 + length]))
+        elif length < 256:
+            serialized.extend(b'\x58' + length.to_bytes(1, "big"))
+        elif length < 65536:
+            serialized.extend(b'\x59' + length.to_bytes(2, "big"))
+        elif length < 4294967296:
+            serialized.extend(b'\x5a' + length.to_bytes(4, "big"))
+        else:
+            serialized.extend(b'\x5b' + length.to_bytes(8, "big"))
+
+        serialized.extend(value)
+
+    def _serialize_type_boolean(self, serialized, value, shape, key):
+        if value:
+            serialized.extend(b'\xf5')
+        else:
+            serialized.extend(b'\xf4')
+
+    def _serialize_type_timestamp(self, serialized, value, shape, key):
+        timestamp = self._convert_timestamp_to_str(value)
+        serialized.extend(b'\xc1')
+        if timestamp < 24:
+            serialized.extend(bytes([timestamp]))
+        elif timestamp < 256:
+            serialized.extend(b'\x18' + timestamp.to_bytes(1, "big"))
+        elif timestamp < 65536:
+            serialized.extend(b'\x19' + timestamp.to_bytes(2, "big"))
+        elif timestamp < 4294967296:
+            serialized.extend(b'\x1a' + timestamp.to_bytes(4, "big"))
+        else:
+            serialized.extend(b'\x1b' + timestamp.to_bytes(8, "big"))
+
+    def _get_bytes_for_special_numbers(self, value):
+        if value == float('inf'):
+            return b'\xf9\x7c\x00'  # Positive infinity
+        elif value == float('-inf'):
+            return b'\xf9\xfc\x00'  # Negative infinity
+        elif value != value:  # NaN check
+            return b'\xf9\x7e\x00'
+
+    def _serialize_type_float(self, serialized, value, shape, key):
+        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+            serialized.extend(special_value_bytes)  # Positive infinity
+        else:
+            serialized.extend(b'\xfa' + struct.pack(">f", value))
+
+    def _serialize_type_double(self, serialized, value, shape, key):
+        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+            serialized.extend(special_value_bytes)  # Positive infinity
+        else:
+            serialized.extend(b'\xfb' + struct.pack(">d", value))
+
+    def _serialize_type_string(self, serialized, value, shape, key):
+        encoded = value.encode('utf-8')
+        length = len(encoded)
+        if length < 24:
+            serialized.extend(bytes([0x60 + length]) + encoded)
+        elif length < 256:
+            serialized.extend(b'\x78' + length.to_bytes(1, 'big') + encoded)
+        elif length < 65536:
+            serialized.extend(b'\x79' + length.to_bytes(2, 'big') + encoded)
+        elif length < 4294967296:
+            serialized.extend(b'\x7a' + length.to_bytes(4, 'big') + encoded)
+        else:
+            serialized.extend(b'\x7b' + length.to_bytes(8, 'big') + encoded)
+
+    def _serialize_type_structure(self, serialized, value, shape, key):
+        if key is not None:
+            # For nested structures, we need to serialize the key first
+            self._serialize_data_item(serialized, key, shape.key_shape)
+
+        # Remove `None` values from the dictionary
+        value = {k: v for k, v in value.items() if v is not None}
+
+        map_length = len(value)
+        if map_length == 0:
+            serialized.append(0xA0)  # CBOR encoding for an empty map
+            return
+        elif map_length < 24:
+            serialized.append(0xA0 + map_length)
+        elif map_length < 256:
+            serialized.extend(b'\xb8' + struct.pack('B', map_length))
+        elif map_length < 65536:
+            serialized.extend(b'\xb9' + struct.pack('>H', map_length))
+        elif map_length < 4294967296:
+            serialized.extend(b'\xba' + struct.pack('>I', map_length))
+        else:
+            serialized.extend(b'\xbb' + struct.pack('>Q', map_length))
+
+        members = shape.members
+        for member_key, member_value in value.items():
+            member_shape = members[member_key]
+            if 'name' in member_shape.serialization:
+                member_key = member_shape.serialization['name']
+            if member_value is not None:
+                self._serialize_type_string(serialized, member_key, None, None)
+                self._serialize_data_item(
+                    serialized, member_value, member_shape
+                )
+
+    def _serialize_type_list(self, serialized, value, shape, key):
+        length = len(value)
+        if length < 24:
+            serialized.extend(struct.pack('B', 0x80 + length))
+        elif length < 256:
+            serialized.extend(b'\x98' + struct.pack('B', length))
+        elif length < 65536:
+            serialized.extend(b'\x99' + struct.pack('>H', length))
+        elif length < 4294967296:
+            serialized.extend(b'\x9a' + struct.pack('>I', length))
+        else:
+            serialized.extend(b'\x9b' + struct.pack('>Q', length))
+        for item in value:
+            self._serialize_data_item(serialized, item, shape.member)
+
+    def _serialize_type_map(self, serialized, value, shape, key):
+        length = len(value)
+        if length < 24:
+            serialized.extend(struct.pack('B', 0xA0 + length))
+        elif length < 256:
+            serialized.extend(b'\xb8' + struct.pack('B', length))
+        elif length < 65536:
+            serialized.extend(b'\xb9' + struct.pack('>H', length))
+        elif length < 4294967296:
+            serialized.extend(b'\xba' + struct.pack('>I', length))
+        else:
+            serialized.extend(b'\xbb' + struct.pack('>Q', length))
+        for key_item, item in value.items():
+            self._serialize_data_item(serialized, key_item, shape.key)
+            self._serialize_data_item(serialized, item, shape.value)
+
+
 class BaseRestSerializer(Serializer):
     """Base class for rest protocols.
 
@@ -669,6 +845,41 @@ class BaseRestSerializer(Serializer):
             return value
 
 
+class BaseRpcV2Serializer(Serializer):
+    """Base class for RPCv2 protocols.
+
+    The only variance between the various RPCv2 protocols is the
+    way that the body is serialized.  All other aspects (headers, uri, etc.)
+    are the same and logic for serializing those aspects lives here.
+
+    Subclasses must implement the ``_serialize_body_params`` method.
+
+    """
+
+    def serialize_to_request(self, parameters, operation_model):
+        serialized = self._create_default_request()
+        service_name = operation_model.service_model.metadata['targetPrefix']
+        operation_name = operation_model.name
+        serialized['url_path'] = (
+            f'/service/{service_name}/operation/{operation_name}'
+        )
+
+        input_shape = operation_model.input_shape
+        if input_shape is not None:
+            self._serialize_payload(
+                parameters, serialized, input_shape
+            )
+
+        self._serialize_headers(serialized, operation_model)
+
+        return serialized
+
+    def _serialize_payload(self, parameters, serialized, shape):
+        body_payload = self._serialize_body_params(parameters, shape)
+        serialized['body'] = body_payload
+
+
+
 class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
     def _serialize_empty_body(self):
         return b'{}'
@@ -802,10 +1013,35 @@ class RestXMLSerializer(BaseRestSerializer):
         node.text = str(params)
 
 
+class RpcV2CBORSerializer(BaseRpcV2Serializer, CBORSerializer):
+    TIMESTAMP_FORMAT = 'unixtimestamp'
+
+    def _serialize_body_params(self, parameters, input_shape):
+        body = bytearray()
+        self._serialize_data_item(body, parameters, input_shape)
+        return bytes(body)
+
+    def _serialize_headers(self, serialized, operation_model):
+        serialized['headers']['smithy-protocol'] = 'rpc-v2-cbor'
+
+        if operation_model.has_event_stream_output:
+            header_val = 'application/vnd.amazon.eventstream'
+        else:
+            header_val = 'application/cbor'
+
+        has_body = serialized['body'] != b''
+        has_content_type = has_header('Content-Type', serialized['headers'])
+
+        serialized['headers']['Accept'] = header_val
+        if not has_content_type and has_body:
+            serialized['headers']['Content-Type'] = header_val
+
+
 SERIALIZERS = {
     'ec2': EC2Serializer,
     'query': QuerySerializer,
     'json': JSONSerializer,
     'rest-json': RestJSONSerializer,
     'rest-xml': RestXMLSerializer,
+    'smithy-rpc-v2-cbor': RpcV2CBORSerializer,
 }
