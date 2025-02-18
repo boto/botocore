@@ -4,7 +4,8 @@
       "suites": [
         "Test cases for PutWithContentEncoding operation",
         "Test cases for QueryIdempotencyTokenAutoFill operation",
-        "Test cases for HostWithPathOperation operation"
+        "Test cases for HostWithPathOperation operation",
+        "Idempotency token auto fill"
       ]
     }
   },
@@ -38,6 +39,11 @@
       }
     },
     "json" : {
+      "input": {
+        "cases": [
+          "AwsJson11StructuresDontSerializeNullValues"
+        ]
+      },
       "output" : {
         "cases": [
           "AwsJson11FooErrorUsingXAmznErrorType",
@@ -65,7 +71,8 @@
       "input" : {
         "cases": [
           "MediaTypeHeaderInputBase64",
-          "RestJsonHttpChecksumRequired"
+          "RestJsonHttpChecksumRequired",
+          "RestJsonNullAndEmptyHeaders"
         ]
       },
       "output" : {
@@ -91,7 +98,8 @@
           "HttpPayloadWithXmlNamespace",
           "HttpPayloadWithXmlNamespaceAndPrefix",
           "XmlAttributesOnPayload",
-          "NestedXmlMapWithXmlNameSerializes"
+          "NestedXmlMapWithXmlNameSerializes",
+          "NullAndEmptyHeaders"
         ]
       },
       "output": {
