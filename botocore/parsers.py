@@ -1331,7 +1331,6 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
             ]
         return error
 
-    #TODO this should probably go on the cbor parser?
     def _handle_event_stream(self, response, shape, event_name):
         event_stream_shape = shape.members[event_name]
         event_stream = self._create_event_stream(response, event_stream_shape)
