@@ -24,29 +24,34 @@ showing the inheritance hierarchy of the response classes.
 ::
 
 
-                                 +--------------+
-                                 |ResponseParser|
-                                 +--------------+
-                                    ^    ^    ^
-               +--------------------+    |    +-------------------+
-               |                         |                        |
-    +----------+----------+       +------+-------+        +-------+------+
-    |BaseXMLResponseParser|       |BaseRestParser|        |BaseJSONParser|
-    +---------------------+       +--------------+        +--------------+
-              ^         ^          ^           ^           ^        ^
-              |         |          |           |           |        |
-              |         |          |           |           |        |
-              |        ++----------+-+       +-+-----------++       |
-              |        |RestXMLParser|       |RestJSONParser|       |
-        +-----+-----+  +-------------+       +--------------+  +----+-----+
-        |QueryParser|                                          |JSONParser|
-        +-----------+                                          +----------+
-
+                                +-------------------+
+                                |   ResponseParser  |
+                                +-------------------+
+                                ^    ^    ^   ^   ^
+                                |    |    |   |   |
+                                |    |    |   |   +--------------------------------------------+
+                                |    |    |   +-----------------------------+                  |
+                                |    |    |                                 |                  |
+           +--------------------+    |    +----------------+                |                  |
+           |                         |                     |                |                  |
++----------+----------+       +------+-------+     +-------+------+  +------+-------+   +------+--------+
+|BaseXMLResponseParser|       |BaseRestParser|     |BaseJSONParser|  |BaseCBORParser|   |BaseRpcV2Parser|
++---------------------+       +--------------+     +--------------+  +----------+---+   +-+-------------+
+          ^         ^          ^           ^        ^        ^                  |         |
+          |         |          |           |        |        |                  |         |
+          |         |          |           |        |        |                  |         |
+          |        ++----------+-+       +-+--------+---+    |              +---+---------+-+
+          |        |RestXMLParser|       |RestJSONParser|    |              |RpcV2CBORParser|
+    +-----+-----+  +-------------+       +--------------+    |              +---+---------+-+
+    |QueryParser|                                            |
+    +-----------+                                       +----+-----+
+                                                        |JSONParser|
+                                                        +----------+
 
 The diagram above shows that there is a base class, ``ResponseParser`` that
 contains logic that is similar amongst all the different protocols (``query``,
-``json``, ``rest-json``, ``rest-xml``).  Amongst the various services there
-is shared logic that can be grouped several ways:
+``json``, ``rest-json``, ``rest-xml``, ``RPCv2CBOR``).  Amongst the various services
+there is shared logic that can be grouped several ways:
 
 * The ``query`` and ``rest-xml`` both have XML bodies that are parsed in the
   same way.
@@ -1213,6 +1218,30 @@ class BaseRpcV2Parser(ResponseParser):
             metadata['RequestId'] = headers['x-amzn-requestid']
         return metadata
 
+    def _handle_structure(self, shape, node):
+        parsed = {}
+        members = shape.members
+        if shape.is_tagged_union:
+            cleaned_value = node.copy()
+            cleaned_value.pop("__type", None)
+            cleaned_value = {
+                k: v for k, v in cleaned_value.items() if v is not None
+            }
+            if len(cleaned_value) != 1:
+                error_msg = (
+                    "Invalid service response: %s must have one and only "
+                    "one member set."
+                )
+                raise ResponseParserError(error_msg % shape.name)
+        for member_name in members:
+            member_shape = members[member_name]
+            member_node = node.get(member_name)
+            if member_node is not None:
+                parsed[member_name] = self._parse_shape(
+                    member_shape, member_node
+                )
+        return parsed
+
     def _parse_payload(self, response, shape, final_parsed):
         original_parsed = self._initial_body_parse(response['body'])
         body_parsed = self._parse_shape(shape, original_parsed)
@@ -1292,11 +1321,10 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
         if code:
             code = code.rsplit('#', 1)[-1]
             if 'x-amzn-query-error' in headers:
-                # TODO test this
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
                 )
-            error['Error']['Code'] = code
+        error['Error']['Code'] = code
         if 'x-amzn-requestid' in headers:
             error.setdefault('ResponseMetadata', {})['RequestId'] = headers[
                 'x-amzn-requestid'

@@ -1526,5 +1526,95 @@
                 }
             }
         ]
+    },
+    {
+        "description": "Test cases for HttpPayloadWithUnion operation",
+        "metadata": {
+            "protocol": "smithy-rpc-v2-cbor",
+            "protocols": [
+                "smithy-rpc-v2-cbor"
+            ],
+            "apiVersion": "2020-07-14",
+            "targetPrefix": "RpcV2Protocol"
+        },
+        "shapes": {
+            "HttpPayloadWithUnionInputOutput": {
+                "type": "structure",
+                "members": {
+                    "nested": {
+                        "shape": "UnionPayload"
+                    }
+                },
+                "payload": "nested"
+            },
+            "UnionPayload": {
+                "type": "structure",
+                "members": {
+                    "greeting": {
+                        "shape": "String"
+                    }
+                },
+                "union": true
+            },
+            "String": {
+                "type": "string"
+            }
+        },
+        "cases": [
+            {
+                "id": "RpcV2CborPayloadWithUnion",
+                "given": {
+                    "name": "HttpPayloadWithUnion",
+                    "http": {
+                        "method": "PUT",
+                        "requestUri": "/HttpPayloadWithUnion",
+                        "responseCode": 200
+                    },
+                    "output": {
+                        "shape": "HttpPayloadWithUnionInputOutput"
+                    },
+                    "documentation": "<p>This example serializes a union in the payload.</p>",
+                    "idempotent": true
+                },
+                "description": "Serializes a union in the payload.",
+                "result": {
+                    "nested": {
+                        "greeting": "hello"
+                    }
+                },
+                "response": {
+                    "status_code": 200,
+                    "headers": {
+                        "Content-Type": "application/cbor",
+                        "smithy-protocol": "rpc-v2-cbor"                    },
+                    "body": "oWZuZXN0ZWShaGdyZWV0aW5nZWhlbGxv"
+                }
+            },
+            {
+                "id": "RpcV2CborPayloadWithUnsetUnion",
+                "given": {
+                    "name": "HttpPayloadWithUnion",
+                    "http": {
+                        "method": "PUT",
+                        "requestUri": "/HttpPayloadWithUnion",
+                        "responseCode": 200
+                    },
+                    "output": {
+                        "shape": "HttpPayloadWithUnionInputOutput"
+                    },
+                    "documentation": "<p>This example serializes a union in the payload.</p>",
+                    "idempotent": true
+                },
+                "description": "No payload is sent if the union has no value.",
+                "result": {},
+                "response": {
+                    "status_code": 200,
+                    "headers": {
+                        "Content-Length": "0"
+                    },
+                    "body": "v2tkb3VibGVWYWx1Zfv/8AAAAAAAAGpmbG9hdFZhbHVl+v+AAAD/"
+                }
+            }
+        ]
     }
 ]
