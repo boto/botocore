@@ -35,6 +35,8 @@ def parser():
 def _get_cbor_decoding_success_tests():
     success_test_data = json.load(open('decode-success-tests.json'))
     for case in success_test_data:
+        if case['description'] in IGNORE_CASES:
+            continue
         yield case['description'], case['input'], case['expect']
 
 
@@ -48,8 +50,6 @@ def _get_cbor_decoding_error_tests():
     "json_description, input, expect", _get_cbor_decoding_success_tests()
 )
 def test_cbor_decoding_success(json_description, input, expect, parser):
-    if json_description in IGNORE_CASES:
-        pytest.skip("Intentionally skipped CBOR case")
     stream = io.BytesIO(bytearray.fromhex(input))
     parsed = parser.parse_data_item(stream)
     _assert_expected_value(parsed, expect)
@@ -64,30 +64,63 @@ def test_cbor_decoding_error(json_description, input, error, parser):
         parser.parse_data_item(stream)
 
 
+def assert_null(actual):
+    assert actual is None
+
+
+def assert_bytestring(actual, value):
+    assert actual == bytes(value)
+
+
+def assert_list(actual, value):
+    assert isinstance(actual, list)
+    for act_val, exp_val in zip(actual, value):
+        _assert_expected_value(act_val, exp_val)
+
+
+def assert_map(actual, value):
+    assert isinstance(actual, dict)
+    for key, val in value.items():
+        assert key in actual
+        _assert_expected_value(actual[key], val)
+
+
+def assert_tag(actual, value):
+    assert actual.tag == value['id']
+    assert actual.value == value['value']['uint']
+
+
+def assert_float(actual, expected_key, value):
+    struct_format = '<f' if expected_key == 'float32' else '<d'
+    packed_value = struct.pack(
+        '<I' if expected_key == 'float32' else '<Q', value
+    )
+    unpacked_value = struct.unpack(struct_format, packed_value)[0]
+    assert actual == unpacked_value
+
+
+def assert_default(actual, value):
+    assert actual == value
+
+
+ASSERTION_MAP = {
+    'null': assert_null,
+    'undefined': assert_null,
+    'bytestring': assert_bytestring,
+    'list': assert_list,
+    'map': assert_map,
+    'tag': assert_tag,
+    'float32': assert_float,
+    'float64': assert_float,
+}
+
+
 def _assert_expected_value(actual, expected):
     for expected_key, value in expected.items():
-        if expected_key in ['null', 'undefined']:
-            assert actual is None
-        elif expected_key == 'bytestring':
-            assert actual == bytes(value)
-        elif expected_key == 'list':
-            assert isinstance(actual, list)
-            for act_val, exp_val in zip(actual, value):
-                _assert_expected_value(act_val, exp_val)
-        elif expected_key == 'map':
-            assert isinstance(actual, dict)
-            for key, val in value.items():
-                assert key in actual
-                _assert_expected_value(actual[key], val)
-        elif expected_key == 'tag':
-            assert actual.tag == value['id']
-            assert actual.value == value['value']['uint']
+        assertion_func = ASSERTION_MAP.get(expected_key, assert_default)
+        if expected_key in ['null']:
+            assertion_func(actual)
         elif expected_key in ['float32', 'float64']:
-            struct_format = '<f' if expected_key == 'float32' else '<d'
-            packed_value = struct.pack(
-                '<I' if expected_key == 'float32' else '<Q', value
-            )
-            unpacked_value = struct.unpack(struct_format, packed_value)[0]
-            assert actual == unpacked_value
+            assertion_func(actual, expected_key, value)
         else:
-            assert actual == value
+            assertion_func(actual, value)

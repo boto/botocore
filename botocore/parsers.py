@@ -748,7 +748,6 @@ class BaseJSONParser(ResponseParser):
         self._inject_response_metadata(error, response['headers'])
         return error
 
-
     def _inject_response_metadata(self, parsed, headers):
         if 'x-amzn-requestid' in headers:
             parsed.setdefault('ResponseMetadata', {})['RequestId'] = headers[
@@ -767,10 +766,18 @@ class BaseJSONParser(ResponseParser):
             # the literal string as the message
             return {'message': body}
 
+
 class BaseCBORParser(ResponseParser):
     def parse_data_item(self, stream):
+        # Sections of CBOR data are called "data items", and each data item starts
+        # with an initial byte that describes how the following bytes should be parsed
         initial_byte = self._read_bytes_as_int(stream, 1)
+        # The first three bits of the initial byte describe the "major type" such as
+        # integer, map, etc.
         major_type = initial_byte >> 5
+        # The last 5 bits of the initial byte tells us more information about how the
+        # bytes should be parsed; what this tells us varies based on the value of the
+        # additional information and the major type
         additional_info = initial_byte & 0b00011111
 
         if major_type == 0:
@@ -790,7 +797,11 @@ class BaseCBORParser(ResponseParser):
         elif major_type == 7:
             return self._parse_simple_and_float(stream, additional_info)
         else:
-            raise ResponseParserError(f"Unsupported major type: {major_type}")
+            raise ResponseParserError(
+                f"Unsupported inital byte found for data item- "
+                f"Major type:{major_type}, Additional info: "
+                f"{additional_info}"
+            )
 
     def _parse_tag(self, stream, additional_info):
         tag = self._parse_integer(stream, additional_info)
@@ -804,7 +815,9 @@ class BaseCBORParser(ResponseParser):
         if isinstance(value, (int, float)):
             return self._timestamp_parser(value)
         else:
-            raise ResponseParserError(f"Unable to parse datetime value: {value}")
+            raise ResponseParserError(
+                f"Unable to parse datetime value: {value}"
+            )
 
     def _parse_integer(self, stream, additional_info):
         if additional_info < 24:
@@ -875,17 +888,25 @@ class BaseCBORParser(ResponseParser):
                     items[key] = value
             return items
 
+    # Major type 7 includes floats and "simple" types.  Supported simple types are
+    # currently boolean values, CBOR's null, and CBOR's undefined type.  All other
+    # values are either floats or invalid.
     def _parse_simple_and_float(self, stream, additional_info):
-        if additional_info < 20:
-            return additional_info
+        if additional_info < 20 or additional_info == 24:
+            raise ResponseParserError(
+                f"Invalid additional info found for major type "
+                f"7: {additional_info}.  This indicates an "
+                f"unassigned simple type that is not supported "
+                f"by botocore"
+            )
         elif additional_info == 20:
             return False
         elif additional_info == 21:
             return True
+        # Simple types 22 and 23 are null and undefined respectively.  Both should be
+        # parsed to `None` in Python
         elif additional_info in [22, 23]:
             return None
-        elif additional_info == 24:
-            return self._read_bytes_as_int(stream, 1)
         elif additional_info == 25:
             return struct.unpack('>e', self._read_from_stream(stream, 2))[0]
         elif additional_info == 26:
@@ -905,7 +926,6 @@ class BaseCBORParser(ResponseParser):
             raise ResponseParserError(
                 "Invalid additional information for simple or floating point types"
             )
-
 
     def _read_chunk(self, stream):
         initial_byte = self._read_bytes_as_int(stream, 1)
@@ -1026,6 +1046,7 @@ class EventStreamCBORParser(BaseEventStreamParser, BaseCBORParser):
         if body_contents == b'':
             return {}
         return self.parse_data_item(io.BytesIO(body_contents))
+
 
 class JSONParser(BaseJSONParser):
     EVENT_STREAM_PARSER_CLS = EventStreamJSONParser
@@ -1190,9 +1211,11 @@ class BaseRpcV2Parser(ResponseParser):
     def _do_parse(self, response, shape):
         parsed = {}
         if shape is not None:
-            event_name = shape.event_stream_name
-            if event_name:
-                parsed = self._handle_event_stream(response, shape, event_name)
+            event_stream_name = shape.event_stream_name
+            if event_stream_name:
+                parsed = self._handle_event_stream(
+                    response, shape, event_stream_name
+                )
             else:
                 parsed = {}
                 self._parse_payload(response, shape, parsed)
@@ -1314,18 +1337,22 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
             "ResponseMetadata": {},
         }
         headers = response['headers']
-        code = body.get(
-            '__type', response.get('status_code'),
-        )
-        if code:
-            code_str = str(code).rsplit('#', 1)[-1] 
-        if code:
-            code = code.rsplit('#', 1)[-1]
+
+        code = body.get('__type')
+        if code is None:
+            response_code = response.get('status_code')
+            if response_code is not None:
+                code = str(response_code)
+        if code is not None:
+            if ':' in code:
+                code = code.split(':', 1)[0]
+            if '#' in code:
+                code = code.rsplit('#', 1)[1]
             if 'x-amzn-query-error' in headers:
                 code = self._do_query_compatible_error_parse(
                     code, headers, error
                 )
-        error['Error']['Code'] = code
+            error['Error']['Code'] = code
         if 'x-amzn-requestid' in headers:
             error.setdefault('ResponseMetadata', {})['RequestId'] = headers[
                 'x-amzn-requestid'
@@ -1343,6 +1370,7 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
         parsed = self._initial_body_parse(event.payload)
         parsed[event_name] = event_stream
         return parsed
+
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
     EVENT_STREAM_PARSER_CLS = EventStreamXMLParser

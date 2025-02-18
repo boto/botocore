@@ -55,7 +55,6 @@ import base64
 import copy
 import io
 import os
-import xml.etree.ElementTree as ET
 from base64 import b64decode
 from enum import Enum
 
@@ -470,14 +469,20 @@ def _assert_requests_equal(actual, expected, protocol):
     # values to ensure we are properly testing things like
     if protocol == 'smithy-rpc-v2-cbor' and actual['body']:
         parser = RpcV2CBORParser()
-        actual_body = _convert_special_floats_to_string(parser.parse_data_item(
-            io.BytesIO(actual['body'])))
-        expected_body = _convert_special_floats_to_string(parser.parse_data_item(
-            io.BytesIO(base64.b64decode(expected['body']))))
+        actual_body = _convert_special_floats_to_string(
+            parser.parse_data_item(io.BytesIO(actual['body']))
+        )
+        expected_body = _convert_special_floats_to_string(
+            parser.parse_data_item(
+                io.BytesIO(base64.b64decode(expected['body']))
+            )
+        )
         assert_equal(actual_body, expected_body, 'Body value')
     else:
         assert_equal(
-            actual['body'], expected.get('body', '').encode('utf-8'), 'Body value'
+            actual['body'],
+            expected.get('body', '').encode('utf-8'),
+            'Body value',
         )
     actual_headers = HeadersDict(actual['headers'])
     expected_headers = HeadersDict(expected.get('headers', {}))
