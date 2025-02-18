@@ -1197,8 +1197,8 @@ class BaseRpcV2Parser(ResponseParser):
                 parsed = {}
                 self._parse_payload(response, shape, parsed)
             parsed['ResponseMetadata'] = self._populate_response_metadata(
-            response
-        )
+                response
+            )
         return parsed
 
     def _add_modeled_parse(self, response, shape, final_parsed):
@@ -1315,9 +1315,10 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
         }
         headers = response['headers']
         code = body.get(
-            '__type',
-            response.get('status_code') and str(response['status_code']),
+            '__type', response.get('status_code'),
         )
+        if code:
+            code_str = str(code).rsplit('#', 1)[-1] 
         if code:
             code = code.rsplit('#', 1)[-1]
             if 'x-amzn-query-error' in headers:
