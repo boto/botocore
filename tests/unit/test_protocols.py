@@ -127,7 +127,7 @@ def _compliance_tests(test_type=None):
                     protocol,
                     "input" if inp else "output",
                     model['description'],
-                    case['id'],
+                    case.get('id'),
                 ):
                     continue
                 if 'params' in case and inp:
@@ -158,7 +158,9 @@ def test_input_compliance(json_description, case, basename):
     client_endpoint = service_description.get('clientEndpoint')
     try:
         _assert_request_body_is_bytes(request['body'])
-        _assert_requests_equal(request, case['serialized'], protocol_type)
+        _assert_requests_equal(
+            request, case['serialized'], protocol_type, operation_model
+        )
         _assert_endpoints_equal(request, case['serialized'], client_endpoint)
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
@@ -436,7 +438,7 @@ def _serialize_request_description(request_dict):
                 request_dict['url_path'] += f'&{encoded}'
 
 
-def _assert_requests_equal(actual, expected, protocol_type):
+def _assert_requests_equal(actual, expected, protocol_type, operation_model):
     if 'body' in expected:
         expected_body = expected['body'].encode('utf-8')
         actual_body = actual['body']
@@ -446,7 +448,11 @@ def _assert_requests_equal(actual, expected, protocol_type):
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
     _assert_expected_headers_in_request(
-        actual_headers, expected_headers, excluded_headers, protocol_type
+        actual_headers,
+        expected_headers,
+        excluded_headers,
+        protocol_type,
+        operation_model,
     )
     assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
     if 'method' in expected:
@@ -489,20 +495,69 @@ def _assert_xml_bodies(actual, expected):
 
 
 def _assert_expected_headers_in_request(
-    actual, expected, excluded_headers, protocol_type
+    actual, expected, excluded_headers, protocol_type, operation_model
 ):
+    _clean_list_header_values(actual, expected, operation_model)
     if protocol_type in ['query', 'ec2']:
         # Botocore sets the Content-Type header to the following for query and ec2:
         # Content-Type: application/x-www-form-urlencoded; charset=utf-8
         # The protocol test files do not include "; charset=utf-8".
         # We'll add this to the expected header value before asserting equivalence.
-        if expected.get('Content-Type'):
-            expected['Content-Type'] += '; charset=utf-8'
+        content_type = expected.get('Content-Type', '')
+        if 'charset=utf-8' not in content_type:
+            expected['Content-Type'] = content_type + '; charset=utf-8'
     for header, value in expected.items():
         assert header in actual
         assert actual[header] == value
     for header in excluded_headers:
         assert header not in actual
+
+
+def _clean_list_header_values(
+    actual_headers, expected_headers, operation_model
+):
+    """
+    Standardizes list-type header values in HTTP request headers based on an AWS operation model.
+    Ensures consistency between expected and actual header values, particularly for lists and timestamps.
+
+    Expected list header values in Smithy protocol tests are joined by ", ". Example: "foo, bar, baz".
+    Actual list headers values generated in botocore are  joined by ",". Example "foo,bar,baz".
+    We need to standardize these header values to assert equivalence appropriately.
+    """
+    input_shape = operation_model.input_shape
+
+    if not (
+        input_shape
+        and input_shape.type_name == "structure"
+        and input_shape.members
+    ):
+        return
+
+    for member, shape in input_shape.members.items():
+        if (
+            shape.serialization.get("location") != "header"
+            or shape.type_name != "list"
+        ):
+            continue
+
+        header_name = shape.serialization.get("name")
+        if not header_name:
+            continue
+
+        # Standardize expected header values by removing spaces after commas
+        if header_name in expected_headers:
+            expected_headers[header_name] = expected_headers[
+                header_name
+            ].replace(", ", ",")
+
+        # Standardize actual header values only if they exist and the list contains timestamps
+        if (
+            shape.member.type_name == "timestamp"
+            and header_name in actual_headers
+        ):
+            actual_headers[header_name] = actual_headers[header_name].replace(
+                ", ", ","
+            )
 
 
 def _walk_files():

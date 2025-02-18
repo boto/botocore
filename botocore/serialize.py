@@ -398,9 +398,6 @@ class JSONSerializer(Serializer):
                 serialized = new_serialized
             members = shape.members
             for member_key, member_value in value.items():
-                if member_value is None:
-                    # Don't serialize any parameter with a None value.
-                    continue
                 member_shape = members[member_key]
                 if 'name' in member_shape.serialization:
                     member_key = member_shape.serialization['name']
@@ -642,6 +639,9 @@ class BaseRestSerializer(Serializer):
                 partitioned['query_string_kwargs'][key_name] = new_param
         elif location == 'header':
             shape = shape_members[param_name]
+            if not param_value and shape.type_name == 'list':
+                # Empty lists should not be set on the headers
+                return
             value = self._convert_header_value(shape, param_value)
             partitioned['headers'][key_name] = value
         elif location == 'headers':
@@ -704,7 +704,7 @@ class BaseRestSerializer(Serializer):
                     for v in value
                     if v is not None
                 ]
-            return ", ".join(converted_value)
+            return ",".join(converted_value)
         elif is_json_value_header(shape):
             # Serialize with no spaces after separators to save space in
             # the header.
@@ -735,8 +735,7 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
 
     def _serialize_content_type(self, serialized, shape, shape_members):
         """Set Content-Type to application/json for all structured bodies."""
-        has_content_type = has_header('Content-Type', serialized['headers'])
-        if has_content_type:
+        if has_header('Content-Type', serialized['headers']):
             return
         payload = shape.serialization.get('payload')
         if self._has_streaming_payload(payload, shape_members):
@@ -746,9 +745,8 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
                 serialized['headers']['Content-Type'] = (
                     'application/octet-stream'
                 )
-        else:
-            if serialized['body'] != b'':
-                serialized['headers']['Content-Type'] = 'application/json'
+        elif serialized['body'] != b'':
+            serialized['headers']['Content-Type'] = 'application/json'
 
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
@@ -790,9 +788,9 @@ class RestXMLSerializer(BaseRestSerializer):
             # xmlAttribute.  Rather than serializing into an XML child node,
             # we instead serialize the shape to an XML attribute of the
             # *current* node.
-            # if value is None:
-            #     # Don't serialize any param whose value is None.
-            #     return
+            if value is None:
+                # Don't serialize any param whose value is None.
+                return
             if member_shape.serialization.get('xmlAttribute'):
                 # xmlAttributes must have a serialization name.
                 xml_attribute_name = member_shape.serialization['name']
@@ -871,8 +869,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_content_type(self, serialized, shape, shape_members):
         """Set Content-Type to application/xml for all structured bodies."""
-        has_content_type = has_header('Content-Type', serialized['headers'])
-        if has_content_type:
+        if has_header('Content-Type', serialized['headers']):
             return
         payload = shape.serialization.get('payload')
         if self._has_streaming_payload(payload, shape_members):
