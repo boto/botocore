@@ -806,7 +806,7 @@ class BaseCBORParser(ResponseParser):
     def _parse_tag(self, stream, additional_info):
         tag = self._parse_integer(stream, additional_info)
         value = self.parse_data_item(stream)
-        if tag == 1:  # Epoch-based date/time
+        if tag == 1:  # Epoch-based date/time in milliseconds
             return self._parse_datetime(value)
         else:
             raise ResponseParserError(f"Unknown CBOR tag: {tag}")
