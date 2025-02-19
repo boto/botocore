@@ -470,11 +470,11 @@ def _assert_requests_equal(actual, expected, protocol):
     if protocol == 'smithy-rpc-v2-cbor' and actual['body']:
         parser = RpcV2CBORParser()
         actual_body = _convert_special_floats_to_string(
-            parser.parse_data_item(io.BytesIO(actual['body']))
+            parser.parse_data_item(io.BufferedReader(io.BytesIO(actual['body'])))
         )
         expected_body = _convert_special_floats_to_string(
             parser.parse_data_item(
-                io.BytesIO(base64.b64decode(expected['body']))
+                io.BufferedReader(io.BytesIO(base64.b64decode(expected['body'])))
             )
         )
         assert_equal(actual_body, expected_body, 'Body value')
