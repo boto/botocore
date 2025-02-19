@@ -42,6 +42,7 @@ import base64
 import calendar
 import datetime
 import json
+import math
 import re
 import struct
 from xml.etree import ElementTree
@@ -433,113 +434,99 @@ class JSONSerializer(Serializer):
 
 
 class CBORSerializer(Serializer):
-
-
     def _serialize_data_item(self, serialized, value, shape, key=None):
         method = getattr(self, f'_serialize_type_{shape.type_name}')
+        if method is None:
+            raise ValueError(
+                f"Unrecognized C2J type: {shape.type_name}, unable to "
+                f"serialize request"
+            )
         method(serialized, value, shape, key)
 
     def _serialize_type_integer(self, serialized, value, shape, key):
+        # Major type is 0 for unsigned integers, and 1 for negative integers
         if value >= 0:
-            if value < 24:
-                serialized.extend(bytes([value]))
-            elif value < 256:
-                serialized.extend(b'\x18' + value.to_bytes(1, "big"))
-            elif value < 65536:
-                serialized.extend(b'\x19' + value.to_bytes(2, "big"))
-            elif value < 4294967296:
-                serialized.extend(b'\x1a' + value.to_bytes(4, "big"))
-            else:
-                serialized.extend(b'\x1b' + value.to_bytes(8, "big"))
+            major_type = 0
         else:
+            major_type = 1
+            # The only differences in serializing negative and positive integers is
+            # that for negative, we set the major type to 1 and set the value to -1
+            # minus the value
             value = -1 - value
-            if value < 24:
-                serialized.extend(bytes([0x20 + value]))
-            elif value < 256:
-                serialized.extend(b'\x38' + value.to_bytes(1, "big"))
-            elif value < 65536:
-                serialized.extend(b'\x39' + value.to_bytes(2, "big"))
-            elif value < 4294967296:
-                serialized.extend(b'\x3a' + value.to_bytes(4, "big"))
-            else:
-                serialized.extend(b'\x3b' + value.to_bytes(8, "big"))
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            value
+        )
+        initial_byte = self._get_initial_byte(major_type, additional_info)
+        if num_bytes == 0:
+            serialized.extend(initial_byte)
+        else:
+            serialized.extend(initial_byte + value.to_bytes(num_bytes, "big"))
 
     def _serialize_type_long(self, serialized, value, shape, key):
         self._serialize_type_integer(serialized, value, shape, key)
 
     def _serialize_type_blob(self, serialized, value, shape, key):
+        major_type = 2
         if isinstance(value, str):
             value = value.encode('utf-8')
         elif not isinstance(value, (bytes, bytearray)):
-            raise TypeError("value must be bytes, bytearray, or str")
-
+            # We support file-like objects for blobs; these already have been
+            # validated to ensure they have a read method
+            value = value.read()
         length = len(value)
-        if length < 24:
-            serialized.extend(bytes([0x40 + length]))
-        elif length < 256:
-            serialized.extend(b'\x58' + length.to_bytes(1, "big"))
-        elif length < 65536:
-            serialized.extend(b'\x59' + length.to_bytes(2, "big"))
-        elif length < 4294967296:
-            serialized.extend(b'\x5a' + length.to_bytes(4, "big"))
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            length
+        )
+        initial_byte = self._get_initial_byte(major_type, additional_info)
+        if num_bytes == 0:
+            serialized.extend(initial_byte)
         else:
-            serialized.extend(b'\x5b' + length.to_bytes(8, "big"))
-
+            serialized.extend(initial_byte + length.to_bytes(num_bytes, "big"))
         serialized.extend(value)
 
-    def _serialize_type_boolean(self, serialized, value, shape, key):
-        if value:
-            serialized.extend(b'\xf5')
-        else:
-            serialized.extend(b'\xf4')
-
-    def _serialize_type_timestamp(self, serialized, value, shape, key):
-        timestamp = self._convert_timestamp_to_str(value)
-        serialized.extend(b'\xc1')
-        if timestamp < 24:
-            serialized.extend(bytes([timestamp]))
-        elif timestamp < 256:
-            serialized.extend(b'\x18' + timestamp.to_bytes(1, "big"))
-        elif timestamp < 65536:
-            serialized.extend(b'\x19' + timestamp.to_bytes(2, "big"))
-        elif timestamp < 4294967296:
-            serialized.extend(b'\x1a' + timestamp.to_bytes(4, "big"))
-        else:
-            serialized.extend(b'\x1b' + timestamp.to_bytes(8, "big"))
-
-    def _get_bytes_for_special_numbers(self, value):
-        if value == float('inf'):
-            return b'\xf9\x7c\x00'  # Positive infinity
-        elif value == float('-inf'):
-            return b'\xf9\xfc\x00'  # Negative infinity
-        elif value != value:  # NaN check
-            return b'\xf9\x7e\x00'
-
-    def _serialize_type_float(self, serialized, value, shape, key):
-        if special_value_bytes := self._get_bytes_for_special_numbers(value):
-            serialized.extend(special_value_bytes)  # Positive infinity
-        else:
-            serialized.extend(b'\xfa' + struct.pack(">f", value))
-
-    def _serialize_type_double(self, serialized, value, shape, key):
-        if special_value_bytes := self._get_bytes_for_special_numbers(value):
-            serialized.extend(special_value_bytes)  # Positive infinity
-        else:
-            serialized.extend(b'\xfb' + struct.pack(">d", value))
-
     def _serialize_type_string(self, serialized, value, shape, key):
+        major_type = 3
         encoded = value.encode('utf-8')
         length = len(encoded)
-        if length < 24:
-            serialized.extend(bytes([0x60 + length]) + encoded)
-        elif length < 256:
-            serialized.extend(b'\x78' + length.to_bytes(1, 'big') + encoded)
-        elif length < 65536:
-            serialized.extend(b'\x79' + length.to_bytes(2, 'big') + encoded)
-        elif length < 4294967296:
-            serialized.extend(b'\x7a' + length.to_bytes(4, 'big') + encoded)
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            length
+        )
+        initial_byte = self._get_initial_byte(major_type, length)
+        if num_bytes == 0:
+            serialized.extend(initial_byte + encoded)
         else:
-            serialized.extend(b'\x7b' + length.to_bytes(8, 'big') + encoded)
+            serialized.extend(
+                initial_byte + length.to_bytes(num_bytes, "big") + encoded
+            )
+
+    def _serialize_type_list(self, serialized, value, shape, key):
+        major_type = 4
+        length = len(value)
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            length
+        )
+        initial_byte = self._get_initial_byte(major_type, additional_info)
+        if num_bytes == 0:
+            serialized.extend(initial_byte)
+        else:
+            serialized.extend(initial_byte + length.to_bytes(num_bytes, "big"))
+        for item in value:
+            self._serialize_data_item(serialized, item, shape.member)
+
+    def _serialize_type_map(self, serialized, value, shape, key):
+        major_type = 5
+        length = len(value)
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            length
+        )
+        initial_byte = self._get_initial_byte(major_type, additional_info)
+        if num_bytes == 0:
+            serialized.extend(initial_byte)
+        else:
+            serialized.extend(initial_byte + length.to_bytes(num_bytes, "big"))
+        for key_item, item in value.items():
+            self._serialize_data_item(serialized, key_item, shape.key)
+            self._serialize_data_item(serialized, item, shape.value)
 
     def _serialize_type_structure(self, serialized, value, shape, key):
         if key is not None:
@@ -549,20 +536,18 @@ class CBORSerializer(Serializer):
         # Remove `None` values from the dictionary
         value = {k: v for k, v in value.items() if v is not None}
 
+        map_major_type = 5
         map_length = len(value)
-        if map_length == 0:
-            serialized.append(0xA0)  # CBOR encoding for an empty map
-            return
-        elif map_length < 24:
-            serialized.append(0xA0 + map_length)
-        elif map_length < 256:
-            serialized.extend(b'\xb8' + struct.pack('B', map_length))
-        elif map_length < 65536:
-            serialized.extend(b'\xb9' + struct.pack('>H', map_length))
-        elif map_length < 4294967296:
-            serialized.extend(b'\xba' + struct.pack('>I', map_length))
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            map_length
+        )
+        initial_byte = self._get_initial_byte(map_major_type, additional_info)
+        if num_bytes == 0:
+            serialized.extend(initial_byte)
         else:
-            serialized.extend(b'\xbb' + struct.pack('>Q', map_length))
+            serialized.extend(
+                initial_byte + map_length.to_bytes(num_bytes, "big")
+            )
 
         members = shape.members
         for member_key, member_value in value.items():
@@ -575,36 +560,89 @@ class CBORSerializer(Serializer):
                     serialized, member_value, member_shape
                 )
 
-    def _serialize_type_list(self, serialized, value, shape, key):
-        length = len(value)
-        if length < 24:
-            serialized.extend(struct.pack('B', 0x80 + length))
-        elif length < 256:
-            serialized.extend(b'\x98' + struct.pack('B', length))
-        elif length < 65536:
-            serialized.extend(b'\x99' + struct.pack('>H', length))
-        elif length < 4294967296:
-            serialized.extend(b'\x9a' + struct.pack('>I', length))
-        else:
-            serialized.extend(b'\x9b' + struct.pack('>Q', length))
-        for item in value:
-            self._serialize_data_item(serialized, item, shape.member)
+    def _serialize_type_timestamp(self, serialized, value, shape, key):
+        tag_major_type = 6
+        timestamp = self._convert_timestamp_to_str(value)
+        tag = 1  # Use tag 1 for unix timestamp
+        initial_byte = self._get_initial_byte(tag_major_type, tag)
+        serialized.extend(initial_byte)  # Tagging the timestamp
+        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
+            timestamp
+        )
 
-    def _serialize_type_map(self, serialized, value, shape, key):
-        length = len(value)
-        if length < 24:
-            serialized.extend(struct.pack('B', 0xA0 + length))
-        elif length < 256:
-            serialized.extend(b'\xb8' + struct.pack('B', length))
-        elif length < 65536:
-            serialized.extend(b'\xb9' + struct.pack('>H', length))
-        elif length < 4294967296:
-            serialized.extend(b'\xba' + struct.pack('>I', length))
+        int_major_type = 0
+        if num_bytes == 0:
+            initial_byte = self._get_initial_byte(int_major_type, timestamp)
+            serialized.extend(initial_byte)
         else:
-            serialized.extend(b'\xbb' + struct.pack('>Q', length))
-        for key_item, item in value.items():
-            self._serialize_data_item(serialized, key_item, shape.key)
-            self._serialize_data_item(serialized, item, shape.value)
+            initial_byte = self._get_initial_byte(
+                int_major_type, additional_info
+            )
+            serialized.extend(
+                initial_byte + timestamp.to_bytes(num_bytes, "big")
+            )
+
+    def _serialize_type_float(self, serialized, value, shape, key):
+        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+            serialized.extend(
+                special_value_bytes
+            )  # Special values like NaN or Infinity
+        else:
+            major_type = 7
+            initial_byte = self._get_initial_byte(major_type, 26)
+            serialized.extend(initial_byte + struct.pack(">f", value))
+
+    def _serialize_type_double(self, serialized, value, shape, key):
+        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+            serialized.extend(
+                special_value_bytes
+            )  # Special values like NaN or Infinity
+        else:
+            major_type = 7
+            initial_byte = self._get_initial_byte(major_type, 27)
+            serialized.extend(initial_byte + struct.pack(">d", value))
+
+    def _serialize_type_boolean(self, serialized, value, shape, key):
+        major_type = 7
+        additional_info = 21 if value else 20
+        serialized.extend(self._get_initial_byte(major_type, additional_info))
+
+    def _get_additional_info_and_num_bytes(self, value):
+        # Values under 24 can be stored in the initial byte and don't need further
+        # encoding
+        if value < 24:
+            return value, 0
+        # Values between 24 and 255 (inclusive) can be stored in 1 byte and
+        # correspond to additional info 24
+        elif value < 256:
+            return 24, 1
+        # Values up to 65535 can be stored in two bytes
+        elif value < 65536:
+            return 25, 2
+        # Values up to 4294967296 can be stored in four bytes
+        elif value < 4294967296:
+            return 26, 4
+        # The maximum number of bytes currently allowed by CBOR is 8
+        else:
+            return 27, 8
+
+    def _get_initial_byte(self, major_type, additional_info):
+        # The first three bits are the major type, so we need to bitshift the major
+        # type by 5
+        major_type_bytes = major_type << 5
+        return (major_type_bytes | additional_info).to_bytes(1, "big")
+
+    def _get_bytes_for_special_numbers(self, value):
+        major_type = 7
+        additional_info = 25
+        initial_byte = self._get_initial_byte(major_type, additional_info)
+        if value == float('inf'):
+            return initial_byte + struct.pack(">H", 0x7C00)
+        elif value == float('-inf'):
+            return initial_byte + struct.pack(">H", 0xFC00)
+        elif math.isnan(value):
+            return initial_byte + struct.pack(">H", 0x7E00)
+        return None
 
 
 class BaseRestSerializer(Serializer):
@@ -852,7 +890,8 @@ class BaseRpcV2Serializer(Serializer):
     way that the body is serialized.  All other aspects (headers, uri, etc.)
     are the same and logic for serializing those aspects lives here.
 
-    Subclasses must implement the ``_serialize_body_params`` method.
+    Subclasses must implement the ``_serialize_body_params``  and
+    ``_serialize_headers`` methods.
 
     """
 
@@ -866,9 +905,7 @@ class BaseRpcV2Serializer(Serializer):
 
         input_shape = operation_model.input_shape
         if input_shape is not None:
-            self._serialize_payload(
-                parameters, serialized, input_shape
-            )
+            self._serialize_payload(parameters, serialized, input_shape)
 
         self._serialize_headers(serialized, operation_model)
 
@@ -877,7 +914,6 @@ class BaseRpcV2Serializer(Serializer):
     def _serialize_payload(self, parameters, serialized, shape):
         body_payload = self._serialize_body_params(parameters, shape)
         serialized['body'] = body_payload
-
 
 
 class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
@@ -1025,16 +1061,16 @@ class RpcV2CBORSerializer(BaseRpcV2Serializer, CBORSerializer):
         serialized['headers']['smithy-protocol'] = 'rpc-v2-cbor'
 
         if operation_model.has_event_stream_output:
-            content_type = 'application/vnd.amazon.eventstream'
+            header_val = 'application/vnd.amazon.eventstream'
         else:
-            content_type = 'application/cbor'
+            header_val = 'application/cbor'
 
         has_body = serialized['body'] != b''
         has_content_type = has_header('Content-Type', serialized['headers'])
 
-        serialized['headers']['Accept'] = content_type 
+        serialized['headers']['Accept'] = header_val
         if not has_content_type and has_body:
-            serialized['headers']['Content-Type'] = content_type
+            serialized['headers']['Content-Type'] = header_val
 
 
 SERIALIZERS = {
