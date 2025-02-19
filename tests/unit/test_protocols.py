@@ -53,7 +53,6 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
 import base64
 import copy
-import io
 import os
 from base64 import b64decode
 from enum import Enum
@@ -469,13 +468,17 @@ def _assert_requests_equal(actual, expected, protocol):
     # values to ensure we are properly testing things like
     if protocol == 'smithy-rpc-v2-cbor' and actual['body']:
         parser = RpcV2CBORParser()
+        actual_body_stream = parser.get_peekable_stream_from_bytes(
+            actual['body']
+        )
+        expected_body_stream = parser.get_peekable_stream_from_bytes(
+            base64.b64decode(expected['body'])
+        )
         actual_body = _convert_special_floats_to_string(
-            parser.parse_data_item(io.BufferedReader(io.BytesIO(actual['body'])))
+            parser.parse_data_item(actual_body_stream)
         )
         expected_body = _convert_special_floats_to_string(
-            parser.parse_data_item(
-                io.BufferedReader(io.BytesIO(base64.b64decode(expected['body'])))
-            )
+            parser.parse_data_item(expected_body_stream)
         )
         assert_equal(actual_body, expected_body, 'Body value')
     else:

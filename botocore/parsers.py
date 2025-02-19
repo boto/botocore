@@ -769,7 +769,6 @@ class BaseJSONParser(ResponseParser):
 
 
 class BaseCBORParser(ResponseParser):
-
     ADDITIONAL_INFO_TO_BYTES = {
         24: 1,
         25: 2,
@@ -777,17 +776,20 @@ class BaseCBORParser(ResponseParser):
         27: 8,
     }
 
-    SIMPLE_VALUES = {
+    MAJOR_TYPE_7_SIMPLE_VALUES = {
         20: False,
         21: True,
         22: None,
         23: None,
     }
 
-    BREAK_CODE = 0xff
+    BREAK_CODE = 0xFF
+
+    def get_peekable_stream_from_bytes(self, bytes):
+        return io.BufferedReader(io.BytesIO(bytes))
 
     def parse_data_item(self, stream):
-        # Sections of CBOR data are called "data items", and each data item starts
+        # CBOR data is divided into "data items", and each data item starts
         # with an initial byte that describes how the following bytes should be parsed
         initial_byte = self._read_bytes_as_int(stream, 1)
         # The first three bits of the initial byte describe the "major type" such as
@@ -821,7 +823,7 @@ class BaseCBORParser(ResponseParser):
                 f"{additional_info}"
             )
 
-    # Major types 0 and 1
+    # Major types 0 and 1 - unsigned and negative integers, respectively
     def _parse_integer(self, stream, additional_info):
         if additional_info < 24:
             return additional_info
@@ -834,70 +836,75 @@ class BaseCBORParser(ResponseParser):
                 f"additional info found for major type 0 or 1: {additional_info}"
             )
 
-    # Major type 2
+    # Major type 2 - byte string
     def _parse_byte_string(self, stream, additional_info):
-        if additional_info == 31:
-            chunks = []
-            while True:
-                chunk = self._read_chunk(stream)
-                if chunk is None:
-                    break
-                chunks.append(chunk)
-            return b''.join(chunks)
-        else:
+        # 31 indicates an indefinite length
+        if additional_info != 31:
             length = self._parse_integer(stream, additional_info)
             return self._read_from_stream(stream, length)
+        else:
+            chunks = []
+            while True:
+                if self._handle_break_code(stream):
+                    break
+                initial_byte = self._read_bytes_as_int(stream, 1)
+                additional_info = initial_byte & 0b00011111
+                length = self._parse_integer(stream, additional_info)
+                chunks.append(self._read_from_stream(stream, length))
+            return b''.join(chunks)
 
-    # Major type 3
+    # Major type 3 - text string
     def _parse_text_string(self, stream, additional_info):
         return self._parse_byte_string(stream, additional_info).decode('utf-8')
 
-    # Major type 4
+    # Major type 4 - lists
     def _parse_array(self, stream, additional_info):
-        if additional_info == 31:
+        # 31 indicates an indefinite length
+        if additional_info != 31:
+            length = self._parse_integer(stream, additional_info)
+            return [self.parse_data_item(stream) for _ in range(length)]
+        else:
             items = []
             while True:
-                if self._peek_first_byte_as_int(stream) == self.BREAK_CODE:
-                    stream.seek(1, os.SEEK_CUR)
+                if self._handle_break_code(stream):
                     break
                 items.append(self.parse_data_item(stream))
             return items
-        else:
-            length = self._parse_integer(stream, additional_info)
-            return [self.parse_data_item(stream) for _ in range(length)]
 
-    # Major type 5
+    # Major type 5 - maps
     def _parse_map(self, stream, additional_info):
-        if additional_info == 31:
-            items = {}
-            while True:
-                if self._peek_first_byte_as_int(stream) == 0xFF:
-                    stream.seek(1, os.SEEK_CUR)
-                    break
-                key = self.parse_data_item(stream)
-                value = self.parse_data_item(stream)
-                if value is not None:
-                    items[key] = value
-            return items
-        else:
-            items = {}
+        # 31 indicates an indefinite length
+        items = {}
+        if additional_info != 31:
             length = self._parse_integer(stream, additional_info)
             for _ in range(length):
-                key = self.parse_data_item(stream)
-                value = self.parse_data_item(stream)
-                if value is not None:
-                    items[key] = value
+                self._parse_key_value_pair(stream, items)
             return items
 
-    # Major type 6
+        else:
+            while True:
+                if self._handle_break_code(stream):
+                    break
+                self._parse_key_value_pair(stream, items)
+            return items
+
+    def _parse_key_value_pair(self, stream, items):
+        key = self.parse_data_item(stream)
+        value = self.parse_data_item(stream)
+        if value is not None:
+            items[key] = value
+
+    # Major type 6 is tags.  The only tag we currently support is tag 1 for unix
+    # timestamps
     def _parse_tag(self, stream, additional_info):
         tag = self._parse_integer(stream, additional_info)
         value = self.parse_data_item(stream)
         if tag == 1:  # Epoch-based date/time in milliseconds
             return self._parse_datetime(value)
         else:
-            raise ResponseParserError(f"Found CBOR tag not supported by botocore:"
-                                      f" {tag}")
+            raise ResponseParserError(
+                f"Found CBOR tag not supported by botocore:" f" {tag}"
+            )
 
     def _parse_datetime(self, value):
         if isinstance(value, (int, float)):
@@ -911,10 +918,11 @@ class BaseCBORParser(ResponseParser):
     # currently boolean values, CBOR's null, and CBOR's undefined type.  All other
     # values are either floats or invalid.
     def _parse_simple_and_float(self, stream, additional_info):
-        #First we look up if the additional info corresponds to a supported simple
+        # First we look up if the additional info corresponds to a supported simple
         # value:
-        if additional_info in self.SIMPLE_VALUES.keys():
-            return self.SIMPLE_VALUES[additional_info]
+        if additional_info in self.MAJOR_TYPE_7_SIMPLE_VALUES.keys():
+            return self.MAJOR_TYPE_7_SIMPLE_VALUES[additional_info]
+        # Otherwise we parse the bytes into the corresponding float format
         elif additional_info == 25:
             return struct.unpack('>e', self._read_from_stream(stream, 2))[0]
         elif additional_info == 26:
@@ -926,17 +934,14 @@ class BaseCBORParser(ResponseParser):
             f"This indicates an unsupported simple type or an indefinite float value"
         )
 
-    def _read_chunk(self, stream):
-        if self._peek_first_byte_as_int(stream) == self.BREAK_CODE:
+    # This helper method is intended for use when parsing indefinite length items.
+    # It does nothing if the next byte is not the break code.  If the next byte is
+    # the break code, it advances past that byte and returns True so the calling
+    # method knows to stop parsing that data item.
+    def _handle_break_code(self, stream):
+        if int.from_bytes(stream.peek(1)[:1]) == self.BREAK_CODE:
             stream.seek(1, os.SEEK_CUR)
-            return None
-        initial_byte = self._read_bytes_as_int(stream, 1)
-        additional_info = initial_byte & 0b00011111
-        length = self._parse_integer(stream, additional_info)
-        return self._read_from_stream(stream, length)
-
-    def _peek_first_byte_as_int(self, stream):
-        return int.from_bytes(stream.peek(1)[:1])
+            return True
 
     def _read_bytes_as_int(self, stream, num_bytes):
         byte = self._read_from_stream(stream, num_bytes)
@@ -945,9 +950,11 @@ class BaseCBORParser(ResponseParser):
     def _read_from_stream(self, stream, num_bytes):
         value = stream.read(num_bytes)
         if len(value) != num_bytes:
-            raise ResponseParserError("End of stream reached; this indicates a "
-                                      "malformed CBOR response from the server or an "
-                                      "issue in botocore")
+            raise ResponseParserError(
+                "End of stream reached; this indicates a "
+                "malformed CBOR response from the server or an "
+                "issue in botocore"
+            )
         return value
 
 
@@ -1050,7 +1057,9 @@ class EventStreamCBORParser(BaseEventStreamParser, BaseCBORParser):
     def _initial_body_parse(self, body_contents):
         if body_contents == b'':
             return {}
-        return self.parse_data_item(io.BufferedReader(io.BytesIO(body_contents)))
+        return self.parse_data_item(
+            self.get_peekable_stream_from_bytes(body_contents)
+        )
 
 
 class JSONParser(BaseJSONParser):
@@ -1329,7 +1338,9 @@ class RpcV2CBORParser(BaseRpcV2Parser, BaseCBORParser):
     def _initial_body_parse(self, body_contents):
         if body_contents == b'':
             return body_contents
-        body_contents_stream = io.BufferedReader(io.BytesIO(body_contents))
+        body_contents_stream = self.get_peekable_stream_from_bytes(
+            body_contents
+        )
         return self.parse_data_item(body_contents_stream)
 
     def _do_error_parse(self, response, shape):
