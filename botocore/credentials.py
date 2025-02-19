@@ -344,6 +344,12 @@ class Credentials:
             self.access_key, self.secret_key, self.token, self.account_id
         )
 
+    def get_deferred_property(self, property_name):
+        def get_property():
+            return getattr(self, property_name, None)
+
+        return get_property
+
 
 class RefreshableCredentials(Credentials):
     """
