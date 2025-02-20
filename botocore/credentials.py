@@ -44,6 +44,7 @@ from botocore.exceptions import (
 )
 from botocore.tokens import SSOTokenProvider
 from botocore.utils import (
+    ArnParser,
     ContainerMetadataFetcher,
     FileWebIdentityTokenLoader,
     InstanceMetadataFetcher,
@@ -729,12 +730,15 @@ class CachedCredentialFetcher:
 
         creds = response['Credentials']
         expiration = _serialize_if_needed(creds['Expiration'], iso=True)
-        return {
+        credentials = {
             'access_key': creds['AccessKeyId'],
             'secret_key': creds['SecretAccessKey'],
             'token': creds['SessionToken'],
             'expiry_time': expiration,
+            'account_id': creds.get('AccountId'),
         }
+
+        return credentials
 
     def _load_from_cache(self):
         if self._cache_key in self._cache:
@@ -809,6 +813,15 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
         argument_hash = sha1(args.encode('utf-8')).hexdigest()
         return self._make_file_safe(argument_hash)
 
+    def _add_account_id_to_response(self, response):
+        role_arn = response.get('AssumedRoleUser', {}).get('Arn')
+        if ArnParser.is_arn(role_arn):
+            arn_parser = ArnParser()
+            account_id = arn_parser.parse_arn(role_arn)['account']
+            response['Credentials']['AccountId'] = account_id
+        else:
+            logger.debug(f"Unable to extract account ID from Arn: {role_arn}")
+
 
 class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
     def __init__(
@@ -869,7 +882,9 @@ class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
         """Get credentials by calling assume role."""
         kwargs = self._assume_role_kwargs()
         client = self._create_client()
-        return client.assume_role(**kwargs)
+        response = client.assume_role(**kwargs)
+        self._add_account_id_to_response(response)
+        return response
 
     def _assume_role_kwargs(self):
         """Get the arguments for assume role based on current configuration."""
@@ -956,7 +971,9 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
         # the token, explicitly configure the client to not sign requests.
         config = Config(signature_version=UNSIGNED)
         client = self._client_creator('sts', config=config)
-        return client.assume_role_with_web_identity(**kwargs)
+        response = client.assume_role_with_web_identity(**kwargs)
+        self._add_account_id_to_response(response)
+        return response
 
     def _assume_role_kwargs(self):
         """Get the arguments for assume role based on current configuration."""
@@ -1748,8 +1765,8 @@ class AssumeRoleProvider(CredentialProvider):
         ):
             # This is only here for backwards compatibility. If this provider
             # isn't given a profile provider builder we still want to be able
-            # handle the basic static credential case as we would before the
-            # provile provider builder parameter was added.
+            # to handle the basic static credential case as we would before the
+            # profile provider builder parameter was added.
             return self._resolve_static_credentials_from_profile(profile)
         elif self._has_static_credentials(
             profile
@@ -2245,6 +2262,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
                 'SecretAccessKey': credentials['secretAccessKey'],
                 'SessionToken': credentials['sessionToken'],
                 'Expiration': self._parse_timestamp(credentials['expiration']),
+                'AccountId': self._account_id,
             },
         }
         return credentials

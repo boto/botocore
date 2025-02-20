@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import logging
 import os
 import shutil
 import subprocess
@@ -30,6 +31,7 @@ from botocore.configprovider import ConfigValueStore
 from botocore.credentials import (
     AssumeRoleProvider,
     AssumeRoleWithWebIdentityProvider,
+    BaseAssumeRoleCredentialFetcher,
     ConfigProvider,
     CredentialProvider,
     Credentials,
@@ -265,6 +267,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
+            'account_id': response.get('Credentials', {}).get('AccountId'),
         }
 
     def some_future_time(self):
@@ -696,6 +699,51 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         ]
         self.assertEqual(calls, expected_calls)
 
+    def test_account_id_with_valid_arn(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+                'AccountId': '123456789012',
+            },
+            'AssumedRoleUser': {
+                'AssumedRoleId': 'myroleid',
+                'Arn': 'arn:aws:iam::123456789012:role/RoleA',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleCredentialFetcher(
+            client_creator, self.source_creds, self.role_arn
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], '123456789012')
+
+    def test_account_id_with_invalid_arn(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+            'AssumedRoleUser': {
+                'AssumedRoleId': 'myroleid',
+                'Arn': 'invalid-arn',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleCredentialFetcher(
+            client_creator, self.source_creds, self.role_arn
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], None)
+
 
 class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
     def setUp(self):
@@ -728,6 +776,7 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             'secret_key': response['Credentials']['SecretAccessKey'],
             'token': response['Credentials']['SessionToken'],
             'expiry_time': expiration,
+            'account_id': response.get('Credentials', {}).get('AccountId'),
         }
 
     def test_no_cache(self):
@@ -802,6 +851,53 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
         response = refresher.fetch_credentials()
 
         self.assertEqual(response, expected)
+
+    def test_account_id_with_valid_arn(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+                'AccountId': '123456789012',
+            },
+            'AssumedRoleUser': {
+                'AssumedRoleId': 'myroleid',
+                'Arn': 'arn:aws:iam::123456789012:role/RoleA',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator, self.load_token, self.role_arn
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], '123456789012')
+
+    def test_account_id_with_invalid_arn(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+            'AssumedRoleUser': {
+                'AssumedRoleId': 'myroleid',
+                'Arn': 'invalid-arn',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator,
+            self.load_token,
+            self.role_arn,
+        )
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+        self.assertEqual(response, expected_response)
+        self.assertEqual(response['account_id'], None)
 
 
 class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
@@ -3750,6 +3846,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
                 'Expiration': '2008-09-23T12:43:20Z',
+                'AccountId': '1234567890',
             },
         }
         self.assertEqual(self.cache[cache_key], expected_cached_credentials)
@@ -3883,6 +3980,15 @@ class TestSSOProvider(unittest.TestCase):
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
             self.provider.load()
 
+    def test_load_sso_credentials_with_account_id(self):
+        self._add_get_role_credentials_response()
+        with self.stubber:
+            credentials = self.provider.load()
+            self.assertEqual(credentials.access_key, 'foo')
+            self.assertEqual(credentials.secret_key, 'bar')
+            self.assertEqual(credentials.token, 'baz')
+            self.assertEqual(credentials.account_id, '1234567890')
+
 
 @pytest.mark.parametrize(
     "account_id, expected", [("123456789012", "123456789012"), (None, None)]
@@ -3894,3 +4000,46 @@ def test_get_deferred_property_account_id(account_id, expected):
     deferred_account_id = creds.get_deferred_property('account_id')
     assert callable(deferred_account_id)
     assert deferred_account_id() == expected
+
+
+@pytest.fixture
+def mock_base_assume_role_credential_fetcher():
+    return BaseAssumeRoleCredentialFetcher(
+        client_creator=mock.Mock(),
+        role_arn='arn:aws:iam::123456789012:role/RoleA',
+    )
+
+
+def test_add_account_id_to_response_with_valid_arn(
+    mock_base_assume_role_credential_fetcher,
+):
+    response = {
+        'Credentials': {},
+        'AssumedRoleUser': {
+            'AssumedRoleId': 'myroleid',
+            'Arn': 'arn:aws:iam::123456789012:role/RoleA',
+        },
+    }
+    mock_base_assume_role_credential_fetcher._add_account_id_to_response(
+        response
+    )
+    assert 'AccountId' in response['Credentials']
+    assert response['Credentials']['AccountId'] == '123456789012'
+
+
+def test_add_account_id_to_response_with_invalid_arn(
+    mock_base_assume_role_credential_fetcher, caplog
+):
+    response = {
+        'Credentials': {},
+        'AssumedRoleUser': {
+            'AssumedRoleId': 'myroleid',
+            'Arn': 'invalid-arn',
+        },
+    }
+    with caplog.at_level(logging.DEBUG):
+        mock_base_assume_role_credential_fetcher._add_account_id_to_response(
+            response
+        )
+    assert 'AccountId' not in response['Credentials']
+    assert 'Unable to extract account ID from Arn' in caplog.text
