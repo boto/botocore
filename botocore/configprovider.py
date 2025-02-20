@@ -214,7 +214,6 @@ def _warn_misspelling_deprecated():
     Will not warn on:
 
     - Module imports: import botocore.configprovider
-    - Imports done via python shell since import statement will not be on the stack in a shell context.
 
     Use of BOTOCORE_DEFAUT_SESSION_VARIABLES remains functional due to pass by reference nature of dictionaries.
     """
