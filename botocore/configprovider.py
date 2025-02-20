@@ -15,8 +15,10 @@ is loaded.
 """
 
 import copy
+import inspect
 import logging
 import os
+import re
 
 from botocore import utils
 from botocore.exceptions import InvalidConfigError
@@ -48,9 +50,7 @@ logger = logging.getLogger(__name__)
 #: the ``env var`` is the OS environment variable (``os.environ``) to
 #: use, and ``default_value`` is the value to use if no value is otherwise
 #: found.
-#: NOTE: Fixing the spelling of this variable would be a breaking change.
-#: Please leave as is.
-BOTOCORE_DEFAUT_SESSION_VARIABLES = {
+BOTOCORE_DEFAULT_SESSION_VARIABLES = {
     # logical:  config_file, env_var, default_value, conversion_func
     'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
@@ -200,8 +200,36 @@ _STS_DEFAULT_SETTINGS = {
         None,
     ),
 }
-BOTOCORE_DEFAUT_SESSION_VARIABLES.update(_STS_DEFAULT_SETTINGS)
+BOTOCORE_DEFAULT_SESSION_VARIABLES.update(_STS_DEFAULT_SETTINGS)
 
+_BOTOCORE_DEFAUT_SESSION_VARIABLES_TEST_PATTERN = r'.*import.*BOTOCORE_DEFAUT_SESSION_VARIABLES.*'
+
+def _warn_misspelling_deprecated():
+    """Warns the user if importing BOTOCORE_DEFAUT_SESSION_VARIABLES in a named import. Below is a summary:
+
+    Will warn on:
+
+    - Named imports: from botocore.configprovider import BOTOCORE_DEFAUT_SESSION_VARIABLES
+
+    Will not warn on:
+
+    - Module imports: import botocore.configprovider
+    - Imports done via python shell since import statement will not be on the stack in a shell context.
+
+    Use of BOTOCORE_DEFAUT_SESSION_VARIABLES remains functional due to pass by reference nature of dictionaries.
+    """
+    # Grab the stack
+    for frame in inspect.stack():
+        if frame.code_context:
+            # Do a basic regex match on each line
+            for line in frame.code_context:
+                # If a named import is being used, warn the user of deprecation
+                if re.match(_BOTOCORE_DEFAUT_SESSION_VARIABLES_TEST_PATTERN, line):
+                    logging.warning("BOTOCORE_DEFAUT_SESSION_VARIABLES as a named import is deprecated and will be removed in a future release. Use BOTOCORE_DEFAULT_SESSION_VARIABLES instead.")
+    # Return the value with the correct name; remains mutable via pass by reference
+    return BOTOCORE_DEFAULT_SESSION_VARIABLES
+
+BOTOCORE_DEFAUT_SESSION_VARIABLES=_warn_misspelling_deprecated()
 
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
@@ -266,7 +294,7 @@ DEFAULT_PROXIES_CONFIG_VARS = {
 def create_botocore_default_config_mapping(session):
     chain_builder = ConfigChainFactory(session=session)
     config_mapping = _create_config_chain_mapping(
-        chain_builder, BOTOCORE_DEFAUT_SESSION_VARIABLES
+        chain_builder, BOTOCORE_DEFAULT_SESSION_VARIABLES
     )
     config_mapping['s3'] = SectionConfigProvider(
         's3',
