@@ -218,14 +218,16 @@ def _warn_misspelling_deprecated():
 
     Use of BOTOCORE_DEFAUT_SESSION_VARIABLES remains functional due to pass by reference nature of dictionaries.
     """
-    # Grab the stack
-    for frame in inspect.stack():
+    # Grab the stack and go through frames in reverse order (imports are likely low on the stack)
+    for frame in inspect.stack()[::-1]:
         if frame.code_context:
             # Do a basic regex match on each line
             for line in frame.code_context:
                 # If a named import is being used, warn the user of deprecation
                 if re.match(_BOTOCORE_DEFAUT_SESSION_VARIABLES_TEST_PATTERN, line):
                     logging.warning("BOTOCORE_DEFAUT_SESSION_VARIABLES as a named import is deprecated and will be removed in a future release. Use BOTOCORE_DEFAULT_SESSION_VARIABLES instead.")
+                    # Don't inspect rest of stack and return
+                    return BOTOCORE_DEFAULT_SESSION_VARIABLES
     # Return the value with the correct name; remains mutable via pass by reference
     return BOTOCORE_DEFAULT_SESSION_VARIABLES
 
