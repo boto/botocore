@@ -479,7 +479,9 @@ class Session:
         """
         self._client_config = client_config
 
-    def set_credentials(self, access_key, secret_key, token=None):
+    def set_credentials(
+        self, access_key, secret_key, token=None, account_id=None
+    ):
         """
         Manually create credentials for this session.  If you would
         prefer to use botocore without a config file, environment variables,
@@ -495,9 +497,12 @@ class Session:
         :type token: str
         :param token: An option session token used by STS session
             credentials.
+
+        :type account_id: str
+        :param account_id: An optional account ID part of the credentials.
         """
         self._credentials = botocore.credentials.Credentials(
-            access_key, secret_key, token
+            access_key, secret_key, token, account_id=account_id
         )
 
     def get_credentials(self):
@@ -841,6 +846,7 @@ class Session:
         aws_secret_access_key=None,
         aws_session_token=None,
         config=None,
+        aws_account_id=None,
     ):
         """Create a botocore client.
 
@@ -907,6 +913,10 @@ class Session:
             the client will be the result of calling ``merge()`` on the
             default config with the config provided to this call.
 
+        :type aws_account_id: string
+        :param aws_account_id: The account id to use when creating
+            the client.  Same semantics as aws_access_key_id above.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -945,6 +955,7 @@ class Session:
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token,
+                account_id=aws_account_id,
             )
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
@@ -954,6 +965,13 @@ class Session:
                 ),
             )
         else:
+            if ignored_credentials := self._get_ignored_credentials(
+                aws_session_token, aws_account_id
+            ):
+                logger.debug(
+                    f"Ignoring the following credential-related values which were set without "
+                    f"an access key id and secret key on the session or client: {ignored_credentials}"
+                )
             credentials = self.get_credentials()
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
@@ -1125,6 +1143,14 @@ class Session:
         except UnknownServiceError:
             pass
         return results
+
+    def _get_ignored_credentials(self, aws_session_token, aws_account_id):
+        credential_inputs = []
+        if aws_session_token:
+            credential_inputs.append('aws_session_token')
+        if aws_account_id:
+            credential_inputs.append('aws_account_id')
+        return ', '.join(credential_inputs) if credential_inputs else None
 
 
 class ComponentLocator:
