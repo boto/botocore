@@ -129,7 +129,6 @@ import re
 import struct
 
 from propcache import cached_property
-from tomlkit import value
 
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
@@ -772,21 +771,6 @@ class BaseJSONParser(ResponseParser):
 
 
 class BaseCBORParser(ResponseParser):
-
-    MAJOR_TYPE_7_SIMPLE_VALUES = {
-        20: False,
-        21: True,
-        22: None,
-        23: None,
-    }
-
-    ADDITIONAL_INFO_TO_BYTES = {
-        24: 1,
-        25: 2,
-        26: 4,
-        27: 8,
-    }
-
     INDEFINITE_ITEM_ADDITIONAL_INFO = 31
     BREAK_CODE = 0xFF
 
@@ -802,7 +786,6 @@ class BaseCBORParser(ResponseParser):
             6: self._parse_tag,
             7: self._parse_simple_and_float,
         }
-
 
     def get_peekable_stream_from_bytes(self, bytes):
         return io.BufferedReader(io.BytesIO(bytes))
@@ -827,13 +810,20 @@ class BaseCBORParser(ResponseParser):
                 f"{additional_info}"
             )
 
-
     # Major type 0 - unsigned integers
     def _parse_unsigned_integer(self, stream, additional_info):
+        additional_info_to_num_bytes = {
+            24: 1,
+            25: 2,
+            26: 4,
+            27: 8,
+        }
+        # Values under 24 don't need a full byte to be stored; their values are
+        # instead stored as the "additional info" in the initial byte
         if additional_info < 24:
             return additional_info
-        elif additional_info in self.ADDITIONAL_INFO_TO_BYTES:
-            num_bytes = self.ADDITIONAL_INFO_TO_BYTES[additional_info]
+        elif additional_info in additional_info_to_num_bytes:
+            num_bytes = additional_info_to_num_bytes[additional_info]
             return self._read_bytes_as_int(stream, num_bytes)
         else:
             raise ResponseParserError(
@@ -844,7 +834,6 @@ class BaseCBORParser(ResponseParser):
     # Major type 1 - negative integers
     def _parse_negative_integer(self, stream, additional_info):
         return -1 - self._parse_unsigned_integer(stream, additional_info)
-
 
     # Major type 2 - byte string
     def _parse_byte_string(self, stream, additional_info):
@@ -921,17 +910,30 @@ class BaseCBORParser(ResponseParser):
     # currently boolean values, CBOR's null, and CBOR's undefined type.  All other
     # values are either floats or invalid.
     def _parse_simple_and_float(self, stream, additional_info):
-        # First we look up if the additional info corresponds to a supported simple
-        # value:
-        if additional_info in self.MAJOR_TYPE_7_SIMPLE_VALUES:
-            return self.MAJOR_TYPE_7_SIMPLE_VALUES[additional_info]
-        # Otherwise we parse the bytes into the corresponding float format
-        elif additional_info == 25:
-            return struct.unpack('>e', self._read_from_stream(stream, 2))[0]
-        elif additional_info == 26:
-            return struct.unpack('>f', self._read_from_stream(stream, 4))[0]
-        elif additional_info == 27:
-            return struct.unpack('>d', self._read_from_stream(stream, 8))[0]
+        # For major type 7, values 20-23 correspond to CBOR "simple" values
+        additional_info_simple_values = {
+            20: False,  # CBOR false
+            21: True,  # CBOR true
+            22: None,  # CBOR null
+            23: None,  # CBOR undefined
+        }
+        # First we check if the additional info corresponds to a supported simple value
+        if additional_info in additional_info_simple_values:
+            return additional_info_simple_values[additional_info]
+
+        # If it's not a simple value, we need to parse it into the correct format and
+        # number fo bytes
+        float_formats = {
+            25: ('>e', 2),
+            26: ('>f', 4),
+            27: ('>d', 8),
+        }
+
+        if additional_info in float_formats:
+            float_format, num_bytes = float_formats[additional_info]
+            return struct.unpack(
+                float_format, self._read_from_stream(stream, num_bytes)
+            )[0]
         raise ResponseParserError(
             f"Invalid additional info found for major type 7: {additional_info}.  "
             f"This indicates an unsupported simple type or an indefinite float value"
