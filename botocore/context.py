@@ -26,7 +26,7 @@ from typing import Set
 @dataclass
 class ClientContext:
     """
-    Encapsulation of objects tracked within the ``__context`` context variable.
+    Encapsulation of objects tracked within the ``_context`` context variable.
 
     ``features`` is a set responsible for storing features used during
     preparation of an AWS request. ``botocore.useragent.register_feature_id``
