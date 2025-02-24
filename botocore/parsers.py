@@ -50,7 +50,7 @@ showing the inheritance hierarchy of the response classes.
 
 The diagram above shows that there is a base class, ``ResponseParser`` that
 contains logic that is similar amongst all the different protocols (``query``,
-``json``, ``rest-json``, ``rest-xml``, ``RPCv2CBOR``).  Amongst the various services
+``json``, ``rest-json``, ``rest-xml``, ``smithy-rpc-v2-cbor``).  Amongst the various services
 there is shared logic that can be grouped several ways:
 
 * The ``query`` and ``rest-xml`` both have XML bodies that are parsed in the
@@ -827,7 +827,7 @@ class BaseCBORParser(ResponseParser):
     def _parse_integer(self, stream, additional_info):
         if additional_info < 24:
             return additional_info
-        elif additional_info in self.ADDITIONAL_INFO_TO_BYTES.keys():
+        elif additional_info in self.ADDITIONAL_INFO_TO_BYTES:
             num_bytes = self.ADDITIONAL_INFO_TO_BYTES[additional_info]
             return self._read_bytes_as_int(stream, num_bytes)
         else:
@@ -865,9 +865,7 @@ class BaseCBORParser(ResponseParser):
             return [self.parse_data_item(stream) for _ in range(length)]
         else:
             items = []
-            while True:
-                if self._handle_break_code(stream):
-                    break
+            while not self._handle_break_code(stream):
                 items.append(self.parse_data_item(stream))
             return items
 
@@ -882,9 +880,7 @@ class BaseCBORParser(ResponseParser):
             return items
 
         else:
-            while True:
-                if self._handle_break_code(stream):
-                    break
+            while not self._handle_break_code(stream):
                 self._parse_key_value_pair(stream, items)
             return items
 
@@ -920,7 +916,7 @@ class BaseCBORParser(ResponseParser):
     def _parse_simple_and_float(self, stream, additional_info):
         # First we look up if the additional info corresponds to a supported simple
         # value:
-        if additional_info in self.MAJOR_TYPE_7_SIMPLE_VALUES.keys():
+        if additional_info in self.MAJOR_TYPE_7_SIMPLE_VALUES:
             return self.MAJOR_TYPE_7_SIMPLE_VALUES[additional_info]
         # Otherwise we parse the bytes into the corresponding float format
         elif additional_info == 25:
