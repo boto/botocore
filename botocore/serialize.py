@@ -434,6 +434,15 @@ class JSONSerializer(Serializer):
 
 
 class CBORSerializer(Serializer):
+    UNSIGNED_INT_MAJOR_TYPE = 0
+    NEGATIVE_INT_MAJOR_TYPE = 1
+    BLOB_MAJOR_TYPE = 2
+    STRING_MAJOR_TYPE = 3
+    LIST_MAJOR_TYPE = 4
+    MAP_MAJOR_TYPE = 5
+    TAG_MAJOR_TYPE = 6
+    FLOAT_AND_SIMPLE_MAJOR_TYPE = 7
+
     def _serialize_data_item(self, serialized, value, shape, key=None):
         method = getattr(self, f'_serialize_type_{shape.type_name}')
         if method is None:
@@ -444,11 +453,10 @@ class CBORSerializer(Serializer):
         method(serialized, value, shape, key)
 
     def _serialize_type_integer(self, serialized, value, shape, key):
-        # Major type is 0 for unsigned integers, and 1 for negative integers
         if value >= 0:
-            major_type = 0
+            major_type = self.UNSIGNED_INT_MAJOR_TYPE
         else:
-            major_type = 1
+            major_type = self.NEGATIVE_INT_MAJOR_TYPE
             # The only differences in serializing negative and positive integers is
             # that for negative, we set the major type to 1 and set the value to -1
             # minus the value
@@ -466,7 +474,6 @@ class CBORSerializer(Serializer):
         self._serialize_type_integer(serialized, value, shape, key)
 
     def _serialize_type_blob(self, serialized, value, shape, key):
-        major_type = 2
         if isinstance(value, str):
             value = value.encode('utf-8')
         elif not isinstance(value, (bytes, bytearray)):
@@ -477,7 +484,9 @@ class CBORSerializer(Serializer):
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             length
         )
-        initial_byte = self._get_initial_byte(major_type, additional_info)
+        initial_byte = self._get_initial_byte(
+            self.BLOB_MAJOR_TYPE, additional_info
+        )
         if num_bytes == 0:
             serialized.extend(initial_byte)
         else:
@@ -485,13 +494,12 @@ class CBORSerializer(Serializer):
         serialized.extend(value)
 
     def _serialize_type_string(self, serialized, value, shape, key):
-        major_type = 3
         encoded = value.encode('utf-8')
         length = len(encoded)
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             length
         )
-        initial_byte = self._get_initial_byte(major_type, length)
+        initial_byte = self._get_initial_byte(self.STRING_MAJOR_TYPE, length)
         if num_bytes == 0:
             serialized.extend(initial_byte + encoded)
         else:
@@ -500,12 +508,13 @@ class CBORSerializer(Serializer):
             )
 
     def _serialize_type_list(self, serialized, value, shape, key):
-        major_type = 4
         length = len(value)
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             length
         )
-        initial_byte = self._get_initial_byte(major_type, additional_info)
+        initial_byte = self._get_initial_byte(
+            self.LIST_MAJOR_TYPE, additional_info
+        )
         if num_bytes == 0:
             serialized.extend(initial_byte)
         else:
@@ -514,12 +523,13 @@ class CBORSerializer(Serializer):
             self._serialize_data_item(serialized, item, shape.member)
 
     def _serialize_type_map(self, serialized, value, shape, key):
-        major_type = 5
         length = len(value)
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             length
         )
-        initial_byte = self._get_initial_byte(major_type, additional_info)
+        initial_byte = self._get_initial_byte(
+            self.MAP_MAJOR_TYPE, additional_info
+        )
         if num_bytes == 0:
             serialized.extend(initial_byte)
         else:
@@ -536,12 +546,13 @@ class CBORSerializer(Serializer):
         # Remove `None` values from the dictionary
         value = {k: v for k, v in value.items() if v is not None}
 
-        map_major_type = 5
         map_length = len(value)
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             map_length
         )
-        initial_byte = self._get_initial_byte(map_major_type, additional_info)
+        initial_byte = self._get_initial_byte(
+            self.MAP_MAJOR_TYPE, additional_info
+        )
         if num_bytes == 0:
             serialized.extend(initial_byte)
         else:
@@ -561,51 +572,56 @@ class CBORSerializer(Serializer):
                 )
 
     def _serialize_type_timestamp(self, serialized, value, shape, key):
-        tag_major_type = 6
         timestamp = self._convert_timestamp_to_str(value)
         tag = 1  # Use tag 1 for unix timestamp
-        initial_byte = self._get_initial_byte(tag_major_type, tag)
+        initial_byte = self._get_initial_byte(self.TAG_MAJOR_TYPE, tag)
         serialized.extend(initial_byte)  # Tagging the timestamp
         additional_info, num_bytes = self._get_additional_info_and_num_bytes(
             timestamp
         )
 
-        int_major_type = 0
         if num_bytes == 0:
-            initial_byte = self._get_initial_byte(int_major_type, timestamp)
+            initial_byte = self._get_initial_byte(
+                self.UNSIGNED_INT_MAJOR_TYPE, timestamp
+            )
             serialized.extend(initial_byte)
         else:
             initial_byte = self._get_initial_byte(
-                int_major_type, additional_info
+                self.UNSIGNED_INT_MAJOR_TYPE, additional_info
             )
             serialized.extend(
                 initial_byte + timestamp.to_bytes(num_bytes, "big")
             )
 
     def _serialize_type_float(self, serialized, value, shape, key):
-        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+        if self._is_special_number(value):
             serialized.extend(
-                special_value_bytes
-            )  # Special values like NaN or Infinity
+                self._get_bytes_for_special_numbers(value)
+            )  # Handle special values like NaN or Infinity
         else:
-            major_type = 7
-            initial_byte = self._get_initial_byte(major_type, 26)
+            initial_byte = self._get_initial_byte(
+                self.FLOAT_AND_SIMPLE_MAJOR_TYPE, 26
+            )
             serialized.extend(initial_byte + struct.pack(">f", value))
 
     def _serialize_type_double(self, serialized, value, shape, key):
-        if special_value_bytes := self._get_bytes_for_special_numbers(value):
+        if self._is_special_number(value):
             serialized.extend(
-                special_value_bytes
-            )  # Special values like NaN or Infinity
+                self._get_bytes_for_special_numbers(value)
+            )  # Handle special values like NaN or Infinity
         else:
-            major_type = 7
-            initial_byte = self._get_initial_byte(major_type, 27)
+            initial_byte = self._get_initial_byte(
+                self.FLOAT_AND_SIMPLE_MAJOR_TYPE, 27
+            )
             serialized.extend(initial_byte + struct.pack(">d", value))
 
     def _serialize_type_boolean(self, serialized, value, shape, key):
-        major_type = 7
         additional_info = 21 if value else 20
-        serialized.extend(self._get_initial_byte(major_type, additional_info))
+        serialized.extend(
+            self._get_initial_byte(
+                self.FLOAT_AND_SIMPLE_MAJOR_TYPE, additional_info
+            )
+        )
 
     def _get_additional_info_and_num_bytes(self, value):
         # Values under 24 can be stored in the initial byte and don't need further
@@ -616,33 +632,45 @@ class CBORSerializer(Serializer):
         # correspond to additional info 24
         elif value < 256:
             return 24, 1
-        # Values up to 65535 can be stored in two bytes
+        # Values up to 65535 can be stored in two bytes and correspond to additional
+        # info 25
         elif value < 65536:
             return 25, 2
-        # Values up to 4294967296 can be stored in four bytes
+        # Values up to 4294967296 can be stored in four bytes and correspond to
+        # additional info 26
         elif value < 4294967296:
             return 26, 4
-        # The maximum number of bytes currently allowed by CBOR is 8
+        # The maximum number of bytes in a definite length data items is 8 which
+        # to additional info 27
         else:
             return 27, 8
 
     def _get_initial_byte(self, major_type, additional_info):
-        # The first three bits are the major type, so we need to bitshift the major
-        # type by 5
+        # The highest order three bits are the major type, so we need to bitshift the
+        # major type by 5
         major_type_bytes = major_type << 5
         return (major_type_bytes | additional_info).to_bytes(1, "big")
 
+    def _is_special_number(self, value):
+        return any(
+            [
+                value == float('inf'),
+                value == float('-inf'),
+                math.isnan(value),
+            ]
+        )
+
     def _get_bytes_for_special_numbers(self, value):
-        major_type = 7
         additional_info = 25
-        initial_byte = self._get_initial_byte(major_type, additional_info)
+        initial_byte = self._get_initial_byte(
+            self.FLOAT_AND_SIMPLE_MAJOR_TYPE, additional_info
+        )
         if value == float('inf'):
             return initial_byte + struct.pack(">H", 0x7C00)
         elif value == float('-inf'):
             return initial_byte + struct.pack(">H", 0xFC00)
         elif math.isnan(value):
             return initial_byte + struct.pack(">H", 0x7E00)
-        return None
 
 
 class BaseRestSerializer(Serializer):
