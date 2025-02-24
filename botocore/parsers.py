@@ -128,6 +128,9 @@ import os
 import re
 import struct
 
+from propcache import cached_property
+from tomlkit import value
+
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 from botocore.utils import (
@@ -769,12 +772,6 @@ class BaseJSONParser(ResponseParser):
 
 
 class BaseCBORParser(ResponseParser):
-    ADDITIONAL_INFO_TO_BYTES = {
-        24: 1,
-        25: 2,
-        26: 4,
-        27: 8,
-    }
 
     MAJOR_TYPE_7_SIMPLE_VALUES = {
         20: False,
@@ -783,7 +780,29 @@ class BaseCBORParser(ResponseParser):
         23: None,
     }
 
+    ADDITIONAL_INFO_TO_BYTES = {
+        24: 1,
+        25: 2,
+        26: 4,
+        27: 8,
+    }
+
+    INDEFINITE_ITEM_ADDITIONAL_INFO = 31
     BREAK_CODE = 0xFF
+
+    @cached_property
+    def major_type_to_parsing_method_map(self):
+        return {
+            0: self._parse_unsigned_integer,
+            1: self._parse_negative_integer,
+            2: self._parse_byte_string,
+            3: self._parse_text_string,
+            4: self._parse_array,
+            5: self._parse_map,
+            6: self._parse_tag,
+            7: self._parse_simple_and_float,
+        }
+
 
     def get_peekable_stream_from_bytes(self, bytes):
         return io.BufferedReader(io.BytesIO(bytes))
@@ -792,30 +811,15 @@ class BaseCBORParser(ResponseParser):
         # CBOR data is divided into "data items", and each data item starts
         # with an initial byte that describes how the following bytes should be parsed
         initial_byte = self._read_bytes_as_int(stream, 1)
-        # The first three bits of the initial byte describe the "major type" such as
-        # integer, map, etc.
+        # The highest order three bits of the initial byte describe the CBOR major type
         major_type = initial_byte >> 5
-        # The last 5 bits of the initial byte tells us more information about how the
-        # bytes should be parsed; what this tells us varies based on the value of the
-        # additional information and the major type
+        # The lowest order 5 bits of the initial byte tells us more information about
+        # how the bytes should be parsed that will be used
         additional_info = initial_byte & 0b00011111
 
-        if major_type == 0:
-            return self._parse_integer(stream, additional_info)
-        elif major_type == 1:
-            return -1 - self._parse_integer(stream, additional_info)
-        elif major_type == 2:
-            return self._parse_byte_string(stream, additional_info)
-        elif major_type == 3:
-            return self._parse_text_string(stream, additional_info)
-        elif major_type == 4:
-            return self._parse_array(stream, additional_info)
-        elif major_type == 5:
-            return self._parse_map(stream, additional_info)
-        elif major_type == 6:
-            return self._parse_tag(stream, additional_info)
-        elif major_type == 7:
-            return self._parse_simple_and_float(stream, additional_info)
+        if major_type in self.major_type_to_parsing_method_map:
+            method = self.major_type_to_parsing_method_map[major_type]
+            return method(stream, additional_info)
         else:
             raise ResponseParserError(
                 f"Unsupported inital byte found for data item- "
@@ -823,8 +827,9 @@ class BaseCBORParser(ResponseParser):
                 f"{additional_info}"
             )
 
-    # Major types 0 and 1 - unsigned and negative integers, respectively
-    def _parse_integer(self, stream, additional_info):
+
+    # Major type 0 - unsigned integers
+    def _parse_unsigned_integer(self, stream, additional_info):
         if additional_info < 24:
             return additional_info
         elif additional_info in self.ADDITIONAL_INFO_TO_BYTES:
@@ -836,11 +841,15 @@ class BaseCBORParser(ResponseParser):
                 f"additional info found for major type 0 or 1: {additional_info}"
             )
 
+    # Major type 1 - negative integers
+    def _parse_negative_integer(self, stream, additional_info):
+        return -1 - self._parse_unsigned_integer(stream, additional_info)
+
+
     # Major type 2 - byte string
     def _parse_byte_string(self, stream, additional_info):
-        # 31 indicates an indefinite length
-        if additional_info != 31:
-            length = self._parse_integer(stream, additional_info)
+        if additional_info != self.INDEFINITE_ITEM_ADDITIONAL_INFO:
+            length = self._parse_unsigned_integer(stream, additional_info)
             return self._read_from_stream(stream, length)
         else:
             chunks = []
@@ -849,7 +858,7 @@ class BaseCBORParser(ResponseParser):
                     break
                 initial_byte = self._read_bytes_as_int(stream, 1)
                 additional_info = initial_byte & 0b00011111
-                length = self._parse_integer(stream, additional_info)
+                length = self._parse_unsigned_integer(stream, additional_info)
                 chunks.append(self._read_from_stream(stream, length))
             return b''.join(chunks)
 
@@ -859,9 +868,8 @@ class BaseCBORParser(ResponseParser):
 
     # Major type 4 - lists
     def _parse_array(self, stream, additional_info):
-        # 31 indicates an indefinite length
-        if additional_info != 31:
-            length = self._parse_integer(stream, additional_info)
+        if additional_info != self.INDEFINITE_ITEM_ADDITIONAL_INFO:
+            length = self._parse_unsigned_integer(stream, additional_info)
             return [self.parse_data_item(stream) for _ in range(length)]
         else:
             items = []
@@ -871,10 +879,9 @@ class BaseCBORParser(ResponseParser):
 
     # Major type 5 - maps
     def _parse_map(self, stream, additional_info):
-        # 31 indicates an indefinite length
         items = {}
-        if additional_info != 31:
-            length = self._parse_integer(stream, additional_info)
+        if additional_info != self.INDEFINITE_ITEM_ADDITIONAL_INFO:
+            length = self._parse_unsigned_integer(stream, additional_info)
             for _ in range(length):
                 self._parse_key_value_pair(stream, items)
             return items
@@ -893,7 +900,7 @@ class BaseCBORParser(ResponseParser):
     # Major type 6 is tags.  The only tag we currently support is tag 1 for unix
     # timestamps
     def _parse_tag(self, stream, additional_info):
-        tag = self._parse_integer(stream, additional_info)
+        tag = self._parse_unsigned_integer(stream, additional_info)
         value = self.parse_data_item(stream)
         if tag == 1:  # Epoch-based date/time in milliseconds
             return self._parse_datetime(value)
