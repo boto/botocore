@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import struct
 
 import pytest
@@ -26,6 +27,10 @@ IGNORE_CASES = [
     'map - {null}',
 ]
 
+TEST_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
 
 @pytest.fixture(scope="module")
 def parser():
@@ -33,7 +38,8 @@ def parser():
 
 
 def _get_cbor_decoding_success_tests():
-    success_test_data = json.load(open('decode-success-tests.json'))
+    success_test_file_name = os.path.join(TEST_DIR, 'decode-success-tests.json')
+    success_test_data = json.load(open(success_test_file_name))
     for case in success_test_data:
         if case['description'] in IGNORE_CASES:
             continue
@@ -41,8 +47,9 @@ def _get_cbor_decoding_success_tests():
 
 
 def _get_cbor_decoding_error_tests():
-    success_test_data = json.load(open('decode-error-tests.json'))
-    for case in success_test_data:
+    error_test_file_name = os.path.join(TEST_DIR, 'decode-error-tests.json')
+    error_test_data = json.load(open(error_test_file_name))
+    for case in error_test_data:
         yield case['description'], case['input'], case['error']
 
 
@@ -50,7 +57,7 @@ def _get_cbor_decoding_error_tests():
     "json_description, input, expect", _get_cbor_decoding_success_tests()
 )
 def test_cbor_decoding_success(json_description, input, expect, parser):
-    stream = io.BytesIO(bytearray.fromhex(input))
+    stream = parser.get_peekable_stream_from_bytes(bytearray.fromhex(input))
     parsed = parser.parse_data_item(stream)
     _assert_expected_value(parsed, expect)
 
@@ -59,7 +66,7 @@ def test_cbor_decoding_success(json_description, input, expect, parser):
     "json_description, input, error", _get_cbor_decoding_error_tests()
 )
 def test_cbor_decoding_error(json_description, input, error, parser):
-    stream = io.BytesIO(bytearray.fromhex(input))
+    stream = parser.get_peekable_stream_from_bytes(bytearray.fromhex(input))
     with pytest.raises(ResponseParserError):
         parser.parse_data_item(stream)
 
