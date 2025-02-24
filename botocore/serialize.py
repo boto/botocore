@@ -943,6 +943,12 @@ class BaseRpcV2Serializer(Serializer):
         body_payload = self._serialize_body_params(parameters, shape)
         serialized['body'] = body_payload
 
+    def _serialize_headers(self, serialized, operation_model):
+        raise NotImplementedError("_serialize_headers")
+
+    def _serialize_body_params(self, parameters, shape):
+        raise NotImplementedError("_serialize_body_params")
+
 
 class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
     def _serialize_empty_body(self):
