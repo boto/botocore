@@ -180,6 +180,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         "when_supported",
         None,
     ),
+    'account_id_endpoint_mode': (
+        'account_id_endpoint_mode',
+        'AWS_ACCOUNT_ID_ENDPOINT_MODE',
+        'preferred',
+        None,
+    ),
 }
 
 # Evaluate AWS_STS_REGIONAL_ENDPOINTS settings
