@@ -76,6 +76,7 @@ PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = (
     'rest-xml',
     'query',
     'ec2',
+    'smithy-rpc-v2-cbor',
 )
 
 
