@@ -943,7 +943,7 @@ class BaseCBORParser(ResponseParser):
     # the break code, it advances past that byte and returns True so the calling
     # method knows to stop parsing that data item.
     def _handle_break_code(self, stream):
-        if int.from_bytes(stream.peek(1)[:1]) == self.BREAK_CODE:
+        if int.from_bytes(stream.peek(1)[:1], 'big') == self.BREAK_CODE:
             stream.seek(1, os.SEEK_CUR)
             return True
 
