@@ -20,7 +20,7 @@ from botocore.config import Config
 from botocore.context import get_context
 from botocore.useragent import (
     UserAgentComponent,
-    UserAgentSizeConfig,
+    UserAgentComponentSizeConfig,
     UserAgentString,
     register_feature_id,
     sanitize_user_agent_string_component,
@@ -223,7 +223,7 @@ def test_register_unknown_feature_id_raises(client_context):
 
 
 def test_user_agent_truncated_string():
-    size_config = UserAgentSizeConfig(4, ',')
+    size_config = UserAgentComponentSizeConfig(4, ',')
     component = UserAgentComponent(
         'm',
         'A,BCD',
@@ -233,7 +233,7 @@ def test_user_agent_truncated_string():
 
 
 def test_user_agent_empty_truncated_string_raises():
-    size_config = UserAgentSizeConfig(1, ',')
+    size_config = UserAgentComponentSizeConfig(1, ',')
     component = UserAgentComponent(
         'm',
         'A,B,C',
@@ -242,3 +242,12 @@ def test_user_agent_empty_truncated_string_raises():
     with pytest.raises(ValueError) as excinfo:
         component.to_string()
     assert "could not be truncated" in str(excinfo.value)
+
+
+def test_non_positive_user_agent_component_size_config_raises():
+    with pytest.raises(ValueError) as excinfo:
+        UserAgentComponentSizeConfig(0, ',')
+    assert 'Invalid `max_size_in_bytes`' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        UserAgentComponentSizeConfig(-1, ',')
+    assert 'Invalid `max_size_in_bytes`' in str(excinfo.value)

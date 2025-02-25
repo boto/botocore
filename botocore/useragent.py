@@ -103,14 +103,23 @@ def sanitize_user_agent_string_component(raw_str, allow_hash):
     )
 
 
-class UserAgentSizeConfig(NamedTuple):
+class UserAgentComponentSizeConfig:
     """
     Configures the max size of a built user agent string component and the
     delimiter used to truncate the string if the size is above the max.
     """
 
-    max_size_in_bytes: int
-    delimiter: str
+    def __init__(self, max_size_in_bytes: int, delimiter: str):
+        self.max_size_in_bytes = max_size_in_bytes
+        self.delimiter = delimiter
+        self._validate_input()
+
+    def _validate_input(self):
+        if self.max_size_in_bytes < 1:
+            raise ValueError(
+                f'Invalid `max_size_in_bytes`: {self.max_size_in_bytes}. '
+                'Value must be a positive integer.'
+            )
 
 
 class UserAgentComponent(NamedTuple):
@@ -130,7 +139,7 @@ class UserAgentComponent(NamedTuple):
     prefix: str
     name: str
     value: Optional[str] = None
-    size_config: Optional[UserAgentSizeConfig] = None
+    size_config: Optional[UserAgentComponentSizeConfig] = None
 
     def to_string(self):
         """Create string like 'prefix/name#value' from a UserAgentComponent."""
@@ -161,12 +170,10 @@ class UserAgentComponent(NamedTuple):
         equal to ``max_size``.
         """
         orig = string
-        encoded_string = string.encode('utf-8')
-        while len(encoded_string) > max_size:
+        while len(string.encode('utf-8')) > max_size:
             parts = string.split(delimiter)
             parts.pop()
             string = delimiter.join(parts)
-            encoded_string = string.encode('utf-8')
 
         if string == '':
             raise ValueError(
@@ -512,7 +519,7 @@ class UserAgentString:
         features = client_features.union(context_features)
         if not features:
             return []
-        size_config = UserAgentSizeConfig(1024, ',')
+        size_config = UserAgentComponentSizeConfig(1024, ',')
         return [
             UserAgentComponent(
                 'm', ','.join(features), size_config=size_config
