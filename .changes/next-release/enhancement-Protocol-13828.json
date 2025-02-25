@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "``Protocol``",
+  "description": "Adds support for the smithy-rpcv2-CBOR protocol.  Services can now opt in to using this as their preferred protocol.  For more information, see https"
+}

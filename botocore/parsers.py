@@ -895,7 +895,7 @@ class BaseCBORParser(ResponseParser):
             return self._parse_datetime(value)
         else:
             raise ResponseParserError(
-                f"Found CBOR tag not supported by botocore:" f" {tag}"
+                f"Found CBOR tag not supported by botocore: {tag}"
             )
 
     def _parse_datetime(self, value):
