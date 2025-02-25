@@ -128,11 +128,10 @@ import os
 import re
 import struct
 
-from propcache import cached_property
-
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 from botocore.utils import (
+    CachedProperty,
     ensure_boolean,
     is_json_value_header,
     lowercase_dict,
@@ -774,7 +773,7 @@ class BaseCBORParser(ResponseParser):
     INDEFINITE_ITEM_ADDITIONAL_INFO = 31
     BREAK_CODE = 0xFF
 
-    @cached_property
+    @CachedProperty
     def major_type_to_parsing_method_map(self):
         return {
             0: self._parse_unsigned_integer,
@@ -895,7 +894,7 @@ class BaseCBORParser(ResponseParser):
             return self._parse_datetime(value)
         else:
             raise ResponseParserError(
-                f"Found CBOR tag not supported by botocore:" f" {tag}"
+                f"Found CBOR tag not supported by botocore: {tag}"
             )
 
     def _parse_datetime(self, value):
@@ -944,7 +943,7 @@ class BaseCBORParser(ResponseParser):
     # the break code, it advances past that byte and returns True so the calling
     # method knows to stop parsing that data item.
     def _handle_break_code(self, stream):
-        if int.from_bytes(stream.peek(1)[:1]) == self.BREAK_CODE:
+        if int.from_bytes(stream.peek(1)[:1], 'big') == self.BREAK_CODE:
             stream.seek(1, os.SEEK_CUR)
             return True
 
