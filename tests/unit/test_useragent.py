@@ -84,7 +84,7 @@ def test_basic_user_agent_string():
     expected = (
         f'Botocore/{botocore_version} '
         'md/awscrt#Unknown '
-        'ua/2.0 '
+        'ua/2.1 '
         'os/linux#1.2.3-foo '
         'md/arch#x86_64 '
         'lang/python#3.8.20 '
@@ -112,7 +112,7 @@ def test_shared_test_case():
     actual = uas.to_string().split(' ')
     expected_in_exact_order = [
         f"Botocore/{botocore_version}",
-        "ua/2.0",
+        "ua/2.1",
         "os/linux#5.4.228-131.415.AMZN2.X86_64",
         "lang/python#4.3.2",
         "exec-env/lambda",
@@ -144,7 +144,7 @@ def test_user_agent_string_with_missing_information():
         crt_version=None,
     ).with_client_config(Config())
     actual = uas.to_string()
-    assert actual == f'Botocore/{botocore_version} ua/2.0 os/other lang/python'
+    assert actual == f'Botocore/{botocore_version} ua/2.1 os/other lang/python'
 
 
 def test_from_environment(monkeypatch):

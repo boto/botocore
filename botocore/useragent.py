@@ -370,7 +370,7 @@ class UserAgentString:
 
         components = [
             *self._build_sdk_metadata(),
-            RawStringUserAgentComponent('ua/2.0'),
+            RawStringUserAgentComponent('ua/2.1'),
             *self._build_os_metadata(),
             *self._build_architecture_metadata(),
             *self._build_language_metadata(),
