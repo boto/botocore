@@ -23,6 +23,7 @@ configuration options:
 
 """
 
+import logging
 import os
 import platform
 from copy import copy
@@ -32,6 +33,9 @@ from typing import NamedTuple, Optional
 from botocore import __version__ as botocore_version
 from botocore.compat import HAS_CRT
 from botocore.context import get_context
+
+logger = logging.getLogger(__name__)
+
 
 _USERAGENT_ALLOWED_CHARACTERS = ascii_letters + digits + "!$%&'*+-.^_`|~,"
 _USERAGENT_ALLOWED_OS_NAMES = (
@@ -176,10 +180,11 @@ class UserAgentComponent(NamedTuple):
             string = delimiter.join(parts)
 
         if string == '':
-            raise ValueError(
+            logger.debug(
                 f"User agent component `{orig}` could not be truncated to "
                 f"`{max_size}` bytes with delimiter "
-                f"`{delimiter}` without losing all contents."
+                f"`{delimiter}` without losing all contents. "
+                f"Value will be omitted from user agent string."
             )
         return string
 
@@ -378,7 +383,9 @@ class UserAgentString:
 
         components = modify_components(components)
 
-        return ' '.join([comp.to_string() for comp in components])
+        return ' '.join(
+            [comp.to_string() for comp in components if comp.to_string()]
+        )
 
     def _build_sdk_metadata(self):
         """

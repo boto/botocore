@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import logging
 import platform
 
 import pytest
@@ -232,16 +233,16 @@ def test_user_agent_truncated_string():
     assert component.to_string() == 'm/A'
 
 
-def test_user_agent_empty_truncated_string_raises():
+def test_user_agent_empty_truncated_string_logs(caplog):
+    caplog.set_level(logging.DEBUG)
     size_config = UserAgentComponentSizeConfig(1, ',')
     component = UserAgentComponent(
         'm',
         'A,B,C',
         size_config=size_config,
     )
-    with pytest.raises(ValueError) as excinfo:
-        component.to_string()
-    assert "could not be truncated" in str(excinfo.value)
+    assert component.to_string() == ''
+    assert 'could not be truncated' in caplog.text
 
 
 def test_non_positive_user_agent_component_size_config_raises():
