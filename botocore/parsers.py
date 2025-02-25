@@ -128,11 +128,10 @@ import os
 import re
 import struct
 
-from propcache import cached_property
-
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
 from botocore.utils import (
+    CachedProperty,
     ensure_boolean,
     is_json_value_header,
     lowercase_dict,
@@ -774,7 +773,7 @@ class BaseCBORParser(ResponseParser):
     INDEFINITE_ITEM_ADDITIONAL_INFO = 31
     BREAK_CODE = 0xFF
 
-    @cached_property
+    @CachedProperty
     def major_type_to_parsing_method_map(self):
         return {
             0: self._parse_unsigned_integer,
