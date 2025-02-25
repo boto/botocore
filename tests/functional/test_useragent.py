@@ -304,7 +304,7 @@ def test_boto3_user_agent(patched_session):
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in stub_client.captured_ua_string
     assert ' os/' in stub_client.captured_ua_string
     assert ' lang/' in stub_client.captured_ua_string
     assert ' cfg/' in stub_client.captured_ua_string
@@ -327,7 +327,7 @@ def test_awscli_v1_user_agent(patched_session):
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in stub_client.captured_ua_string
     assert ' os/' in stub_client.captured_ua_string
     assert ' lang/' in stub_client.captured_ua_string
     assert ' cfg/' in stub_client.captured_ua_string
@@ -356,7 +356,7 @@ def test_awscli_v2_user_agent(patched_session):
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.0 ' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in stub_client.captured_ua_string
     assert ' os/' in stub_client.captured_ua_string
     assert ' lang/' in stub_client.captured_ua_string
     assert ' cfg/' in stub_client.captured_ua_string
