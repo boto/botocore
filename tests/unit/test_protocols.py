@@ -130,9 +130,7 @@ def _compliance_tests(test_type=None):
                     case.get('id'),
                 ):
                     continue
-                if 'params' in case and inp:
-                    yield model, case, basename
-                elif 'response' in case and out:
+                if ('params' in case and inp) or ('response' in case and out):
                     yield model, case, basename
 
 

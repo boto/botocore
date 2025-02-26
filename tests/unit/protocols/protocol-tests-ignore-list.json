@@ -72,7 +72,9 @@
         "cases": [
           "MediaTypeHeaderInputBase64",
           "RestJsonHttpChecksumRequired",
-          "RestJsonNullAndEmptyHeaders"
+          "RestJsonNullAndEmptyHeaders",
+          "RestJsonQueryPrecedence",
+          "RestJsonHttpPayloadWithUnsetUnion"
         ]
       },
       "output" : {
@@ -99,7 +101,8 @@
           "HttpPayloadWithXmlNamespaceAndPrefix",
           "XmlAttributesOnPayload",
           "NestedXmlMapWithXmlNameSerializes",
-          "NullAndEmptyHeaders"
+          "NullAndEmptyHeaders",
+          "RestXmlQueryPrecedence"
         ]
       },
       "output": {

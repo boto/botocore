@@ -180,11 +180,9 @@ class Serializer:
             return None
 
         host_prefix_expression = operation_endpoint['hostPrefix']
-        input_members = (
-            operation_model.input_shape.members
-            if operation_model.input_shape
-            else {}
-        )
+        if operation_model.input_shape is None:
+            return host_prefix_expression
+        input_members = operation_model.input_shape.members
         host_labels = [
             member
             for member, shape in input_members.items()
@@ -446,8 +444,7 @@ class BaseRestSerializer(Serializer):
 
     """
 
-    URI_TIMESTAMP_FORMAT = 'iso8601'
-    QUERY_STRING_TIMESTAMP_FORMAT = 'iso8601'
+    URI_AND_QUERY_STRING_TIMESTAMP_FORMAT = 'iso8601'
     HEADER_TIMESTAMP_FORMAT = 'rfc822'
     # This is a list of known values for the "location" key in the
     # serialization dict.  The location key tells us where on the request
@@ -557,10 +554,7 @@ class BaseRestSerializer(Serializer):
                     body_params, shape_members[payload_member]
                 )
             else:
-                if shape_members[payload_member].is_tagged_union:
-                    serialized['body'] = b''
-                else:
-                    serialized['body'] = self._serialize_empty_body()
+                serialized['body'] = self._serialize_empty_body()
         elif partitioned['body_kwargs']:
             serialized['body'] = self._serialize_body_params(
                 partitioned['body_kwargs'], shape
@@ -609,41 +603,32 @@ class BaseRestSerializer(Serializer):
         location = member.serialization.get('location')
         key_name = member.serialization.get('name', param_name)
         if location == 'uri':
-            if isinstance(param_value, bool):
-                bool_str = str(param_value).lower()
-                partitioned['uri_path_kwargs'][key_name] = bool_str
-            elif member.type_name == 'timestamp':
-                timestamp_format = member.serialization.get(
-                    'timestampFormat', self.URI_TIMESTAMP_FORMAT
-                )
-                timestamp = self._convert_timestamp_to_str(
-                    param_value, timestamp_format
-                )
-                partitioned['uri_path_kwargs'][key_name] = timestamp
-            else:
-                partitioned['uri_path_kwargs'][key_name] = param_value
+            uri_path_value = self._get_uri_and_query_string_value(
+                param_value, member
+            )
+            partitioned['uri_path_kwargs'][key_name] = uri_path_value
         elif location == 'querystring':
             if isinstance(param_value, dict):
-                # Add only new query string key/value pairs.
-                # Named query parameters should take precedence.
-                for key, value in param_value.items():
-                    partitioned['query_string_kwargs'].setdefault(key, value)
+                partitioned['query_string_kwargs'].update(param_value)
             elif member.type_name == 'list':
                 new_param = [
-                    self._get_query_string_value(value, member.member)
+                    self._get_uri_and_query_string_value(value, member.member)
                     for value in param_value
                 ]
                 partitioned['query_string_kwargs'][key_name] = new_param
             else:
-                new_param = self._get_query_string_value(param_value, member)
+                new_param = self._get_uri_and_query_string_value(
+                    param_value, member
+                )
                 partitioned['query_string_kwargs'][key_name] = new_param
         elif location == 'header':
             shape = shape_members[param_name]
             if not param_value and shape.type_name == 'list':
                 # Empty lists should not be set on the headers
                 return
-            value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] = value
+            partitioned['headers'][key_name] = self._convert_header_value(
+                shape, param_value
+            )
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
@@ -658,18 +643,17 @@ class BaseRestSerializer(Serializer):
         else:
             partitioned['body_kwargs'][param_name] = param_value
 
-    def _get_query_string_value(self, param_value, member):
+    def _get_uri_and_query_string_value(self, param_value, member):
         if isinstance(param_value, bool):
             return str(param_value).lower()
         elif member.type_name == 'timestamp':
             timestamp_format = member.serialization.get(
-                'timestampFormat', self.QUERY_STRING_TIMESTAMP_FORMAT
+                'timestampFormat', self.URI_AND_QUERY_STRING_TIMESTAMP_FORMAT
             )
             return self._convert_timestamp_to_str(
                 param_value, timestamp_format
             )
-        else:
-            return param_value
+        return param_value
 
     def _do_serialize_header_map(self, header_prefix, headers, user_input):
         for key, val in user_input.items():
@@ -713,6 +697,8 @@ class BaseRestSerializer(Serializer):
             return str(value)
 
     def _escape_header_list_string(self, value):
+        # Escapes a header list string by wrapping it in double quotes if it contains
+        # a comma or a double quote, and escapes any internal double quotes.
         if '"' in value or ',' in value:
             return '"' + value.replace('"', '\\"') + '"'
         else:
@@ -735,18 +721,18 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
 
     def _serialize_content_type(self, serialized, shape, shape_members):
         """Set Content-Type to application/json for all structured bodies."""
-        if has_header('Content-Type', serialized['headers']):
+        headers = serialized['headers']
+        if has_header('Content-Type', headers):
             return
         payload = shape.serialization.get('payload')
         if self._has_streaming_payload(payload, shape_members):
-            if shape_members[payload].type_name == 'string':
-                serialized['headers']['Content-Type'] = 'text/plain'
-            elif shape_members[payload].type_name == 'blob':
-                serialized['headers']['Content-Type'] = (
-                    'application/octet-stream'
-                )
+            payload_type = shape_members[payload].type_name
+            if payload_type == 'string':
+                headers['Content-Type'] = 'text/plain'
+            elif payload_type == 'blob':
+                headers['Content-Type'] = 'application/octet-stream'
         elif serialized['body'] != b'':
-            serialized['headers']['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json'
 
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
@@ -869,19 +855,19 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_content_type(self, serialized, shape, shape_members):
         """Set Content-Type to application/xml for all structured bodies."""
-        if has_header('Content-Type', serialized['headers']):
+        headers = serialized['headers']
+        if has_header('Content-Type', headers):
             return
         payload = shape.serialization.get('payload')
         if self._has_streaming_payload(payload, shape_members):
-            if shape_members[payload].type_name == 'string':
-                serialized['headers']['Content-Type'] = 'text/plain'
-            elif shape_members[payload].type_name == 'blob':
-                serialized['headers']['Content-Type'] = (
-                    'application/octet-stream'
-                )
+            payload_type = shape_members[payload].type_name
+            if payload_type == 'string':
+                headers['Content-Type'] = 'text/plain'
+            elif payload_type == 'blob':
+                headers['Content-Type'] = 'application/octet-stream'
         else:
             if serialized['body'] != b'':
-                serialized['headers']['Content-Type'] = 'application/xml'
+                headers['Content-Type'] = 'application/xml'
 
     def _add_xml_namespace(self, shape, structure_node):
         if 'xmlNamespace' in shape.serialization:
