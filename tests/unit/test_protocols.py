@@ -53,6 +53,7 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
 import copy
 import os
+import xml.etree.ElementTree as ET
 from base64 import b64decode
 from enum import Enum
 
@@ -97,7 +98,6 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
 IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
 
 
@@ -123,18 +123,14 @@ def _compliance_tests(test_type=None):
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
                 protocol = basename.replace('.json', '')
-                if 'params' in case and inp:
-                    if model.get('description') in PROTOCOL_TEST_BLACKLIST:
-                        continue
-                    yield model, case, basename
-                elif 'response' in case and out:
-                    if _should_ignore_test(
-                        protocol,
-                        "output",
-                        model['description'],
-                        case.get('id'),
-                    ):
-                        continue
+                if _should_ignore_test(
+                    protocol,
+                    "input" if inp else "output",
+                    model['description'],
+                    case.get('id'),
+                ):
+                    continue
+                if ('params' in case and inp) or ('response' in case and out):
                     yield model, case, basename
 
 
@@ -144,7 +140,7 @@ def _compliance_tests(test_type=None):
 def test_input_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
     service_description['operations'] = {
-        case.get('name', 'OperationName'): case,
+        case.get('given', {}).get('name', 'OperationName'): case,
     }
     model = ServiceModel(service_description)
     protocol_type = model.metadata['protocol']
@@ -160,7 +156,9 @@ def test_input_compliance(json_description, case, basename):
     client_endpoint = service_description.get('clientEndpoint')
     try:
         _assert_request_body_is_bytes(request['body'])
-        _assert_requests_equal(request, case['serialized'])
+        _assert_requests_equal(
+            request, case['serialized'], protocol_type, operation_model
+        )
         _assert_endpoints_equal(request, case['serialized'], client_endpoint)
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
@@ -438,27 +436,126 @@ def _serialize_request_description(request_dict):
                 request_dict['url_path'] += f'&{encoded}'
 
 
-def _assert_requests_equal(actual, expected):
-    assert_equal(
-        actual['body'], expected.get('body', '').encode('utf-8'), 'Body value'
-    )
+def _assert_requests_equal(actual, expected, protocol_type, operation_model):
+    if 'body' in expected:
+        expected_body = expected['body'].encode('utf-8')
+        actual_body = actual['body']
+        _assert_request_body(actual_body, expected_body, protocol_type)
+
     actual_headers = HeadersDict(actual['headers'])
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
     _assert_expected_headers_in_request(
-        actual_headers, expected_headers, excluded_headers
+        actual_headers,
+        expected_headers,
+        excluded_headers,
+        protocol_type,
+        operation_model,
     )
     assert_equal(actual['url_path'], expected.get('uri', ''), "URI")
     if 'method' in expected:
         assert_equal(actual['method'], expected['method'], "Method")
 
 
-def _assert_expected_headers_in_request(actual, expected, excluded_headers):
+def _assert_request_body(actual, expected, protocol_type):
+    """
+    Asserts the equivalence of actual and expected request bodies based
+    on protocol type.
+
+    The expected bodies in our consumed protocol tests have extra
+    whitespace and newlines that need to be handled. We need to normalize
+    the expected and actual response bodies before evaluating equivalence.
+    """
+    if protocol_type in ['json', 'rest-json']:
+        _assert_json_bodies(actual, expected, protocol_type)
+    elif protocol_type in ['rest-xml']:
+        _assert_xml_bodies(actual, expected)
+    else:
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_json_bodies(actual, expected, protocol_type):
+    try:
+        assert_equal(json.loads(actual), json.loads(expected), 'Body value')
+    except json.JSONDecodeError as e:
+        if protocol_type == 'json':
+            raise e
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_xml_bodies(actual, expected):
+    try:
+        tree1 = ET.canonicalize(actual, strip_text=True)
+        tree2 = ET.canonicalize(expected, strip_text=True)
+        assert_equal(tree1, tree2, 'Body value')
+    except ET.ParseError:
+        assert_equal(actual, expected, 'Body value')
+
+
+def _assert_expected_headers_in_request(
+    actual, expected, excluded_headers, protocol_type, operation_model
+):
+    _clean_list_header_values(actual, expected, operation_model)
+    if protocol_type in ['query', 'ec2']:
+        # Botocore sets the Content-Type header to the following for query and ec2:
+        # Content-Type: application/x-www-form-urlencoded; charset=utf-8
+        # The protocol test files do not include "; charset=utf-8".
+        # We'll add this to the expected header value before asserting equivalence.
+        content_type = expected.get('Content-Type', '')
+        if 'charset=utf-8' not in content_type:
+            expected['Content-Type'] = content_type + '; charset=utf-8'
     for header, value in expected.items():
         assert header in actual
         assert actual[header] == value
     for header in excluded_headers:
         assert header not in actual
+
+
+def _clean_list_header_values(
+    actual_headers, expected_headers, operation_model
+):
+    """
+    Standardizes list-type header values in HTTP request headers based on an AWS operation model.
+    Ensures consistency between expected and actual header values, particularly for lists and timestamps.
+
+    Expected list header values in Smithy protocol tests are joined by ", ". Example: "foo, bar, baz".
+    Actual list headers values generated in botocore are  joined by ",". Example "foo,bar,baz".
+    We need to standardize these header values to assert equivalence appropriately.
+    """
+    input_shape = operation_model.input_shape
+
+    if not (
+        input_shape
+        and input_shape.type_name == "structure"
+        and input_shape.members
+    ):
+        return
+
+    for member, shape in input_shape.members.items():
+        if (
+            shape.serialization.get("location") != "header"
+            or shape.type_name != "list"
+        ):
+            continue
+
+        header_name = shape.serialization.get("name")
+        if not header_name:
+            continue
+
+        # Standardize expected header values by removing spaces after commas
+        if header_name in expected_headers:
+            expected_headers[header_name] = expected_headers[
+                header_name
+            ].replace(", ", ",")
+
+        # Standardize actual header values only if they exist and the list contains timestamps
+        if (
+            shape.member.type_name == "timestamp"
+            and header_name in actual_headers
+        ):
+            actual_headers[header_name] = actual_headers[header_name].replace(
+                ", ", ","
+            )
 
 
 def _walk_files():
@@ -482,7 +579,9 @@ def _load_cases(full_path):
     # The format is BOTOCORE_TEST_ID=suite_id:test_id or
     # BOTOCORE_TEST_ID=suite_id
     suite_id, test_id = _get_suite_test_id()
-    all_test_data = json.load(open(full_path), object_pairs_hook=OrderedDict)
+    all_test_data = json.load(
+        open(full_path, encoding='utf-8'), object_pairs_hook=OrderedDict
+    )
     basename = os.path.basename(full_path)
     for i, test_data in enumerate(all_test_data):
         if suite_id is not None and i != suite_id:
