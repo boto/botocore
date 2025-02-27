@@ -217,10 +217,10 @@ def test_register_feature_id(client_context):
     assert ctx.features == {'B'}
 
 
-def test_register_unknown_feature_id_raises(client_context):
-    with pytest.raises(ValueError) as excinfo:
-        register_feature_id('MY_FEATURE')
-    assert "Unknown feature id" in str(excinfo.value)
+def test_register_unknown_feature_id_skips(client_context):
+    register_feature_id('MY_FEATURE')
+    ctx = get_context()
+    assert ctx.features == set()
 
 
 def test_user_agent_truncated_string():
