@@ -78,13 +78,8 @@ def register_feature_id(feature_id):
         # bleed into all subsequent requests. Return instead of raising an
         # exception since this function could be invoked in a public interface.
         return
-    val = _USERAGENT_FEATURE_MAPPINGS.get(feature_id)
-    if val is None:
-        raise ValueError(
-            f"Unknown feature id: `{feature_id}`. "
-            f"Must be 1 of {', '.join(_USERAGENT_FEATURE_MAPPINGS.keys())}"
-        )
-    ctx.features.add(val)
+    if val := _USERAGENT_FEATURE_MAPPINGS.get(feature_id):
+        ctx.features.add(val)
 
 
 def sanitize_user_agent_string_component(raw_str, allow_hash):
