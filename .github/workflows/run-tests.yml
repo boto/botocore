@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') && github.run_id || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: '${{ matrix.os }}'
