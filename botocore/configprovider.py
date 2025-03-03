@@ -186,6 +186,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'preferred',
         None,
     ),
+    'disable_host_prefix_injection': (
+        'disable_host_prefix_injection',
+        'AWS_DISABLE_HOST_PREFIX_INJECTION',
+        None,
+        utils.ensure_boolean,
+    ),
 }
 
 # Evaluate AWS_STS_REGIONAL_ENDPOINTS settings
