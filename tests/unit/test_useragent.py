@@ -154,7 +154,7 @@ def test_from_environment(monkeypatch):
         platform, 'release', lambda: '5.4.228-131.415.AMZN2.X86_64'
     )
     monkeypatch.setattr(platform, 'python_version', lambda: '4.3.2')
-    monkeypatch.setattr(platform, 'python_implementation', lambda: 'Cpython')
+    monkeypatch.setattr(platform, 'python_implementation', lambda: 'CPython')
 
     uas = UserAgentString.from_environment()
 
@@ -162,7 +162,7 @@ def test_from_environment(monkeypatch):
     assert uas._platform_name == 'Linux'
     assert uas._platform_version == '5.4.228-131.415.AMZN2.X86_64'
     assert uas._python_version == '4.3.2'
-    assert uas._python_implementation == 'Cpython'
+    assert uas._python_implementation == 'CPython'
 
 
 @requires_crt()
