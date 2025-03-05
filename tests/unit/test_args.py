@@ -13,12 +13,17 @@
 # language governing permissions and limitations under the License.
 import socket
 
-from botocore import args, exceptions
+from botocore import UNSIGNED, args, exceptions
+from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
+from botocore.credentials import Credentials
+from botocore.exceptions import UnsupportedServiceProtocolsError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
+from botocore.parsers import PROTOCOL_PARSERS
+from botocore.serialize import SERIALIZERS
 from botocore.useragent import UserAgentString
 from tests import get_botocore_default_config_mapping, mock, unittest
 
@@ -63,9 +68,12 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model = mock.Mock(ServiceModel)
         service_model.service_name = service_name
         service_model.endpoint_prefix = service_name
+        service_model.protocol = 'query'
+        service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
             'protocol': 'query',
+            'protocols': ['query'],
         }
         service_model.operation_names = []
         return service_model
@@ -105,6 +113,19 @@ class TestCreateClientArgs(unittest.TestCase):
         }
         call_kwargs.update(**override_kwargs)
         return self.args_create.get_client_args(**call_kwargs)
+
+    def call_compute_client_args(self, **override_kwargs):
+        call_kwargs = {
+            'service_model': self.service_model,
+            'client_config': None,
+            'endpoint_bridge': self.bridge,
+            'region_name': self.region,
+            'is_secure': True,
+            'endpoint_url': self.endpoint_url,
+            'scoped_config': {},
+        }
+        call_kwargs.update(**override_kwargs)
+        return self.args_create.compute_client_args(**call_kwargs)
 
     def assert_create_endpoint_call(self, mock_endpoint, **override_kwargs):
         call_kwargs = {
@@ -679,6 +700,90 @@ class TestCreateClientArgs(unittest.TestCase):
         with self.assertRaises(exceptions.InvalidChecksumConfigError):
             self.call_get_client_args()
 
+    def test_protocol_resolution_without_protocols_trait(self):
+        del self.service_model.protocols
+        del self.service_model.metadata['protocols']
+        client_args = self.call_compute_client_args()
+        self.assertEqual(client_args['protocol'], 'query')
+
+    def test_protocol_resolution_picks_highest_supported(self):
+        self.service_model.protocol = 'query'
+        self.service_model.protocols = ['query', 'json']
+        client_args = self.call_compute_client_args()
+        self.assertEqual(client_args['protocol'], 'json')
+
+    def test_protocol_raises_error_for_unsupported_protocol(self):
+        self.service_model.protocols = ['wrongprotocol']
+        with self.assertRaisesRegex(
+            UnsupportedServiceProtocolsError, self.service_model.service_name
+        ):
+            self.call_compute_client_args()
+
+    def test_account_id_endpoint_mode_set_on_config_store(self):
+        self.config_store.set_config_variable(
+            'account_id_endpoint_mode', 'preferred'
+        )
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'preferred')
+
+    def test_account_id_endpoint_mode_set_on_client_config(self):
+        config = self.call_get_client_args(
+            client_config=Config(account_id_endpoint_mode='required')
+        )['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'required')
+
+    def test_account_id_endpoint_mode_client_config_overrides_config_store(
+        self,
+    ):
+        self.config_store.set_config_variable(
+            'account_id_endpoint_mode', 'preferred'
+        )
+        config = self.call_get_client_args(
+            client_config=Config(account_id_endpoint_mode='disabled')
+        )['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'disabled')
+
+    def test_account_id_endpoint_mode_bad_value(self):
+        with self.assertRaises(exceptions.InvalidConfigError):
+            config = Config(account_id_endpoint_mode='foo')
+            self.call_get_client_args(client_config=config)
+        self.config_store.set_config_variable(
+            'account_id_endpoint_mode', 'foo'
+        )
+        with self.assertRaises(exceptions.InvalidConfigError):
+            self.call_get_client_args()
+
+    def test_account_id_endpoint_mode_disabled_on_unsigned_request(self):
+        self._set_endpoint_bridge_resolve(signature_version=UNSIGNED)
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.account_id_endpoint_mode, 'disabled')
+
+    def test_inject_host_prefix_default_client_config(self):
+        input_config = Config()
+        client_args = self.call_get_client_args(client_config=input_config)
+        config = client_args["client_config"]
+        self.assertEqual(config.inject_host_prefix, True)
+
+    def test_disable_host_prefix_injection_config_store(self):
+        self.config_store.set_config_variable(
+            "disable_host_prefix_injection",
+            True,
+        )
+        config = self.call_get_client_args()['client_config']
+        self.assertEqual(config.inject_host_prefix, False)
+
+    def test_inject_host_prefix_client_config_overrides_config_store(
+        self,
+    ):
+        self.config_store.set_config_variable(
+            "disable_host_prefix_injection",
+            False,
+        )
+        input_config = Config(inject_host_prefix=False)
+        client_args = self.call_get_client_args(client_config=input_config)
+        config = client_args['client_config']
+        self.assertEqual(config.inject_host_prefix, False)
+
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
     def setUp(self):
@@ -722,6 +827,8 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             'endpoint_bridge': self.bridge,
             'client_endpoint_url': None,
             'legacy_endpoint_url': 'https://my.legacy.endpoint.com',
+            'credentials': None,
+            'account_id_endpoint_mode': 'preferred',
         }
         kwargs = {**defaults, **overrides}
         return self.args_create.compute_endpoint_resolver_builtin_defaults(
@@ -744,6 +851,8 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             bins['AWS::S3::DisableMultiRegionAccessPoints'], False
         )
         self.assertEqual(bins['SDK::Endpoint'], None)
+        self.assertEqual(bins['AWS::Auth::AccountId'], None)
+        self.assertEqual(bins['AWS::Auth::AccountIdEndpointMode'], 'preferred')
 
     def test_aws_region(self):
         bins = self.call_compute_endpoint_resolver_builtin_defaults(
@@ -907,3 +1016,35 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
             legacy_endpoint_url='https://my.legacy.endpoint.com',
         )
         self.assertEqual(bins['SDK::Endpoint'], None)
+
+    def test_account_id_set_with_credentials(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            credentials=Credentials(
+                access_key='foo', secret_key='bar', account_id='baz'
+            )
+        )
+        self.assertEqual(bins['AWS::Auth::AccountId'](), 'baz')
+
+    def test_account_id_endpoint_mode_set_to_disabled(self):
+        bins = self.call_compute_endpoint_resolver_builtin_defaults(
+            account_id_endpoint_mode='disabled'
+        )
+        self.assertEqual(bins['AWS::Auth::AccountIdEndpointMode'], 'disabled')
+
+
+class TestProtocolPriorityList:
+    def test_all_parsers_accounted_for(self):
+        assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
+            PROTOCOL_PARSERS.keys()
+        ), (
+            "The map of protocol names to parsers is out of sync with the priority "
+            "ordered list of protocols supported by botocore"
+        )
+
+    def test_all_serializers_accounted_for(self):
+        assert set(PRIORITY_ORDERED_SUPPORTED_PROTOCOLS) == set(
+            SERIALIZERS.keys()
+        ), (
+            "The map of protocol names to serializers is out of sync with the "
+            "priority ordered list of protocols supported by botocore"
+        )

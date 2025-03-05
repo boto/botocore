@@ -25,7 +25,7 @@ import logging
 from binascii import crc32
 from hashlib import sha1, sha256
 
-from botocore.compat import HAS_CRT, urlparse
+from botocore.compat import HAS_CRT, has_minimum_crt_version, urlparse
 from botocore.exceptions import (
     AwsChunkedWrapperError,
     FlexibleChecksumError,
@@ -33,7 +33,11 @@ from botocore.exceptions import (
 )
 from botocore.model import StructureShape
 from botocore.response import StreamingBody
-from botocore.utils import determine_content_length, has_checksum_header
+from botocore.utils import (
+    conditionally_calculate_md5,
+    determine_content_length,
+    has_checksum_header,
+)
 
 if HAS_CRT:
     from awscrt import checksums as crt_checksums
@@ -354,7 +358,10 @@ def apply_request_checksum(request):
     if not algorithm:
         return
 
-    if algorithm["in"] == "header":
+    if algorithm == "conditional-md5":
+        # Special case to handle the http checksum required trait
+        conditionally_calculate_md5(request)
+    elif algorithm["in"] == "header":
         _apply_request_header_checksum(request)
     elif algorithm["in"] == "trailer":
         _apply_request_trailer_checksum(request)
@@ -408,6 +415,12 @@ def _apply_request_trailer_checksum(request):
         # Send the decoded content length if we can determine it. Some
         # services such as S3 may require the decoded content length
         headers["X-Amz-Decoded-Content-Length"] = str(content_length)
+
+        if "Content-Length" in headers:
+            del headers["Content-Length"]
+            logger.debug(
+                "Removing the Content-Length header since 'chunked' is specified for Transfer-Encoding."
+            )
 
     if isinstance(body, (bytes, bytearray)):
         body = io.BytesIO(body)
@@ -478,7 +491,7 @@ def handle_checksum_body(http_response, response, context, operation_model):
         response["context"]["checksum"] = checksum_context
         return
 
-    logger.info(
+    logger.debug(
         f'Skipping checksum validation. Response did not contain one of the '
         f'following algorithms: {algorithms}.'
     )
@@ -522,8 +535,12 @@ if HAS_CRT:
     _CRT_CHECKSUM_CLS = {
         "crc32": CrtCrc32Checksum,
         "crc32c": CrtCrc32cChecksum,
-        "crc64nvme": CrtCrc64NvmeChecksum,
     }
+
+    if has_minimum_crt_version((0, 23, 4)):
+        # CRC64NVME support wasn't officially added until 0.23.4
+        _CRT_CHECKSUM_CLS["crc64nvme"] = CrtCrc64NvmeChecksum
+
     _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
     # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
     assert all(

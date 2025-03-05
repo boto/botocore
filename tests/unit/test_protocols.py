@@ -37,24 +37,24 @@ failed test.
 To run tests from only a single file, you can set the
 BOTOCORE_TEST env var::
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json pytest tests/unit/test_protocols.py
+    BOTOCORE_TEST=tests/unit/protocols/input/json.json pytest tests/unit/test_protocols.py
 
 To run a single test suite you can set the BOTOCORE_TEST_ID env var:
 
-    BOTOCORE_TEST=tests/unit/compliance/input/json.json BOTOCORE_TEST_ID=5 \
+    BOTOCORE_TEST=tests/unit/protocols/input/json.json BOTOCORE_TEST_ID=5 \
         pytest tests/unit/test_protocols.py
 
 To run a single test case in a suite (useful when debugging a single test), you
 can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 
-    BOTOCORE_TEST_ID=5:1 pytest test/unit/test_protocols.py
+    BOTOCORE_TEST_ID=5:1 pytest tests/unit/test_protocols.py
 
 """
 
+import base64
 import copy
 import os
 from base64 import b64decode
-from calendar import timegm
 from enum import Enum
 
 import pytest
@@ -70,6 +70,7 @@ from botocore.parsers import (
     QueryParser,
     RestJSONParser,
     RestXMLParser,
+    RpcV2CBORParser,
 )
 from botocore.serialize import (
     EC2Serializer,
@@ -77,6 +78,7 @@ from botocore.serialize import (
     QuerySerializer,
     RestJSONSerializer,
     RestXMLSerializer,
+    RpcV2CBORSerializer,
 )
 from botocore.utils import parse_timestamp, percent_encode_sequence
 
@@ -90,6 +92,7 @@ PROTOCOL_SERIALIZERS = {
     'json': JSONSerializer,
     'rest-json': RestJSONSerializer,
     'rest-xml': RestXMLSerializer,
+    'smithy-rpc-v2-cbor': RpcV2CBORSerializer,
 }
 PROTOCOL_PARSERS = {
     'ec2': EC2QueryParser,
@@ -97,8 +100,10 @@ PROTOCOL_PARSERS = {
     'json': JSONParser,
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
+    'smithy-rpc-v2-cbor': RpcV2CBORParser,
 }
 PROTOCOL_TEST_BLACKLIST = ['Idempotency token auto fill']
+IGNORE_LIST_FILENAME = "protocol-tests-ignore-list.json"
 
 
 class TestType(Enum):
@@ -109,6 +114,12 @@ class TestType(Enum):
     OUTPUT = "output"
 
 
+def get_protocol_test_ignore_list():
+    ignore_list_path = os.path.join(TEST_DIR, IGNORE_LIST_FILENAME)
+    with open(ignore_list_path) as f:
+        return json.load(f)
+
+
 def _compliance_tests(test_type=None):
     inp = test_type is None or test_type is TestType.INPUT
     out = test_type is None or test_type is TestType.OUTPUT
@@ -116,11 +127,19 @@ def _compliance_tests(test_type=None):
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
-                if model.get('description') in PROTOCOL_TEST_BLACKLIST:
-                    continue
+                protocol = basename.replace('.json', '')
                 if 'params' in case and inp:
+                    if model.get('description') in PROTOCOL_TEST_BLACKLIST:
+                        continue
                     yield model, case, basename
                 elif 'response' in case and out:
+                    if _should_ignore_test(
+                        protocol,
+                        "output",
+                        model['description'],
+                        case.get('id'),
+                    ):
+                        continue
                     yield model, case, basename
 
 
@@ -141,12 +160,13 @@ def test_input_compliance(json_description, case, basename):
     serializer = protocol_serializer()
     serializer.MAP_TYPE = OrderedDict
     operation_model = OperationModel(case['given'], model)
+    case['params'] = _convert_strings_to_special_float(case['params'])
     request = serializer.serialize_to_request(case['params'], operation_model)
     _serialize_request_description(request)
     client_endpoint = service_description.get('clientEndpoint')
     try:
         _assert_request_body_is_bytes(request['body'])
-        _assert_requests_equal(request, case['serialized'])
+        _assert_requests_equal(request, case['serialized'], protocol_type)
         _assert_endpoints_equal(request, case['serialized'], client_endpoint)
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
@@ -181,7 +201,7 @@ class MockRawResponse:
 )
 def test_output_compliance(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
-    operation_name = case.get('name', 'OperationName')
+    operation_name = case.get('given', {}).get('name', 'OperationName')
     service_description['operations'] = {
         operation_name: case,
     }
@@ -189,24 +209,38 @@ def test_output_compliance(json_description, case, basename):
     try:
         model = ServiceModel(service_description)
         operation_model = OperationModel(case['given'], model)
-        parser = PROTOCOL_PARSERS[model.metadata['protocol']](
+        protocol = model.metadata['protocol']
+        parser = PROTOCOL_PARSERS[protocol](
             timestamp_parser=_compliance_timestamp_parser
         )
         # We load the json as utf-8, but the response parser is at the
         # botocore boundary, so it expects to work with bytes.
-        body_bytes = case['response']['body'].encode('utf-8')
-        case['response']['body'] = body_bytes
+        # If a test case doesn't define a response body, set it to `None`.
+        if 'body' in case['response']:
+            body_bytes = case['response']['body'].encode('utf-8')
+            case['response']['body'] = body_bytes
+        else:
+            case['response']['body'] = (
+                b'' if protocol != "query" else b'<xml/>'
+            )
         # We need the headers to be case insensitive
-        headers = HeadersDict(case['response']['headers'])
-        case['response']['headers'] = headers
+        # If a test case doesn't define response headers, set it to an empty `HeadersDict`.
+        case['response']['headers'] = HeadersDict(
+            case['response'].get('headers', {})
+        )
         # If this is an event stream fake the raw streamed response
         if operation_model.has_event_stream_output:
             case['response']['body'] = MockRawResponse(body_bytes)
         if 'error' in case:
             output_shape = operation_model.output_shape
+            if protocol == 'smithy-rpc-v2-cbor':
+                case['response']['body'] = base64.b64decode(
+                    case['response']['body']
+                )
             parsed = parser.parse(case['response'], output_shape)
             try:
-                error_shape = model.shape_for(parsed['Error']['Code'])
+                error_code = parsed.get("Error", {}).get("Code")
+                error_shape = model.shape_for_error_code(error_code)
             except NoShapeFoundError:
                 error_shape = None
             if error_shape is not None:
@@ -214,6 +248,14 @@ def test_output_compliance(json_description, case, basename):
                 parsed.update(error_parse)
         else:
             output_shape = operation_model.output_shape
+            if protocol == 'query' and output_shape and output_shape.members:
+                output_shape.serialization['resultWrapper'] = (
+                    f'{operation_name}Result'
+                )
+            elif protocol == 'smithy-rpc-v2-cbor':
+                case['response']['body'] = base64.b64decode(
+                    case['response']['body']
+                )
             parsed = parser.parse(case['response'], output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
@@ -279,6 +321,11 @@ def _fixup_parsed_result(parsed):
         for key in error_keys:
             if key not in ['Code', 'Message']:
                 del parsed['Error'][key]
+    # 5. Special float types. In the protocol test suite, certain special float
+    # types are represented as strings: "Infinity", "-Infinity", and "NaN".
+    # However, we parse these values as actual floats types, so we need to convert
+    # them back to their string representation.
+    parsed = _convert_special_floats_to_string(parsed)
     return parsed
 
 
@@ -299,12 +346,34 @@ def _convert_bytes_to_str(parsed):
         return parsed
 
 
+def _convert_strings_to_special_float(parsed):
+    for key, value in parsed.items():
+        if value == 'Infinity':
+            parsed[key] = float('Infinity')
+        elif value == '-Infinity':
+            parsed[key] = float('-Infinity')
+        elif value == 'NaN':
+            parsed[key] = float('NaN')
+    return parsed
+
+
+def _convert_special_floats_to_string(parsed):
+    for key, value in parsed.items():
+        if value == float('Infinity'):
+            parsed[key] = 'Infinity'
+        elif value == float('-Infinity'):
+            parsed[key] = '-Infinity'
+        elif value != value:
+            parsed[key] = 'NaN'
+    return parsed
+
+
 def _compliance_timestamp_parser(value):
     datetime = parse_timestamp(value)
     # Convert from our time zone to UTC
     datetime = datetime.astimezone(tzutc())
     # Convert to epoch.
-    return int(timegm(datetime.timetuple()))
+    return datetime.timestamp()
 
 
 def _output_failure_message(
@@ -394,10 +463,30 @@ def _serialize_request_description(request_dict):
                 request_dict['url_path'] += f'&{encoded}'
 
 
-def _assert_requests_equal(actual, expected):
-    assert_equal(
-        actual['body'], expected.get('body', '').encode('utf-8'), 'Body value'
-    )
+def _assert_requests_equal(actual, expected, protocol):
+    # For CBOR, we need to assert that the bodies are equal based on their parsed
+    # values to ensure we are properly testing things like
+    if protocol == 'smithy-rpc-v2-cbor' and actual['body']:
+        parser = RpcV2CBORParser()
+        actual_body_stream = parser.get_peekable_stream_from_bytes(
+            actual['body']
+        )
+        expected_body_stream = parser.get_peekable_stream_from_bytes(
+            base64.b64decode(expected['body'])
+        )
+        actual_body = _convert_special_floats_to_string(
+            parser.parse_data_item(actual_body_stream)
+        )
+        expected_body = _convert_special_floats_to_string(
+            parser.parse_data_item(expected_body_stream)
+        )
+        assert_equal(actual_body, expected_body, 'Body value')
+    else:
+        assert_equal(
+            actual['body'],
+            expected.get('body', '').encode('utf-8'),
+            'Body value',
+        )
     actual_headers = HeadersDict(actual['headers'])
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
@@ -427,11 +516,13 @@ def _walk_files():
     else:
         for root, _, filenames in os.walk(TEST_DIR):
             for filename in filenames:
+                if filename == IGNORE_LIST_FILENAME:
+                    continue
                 yield os.path.join(root, filename)
 
 
 def _load_cases(full_path):
-    # During developement, you can set the BOTOCORE_TEST_ID
+    # During development, you can set the BOTOCORE_TEST_ID
     # to run a specific test suite or even a specific test case.
     # The format is BOTOCORE_TEST_ID=suite_id:test_id or
     # BOTOCORE_TEST_ID=suite_id
@@ -462,7 +553,7 @@ def _get_suite_test_id():
         if len(split) == 2:
             suite_id, test_id = int(split[0]), int(split[1])
         else:
-            suite_id = int(split([0]))
+            suite_id = int(split[0])
     except TypeError:
         # Same exception, just give a better error message.
         raise TypeError(
@@ -471,3 +562,40 @@ def _get_suite_test_id():
             "integers."
         )
     return suite_id, test_id
+
+
+def _should_ignore_test(protocol, test_type, suite, case):
+    """
+    Determines if a protocol test should be ignored.
+
+    :type protocol: str
+    :param protocol: The protocol name as represented by its corresponding
+        protocol test file name (without the .json extension).
+
+    :type test_type: str
+    :param test_type: The protocol test type ("input" or "output").
+
+    :type suite: str
+    :param suite: The "description" attribute of a protocol test suite.
+
+    :type case: str
+    :param case: The "id" attribute of a specific protocol test case.
+
+    :return: True if the protocol test should be ignored, False otherwise.
+    :rtype: bool
+    """
+    # Get test suites and cases to ignore for all protocols.
+    ignore_list = get_protocol_test_ignore_list()
+    general_ignore_list = ignore_list.get('general', {}).get(test_type, {})
+    general_suites = general_ignore_list.get('suites', [])
+    general_cases = general_ignore_list.get('cases', [])
+    if suite in general_suites or case in general_cases:
+        return True
+
+    # Get test suites and cases to ignore for a specific protocol.
+    protocol_ignore_list = (
+        ignore_list.get('protocols', {}).get(protocol, {}).get(test_type, {})
+    )
+    protocol_suites = protocol_ignore_list.get('suites', [])
+    protocol_cases = protocol_ignore_list.get('cases', [])
+    return suite in protocol_suites or case in protocol_cases
