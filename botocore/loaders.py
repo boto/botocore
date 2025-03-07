@@ -197,6 +197,143 @@ class JSONFileLoader:
                 return data
         return None
 
+    def load_examples_file(self, file_path):
+        """Load the examples data if available
+
+        :return: The loaded data if it exists, otherwise None.
+
+        """
+        examples_json = '''{
+        "examples": {
+            "lookoutvision_CreateDataset": {
+                "id": "lookoutvision_CreateDataset",
+                "file": "lookoutvision_metadata.yaml",
+                "languages": {
+                    "Python": {
+                        "name": "Python",
+                        "property": "",
+                        "versions": [
+                            {
+                                "sdk_version": 3,
+                                "block_content": null,
+                                "excerpts": [
+                                    {
+                                        "description": null,
+                                        "snippet_tags": [
+                                            "python.example_code.lookoutvision.Datasets",
+                                            "python.example_code.lookoutvision.CreateDataset"
+                                        ],
+                                        "snippet_files": [],
+                                        "genai": "none"
+                                    }
+                                ],
+                                "github": "python/example_code/lookoutvision",
+                                "sdkguide": null,
+                                "more_info": []
+                            }
+                        ]
+                    }
+                },
+                "title": "Use <code>CreateDataset</code>",
+                "title_abbrev": "<code>CreateDataset</code>",
+                "synopsis": "use <code>CreateDataset</code>.",
+                "category": "Api",
+                "guide_topic": {
+                    "title": "Creating your dataset",
+                    "url": "lookout-for-vision/latest/developer-guide/model-create-dataset.html"
+                },
+                "service_main": null,
+                "services": {
+                    "lookoutvision": {
+                        "__set__": [
+                            "CreateDataset"
+                        ]
+                    }
+                },
+                "doc_filenames": {
+                    "service_pages": {
+                        "lookoutvision": "https://docs.aws.amazon.com/code-library/latest/ug/lookoutvision_example_lookoutvision_CreateDataset_section.html"
+                    },
+                    "sdk_pages": {
+                        "": {
+                            "3": {
+                                "actions_scenarios": {
+                                    "lookoutvision": "https://docs.aws.amazon.com/code-library/latest/ug/_3_lookoutvision_code_examples.html#actions"
+                                },
+                                "cross_service": null
+                            }
+                        }
+                    }
+                },
+                "synopsis_list": [],
+                "source_key": null
+            },
+            "lookoutvision_Scenario_CreateManifestFile": {
+                "id": "lookoutvision_Scenario_CreateManifestFile",
+                "file": "lookoutvision_metadata.yaml",
+                "languages": {
+                    "Python": {
+                        "name": "Python",
+                        "property": "",
+                        "versions": [
+                            {
+                                "sdk_version": 3,
+                                "block_content": null,
+                                "excerpts": [
+                                    {
+                                        "description": null,
+                                        "snippet_tags": [
+                                            "python.example_code.lookoutvision.Datasets",
+                                            "python.example_code.lookoutvision.Scenario_CreateManifestFile"
+                                        ],
+                                        "snippet_files": [],
+                                        "genai": "none"
+                                    }
+                                ],
+                                "github": "python/example_code/lookoutvision",
+                                "sdkguide": null,
+                                "more_info": []
+                            }
+                        ]
+                    }
+                },
+                "title": "Create a Lookout for Vision manifest file using an AWS SDK",
+                "title_abbrev": "Create a manifest file",
+                "synopsis": "create a Lookout for Vision manifest file and upload it to Amazon S3.",
+                "category": "Scenarios",
+                "guide_topic": {
+                    "title": "Creating a manifest file",
+                    "url": "lookout-for-vision/latest/developer-guide/manifest-files.html"
+                },
+                "service_main": null,
+                "services": {
+                    "lookoutvision": {
+                        "__set__": []
+                    }
+                },
+                "doc_filenames": {
+                    "service_pages": {
+                        "lookoutvision": "https://docs.aws.amazon.com/code-library/latest/ug/lookoutvision_example_lookoutvision_Scenario_CreateManifestFile_section.html"
+                    },
+                    "sdk_pages": {
+                        "": {
+                            "3": {
+                                "actions_scenarios": {
+                                    "lookoutvision": "https://docs.aws.amazon.com/code-library/latest/ug/_3_lookoutvision_code_examples.html#scenarios"
+                                },
+                                "cross_service": null
+                            }
+                        }
+                    }
+                },
+                "synopsis_list": [],
+                "source_key": null
+            }
+        }
+        }'''
+        # return json.loads(examples_json, object_pairs_hook=OrderedDict)
+        return json.loads(examples_json)
+
 
 def create_loader(search_path_string=None):
     """Create a Loader class.

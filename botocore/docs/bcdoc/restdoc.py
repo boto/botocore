@@ -44,6 +44,7 @@ SECTION_METHOD_PATH_DEPTH = {
     'client-api': 4,
     'paginator-api': 3,
     'waiter-api': 3,
+    'examples-api': 3,
 }
 
 
@@ -203,7 +204,7 @@ class DocumentStructure(ReSTDocument):
             name=name, target=self.target, context=context
         )
         section.path = self.path + [name]
-        # Indent the section apporpriately as well
+        # Indent the section appropriately as well
         section.style.indentation = self.style.indentation
         section.translation_map = self.translation_map
         section.hrefs = self.hrefs
