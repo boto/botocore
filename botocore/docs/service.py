@@ -130,11 +130,11 @@ class ServiceDocumenter:
     def get_library_examples(self):
         loader = self._session.get_component('data_loader')
         examples = loader.file_loader.load_examples_file('sample_file')
-        print(examples['examples'])
+        # print(examples['examples'])
 
-        for example in examples['examples']:
-            print(example)
-            print(examples['examples'][example]['id'])
+        # for example in examples['examples']:
+        #    print(example)
+        #    print(examples['examples'][example]['id'])
         return examples['examples']
 
     def get_examples(self, service_name, api_version=None):

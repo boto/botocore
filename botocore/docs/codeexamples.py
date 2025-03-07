@@ -40,13 +40,13 @@ class CodeExamplesDocumenter:
         :param section: The section to write to.
         :param examples: The list of examples.
         """
-        section.style.h2('AWS Code Examples')
+        section.style.h2('AWS SDK Code Examples')
         self._add_overview(section)
 
         # List the available Code Library examples with a link.
         # TODO: fix service name
         for example in examples:
-            section.style.new_paragraph()
+            section.style.start_li()
             title_text = examples[example]['title']
             plain_title = title_text.replace('<code>', '').replace('</code>', '')
             section.style.external_link(
@@ -54,7 +54,7 @@ class CodeExamplesDocumenter:
                 link=examples[example]['doc_filenames']['service_pages']['lookoutvision'],
                 # link=self._CODE_EXAMPLE_LINK + self._service_name + '_code_examples.html',
             )
-            section.style.new_line()
+            section.style.end_li()
 
     def _add_overview(self, section):
         section.style.new_line()
@@ -62,7 +62,7 @@ class CodeExamplesDocumenter:
             'Explore more examples for this service in the '
         )
         section.style.external_link(
-            title='AWS Examples Code Library',
+            title='AWS SDK Code Examples Code Library',
             link=self._CODE_EXAMPLE_LINK + self._service_name + '_code_examples.html',
         )
         section.write('.')
