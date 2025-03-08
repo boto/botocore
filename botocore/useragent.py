@@ -58,6 +58,7 @@ _USERAGENT_FEATURE_MAPPINGS = {
     'WAITER': 'B',
     'PAGINATOR': 'C',
     'S3_TRANSFER': 'G',
+    'PROTOCOL_RPC_V2_CBOR': 'M',
     'ENDPOINT_OVERRIDE': 'N',
     'SIGV4A_SIGNING': 'S',
 }
