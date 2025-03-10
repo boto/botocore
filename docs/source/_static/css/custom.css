@@ -110,3 +110,41 @@ h3.admonition-title::before {
 .hidden {
     display: none;
 }
+/* Applies styling to a table and ensures the borders are collapsed */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+/* Use flexbox to align columns */
+.styled-table tr {
+    display: flex;
+}
+/* Ensures columns are aligned properly */
+.styled-row-col {
+    width: 33%;
+    vertical-align: top;
+    display: inline-block;
+}
+/* Applies styling to an error page */
+.error-page-style {
+    box-sizing: border-box;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 1.5;
+    font-family: "Open Sans", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+.error-page-style h1 {
+    font-size: 38px;
+    padding: 10px 10px 10px 45px;
+    margin: 20px 0 35px -45px;
+    font-weight: normal;
+}
+
+.error-page-style p {
+    padding: 0;
+    margin: 0 0 10px;
+}
