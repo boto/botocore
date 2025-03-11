@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "dependency",
+  "description": "TEST DO NOT MERGE TO MAIN BRANCH - bump docutils dependency in AWS CLI"
+}
