@@ -110,20 +110,14 @@ h3.admonition-title::before {
 .hidden {
     display: none;
 }
-/* Applies styling to a table and ensures the borders are collapsed */
-.styled-table {
+
+.max-width {
     width: 100%;
-    border-collapse: collapse;
-}
-/* Use flexbox to align columns */
-.styled-table tr {
-    display: flex;
 }
 /* Ensures columns are aligned properly */
 .styled-row-col {
     width: 33%;
     vertical-align: top;
-    display: inline-block;
 }
 /* Applies styling to an error page */
 .error-page-style {
