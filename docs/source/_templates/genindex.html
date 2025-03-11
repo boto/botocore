@@ -1,7 +1,11 @@
+{#This file is normally inherited from the version defined by our docs theme (Furo).
+However, that file includes in-line styling which isn't allowed by our website's
+Content Security Policy (CSP). To resolve this issue, we copied this file from
+Furo version "2022.12.7".#}
+
 {% extends "page.html" %} {% block htmltitle -%}
 
 <title>{{ _("Index") }} - {{ docstitle|striptags|e }}</title>
-<link rel="stylesheet" href="../_static/css/custom.css"> </head>
 {% endblock htmltitle -%} 
 
 {% macro indexentries(firstname, links) %} {%- if
