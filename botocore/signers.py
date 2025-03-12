@@ -838,11 +838,11 @@ def generate_presigned_post(
 
     .. note::
 
-        Amazon S3 supports Signature Version 4, a protocol for authenticating 
-        inbound API requests to AWS services, in all AWS Regions. At this time, 
-        AWS Regions created before January 30, 2014, will continue to support 
-        the previous protocol, Signature Version 2. Any new Regions after January 30, 
-        2014, will support only Signature Version 4 and therefore all requests to 
+        Amazon S3 supports Signature Version 4, a protocol for authenticating
+        inbound API requests to AWS services, in all AWS Regions. At this time,
+        AWS Regions created before January 30, 2014, will continue to support
+        the previous protocol, Signature Version 2. Any new Regions after January 30,
+        2014, will support only Signature Version 4 and therefore all requests to
         those Regions must be made with Signature Version 4.
 
         For more details, see:
