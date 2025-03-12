@@ -848,7 +848,7 @@ def generate_presigned_post(
         For more details, see:
         `AWS Signature Version 4 <https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html>`_.
 
-        
+
     :type Bucket: string
     :param Bucket: The name of the bucket to presign the post to. Note that
         bucket related conditions should not be included in the
