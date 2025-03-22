@@ -524,9 +524,9 @@ class TestSigV4(unittest.TestCase):
             'datetime',
             mock.Mock(wraps=datetime.datetime),
         ) as mock_datetime:
-            original_utcnow = datetime.datetime(2014, 1, 1, 0, 0)
+            original_now = datetime.datetime(2014, 1, 1, 0, 0)
 
-            mock_datetime.now.return_value = original_utcnow
+            mock_datetime.now.return_value = original_now
             # Go through the add_auth process once. This will attach
             # a timestamp to the request at the beginning of auth.
             auth.add_auth(request)

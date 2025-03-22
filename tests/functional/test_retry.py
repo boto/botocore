@@ -66,9 +66,9 @@ class TestRetryHeader(BaseRetryTest):
         ]
 
         # The first, third and seventh datetime values of each
-        # utcnow_side_effects list are side_effect values for when
-        # utcnow is called in SigV4 signing.
-        utcnow_side_effects = [
+        # now_side_effects list are side_effect values for when
+        # now is called in SigV4 signing.
+        now_side_effects = [
             [
                 datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
                 datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
@@ -100,13 +100,11 @@ class TestRetryHeader(BaseRetryTest):
                 b'ttl=20190601T001020Z; attempt=3; max=3',
             ],
         ]
-        test_cases = list(
-            zip(responses, utcnow_side_effects, expected_headers)
-        )
+        test_cases = list(zip(responses, now_side_effects, expected_headers))
         return test_cases
 
     def _test_amz_sdk_request_header_with_test_case(
-        self, responses, utcnow_side_effects, expected_headers, client_config
+        self, responses, now_side_effects, expected_headers, client_config
     ):
         datetime_patcher = mock.patch.object(
             botocore.endpoint.datetime,
@@ -114,7 +112,7 @@ class TestRetryHeader(BaseRetryTest):
             mock.Mock(wraps=datetime.datetime),
         )
         mocked_datetime = datetime_patcher.start()
-        mocked_datetime.now.side_effect = utcnow_side_effects
+        mocked_datetime.now.side_effect = now_side_effects
 
         client = self.session.create_client(
             'dynamodb', self.region, config=client_config
