@@ -59,6 +59,7 @@ from tests import (
     temporary_file,
     unittest,
 )
+from datetime import timezone
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -130,8 +131,7 @@ class TestRefreshableCredentials(TestCredentials):
 
     def test_refresh_needed(self):
         # The expiry time was set for 30 minutes ago, so if we
-        # say the current time is utcnow(), then we should need
-        # a refresh.
+        # say the current time is now(), then we should need a refresh
         self.mock_time.return_value = datetime.now(tzlocal())
         self.assertTrue(self.creds.refresh_needed())
         # We should refresh creds, if we try to access "access_key"
@@ -318,7 +318,9 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         self.assertEqual(response, expected_response)
 
     def test_retrieves_from_cache(self):
-        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        date_in_future = datetime.now(tz=timezone.utc) + timedelta(
+            seconds=1000
+        )
         utc_timestamp = date_in_future.isoformat() + 'Z'
         cache_key = '793d6e2f27667ab2da104824407e486bfec24a47'
         cache = {
@@ -798,7 +800,9 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
         self.assertEqual(response, expected_response)
 
     def test_retrieves_from_cache(self):
-        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        date_in_future = datetime.datetime.now(
+            tz=datetime.timezone.utc
+        ) + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
         cache_key = '793d6e2f27667ab2da104824407e486bfec24a47'
         cache = {
@@ -963,7 +967,9 @@ class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
         mock_loader_cls.assert_called_with('/some/path/token.jwt')
 
     def test_assume_role_retrieves_from_cache(self):
-        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        date_in_future = datetime.now(tz=datetime.timezone.utc) + timedelta(
+            seconds=1000
+        )
         utc_timestamp = date_in_future.isoformat() + 'Z'
 
         cache_key = 'c29461feeacfbed43017d20612606ff76abc073d'
@@ -2204,7 +2210,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(expiry_time, '2016-11-06T01:30:00UTC')
 
     def test_assume_role_retrieves_from_cache(self):
-        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        date_in_future = datetime.now() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
         self.fake_config['profiles']['development']['role_arn'] = 'myrole'
 
@@ -2233,7 +2239,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.token, 'baz-cached')
 
     def test_chain_prefers_cache(self):
-        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        date_in_future = datetime.now() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
 
         # The profile we will be using has a cache entry, but the profile it

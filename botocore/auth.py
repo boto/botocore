@@ -422,7 +422,10 @@ class SigV4Auth(BaseSigner):
     def add_auth(self, request):
         if self.credentials is None:
             raise NoCredentialsError()
-        datetime_now = datetime.datetime.utcnow()
+
+        # TODO fix this. But make sure it still works for Python 3.8
+        datetime_now = datetime.datetime.now(tz=datetime.timezone.utc)
+
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
@@ -560,7 +563,7 @@ class S3ExpressPostAuth(S3ExpressAuth):
     REQUIRES_IDENTITY_CACHE = True
 
     def add_auth(self, request):
-        datetime_now = datetime.datetime.utcnow()
+        datetime_now = datetime.datetime.now(tz=datetime.timezone.utc)
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
 
         fields = {}
@@ -819,7 +822,7 @@ class S3SigV4PostAuth(SigV4Auth):
     """
 
     def add_auth(self, request):
-        datetime_now = datetime.datetime.utcnow()
+        datetime_now = datetime.datetime.now(tz=datetime.timezone.utc)
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
 
         fields = {}

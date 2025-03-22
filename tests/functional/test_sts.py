@@ -39,7 +39,7 @@ class TestSTSPresignedUrl(BaseSessionTest):
     def test_presigned_url_contains_no_content_type(self):
         timestamp = datetime(2017, 3, 22, 0, 0)
         with mock.patch('botocore.auth.datetime.datetime') as _datetime:
-            _datetime.utcnow.return_value = timestamp
+            _datetime.now.return_value = timestamp
             url = self.client.generate_presigned_url('get_caller_identity', {})
 
         # There should be no 'content-type' in x-amz-signedheaders
@@ -67,7 +67,7 @@ class TestSTSEndpoints(BaseSessionTest):
         )
 
     def set_sts_regional_for_config_file(self, fileobj, config_val):
-        fileobj.write('[default]\n' f'sts_regional_endpoints={config_val}\n')
+        fileobj.write(f'[default]\nsts_regional_endpoints={config_val}\n')
         fileobj.flush()
         self.environ['AWS_CONFIG_FILE'] = fileobj.name
 
