@@ -321,7 +321,6 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         date_in_future = datetime.now(tz=timezone.utc) + timedelta(
             seconds=1000
         )
-        utc_timestamp = date_in_future.isoformat() + 'Z'
         cache_key = '793d6e2f27667ab2da104824407e486bfec24a47'
         cache = {
             cache_key: {
@@ -329,7 +328,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
                     'SessionToken': 'baz-cached',
-                    'Expiration': utc_timestamp,
+                    'Expiration': date_in_future.isoformat(),
                 }
             }
         }
@@ -800,10 +799,9 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
         self.assertEqual(response, expected_response)
 
     def test_retrieves_from_cache(self):
-        date_in_future = datetime.datetime.now(
-            tz=datetime.timezone.utc
-        ) + timedelta(seconds=1000)
-        utc_timestamp = date_in_future.isoformat() + 'Z'
+        date_in_future = datetime.now(tz=timezone.utc) + timedelta(
+            seconds=1000
+        )
         cache_key = '793d6e2f27667ab2da104824407e486bfec24a47'
         cache = {
             cache_key: {
@@ -811,7 +809,7 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
                     'SessionToken': 'baz-cached',
-                    'Expiration': utc_timestamp,
+                    'Expiration': date_in_future.isoformat(),
                 }
             }
         }
@@ -967,10 +965,9 @@ class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
         mock_loader_cls.assert_called_with('/some/path/token.jwt')
 
     def test_assume_role_retrieves_from_cache(self):
-        date_in_future = datetime.now(tz=datetime.timezone.utc) + timedelta(
+        date_in_future = datetime.now(tz=timezone.utc) + timedelta(
             seconds=1000
         )
-        utc_timestamp = date_in_future.isoformat() + 'Z'
 
         cache_key = 'c29461feeacfbed43017d20612606ff76abc073d'
         cache = {
@@ -979,7 +976,7 @@ class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
                     'SessionToken': 'baz-cached',
-                    'Expiration': utc_timestamp,
+                    'Expiration': date_in_future.isoformat(),
                 }
             }
         }

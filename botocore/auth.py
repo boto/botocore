@@ -423,7 +423,6 @@ class SigV4Auth(BaseSigner):
         if self.credentials is None:
             raise NoCredentialsError()
 
-        # TODO fix this. But make sure it still works for Python 3.8
         datetime_now = datetime.datetime.now(tz=datetime.timezone.utc)
 
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
