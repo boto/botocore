@@ -20,6 +20,9 @@ from botocore.docs.paginator import PaginatorDocumenter
 from botocore.docs.waiter import WaiterDocumenter
 from botocore.docs.codeexamples import CodeExamplesDocumenter
 from botocore.exceptions import DataNotFoundError
+from botocore.utils import (
+    SDK_CODE_EXAMPLE_ALIASES
+)
 
 
 class ServiceDocumenter:
@@ -117,7 +120,8 @@ class ServiceDocumenter:
     def examples_api(self, section):
         library_examples_list = None
         try:
-            library_examples_list = self.get_library_examples()
+            code_example_service_name = SDK_CODE_EXAMPLE_ALIASES.get(self._service_name, self._service_name)
+            library_examples_list = self.get_library_examples(code_example_service_name)
         except DataNotFoundError:
             pass
 
@@ -125,17 +129,20 @@ class ServiceDocumenter:
             examples_documenter = CodeExamplesDocumenter(
                 self._client, self._root_docs_path
             )
-            examples_documenter.document_code_examples(section, library_examples_list)
+            examples_documenter.document_code_examples(section, library_examples_list, code_example_service_name)
 
-    def get_library_examples(self):
+    def get_library_examples(self, service_name):
         loader = self._session.get_component('data_loader')
-        examples = loader.file_loader.load_examples_file('sample_file')
-        # print(examples['examples'])
+        #TODO: move these constants to config somewhere
+        git_url = 'https://raw.githubusercontent.com/rlhagerm/aws-doc-sdk-examples/fe9f3a68c94ba888f96e23e799aa8b43cb3f457d/python/example_code/'
+        git_service_url = f"{git_url}/{service_name}/examples_catalog.json"
 
-        # for example in examples['examples']:
-        #    print(example)
-        #    print(examples['examples'][example]['id'])
-        return examples['examples']
+        examples = loader.file_loader.load_examples_url(git_service_url)
+
+        if len(examples) > 0:
+            return examples['examples']
+
+        return []
 
     def get_examples(self, service_name, api_version=None):
         loader = self._session.get_component('data_loader')

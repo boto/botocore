@@ -178,6 +178,10 @@ EVENT_ALIASES = {
     "tagging": "resource-groups-tagging-api",
 }
 
+# The SDK code examples library service names mapped to the service id, if they do not match.
+SDK_CODE_EXAMPLE_ALIASES = {
+    "apigateway": "api-gateway",
+}
 
 # This pattern can be used to detect if a header is a flexible checksum header
 CHECKSUM_HEADER_PATTERN = re.compile(

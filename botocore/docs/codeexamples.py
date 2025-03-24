@@ -34,32 +34,42 @@ class CodeExamplesDocumenter:
             'https://docs.aws.amazon.com/code-library/latest/ug/python_3_'
         )
 
-    def document_code_examples(self, section, examples):
+    def document_code_examples(self, section, examples, service_id):
         """Documents the code library code examples for a service.
 
         :param section: The section to write to.
         :param examples: The list of examples.
+        :param service_id: The code examples service id.
         """
         section.style.h2('AWS SDK Code Examples')
         self._add_overview(section)
 
         # List the available Code Library examples with a link.
-        # TODO: fix service name
-        for example in examples:
-            section.style.start_li()
-            title_text = examples[example]['title']
-            plain_title = title_text.replace('<code>', '').replace('</code>', '')
-            section.style.external_link(
-                title=plain_title,
-                link=examples[example]['doc_filenames']['service_pages']['lookoutvision'],
-                # link=self._CODE_EXAMPLE_LINK + self._service_name + '_code_examples.html',
-            )
-            section.style.end_li()
+
+        # Group the examples by category. Do not show a category if there are no examples.
+        example_categories = {}
+        for i in range(len(examples)):
+            example_categories.setdefault(examples[i]['category'], []).append(examples[i])
+
+        # for example in examples:
+        for category in example_categories:
+            section.style.new_line()
+            section.style.h3(category)
+            for i in range(len(example_categories[category])):
+                section.style.start_li()
+                title_text = example_categories[category][i]['title']
+                if not title_text:
+                    title_text = example_categories[category][i]['id'].rsplit('_', 1)[-1]
+                section.style.external_link(
+                    title=title_text,
+                    link=example_categories[category][i]['doc_filenames']['service_pages'][service_id],
+                )
+                section.style.end_li()
 
     def _add_overview(self, section):
         section.style.new_line()
         section.write(
-            'Explore more examples for this service in the '
+            'Explore code examples in the '
         )
         section.style.external_link(
             title='AWS SDK Code Examples Code Library',
