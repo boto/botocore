@@ -181,6 +181,9 @@ EVENT_ALIASES = {
 # The SDK code examples library service names mapped to the service id, if they do not match.
 SDK_CODE_EXAMPLE_ALIASES = {
     "apigateway": "api-gateway",
+    "autoscaling": "auto-scaling",
+    "cognito-identity": "cognito",
+    "kinesis-analytics-v2": "kinesisanalyticsv2",
 }
 
 # This pattern can be used to detect if a header is a flexible checksum header

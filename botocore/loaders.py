@@ -345,6 +345,7 @@ class Loader:
                     if self.file_loader.exists(full_load_path):
                         services.add(service_name)
                         break
+        print(sorted(services))
         return sorted(services)
 
     @instance_cache

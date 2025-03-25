@@ -60,9 +60,11 @@ class CodeExamplesDocumenter:
                 title_text = example_categories[category][i]['title']
                 if not title_text:
                     title_text = example_categories[category][i]['id'].rsplit('_', 1)[-1]
+                service_page = example_categories[category][i]['doc_filenames']['service_pages'].get(
+                    service_id,list(example_categories[category][i]['doc_filenames']['service_pages'].values())[0])
                 section.style.external_link(
                     title=title_text,
-                    link=example_categories[category][i]['doc_filenames']['service_pages'][service_id],
+                    link=service_page,
                 )
                 section.style.end_li()
 
