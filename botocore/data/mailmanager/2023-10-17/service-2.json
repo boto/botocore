@@ -3077,6 +3077,10 @@
     "IngressStringToEvaluate":{
       "type":"structure",
       "members":{
+        "Analysis":{
+          "shape":"IngressAnalysis",
+          "documentation":"<p>The structure type for a string condition stating the Add On ARN and its returned value.</p>"
+        },
         "Attribute":{
           "shape":"IngressStringEmailAttribute",
           "documentation":"<p>The enum type representing the allowed attribute types for a string condition.</p>"
@@ -3576,6 +3580,10 @@
     "Metadata":{
       "type":"structure",
       "members":{
+        "ConfigurationSet":{
+          "shape":"String",
+          "documentation":"<p>The name of the configuration set used when sent through a configuration set with archiving enabled.</p>"
+        },
         "IngressPointId":{
           "shape":"IngressPointId",
           "documentation":"<p>The ID of the ingress endpoint through which the email was received.</p>"
@@ -3591,6 +3599,22 @@
         "SenderIpAddress":{
           "shape":"SenderIpAddress",
           "documentation":"<p>The IP address of the host from which the email was received.</p>"
+        },
+        "SendingMethod":{
+          "shape":"String",
+          "documentation":"<p>The name of the API call used when sent through a configuration set with archiving enabled.</p>"
+        },
+        "SendingPool":{
+          "shape":"String",
+          "documentation":"<p>The name of the dedicated IP pool used when sent through a configuration set with archiving enabled.</p>"
+        },
+        "SourceArn":{
+          "shape":"String",
+          "documentation":"<p>Specifies the archived email source, identified by either a Rule Set's ARN with an Archive action, or a Configuration Set's Archive ARN.</p>"
+        },
+        "SourceIdentity":{
+          "shape":"String",
+          "documentation":"<p>The identity name used to authorize the sending action when sent through a configuration set with archiving enabled.</p>"
         },
         "Timestamp":{
           "shape":"Timestamp",
@@ -3835,7 +3859,7 @@
       "type":"string",
       "max":256,
       "min":1,
-      "pattern":"^[\\sa-zA-Z0-9_]+$"
+      "pattern":"^(addon\\.)?[\\sa-zA-Z0-9_]+$"
     },
     "RetentionPeriod":{
       "type":"string",
@@ -3911,7 +3935,11 @@
         },
         "SenderIpAddress":{
           "shape":"SenderIpAddress",
-          "documentation":"<p>The IP address of the host from which the email was received.</p>"
+          "documentation":"<ul> <li> <p>Mail archived with Mail Manager: The IP address of the client that connects to the ingress endpoint.</p> </li> <li> <p>Mail sent through a configuration set with the archiving option enabled: The IP address of the client that makes the SendEmail API call.</p> </li> </ul>"
+        },
+        "SourceArn":{
+          "shape":"String",
+          "documentation":"<p>Specifies the archived email source, identified by either a Rule Set's ARN with an Archive action, or a Configuration Set's Archive ARN.</p>"
         },
         "Subject":{
           "shape":"String",
@@ -4065,6 +4093,10 @@
     "RuleBooleanToEvaluate":{
       "type":"structure",
       "members":{
+        "Analysis":{
+          "shape":"Analysis",
+          "documentation":"<p>The Add On ARN and its returned value to evaluate in a boolean condition expression.</p>"
+        },
         "Attribute":{
           "shape":"RuleBooleanEmailAttribute",
           "documentation":"<p>The boolean type representing the allowed attribute types for an email.</p>"
@@ -4372,6 +4404,10 @@
     "RuleStringToEvaluate":{
       "type":"structure",
       "members":{
+        "Analysis":{
+          "shape":"Analysis",
+          "documentation":"<p>The Add On ARN and its returned value to evaluate in a string condition expression.</p>"
+        },
         "Attribute":{
           "shape":"RuleStringEmailAttribute",
           "documentation":"<p>The email attribute to evaluate in a string condition expression.</p>"
