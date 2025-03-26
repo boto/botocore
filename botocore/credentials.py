@@ -1041,7 +1041,7 @@ class ProcessProvider(CredentialProvider):
 
     def load(self):
         credential_process = self._credential_process
-        if credential_process is None:
+        if not credential_process:
             return
 
         creds_dict = self._retrieve_credentials_using(credential_process)
