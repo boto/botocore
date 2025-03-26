@@ -46,7 +46,7 @@ class ServiceDocumenter:
             'paginator-api',
             'waiter-api',
             'client-context-params',
-            'examples-api',
+            'sdk-examples-api',
         ]
 
     def document_service(self):
@@ -66,7 +66,7 @@ class ServiceDocumenter:
             'client-context-params'
         )
         self.client_context_params(context_params_section)
-        self.examples_api(doc_structure.get_section('examples-api'))
+        self.sdk_examples_api(doc_structure.get_section('sdk-examples-api'))
         return doc_structure.flush_structure()
 
     def title(self, section):
@@ -117,32 +117,20 @@ class ServiceDocumenter:
             )
             waiter_documenter.document_waiters(section)
 
-    def examples_api(self, section):
+    def sdk_examples_api(self, section):
         library_examples_list = None
         try:
             code_example_service_name = SDK_CODE_EXAMPLE_ALIASES.get(self._service_name, self._service_name)
-            library_examples_list = self.get_library_examples(code_example_service_name)
-        except DataNotFoundError:
-            pass
-
-        if library_examples_list:
             examples_documenter = CodeExamplesDocumenter(
                 self._client, self._root_docs_path
             )
-            examples_documenter.document_code_examples(section, library_examples_list, code_example_service_name)
-
-    def get_library_examples(self, service_name):
-        loader = self._session.get_component('data_loader')
-        #TODO: move these constants to config somewhere
-        git_url = 'https://raw.githubusercontent.com/rlhagerm/aws-doc-sdk-examples/fe9f3a68c94ba888f96e23e799aa8b43cb3f457d/python/example_code/'
-        git_service_url = f"{git_url}/{service_name}/examples_catalog.json"
-
-        examples = loader.file_loader.load_examples_url(git_service_url)
-
-        if len(examples) > 0:
-            return examples['examples']
-
-        return []
+            loader = self._session.get_component('data_loader')
+            library_examples_list = examples_documenter.load_code_examples_catalog(loader, code_example_service_name)
+            # Only document the examples if there are any in the list.
+            if library_examples_list:
+                examples_documenter.document_code_examples(section, library_examples_list, code_example_service_name)
+        except DataNotFoundError:
+            pass
 
     def get_examples(self, service_name, api_version=None):
         loader = self._session.get_component('data_loader')

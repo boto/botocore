@@ -44,7 +44,7 @@ SECTION_METHOD_PATH_DEPTH = {
     'client-api': 4,
     'paginator-api': 3,
     'waiter-api': 3,
-    'examples-api': 3,
+    'sdk-examples-api': 3,
 }
 
 
