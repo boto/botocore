@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.37.21
+=======
+
+* api-change:``arc-zonal-shift``: Add new shiftType field for ARC zonal shifts.
+* api-change:``directconnect``: With this release, AWS Direct Connect allows you to tag your Direct Connect gateways. Tags are metadata that you can create and use to manage your Direct Connect gateways. For more information about tagging, see AWS Tagging Strategies.
+* api-change:``mediaconvert``: This release adds a configurable Quality Level setting for the top rendition of Auto ABR jobs
+* api-change:``mediatailor``: Add support for log filtering which allow customers to filter out selected event types from logs.
+* api-change:``polly``: Added support for the new voice - Jihye (ko-KR). Jihye is available as a Neural voice only.
+* api-change:``rds``: Add note about the Availability Zone where RDS restores the DB cluster for the RestoreDBClusterToPointInTime operation.
+* api-change:``wafv2``: This release adds the ability to associate an AWS WAF v2 web ACL with an AWS Amplify App.
+
+
+1.37.20
+=======
+
+* api-change:``bedrock-agent``: Adding support for Amazon OpenSearch Managed clusters as a vector database in Knowledge Bases for Amazon Bedrock
+* api-change:``eks``: Added support to override upgrade-blocking readiness checks via force flag when updating a cluster.
+* api-change:``gameliftstreams``: Minor updates to improve developer experience.
+* api-change:``keyspaces``: Removing replication region limitation for Amazon Keyspaces Multi-Region Replication APIs.
+* api-change:``marketplace-entitlement``: This release enhances the GetEntitlements API to support new filter CUSTOMER_AWS_ACCOUNT_ID in request and CustomerAWSAccountId field in response.
+* api-change:``meteringmarketplace``: This release enhances the BatchMeterUsage API to support new field CustomerAWSAccountId in request and response and making CustomerIdentifier optional. CustomerAWSAccountId or CustomerIdentifier must be provided in request but not both.
+* api-change:``sagemaker``: This release adds support for customer-managed KMS keys in Amazon SageMaker Partner AI Apps
+* api-change:``workspaces-thin-client``: Deprecate tags field in Get API responses
+
+
 1.37.19
 =======
 
