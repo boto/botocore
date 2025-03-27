@@ -33,6 +33,7 @@ from botocore.exceptions import (
 )
 from botocore.model import StructureShape
 from botocore.response import StreamingBody
+from botocore.useragent import register_feature_id
 from botocore.utils import (
     conditionally_calculate_md5,
     determine_content_length,
@@ -271,6 +272,10 @@ def resolve_request_checksum_algorithm(
     request_checksum_calculation = request["context"][
         "client_config"
     ].request_checksum_calculation
+    request_checksum_feature_id = (
+        "FLEXIBLE_CHECKSUMS_REQ_" + request_checksum_calculation.upper()
+    )
+    register_feature_id(request_checksum_feature_id)
     http_checksum = operation_model.http_checksum
     request_checksum_required = (
         operation_model.http_checksum_required
@@ -325,6 +330,10 @@ def resolve_request_checksum_algorithm(
             # disables payload signing we'll only use trailers over TLS.
             location_type = "trailer"
 
+    request_checksum_algorithm_feature_id = (
+        "FLEXIBLE_CHECKSUMS_REQ_" + algorithm_name.upper()
+    )
+    register_feature_id(request_checksum_algorithm_feature_id)
     algorithm = {
         "algorithm": algorithm_name,
         "in": location_type,
