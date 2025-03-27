@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import requests
+from botocore.compat import json
 
 CODE_EXAMPLE_LINK = 'https://docs.aws.amazon.com/code-library/latest/ug/python_3_'
 # Change this to the main repo and branch when PR is merged.
@@ -24,18 +26,21 @@ class CodeExamplesDocumenter:
         self._service_name = self._client.meta.service_model.service_name
         self._root_docs_path = root_docs_path
 
-    def load_code_examples_catalog(self, loader, service_id):
+    def load_code_examples_catalog(self, service_id):
         """Loads the code library example catalog listing for the service.
 
-        :param loader: The loader for the examples catalog.
         :param service_id: The code examples service id.
-
         :return: The list of examples.
         """
         git_service_url = f"{CODE_EXAMPLE_CATALOG_BASE}/python/example_code/{service_id}/examples_catalog.json"
-        examples = loader.file_loader.load_examples_url(git_service_url)
-        if len(examples) > 0:
-            return examples['examples']
+
+        response = requests.get(git_service_url)
+        if response.status_code == 200:
+            example_json = response.text
+            if example_json:
+                examples = json.loads(example_json)
+                if len(examples) > 0:
+                    return examples['examples']
 
         return []
 

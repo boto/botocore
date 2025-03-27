@@ -13,6 +13,7 @@
 from botocore.docs.codeexamples import CodeExamplesDocumenter
 from botocore.compat import json
 from tests.unit.docs import BaseDocsTest
+from tests import mock
 
 
 class TestCodeExamplesDocumenter(BaseDocsTest):
@@ -27,6 +28,39 @@ class TestCodeExamplesDocumenter(BaseDocsTest):
             client=self.client,
             root_docs_path=self.root_services_path,
         )
+
+    def mock_response(
+            self,
+            status=200,
+            content="CONTENT",
+            json_data=None):
+
+        mock_resp = mock.Mock()
+        # Aet status code and content.
+        mock_resp.status_code = status
+        mock_resp.content = content
+        # Add json data if provided.
+        if json_data:
+            mock_resp.text = json_data
+        return mock_resp
+
+    def test_load_catalog(self):
+        mock_json = '''
+                {
+                    "examples": [
+                        {
+                            "id": "service1_actions1"
+                        }
+                    ]
+                }
+                '''
+        examples_result = json.loads(mock_json)
+        mock_resp = self.mock_response(status=200, json_data=mock_json)
+        self.request_patch = mock.patch('requests.get', return_value=mock_resp)
+        self.request_patch.start()
+        examples = self.examples_documenter.load_code_examples_catalog('service1')
+        self.request_patch.stop()
+        self.assertEqual(examples, examples_result['examples'])
 
     def test_document_codeexamples(self):
         examples_json = '''

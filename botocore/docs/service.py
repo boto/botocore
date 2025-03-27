@@ -124,8 +124,7 @@ class ServiceDocumenter:
             examples_documenter = CodeExamplesDocumenter(
                 self._client, self._root_docs_path
             )
-            loader = self._session.get_component('data_loader')
-            library_examples_list = examples_documenter.load_code_examples_catalog(loader, code_example_service_name)
+            library_examples_list = examples_documenter.load_code_examples_catalog(code_example_service_name)
             # Only document the examples if there are any in the list.
             if library_examples_list:
                 examples_documenter.document_code_examples(section, library_examples_list, code_example_service_name)

@@ -104,7 +104,6 @@ which don't represent the actual service api.
 
 import logging
 import os
-import requests
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import HAS_GZIP, OrderedDict, json
@@ -197,33 +196,6 @@ class JSONFileLoader:
             if data is not None:
                 return data
         return None
-
-    def load_examples_file(self, file_path):
-        """Load the examples data if available
-
-        :return: The loaded data if it exists, otherwise None.
-
-        """
-
-        examples_json = self.load_file(file_path)
-        if examples_json:
-            return examples_json
-        return []
-
-    def load_examples_url(self, file_url):
-        """Load the examples data from a url if available
-
-        :return: The loaded data if it exists, otherwise None.
-
-        """
-        response = requests.get(file_url)
-        if response.status_code == 200:
-            example_json = response.text
-            if example_json:
-                examples = json.loads(example_json)
-                return examples
-
-        return []
 
 
 def create_loader(search_path_string=None):
