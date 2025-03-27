@@ -479,12 +479,10 @@ def _assert_requests_equal(actual, expected, protocol, operation_model):
             parser.parse_data_item(expected_body_stream)
         )
         assert_equal(actual_body, expected_body, 'Body value')
-    else:
-        assert_equal(
-            actual['body'],
-            expected.get('body', '').encode('utf-8'),
-            'Body value',
-        )
+    elif 'body' in expected:
+        expected_body = expected['body'].encode('utf-8')
+        actual_body = actual['body']
+        _assert_request_body(actual_body, expected_body, protocol)
     actual_headers = HeadersDict(actual['headers'])
     expected_headers = HeadersDict(expected.get('headers', {}))
     excluded_headers = expected.get('forbidHeaders', [])
