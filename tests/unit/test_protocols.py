@@ -545,6 +545,16 @@ def _assert_expected_headers_in_request(
         content_type = expected.get('Content-Type', '')
         if 'charset=utf-8' not in content_type:
             expected['Content-Type'] = content_type + '; charset=utf-8'
+    elif protocol_type in ['rest-xml']:
+        # We don't set Content-Type for rest-xml. This may be added in the
+        # future, but we'll ignore it until then.
+        expected.pop('Content-Type', None)
+    elif protocol_type in ['rest-json']:
+        # We don't set Content-Type for streaming payloads in rest-json.
+        # This may be added in the future, but we'll ignore it until then.
+        content_type = expected.get('Content-Type')
+        if content_type and content_type != 'application/json':
+            expected.pop('Content-Type')
     for header, value in expected.items():
         assert header in actual
         assert actual[header] == value

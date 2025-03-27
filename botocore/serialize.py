@@ -1029,18 +1029,15 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
 
     def _serialize_content_type(self, serialized, shape, shape_members):
         """Set Content-Type to application/json for all structured bodies."""
-        headers = serialized['headers']
-        if has_header('Content-Type', headers):
-            return
         payload = shape.serialization.get('payload')
         if self._has_streaming_payload(payload, shape_members):
-            payload_type = shape_members[payload].type_name
-            if payload_type == 'string':
-                headers['Content-Type'] = 'text/plain'
-            elif payload_type == 'blob':
-                headers['Content-Type'] = 'application/octet-stream'
-        elif serialized['body'] != b'':
-            headers['Content-Type'] = 'application/json'
+            # Don't apply content-type to streaming bodies
+            return
+
+        has_body = serialized['body'] != b''
+        has_content_type = has_header('Content-Type', serialized['headers'])
+        if has_body and not has_content_type:
+            serialized['headers']['Content-Type'] = 'application/json'
 
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
@@ -1168,22 +1165,6 @@ class RestXMLSerializer(BaseRestSerializer):
         node = ElementTree.SubElement(xmlnode, name)
         node.text = str(params)
         self._add_xml_namespace(shape, node)
-
-    def _serialize_content_type(self, serialized, shape, shape_members):
-        """Set Content-Type to application/xml for all structured bodies."""
-        headers = serialized['headers']
-        if has_header('Content-Type', headers):
-            return
-        payload = shape.serialization.get('payload')
-        if self._has_streaming_payload(payload, shape_members):
-            payload_type = shape_members[payload].type_name
-            if payload_type == 'string':
-                headers['Content-Type'] = 'text/plain'
-            elif payload_type == 'blob':
-                headers['Content-Type'] = 'application/octet-stream'
-        else:
-            if serialized['body'] != b'':
-                headers['Content-Type'] = 'application/xml'
 
     def _add_xml_namespace(self, shape, structure_node):
         if 'xmlNamespace' in shape.serialization:
