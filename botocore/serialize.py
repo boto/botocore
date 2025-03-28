@@ -931,9 +931,7 @@ class BaseRestSerializer(Serializer):
         raise NotImplementedError('_serialize_body_params')
 
     def _convert_header_value(self, shape, value):
-        if shape.type_name == 'boolean':
-            return str(value).lower()
-        elif shape.type_name == 'timestamp':
+        if shape.type_name == 'timestamp':
             datetime_obj = parse_to_aware_datetime(value)
             timestamp = calendar.timegm(datetime_obj.utctimetuple())
             timestamp_format = shape.serialization.get(
@@ -960,6 +958,8 @@ class BaseRestSerializer(Serializer):
             # Serialize with no spaces after separators to save space in
             # the header.
             return self._get_base64(json.dumps(value, separators=(',', ':')))
+        elif shape.type_name == 'boolean':
+            return str(value).lower()
         elif shape.type_name in ['float', 'double']:
             return str(self._handle_float(value))
         else:
