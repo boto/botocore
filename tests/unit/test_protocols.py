@@ -574,7 +574,6 @@ def _clean_list_header_values(
     We need to standardize these header values to assert equivalence appropriately.
     """
     input_shape = operation_model.input_shape
-
     if not (
         input_shape
         and input_shape.type_name == "structure"
@@ -583,14 +582,12 @@ def _clean_list_header_values(
         return
 
     for member, shape in input_shape.members.items():
-        if (
-            shape.serialization.get("location") != "header"
-            or shape.type_name != "list"
-        ):
-            continue
-
         header_name = shape.serialization.get("name")
-        if not header_name:
+        if not (
+            header_name
+            and shape.serialization.get("location") == "header"
+            and shape.type_name == "list"
+        ):
             continue
 
         # Standardize expected header values by removing spaces after commas
@@ -601,8 +598,8 @@ def _clean_list_header_values(
 
         # Standardize actual header values only if they exist and the list contains timestamps
         if (
-            shape.member.type_name == "timestamp"
-            and header_name in actual_headers
+            header_name in actual_headers
+            and shape.member.type_name == "timestamp"
         ):
             actual_headers[header_name] = actual_headers[header_name].replace(
                 ", ", ","
