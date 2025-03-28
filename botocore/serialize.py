@@ -210,12 +210,12 @@ class Serializer:
     def _is_shape_flattened(self, shape):
         return shape.serialization.get('flattened')
 
-    def _handle_special_float(self, value):
+    def _handle_float(self, value):
         if value == float("Infinity"):
             value = "Infinity"
         elif value == float("-Infinity"):
             value = "-Infinity"
-        elif value != value:
+        elif math.isnan(value):
             value = "NaN"
         return value
 
@@ -325,7 +325,7 @@ class QuerySerializer(Serializer):
         serialized[prefix] = value
 
     def _serialize_type_float(self, serialized, value, shape, prefix=''):
-        serialized[prefix] = self._handle_special_float(value)
+        serialized[prefix] = self._handle_float(value)
 
     def _serialize_type_double(self, serialized, value, shape, prefix=''):
         self._serialize_type_float(serialized, value, shape, prefix)
@@ -450,7 +450,7 @@ class JSONSerializer(Serializer):
         serialized[key] = self._get_base64(value)
 
     def _serialize_type_float(self, serialized, value, shape, prefix=''):
-        serialized[prefix] = self._handle_special_float(value)
+        serialized[prefix] = self._handle_float(value)
 
     def _serialize_type_double(self, serialized, value, shape, prefix=''):
         self._serialize_type_float(serialized, value, shape, prefix)
@@ -909,7 +909,7 @@ class BaseRestSerializer(Serializer):
             partitioned['body_kwargs'][param_name] = param_value
 
     def _get_uri_and_query_string_value(self, param_value, member):
-        if isinstance(param_value, bool):
+        if member.type_name == 'boolean':
             return str(param_value).lower()
         elif member.type_name == 'timestamp':
             timestamp_format = member.serialization.get(
@@ -919,7 +919,7 @@ class BaseRestSerializer(Serializer):
                 param_value, timestamp_format
             )
         elif member.type_name in ['float', 'double']:
-            return str(self._handle_special_float(param_value))
+            return str(self._handle_float(param_value))
         return param_value
 
     def _do_serialize_header_map(self, header_prefix, headers, user_input):
@@ -961,7 +961,7 @@ class BaseRestSerializer(Serializer):
             # the header.
             return self._get_base64(json.dumps(value, separators=(',', ':')))
         elif shape.type_name in ['float', 'double']:
-            return str(self._handle_special_float(value))
+            return str(self._handle_float(value))
         else:
             return str(value)
 
@@ -1155,7 +1155,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_type_float(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = str(self._handle_special_float(params))
+        node.text = str(self._handle_float(params))
         self._add_xml_namespace(shape, node)
 
     def _serialize_type_double(self, xmlnode, params, shape, name):
