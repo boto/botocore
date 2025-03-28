@@ -931,7 +931,7 @@ class BaseRestSerializer(Serializer):
         raise NotImplementedError('_serialize_body_params')
 
     def _convert_header_value(self, shape, value):
-        if isinstance(value, bool):
+        if shape.type_name == 'boolean':
             return str(value).lower()
         elif shape.type_name == 'timestamp':
             datetime_obj = parse_to_aware_datetime(value)
