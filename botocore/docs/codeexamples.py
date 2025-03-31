@@ -61,7 +61,7 @@ class CodeExamplesDocumenter:
             example_categories.setdefault(examples[i]['category'], []).append(examples[i])
 
         # Write a link item for each example in the category.
-        for category in example_categories:
+        for category in sorted(example_categories):
             section.style.new_line()
             section.style.h3(category)
             for i in range(len(example_categories[category])):
