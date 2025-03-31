@@ -709,7 +709,7 @@ class BaseRestSerializer(Serializer):
 
     """
 
-    URI_AND_QUERY_STRING_TIMESTAMP_FORMAT = 'iso8601'
+    QUERY_STRING_TIMESTAMP_FORMAT = 'iso8601'
     HEADER_TIMESTAMP_FORMAT = 'rfc822'
     # This is a list of known values for the "location" key in the
     # serialization dict.  The location key tells us where on the request
@@ -913,7 +913,7 @@ class BaseRestSerializer(Serializer):
             return str(param_value).lower()
         elif member.type_name == 'timestamp':
             timestamp_format = member.serialization.get(
-                'timestampFormat', self.URI_AND_QUERY_STRING_TIMESTAMP_FORMAT
+                'timestampFormat', self.QUERY_STRING_TIMESTAMP_FORMAT
             )
             return self._convert_timestamp_to_str(
                 param_value, timestamp_format
@@ -1042,11 +1042,6 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
         self._serialize(serialized_body, params, shape)
-        # Handle document types as a payload
-        if list(serialized_body.keys()) == [None] and shape.metadata.get(
-            'document'
-        ):
-            serialized_body = serialized_body[None]
         return json.dumps(serialized_body).encode(self.DEFAULT_ENCODING)
 
 

@@ -74,7 +74,9 @@
           "RestJsonHttpChecksumRequired",
           "RestJsonNullAndEmptyHeaders",
           "RestJsonQueryPrecedence",
-          "RestJsonHttpPayloadWithUnsetUnion"
+          "RestJsonHttpPayloadWithUnsetUnion",
+          "DocumentTypeAsPayloadInputString",
+          "DocumentTypeAsPayloadInput"
         ]
       },
       "output" : {
