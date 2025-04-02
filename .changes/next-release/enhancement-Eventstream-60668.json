@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Eventstream",
+  "description": "The limit for event streams maximum payload size was raised from 16Mb to 24Mb."
+}
