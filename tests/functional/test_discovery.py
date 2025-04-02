@@ -56,9 +56,7 @@ class TestEndpointDiscovery(FunctionalSessionTest):
         stubber.add_response(status=200, body=b'{}')
 
     def set_endpoint_discovery_config_file(self, fileobj, config_val):
-        fileobj.write(
-            '[default]\n' f'endpoint_discovery_enabled={config_val}\n'
-        )
+        fileobj.write(f'[default]\nendpoint_discovery_enabled={config_val}\n')
         fileobj.flush()
         self.environ['AWS_CONFIG_FILE'] = fileobj.name
 

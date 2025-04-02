@@ -37,21 +37,19 @@ from urllib3.exceptions import LocationParseError
 import botocore
 import botocore.awsrequest
 import botocore.httpsession
-
-# IP Regexes retained for backwards compatibility
-from botocore.compat import HEX_PAT  # noqa: F401
-from botocore.compat import IPV4_PAT  # noqa: F401
-from botocore.compat import IPV6_ADDRZ_PAT  # noqa: F401
-from botocore.compat import IPV6_PAT  # noqa: F401
-from botocore.compat import LS32_PAT  # noqa: F401
-from botocore.compat import UNRESERVED_PAT  # noqa: F401
-from botocore.compat import ZONE_ID_PAT  # noqa: F401
 from botocore.compat import (
     HAS_CRT,
+    HEX_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
+    IPV4_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
     IPV4_RE,
+    IPV6_ADDRZ_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
     IPV6_ADDRZ_RE,
+    IPV6_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
+    LS32_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
     MD5_AVAILABLE,
+    UNRESERVED_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
     UNSAFE_URL_CHARS,
+    ZONE_ID_PAT,  # noqa: F401 -- IP Regexes retained for backwards compatibility
     OrderedDict,
     get_md5,
     get_tzinfo_options,
@@ -681,7 +679,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
                     f"Attempting credential expiration extension due to a "
                     f"credential service availability issue. A refresh of "
                     f"these credentials will be attempted again within "
-                    f"the next {refresh_interval_with_jitter/60:.0f} minutes."
+                    f"the next {refresh_interval_with_jitter / 60:.0f} minutes."
                 )
         except ValueError:
             logger.debug(
@@ -3532,8 +3530,7 @@ class JSONFileCache:
             file_content = self._dumps(value)
         except (TypeError, ValueError):
             raise ValueError(
-                f"Value cannot be cached, must be "
-                f"JSON serializable: {value}"
+                f"Value cannot be cached, must be JSON serializable: {value}"
             )
         if not os.path.isdir(self._working_dir):
             os.makedirs(self._working_dir)
