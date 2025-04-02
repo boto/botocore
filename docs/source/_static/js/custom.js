@@ -72,7 +72,7 @@ function isValidFragment(splitFragment) {
 		}
 	}
 })();
-// Given a service name, we apply the html classes which indicate a current page to the corresponding list item.
+// Given a service name, we apply the html classes which indicate a current page to the corresponsing list item.
 // Before: <li class="toctree-l2"><a class="reference internal" href="../../acm.html">ACM</a></li>
 // After: <li class="toctree-l2 current current-page"><a class="reference internal" href="../../acm.html">ACM</a></li>
 function makeServiceLinkCurrent(serviceName) {
@@ -199,8 +199,8 @@ function setupKeyboardFriendlyNavigation() {
 function loadShortbread() {
 	if (typeof AWSCShortbread !== "undefined") {
 		const shortbread = AWSCShortbread({
-			// If you're testing in your dev environment, use ".cloudfront.net" for domain, else "botocore.amazonaws.com"
-			domain: "botocore.amazonaws.com",
+			// If you're testing in your dev environment, use ".cloudfront.net" for domain, else ".amazonaws.com"
+			domain: ".amazonaws.com",
 		});
 
 		// Check for cookie consent
