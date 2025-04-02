@@ -37,7 +37,7 @@
 {%- for key, entries in genindexentries %}
 <section id="{{ key }}" class="genindex-section">
   <h2>{{ key }}</h2>
-    <table class="max-width indextable genindextable">
+  <table class="max-width indextable genindextable"><tr>
     {%- for column in entries|slice_index(2) if column %}
     <td class="styled-row-col"><ul>
       {%- for entryname, (links, subitems, _) in column %}
