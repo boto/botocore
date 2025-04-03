@@ -223,6 +223,18 @@ def test_register_unknown_feature_id_skips(client_context):
     assert ctx.features == set()
 
 
+def test_register_feature_id_checksum_algorithm(client_context):
+    register_feature_id('FLEXIBLE_CHECKSUMS_REQ_CRC64')
+    ctx = get_context()
+    assert ctx.features == {'W'}
+
+
+def test_register_feature_id_checksum_calculation(client_context):
+    register_feature_id('FLEXIBLE_CHECKSUMS_RES_WHEN_REQUIRED')
+    ctx = get_context()
+    assert ctx.features == {'c'}
+
+
 def test_user_agent_truncated_string():
     size_config = UserAgentComponentSizeConfig(4, ',')
     component = UserAgentComponent(
