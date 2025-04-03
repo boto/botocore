@@ -15,8 +15,9 @@ import requests
 from botocore.compat import json
 
 CODE_EXAMPLE_LINK = 'https://docs.aws.amazon.com/code-library/latest/ug/python_3_'
+CODE_EXAMPLE_CATALOG_VERSION = '2025.0.0-alpha'
 # Change this to the main repo and branch when PR is merged.
-CODE_EXAMPLE_CATALOG_BASE = 'https://raw.githubusercontent.com/rlhagerm/aws-doc-sdk-examples/fe9f3a68c94ba888f96e23e799aa8b43cb3f457d'
+CODE_EXAMPLE_CATALOG_BASE = 'https://raw.githubusercontent.com/rlhagerm/aws-doc-sdk-examples/refs/tags/'
 
 
 class CodeExamplesDocumenter:
@@ -32,7 +33,7 @@ class CodeExamplesDocumenter:
         :param service_id: The code examples service id.
         :return: The list of examples.
         """
-        git_service_url = f"{CODE_EXAMPLE_CATALOG_BASE}/python/example_code/{service_id}/examples_catalog.json"
+        git_service_url = f"{CODE_EXAMPLE_CATALOG_BASE}/{CODE_EXAMPLE_CATALOG_VERSION}/python/example_code/{service_id}/examples_catalog.json"
 
         response = requests.get(git_service_url)
         if response.status_code == 200:
