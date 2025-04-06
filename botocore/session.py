@@ -437,7 +437,10 @@ class Session:
         if self._config is None:
             try:
                 config_file = self.get_config_variable('config_file')
-                self._config = botocore.configloader.load_config(config_file)
+                config_dir = self.get_config_variable('config_dir')
+                self._config = botocore.configloader.multi_file_load_config(
+                    config_file, config_dir
+                )
             except ConfigNotFound:
                 self._config = {'profiles': {}}
             try:

@@ -70,7 +70,7 @@ def multi_file_load_config(*filenames):
     """
     configs = []
     profiles = []
-    for filename in filenames:
+    for filename in _directories_to_files(*filenames):
         try:
             loaded = load_config(filename)
         except botocore.exceptions.ConfigNotFound:
@@ -81,6 +81,25 @@ def multi_file_load_config(*filenames):
     merged_profiles = _merge_list_of_dicts(profiles)
     merged_config['profiles'] = merged_profiles
     return merged_config
+
+
+def _directories_to_files(*paths):
+    filenames = []
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        if os.path.isfile(path):
+            filenames.append(path)
+        elif os.path.isdir(path):
+            path = os.path.expandvars(path)
+            path = os.path.expanduser(path)
+
+            dir_files = []
+            for dir in os.walk(path):
+                for file in dir[2]:
+                    dir_files.append(os.path.join(dir[0], file))
+            filenames.extend(sorted(dir_files))
+    return filenames
 
 
 def _merge_list_of_dicts(list_of_dicts):

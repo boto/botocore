@@ -18,6 +18,7 @@ import tempfile
 
 import botocore.exceptions
 from botocore.configloader import (
+    _directories_to_files,
     load_config,
     multi_file_load_config,
     raw_config_parse,
@@ -136,6 +137,72 @@ class TestConfigLoader(unittest.TestCase):
             encoding.return_value = None
             with self.assertRaises(botocore.exceptions.ConfigParseError):
                 load_config(filename)
+
+    def test_directories_to_files_flat(self):
+        filenames = [path('flat.config.d')]
+        walked_files = _directories_to_files(*filenames)
+        self.assertListEqual(
+            walked_files,
+            [
+                path("flat.config.d/aws_config_other"),
+                path("flat.config.d/aws_third_config"),
+            ],
+        )
+
+    def test_directories_to_files_nested(self):
+        filenames = [path('nested.config.d')]
+        walked_files = _directories_to_files(*filenames)
+        self.assertListEqual(
+            walked_files,
+            [
+                path("nested.config.d/a/aws_config_other"),
+                path("nested.config.d/b/aws_third_config"),
+            ],
+        )
+
+    def test_directories_to_files_directory_not_exists(self):
+        filenames = [path('notexists.config.d')]
+        walked_files = _directories_to_files(*filenames)
+        self.assertListEqual(walked_files, [])
+
+    def test_config_dir_load_flat(self):
+        filenames = [path('flat.config.d')]
+        loaded_config = multi_file_load_config(*filenames)
+        second_config = loaded_config['profiles']['personal']
+        self.assertEqual(second_config['aws_access_key_id'], 'fie')
+        self.assertEqual(second_config['aws_secret_access_key'], 'baz')
+        self.assertEqual(second_config['aws_security_token'], 'fiebaz')
+        third_config = loaded_config['profiles']['third']
+        self.assertEqual(third_config['aws_access_key_id'], 'third_fie')
+        self.assertEqual(third_config['aws_secret_access_key'], 'third_baz')
+        self.assertEqual(third_config['aws_security_token'], 'third_fiebaz')
+
+    def test_config_dir_load_nested(self):
+        filenames = [path('nested.config.d')]
+        loaded_config = multi_file_load_config(*filenames)
+        second_config = loaded_config['profiles']['personal']
+        self.assertEqual(second_config['aws_access_key_id'], 'fie')
+        self.assertEqual(second_config['aws_secret_access_key'], 'baz')
+        self.assertEqual(second_config['aws_security_token'], 'fiebaz')
+        third_config = loaded_config['profiles']['third']
+        self.assertEqual(third_config['aws_access_key_id'], 'third_fie')
+        self.assertEqual(third_config['aws_secret_access_key'], 'third_baz')
+        self.assertEqual(third_config['aws_security_token'], 'third_fiebaz')
+
+    def test_config_and_config_dir_flat(self):
+        filenames = [path('aws_config'), path('flat.config.d')]
+        loaded_config = multi_file_load_config(*filenames)
+        config = loaded_config['profiles']['default']
+        self.assertEqual(config['aws_access_key_id'], 'foo')
+        self.assertEqual(config['aws_secret_access_key'], 'bar')
+        second_config = loaded_config['profiles']['personal']
+        self.assertEqual(second_config['aws_access_key_id'], 'fie')
+        self.assertEqual(second_config['aws_secret_access_key'], 'baz')
+        self.assertEqual(second_config['aws_security_token'], 'fiebaz')
+        third_config = loaded_config['profiles']['third']
+        self.assertEqual(third_config['aws_access_key_id'], 'third_fie')
+        self.assertEqual(third_config['aws_secret_access_key'], 'third_baz')
+        self.assertEqual(third_config['aws_security_token'], 'third_fiebaz')
 
     def test_multi_file_load(self):
         filenames = [

@@ -56,6 +56,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
     'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
     'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
+    'config_dir': (None, 'AWS_CONFIG_DIR', '~/.aws/config.d', None),
     'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
     'api_versions': ('api_versions', None, {}, None),
     # This is the shared credentials file amongst sdks.
