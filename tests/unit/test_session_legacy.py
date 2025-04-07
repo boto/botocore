@@ -731,8 +731,7 @@ class TestCreateClient(BaseSessionTest):
             self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write(
-                'foo_api_versions =\n'
-                f'    myservice = {config_api_version}\n'
+                f'foo_api_versions =\n    myservice = {config_api_version}\n'
             )
             f.flush()
 
@@ -782,8 +781,7 @@ class TestCreateClient(BaseSessionTest):
             self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write(
-                'foo_api_versions =\n'
-                f'    myservice = {config_api_version}\n'
+                f'foo_api_versions =\n    myservice = {config_api_version}\n'
             )
             f.flush()
 

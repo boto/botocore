@@ -122,7 +122,7 @@ class TestConfigLoader(unittest.TestCase):
         self.assertEqual(raw_config['cloudwatch'], '\nsignature_version = v4')
         self.assertEqual(
             raw_config['s3'],
-            '\nsignature_version = s3v4' '\naddressing_style = path',
+            '\nsignature_version = s3v4\naddressing_style = path',
         )
 
     def test_nested_bad_config(self):
