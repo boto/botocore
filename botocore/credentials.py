@@ -22,8 +22,8 @@ import time
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
-import dateutil.parser
 
+import dateutil.parser
 from dateutil.parser import parse
 from dateutil.tz import tzlocal, tzutc
 

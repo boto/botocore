@@ -3875,9 +3875,14 @@ class TestSSOCredentialFetcher(unittest.TestCase):
         mock_client = mock.Mock()
         create_mock_client = mock.Mock(return_value=mock_client)
         fetcher = SSOCredentialFetcher(
-            self.start_url, self.sso_region, self.role_name, self.account_id,
-            create_mock_client, token_loader=self.loader,
-            cache=self.cache, time_fetcher=mock.Mock(return_value=now)
+            self.start_url,
+            self.sso_region,
+            self.role_name,
+            self.account_id,
+            create_mock_client,
+            token_loader=self.loader,
+            cache=self.cache,
+            time_fetcher=mock.Mock(return_value=now),
         )
         # since the cached token is expired, an UnauthorizedSSOTokenError should be
         # raised and GetRoleCredentials should not be called.
