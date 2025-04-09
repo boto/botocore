@@ -17,7 +17,9 @@ from tests import BaseSessionTest
 class TestBedrock(BaseSessionTest):
     def test_invoke_model_with_bidirectional_stream(self):
         """InvokeModelWithBidirectionalStream operation removed due to h2 requirement"""
-        bedrock_runtime_client = self.session.create_client('bedrock-runtime', 'us-west-2')
+        bedrock_runtime_client = self.session.create_client(
+            'bedrock-runtime', 'us-west-2'
+        )
         try:
             bedrock_runtime_client.invoke_model_with_bidirectional_stream()
         except AttributeError:
