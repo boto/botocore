@@ -229,8 +229,6 @@ class ClientArgsCreator:
     ):
         service_name = service_model.endpoint_prefix
         protocol = self._resolve_protocol(service_model)
-        if protocol == 'smithy-rpc-v2-cbor':
-            register_feature_id('PROTOCOL_RPC_V2_CBOR')
         parameter_validation = True
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
