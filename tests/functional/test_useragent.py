@@ -14,22 +14,28 @@ import logging
 import time
 from concurrent import futures
 from itertools import product
-from typing import List
 
 import pytest
 
 from botocore import __version__ as botocore_version
 from botocore.config import Config
-from tests import BaseHTTPStubber, ClientHTTPStubber
+from tests import ClientHTTPStubber
 
 
-def get_captured_ua_strings(stubber: BaseHTTPStubber) -> List[str]:
-    """Get captured request-level user agent strings from stubber."""
+def get_captured_ua_strings(stubber):
+    """Get captured request-level user agent strings from stubber.
+
+    :type stubber: tests.BaseHTTPStubber
+    """
     return [req.headers['User-Agent'].decode() for req in stubber.requests]
 
 
-def parse_registered_feature_ids(ua_string: str) -> List[str]:
-    """Parse registered feature ids in user agent string."""
+def parse_registered_feature_ids(ua_string):
+    """Parse registered feature ids in user agent string.
+
+    :type ua_string: str
+    :rtype: list[str]
+    """
     ua_fields = ua_string.split(' ')
     feature_field = [field for field in ua_fields if field.startswith('m/')][0]
     return feature_field[2:].split(',')
