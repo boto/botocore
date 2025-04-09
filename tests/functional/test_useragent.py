@@ -14,28 +14,25 @@ import logging
 import time
 from concurrent import futures
 from itertools import product
+from typing import List
 
 import pytest
 
 from botocore import __version__ as botocore_version
 from botocore.config import Config
-from tests import ClientHTTPStubber
+from tests import BaseHTTPStubber, ClientHTTPStubber
 
 
-class UACapHTTPStubber(ClientHTTPStubber):
-    """
-    Wrapper for ClientHTTPStubber that captures UA header from one request.
-    """
+def get_captured_ua_strings(stubber: BaseHTTPStubber) -> List[str]:
+    """Get captured request-level user agent strings from stubber."""
+    return [req.headers['User-Agent'].decode() for req in stubber.requests]
 
-    def __init__(self, obj_with_event_emitter):
-        super().__init__(obj_with_event_emitter, strict=False)
-        self.add_response()  # expect exactly one request
 
-    @property
-    def captured_ua_string(self):
-        if len(self.requests) > 0:
-            return self.requests[0].headers['User-Agent'].decode()
-        return None
+def parse_registered_feature_ids(ua_string: str) -> List[str]:
+    """Parse registered feature ids in user agent string."""
+    ua_fields = ua_string.split(' ')
+    feature_field = [field for field in ua_fields if field.startswith('m/')][0]
+    return feature_field[2:].split(',')
 
 
 @pytest.mark.parametrize(
@@ -78,10 +75,11 @@ def test_user_agent_from_config_replaces_default(
     if cfg_extra:
         expected_str += f' {cfg_extra}'
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
 
-    assert stub_client.captured_ua_string == expected_str
+    assert get_captured_ua_strings(stub_client)[0] == expected_str
 
 
 @pytest.mark.parametrize(
@@ -118,10 +116,13 @@ def test_user_agent_includes_extra(
         user_agent_appid=cfg_appid,
     )
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
 
-    assert stub_client.captured_ua_string.endswith(' sess_extra cfg_extra')
+    assert get_captured_ua_strings(stub_client)[0].endswith(
+        ' sess_extra cfg_extra'
+    )
 
 
 @pytest.mark.parametrize(
@@ -158,10 +159,11 @@ def test_user_agent_includes_appid(
         user_agent_extra=cfg_extra,
     )
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
 
-    uafields = stub_client.captured_ua_string.split(' ')
+    uafields = get_captured_ua_strings(stub_client)[0].split(' ')
     assert 'app/123456' in uafields
 
 
@@ -172,7 +174,8 @@ def test_user_agent_long_appid_yields_warning(patched_session, caplog):
     assert len(sixtychars) > 50
     client_cfg = Config(user_agent_appid=sixtychars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
-    with UACapHTTPStubber(client_s3):
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         with caplog.at_level(logging.INFO):
             client_s3.list_buckets()
 
@@ -188,49 +191,49 @@ def test_user_agent_appid_gets_sanitized(patched_session, caplog):
     client_cfg = Config(user_agent_appid=badchars)
     client_s3 = patched_session.create_client('s3', config=client_cfg)
 
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         with caplog.at_level(logging.INFO):
             client_s3.list_buckets()
 
     # given string should be truncated to 50 characters
-    uafields = stub_client.captured_ua_string.split(' ')
+    uafields = get_captured_ua_strings(stub_client)[0].split(' ')
     assert 'app/1234-' in uafields
 
 
 def test_user_agent_has_registered_feature_id(patched_session):
     client_s3 = patched_session.create_client('s3')
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         paginator = client_s3.get_paginator('list_buckets')
         # The `paginate()` method registers `'PAGINATOR': 'C'`
         for _ in paginator.paginate():
             pass
-    uafields = stub_client.captured_ua_string.split(' ')
-    feature_field = [field for field in uafields if field.startswith('m/')][0]
-    feature_list = feature_field[2:].split(',')
+    ua_string = get_captured_ua_strings(stub_client)[0]
+    feature_list = parse_registered_feature_ids(ua_string)
     assert 'C' in feature_list
 
 
 def test_registered_feature_ids_dont_bleed_between_requests(patched_session):
     client_s3 = patched_session.create_client('s3')
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         waiter = client_s3.get_waiter('bucket_exists')
         # The `wait()` method registers `'WAITER': 'B'`
         waiter.wait(Bucket='mybucket')
-    uafields = stub_client.captured_ua_string.split(' ')
-    feature_field = [field for field in uafields if field.startswith('m/')][0]
-    feature_list = feature_field[2:].split(',')
-    assert 'B' in feature_list
 
-    with UACapHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         paginator = client_s3.get_paginator('list_buckets')
         # The `paginate()` method registers `'PAGINATOR': 'C'`
         for _ in paginator.paginate():
             pass
-    uafields = stub_client.captured_ua_string.split(' ')
-    feature_field = [field for field in uafields if field.startswith('m/')][0]
-    feature_list = feature_field[2:].split(',')
-    assert 'C' in feature_list
-    assert 'B' not in feature_list
+    ua_strings = get_captured_ua_strings(stub_client)
+    waiter_feature_list = parse_registered_feature_ids(ua_strings[0])
+    assert 'B' in waiter_feature_list
+
+    paginator_feature_list = parse_registered_feature_ids(ua_strings[1])
+    assert 'C' in paginator_feature_list
+    assert 'B' not in paginator_feature_list
 
 
 def test_registered_feature_ids_dont_bleed_across_threads(patched_session):
@@ -242,15 +245,13 @@ def test_registered_feature_ids_dont_bleed_across_threads(patched_session):
     waiter_done = False
 
     def wait(client, features):
-        with UACapHTTPStubber(client) as stub_client:
+        with ClientHTTPStubber(client) as stub_client:
+            stub_client.add_response()
             waiter = client.get_waiter('bucket_exists')
             # The `wait()` method registers `'WAITER': 'B'`
             waiter.wait(Bucket='mybucket')
-        uafields = stub_client.captured_ua_string.split(' ')
-        feature_field = [
-            field for field in uafields if field.startswith('m/')
-        ][0]
-        features.extend(feature_field[2:].split(','))
+        ua_string = get_captured_ua_strings(stub_client)[0]
+        features.extend(parse_registered_feature_ids(ua_string))
         nonlocal waiter_done
         waiter_done = True
 
@@ -258,16 +259,14 @@ def test_registered_feature_ids_dont_bleed_across_threads(patched_session):
         nonlocal waiter_done
         while not waiter_done:
             time.sleep(0.5)
-        with UACapHTTPStubber(client) as stub_client:
+        with ClientHTTPStubber(client) as stub_client:
+            stub_client.add_response()
             paginator = client.get_paginator('list_buckets')
             # The `paginate()` method registers `'PAGINATOR': 'C'`
             for _ in paginator.paginate():
                 pass
-        uafields = stub_client.captured_ua_string.split(' ')
-        feature_field = [
-            field for field in uafields if field.startswith('m/')
-        ][0]
-        features.extend(feature_field[2:].split(','))
+        ua_string = get_captured_ua_strings(stub_client)[0]
+        features.extend(parse_registered_feature_ids(ua_string))
 
     waiter_features = []
     paginator_features = []
@@ -295,19 +294,21 @@ def test_boto3_user_agent(patched_session):
     patched_session.user_agent_version = '9.9.9'  # Boto3 version
 
     client_s3 = patched_session.create_client('s3')
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
+    captured_ua_string = get_captured_ua_strings(stub_client)[0]
     # The user agent string should start with "Boto3/9.9.9" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert stub_client.captured_ua_string.startswith(
+    assert captured_ua_string.startswith(
         f'Boto3/9.9.9 md/Botocore#{botocore_version} '
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.1 ' in stub_client.captured_ua_string
-    assert ' os/' in stub_client.captured_ua_string
-    assert ' lang/' in stub_client.captured_ua_string
-    assert ' cfg/' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in captured_ua_string
+    assert ' os/' in captured_ua_string
+    assert ' lang/' in captured_ua_string
+    assert ' cfg/' in captured_ua_string
 
 
 def test_awscli_v1_user_agent(patched_session):
@@ -317,20 +318,21 @@ def test_awscli_v1_user_agent(patched_session):
     patched_session.user_agent_extra = f'botocore/{botocore_version}'
 
     client_s3 = patched_session.create_client('s3')
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
-
+    captured_ua_string = get_captured_ua_strings(stub_client)[0]
     # The user agent string should start with "aws-cli/1.1.1" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert stub_client.captured_ua_string.startswith(
+    assert captured_ua_string.startswith(
         f'aws-cli/1.1.1 md/Botocore#{botocore_version} '
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.1 ' in stub_client.captured_ua_string
-    assert ' os/' in stub_client.captured_ua_string
-    assert ' lang/' in stub_client.captured_ua_string
-    assert ' cfg/' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in captured_ua_string
+    assert ' os/' in captured_ua_string
+    assert ' lang/' in captured_ua_string
+    assert ' cfg/' in captured_ua_string
 
 
 def test_awscli_v2_user_agent(patched_session):
@@ -344,22 +346,24 @@ def test_awscli_v2_user_agent(patched_session):
     patched_session.user_agent_extra += ' command/service-name.op-name'
 
     client_s3 = patched_session.create_client('s3')
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
+    captured_ua_string = get_captured_ua_strings(stub_client)[0]
     # The user agent string should start with "aws-cli/1.1.1" from the setting
     # above, followed by Botocore's version info as metadata ("md/...").
-    assert stub_client.captured_ua_string.startswith(
+    assert captured_ua_string.startswith(
         f'aws-cli/2.2.2 md/Botocore#{botocore_version} '
     )
-    assert stub_client.captured_ua_string.endswith(
+    assert captured_ua_string.endswith(
         ' sources/x86_64 prompt/off command/service-name.op-name'
     )
     # The regular User-Agent header components for platform, language, ...
     # should also be present:
-    assert ' ua/2.1 ' in stub_client.captured_ua_string
-    assert ' os/' in stub_client.captured_ua_string
-    assert ' lang/' in stub_client.captured_ua_string
-    assert ' cfg/' in stub_client.captured_ua_string
+    assert ' ua/2.1 ' in captured_ua_string
+    assert ' os/' in captured_ua_string
+    assert ' lang/' in captured_ua_string
+    assert ' cfg/' in captured_ua_string
 
 
 def test_s3transfer_user_agent(patched_session):
@@ -380,8 +384,9 @@ def test_chalice_user_agent(patched_session):
     patched_session.user_agent_extra = suffix
     client_s3 = patched_session.create_client('s3')
 
-    with UACapHTTPStubber(client_s3) as stub_client:
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
         client_s3.list_buckets()
-    assert stub_client.captured_ua_string.startswith(
+    assert get_captured_ua_strings(stub_client)[0].startswith(
         f'aws-chalice/0.1.2 md/Botocore#{botocore_version} '
     )
