@@ -50,6 +50,7 @@ from xml.etree import ElementTree
 from botocore import validate
 from botocore.compat import formatdate
 from botocore.exceptions import ParamValidationError
+from botocore.useragent import register_feature_id
 from botocore.utils import (
     has_header,
     is_json_value_header,
@@ -1184,6 +1185,7 @@ class RpcV2CBORSerializer(BaseRpcV2Serializer, CBORSerializer):
         return bytes(body)
 
     def _serialize_headers(self, serialized, operation_model):
+        register_feature_id('PROTOCOL_RPC_V2_CBOR')
         serialized['headers']['smithy-protocol'] = 'rpc-v2-cbor'
 
         if operation_model.has_event_stream_output:
