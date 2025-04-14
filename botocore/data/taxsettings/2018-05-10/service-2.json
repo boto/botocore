@@ -325,9 +325,7 @@
     },
     "AccountIds":{
       "type":"list",
-      "member":{"shape":"AccountId"},
-      "max":5,
-      "min":1
+      "member":{"shape":"AccountId"}
     },
     "AccountMetaData":{
       "type":"structure",
@@ -424,6 +422,10 @@
           "shape":"UkraineAdditionalInfo",
           "documentation":"<p> Additional tax information associated with your TRN in Ukraine. </p>"
         },
+        "uzbekistanAdditionalInfo":{
+          "shape":"UzbekistanAdditionalInfo",
+          "documentation":"<p> Additional tax information to specify for a TRN in Uzbekistan. </p>"
+        },
         "vietnamAdditionalInfo":{
           "shape":"VietnamAdditionalInfo",
           "documentation":"<p>Additional tax information to specify for a TRN in Vietnam. </p>"
@@ -505,6 +507,10 @@
         "ukraineAdditionalInfo":{
           "shape":"UkraineAdditionalInfo",
           "documentation":"<p> Additional tax information associated with your TRN in Ukraine. </p>"
+        },
+        "uzbekistanAdditionalInfo":{
+          "shape":"UzbekistanAdditionalInfo",
+          "documentation":"<p> Additional tax information associated with your TRN in Uzbekistan. </p>"
         },
         "vietnamAdditionalInfo":{
           "shape":"VietnamAdditionalInfo",
@@ -651,10 +657,16 @@
       "required":["accountIds"],
       "members":{
         "accountIds":{
-          "shape":"AccountIds",
+          "shape":"BatchDeleteTaxRegistrationRequestAccountIdsList",
           "documentation":"<p>List of unique account identifiers. </p>"
         }
       }
+    },
+    "BatchDeleteTaxRegistrationRequestAccountIdsList":{
+      "type":"list",
+      "member":{"shape":"AccountId"},
+      "max":5,
+      "min":1
     },
     "BatchDeleteTaxRegistrationResponse":{
       "type":"structure",
@@ -671,10 +683,16 @@
       "required":["accountIds"],
       "members":{
         "accountIds":{
-          "shape":"AccountIds",
+          "shape":"BatchGetTaxExemptionsRequestAccountIdsList",
           "documentation":"<p> List of unique account identifiers. </p>"
         }
       }
+    },
+    "BatchGetTaxExemptionsRequestAccountIdsList":{
+      "type":"list",
+      "member":{"shape":"AccountId"},
+      "max":5,
+      "min":1
     },
     "BatchGetTaxExemptionsResponse":{
       "type":"structure",
@@ -723,7 +741,7 @@
       ],
       "members":{
         "accountIds":{
-          "shape":"AccountIds",
+          "shape":"BatchPutTaxRegistrationRequestAccountIdsList",
           "documentation":"<p> List of unique account identifiers.</p>"
         },
         "taxRegistrationEntry":{
@@ -731,6 +749,12 @@
           "documentation":"<p>Your TRN information that will be stored to the accounts mentioned in <code>putEntries</code>. </p>"
         }
       }
+    },
+    "BatchPutTaxRegistrationRequestAccountIdsList":{
+      "type":"list",
+      "member":{"shape":"AccountId"},
+      "max":550,
+      "min":1
     },
     "BatchPutTaxRegistrationResponse":{
       "type":"structure",
@@ -1433,7 +1457,7 @@
     },
     "PaymentVoucherNumber":{
       "type":"string",
-      "pattern":"^\\d{17}$"
+      "pattern":"^(\\d{17}|[A-Za-z]{3}\\d{13})$"
     },
     "PersonType":{
       "type":"string",
@@ -1500,16 +1524,22 @@
       ],
       "members":{
         "accountIds":{
-          "shape":"AccountIds",
+          "shape":"PutTaxExemptionRequestAccountIdsList",
           "documentation":"<p> The list of unique account identifiers. </p>"
         },
         "authority":{"shape":"Authority"},
         "exemptionCertificate":{"shape":"ExemptionCertificate"},
         "exemptionType":{
           "shape":"GenericString",
-          "documentation":"<p>The exemption type. </p>"
+          "documentation":"<p>The exemption type. Use the supported tax exemption type description. </p>"
         }
       }
+    },
+    "PutTaxExemptionRequestAccountIdsList":{
+      "type":"list",
+      "member":{"shape":"AccountId"},
+      "max":550,
+      "min":1
     },
     "PutTaxExemptionResponse":{
       "type":"structure",
@@ -1968,7 +1998,7 @@
         },
         "registrationType":{
           "shape":"TaxRegistrationType",
-          "documentation":"<p>Type of your tax registration. This can be either <code>VAT</code> or <code>GST</code>. </p>"
+          "documentation":"<p>Type of your tax registration. </p>"
         },
         "sector":{
           "shape":"Sector",
@@ -2196,6 +2226,27 @@
       "min":1,
       "pattern":"^https.*\\S.*$"
     },
+    "UzbekistanAdditionalInfo":{
+      "type":"structure",
+      "members":{
+        "taxRegistrationNumberType":{
+          "shape":"UzbekistanTaxRegistrationNumberType",
+          "documentation":"<p> The tax registration number type. The tax registration number type valid values are <code>Business</code> and <code>Individual</code>. </p>"
+        },
+        "vatRegistrationNumber":{
+          "shape":"VatRegistrationNumber",
+          "documentation":"<p> The unique 12-digit number issued to identify VAT-registered identities in Uzbekistan. </p>"
+        }
+      },
+      "documentation":"<p> Additional tax information to specify for a TRN in Uzbekistan. </p>"
+    },
+    "UzbekistanTaxRegistrationNumberType":{
+      "type":"string",
+      "enum":[
+        "Business",
+        "Individual"
+      ]
+    },
     "ValidationException":{
       "type":"structure",
       "required":[
@@ -2245,6 +2296,10 @@
       "type":"list",
       "member":{"shape":"ValidationExceptionField"}
     },
+    "VatRegistrationNumber":{
+      "type":"string",
+      "pattern":"^[0-9]{12}$"
+    },
     "VerificationDetails":{
       "type":"structure",
       "members":{
@@ -2264,19 +2319,19 @@
       "members":{
         "electronicTransactionCodeNumber":{
           "shape":"ElectronicTransactionCodeNumber",
-          "documentation":"<p>The electronic transaction code number on the tax return document.</p>"
+          "documentation":"<p>The electronic transaction code number on the tax return document. This field must be provided for successful API operation.</p>"
         },
         "enterpriseIdentificationNumber":{
           "shape":"EnterpriseIdentificationNumber",
-          "documentation":"<p>The enterprise identification number for tax registration.</p>"
+          "documentation":"<p>The enterprise identification number for tax registration. This field must be provided for successful API operation.</p>"
         },
         "paymentVoucherNumber":{
           "shape":"PaymentVoucherNumber",
-          "documentation":"<p>The payment voucher number on the tax return payment document.</p>"
+          "documentation":"<p>The payment voucher number on the tax return payment document. This field must be provided for successful API operation.</p>"
         },
         "paymentVoucherNumberDate":{
           "shape":"DateString",
-          "documentation":"<p>The date on the tax return payment document.</p>"
+          "documentation":"<p>The date on the tax return payment document. This field must be provided for successful API operation.</p>"
         }
       },
       "documentation":"<p>Additional tax information to specify for a TRN in Vietnam.</p>"

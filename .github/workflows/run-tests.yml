@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') && github.run_id || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: '${{ matrix.os }}'
@@ -20,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
       - name: 'Set up Python ${{ matrix.python-version }}'
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55
         with:
           python-version: '${{ matrix.python-version }}'
           cache: 'pip'
@@ -46,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
       - name: 'Set up Python 3.10'
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55
         with:
           python-version: '3.10'
       - name: Install dependencies
