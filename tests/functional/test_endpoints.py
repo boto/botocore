@@ -92,6 +92,7 @@ KNOWN_ENDPOINT_PREFIXES = _known_endpoint_prefixes()
 COMPUTED_ENDPOINT_PREFIXES = _computed_endpoint_prefixes()
 
 
+@pytest.mark.validates_models
 @pytest.mark.parametrize("endpoint_prefix", COMPUTED_ENDPOINT_PREFIXES)
 def test_endpoint_matches_service(endpoint_prefix):
     # We need to cross check all computed endpoints against our
@@ -100,6 +101,7 @@ def test_endpoint_matches_service(endpoint_prefix):
     assert endpoint_prefix in KNOWN_ENDPOINT_PREFIXES
 
 
+@pytest.mark.validates_models
 @pytest.mark.parametrize("service_name", AVAILABLE_SERVICES)
 def test_client_name_matches_hyphenized_service_id(service_name):
     """Generates tests for each service to verify that the computed service
