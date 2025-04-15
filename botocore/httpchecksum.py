@@ -356,7 +356,9 @@ def apply_request_checksum(request):
     checksum_context = request.get("context", {}).get("checksum", {})
     algorithm = checksum_context.get("request_algorithm")
 
-    if request["method"] == "HEAD" or request["method"] == "GET":
+    if "method" in request and (
+        request["method"] == "HEAD" or request["method"] == "GET"
+    ):
         response_checksum_validation = request["context"][
             "client_config"
         ].response_checksum_validation
