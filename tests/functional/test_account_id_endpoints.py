@@ -99,6 +99,24 @@ FAKE_RULESET = {
             },
             "type": "endpoint",
         },
+        {
+            "documentation": "Fallback when AccountID is unset but AccountIdEndpointMode is set to preferred.",
+            "conditions": [
+                {
+                    "fn": "not",
+                    "argv": [{"fn": "isSet", "argv": [{"ref": "AccountId"}]}],
+                },
+                {"fn": "isSet", "argv": [{"ref": "AccountIdEndpointMode"}]},
+                {
+                    "fn": "stringEquals",
+                    "argv": [{"ref": "AccountIdEndpointMode"}, "preferred"],
+                },
+            ],
+            "endpoint": {
+                "url": "https://otherservice.us-west-2.amazonaws.com/"
+            },
+            "type": "endpoint",
+        },
     ],
 }
 
@@ -229,6 +247,8 @@ def test_account_id_endpoint_resolution(
         ('123456789012', 'preferred', ['P', 'T']),
         ('123456789012', 'disabled', ['Q', 'T']),
         ('123456789012', 'required', ['R', 'T']),
+        (None, 'preferred', ['P']),
+        ('', 'preferred', ['P']),
     ],
 )
 def test_user_agent_has_account_id_endpoint_feature_ids(
@@ -238,7 +258,10 @@ def test_user_agent_has_account_id_endpoint_feature_ids(
     account_id_endpoint_mode,
     expected_feature_ids,
 ):
-    monkeypatch.setenv('AWS_ACCOUNT_ID', account_id)
+    if account_id is not None:
+        monkeypatch.setenv('AWS_ACCOUNT_ID', account_id)
+    else:
+        monkeypatch.delenv('AWS_ACCOUNT_ID', raising=False)
 
     patch_load_service_model(
         patched_session, monkeypatch, FAKE_SERVICE_MODEL, FAKE_RULESET
@@ -255,5 +278,4 @@ def test_user_agent_has_account_id_endpoint_feature_ids(
         client.mock_operation(MockOpParam='mock-op-param-value')
     ua_string = get_captured_ua_strings(http_stubber)[0]
     feature_list = parse_registered_feature_ids(ua_string)
-    for feature_id in expected_feature_ids:
-        assert feature_id in feature_list
+    assert sorted(feature_list) == sorted(expected_feature_ids)
