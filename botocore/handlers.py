@@ -1338,6 +1338,10 @@ BUILTIN_HANDLERS = [
         ClientMethodAlias('list_hits_for_qualification_type'),
     ),
     (
+        'getattr.socialmessaging.delete_whatsapp_media_message',
+        ClientMethodAlias('delete_whatsapp_message_media'),
+    ),
+    (
         'before-parameter-build.s3.UploadPart',
         convert_body_to_file_like_object,
         REGISTER_LAST,

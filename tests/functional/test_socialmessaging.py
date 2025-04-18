@@ -14,6 +14,7 @@ import pytest
 
 from botocore import xform_name
 from botocore.session import get_session
+from botocore.stub import Stubber
 
 _KNOWN_REPLACEMENTS = [
     'whatsapp',
@@ -42,3 +43,23 @@ def test_known_replacements(operation, replacement):
     # name
     assert replacement in xform_name(operation, '_')
     assert replacement in xform_name(operation, '-')
+
+
+class TestSocialMessaging:
+    def test_delete_whatsapp_message_media_aliased(self):
+        session = get_session()
+        self.client = session.create_client('socialmessaging', 'us-west-2')
+        self.stubber = Stubber(self.client)
+        self.stubber.activate()
+        self.stubber.add_response('delete_whatsapp_message_media', {})
+        self.stubber.add_response('delete_whatsapp_message_media', {})
+
+        params = {
+            'mediaId': 'foo',
+            'originationPhoneNumberId': 'bar',
+        }
+
+        self.client.delete_whatsapp_media_message(**params)
+        self.client.delete_whatsapp_message_media(**params)
+
+        self.stubber.assert_no_pending_responses()
