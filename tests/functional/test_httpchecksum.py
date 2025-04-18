@@ -17,6 +17,10 @@ import pytest
 from botocore.compat import HAS_CRT
 from botocore.exceptions import FlexibleChecksumError
 from tests import ClientHTTPStubber, patch_load_service_model
+from tests.functional.test_useragent import (
+    get_captured_ua_strings,
+    parse_registered_feature_ids,
+)
 
 TEST_CHECKSUM_SERVICE_MODEL = {
     "version": "2.0",
@@ -61,6 +65,50 @@ TEST_CHECKSUM_SERVICE_MODEL = {
             "output": {"shape": "SomeStreamingOutput"},
             "httpChecksum": {
                 "requestChecksumRequired": True,
+                "requestAlgorithmMember": "checksumAlgorithm",
+                "requestValidationModeMember": "validationMode",
+                "responseAlgorithms": [
+                    "CRC32",
+                    "CRC32C",
+                    "CRC64NVME",
+                    "SHA1",
+                    "SHA256",
+                ],
+            },
+        },
+        "HttpChecksumStreamingDownloadOperation": {
+            "name": "MyTestOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/some_file.txt",
+            },
+            "input": {"shape": "SomeStreamingInput"},
+            "output": {"shape": "SomeStreamingOutput"},
+            "httpChecksum": {
+                "requestChecksumRequired": None,
+                "httpChecksumRequired": None,
+                "requestAlgorithmMember": "checksumAlgorithm",
+                "requestValidationModeMember": "validationMode",
+                "responseAlgorithms": [
+                    "CRC32",
+                    "CRC32C",
+                    "CRC64NVME",
+                    "SHA1",
+                    "SHA256",
+                ],
+            },
+        },
+        "HttpChecksumStreamingUploadOperation": {
+            "name": "MyTestOperation",
+            "http": {
+                "method": "PUT",
+                "requestUri": "/some_file.txt",
+            },
+            "input": {"shape": "SomeStreamingInput"},
+            "output": {"shape": "SomeStreamingOutput"},
+            "httpChecksum": {
+                "requestChecksumRequired": True,
+                "httpChecksumRequired": True,
                 "requestAlgorithmMember": "checksumAlgorithm",
                 "requestValidationModeMember": "validationMode",
                 "responseAlgorithms": [
@@ -549,3 +597,67 @@ def test_unsuccessful_streaming_response_checksum_validation(
             expected_checksum,
         )
         assert str(expected_error.value) == error_msg
+
+
+def test_user_agent_has_checksum_response_feature_id(
+    patched_session,
+    monkeypatch,
+):
+    response_payload = "Hello world"
+    client = setup_test_client(
+        patched_session,
+        monkeypatch,
+    )
+    with ClientHTTPStubber(client, strict=True) as http_stubber:
+        http_stubber.add_response(
+            status=200,
+            body=b"<response/>",
+        )
+        operation_kwargs = {"body": response_payload}
+        client.http_checksum_streaming_download_operation(**operation_kwargs)
+    ua_string = get_captured_ua_strings(http_stubber)[0]
+    feature_list = parse_registered_feature_ids(ua_string)
+    assert "b" in feature_list
+
+
+def _request_checksum_user_agent_feature_id_cases():
+    response_payload = "Hello world"
+    cases = [
+        (None, response_payload, ["U", "Z"]),
+        ("CRC32", response_payload, ["U", "Z"]),
+        ("SHA1", response_payload, ["X", "Z"]),
+    ]
+    if HAS_CRT:
+        cases.extend([("CRC32C", response_payload, ["V", "Z"])])
+    return cases
+
+
+@pytest.mark.parametrize(
+    "checksum_algorithm, request_payload, expected_feature_ids",
+    _request_checksum_user_agent_feature_id_cases(),
+)
+def test_user_agent_has_checksum_request_feature_id(
+    patched_session,
+    monkeypatch,
+    checksum_algorithm,
+    request_payload,
+    expected_feature_ids,
+):
+    client = setup_test_client(
+        patched_session,
+        monkeypatch,
+    )
+
+    with ClientHTTPStubber(client, strict=True) as http_stubber:
+        http_stubber.add_response(
+            status=200,
+            body=b"<response/>",
+        )
+        operation_kwargs = {"body": request_payload}
+        if checksum_algorithm:
+            operation_kwargs["checksumAlgorithm"] = checksum_algorithm
+        client.http_checksum_streaming_upload_operation(**operation_kwargs)
+    ua_string = get_captured_ua_strings(http_stubber)[0]
+    feature_list = parse_registered_feature_ids(ua_string)
+    for feature_id in expected_feature_ids:
+        assert feature_id in feature_list
