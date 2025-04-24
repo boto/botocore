@@ -356,17 +356,6 @@ def apply_request_checksum(request):
     checksum_context = request.get("context", {}).get("checksum", {})
     algorithm = checksum_context.get("request_algorithm")
 
-    if "method" in request and (
-        request["method"] == "HEAD" or request["method"] == "GET"
-    ):
-        response_checksum_validation = request["context"][
-            "client_config"
-        ].response_checksum_validation
-        response_checksum_validation_feature_id = (
-            "FLEXIBLE_CHECKSUMS_RES_" + response_checksum_validation.upper()
-        )
-        register_feature_id(response_checksum_validation_feature_id)
-
     if not algorithm:
         return
 
@@ -398,19 +387,7 @@ def _apply_request_header_checksum(request):
     checksum_cls = _CHECKSUM_CLS.get(algorithm["algorithm"])
     digest = checksum_cls().handle(request["body"])
     request["headers"][location_name] = digest
-
-    checksum_algorithm_name = algorithm["algorithm"]
-    request_checksum_calculation = request["context"][
-        "client_config"
-    ].request_checksum_calculation
-    request_checksum_calculation_feature_id = (
-        "FLEXIBLE_CHECKSUMS_REQ_" + request_checksum_calculation.upper()
-    )
-    checksum_algorithm_name_feature_id = (
-        "FLEXIBLE_CHECKSUMS_REQ_" + checksum_algorithm_name.upper()
-    )
-    register_feature_id(request_checksum_calculation_feature_id)
-    register_feature_id(checksum_algorithm_name_feature_id)
+    _register_checksum_algorithm(algorithm)
 
 
 def _apply_request_trailer_checksum(request):
@@ -434,19 +411,7 @@ def _apply_request_trailer_checksum(request):
     else:
         headers["Content-Encoding"] = "aws-chunked"
     headers["X-Amz-Trailer"] = location_name
-
-    checksum_algorithm_name = algorithm["algorithm"]
-    request_checksum_calculation = request["context"][
-        "client_config"
-    ].request_checksum_calculation
-    request_checksum_calculation_feature_id = (
-        "FLEXIBLE_CHECKSUMS_REQ_" + request_checksum_calculation.upper()
-    )
-    checksum_algorithm_name_feature_id = (
-        "FLEXIBLE_CHECKSUMS_REQ_" + checksum_algorithm_name.upper()
-    )
-    register_feature_id(request_checksum_calculation_feature_id)
-    register_feature_id(checksum_algorithm_name_feature_id)
+    _register_checksum_algorithm(algorithm)
 
     content_length = determine_content_length(body)
     if content_length is not None:
@@ -468,6 +433,14 @@ def _apply_request_trailer_checksum(request):
         checksum_cls=checksum_cls,
         checksum_name=location_name,
     )
+
+
+def _register_checksum_algorithm(algorithm):
+    checksum_algorithm_name = algorithm["algorithm"]
+    checksum_algorithm_name_feature_id = (
+        "FLEXIBLE_CHECKSUMS_REQ_" + checksum_algorithm_name.upper()
+    )
+    register_feature_id(checksum_algorithm_name_feature_id)
 
 
 def resolve_response_checksum_algorithms(

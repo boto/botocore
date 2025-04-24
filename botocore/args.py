@@ -888,6 +888,7 @@ class ClientArgsCreator:
         valid_options,
     ):
         value = config_kwargs.get(config_key)
+        self._register_checksum_calculation(value, config_key)
         if value is None:
             value = self._config_store.get_config_variable(config_key)
 
@@ -901,6 +902,19 @@ class ClientArgsCreator:
                 valid_options=valid_options,
             )
         config_kwargs[config_key] = value
+
+    def _register_checksum_calculation(self, value, config_key):
+        if value is None:
+            value = "when_supported"
+        if config_key.split("_")[0] == "request":
+            checksum_calculation_feature_id = (
+                "FLEXIBLE_CHECKSUMS_REQ_" + value.upper()
+            )
+        else:
+            checksum_calculation_feature_id = (
+                "FLEXIBLE_CHECKSUMS_RES_" + value.upper()
+            )
+        register_feature_id(checksum_calculation_feature_id)
 
     def _compute_account_id_endpoint_mode_config(self, config_kwargs):
         config_key = 'account_id_endpoint_mode'
