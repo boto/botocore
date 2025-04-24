@@ -594,7 +594,7 @@ class FreezeTime(ContextDecorator):
 
 
 def patch_load_service_model(
-    session, monkeypatch, service_model_json, ruleset_json
+    session, monkeypatch, service_model_json, ruleset_json, config=None
 ):
     def mock_load_service_model(service_name, type_name, api_version=None):
         if type_name == 'service-2':

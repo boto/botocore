@@ -15,6 +15,7 @@
 import pytest
 
 from botocore.compat import HAS_CRT
+from botocore.config import Config
 from botocore.exceptions import FlexibleChecksumError
 from tests import ClientHTTPStubber, patch_load_service_model
 from tests.functional.test_useragent import (
@@ -197,16 +198,16 @@ TEST_CHECKSUM_RULESET = {
 }
 
 
-def setup_test_client(patched_session, monkeypatch):
+def setup_test_client(patched_session, monkeypatch, config=None):
     patch_load_service_model(
         patched_session,
         monkeypatch,
         TEST_CHECKSUM_SERVICE_MODEL,
         TEST_CHECKSUM_RULESET,
+        config=None,
     )
     return patched_session.create_client(
-        "testservice",
-        region_name="us-west-2",
+        "testservice", region_name="us-west-2", config=config
     )
 
 
@@ -599,54 +600,83 @@ def test_unsuccessful_streaming_response_checksum_validation(
         assert str(expected_error.value) == error_msg
 
 
-def test_user_agent_has_checksum_response_feature_id(
-    patched_session,
-    monkeypatch,
-):
-    response_payload = "Hello world"
-    client = setup_test_client(
-        patched_session,
-        monkeypatch,
-    )
-    with ClientHTTPStubber(client, strict=True) as http_stubber:
-        http_stubber.add_response(
-            status=200,
-            body=b"<response/>",
-        )
-        operation_kwargs = {"body": response_payload}
-        client.http_checksum_streaming_download_operation(**operation_kwargs)
-    ua_string = get_captured_ua_strings(http_stubber)[0]
-    feature_list = parse_registered_feature_ids(ua_string)
-    assert "b" in feature_list
-
-
-def _request_checksum_user_agent_feature_id_cases():
-    response_payload = "Hello world"
+def _checksum_user_agent_feature_id_cases():
+    request_payload = "Hello world"
     cases = [
-        (None, response_payload, ["U", "Z"]),
-        ("CRC32", response_payload, ["U", "Z"]),
-        ("SHA1", response_payload, ["X", "Z"]),
+        (None, None, None, request_payload, ["U", "b", "Z"]),
+        (
+            "CRC32",
+            "when_required",
+            "when_required",
+            request_payload,
+            ["U", "a", "c"],
+        ),
+        (
+            "SHA1",
+            "when_supported",
+            "when_supported",
+            request_payload,
+            ["X", "Z", "b"],
+        ),
+        (
+            "SHA256",
+            "when_supported",
+            "when_required",
+            request_payload,
+            ["Y", "Z", "c"],
+        ),
+        (
+            "SHA1",
+            "when_required",
+            "when_supported",
+            request_payload,
+            ["X", "a", "b"],
+        ),
+        ("SHA256", None, "when_supported", request_payload, ["Y", "Z", "b"]),
+        ("SHA1", "when_required", None, request_payload, ["X", "a", "b"]),
     ]
     if HAS_CRT:
-        cases.extend([("CRC32C", response_payload, ["V", "Z"])])
+        cases.extend(
+            [("CRC32C", None, None, request_payload, ["V", "Z", 'b'])]
+        )
+        cases.extend(
+            [
+                (
+                    "SHA256",
+                    None,
+                    "when_required",
+                    request_payload,
+                    ["Y", "Z", "c"],
+                )
+            ]
+        )
     return cases
 
 
 @pytest.mark.parametrize(
-    "checksum_algorithm, request_payload, expected_feature_ids",
-    _request_checksum_user_agent_feature_id_cases(),
+    "checksum_algorithm, checksum_calculation, checksum_validation, request_payload, expected_feature_ids",
+    _checksum_user_agent_feature_id_cases(),
 )
 def test_user_agent_has_checksum_request_feature_id(
     patched_session,
     monkeypatch,
     checksum_algorithm,
+    checksum_calculation,
+    checksum_validation,
     request_payload,
     expected_feature_ids,
 ):
-    client = setup_test_client(
-        patched_session,
-        monkeypatch,
-    )
+    if checksum_calculation or checksum_validation:
+        client = setup_test_client(
+            patched_session,
+            monkeypatch,
+            config=Config(
+                request_checksum_calculation=checksum_calculation,
+                response_checksum_validation=checksum_validation,
+            ),
+        )
+    else:
+        client = setup_test_client(patched_session, monkeypatch)
 
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(
