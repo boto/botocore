@@ -888,7 +888,6 @@ class ClientArgsCreator:
         valid_options,
     ):
         value = config_kwargs.get(config_key)
-        self._register_checksum_calculation(value, config_key)
         if value is None:
             value = self._config_store.get_config_variable(config_key)
 
@@ -901,16 +900,15 @@ class ClientArgsCreator:
                 config_value=value,
                 valid_options=valid_options,
             )
+        self._register_checksum_config_feature_ids(value, config_key)
         config_kwargs[config_key] = value
 
-    def _register_checksum_calculation(self, value, config_key):
-        if value is None:
-            value = "when_supported"
-        if config_key.split("_")[0] == "request":
+    def _register_checksum_config_feature_ids(self, value, config_key):
+        if config_key == "request_checksum_calculation":
             checksum_calculation_feature_id = (
                 "FLEXIBLE_CHECKSUMS_REQ_" + value.upper()
             )
-        else:
+        elif config_key == "response_checksum_validation":
             checksum_calculation_feature_id = (
                 "FLEXIBLE_CHECKSUMS_RES_" + value.upper()
             )
