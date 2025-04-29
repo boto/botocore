@@ -387,7 +387,7 @@ def _apply_request_header_checksum(request):
     checksum_cls = _CHECKSUM_CLS.get(algorithm["algorithm"])
     digest = checksum_cls().handle(request["body"])
     request["headers"][location_name] = digest
-    _register_checksum_algorithm(algorithm)
+    _register_checksum_algorithm_feature_id(algorithm)
 
 
 def _apply_request_trailer_checksum(request):
@@ -411,7 +411,7 @@ def _apply_request_trailer_checksum(request):
     else:
         headers["Content-Encoding"] = "aws-chunked"
     headers["X-Amz-Trailer"] = location_name
-    _register_checksum_algorithm(algorithm)
+    _register_checksum_algorithm_feature_id(algorithm)
 
     content_length = determine_content_length(body)
     if content_length is not None:
@@ -435,8 +435,10 @@ def _apply_request_trailer_checksum(request):
     )
 
 
-def _register_checksum_algorithm(algorithm):
+def _register_checksum_algorithm_feature_id(algorithm):
     checksum_algorithm_name = algorithm["algorithm"]
+    if checksum_algorithm_name.upper() == "CRC64NVME":
+        checksum_algorithm_name = "CRC64"
     checksum_algorithm_name_feature_id = (
         "FLEXIBLE_CHECKSUMS_REQ_" + checksum_algorithm_name.upper()
     )

@@ -77,50 +77,6 @@ TEST_CHECKSUM_SERVICE_MODEL = {
                 ],
             },
         },
-        "HttpChecksumStreamingDownloadOperation": {
-            "name": "MyTestOperation",
-            "http": {
-                "method": "GET",
-                "requestUri": "/some_file.txt",
-            },
-            "input": {"shape": "SomeStreamingInput"},
-            "output": {"shape": "SomeStreamingOutput"},
-            "httpChecksum": {
-                "requestChecksumRequired": None,
-                "httpChecksumRequired": None,
-                "requestAlgorithmMember": "checksumAlgorithm",
-                "requestValidationModeMember": "validationMode",
-                "responseAlgorithms": [
-                    "CRC32",
-                    "CRC32C",
-                    "CRC64NVME",
-                    "SHA1",
-                    "SHA256",
-                ],
-            },
-        },
-        "HttpChecksumStreamingUploadOperation": {
-            "name": "MyTestOperation",
-            "http": {
-                "method": "PUT",
-                "requestUri": "/some_file.txt",
-            },
-            "input": {"shape": "SomeStreamingInput"},
-            "output": {"shape": "SomeStreamingOutput"},
-            "httpChecksum": {
-                "requestChecksumRequired": True,
-                "httpChecksumRequired": True,
-                "requestAlgorithmMember": "checksumAlgorithm",
-                "requestValidationModeMember": "validationMode",
-                "responseAlgorithms": [
-                    "CRC32",
-                    "CRC32C",
-                    "CRC64NVME",
-                    "SHA1",
-                    "SHA256",
-                ],
-            },
-        },
     },
     "shapes": {
         "ChecksumAlgorithm": {
@@ -204,7 +160,6 @@ def setup_test_client(patched_session, monkeypatch, config=None):
         monkeypatch,
         TEST_CHECKSUM_SERVICE_MODEL,
         TEST_CHECKSUM_RULESET,
-        config=None,
     )
     return patched_session.create_client(
         "testservice", region_name="us-west-2", config=config
@@ -632,8 +587,6 @@ def _checksum_user_agent_feature_id_cases():
             request_payload,
             ["X", "a", "b"],
         ),
-        ("SHA256", None, "when_supported", request_payload, ["Y", "Z", "b"]),
-        ("SHA1", "when_required", None, request_payload, ["X", "a", "b"]),
     ]
     if HAS_CRT:
         cases.extend(
@@ -642,11 +595,11 @@ def _checksum_user_agent_feature_id_cases():
         cases.extend(
             [
                 (
-                    "SHA256",
+                    "CRC64NVME",
                     None,
                     "when_required",
                     request_payload,
-                    ["Y", "Z", "c"],
+                    ["W", "Z", "c"],
                 )
             ]
         )
@@ -686,7 +639,7 @@ def test_user_agent_has_checksum_request_feature_id(
         operation_kwargs = {"body": request_payload}
         if checksum_algorithm:
             operation_kwargs["checksumAlgorithm"] = checksum_algorithm
-        client.http_checksum_streaming_upload_operation(**operation_kwargs)
+        client.http_checksum_streaming_operation(**operation_kwargs)
     ua_string = get_captured_ua_strings(http_stubber)[0]
     feature_list = parse_registered_feature_ids(ua_string)
     for feature_id in expected_feature_ids:
