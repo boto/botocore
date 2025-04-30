@@ -436,11 +436,11 @@ def _apply_request_trailer_checksum(request):
 
 
 def _register_checksum_algorithm_feature_id(algorithm):
-    checksum_algorithm_name = algorithm["algorithm"]
-    if checksum_algorithm_name.upper() == "CRC64NVME":
+    checksum_algorithm_name = algorithm["algorithm"].upper()
+    if checksum_algorithm_name == "CRC64NVME":
         checksum_algorithm_name = "CRC64"
     checksum_algorithm_name_feature_id = (
-        "FLEXIBLE_CHECKSUMS_REQ_" + checksum_algorithm_name.upper()
+        f"FLEXIBLE_CHECKSUMS_REQ_{checksum_algorithm_name}"
     )
     register_feature_id(checksum_algorithm_name_feature_id)
 

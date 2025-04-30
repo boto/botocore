@@ -906,11 +906,11 @@ class ClientArgsCreator:
     def _register_checksum_config_feature_ids(self, value, config_key):
         if config_key == "request_checksum_calculation":
             checksum_calculation_feature_id = (
-                "FLEXIBLE_CHECKSUMS_REQ_" + value.upper()
+                f"FLEXIBLE_CHECKSUMS_REQ_{value.upper()}"
             )
         elif config_key == "response_checksum_validation":
             checksum_calculation_feature_id = (
-                "FLEXIBLE_CHECKSUMS_RES_" + value.upper()
+                f"FLEXIBLE_CHECKSUMS_RES_{value.upper()}"
             )
         register_feature_id(checksum_calculation_feature_id)
 
