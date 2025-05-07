@@ -12,8 +12,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import importlib.resources
 import logging
-import os
 import re
 
 __version__ = '1.38.10'
@@ -113,7 +113,7 @@ _xform_cache = {
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
-BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
+BOTOCORE_ROOT = str(importlib.resources.files('botocore'))
 
 
 # Used to specify anonymous (unsigned) request signature
