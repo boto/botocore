@@ -110,6 +110,59 @@ class TestStreamWrapper(unittest.TestCase):
         chunks = [b'1234567890\n', b'1234567890\n', b'12345']
         self.assertEqual(stream.readlines(), chunks)
 
+    def test_streaming_body_readinto(self):
+        body = BytesIO(b"123456789")
+        stream = response.StreamingBody(body, content_length=9)
+        chunk = bytearray(b"\x00\x00\x00\x00\x00")
+        self.assertEqual(5, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"\x31\x32\x33\x34\x35"))
+        self.assertEqual(4, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"\x36\x37\x38\x39\x35"))
+
+    def test_streaming_body_readinto_with_invalid_length(self):
+        body = BytesIO(b"12")
+        stream = response.StreamingBody(body, content_length=9)
+        chunk = bytearray(b"\xde\xad\xbe\xef")
+        self.assertEqual(2, stream.readinto(chunk))
+        self.assertEqual(chunk, bytearray(b"\x31\x32\xbe\xef"))
+        with self.assertRaises(IncompleteReadError):
+            stream.readinto(chunk)
+
+    def test_streaming_body_readinto_with_empty_buffer(self):
+        body = BytesIO(b"12")
+        stream = response.StreamingBody(body, content_length=9)
+        chunk = bytearray(b"")
+        # Does not raise IncompleteReadError
+        self.assertEqual(0, stream.readinto(chunk))
+
+    def test_streaming_body_readinto_catches_urllib3_read_timeout(self):
+        class TimeoutBody:
+            def readinto(*args, **kwargs):
+                raise URLLib3ReadTimeoutError(None, None, None)
+
+            def geturl(*args, **kwargs):
+                return "http://example.com"
+
+        stream = response.StreamingBody(TimeoutBody(), content_length=None)
+        with self.assertRaises(ReadTimeoutError):
+            chunk = bytearray(b"\x00\x00\x00\x00\x00")
+            stream.readinto(chunk)
+
+    def test_streaming_body_readinto_catches_urllib3_protocol_error(self):
+        class ProtocolErrorBody:
+            def readinto(*args, **kwargs):
+                raise URLLib3ProtocolError(None, None, None)
+
+            def geturl(*args, **kwargs):
+                return "http://example.com"
+
+        stream = response.StreamingBody(
+            ProtocolErrorBody(), content_length=None
+        )
+        with self.assertRaises(ResponseStreamingError):
+            chunk = bytearray(b"\x00\x00\x00\x00\x00")
+            stream.readinto(chunk)
+
     def test_streaming_body_tell(self):
         body = BytesIO(b'1234567890')
         stream = response.StreamingBody(body, content_length=10)
