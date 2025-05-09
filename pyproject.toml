@@ -4,19 +4,15 @@ markers = [
     "validates_models: marks tests as one which validates service models",
 ]
 
-[tool.isort]
-profile = "black"
-line_length = 79
-honor_noqa = true
-src_paths = ["botocore", "tests"]
-
 [tool.ruff]
 exclude = [
     ".bzr",
+    ".changes", # from .pre-commit-config.yaml
     ".direnv",
     ".eggs",
     ".git",
     ".git-rewrite",
+    ".github", # from .pre-commit-config.yaml
     ".hg",
     ".ipynb_checkpoints",
     ".mypy_cache",
@@ -32,11 +28,19 @@ exclude = [
     ".vscode",
     "__pypackages__",
     "_build",
+    "botocore/compat.py", # from .pre-commit-config.yaml
+    "botocore/data", # from .pre-commit-config.yaml
+    "botocore/vendored", # from .pre-commit-config.yaml
     "buck-out",
     "build",
     "dist",
+    "docs/", # from .pre-commit-config.yaml
     "node_modules",
     "site-packages",
+    "tests/functional/endpoint-rules", # from .pre-commit-config.yaml
+    "tests/unit/auth/aws4_testsuite", # from .pre-commit-config.yaml
+    "tests/unit/data/endpoints/", # from .pre-commit-config.yaml
+    "tests/unit/response_parsing/xml", # from .pre-commit-config.yaml
     "venv",
 ]
 
@@ -50,7 +54,7 @@ target-version = "py39"
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
-select = ["E4", "E7", "E9", "F", "UP"]
+select = ["E4", "E7", "E9", "F", "UP", "I"]
 ignore = []
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
