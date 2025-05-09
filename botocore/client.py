@@ -66,18 +66,6 @@ from botocore.utils import S3RegionRedirector  # noqa
 from botocore import UNSIGNED  # noqa
 
 
-_LEGACY_SIGNATURE_VERSIONS = frozenset(
-    (
-        'v2',
-        'v3',
-        'v3https',
-        'v4',
-        's3',
-        's3v4',
-    )
-)
-
-
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
 
@@ -832,27 +820,34 @@ class ClientEndpointBridge:
         if configured_version is not None:
             return configured_version
 
-        potential_versions = resolved.get('signatureVersions', [])
-        if (
-            self.service_signature_version is not None
-            and self.service_signature_version
-            not in _LEGACY_SIGNATURE_VERSIONS
-        ):
-            # Prefer the service model as most specific
-            # source of truth for new signature versions.
-            potential_versions = [self.service_signature_version]
+        # These have since added the "auth" key to the service model
+        # with "aws.auth#sigv4", but preserve existing behavior from
+        # when we preferred endpoints.json over the service models
+        if service_name in ['s3', 's3-control']:
+            return 's3v4'
 
-        # Pick a signature version from the endpoint metadata if present.
-        if 'signatureVersions' in resolved:
-            if service_name == 's3':
-                return 's3v4'
+        if self.service_signature_version is not None:
+            # Prefer the service model
+            potential_versions = [self.service_signature_version]
+            # importexport is modeled with V2, but we previously allowed
+            # endpoints.json to move it to v4 before switching this method
+            # to prefer the service models
+            if service_name == 'importexport':
+                return 'v4'
+        else:
+            # Fall back to endpoints.json to preserve existing behavior, which
+            # may be useful for users who have custom service models
+            potential_versions = resolved.get('signatureVersions', [])
+            # This was added for the V2 -> V4 transition,
+            # for services like importexport that added V4 after V2
             if 'v4' in potential_versions:
                 return 'v4'
-            # Now just iterate over the signature versions in order until we
-            # find the first one that is known to Botocore.
-            for known in potential_versions:
-                if known in AUTH_TYPE_MAPS:
-                    return known
+        # Now just iterate over the signature versions in order until we
+        # find the first one that is known to Botocore.
+        for known in potential_versions:
+            if known in AUTH_TYPE_MAPS:
+                return known
+
         raise UnknownSignatureVersionError(
             signature_version=potential_versions
         )
