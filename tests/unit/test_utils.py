@@ -18,85 +18,85 @@ from contextlib import contextmanager
 from sys import getrefcount
 
 import pytest
-from dateutil.tz import tzoffset, tzutc
+from dateutil.tz import tzoffset
+from dateutil.tz import tzutc
 
 import botocore
 from botocore import xform_name
-from botocore.awsrequest import AWSRequest, HeadersDict
+from botocore.awsrequest import AWSRequest
+from botocore.awsrequest import HeadersDict
 from botocore.compat import json
 from botocore.config import Config
 from botocore.endpoint_provider import RuleSetEndpoint
-from botocore.exceptions import (
-    ClientError,
-    ConfigNotFound,
-    ConnectionClosedError,
-    ConnectTimeoutError,
-    InvalidDNSNameError,
-    InvalidExpressionError,
-    InvalidIMDSEndpointError,
-    InvalidIMDSEndpointModeError,
-    MetadataRetrievalError,
-    ReadTimeoutError,
-    SSOTokenLoadError,
-    UnsupportedOutpostResourceError,
-    UnsupportedS3AccesspointConfigurationError,
-    UnsupportedS3ArnError,
-)
-from botocore.model import (
-    DenormalizedStructureBuilder,
-    OperationModel,
-    ServiceModel,
-    ShapeResolver,
-)
+from botocore.exceptions import ClientError
+from botocore.exceptions import ConfigNotFound
+from botocore.exceptions import ConnectTimeoutError
+from botocore.exceptions import ConnectionClosedError
+from botocore.exceptions import InvalidDNSNameError
+from botocore.exceptions import InvalidExpressionError
+from botocore.exceptions import InvalidIMDSEndpointError
+from botocore.exceptions import InvalidIMDSEndpointModeError
+from botocore.exceptions import MetadataRetrievalError
+from botocore.exceptions import ReadTimeoutError
+from botocore.exceptions import SSOTokenLoadError
+from botocore.exceptions import UnsupportedOutpostResourceError
+from botocore.exceptions import UnsupportedS3AccesspointConfigurationError
+from botocore.exceptions import UnsupportedS3ArnError
+from botocore.model import DenormalizedStructureBuilder
+from botocore.model import OperationModel
+from botocore.model import ServiceModel
+from botocore.model import ShapeResolver
 from botocore.regions import EndpointRulesetResolver
 from botocore.session import Session
-from botocore.utils import (
-    ArgumentGenerator,
-    ArnParser,
-    CachedProperty,
-    ContainerMetadataFetcher,
-    IMDSRegionProvider,
-    InstanceMetadataFetcher,
-    InstanceMetadataRegionFetcher,
-    InvalidArnException,
-    S3ArnParamHandler,
-    S3EndpointSetter,
-    S3RegionRedirectorv2,
-    SSOTokenLoader,
-    calculate_sha256,
-    calculate_tree_hash,
-    datetime2timestamp,
-    deep_merge,
-    determine_content_length,
-    ensure_boolean,
-    fix_s3_host,
-    get_encoding_from_headers,
-    get_service_module_name,
-    has_header,
-    instance_cache,
-    is_json_value_header,
-    is_s3_accelerate_url,
-    is_valid_endpoint_url,
-    is_valid_ipv6_endpoint_url,
-    is_valid_uri,
-    lowercase_dict,
-    lru_cache_weakref,
-    merge_dicts,
-    normalize_url_path,
-    parse_key_val_file,
-    parse_key_val_file_contents,
-    parse_timestamp,
-    parse_to_aware_datetime,
-    percent_encode,
-    percent_encode_sequence,
-    remove_dot_segments,
-    resolve_imds_endpoint_mode,
-    set_value_from_jmespath,
-    switch_host_s3_accelerate,
-    switch_to_virtual_host_style,
-    validate_jmespath_for_set,
-)
-from tests import FreezeTime, RawResponse, create_session, mock, unittest
+from botocore.utils import ArgumentGenerator
+from botocore.utils import ArnParser
+from botocore.utils import CachedProperty
+from botocore.utils import ContainerMetadataFetcher
+from botocore.utils import IMDSRegionProvider
+from botocore.utils import InstanceMetadataFetcher
+from botocore.utils import InstanceMetadataRegionFetcher
+from botocore.utils import InvalidArnException
+from botocore.utils import S3ArnParamHandler
+from botocore.utils import S3EndpointSetter
+from botocore.utils import S3RegionRedirectorv2
+from botocore.utils import SSOTokenLoader
+from botocore.utils import calculate_sha256
+from botocore.utils import calculate_tree_hash
+from botocore.utils import datetime2timestamp
+from botocore.utils import deep_merge
+from botocore.utils import determine_content_length
+from botocore.utils import ensure_boolean
+from botocore.utils import fix_s3_host
+from botocore.utils import get_encoding_from_headers
+from botocore.utils import get_service_module_name
+from botocore.utils import has_header
+from botocore.utils import instance_cache
+from botocore.utils import is_json_value_header
+from botocore.utils import is_s3_accelerate_url
+from botocore.utils import is_valid_endpoint_url
+from botocore.utils import is_valid_ipv6_endpoint_url
+from botocore.utils import is_valid_uri
+from botocore.utils import lowercase_dict
+from botocore.utils import lru_cache_weakref
+from botocore.utils import merge_dicts
+from botocore.utils import normalize_url_path
+from botocore.utils import parse_key_val_file
+from botocore.utils import parse_key_val_file_contents
+from botocore.utils import parse_timestamp
+from botocore.utils import parse_to_aware_datetime
+from botocore.utils import percent_encode
+from botocore.utils import percent_encode_sequence
+from botocore.utils import remove_dot_segments
+from botocore.utils import resolve_imds_endpoint_mode
+from botocore.utils import set_value_from_jmespath
+from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import switch_to_virtual_host_style
+from botocore.utils import validate_jmespath_for_set
+from tests import FreezeTime
+from tests import RawResponse
+from tests import create_session
+from tests import mock
+from tests import unittest
 
 DATE = datetime.datetime(2021, 12, 10, 00, 00, 00)
 DT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -512,7 +512,7 @@ class TestParseTimestamps(unittest.TestCase):
         mock_get_tzinfo_options = mock.MagicMock(return_value=(mock_tzinfo,))
 
         with mock.patch(
-            'botocore.utils.get_tzinfo_options', mock_get_tzinfo_options
+                'botocore.utils.get_tzinfo_options', mock_get_tzinfo_options
         ):
             with self.assertRaises(RuntimeError):
                 parse_timestamp(0)
@@ -1908,7 +1908,7 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.assertEqual(redirect_response, 0)
 
     def test_no_redirect_on_illegal_location_constraint_from_bad_location_constraint(
-        self,
+            self,
     ):
         request_dict = {
             'url': 'https://us-west-2.amazonaws.com/foo',
@@ -2234,7 +2234,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
     def test_outpost_arn_errors_for_missing_fields(self):
         params = {
             'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
-            'op-01234567890123456/accesspoint'
+                      'op-01234567890123456/accesspoint'
         }
         with self.assertRaises(UnsupportedOutpostResourceError):
             self.arn_handler.handle_arn(params, self.model, {})
@@ -2242,7 +2242,7 @@ class TestS3ArnParamHandler(unittest.TestCase):
     def test_outpost_arn_errors_for_empty_fields(self):
         params = {
             'Bucket': 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/'
-            '/accesspoint/myaccesspoint'
+                      '/accesspoint/myaccesspoint'
         }
         with self.assertRaises(UnsupportedOutpostResourceError):
             self.arn_handler.handle_arn(params, self.model, {})
@@ -2292,7 +2292,7 @@ class TestS3EndpointSetter(unittest.TestCase):
         return S3EndpointSetter(**setter_kwargs)
 
     def get_s3_request(
-        self, bucket=None, key=None, scheme='https://', querystring=None
+            self, bucket=None, key=None, scheme='https://', querystring=None
     ):
         url = scheme + 's3.us-west-2.amazonaws.com/'
         if bucket:
@@ -2314,10 +2314,10 @@ class TestS3EndpointSetter(unittest.TestCase):
         return request
 
     def get_s3_accesspoint_request(
-        self,
-        accesspoint_name=None,
-        accesspoint_context=None,
-        **s3_request_kwargs,
+            self,
+            accesspoint_name=None,
+            accesspoint_context=None,
+            **s3_request_kwargs,
     ):
         if not accesspoint_name:
             accesspoint_name = self.accesspoint_name
@@ -3144,7 +3144,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def _get_datetime(self, dt=None, offset=None, offset_func=operator.add):
         if dt is None:
-            dt = datetime.datetime.utcnow()
+            dt = datetime.datetime.now(datetime.UTC)
         if offset is not None:
             dt = offset_func(dt, offset)
 
@@ -3286,9 +3286,9 @@ class TestIMDSRegionProvider(unittest.TestCase):
         self.environ_patch.stop()
 
     def assert_does_provide_expected_value(
-        self,
-        fetcher_region=None,
-        expected_result=None,
+            self,
+            fetcher_region=None,
+            expected_result=None,
     ):
         fake_session = mock.Mock(spec=Session)
         fake_fetcher = mock.Mock(spec=InstanceMetadataRegionFetcher)
@@ -3453,16 +3453,16 @@ class TestSSOTokenLoader(unittest.TestCase):
 @pytest.mark.parametrize(
     'header_name, headers, expected',
     (
-        ('test_header', {'test_header': 'foo'}, True),
-        ('Test_Header', {'test_header': 'foo'}, True),
-        ('test_header', {'Test_Header': 'foo'}, True),
-        ('missing_header', {'Test_Header': 'foo'}, False),
-        (None, {'Test_Header': 'foo'}, False),
-        ('test_header', HeadersDict({'test_header': 'foo'}), True),
-        ('Test_Header', HeadersDict({'test_header': 'foo'}), True),
-        ('test_header', HeadersDict({'Test_Header': 'foo'}), True),
-        ('missing_header', HeadersDict({'Test_Header': 'foo'}), False),
-        (None, HeadersDict({'Test_Header': 'foo'}), False),
+            ('test_header', {'test_header': 'foo'}, True),
+            ('Test_Header', {'test_header': 'foo'}, True),
+            ('test_header', {'Test_Header': 'foo'}, True),
+            ('missing_header', {'Test_Header': 'foo'}, False),
+            (None, {'Test_Header': 'foo'}, False),
+            ('test_header', HeadersDict({'test_header': 'foo'}), True),
+            ('Test_Header', HeadersDict({'test_header': 'foo'}), True),
+            ('test_header', HeadersDict({'Test_Header': 'foo'}), True),
+            ('missing_header', HeadersDict({'Test_Header': 'foo'}), False),
+            (None, HeadersDict({'Test_Header': 'foo'}), False),
     ),
 )
 def test_has_header(header_name, headers, expected):
@@ -3522,24 +3522,24 @@ class TestDetermineContentLength(unittest.TestCase):
 @pytest.mark.parametrize(
     'url, expected',
     (
-        ('https://s3-accelerate.amazonaws.com', True),
-        ('https://s3-accelerate.amazonaws.com/', True),
-        ('https://s3-accelerate.amazonaws.com/key', True),
-        ('http://s3-accelerate.amazonaws.com/key', True),
-        ('https://s3-accelerate.foo.amazonaws.com/key', False),
-        # bucket prefixes are not allowed
-        ('https://bucket.s3-accelerate.amazonaws.com/key', False),
-        # S3 accelerate can be combined with dualstack
-        ('https://s3-accelerate.dualstack.amazonaws.com/key', True),
-        ('https://bucket.s3-accelerate.dualstack.amazonaws.com/key', False),
-        ('https://s3-accelerate.dualstack.dualstack.amazonaws.com/key', False),
-        ('https://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
-        ('https://dualstack.s3-accelerate.amazonaws.com/key', False),
-        # assorted other ways for URLs to not be valid for s3-accelerate
-        ('ftp://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
-        ('https://s3-accelerate.dualstack.foo.c2s.ic.gov/key', False),
-        # None-valued url is accepted
-        (None, False),
+            ('https://s3-accelerate.amazonaws.com', True),
+            ('https://s3-accelerate.amazonaws.com/', True),
+            ('https://s3-accelerate.amazonaws.com/key', True),
+            ('http://s3-accelerate.amazonaws.com/key', True),
+            ('https://s3-accelerate.foo.amazonaws.com/key', False),
+            # bucket prefixes are not allowed
+            ('https://bucket.s3-accelerate.amazonaws.com/key', False),
+            # S3 accelerate can be combined with dualstack
+            ('https://s3-accelerate.dualstack.amazonaws.com/key', True),
+            ('https://bucket.s3-accelerate.dualstack.amazonaws.com/key', False),
+            ('https://s3-accelerate.dualstack.dualstack.amazonaws.com/key', False),
+            ('https://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
+            ('https://dualstack.s3-accelerate.amazonaws.com/key', False),
+            # assorted other ways for URLs to not be valid for s3-accelerate
+            ('ftp://s3-accelerate.dualstack.foo.amazonaws.com/key', False),
+            ('https://s3-accelerate.dualstack.foo.c2s.ic.gov/key', False),
+            # None-valued url is accepted
+            (None, False),
     ),
 )
 def test_is_s3_accelerate_url(url, expected):
@@ -3549,11 +3549,11 @@ def test_is_s3_accelerate_url(url, expected):
 @pytest.mark.parametrize(
     'headers, default, expected',
     (
-        ({}, 'ISO-8859-1', None),
-        ({'Content-Type': 'text/html; charset=utf-8'}, 'default', 'utf-8'),
-        ({'Content-Type': 'text/html; charset="utf-8"'}, 'default', 'utf-8'),
-        ({'Content-Type': 'text/html'}, 'ascii', 'ascii'),
-        ({'Content-Type': 'application/json'}, 'ISO-8859-1', None),
+            ({}, 'ISO-8859-1', None),
+            ({'Content-Type': 'text/html; charset=utf-8'}, 'default', 'utf-8'),
+            ({'Content-Type': 'text/html; charset="utf-8"'}, 'default', 'utf-8'),
+            ({'Content-Type': 'text/html'}, 'ascii', 'ascii'),
+            ({'Content-Type': 'application/json'}, 'ISO-8859-1', None),
     ),
 )
 def test_get_encoding_from_headers(headers, default, expected):
