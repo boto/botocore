@@ -860,7 +860,7 @@ class ClientEndpointBridge:
         # These have since added the "auth" key to the service model
         # with "aws.auth#sigv4", but preserve existing behavior from
         # when we preferred endpoints.json over the service models
-        if service_name in ['s3', 's3-control']:
+        if service_name in ('s3', 's3-control'):
             return 's3v4'
 
         if self.service_signature_version is not None:
