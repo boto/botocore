@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "``endpoints``",
-  "description": "Prefer signature version from service models over endpoints.json."
-}
