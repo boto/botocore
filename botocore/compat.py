@@ -303,7 +303,7 @@ def has_minimum_crt_version(minimum_version):
 
     crt_version_str = awscrt.__version__
     try:
-        crt_version_ints = map(int, crt_version_str.split("."))
+        crt_version_ints = map(int, crt_version_str.strip("v").split("."))
         crt_version_tuple = tuple(crt_version_ints)
     except (TypeError, ValueError):
         return False
