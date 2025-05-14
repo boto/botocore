@@ -619,17 +619,14 @@ def test_user_agent_has_checksum_request_feature_id(
     request_payload,
     expected_feature_ids,
 ):
-    if checksum_calculation or checksum_validation:
-        client = setup_test_client(
-            patched_session,
-            monkeypatch,
-            config=Config(
-                request_checksum_calculation=checksum_calculation,
-                response_checksum_validation=checksum_validation,
-            ),
-        )
-    else:
-        client = setup_test_client(patched_session, monkeypatch)
+    client = setup_test_client(
+        patched_session,
+        monkeypatch,
+        config=Config(
+            request_checksum_calculation=checksum_calculation,
+            response_checksum_validation=checksum_validation,
+        ),
+    )
 
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(
