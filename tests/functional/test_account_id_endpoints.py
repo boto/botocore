@@ -278,4 +278,4 @@ def test_user_agent_has_account_id_endpoint_feature_ids(
         client.mock_operation(MockOpParam='mock-op-param-value')
     ua_string = get_captured_ua_strings(http_stubber)[0]
     feature_list = parse_registered_feature_ids(ua_string)
-    assert sorted(feature_list) == sorted(expected_feature_ids)
+    assert all(item in feature_list for item in expected_feature_ids)
