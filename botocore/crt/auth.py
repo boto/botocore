@@ -114,7 +114,7 @@ class CrtSigV4Auth(BaseSigner):
         if aws_request.params:
             array = []
             for param, value in aws_request.params.items():
-                value = str(value)
+                value = value.decode("utf-8") if isinstance(value, bytes) else str(value)
                 array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
@@ -312,7 +312,7 @@ class CrtSigV4AsymAuth(BaseSigner):
         if aws_request.params:
             array = []
             for param, value in aws_request.params.items():
-                value = str(value)
+                value = value.decode("utf-8") if isinstance(value, bytes) else str(value)
                 array.append(f'{param}={value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
