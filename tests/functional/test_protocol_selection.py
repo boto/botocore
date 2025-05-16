@@ -10,10 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.model import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.session import Session
 from tests import ClientHTTPStubber
 from tests.functional import TEST_MODELS_DIR
-from botocore.model import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 
 json_response = b"""
 {
@@ -23,6 +23,7 @@ json_response = b"""
 }
 
 """
+
 
 def test_correct_protocol_selection():
     # This test ensures that botocore can properly resolve a protocol and
@@ -42,13 +43,14 @@ def test_correct_protocol_selection():
         aws_secret_access_key='bar',
     )
 
-    #This test would not be effective if the protocols were ever changed or
-    #the order of json and xml were flipped.  We need to make sure that
-    #json comes before xml and the list contains both
+    # This test would not be effective if the protocols were ever changed or
+    # the order of json and xml were flipped.  We need to make sure that
+    # json comes before xml and the list contains both
     service_model_metadata = client.meta.service_model.metadata
-    assert PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index('rest-xml') > PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index('rest-json')
+    assert PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index(
+        'rest-xml'
+    ) > PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index('rest-json')
     assert service_model_metadata['protocols'] == ['rest-json', 'rest-xml']
-
 
     with ClientHTTPStubber(client) as stubber:
         stubber.add_response(
