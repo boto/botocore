@@ -2,6 +2,7 @@ import pytest
 
 from botocore import model
 from botocore.compat import OrderedDict
+from botocore.exceptions import UnsupportedServiceProtocolsError
 from tests import unittest
 
 
@@ -161,6 +162,47 @@ class TestServiceModel(unittest.TestCase):
             self.service_model.client_context_parameters, list
         )
         self.assertEqual(len(self.service_model.client_context_parameters), 0)
+
+    def test_protocol_resolution_without_protocols_trait(self):
+        service_model = {
+            'metadata': {
+                'protocol': 'query',
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {'StringShape': {'type': 'string'}},
+        }
+        service_name = 'myservice'
+        service_model = model.ServiceModel(service_model, service_name)
+        self.assertEqual(service_model.resolved_protocol, 'query')
+
+    def test_protocol_resolution_picks_highest_supported(self):
+        service_model = {
+            'metadata': {
+                'protocol': 'query',
+                'protocols': ['query', 'json'],
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {'StringShape': {'type': 'string'}},
+        }
+        service_name = 'myservice'
+        service_model = model.ServiceModel(service_model, service_name)
+        self.assertEqual(service_model.resolved_protocol, 'json')
+
+    def test_protocol_raises_error_for_unsupported_protocol(self):
+        service_model = {
+            'metadata': {
+                'protocols': ['wrongprotocol'],
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {'StringShape': {'type': 'string'}},
+        }
+        service_name = 'myservice'
+        with self.assertRaises(model.UnsupportedServiceProtocolsError):
+            service_model = model.ServiceModel(service_model, service_name)
+            service_model.resolved_protocol
 
 
 class TestOperationModelFromService(unittest.TestCase):
