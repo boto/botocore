@@ -14,7 +14,6 @@
 import socket
 
 from botocore import UNSIGNED, args, exceptions
-from botocore.args import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.client import ClientEndpointBridge
 from botocore.config import Config
 from botocore.configprovider import ConfigValueStore
@@ -24,6 +23,7 @@ from botocore.model import ServiceModel
 from botocore.parsers import PROTOCOL_PARSERS
 from botocore.serialize import SERIALIZERS
 from botocore.useragent import UserAgentString
+from botocore.utils import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from tests import get_botocore_default_config_mapping, mock, unittest
 
 

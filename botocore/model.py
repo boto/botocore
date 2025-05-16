@@ -22,18 +22,14 @@ from botocore.exceptions import (
     UndefinedModelAttributeError,
     UnsupportedServiceProtocolsError,
 )
-from botocore.utils import CachedProperty, hyphenize_service_id, instance_cache
+from botocore.utils import (
+    PRIORITY_ORDERED_SUPPORTED_PROTOCOLS,
+    CachedProperty,
+    hyphenize_service_id,
+    instance_cache,
+)
 
 NOT_SET = object()
-
-PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = (
-    'json',
-    'rest-json',
-    'rest-xml',
-    'smithy-rpc-v2-cbor',
-    'query',
-    'ec2',
-)
 
 
 class NoShapeFoundError(Exception):

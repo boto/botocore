@@ -10,19 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.model import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from botocore.session import Session
+from botocore.utils import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from tests import ClientHTTPStubber
 from tests.functional import TEST_MODELS_DIR
-
-json_response = b"""
-{
-  "flows": [
-  ],
-  "nextToken": "eyJwYWdlIjoyfQ=="
-}
-
-"""
 
 
 def test_correct_protocol_selection():
@@ -37,39 +28,39 @@ def test_correct_protocol_selection():
     loader.search_paths.insert(0, TEST_MODELS_DIR)
 
     client = session.create_client(
-        'appflow-with-more-protocols',
+        'test-protocol-list',
         region_name='us-west-2',
         aws_access_key_id='foo',
         aws_secret_access_key='bar',
     )
 
-    # This test would not be effective if the protocols were ever changed or
-    # the order of json and xml were flipped.  We need to make sure that
-    # json comes before xml and the list contains both
-    service_model_metadata = client.meta.service_model.metadata
+    # This test would not be effective if the `protocol` trait was ever
+    # a higher priority protocol than the resolved protocol as it would
+    # pass even if a client's resolved parser was based on the `protocol`
+    # trait instead of the resolved protocol
+    service_model = client.meta.service_model
     assert PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index(
-        'rest-xml'
-    ) > PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index('rest-json')
-    assert service_model_metadata['protocols'] == ['rest-json', 'rest-xml']
+        service_model.protocol
+    ) > PRIORITY_ORDERED_SUPPORTED_PROTOCOLS.index(
+        service_model.resolved_protocol
+    )
 
     with ClientHTTPStubber(client) as stubber:
         stubber.add_response(
-            url='https://appflow.us-west-2.amazonaws.com/',
             headers={
                 'x-amzn-RequestId': 'abcd',
                 'Date': 'Fri, 31 Oct 2024 01:46:30 GMT',
-                'Content-Length': '58',
+                'Content-Length': '17',
                 'Content-Type': 'application/x-amz-json-1.1',
             },
-            body=json_response,
+            body=b'{"Bar": "Baz"}',
         )
-        response = client.list_flows()
+        response = client.test_protocol_selection(Foo="input")
         assert response == {
-            'flows': [],
-            "nextToken": "eyJwYWdlIjoyfQ==",
+            'Bar': 'Baz',
             'ResponseMetadata': {
                 'HTTPHeaders': {
-                    'content-length': '58',
+                    'content-length': '17',
                     'content-type': 'application/x-amz-json-1.1',
                     'date': 'Fri, 31 Oct 2024 01:46:30 GMT',
                     'x-amzn-requestid': 'abcd',
