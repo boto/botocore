@@ -26,6 +26,8 @@ import botocore.parsers
 import botocore.serialize
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
+
+# We have moved this list from this file to the botocore.model file and need to keep this import to maintain backwards compatibility
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
@@ -70,14 +72,6 @@ VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG = (
     "when_required",
 )
 
-PRIORITY_ORDERED_SUPPORTED_PROTOCOLS = (
-    'smithy-rpc-v2-cbor',
-    'json',
-    'rest-json',
-    'rest-xml',
-    'query',
-    'ec2',
-)
 
 VALID_ACCOUNT_ID_ENDPOINT_MODE_CONFIG = (
     'preferred',
@@ -865,21 +859,7 @@ class ClientArgsCreator:
         )
 
     def _resolve_protocol(self, service_model):
-        # We need to ensure `protocols` exists in the metadata before attempting to
-        # access it directly since referencing service_model.protocols directly will
-        # raise an UndefinedModelAttributeError if protocols is not defined
-        if service_model.metadata.get('protocols'):
-            for protocol in PRIORITY_ORDERED_SUPPORTED_PROTOCOLS:
-                if protocol in service_model.protocols:
-                    return protocol
-            raise botocore.exceptions.UnsupportedServiceProtocolsError(
-                botocore_supported_protocols=PRIORITY_ORDERED_SUPPORTED_PROTOCOLS,
-                service_supported_protocols=service_model.protocols,
-                service=service_model.service_name,
-            )
-        # If a service does not have a `protocols` trait, fall back to the legacy
-        # `protocol` trait
-        return service_model.protocol
+        return service_model.resolved_protocol
 
     def _handle_checksum_config(
         self,

@@ -69,6 +69,7 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model.service_name = service_name
         service_model.endpoint_prefix = service_name
         service_model.protocol = 'query'
+        service_model.resolved_protocol = 'query'
         service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
@@ -708,6 +709,7 @@ class TestCreateClientArgs(unittest.TestCase):
 
     def test_protocol_resolution_picks_highest_supported(self):
         self.service_model.protocol = 'query'
+        self.service_model.resolved_protocol = 'query'
         self.service_model.protocols = ['query', 'json']
         client_args = self.call_compute_client_args()
         self.assertEqual(client_args['protocol'], 'json')
