@@ -2,7 +2,6 @@ import pytest
 
 from botocore import model
 from botocore.compat import OrderedDict
-from botocore.exceptions import UnsupportedServiceProtocolsError
 from tests import unittest
 
 
