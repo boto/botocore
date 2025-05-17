@@ -68,6 +68,7 @@ class TestCreateClientArgs(unittest.TestCase):
         service_model.service_name = service_name
         service_model.endpoint_prefix = service_name
         service_model.protocol = 'query'
+        service_model.resolved_protocol = 'query'
         service_model.protocols = ['query']
         service_model.metadata = {
             'serviceFullName': 'MyService',
