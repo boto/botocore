@@ -1,3 +1,4 @@
+import importlib.resources
 import logging
 import os
 import os.path
@@ -79,7 +80,7 @@ filter_ssl_warnings()
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
-DEFAULT_CA_BUNDLE = os.path.join(os.path.dirname(__file__), 'cacert.pem')
+DEFAULT_CA_BUNDLE = str(importlib.resources.files('botocore') / 'cacert.pem')
 
 try:
     from certifi import where
