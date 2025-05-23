@@ -832,3 +832,15 @@ class UnsupportedServiceProtocolsError(BotoCoreError):
         'Botocore supports {botocore_supported_protocols}, but service {service} only '
         'supports {service_supported_protocols}.'
     )
+
+
+class UnableToGetProfileNameError(BotoCoreError):
+    fmt = "Error: Unable to get profile name"
+
+
+class Ec2ProfileNameMisconfigurationError(BotoCoreError):
+    fmt = "Error: Invalid profile name for ec2_instance_profile_name"
+
+
+class UnableToGetCredentialsError(BotoCoreError):
+    fmt = "Error: Unable to get credentials for both Legacy and Extended APIs"
