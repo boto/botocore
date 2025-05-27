@@ -30,7 +30,7 @@ from botocore.endpoint import EndpointCreator
 # We have moved the PRIORITY_ORDERED_SUPPORTED_PROTOCOLS list out of this file
 # so we import it here to maintain backwards compatibility.  The redundant "as"
 # statement tells tools like Ruff not to remove it
-from botocore.model import (
+from botocore.utils import (
     PRIORITY_ORDERED_SUPPORTED_PROTOCOLS as PRIORITY_ORDERED_SUPPORTED_PROTOCOLS,
 )
 from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
