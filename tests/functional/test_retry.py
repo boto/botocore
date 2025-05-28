@@ -18,6 +18,10 @@ import botocore.endpoint
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from tests import BaseSessionTest, ClientHTTPStubber, mock
+from tests.functional.test_useragent import (
+    get_captured_ua_strings,
+    parse_registered_feature_ids,
+)
 
 RETRY_MODES = ('legacy', 'standard', 'adaptive')
 
@@ -264,6 +268,20 @@ class TestLegacyRetry(BaseRetryTest):
         with self.assert_will_retry_n_times(client, 0):
             client.list_repositories()
 
+    def test_user_agent_has_legacy_mode_feature_id(self):
+        client = self.session.create_client('dynamodb', self.region)
+        with ClientHTTPStubber(client) as http_stubber:
+            # Add two failed responses followed by a success
+            http_stubber.add_response(status=500, body=b'{}')
+            http_stubber.add_response(status=500, body=b'{}')
+            http_stubber.add_response(status=200, body=b'{}')
+            client.list_tables()
+        ua_strings = get_captured_ua_strings(http_stubber)
+        # Confirm all requests register `'RETRY_MODE_LEGACY': 'D'`
+        for ua_string in ua_strings:
+            feature_list = parse_registered_feature_ids(ua_string)
+            assert 'D' in feature_list
+
 
 class TestRetriesV2(BaseRetryTest):
     def create_client_with_retry_mode(
@@ -349,3 +367,35 @@ class TestRetriesV2(BaseRetryTest):
         self.assertTrue(
             e.exception.response['ResponseMetadata'].get('RetryQuotaReached')
         )
+
+    def test_user_agent_has_standard_mode_feature_id(self):
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='standard'
+        )
+        with ClientHTTPStubber(client) as http_stubber:
+            # Add two failed responses followed by a success
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=200, body=b'{}')
+            client.list_tables()
+        ua_strings = get_captured_ua_strings(http_stubber)
+        # Confirm all requests register `'RETRY_MODE_STANDARD': 'E'`
+        for ua_string in ua_strings:
+            feature_list = parse_registered_feature_ids(ua_string)
+            assert 'E' in feature_list
+
+    def test_user_agent_has_adaptive_mode_feature_id(self):
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='adaptive'
+        )
+        with ClientHTTPStubber(client) as http_stubber:
+            # Add two failed responses followed by a success
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=200, body=b'{}')
+            client.list_tables()
+        ua_strings = get_captured_ua_strings(http_stubber)
+        # Confirm all requests register `'RETRY_MODE_ADAPTIVE': 'F'`
+        for ua_string in ua_strings:
+            feature_list = parse_registered_feature_ids(ua_string)
+            assert 'F' in feature_list

@@ -554,6 +554,7 @@ class ClientArgsCreator:
     def _compute_retry_config(self, config_kwargs):
         self._compute_retry_max_attempts(config_kwargs)
         self._compute_retry_mode(config_kwargs)
+        self._register_retry_mode_feature_id(config_kwargs)
 
     def _compute_retry_max_attempts(self, config_kwargs):
         # There's a pre-existing max_attempts client config value that actually
@@ -600,6 +601,11 @@ class ClientArgsCreator:
         if retry_mode is None:
             retry_mode = 'legacy'
         retries['mode'] = retry_mode
+
+    def _register_retry_mode_feature_id(self, config_kwargs):
+        retries = config_kwargs.get('retries')
+        retry_mode = retries.get('mode')
+        register_feature_id(f'RETRY_MODE_{retry_mode.upper()}')
 
     def _compute_connect_timeout(self, config_kwargs):
         # Checking if connect_timeout is set on the client config.
