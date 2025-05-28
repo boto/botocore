@@ -163,44 +163,16 @@ class TestServiceModel(unittest.TestCase):
         self.assertEqual(len(self.service_model.client_context_parameters), 0)
 
     def test_protocol_resolution_without_protocols_trait(self):
-        service_model = {
-            'metadata': {
-                'protocol': 'query',
-            },
-            'documentation': 'Documentation value',
-            'operations': {},
-            'shapes': {'StringShape': {'type': 'string'}},
-        }
-        service_name = 'myservice'
-        service_model = model.ServiceModel(service_model, service_name)
-        self.assertEqual(service_model.resolved_protocol, 'query')
+        self.assertIsNone(self.service_model.metadata.get('protocols'))
+        self.assertEqual(self.service_model.resolved_protocol, 'query')
 
     def test_protocol_resolution_picks_highest_supported(self):
-        service_model = {
-            'metadata': {
-                'protocol': 'query',
-                'protocols': ['query', 'json'],
-            },
-            'documentation': 'Documentation value',
-            'operations': {},
-            'shapes': {'StringShape': {'type': 'string'}},
-        }
-        service_name = 'myservice'
-        service_model = model.ServiceModel(service_model, service_name)
+        self.service_model.metadata['protocols'] = ['query', 'json']
         self.assertEqual(service_model.resolved_protocol, 'json')
 
     def test_protocol_raises_error_for_unsupported_protocol(self):
-        service_model = {
-            'metadata': {
-                'protocols': ['wrongprotocol'],
-            },
-            'documentation': 'Documentation value',
-            'operations': {},
-            'shapes': {'StringShape': {'type': 'string'}},
-        }
-        service_name = 'myservice'
+        self.service_model.metadata['protocols'] = ['wrongprotocol']
         with self.assertRaises(model.UnsupportedServiceProtocolsError):
-            service_model = model.ServiceModel(service_model, service_name)
             service_model.resolved_protocol
 
 
