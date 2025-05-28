@@ -10,6 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from unittest.mock import patch
+
+from botocore.parsers import RestJSONParser
 from botocore.session import Session
 from botocore.utils import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS
 from tests import ClientHTTPStubber
@@ -45,28 +48,20 @@ def test_correct_protocol_selection():
         service_model.resolved_protocol
     )
 
-    with ClientHTTPStubber(client) as stubber:
-        stubber.add_response(
-            headers={
-                'x-amzn-RequestId': 'abcd',
-                'Date': 'Fri, 31 Oct 2024 01:46:30 GMT',
-                'Content-Length': '17',
-                'Content-Type': 'application/x-amz-json-1.1',
-            },
-            body=b'{"Bar": "Baz"}',
-        )
-        response = client.test_protocol_selection(Foo="input")
-        assert response == {
-            'Bar': 'Baz',
-            'ResponseMetadata': {
-                'HTTPHeaders': {
-                    'content-length': '17',
-                    'content-type': 'application/x-amz-json-1.1',
-                    'date': 'Fri, 31 Oct 2024 01:46:30 GMT',
-                    'x-amzn-requestid': 'abcd',
-                },
-                'HTTPStatusCode': 200,
-                'RequestId': 'abcd',
-                'RetryAttempts': 0,
-            },
-        }
+    original_do_parse = RestJSONParser._do_parse
+
+    def tracking_do_parse(self, *args, **kwargs):
+        called['was_called'] = True
+        return original_do_parse(self, *args, **kwargs)
+
+    with patch("botocore.parsers.RestJSONParser._do_parse", tracking_do_parse):
+        called = {'was_called': False}
+        with ClientHTTPStubber(client) as stubber:
+            stubber.add_response(
+                body=b'{"Bar": "Baz"}',
+            )
+            response = client.test_protocol_selection(Foo="input")
+            assert response['Bar'] == 'Baz'
+        assert called[
+            'was_called'
+        ], "_do_parse was not called on RestJSONParser as expected"

@@ -168,12 +168,12 @@ class TestServiceModel(unittest.TestCase):
 
     def test_protocol_resolution_picks_highest_supported(self):
         self.service_model.metadata['protocols'] = ['query', 'json']
-        self.assertEqual(service_model.resolved_protocol, 'json')
+        self.assertEqual(self.service_model.resolved_protocol, 'json')
 
     def test_protocol_raises_error_for_unsupported_protocol(self):
         self.service_model.metadata['protocols'] = ['wrongprotocol']
         with self.assertRaises(model.UnsupportedServiceProtocolsError):
-            service_model.resolved_protocol
+            self.service_model.resolved_protocol
 
 
 class TestOperationModelFromService(unittest.TestCase):

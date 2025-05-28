@@ -30,13 +30,7 @@ from botocore.regions import EndpointResolverBuiltins as EPRBuiltins
 from botocore.regions import EndpointRulesetResolver
 from botocore.signers import RequestSigner
 from botocore.useragent import UserAgentString, register_feature_id
-
-# We have moved the PRIORITY_ORDERED_SUPPORTED_PROTOCOLS list out of this file
-# so we import it here to maintain backwards compatibility.  The redundant "as"
-# statement tells tools like Ruff not to remove it
-from botocore.utils import (
-    PRIORITY_ORDERED_SUPPORTED_PROTOCOLS as PRIORITY_ORDERED_SUPPORTED_PROTOCOLS,
-)
+from botocore.utils import PRIORITY_ORDERED_SUPPORTED_PROTOCOLS  # noqa: F401
 from botocore.utils import ensure_boolean, is_s3_accelerate_url
 
 logger = logging.getLogger(__name__)
@@ -227,7 +221,7 @@ class ClientArgsCreator:
         scoped_config,
     ):
         service_name = service_model.endpoint_prefix
-        protocol = self._resolve_protocol(service_model)
+        protocol = service_model.resolved_protocol
         parameter_validation = True
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
@@ -862,9 +856,6 @@ class ClientArgsCreator:
             config_key="response_checksum_validation",
             valid_options=VALID_RESPONSE_CHECKSUM_VALIDATION_CONFIG,
         )
-
-    def _resolve_protocol(self, service_model):
-        return service_model.resolved_protocol
 
     def _handle_checksum_config(
         self,
