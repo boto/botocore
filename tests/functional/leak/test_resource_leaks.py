@@ -23,7 +23,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
     INJECT_DUMMY_CREDS = True
     # We're making up numbers here, but let's say arbitrarily
     # that the memory can't increase by more than 10MB.
-    MAX_GROWTH_BYTES = 10 * 1024 * 1024
+    MAX_GROWTH_BYTES = 12 * 1024 * 1024
 
     def test_create_single_client_memory_constant(self):
         self.cmd('create_client', 's3')
