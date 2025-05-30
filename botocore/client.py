@@ -42,7 +42,7 @@ from botocore.httpchecksum import (
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.retries import adaptive, standard
-from botocore.useragent import UserAgentString
+from botocore.useragent import UserAgentString, register_feature_id
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
@@ -246,6 +246,9 @@ class ClientCreator:
             self._register_v2_adaptive_retries(client)
         elif retry_mode == 'legacy':
             self._register_legacy_retries(client)
+        else:
+            return
+        register_feature_id(f'RETRY_MODE_{retry_mode.upper()}')
 
     def _register_v2_standard_retries(self, client):
         max_attempts = client.meta.config.retries.get('total_max_attempts')
