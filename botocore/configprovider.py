@@ -192,6 +192,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         None,
         utils.ensure_boolean,
     ),
+    'ec2_instance_profile_name': (
+        'ec2_instance_profile_name',
+        'AWS_EC2_INSTANCE_PROFILE_NAME',
+        None,
+        None,
+    ),
 }
 
 # Evaluate AWS_STS_REGIONAL_ENDPOINTS settings
