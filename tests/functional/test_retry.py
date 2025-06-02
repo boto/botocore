@@ -18,6 +18,10 @@ import botocore.endpoint
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from tests import BaseSessionTest, ClientHTTPStubber, mock
+from tests.functional.test_useragent import (
+    get_captured_ua_strings,
+    parse_registered_feature_ids,
+)
 
 RETRY_MODES = ('legacy', 'standard', 'adaptive')
 
@@ -48,6 +52,18 @@ class BaseRetryTest(BaseSessionTest):
             ):
                 yield
             self.assertEqual(len(http_stubber.requests), num_responses)
+
+    def _get_feature_id_lists_from_retries(self, client):
+        with ClientHTTPStubber(client) as http_stubber:
+            # Add two failed responses followed by a success
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=502, body=b'{}')
+            http_stubber.add_response(status=200, body=b'{}')
+            client.list_tables()
+        ua_strings = get_captured_ua_strings(http_stubber)
+        return [
+            parse_registered_feature_ids(ua_string) for ua_string in ua_strings
+        ]
 
 
 class TestRetryHeader(BaseRetryTest):
@@ -264,6 +280,12 @@ class TestLegacyRetry(BaseRetryTest):
         with self.assert_will_retry_n_times(client, 0):
             client.list_repositories()
 
+    def test_user_agent_has_legacy_mode_feature_id(self):
+        client = self.session.create_client('dynamodb', self.region)
+        feature_lists = self._get_feature_id_lists_from_retries(client)
+        # Confirm all requests register `'RETRY_MODE_LEGACY': 'D'`
+        assert all('D' in feature_list for feature_list in feature_lists)
+
 
 class TestRetriesV2(BaseRetryTest):
     def create_client_with_retry_mode(
@@ -349,3 +371,19 @@ class TestRetriesV2(BaseRetryTest):
         self.assertTrue(
             e.exception.response['ResponseMetadata'].get('RetryQuotaReached')
         )
+
+    def test_user_agent_has_standard_mode_feature_id(self):
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='standard'
+        )
+        feature_lists = self._get_feature_id_lists_from_retries(client)
+        # Confirm all requests register `'RETRY_MODE_STANDARD': 'E'`
+        assert all('E' in feature_list for feature_list in feature_lists)
+
+    def test_user_agent_has_adaptive_mode_feature_id(self):
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='adaptive'
+        )
+        feature_lists = self._get_feature_id_lists_from_retries(client)
+        # Confirm all requests register `'RETRY_MODE_ADAPTIVE': 'F'`
+        assert all('F' in feature_list for feature_list in feature_lists)
