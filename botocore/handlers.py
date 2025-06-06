@@ -328,9 +328,8 @@ def _sse_md5(params, sse_member_prefix='SSECustomer'):
     key_as_bytes = params[sse_key_member]
     if isinstance(key_as_bytes, str):
         key_as_bytes = key_as_bytes.encode('utf-8')
-    key_md5_str = base64.b64encode(get_md5(key_as_bytes).digest()).decode(
-        'utf-8'
-    )
+    md5_val = get_md5(key_as_bytes, usedforsecurity=False).digest()
+    key_md5_str = base64.b64encode(md5_val).decode('utf-8')
     key_b64_encoded = base64.b64encode(key_as_bytes).decode('utf-8')
     params[sse_key_member] = key_b64_encoded
     params[sse_md5_member] = key_md5_str
