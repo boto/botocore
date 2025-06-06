@@ -31,6 +31,7 @@ from botocore.exceptions import (
     ConfigNotFound,
     ConnectionClosedError,
     ConnectTimeoutError,
+    Ec2ProfileNameMisconfigurationError,
     InvalidDNSNameError,
     InvalidExpressionError,
     InvalidIMDSEndpointError,
@@ -2737,11 +2738,19 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self._imds_responses = []
         self._send.side_effect = self.get_imds_response
         self._role_name = 'role-name'
+        self._account_id = 123456789101
         self._creds = {
             'AccessKeyId': 'spam',
             'SecretAccessKey': 'eggs',
             'Token': 'spam-token',
             'Expiration': 'something',
+        }
+        self._creds_extended = {
+            'AccessKeyId': 'spam',
+            'SecretAccessKey': 'eggs',
+            'Token': 'spam-token',
+            'Expiration': 'something',
+            'AccountId': self._account_id,
         }
         self._expected_creds = {
             'access_key': self._creds['AccessKeyId'],
@@ -2749,6 +2758,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             'token': self._creds['Token'],
             'expiry_time': self._creds['Expiration'],
             'role_name': self._role_name,
+        }
+        self._expected_creds_extended = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name,
+            'account_id': self._account_id,
         }
 
     def tearDown(self):
@@ -2770,6 +2787,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def add_get_credentials_imds_response(self, creds=None):
         if creds is None:
+            creds = self._creds_extended
+        elif creds == 'legacy':
             creds = self._creds
         self.add_imds_response(body=json.dumps(creds).encode('utf-8'))
 
@@ -2801,7 +2820,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         fetcher = InstanceMetadataFetcher(config=config)
         result = fetcher.retrieve_iam_role_credentials()
 
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
         self.assertEqual(fetcher.get_base_url(), expected_url)
 
     def test_disabled_by_environment(self):
@@ -2827,7 +2846,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         fetcher = InstanceMetadataFetcher(base_url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
 
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_ec2_metadata_endpoint_service_mode(self):
         configs = [
@@ -2888,7 +2907,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         fetcher = InstanceMetadataFetcher(config=config, base_url=url_arg)
         result = fetcher.retrieve_iam_role_credentials()
 
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
         self.assertEqual(fetcher.get_base_url(), url_arg)
 
     def test_ipv6_imds_not_allocated(self):
@@ -2939,7 +2958,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_http_connection_error_for_role_name_is_retried(self):
         # Connection related errors should be retried
@@ -2950,7 +2969,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_empty_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
@@ -2962,7 +2981,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_non_200_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2976,7 +2995,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_http_connection_errors_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2987,7 +3006,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_empty_response_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -2999,7 +3018,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_invalid_json_is_retried(self):
         self.add_get_token_imds_response(token='token')
@@ -3011,9 +3030,11 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher(
             num_attempts=2
         ).retrieve_iam_role_credentials()
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_exhaust_retries_on_role_name_request(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(status_code=400, body=b'')
         self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
@@ -3024,6 +3045,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
     def test_exhaust_retries_on_credentials_request(self):
         self.add_get_token_imds_response(token='token')
         self.add_get_role_name_imds_response()
+        self.add_imds_response(status_code=400, body=b'')
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1
@@ -3041,6 +3063,211 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
+    def test_returns_valid_credentials_with_account_id(self):
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response('role-name')
+        self.add_get_credentials_imds_response()
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds_extended)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response()
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds_extended)
+
+    def test_returns_valid_credentials_with_account_id_when_role_name_provided(
+        self,
+    ):
+        config = {'ec2_instance_profile_name': 'role-name'}
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response()
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds_extended)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response()
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds_extended)
+
+    def test_returns_valid_credentials_with_account_id_when_unstable_profile(
+        self,
+    ):
+        with FreezeTime(module=botocore.utils.datetime, date=DATE):
+            imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+            self.add_get_token_imds_response(token='token')
+            self.add_get_role_name_imds_response('role-name')
+            self.add_get_credentials_imds_response()
+            result1 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result1, self._expected_creds_extended)
+
+        with FreezeTime(
+            module=botocore.utils.datetime,
+            date=DATE + datetime.timedelta(seconds=21605),
+        ):
+            self.add_get_token_imds_response(token='token')
+            self.add_imds_response(b'', status_code=404)
+            self.add_imds_response(b'', status_code=404)
+            result2 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result2, {})
+
+            imdsFetcher1 = InstanceMetadataFetcher(num_attempts=1)
+            self.add_get_token_imds_response(token='token-1')
+            self.add_get_role_name_imds_response('role-name')
+            self.add_get_credentials_imds_response()
+            result3 = imdsFetcher1.retrieve_iam_role_credentials()
+            self.assertEqual(result3, self._expected_creds_extended)
+
+    def test_invalid_profile_name_throws_an_error(self):
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response('invalid-role-name')
+        self.add_imds_response(b'', status_code=404)
+        self.add_imds_response(b'', status_code=404)
+        result = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_returns_valid_credentials_when_accountId_unavailable(self):
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response('role-name')
+        self.add_get_credentials_imds_response('legacy')
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response('legacy')
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds)
+
+    def test_returns_valid_credentials_when_role_name_provided_and_accountId_unavailable(
+        self,
+    ):
+        config = {'ec2_instance_profile_name': 'role-name'}
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response('legacy')
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response('legacy')
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds)
+
+    def test_returns_valid_credentials_when_unstable_profile_and_accountId_unavailable(
+        self,
+    ):
+        with FreezeTime(module=botocore.utils.datetime, date=DATE):
+            imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+            self.add_get_token_imds_response(token='token')
+            self.add_get_role_name_imds_response('role-name')
+            self.add_get_credentials_imds_response('legacy')
+            result1 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result1, self._expected_creds)
+
+        with FreezeTime(
+            module=botocore.utils.datetime,
+            date=DATE + datetime.timedelta(seconds=21605),
+        ):
+            self.add_get_token_imds_response(token='token')
+            self.add_imds_response(b'', status_code=404)
+            self.add_imds_response(b'', status_code=404)
+            result2 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result2, {})
+
+            self.add_get_token_imds_response(token='token-1')
+            self.add_get_credentials_imds_response('legacy')
+            result3 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result3, self._expected_creds)
+
+    def test_throws_error_when_account_id_unavailable_and_profile_name_invalid(
+        self,
+    ):
+        config = {'ec2_instance_profile_name': 'invalid-role-name'}
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(b'', status_code=404)
+        self.add_imds_response(b'', status_code=404)
+        result = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_returns_valid_credentials_with_legacy_api(self):
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(b'', status_code=404)
+        self.add_get_role_name_imds_response('role-name')
+        self.add_get_credentials_imds_response('legacy')
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response('legacy')
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds)
+
+    def test_returns_valid_credentials_with_legacy_api_when_role_name_provided(
+        self,
+    ):
+        config = {'ec2_instance_profile_name': 'role-name'}
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(b'', status_code=404)
+        self.add_get_credentials_imds_response('legacy')
+        result1 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result1, self._expected_creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_credentials_imds_response('legacy')
+        result2 = imdsFetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result2, self._expected_creds)
+
+    def test_returns_valid_credentials_with_legacy_api_when_unstable_profile(
+        self,
+    ):
+        with FreezeTime(module=botocore.utils.datetime, date=DATE):
+            imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
+
+            self.add_get_token_imds_response(token='token')
+            self.add_imds_response(b'', status_code=404)
+            self.add_get_role_name_imds_response('role-name')
+            self.add_get_credentials_imds_response('legacy')
+            result1 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result1, self._expected_creds)
+
+        with FreezeTime(
+            module=botocore.utils.datetime,
+            date=DATE + datetime.timedelta(seconds=21605),
+        ):
+            self.add_get_token_imds_response(token='token')
+            self.add_imds_response(b'', status_code=404)
+            result2 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result2, {})
+
+            self.add_get_token_imds_response(token='token-1')
+            self.add_get_credentials_imds_response('legacy')
+            result3 = imdsFetcher.retrieve_iam_role_credentials()
+            self.assertEqual(result3, self._expected_creds)
+
+    def test_invalid_provided_role_name_throws_an_error(self):
+        config = {'ec2_instance_profile_name': '  '}
+        imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
+
+        self.add_get_token_imds_response(token='token')
+        with self.assertRaises(Ec2ProfileNameMisconfigurationError):
+            imdsFetcher.retrieve_iam_role_credentials()
+
     def test_token_is_included(self):
         user_agent = 'my-user-agent'
         self.add_default_imds_responses()
@@ -3055,7 +3282,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             self.assertEqual(
                 call[0][0].headers['x-aws-ec2-metadata-token'], 'token'
             )
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_metadata_token_not_supported_404(self):
         user_agent = 'my-user-agent'
@@ -3069,7 +3296,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_metadata_token_not_supported_403(self):
         user_agent = 'my-user-agent'
@@ -3083,7 +3310,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_metadata_token_not_supported_405(self):
         user_agent = 'my-user-agent'
@@ -3097,7 +3324,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_metadata_token_not_supported_timeout(self):
         user_agent = 'my-user-agent'
@@ -3111,7 +3338,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_token_not_supported_exhaust_retries(self):
         user_agent = 'my-user-agent'
@@ -3125,7 +3352,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         for call in self._send.call_args_list[1:]:
             self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
-        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(result, self._expected_creds_extended)
 
     def test_metadata_token_bad_request_yields_no_credentials(self):
         user_agent = 'my-user-agent'
@@ -3159,6 +3386,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             'SecretAccessKey': 'secret',
             'Token': 'token',
             'Expiration': '1970-01-01T00:00:00',
+            'AccountId': self._account_id,
         }
         creds.update(overrides)
         return creds
@@ -3170,6 +3398,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             'token': creds['Token'],
             'expiry_time': creds['Expiration'],
             'role_name': self._role_name,
+            'account_id': self._account_id,
         }
 
     def _add_default_imds_response(self, status_code=200, creds=''):

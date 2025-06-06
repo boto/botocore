@@ -100,6 +100,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         False,
         utils.ensure_boolean,
     ),
+    'ec2_metadata_disabled': (
+        'disable_ec2_metadata',
+        'AWS_EC2_METADATA_DISABLED',
+        False,
+        utils.ensure_boolean,
+    ),
     'imds_use_ipv6': (
         'imds_use_ipv6',
         'AWS_IMDS_USE_IPV6',
@@ -191,6 +197,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'AWS_DISABLE_HOST_PREFIX_INJECTION',
         None,
         utils.ensure_boolean,
+    ),
+    'ec2_instance_profile_name': (
+        'ec2_instance_profile_name',
+        'AWS_EC2_INSTANCE_PROFILE_NAME',
+        None,
+        None,
     ),
 }
 

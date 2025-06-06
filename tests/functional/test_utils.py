@@ -57,7 +57,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             fetcher = InstanceMetadataFetcher()
             send_mock.side_effect = ConnectionClosedError(endpoint_url="foo")
             creds = fetcher.retrieve_iam_role_credentials()
-        self.assertEqual(send_mock.call_count, 2)
+        self.assertEqual(send_mock.call_count, 3)
         for call_instance in send_mock.call_args_list:
             self.assertTrue(
                 call_instance[0][0].url.startswith(fetcher.get_base_url())
