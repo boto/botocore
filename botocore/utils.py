@@ -3247,14 +3247,14 @@ def calculate_md5(body, **kwargs):
 
 def _calculate_md5_from_bytes(body_bytes):
     """This function has been deprecated, but is kept for backwards compatibility."""
-    md5 = get_md5(body_bytes)
+    md5 = get_md5(body_bytes, usedforsecurity=False)
     return md5.digest()
 
 
 def _calculate_md5_from_file(fileobj):
     """This function has been deprecated, but is kept for backwards compatibility."""
     start_position = fileobj.tell()
-    md5 = get_md5()
+    md5 = get_md5(usedforsecurity=False)
     for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
         md5.update(chunk)
     fileobj.seek(start_position)
