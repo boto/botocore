@@ -834,8 +834,8 @@ class UnsupportedServiceProtocolsError(BotoCoreError):
     )
 
 
-class UnableToGetProfileNameError(BotoCoreError):
-    fmt = "Error: Unable to get profile name"
+# class UnableToGetProfileNameError(BotoCoreError):
+#     fmt = "Error: Unable to get profile name"
 
 
 class Ec2ProfileNameMisconfigurationError(BotoCoreError):

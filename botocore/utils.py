@@ -62,7 +62,7 @@ from botocore.compat import (
     urlunsplit,
     zip_longest,
 )
-from botocore.exceptions import (
+from botocore.exceptions import (  # UnableToGetProfileNameError,
     ClientError,
     ConfigNotFound,
     ConnectionClosedError,
@@ -81,8 +81,6 @@ from botocore.exceptions import (
     MissingDependencyException,
     ReadTimeoutError,
     SSOTokenLoadError,
-    UnableToGetCredentialsError,
-    UnableToGetProfileNameError,
     UnsupportedOutpostResourceError,
     UnsupportedS3AccesspointConfigurationError,
     UnsupportedS3ArnError,
@@ -383,7 +381,6 @@ class IMDSFetcher:
         env=None,
         user_agent=None,
         config=None,
-        use_extended_api=None,
     ):
         self._timeout = timeout
         self._num_attempts = num_attempts
@@ -391,7 +388,7 @@ class IMDSFetcher:
             config = {}
         self._base_url = self._select_base_url(base_url, config)
         self._config = config
-        self._use_extended_api = use_extended_api
+        self._use_extended_api = None
 
         if env is None:
             env = os.environ.copy()
@@ -405,8 +402,6 @@ class IMDSFetcher:
             timeout=self._timeout,
             proxies=get_environ_proxies(self._base_url),
         )
-        if env is None:
-            env = os.environ.copy()
         self.resolvedProfile = None
 
     def get_base_url(self):
@@ -574,24 +569,20 @@ class IMDSFetcher:
 class InstanceMetadataFetcher(IMDSFetcher):
     _URL_PATH = 'latest/meta-data/iam/security-credentials/'
     _URL_PATH_EXTENDED = 'latest/meta-data/iam/security-credentials-extended/'
-    _REQUIRED_CREDENTIAL_FIELDS = [
+    _REQUIRED_CREDENTIAL_FIELDS = (
         'AccessKeyId',
         'SecretAccessKey',
         'Token',
         'Expiration',
-    ]
-    _REQUIRED_CREDENTIAL_FIELDS_EXTENDED = [
-        'AccessKeyId',
-        'SecretAccessKey',
-        'Token',
-        'Expiration',
+    )
+    _REQUIRED_CREDENTIAL_FIELDS_EXTENDED = _REQUIRED_CREDENTIAL_FIELDS + (
         'AccountId',
-    ]
+    )
 
     def retrieve_iam_role_credentials(self):
         try:
             token = self._fetch_metadata_token()
-            profileName = self.resolve_if_user_defined_profile_name()
+            profileName = self.resolve_if_pre_defined_profile_name()
             if not profileName:
                 profileName = self._resolve_get_profile_name(token)
             credentials = self._resolve_get_credentials(profileName, token)
@@ -609,12 +600,12 @@ class InstanceMetadataFetcher(IMDSFetcher):
             logger.debug("Bad IMDS request: %s", e.request)
         return {}
 
-    def resolve_if_user_defined_profile_name(self):
-        role_name = None
-        if self.has_user_defined_profile_name():
-            role_name = self.get_user_defined_profile_name()
-            if not self.has_valid_user_defined_profile_name(role_name):
-                raise Ec2ProfileNameMisconfigurationError()
+    def resolve_if_pre_defined_profile_name(self):
+        role_name = self.get_user_defined_profile_name()
+        if role_name and not self.has_valid_user_defined_profile_name(
+            role_name
+        ):
+            raise Ec2ProfileNameMisconfigurationError()
         elif self.resolvedProfile:
             role_name = self.resolvedProfile
         return role_name
@@ -623,33 +614,37 @@ class InstanceMetadataFetcher(IMDSFetcher):
         retry_count = 0
         role_name = None
         while role_name is None and retry_count < 2:
-            role_name_response = self._get_iam_role(token)
-            if role_name_response.status_code == 200:
-                role_name = role_name_response.text
-                if self._use_extended_api is None:
-                    self._use_extended_api = True
-                self.resolvedProfile = role_name
-                break
-            elif role_name_response.status_code == 404:
-                if self._use_extended_api is None:
-                    self._use_extended_api = False
+            try:
+                role_name_response = self._get_iam_role(token)
+                if role_name_response.status_code == 200:
+                    role_name = role_name_response.text
+                    if self._use_extended_api is None:
+                        self._use_extended_api = True
+                    self.resolvedProfile = role_name
+                    break
                 else:
-                    raise UnableToGetProfileNameError()
+                    self._perform_fallback()
+            except self._RETRIES_EXCEEDED_ERROR_CLS:
+                self._perform_fallback()
             retry_count += 1
+        if role_name is None:
+            raise self._RETRIES_EXCEEDED_ERROR_CLS()
         return role_name
 
-    def has_user_defined_profile_name(self):
-        if os.environ.get('AWS_EC2_INSTANCE_PROFILE_NAME') or self._config.get(
-            'ec2_instance_profile_name'
-        ):
-            return True
-        return False
+    def _perform_fallback(self):
+        if self._use_extended_api is None or self._use_extended_api is True:
+            self._use_extended_api = False
+        else:
+            # raise UnableToGetProfileNameError()
+            raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def get_user_defined_profile_name(self):
         if os.environ.get('AWS_EC2_INSTANCE_PROFILE_NAME'):
             return os.environ.get('AWS_EC2_INSTANCE_PROFILE_NAME')
-        else:
+        elif self._config.get('ec2_instance_profile_name'):
             return self._config.get('ec2_instance_profile_name')
+        else:
+            return None
 
     def _get_iam_role(self, token=None):
         if self._use_extended_api is None or self._use_extended_api:
@@ -678,54 +673,58 @@ class InstanceMetadataFetcher(IMDSFetcher):
         try:
             retry_count = 0
             while retry_count < 2:
-                credentials_response = self._get_credentials(role_name, token)
-                if credentials_response.status_code == 200:
-                    credentials = json.loads(credentials_response.text)
-                    if self._use_extended_api is None:
-                        self._use_extended_api = True
-                    if self._contains_all_credential_fields(credentials):
-                        return_credentials = {
-                            'role_name': role_name,
-                            'access_key': credentials['AccessKeyId'],
-                            'secret_key': credentials['SecretAccessKey'],
-                            'token': credentials['Token'],
-                            'expiry_time': credentials['Expiration'],
-                        }
-                        if self._use_extended_api is True:
-                            if 'AccountId' in credentials:
-                                return_credentials['account_id'] = credentials[
-                                    'AccountId'
-                                ]
+                try:
+                    credentials_response = self._get_credentials(
+                        role_name, token
+                    )
+                    if credentials_response.status_code == 200:
+                        credentials = json.loads(credentials_response.text)
+                        if self._use_extended_api is None:
+                            self._use_extended_api = True
+                        if self._contains_all_credential_fields(credentials):
+                            return_credentials = {
+                                'role_name': role_name,
+                                'access_key': credentials['AccessKeyId'],
+                                'secret_key': credentials['SecretAccessKey'],
+                                'token': credentials['Token'],
+                                'expiry_time': credentials['Expiration'],
+                            }
+                            if self._use_extended_api is True:
+                                if 'AccountId' in credentials:
+                                    return_credentials['account_id'] = (
+                                        credentials['AccountId']
+                                    )
+                        else:
+                            # IMDS can return a 200 response that has a JSON formatted
+                            # error message (i.e. if ec2 is not trusted entity for the
+                            # attached role). We do not necessarily want to retry for
+                            # these and we also do not necessarily want to raise a key
+                            # error. So at least log the problematic response and return
+                            # an empty dictionary to signal that it was not able to
+                            # retrieve credentials. These error will contain both a
+                            # Code and Message key.
+                            if (
+                                'Code' in credentials
+                                and 'Message' in credentials
+                            ):
+                                logger.debug(
+                                    'Error response received when retrieving'
+                                    'credentials: %s.',
+                                    credentials,
+                                )
+                            return {}
+                        self._evaluate_expiration(return_credentials)
+                        return return_credentials
                     else:
-                        # IMDS can return a 200 response that has a JSON formatted
-                        # error message (i.e. if ec2 is not trusted entity for the
-                        # attached role). We do not necessarily want to retry for
-                        # these and we also do not necessarily want to raise a key
-                        # error. So at least log the problematic response and return
-                        # an empty dictionary to signal that it was not able to
-                        # retrieve credentials. These error will contain both a
-                        # Code and Message key.
-                        if 'Code' in credentials and 'Message' in credentials:
-                            logger.debug(
-                                'Error response received when retrieving'
-                                'credentials: %s.',
-                                credentials,
-                            )
-                        return {}
-                    self._evaluate_expiration(return_credentials)
-                    return return_credentials
-                elif credentials_response.status_code == 404:
-                    if not self._use_extended_api:
-                        self._use_extended_api = False
-                    else:
-                        raise UnableToGetCredentialsError()
+                        self._perform_fallback()
+                except self._RETRIES_EXCEEDED_ERROR_CLS:
+                    self._perform_fallback()
+                    logger.debug(
+                        "Max number of attempts exceeded (%s) when "
+                        "attempting to retrieve data from metadata service.",
+                        self._num_attempts,
+                    )
                 retry_count += 1
-        except self._RETRIES_EXCEEDED_ERROR_CLS:
-            logger.debug(
-                "Max number of attempts exceeded (%s) when "
-                "attempting to retrieve data from metadata service.",
-                self._num_attempts,
-            )
         except BadIMDSRequestError as e:
             logger.debug("Bad IMDS request: %s", e.request)
 
