@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.38.33
+=======
+
+* api-change:``appsync``: Deprecate `atRestEncryptionEnabled` and `transitEncryptionEnabled` attributes in `CreateApiCache` action. Encryption is always enabled for new caches.
+* api-change:``ce``: Support dual-stack endpoints for ce api
+* api-change:``customer-profiles``: This release introduces capability of Profile Explorer, using correct ingestion timestamp & using historical data for computing calculated attributes, and new standard objects for T&H as part of Amazon Connect Customer Profiles service.
+* api-change:``ec2``: Release to support Elastic VMware Service (Amazon EVS) Subnet and Amazon EVS Network Interface Types.
+* api-change:``efs``: Added support for Internet Protocol Version 6 (IPv6) on EFS Service APIs and mount targets.
+* api-change:``marketplace-catalog``: The ListEntities API now supports the EntityID, LastModifiedDate, ProductTitle, and Visibility filters for machine learning products. You can also sort using all of those filters.
+* api-change:``workspaces-thin-client``: Add ConflictException to UpdateEnvironment API
+
+
 1.38.32
 =======
 
