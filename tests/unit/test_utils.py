@@ -14,6 +14,7 @@ import copy
 import datetime
 import io
 import operator
+import os
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -31,7 +32,7 @@ from botocore.exceptions import (
     ConfigNotFound,
     ConnectionClosedError,
     ConnectTimeoutError,
-    Ec2ProfileNameMisconfigurationError,
+    Ec2RoleNameMisconfigurationError,
     InvalidDNSNameError,
     InvalidExpressionError,
     InvalidIMDSEndpointError,
@@ -2823,16 +2824,24 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(result, self._expected_creds_extended)
         self.assertEqual(fetcher.get_base_url(), expected_url)
 
+    @mock.patch.dict(os.environ, {'AWS_EC2_METADATA_DISABLED': 'true'})
     def test_disabled_by_environment(self):
-        env = {'AWS_EC2_METADATA_DISABLED': 'true'}
-        fetcher = InstanceMetadataFetcher(env=env)
+        disable_ec2_metadata = (
+            os.environ.get('AWS_EC2_METADATA_DISABLED').lower() == 'true'
+        )
+        config = {'disable_ec2_metadata': disable_ec2_metadata}
+        fetcher = InstanceMetadataFetcher(config=config)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
         self._send.assert_not_called()
 
-    def test_disabled_by_environment_mixed_case(self):
-        env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
-        fetcher = InstanceMetadataFetcher(env=env)
+    @mock.patch.dict(os.environ, {'AWS_EC2_METADATA_DISABLED': 'tRuE'})
+    def test_disabled_by_environment_mixed(self):
+        disable_ec2_metadata = (
+            os.environ.get('AWS_EC2_METADATA_DISABLED').lower() == 'true'
+        )
+        config = {'disable_ec2_metadata': disable_ec2_metadata}
+        fetcher = InstanceMetadataFetcher(config=config)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
         self._send.assert_not_called()
@@ -3265,7 +3274,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         imdsFetcher = InstanceMetadataFetcher(num_attempts=1, config=config)
 
         self.add_get_token_imds_response(token='token')
-        with self.assertRaises(Ec2ProfileNameMisconfigurationError):
+        with self.assertRaises(Ec2RoleNameMisconfigurationError):
             imdsFetcher.retrieve_iam_role_credentials()
 
     def test_token_is_included(self):

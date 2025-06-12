@@ -100,7 +100,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         False,
         utils.ensure_boolean,
     ),
-    'ec2_metadata_disabled': (
+    'disable_ec2_metadata': (
         'disable_ec2_metadata',
         'AWS_EC2_METADATA_DISABLED',
         False,
