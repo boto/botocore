@@ -150,7 +150,7 @@ class Endpoint:
     def _calculate_ttl(
         self, response_received_timestamp, date_header, read_timeout
     ):
-        local_timestamp = datetime.datetime.utcnow()
+        local_timestamp = datetime.datetime.now(datetime.UTC)
         date_conversion = datetime.datetime.strptime(
             date_header, "%a, %d %b %Y %H:%M:%S %Z"
         )
@@ -167,7 +167,7 @@ class Endpoint:
         has_streaming_input = retries_context.get('has_streaming_input')
         if response_date_header and not has_streaming_input:
             try:
-                response_received_timestamp = datetime.datetime.utcnow()
+                response_received_timestamp = datetime.datetime.now(datetime.UTC)
                 retries_context['ttl'] = self._calculate_ttl(
                     response_received_timestamp,
                     response_date_header,
