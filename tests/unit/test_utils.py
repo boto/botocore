@@ -3046,6 +3046,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(status_code=400, body=b'')
         self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
+        self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1
         ).retrieve_iam_role_credentials()
@@ -3249,7 +3250,6 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             imdsFetcher = InstanceMetadataFetcher(num_attempts=1)
 
             self.add_get_token_imds_response(token='token')
-            self.add_imds_response(b'', status_code=404)
             self.add_get_role_name_imds_response('role-name')
             self.add_get_credentials_imds_response('legacy')
             result1 = imdsFetcher.retrieve_iam_role_credentials()
@@ -3260,6 +3260,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             date=DATE + datetime.timedelta(seconds=21605),
         ):
             self.add_get_token_imds_response(token='token')
+            self.add_imds_response(b'', status_code=404)
             self.add_imds_response(b'', status_code=404)
             result2 = imdsFetcher.retrieve_iam_role_credentials()
             self.assertEqual(result2, {})
