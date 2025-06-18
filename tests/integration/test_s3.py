@@ -713,8 +713,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             presigned_url.startswith(
                 f'https://{self.bucket_name}.s3.amazonaws.com/{self.key}'
             ),
-            "Host was suppose to use DNS style, instead "
-            f"got: {presigned_url}",
+            f"Host was suppose to use DNS style, instead got: {presigned_url}",
         )
         # Try to retrieve the object using the presigned url.
         self.assertEqual(http_get(presigned_url).data, b'foo')
@@ -782,7 +781,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             post_args['url'].startswith(
                 f'https://{self.bucket_name}.s3.amazonaws.com'
             ),
-            "Host was suppose to use DNS style, instead " "got: {}".format(
+            "Host was suppose to use DNS style, instead got: {}".format(
                 post_args['url']
             ),
         )
@@ -850,8 +849,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             presigned_url.startswith(
                 f'https://{self.bucket_name}.s3.amazonaws.com/{self.key}'
             ),
-            "Host was suppose to use DNS style, instead "
-            f"got: {presigned_url}",
+            f"Host was suppose to use DNS style, instead got: {presigned_url}",
         )
         # Try to retrieve the object using the presigned url.
         self.assertEqual(http_get(presigned_url).data, b'foo')
@@ -911,7 +909,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             post_args['url'].startswith(
                 f'https://{self.bucket_name}.s3.amazonaws.com'
             ),
-            "Host was suppose to use DNS style, instead " "got: {}".format(
+            "Host was suppose to use DNS style, instead got: {}".format(
                 post_args['url']
             ),
         )
@@ -948,7 +946,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             post_args['url'].startswith(
                 f'https://{self.bucket_name}.s3.amazonaws.com/'
             ),
-            "Host was suppose to use DNS style, instead " "got: {}".format(
+            "Host was suppose to use DNS style, instead got: {}".format(
                 post_args['url']
             ),
         )

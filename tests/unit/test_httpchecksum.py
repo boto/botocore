@@ -662,7 +662,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
         bytes = BytesIO(b"abcdefghijklmnopqrstuvwxyz")
         wrapper = AwsChunkedWrapper(bytes)
         body = wrapper.read()
-        expected = b"1a\r\n" b"abcdefghijklmnopqrstuvwxyz\r\n" b"0\r\n\r\n"
+        expected = b"1a\r\nabcdefghijklmnopqrstuvwxyz\r\n0\r\n\r\n"
         self.assertEqual(body, expected)
 
     def test_multi_chunk_body(self):
@@ -678,7 +678,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
             b"6\r\n"
             b"uvwxyz\r\n"
             b"0\r\n\r\n"
-        )
+        )  # fmt: skip
         self.assertEqual(body, expected)
 
     def test_read_returns_less_data(self):
@@ -702,7 +702,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
             b"8\r\n"
             b"stuvwxyz\r\n"
             b"0\r\n\r\n"
-        )
+        )  # fmt: skip
         self.assertEqual(body, expected)
 
     def test_single_chunk_body_with_checksum(self):
@@ -712,9 +712,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
             checksum_name="checksum",
         )
         body = wrapper.read()
-        expected = (
-            b"b\r\n" b"hello world\r\n" b"0\r\n" b"checksum:DUoRhQ==\r\n\r\n"
-        )
+        expected = b"b\r\nhello world\r\n0\r\nchecksum:DUoRhQ==\r\n\r\n"
         self.assertEqual(body, expected)
 
     def test_multi_chunk_body_with_checksum(self):
@@ -734,7 +732,7 @@ class TestAwsChunkedWrapper(unittest.TestCase):
             b"d\r\n"
             b"0\r\n"
             b"checksum:DUoRhQ==\r\n\r\n"
-        )
+        )  # fmt: skip
         self.assertEqual(body, expected)
 
     def test_multi_chunk_body_with_checksum_iter(self):

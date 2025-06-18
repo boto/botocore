@@ -75,7 +75,7 @@ class TestLazyLoadedDocstring(unittest.TestCase):
 class TestClientMethodDocstring(unittest.TestCase):
     def test_use_correct_docstring_writer(self):
         with mock.patch(
-            'botocore.docs.docstring' '.document_model_driven_method'
+            'botocore.docs.docstring.document_model_driven_method'
         ) as mock_writer:
             docstring = ClientMethodDocstring()
             str(docstring)
@@ -85,7 +85,7 @@ class TestClientMethodDocstring(unittest.TestCase):
 class TestWaiterDocstring(unittest.TestCase):
     def test_use_correct_docstring_writer(self):
         with mock.patch(
-            'botocore.docs.docstring' '.document_wait_method'
+            'botocore.docs.docstring.document_wait_method'
         ) as mock_writer:
             docstring = WaiterDocstring()
             str(docstring)
@@ -95,7 +95,7 @@ class TestWaiterDocstring(unittest.TestCase):
 class TestPaginatorDocstring(unittest.TestCase):
     def test_use_correct_docstring_writer(self):
         with mock.patch(
-            'botocore.docs.docstring' '.document_paginate_method'
+            'botocore.docs.docstring.document_paginate_method'
         ) as mock_writer:
             docstring = PaginatorDocstring()
             str(docstring)

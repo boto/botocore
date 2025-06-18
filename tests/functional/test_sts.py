@@ -24,7 +24,7 @@ from tests import (
 )
 
 _V4_SIGNING_REGION_REGEX = re.compile(
-    r'AWS4-HMAC-SHA256 ' r'Credential=\w+/\d+/(?P<signing_region>[a-z0-9-]+)/'
+    r'AWS4-HMAC-SHA256 Credential=\w+/\d+/(?P<signing_region>[a-z0-9-]+)/'
 )
 
 
@@ -67,7 +67,7 @@ class TestSTSEndpoints(BaseSessionTest):
         )
 
     def set_sts_regional_for_config_file(self, fileobj, config_val):
-        fileobj.write('[default]\n' f'sts_regional_endpoints={config_val}\n')
+        fileobj.write(f'[default]\nsts_regional_endpoints={config_val}\n')
         fileobj.flush()
         self.environ['AWS_CONFIG_FILE'] = fileobj.name
 
