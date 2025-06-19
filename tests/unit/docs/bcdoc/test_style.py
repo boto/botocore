@@ -172,10 +172,7 @@ class TestStyle(unittest.TestCase):
         style.hidden_tocitem('bar')
         self.assertEqual(
             style.doc.getvalue(),
-            (
-                b'\n.. toctree::\n  :maxdepth: 1'
-                b'\n  :hidden:\n\n  foo\n  bar\n'
-            ),
+            (b'\n.. toctree::\n  :maxdepth: 1\n  :hidden:\n\n  foo\n  bar\n'),
         )
 
     def test_hidden_toctree_non_html(self):

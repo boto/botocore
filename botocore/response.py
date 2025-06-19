@@ -18,19 +18,20 @@ from io import IOBase
 from urllib3.exceptions import ProtocolError as URLLib3ProtocolError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
-from botocore import parsers
-from botocore.compat import set_socket_timeout
+from botocore import (
+    ScalarTypes,  # noqa: F401
+    parsers,
+)
+from botocore.compat import (
+    XMLParseError,  # noqa: F401
+    set_socket_timeout,
+)
 from botocore.exceptions import (
     IncompleteReadError,
     ReadTimeoutError,
     ResponseStreamingError,
 )
-
-# Keep these imported.  There's pre-existing code that uses them.
-from botocore import ScalarTypes  # noqa
-from botocore.compat import XMLParseError  # noqa
 from botocore.hooks import first_non_none_response  # noqa
-
 
 logger = logging.getLogger(__name__)
 

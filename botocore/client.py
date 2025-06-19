@@ -12,7 +12,11 @@
 # language governing permissions and limitations under the License.
 import logging
 
-from botocore import waiter, xform_name
+from botocore import (
+    UNSIGNED,  # noqa: F401
+    waiter,
+    xform_name,
+)
 from botocore.args import ClientArgsCreator
 from botocore.auth import AUTH_TYPE_MAPS, resolve_auth_type
 from botocore.awsrequest import prepare_request_dict
@@ -27,6 +31,7 @@ from botocore.discovery import (
 )
 from botocore.docs.docstring import ClientMethodDocstring, PaginatorDocstring
 from botocore.exceptions import (
+    ClientError,  # noqa: F401
     DataNotFoundError,
     InvalidEndpointDiscoveryConfigurationError,
     OperationNotPageableError,
@@ -46,25 +51,17 @@ from botocore.useragent import UserAgentString, register_feature_id
 from botocore.utils import (
     CachedProperty,
     EventbridgeSignerSetter,
+    S3ArnParamHandler,  # noqa: F401
+    S3ControlArnParamHandler,  # noqa: F401
     S3ControlArnParamHandlerv2,
+    S3ControlEndpointSetter,  # noqa: F401
+    S3EndpointSetter,  # noqa: F401
     S3ExpressIdentityResolver,
+    S3RegionRedirector,  # noqa: F401
     S3RegionRedirectorv2,
     ensure_boolean,
     get_service_module_name,
 )
-
-# Keep these imported.  There's pre-existing code that uses:
-# "from botocore.client import UNSIGNED"
-# "from botocore.client import ClientError"
-# etc.
-from botocore.exceptions import ClientError  # noqa
-from botocore.utils import S3ArnParamHandler  # noqa
-from botocore.utils import S3ControlArnParamHandler  # noqa
-from botocore.utils import S3ControlEndpointSetter  # noqa
-from botocore.utils import S3EndpointSetter  # noqa
-from botocore.utils import S3RegionRedirector  # noqa
-from botocore import UNSIGNED  # noqa
-
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()

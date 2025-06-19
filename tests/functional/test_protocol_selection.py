@@ -62,6 +62,6 @@ def test_correct_protocol_selection():
             )
             response = client.test_protocol_selection(Foo="input")
             assert response['Bar'] == 'Baz'
-        assert called[
-            'was_called'
-        ], "_do_parse was not called on RestJSONParser as expected"
+        assert called['was_called'], (
+            "_do_parse was not called on RestJSONParser as expected"
+        )

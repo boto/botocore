@@ -27,8 +27,13 @@ from io import BytesIO
 
 import botocore
 import botocore.auth
-from botocore import utils
+from botocore import (
+    retryhandler,  # noqa: F401
+    translate,  # noqa: F401
+    utils,
+)
 from botocore.compat import (
+    MD5_AVAILABLE,  # noqa: F401
     ETree,
     OrderedDict,
     XMLParseError,
@@ -49,6 +54,7 @@ from botocore.docs.utils import (
 from botocore.endpoint_provider import VALID_HOST_LABEL_RE
 from botocore.exceptions import (
     AliasConflictParameterError,
+    MissingServiceIdError,  # noqa: F401
     ParamValidationError,
     UnsupportedTLSVersionWarning,
 )
@@ -61,20 +67,13 @@ from botocore.signers import (
 )
 from botocore.utils import (
     SAFE_CHARS,
+    SERVICE_NAME_ALIASES,  # noqa: F401
     ArnParser,
+    hyphenize_service_id,  # noqa: F401
+    is_global_accesspoint,  # noqa: F401
     percent_encode,
     switch_host_with_param,
 )
-
-# Keep these imported.  There's pre-existing code that uses them.
-from botocore import retryhandler  # noqa
-from botocore import translate  # noqa
-from botocore.compat import MD5_AVAILABLE  # noqa
-from botocore.exceptions import MissingServiceIdError  # noqa
-from botocore.utils import hyphenize_service_id  # noqa
-from botocore.utils import is_global_accesspoint  # noqa
-from botocore.utils import SERVICE_NAME_ALIASES  # noqa
-
 
 logger = logging.getLogger(__name__)
 
