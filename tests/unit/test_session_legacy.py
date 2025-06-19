@@ -733,7 +733,7 @@ class TestCreateClient(BaseSessionTest):
             f.write(
                 'foo_api_versions =\n'
                 f'    myservice = {config_api_version}\n'
-            )
+            )  # fmt: skip
             f.flush()
 
             self.session.create_client('myservice', 'us-west-2')
@@ -755,7 +755,7 @@ class TestCreateClient(BaseSessionTest):
                 f'foo_api_versions =\n'
                 f'    myservice = {config_api_version}\n'
                 f'    myservice2 = {second_config_api_version}\n'
-            )
+            )  # fmt: skip
             f.flush()
 
             self.session.create_client('myservice', 'us-west-2')
@@ -784,7 +784,7 @@ class TestCreateClient(BaseSessionTest):
             f.write(
                 'foo_api_versions =\n'
                 f'    myservice = {config_api_version}\n'
-            )
+            )  # fmt: skip
             f.flush()
 
             self.session.create_client(

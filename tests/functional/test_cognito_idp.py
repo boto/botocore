@@ -89,6 +89,6 @@ def test_unsigned_operations(operation_name, parameters):
             operation(**parameters)
             request = http_stubber.requests[0]
 
-        assert (
-            'authorization' not in request.headers
-        ), 'authorization header found in unsigned operation'
+        assert 'authorization' not in request.headers, (
+            'authorization header found in unsigned operation'
+        )

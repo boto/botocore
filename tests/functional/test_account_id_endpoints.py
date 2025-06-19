@@ -224,16 +224,16 @@ def test_account_id_endpoint_resolution(
             request = http_stubber.requests[0]
 
             if account_id_in_url:
-                assert (
-                    account_id in request.url
-                ), f"Account ID should be in the URL, but it's not: {request.url}"
+                assert account_id in request.url, (
+                    f"Account ID should be in the URL, but it's not: {request.url}"
+                )
             else:
-                assert (
-                    account_id not in request.url
-                ), f"Account ID should not be in the URL, but it is: {request.url}"
-            assert (
-                request.url == expected_endpoint
-            ), f"Expected endpoint '{expected_endpoint}', but got: {request.url}"
+                assert account_id not in request.url, (
+                    f"Account ID should not be in the URL, but it is: {request.url}"
+                )
+            assert request.url == expected_endpoint, (
+                f"Expected endpoint '{expected_endpoint}', but got: {request.url}"
+            )
 
 
 @pytest.mark.parametrize(
