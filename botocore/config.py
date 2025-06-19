@@ -15,6 +15,7 @@ import copy
 from botocore.compat import OrderedDict
 from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import (
+    InvalidConfigError,
     InvalidMaxRetryAttemptsError,
     InvalidRetryConfigurationError,
     InvalidRetryModeError,
@@ -282,6 +283,11 @@ class Config:
         If a value is not provided, the client will default to ``preferred``.
 
         Defaults to None.
+
+    :type ec2_instance_profile_name: str
+    :param ec2_instance_profile_name: User defined profile_name of an ec2 instance. This value can't be empty.
+
+        Defaults to None.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -314,6 +320,7 @@ class Config:
             ('request_checksum_calculation', None),
             ('response_checksum_validation', None),
             ('account_id_endpoint_mode', None),
+            ('ec2_instance_profile_name', None),
         ]
     )
 
@@ -379,6 +386,8 @@ class Config:
 
         self._validate_retry_configuration(self.retries)
 
+        self._validate_ec2_instance_role_name(self.ec2_instance_profile_name)
+
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
         user_provided_options = {}
@@ -418,6 +427,14 @@ class Config:
                 raise InvalidS3AddressingStyleError(
                     s3_addressing_style=addressing_style
                 )
+
+    def _validate_ec2_instance_role_name(self, role_name):
+        if role_name is not None and (
+            not bool(role_name.strip()) or not isinstance(role_name, str)
+        ):
+            raise InvalidConfigError(
+                error_msg="Error: Invalid role name for ec2_instance_profile_name. Role names must not be empty or contain only whitespace characters."
+            )
 
     def _validate_retry_configuration(self, retries):
         valid_options = ('max_attempts', 'mode', 'total_max_attempts')
