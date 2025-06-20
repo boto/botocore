@@ -87,6 +87,7 @@ from botocore.exceptions import (
     UnsupportedS3ControlArnError,
     UnsupportedS3ControlConfigurationError,
 )
+from botocore.useragent import register_feature_id
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
@@ -395,18 +396,16 @@ class IMDSFetcher:
             config = {}
         self._base_url = self._select_base_url(base_url, config)
         self._config = config
+        self._use_extended_api = None
 
-        if env is None:
-            env = os.environ.copy()
-        self._disabled = (
-            env.get('AWS_EC2_METADATA_DISABLED', 'false').lower() == 'true'
-        )
-        self._imds_v1_disabled = config.get('ec2_metadata_v1_disabled')
+        self._disabled = self._config.get('disable_ec2_metadata')
+        self._imds_v1_disabled = self._config.get('ec2_metadata_v1_disabled')
         self._user_agent = user_agent
         self._session = botocore.httpsession.URLLib3Session(
             timeout=self._timeout,
             proxies=get_environ_proxies(self._base_url),
         )
+        self.resolved_role_name = None
 
     def get_base_url(self):
         return self._base_url
@@ -572,28 +571,37 @@ class IMDSFetcher:
 
 class InstanceMetadataFetcher(IMDSFetcher):
     _URL_PATH = 'latest/meta-data/iam/security-credentials/'
-    _REQUIRED_CREDENTIAL_FIELDS = [
+    _URL_PATH_EXTENDED = 'latest/meta-data/iam/security-credentials-extended/'
+    _REQUIRED_CREDENTIAL_FIELDS = (
         'AccessKeyId',
         'SecretAccessKey',
         'Token',
         'Expiration',
-    ]
+    )
+    _URL_PATHS = [_URL_PATH_EXTENDED, _URL_PATH]
 
     def retrieve_iam_role_credentials(self):
         try:
             token = self._fetch_metadata_token()
-            role_name = self._get_iam_role(token)
-            credentials = self._get_credentials(role_name, token)
+            credentials, role_name = self._retrieve_resolve_role_credentials(
+                token
+            )
             if self._contains_all_credential_fields(credentials):
-                credentials = {
+                return_credentials = {
                     'role_name': role_name,
                     'access_key': credentials['AccessKeyId'],
                     'secret_key': credentials['SecretAccessKey'],
                     'token': credentials['Token'],
                     'expiry_time': credentials['Expiration'],
                 }
-                self._evaluate_expiration(credentials)
-                return credentials
+                if self._use_extended_api is True:
+                    if 'AccountId' in credentials:
+                        return_credentials['account_id'] = credentials[
+                            'AccountId'
+                        ]
+                self._evaluate_expiration(return_credentials)
+                register_feature_id('CREDENTIALS_IMDS')
+                return return_credentials
             else:
                 # IMDS can return a 200 response that has a JSON formatted
                 # error message (i.e. if ec2 is not trusted entity for the
@@ -620,16 +628,48 @@ class InstanceMetadataFetcher(IMDSFetcher):
             logger.debug("Bad IMDS request: %s", e.request)
         return {}
 
-    def _get_iam_role(self, token=None):
+    def _retrieve_resolve_role_credentials(self, token):
+        for index, url_path in enumerate(self._URL_PATHS):
+            try:
+                role_name = self._get_iam_role(url_path, token)
+                credentials = self._get_credentials(url_path, role_name, token)
+                if index == 0:
+                    self._use_extended_api = True
+                else:
+                    self._use_extended_api = False
+                self.resolved_role_name = role_name
+                return credentials, role_name
+            except self._RETRIES_EXCEEDED_ERROR_CLS:
+                logger.debug(
+                    "Max number of attempts exceeded (%s) when "
+                    "attempting to get iam role name. Fallback to legacy.",
+                    self._num_attempts,
+                )
+        return {}, None
+
+    def _get_iam_role(
+        self,
+        url,
+        token=None,
+    ):
+        role_name = self.resolve_if_pre_defined_role_name()
+        if role_name:
+            return role_name
         return self._get_request(
-            url_path=self._URL_PATH,
+            url_path=url,
             retry_func=self._needs_retry_for_role_name,
             token=token,
         ).text
 
-    def _get_credentials(self, role_name, token=None):
+    def resolve_if_pre_defined_role_name(self):
+        role_name = self._config.get('ec2_instance_profile_name')
+        if self.resolved_role_name:
+            role_name = self.resolved_role_name
+        return role_name
+
+    def _get_credentials(self, url_path, role_name, token=None):
         r = self._get_request(
-            url_path=self._URL_PATH + role_name,
+            url_path=url_path + role_name,
             retry_func=self._needs_retry_for_credentials,
             token=token,
         )
