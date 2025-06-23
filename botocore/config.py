@@ -429,11 +429,11 @@ class Config:
                 )
 
     def _validate_ec2_instance_role_name(self, role_name):
-        if role_name is not None and (
-            not bool(role_name.strip()) or not isinstance(role_name, str)
-        ):
+        if role_name is None:
+            return
+        if not isinstance(role_name, str) or not bool(role_name.strip()):
             raise InvalidConfigError(
-                error_msg="Error: Invalid role name for ec2_instance_profile_name. Role names must not be empty or contain only whitespace characters."
+                error_msg="Invalid role name for ec2_instance_profile_name. Role names must not be empty or contain only whitespace characters."
             )
 
     def _validate_retry_configuration(self, retries):

@@ -1771,6 +1771,29 @@ class TestInstanceMetadataProvider(BaseEnvVar):
         self.assertEqual(creds.method, 'iam-role')
         self.assertEqual(creds.account_id, '1234567890')
 
+    def test_load_from_instance_metadata_when_account_id_is_None(self):
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher = mock.Mock()
+        fetcher.retrieve_iam_role_credentials.return_value = {
+            'access_key': 'a',
+            'secret_key': 'b',
+            'token': 'c',
+            'expiry_time': timestamp,
+            'role_name': 'myrole',
+            'account_id': None,
+        }
+        provider = credentials.InstanceMetadataProvider(
+            iam_role_fetcher=fetcher
+        )
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+        self.assertEqual(creds.method, 'iam-role')
+        self.assertEqual(creds.account_id, None)
+
     def test_no_role_creds_exist(self):
         fetcher = mock.Mock()
         fetcher.retrieve_iam_role_credentials.return_value = {}

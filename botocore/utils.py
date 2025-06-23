@@ -386,7 +386,6 @@ class IMDSFetcher:
         timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
         num_attempts=1,
         base_url=METADATA_BASE_URL,
-        env=None,
         user_agent=None,
         config=None,
     ):
@@ -398,7 +397,7 @@ class IMDSFetcher:
         self._config = config
         self._use_extended_api = None
 
-        self._disabled = self._config.get('disable_ec2_metadata')
+        self._disabled = self._config.get('ec2_metadata_disabled')
         self._imds_v1_disabled = self._config.get('ec2_metadata_v1_disabled')
         self._user_agent = user_agent
         self._session = botocore.httpsession.URLLib3Session(
@@ -578,13 +577,12 @@ class InstanceMetadataFetcher(IMDSFetcher):
         'Token',
         'Expiration',
     )
-    _URL_PATHS = [_URL_PATH_EXTENDED, _URL_PATH]
 
     def retrieve_iam_role_credentials(self):
         try:
             token = self._fetch_metadata_token()
             credentials, role_name = self._retrieve_resolve_role_credentials(
-                token
+                token,
             )
             if self._contains_all_credential_fields(credentials):
                 return_credentials = {
@@ -593,12 +591,8 @@ class InstanceMetadataFetcher(IMDSFetcher):
                     'secret_key': credentials['SecretAccessKey'],
                     'token': credentials['Token'],
                     'expiry_time': credentials['Expiration'],
+                    'account_id': credentials.get('AccountId'),
                 }
-                if self._use_extended_api is True:
-                    if 'AccountId' in credentials:
-                        return_credentials['account_id'] = credentials[
-                            'AccountId'
-                        ]
                 self._evaluate_expiration(return_credentials)
                 register_feature_id('CREDENTIALS_IMDS')
                 return return_credentials
@@ -629,30 +623,41 @@ class InstanceMetadataFetcher(IMDSFetcher):
         return {}
 
     def _retrieve_resolve_role_credentials(self, token):
-        for index, url_path in enumerate(self._URL_PATHS):
+        url_paths = [self._URL_PATH]
+        if self._use_extended_api in (None, True):
+            url_paths.insert(0, self._URL_PATH_EXTENDED)
+        for url_path in url_paths:
             try:
-                role_name = self._get_iam_role(url_path, token)
+                role_name = self._get_iam_role(token, url_path)
                 credentials = self._get_credentials(url_path, role_name, token)
-                if index == 0:
-                    self._use_extended_api = True
-                else:
-                    self._use_extended_api = False
                 self.resolved_role_name = role_name
+                if self._use_extended_api is None:
+                    self._use_extended_api = True
                 return credentials, role_name
             except self._RETRIES_EXCEEDED_ERROR_CLS:
                 logger.debug(
                     "Max number of attempts exceeded (%s) when "
-                    "attempting to get iam role name. Fallback to legacy.",
+                    "attempting to get iam role name or credentials. Fallback to legacy if legacy API not used already; otherwise, raise an error.",
                     self._num_attempts,
                 )
-        return {}, None
+                if self._use_extended_api in (True, None):
+                    self._use_extended_api = False
+                else:
+                    logger.debug(
+                        "Clear the cache and raise an error if the requests fail (non-200 response), addressing potential issues caused by the cached role name or API usage flag."
+                    )
+                    self.resolved_role_name = None
+                    self._use_extended_api = None
+                    raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _get_iam_role(
         self,
-        url,
         token=None,
+        url=None,
     ):
-        role_name = self.resolve_if_pre_defined_role_name()
+        role_name = self.resolved_role_name or self._config.get(
+            'ec2_instance_profile_name'
+        )
         if role_name:
             return role_name
         return self._get_request(
@@ -660,12 +665,6 @@ class InstanceMetadataFetcher(IMDSFetcher):
             retry_func=self._needs_retry_for_role_name,
             token=token,
         ).text
-
-    def resolve_if_pre_defined_role_name(self):
-        role_name = self._config.get('ec2_instance_profile_name')
-        if self.resolved_role_name:
-            role_name = self.resolved_role_name
-        return role_name
 
     def _get_credentials(self, url_path, role_name, token=None):
         r = self._get_request(
@@ -739,7 +738,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
 
 
 class IMDSRegionProvider:
-    def __init__(self, session, environ=None, fetcher=None):
+    def __init__(self, session, fetcher=None):
         """Initialize IMDSRegionProvider.
         :type session: :class:`botocore.session.Session`
         :param session: The session is needed to look up configuration for
@@ -747,18 +746,11 @@ class IMDSRegionProvider:
             whether or not it should use the IMDS region at all, and if so how
             to configure the timeout and number of attempts to reach the
             service.
-        :type environ: None or dict
-        :param environ: A dictionary of environment variables to use. If
-            ``None`` is the argument then ``os.environ`` will be used by
-            default.
         :type fecther: :class:`botocore.utils.InstanceMetadataRegionFetcher`
         :param fetcher: The class to actually handle the fetching of the region
             from the IMDS. If not provided a default one will be created.
         """
         self._session = session
-        if environ is None:
-            environ = os.environ
-        self._environ = environ
         self._fetcher = fetcher
 
     def provide(self):
@@ -797,7 +789,6 @@ class IMDSRegionProvider:
         fetcher = InstanceMetadataRegionFetcher(
             timeout=metadata_timeout,
             num_attempts=metadata_num_attempts,
-            env=self._environ,
             user_agent=self._session.user_agent(),
             config=imds_config,
         )
