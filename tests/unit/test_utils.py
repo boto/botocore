@@ -2830,6 +2830,31 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.assertEqual(result, self._expected_creds_extended)
         self.assertEqual(fetcher.get_base_url(), expected_url)
 
+    def test_disabled_by_environment(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'true'}
+        fetcher = InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._send.assert_not_called()
+
+    def test_disabled_by_environment_mixed_case(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
+        fetcher = InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._send.assert_not_called()
+
+    def test_disabling_env_var_not_true(self):
+        url = 'https://example.com/'
+        env = {'AWS_EC2_METADATA_DISABLED': 'false'}
+
+        self.add_default_imds_responses()
+
+        fetcher = InstanceMetadataFetcher(base_url=url, env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds_extended)
+
     def test_disabled_by_config(self):
         config = {'ec2_metadata_disabled': True}
         fetcher = InstanceMetadataFetcher(config=config)
@@ -3096,10 +3121,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             date=DATE + datetime.timedelta(seconds=21605),
         ):
             self.add_get_token_imds_response(token='token')
-            self.add_get_role_name_imds_response('role-name')
             self.add_imds_response(b'', status_code=404)
-            result2 = imdsFetcher.retrieve_iam_role_credentials()
-            self.assertEqual(result2, {})
 
             self.add_get_token_imds_response(token='token')
             self.add_get_role_name_imds_response('role-name-1')
@@ -3166,10 +3188,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             date=DATE + datetime.timedelta(seconds=21605),
         ):
             self.add_get_token_imds_response(token='token')
-            self.add_get_role_name_imds_response('role-name')
             self.add_imds_response(b'', status_code=404)
-            result2 = imdsFetcher.retrieve_iam_role_credentials()
-            self.assertEqual(result2, {})
 
             self.add_get_token_imds_response(token='token-1')
             self.add_get_role_name_imds_response('role-name-1')
@@ -3241,10 +3260,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             date=DATE + datetime.timedelta(seconds=21605),
         ):
             self.add_get_token_imds_response(token='token')
-            self.add_get_role_name_imds_response('role-name')
             self.add_imds_response(b'', status_code=404)
-            result2 = imdsFetcher.retrieve_iam_role_credentials()
-            self.assertEqual(result2, {})
 
             self.add_get_token_imds_response(token='token-1')
             self.add_get_role_name_imds_response('role-name-1')

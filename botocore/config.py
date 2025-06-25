@@ -386,7 +386,9 @@ class Config:
 
         self._validate_retry_configuration(self.retries)
 
-        self._validate_ec2_instance_role_name(self.ec2_instance_profile_name)
+        self._validate_ec2_instance_profile_name(
+            self.ec2_instance_profile_name
+        )
 
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
@@ -428,12 +430,16 @@ class Config:
                     s3_addressing_style=addressing_style
                 )
 
-    def _validate_ec2_instance_role_name(self, role_name):
-        if role_name is None:
+    def _validate_ec2_instance_profile_name(self, profile_name):
+        if profile_name is None:
             return
-        if not isinstance(role_name, str) or not bool(role_name.strip()):
+        if not isinstance(profile_name, str) or not bool(profile_name.strip()):
             raise InvalidConfigError(
-                error_msg="Invalid role name for ec2_instance_profile_name. Role names must not be empty or contain only whitespace characters."
+                error_msg=(
+                    "Invalid profile name for ec2_instance_profile_name."
+                    " Profile names must not be empty or contain only "
+                    "whitespace characters."
+                )
             )
 
     def _validate_retry_configuration(self, retries):
