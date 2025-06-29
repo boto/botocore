@@ -596,10 +596,6 @@ class OperationModel:
         return self._operation_model.get('endpointoperation', False)
 
     @CachedProperty
-    def is_query_compatible(self):
-        return 'awsQueryCompatible' in self.metadata
-
-    @CachedProperty
     def input_shape(self):
         if 'input' not in self._operation_model:
             # Some operations do not accept any input and do not define an
