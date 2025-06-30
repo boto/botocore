@@ -23,17 +23,12 @@ def test_ambiguous_error_parsing():
     # that is defined later, which in this case is `ResourceNotFound`.  This test
     # ensures that we continue to select the latter error going forward.
     session = botocore.session.get_session()
-    client = session.create_client('cloudwatch', region_name='us-west-2')
+    cloudwatch = session.create_client('cloudwatch', region_name='us-west-2')
     try:
-        client.get_dashboard(DashboardName='dashboard-which-does-not-exist')
+        cloudwatch.get_dashboard(DashboardName='dashboard-which-does-not-exist')
         assert False, "No error raised for non-existant dashboard"
-    except Exception as exception:
-        exception_class = exception.__class__
+    except cloudwatch.exceptions.ResourceNotFound as exception:
         error_response = exception.response['Error']
-        assert isinstance(exception, ClientError)
-        assert (
-            f"{exception_class.__module__}.{exception_class.__name__}"
-            == 'botocore.errorfactory.ResourceNotFound'
-        )
         assert error_response['Type'] == 'Sender'
         assert error_response['Code'] == 'ResourceNotFound'
+        assert exception.response['ResponseMetadata']['HTTPStatusCode'] == 404
