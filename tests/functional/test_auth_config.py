@@ -13,12 +13,17 @@
 import pytest
 
 from botocore.config import Config
+from botocore.handlers import get_bearer_auth_supported_services
 from tests import create_session, mock
 
 # In the future, a service may have a list of credentials requirements where one
 # signature may fail and others may succeed. e.g. a service may want to use bearer
 # auth but fall back to sigv4 if a token isn't available. There's currently no way to do
 # this in botocore, so this test ensures we handle this gracefully when the need arises.
+
+# Some services (such as Bedrock) have customizations that bypass this limitation
+# by manually assigning a signer when credentials are unavailable. To avoid
+# false positives, we filter these services out of the tests below.
 
 
 # The dictionary's value here needs to be hashable to be added to the set below; any
@@ -29,6 +34,11 @@ AUTH_TYPE_REQUIREMENTS = {
     'smithy.api#httpBearerAuth': 'bearer_token',
     'smithy.api#noAuth': 'none',
 }
+
+# Services with a `signing_name` that are known to have
+# customizations for handling mixed authentication methods.
+KNOWN_MIXED_AUTH_SERVICES = get_bearer_auth_supported_services()
+KNOWN_MIXED_AUTH_SCHEMES = {'aws.auth#sigv4', 'smithy.api#httpBearerAuth'}
 
 
 def _all_test_cases():
@@ -41,7 +51,12 @@ def _all_test_cases():
 
     for service in services:
         service_model = session.get_service_model(service)
+        signing_name = service_model.signing_name
         auth_config = service_model.metadata.get('auth', {})
+        if signing_name in KNOWN_MIXED_AUTH_SERVICES:
+            if set(auth_config) == KNOWN_MIXED_AUTH_SCHEMES:
+                # Skip service due to known mixed auth configurations.
+                continue
         if auth_config:
             auth_services.append([service, auth_config])
         for operation in service_model.operation_names:
