@@ -89,6 +89,12 @@ def create_credential_resolver(session, cache=None, region_name=None):
         'ec2_metadata_v1_disabled': session.get_config_variable(
             'ec2_metadata_v1_disabled'
         ),
+        'ec2_metadata_disabled': session.get_config_variable(
+            'ec2_metadata_disabled'
+        ),
+        'ec2_instance_profile_name': session.get_config_variable(
+            'ec2_instance_profile_name'
+        ),
     }
 
     if cache is None:
