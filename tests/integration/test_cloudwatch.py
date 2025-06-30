@@ -13,7 +13,6 @@
 
 
 import botocore.session
-from botocore.exceptions import ClientError
 
 
 def test_ambiguous_error_parsing():
@@ -25,7 +24,9 @@ def test_ambiguous_error_parsing():
     session = botocore.session.get_session()
     cloudwatch = session.create_client('cloudwatch', region_name='us-west-2')
     try:
-        cloudwatch.get_dashboard(DashboardName='dashboard-which-does-not-exist')
+        cloudwatch.get_dashboard(
+            DashboardName='dashboard-which-does-not-exist'
+        )
         assert False, "No error raised for non-existant dashboard"
     except cloudwatch.exceptions.ResourceNotFound as exception:
         error_response = exception.response['Error']
