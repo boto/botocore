@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import pytest
 
 import botocore.session
 
@@ -23,13 +23,14 @@ def test_ambiguous_error_parsing():
     # ensures that we continue to select the latter error going forward.
     session = botocore.session.get_session()
     cloudwatch = session.create_client('cloudwatch', region_name='us-west-2')
-    try:
+    with pytest.raises(cloudwatch.exceptions.ResourceNotFound) as exception:
         cloudwatch.get_dashboard(
             DashboardName='dashboard-which-does-not-exist'
         )
-        assert False, "No error raised for non-existant dashboard"
-    except cloudwatch.exceptions.ResourceNotFound as exception:
-        error_response = exception.response['Error']
-        assert error_response['Type'] == 'Sender'
-        assert error_response['Code'] == 'ResourceNotFound'
-        assert exception.response['ResponseMetadata']['HTTPStatusCode'] == 404
+
+    error_response = exception.value.response['Error']
+    assert error_response['Type'] == 'Sender'
+    assert error_response['Code'] == 'ResourceNotFound'
+    assert (
+        exception.value.response['ResponseMetadata']['HTTPStatusCode'] == 404
+    )
