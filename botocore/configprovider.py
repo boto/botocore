@@ -192,6 +192,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         None,
         utils.ensure_boolean,
     ),
+    'auth_scheme_preference': (
+        'auth_scheme_preference',
+        'AWS_AUTH_SCHEME_PREFERENCE',
+        None,
+        None,
+    ),
 }
 
 # Evaluate AWS_STS_REGIONAL_ENDPOINTS settings
