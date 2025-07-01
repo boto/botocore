@@ -233,7 +233,7 @@ def test_six_deprecation_warning():
     vendored_msg = "The botocore.vendored.six module is deprecated"
     compat_msg = "The botocore.compat.six module is deprecated"
 
-    # Verify import from compat raises a warning
+    # Verify import from vendored raises a warning
     with pytest.warns(DeprecationWarning, match=vendored_msg):
         import botocore.vendored.six  # noqa: F401
 
