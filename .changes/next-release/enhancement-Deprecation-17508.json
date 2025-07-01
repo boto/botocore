@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Deprecation",
+  "description": "Importing the six module from botocore.compat or botocore.vendored will now raise a deprecation warning. The module will be removed in a future release. Users should add the module as a direct dependency if it's still needed."
+}
