@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import warnings
 
 import pytest
 
@@ -225,3 +226,27 @@ class TestCRTIntegration(unittest.TestCase):
             assert HAS_CRT
         except ImportError:
             assert not HAS_CRT
+
+
+@pytest.mark.filterwarnings("always::DeprecationWarning")
+def test_six_deprecation_warning():
+    vendored_msg = "The botocore.vendored.six module is deprecated"
+    compat_msg = "The botocore.compat.six module is deprecated"
+
+    # Verify import from compat raises a warning
+    with pytest.warns(DeprecationWarning, match=vendored_msg):
+        import botocore.vendored.six  # noqa: F401
+
+    # Verify import from compat raises a warning
+    with pytest.warns(DeprecationWarning, match=compat_msg):
+        from botocore.compat import six  # noqa: F401
+
+    # Verify other imports don't raise a warning
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        from botocore.compat import urlparse  # noqa: F401
+
+    # Verify direct import of the module doesn't raise a warning
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        import botocore.compat  # noqa: F401
