@@ -4,12 +4,6 @@ markers = [
     "validates_models: marks tests as one which validates service models",
 ]
 
-[tool.isort]
-profile = "black"
-line_length = 79
-honor_noqa = true
-src_paths = ["botocore", "tests"]
-
 [tool.ruff]
 exclude = [
     ".bzr",
