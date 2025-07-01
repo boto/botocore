@@ -300,7 +300,7 @@ class ResponseParser:
         # non sensical parsed data.
         # To prevent this case from happening we first need to check
         # whether or not this response looks like the generic response.
-        if response['status_code'] >= 500:
+        if response['status_code'] >= 400:
             if 'body' not in response or response['body'] is None:
                 return True
 
