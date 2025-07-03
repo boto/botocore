@@ -548,8 +548,37 @@ class ClientArgsCreator:
             scoped_config.get("tcp_keepalive", False)
         )
         # Enables TCP Keepalive if specified in client config object or shared config file.
-        if client_keepalive or scoped_keepalive:
-            socket_options.append((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
+        if not client_keepalive and not scoped_keepalive:
+            return socket_options
+
+        seconds_in_a_minute = 60
+
+        client_read_timeout = client_config and client_config.read_timeout
+        scoped_read_timeout = scoped_config.get("read_timeout", None)
+
+        read_timeout = (
+            scoped_read_timeout if scoped_read_timeout else client_read_timeout
+        ) or seconds_in_a_minute
+
+        maximum_keepalive_probes = int(read_timeout / seconds_in_a_minute) or 1
+        keep_idle = (
+            seconds_in_a_minute
+            if read_timeout > seconds_in_a_minute
+            else read_timeout
+        )
+
+        socket_options.extend(
+            [
+                (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keep_idle),
+                (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keep_idle),
+                (
+                    socket.IPPROTO_TCP,
+                    socket.TCP_KEEPCNT,
+                    maximum_keepalive_probes,
+                ),
+            ],
+        )
         return socket_options
 
     def _compute_retry_config(self, config_kwargs):
