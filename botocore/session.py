@@ -43,7 +43,7 @@ from botocore.compat import (
     MutableMapping,
 )
 from botocore.configprovider import (
-    BOTOCORE_DEFAUT_SESSION_VARIABLES,
+    BOTOCORE_DEFAULT_SESSION_VARIABLES,
     ConfigChainFactory,
     ConfiguredEndpointProvider,
     ConfigValueStore,
@@ -90,7 +90,7 @@ class Session:
     :ivar profile: The current profile.
     """
 
-    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAUT_SESSION_VARIABLES)
+    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAULT_SESSION_VARIABLES)
 
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
