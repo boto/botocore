@@ -142,6 +142,7 @@ from botocore.utils import (
 LOG = logging.getLogger(__name__)
 
 DEFAULT_TIMESTAMP_PARSER = parse_timestamp
+KNOWN_LOCATIONS = ("statusCode", "header", "headers")
 
 
 class ResponseParserFactory:
@@ -460,10 +461,14 @@ class BaseXMLResponseParser(ResponseParser):
             member_shape = members[member_name]
             if (
                 'location' in member_shape.serialization
-                or member_shape.serialization.get('eventheader')
-            ):
+                and member_shape.serialization['location']
+                not in ('uri', 'querystring')
+            ) or member_shape.serialization.get('eventheader'):
                 # All members with locations have already been handled,
-                # so we don't need to parse these members.
+                # so we don't need to parse these members except for uri
+                # and querystring, which we will need to parse again for
+                # deserialization even if they were already parsed during
+                # request construction
                 continue
             xml_name = self._member_key_name(member_shape, member_name)
             member_node = xml_dict.get(xml_name)
@@ -1173,7 +1178,7 @@ class BaseRestParser(ResponseParser):
         for name in member_shapes:
             member_shape = member_shapes[name]
             location = member_shape.serialization.get('location')
-            if location is None:
+            if location is None or location not in KNOWN_LOCATIONS:
                 continue
             elif location == 'statusCode':
                 final_parsed[name] = self._parse_shape(
