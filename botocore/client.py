@@ -1065,7 +1065,7 @@ class BaseClient:
             context=request_context,
         )
 
-        if http.status_code >= 300:
+        if http.status_code >= 300 and http.status_code != 409:
             error_info = parsed_response.get("Error", {})
             error_code = error_info.get("QueryErrorCode") or error_info.get(
                 "Code"
