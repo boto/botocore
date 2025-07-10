@@ -293,7 +293,7 @@ class TestLegacyRetry(BaseRetryTest):
             'dynamodb', self.region, config=test_config
         )
         feature_lists = self._get_feature_id_lists_from_retries(client)
-        # Confirm all requests register `'RETRY_MODE_STANDARD': 'D'`
+        # Confirm all requests register `'RETRY_MODE_LEGACY': 'D'`
         assert all('D' in feature_list for feature_list in feature_lists)
 
 
