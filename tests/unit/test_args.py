@@ -247,7 +247,12 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1),
+                ],
             )
 
     def test_tcp_keepalive_not_specified(self):
@@ -272,7 +277,12 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1),
+                ],
             )
             self.call_get_client_args(
                 scoped_config={'tcp_keepalive': 'false'},
@@ -281,7 +291,41 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1),
+                ],
+            )
+            self.call_get_client_args(
+                scoped_config={'tcp_keepalive': 'false'},
+                client_config=Config(tcp_keepalive=True, read_timeout=30),
+            )
+            self.assert_create_endpoint_call(
+                m,
+                socket_options=self.default_socket_options
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 30),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 30),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1),
+                ],
+                timeout=(60, 30),
+            )
+            self.call_get_client_args(
+                scoped_config={'tcp_keepalive': 'false', 'read_timeout': 900},
+                client_config=Config(tcp_keepalive=True),
+            )
+            self.assert_create_endpoint_call(
+                m,
+                socket_options=self.default_socket_options
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 15),
+                ],
             )
 
     def test_tcp_keepalive_explicitly_disabled(self):
@@ -299,7 +343,12 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60),
+                    (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1),
+                ],
             )
 
     def test_client_config_has_use_dualstack_endpoint_flag(self):
