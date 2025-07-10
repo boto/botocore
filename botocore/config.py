@@ -321,6 +321,7 @@ class Config:
             ('response_checksum_validation', None),
             ('account_id_endpoint_mode', None),
             ('auth_scheme_preference', None),
+            ('botocore_client_plugins', None),
         ]
     )
 
