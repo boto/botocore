@@ -1,16 +1,3 @@
-# Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"). You
-# may not use this file except in compliance with the License. A copy of
-# the License is located at
-#
-# http://aws.amazon.com/apache2.0/
-#
-# or in the "license" file accompanying this file. This file is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-# ANY KIND, either express or implied. See the License for the specific
-# language governing permissions and limitations under the License.
-
 import sys
 
 import pytest
@@ -19,7 +6,9 @@ from botocore.session import get_session
 from tests import mock
 
 
-class TestModule:
+class DummyPluginModule:
+    """A mock plugin module for testing client plugin loading."""
+
     def __init__(self):
         self.events_seen = []
 
@@ -30,22 +19,32 @@ class TestModule:
         self.events_seen.append(kwargs)
 
 
+@pytest.fixture
+def dummy_plugin():
+    """Fixture to create and register dummy plugin module in sys.modules."""
+    module = DummyPluginModule()
+    sys.modules['dummy_plugin'] = module
+    yield module
+
+
 class TestPluginConfig:
     @pytest.fixture(autouse=True)
-    def mock_sys_modules(self):
-        self.test_module = TestModule()
-        with mock.patch.dict(sys.modules):
-            sys.modules['test_plugin'] = self.test_module
-            yield
+    def restore_sys_modules(self):
+        """Restore sys.modules after each test for isolation."""
+        old_modules = sys.modules.copy()
+        yield
+        sys.modules.clear()
+        sys.modules.update(old_modules)
 
-    def test_environment_variable(self):
+    def test_environment_variable(self, dummy_plugin):
+        """Tests that plugin is loaded and event registered via env variable."""
         with (
             mock.patch(
                 'os.environ',
                 {
                     'AWS_ACCESS_KEY_ID': 'access_key',
                     "AWS_SECRET_ACCESS_KEY": "secret_key",
-                    "BOTOCORE_EXPERIMENTAL__PLUGINS": "plugin_name=test_plugin",
+                    "BOTOCORE_EXPERIMENTAL__PLUGINS": "plugin_name=dummy_plugin",
                 },
             ),
             mock.patch(
@@ -58,4 +57,58 @@ class TestPluginConfig:
                 status_code=200, headers={}, content=b''
             )
             client.list_tables()
-            assert len(self.test_module.events_seen) == 1
+            assert len(dummy_plugin.events_seen) == 1
+            assert isinstance(dummy_plugin.events_seen[0], dict)
+
+    def test_plugin_not_loaded_without_env(self, dummy_plugin):
+        """Tests that plugin is not loaded if env var is not set."""
+        with (
+            mock.patch(
+                'os.environ',
+                {
+                    'AWS_ACCESS_KEY_ID': 'access_key',
+                    "AWS_SECRET_ACCESS_KEY": "secret_key",
+                    # No BOTOCORE_EXPERIMENTAL__PLUGINS
+                },
+            ),
+            mock.patch(
+                'botocore.httpsession.URLLib3Session.send'
+            ) as mock_send,
+        ):
+            session = get_session()
+            client = session.create_client('dynamodb', region_name='us-east-1')
+            mock_send.return_value = mock.Mock(
+                status_code=200, headers={}, content=b''
+            )
+            client.list_tables()
+            assert dummy_plugin.events_seen == []
+
+    def test_multiple_plugins_and_malformed(self):
+        """Tests that multiple plugins are loaded and a malformed one is skipped."""
+        plugin1 = DummyPluginModule()
+        plugin2 = DummyPluginModule()
+        sys.modules['dummy_plugin1'] = plugin1
+        sys.modules['dummy_module.dummy_plugin2'] = plugin2
+        with (
+            mock.patch(
+                'os.environ',
+                {
+                    'AWS_ACCESS_KEY_ID': 'access_key',
+                    "AWS_SECRET_ACCESS_KEY": "secret_key",
+                    "BOTOCORE_EXPERIMENTAL__PLUGINS": (
+                        "plugin1=dummy_plugin1,plugin2=dummy_module.dummy_plugin2,malformedplugin"
+                    ),
+                },
+            ),
+            mock.patch(
+                'botocore.httpsession.URLLib3Session.send'
+            ) as mock_send,
+        ):
+            session = get_session()
+            client = session.create_client('dynamodb', region_name='us-east-1')
+            mock_send.return_value = mock.Mock(
+                status_code=200, headers={}, content=b''
+            )
+            client.list_tables()
+            assert len(plugin1.events_seen) == 1
+            assert len(plugin2.events_seen) == 1
