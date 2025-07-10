@@ -1189,8 +1189,9 @@ class TestRetryHandlerOrder(BaseSessionTest):
                 names.append(str(handler))
         return names
 
-    def test_s3_special_case_is_before_other_retry(self):
-        client = self.session.create_client('s3')
+    def test_s3_special_case_is_before_other_retry_for_legacy(self):
+        test_config = Config(retries={'mode': 'legacy'})
+        client = self.session.create_client('s3', config=test_config)
         service_model = self.session.get_service_model('s3')
         operation = service_model.operation_model('CopyObject')
         responses = client.meta.events.emit(
@@ -1212,6 +1213,35 @@ class TestRetryHandlerOrder(BaseSessionTest):
         self.assertIn('RetryHandler', names)
         s3_200_handler = names.index('_update_status_code')
         general_retry_handler = names.index('RetryHandler')
+        self.assertTrue(
+            s3_200_handler < general_retry_handler,
+            "S3 200 error handler was supposed to be before "
+            "the general retry handler, but it was not.",
+        )
+
+    def test_s3_special_case_is_before_other_retry(self):
+        client = self.session.create_client('s3')
+        service_model = self.session.get_service_model('s3')
+        operation = service_model.operation_model('CopyObject')
+        responses = client.meta.events.emit(
+            'needs-retry.s3.CopyObject',
+            request_dict={'context': {}},
+            response=(mock.Mock(), mock.Mock()),
+            endpoint=mock.Mock(),
+            operation=operation,
+            attempts=1,
+            caught_exception=None,
+        )
+        # This is implementation specific, but we're trying to verify that
+        # the _update_status_code is before any of the retry logic in
+        # botocore.retryhandlers.
+        # Technically, as long as the relative order is preserved, we don't
+        # care about the absolute order.
+        names = self.get_handler_names(responses)
+        self.assertIn('_update_status_code', names)
+        self.assertIn('needs_retry', names)
+        s3_200_handler = names.index('_update_status_code')
+        general_retry_handler = names.index('needs_retry')
         self.assertTrue(
             s3_200_handler < general_retry_handler,
             "S3 200 error handler was supposed to be before "

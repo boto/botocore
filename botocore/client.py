@@ -312,7 +312,7 @@ class ClientCreator:
             and client_retries.get('mode') is not None
         ):
             return client_retries['mode']
-        return config_store.get_config_variable('retry_mode') or 'legacy'
+        return config_store.get_config_variable('retry_mode') or 'standard'
 
     def _register_endpoint_discovery(self, client, endpoint_url, config):
         if endpoint_url is not None:

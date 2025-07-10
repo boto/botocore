@@ -73,11 +73,11 @@ def session(loader):
     return session
 
 
-def assert_client_uses_legacy_defaults(client):
+def assert_client_uses_defaults(client):
     assert client.meta.config.s3 is None
     assert client.meta.config.connect_timeout == 60
     assert client.meta.endpoint_url == 'https://sts.amazonaws.com'
-    assert client.meta.config.retries['mode'] == 'legacy'
+    assert client.meta.config.retries['mode'] == 'standard'
 
 
 def assert_client_uses_testing_defaults(client):
@@ -105,8 +105,8 @@ class TestConfigurationDefaults:
         # Using the legacy default mode should not change the connect timeout
         # on the client or the session. By default the connect timeout for a client
         # is 60 seconds, and unset on the session.
-        legacy_client = session.create_client('sts', 'us-west-2')
-        assert_client_uses_legacy_defaults(legacy_client)
+        default_client = session.create_client('sts', 'us-west-2')
+        assert_client_uses_defaults(default_client)
 
     def test_defaults_mode_resolved_from_client_config(self, session):
         config = Config(defaults_mode='standard')
@@ -118,6 +118,6 @@ class TestConfigurationDefaults:
             config = Config(defaults_mode='invalid_default_mode')
             session.create_client('sts', 'us-west-2', config=config)
 
-    def test_defaults_mode_resolved_legacy(self, session):
+    def test_defaults_mode_resolved_standard(self, session):
         client = session.create_client('sts', 'us-west-2')
-        assert_client_uses_legacy_defaults(client)
+        assert_client_uses_defaults(client)
