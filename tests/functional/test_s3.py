@@ -22,6 +22,7 @@ from botocore.compat import parse_qs, urlsplit
 from botocore.config import Config
 from botocore.exceptions import (
     ClientError,
+    ConnectionError,
     InvalidS3UsEast1RegionalEndpointConfigError,
     ParamValidationError,
     UnsupportedS3AccesspointConfigurationError,
@@ -2357,6 +2358,32 @@ def test_checksum_content_encoding(content_encoding, expected_header):
         assert request_headers["Content-Encoding"] == expected_header
 
 
+@mock.patch('botocore.endpoint.URLLib3Session.send')
+@mock.patch('botocore.client.apply_request_checksum')
+def test_retries_reuse_request_checksum(
+    mock_apply_request_checksum, mock_urllib3_session_send
+):
+    # Force retry behavior.
+    mock_urllib3_session_send.side_effect = ConnectionError(error='Fake error')
+    op_kwargs = {
+        "Bucket": "mybucket",
+        "Key": "mykey",
+        "Body": b"foo",
+        "ChecksumAlgorithm": "CRC32",
+    }
+    s3 = _create_s3_client(
+        retries={
+            'max_attempts': 1,
+        }
+    )
+    with pytest.raises(ConnectionError):
+        s3.put_object(**op_kwargs)
+    # Ensure sending request was retried.
+    assert mock_urllib3_session_send.call_count == 2
+    # But request checksum was only calculated once.
+    assert mock_apply_request_checksum.call_count == 1
+
+
 def _s3_addressing_test_cases():
     # The default behavior for sigv2. DNS compatible buckets
     yield dict(
@@ -3458,6 +3485,7 @@ def _create_s3_client(
     s3_config=None,
     signature_version="s3v4",
     use_fips_endpoint=None,
+    retries=None,
 ):
     environ = {}
     with mock.patch("os.environ", environ):
@@ -3471,6 +3499,7 @@ def _create_s3_client(
             signature_version=signature_version,
             s3=s3_config,
             use_fips_endpoint=use_fips_endpoint,
+            retries=retries,
         )
         s3 = session.create_client(
             "s3",
