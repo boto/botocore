@@ -214,7 +214,7 @@ class ResponseParser:
     # serialization dict. The location key tells us where in the response
     # to parse the value. Members with locations that aren't in this list
     # will be parsed from the body.
-    KNOWN_LOCATIONS = ('header', 'headers', 'status_code')
+    KNOWN_LOCATIONS = ('header', 'headers', 'statusCode')
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
