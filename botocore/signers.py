@@ -671,53 +671,8 @@ class S3PostPresigner:
         expires_in=3600,
         region_name=None,
     ):
-        """Generates the url and the form fields used for a presigned s3 post
+        """Generates the url and the form fields used for a presigned s3 post"""
 
-        :type request_dict: dict
-        :param request_dict: The prepared request dictionary returned by
-            ``botocore.awsrequest.prepare_request_dict()``
-
-        :type fields: dict
-        :param fields: A dictionary of prefilled form fields to build on top
-            of.
-
-        :type conditions: list
-        :param conditions: A list of conditions to include in the policy. Each
-            element can be either a list or a structure. For example:
-
-            .. code:: python
-
-                [
-                    {"acl": "public-read"},
-                    {"bucket": "amzn-s3-demo-bucket"},
-                    ["starts-with", "$key", "mykey"]
-                ]
-
-        :type expires_in: int
-        :param expires_in: The number of seconds the presigned post is valid
-            for.
-
-        :type region_name: string
-        :param region_name: The region name to sign the presigned post to.
-
-        :rtype: dict
-        :returns: A dictionary with two elements: ``url`` and ``fields``.
-            Url is the url to post to. Fields is a dictionary filled with
-            the form fields and respective values to use when submitting the
-            post. For example:
-
-            .. code:: python
-
-                {
-                    'url': 'https://amzn-s3-demo-bucket.s3.amazonaws.com',
-                    'fields': {
-                        'acl': 'public-read',
-                        'key': 'mykey',
-                        'signature': 'mysignature',
-                        'policy': 'mybase64 encoded policy'
-                    }
-                }
-        """
         if fields is None:
             fields = {}
 
@@ -736,6 +691,18 @@ class S3PostPresigner:
         policy['conditions'] = []
         for condition in conditions:
             policy['conditions'].append(condition)
+
+        # Deduplicate conditions BEFORE signing
+        unique_conditions = []
+        seen_conditions = set()
+
+        for condition in policy['conditions']:
+            condition_str = json.dumps(condition, sort_keys=True)
+            if condition_str not in seen_conditions:
+                unique_conditions.append(condition)
+                seen_conditions.add(condition_str)
+
+        policy['conditions'] = unique_conditions
 
         # Store the policy and the fields in the request for signing
         request = create_request_object(request_dict)
