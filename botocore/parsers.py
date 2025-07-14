@@ -210,6 +210,10 @@ class ResponseParser:
 
     DEFAULT_ENCODING = 'utf-8'
     EVENT_STREAM_PARSER_CLS = None
+    # This is a list of known values for the 'location' key  in the
+    # serialization dict. The location key tells us where in the response
+    # to parse the value. Members with locations that aren't in this list
+    # will be parsed from the body.
     KNOWN_LOCATIONS = ('header', 'headers', 'status_code')
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
