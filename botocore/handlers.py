@@ -237,7 +237,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         return signature_version
 
 
-def _handle_sqs_compatible_error(parsed, http_response, **kwargs):
+def _handle_sqs_compatible_error(parsed, context, **kwargs):
     """
     Ensures backward compatibility for SQS errors.
 
@@ -252,7 +252,7 @@ def _handle_sqs_compatible_error(parsed, http_response, **kwargs):
         return
 
     if query_code := parsed_error.get("QueryErrorCode"):
-        parsed["Error"]["ErrorCodeOverride"] = query_code
+        context['error_code_override'] = query_code
 
 
 def _resolve_sigv4a_region(context):
