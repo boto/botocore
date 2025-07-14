@@ -251,8 +251,8 @@ def _handle_sqs_compatible_error(parsed, http_response, **kwargs):
     if not parsed_error:
         return
 
-    query_code = parsed_error.get("QueryErrorCode")
-    parsed["Error"]["Code"] = query_code
+    if query_code := parsed_error.get("QueryErrorCode"):
+        parsed["Error"]["ErrorCodeOverride"] = query_code
 
 
 def _resolve_sigv4a_region(context):

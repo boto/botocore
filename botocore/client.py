@@ -1067,7 +1067,10 @@ class BaseClient:
 
         if http.status_code >= 300:
             error_info = parsed_response.get("Error", {})
-            error_code = error_info.get("Code")
+            if error_code := error_info.get('ErrorCodeOverride'):
+                del error_info['ErrorCodeOverride']
+            else:
+                error_code = error_info.get("Code")
             error_class = self.exceptions.from_code(error_code)
             raise error_class(parsed_response, operation_name)
         else:
