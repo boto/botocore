@@ -846,6 +846,65 @@ class TestS3PostPresigner(BaseSignerTest):
         with self.assertRaises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_post(request_dict)
 
+    def test_generate_presigned_post_deduplicates_conditions(self):
+        """Test that duplicate conditions are removed from the policy."""
+
+        conditions = [
+            {'bucket': 'mybucket'},
+            ['starts-with', '$key', 'bar'],
+            {'bucket': 'mybucket'},
+            {'acl': 'public-read'},
+            ['starts-with', '$key', 'bar'],
+            {'content-type': 'image/jpeg'},
+            {'bucket': 'mybucket'},
+        ]
+
+        with mock.patch.dict(
+            botocore.auth.AUTH_TYPE_MAPS, {'s3v4-presign-post': self.auth}
+        ):
+            self.signer.generate_presigned_post(
+                self.request_dict, conditions=conditions
+            )
+
+        self.auth.assert_called_with(
+            credentials=self.fixed_credentials,
+            region_name='region_name',
+            service_name='signing_name',
+        )
+        self.assertEqual(self.add_auth.call_count, 1)
+
+        ref_request = self.add_auth.call_args[0][0]
+        ref_policy = ref_request.context['s3-presign-post-policy']
+
+        expected_conditions = [
+            {'bucket': 'mybucket'},
+            ['starts-with', '$key', 'bar'],
+            {'acl': 'public-read'},
+            {'content-type': 'image/jpeg'},
+        ]
+        self.assertEqual(ref_policy['conditions'], expected_conditions)
+        self.assertEqual(len(ref_policy['conditions']), 4)
+
+    def test_generate_presigned_post_all_duplicate_conditions(self):
+        """Test behavior when all conditions are duplicates."""
+        conditions = [
+            {'bucket': 'mybucket'},
+            {'bucket': 'mybucket'},
+            {'bucket': 'mybucket'},
+        ]
+        with mock.patch.dict(
+            botocore.auth.AUTH_TYPE_MAPS, {'s3v4-presign-post': self.auth}
+        ):
+            self.signer.generate_presigned_post(
+                self.request_dict, conditions=conditions
+            )
+        ref_request = self.add_auth.call_args[0][0]
+        ref_policy = ref_request.context['s3-presign-post-policy']
+
+        expected_conditions = [{'bucket': 'mybucket'}]
+        self.assertEqual(ref_policy['conditions'], expected_conditions)
+        self.assertEqual(len(ref_policy['conditions']), 1)
+
 
 class TestGenerateUrl(unittest.TestCase):
     def setUp(self):

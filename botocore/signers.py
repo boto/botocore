@@ -737,7 +737,7 @@ class S3PostPresigner:
         for condition in conditions:
             policy['conditions'].append(condition)
 
-        # Deduplicate conditions BEFORE signing
+        # Deduplicate conditions before signing
         unique_conditions = []
         seen_conditions = set()
 
