@@ -1169,7 +1169,7 @@ class Session:
 
     def _register_client_plugins(self, client, config):
         plugins_list = get_botocore_experimental_plugins()
-        if plugins_list == "DISABLED":
+        if plugins_list == "DISABLED" or not plugins_list:
             return
 
         client_plugins = {}
