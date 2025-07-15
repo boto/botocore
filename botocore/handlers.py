@@ -241,10 +241,10 @@ def _handle_sqs_compatible_error(parsed, context, **kwargs):
     """
     Ensures backward compatibility for SQS errors.
 
-    SQS' migration from the query protocol to JSON was done prior SDKs allowing a
-    service to support multiple models.  Because of this SQS is missing the "error"
+    SQS's migration from the Query protocol to JSON was done prior to SDKs allowing a
+    service to support multiple protocols.  Because of this, SQS is missing the "error"
     key from its modeled exceptions, which is used by most query compatible services
-    to map exceptions to the proper error.  SQS instead uses the error's shape name,
+    to map error codes to the proper exception.  Instead, SQS uses the error's shape name,
     which is preserved in the QueryErrorCode key.
     """
     parsed_error = parsed.get("Error", {})
