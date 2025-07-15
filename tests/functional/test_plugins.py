@@ -2,11 +2,12 @@ import sys
 
 import pytest
 
+from botocore import utils
 from botocore.session import get_session
 from tests import mock
 
 
-class DummyPluginModule:
+class TestPluginModule:
     """A mock plugin module for testing client plugin loading."""
 
     def __init__(self):
@@ -19,24 +20,52 @@ class DummyPluginModule:
         self.events_seen.append(kwargs)
 
 
+class RecursivePluginModule:
+    def initialize_client_plugin(self, client):
+        client.meta.events.register('before-call.s3.*', self.create_client)
+
+    def create_client(self, **kwargs):
+        session = get_session()
+        client = utils.create_nested_client(
+            session, "s3", region_name="us-west-2"
+        )
+        client.list_buckets()
+
+
 @pytest.fixture
-def dummy_plugin():
-    """Fixture to create and register dummy plugin module in sys.modules."""
-    module = DummyPluginModule()
-    sys.modules['dummy_plugin'] = module
+def test_plugin():
+    """Fixture to create and register test plugin module in sys.modules."""
+    module = TestPluginModule()
+    sys.modules['test_plugin'] = module
     yield module
+    sys.modules.pop('test_plugin', None)
+
+
+@pytest.fixture
+def recursive_plugin():
+    """Fixture to create and register recursive plugin module in sys.modules."""
+    module = RecursivePluginModule()
+    sys.modules['recursive_plugin'] = module
+    yield module
+    sys.modules.pop('recursive_plugin', None)
+
+
+@pytest.fixture(autouse=True)
+def restore_sys_modules(request):
+    """
+    Restore sys.modules after each test for isolation.
+
+    This fixture is autouse for this file, so any test that modifies sys.modules
+    will not leak changes to other tests.
+    """
+    old_modules = sys.modules.copy()
+    yield
+    sys.modules.clear()
+    sys.modules.update(old_modules)
 
 
 class TestPluginConfig:
-    @pytest.fixture(autouse=True)
-    def restore_sys_modules(self):
-        """Restore sys.modules after each test for isolation."""
-        old_modules = sys.modules.copy()
-        yield
-        sys.modules.clear()
-        sys.modules.update(old_modules)
-
-    def test_environment_variable(self, dummy_plugin):
+    def test_environment_variable(self, test_plugin):
         """Tests that plugin is loaded and event registered via env variable."""
         with (
             mock.patch(
@@ -44,7 +73,7 @@ class TestPluginConfig:
                 {
                     'AWS_ACCESS_KEY_ID': 'access_key',
                     "AWS_SECRET_ACCESS_KEY": "secret_key",
-                    "BOTOCORE_EXPERIMENTAL__PLUGINS": "plugin_name=dummy_plugin",
+                    "BOTOCORE_EXPERIMENTAL__PLUGINS": "plugin_name=test_plugin",
                 },
             ),
             mock.patch(
@@ -57,10 +86,10 @@ class TestPluginConfig:
                 status_code=200, headers={}, content=b''
             )
             client.list_tables()
-            assert len(dummy_plugin.events_seen) == 1
-            assert isinstance(dummy_plugin.events_seen[0], dict)
+            assert len(test_plugin.events_seen) == 1
+            assert isinstance(test_plugin.events_seen[0], dict)
 
-    def test_plugin_not_loaded_without_env(self, dummy_plugin):
+    def test_plugin_not_loaded_without_env(self, test_plugin):
         """Tests that plugin is not loaded if env var is not set."""
         with (
             mock.patch(
@@ -81,14 +110,46 @@ class TestPluginConfig:
                 status_code=200, headers={}, content=b''
             )
             client.list_tables()
-            assert dummy_plugin.events_seen == []
+            assert test_plugin.events_seen == []
 
     def test_multiple_plugins_and_malformed(self):
         """Tests that multiple plugins are loaded and a malformed one is skipped."""
-        plugin1 = DummyPluginModule()
-        plugin2 = DummyPluginModule()
-        sys.modules['dummy_plugin1'] = plugin1
-        sys.modules['dummy_module.dummy_plugin2'] = plugin2
+        plugin1 = TestPluginModule()
+        plugin2 = TestPluginModule()
+        sys.modules['test_plugin1'] = plugin1
+        sys.modules['test_module.test_plugin2'] = plugin2
+        try:
+            with (
+                mock.patch(
+                    'os.environ',
+                    {
+                        'AWS_ACCESS_KEY_ID': 'access_key',
+                        "AWS_SECRET_ACCESS_KEY": "secret_key",
+                        "BOTOCORE_EXPERIMENTAL__PLUGINS": (
+                            "plugin1=test_plugin1,plugin2=test_module.test_plugin2,malformedplugin"
+                        ),
+                    },
+                ),
+                mock.patch(
+                    'botocore.httpsession.URLLib3Session.send'
+                ) as mock_send,
+            ):
+                session = get_session()
+                client = session.create_client(
+                    'dynamodb', region_name='us-east-1'
+                )
+                mock_send.return_value = mock.Mock(
+                    status_code=200, headers={}, content=b''
+                )
+                client.list_tables()
+                assert len(plugin1.events_seen) == 1
+                assert len(plugin2.events_seen) == 1
+        finally:
+            sys.modules.pop('test_plugin1', None)
+            sys.modules.pop('test_module.test_plugin2', None)
+
+    def test_recursive_plugin_module(self, recursive_plugin):
+        """Tests that a recursive plugin does not leak sys.modules."""
         with (
             mock.patch(
                 'os.environ',
@@ -96,7 +157,7 @@ class TestPluginConfig:
                     'AWS_ACCESS_KEY_ID': 'access_key',
                     "AWS_SECRET_ACCESS_KEY": "secret_key",
                     "BOTOCORE_EXPERIMENTAL__PLUGINS": (
-                        "plugin1=dummy_plugin1,plugin2=dummy_module.dummy_plugin2,malformedplugin"
+                        "recursive=recursive_plugin"
                     ),
                 },
             ),
@@ -105,10 +166,8 @@ class TestPluginConfig:
             ) as mock_send,
         ):
             session = get_session()
-            client = session.create_client('dynamodb', region_name='us-east-1')
+            client = session.create_client('s3', region_name='us-east-1')
             mock_send.return_value = mock.Mock(
                 status_code=200, headers={}, content=b''
             )
-            client.list_tables()
-            assert len(plugin1.events_seen) == 1
-            assert len(plugin2.events_seen) == 1
+            client.list_buckets()

@@ -32,6 +32,7 @@ from botocore.utils import (
     CachedProperty,
     JSONFileCache,
     SSOTokenLoader,
+    create_nested_client,
     get_token_from_environment,
 )
 
@@ -256,7 +257,7 @@ class SSOTokenProvider:
             region_name=self._sso_config["sso_region"],
             signature_version=UNSIGNED,
         )
-        return self._session.create_client("sso-oidc", config=config)
+        return create_nested_client(self._session, "sso-oidc", config=config)
 
     def _attempt_create_token(self, token):
         response = self._client.create_token(

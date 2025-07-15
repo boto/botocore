@@ -74,6 +74,7 @@ from botocore.useragent import UserAgentString
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
+    get_botocore_experimental_plugins,
     validate_region_name,
 )
 
@@ -1167,23 +1168,20 @@ class Session:
         return ', '.join(credential_inputs) if credential_inputs else None
 
     def _register_client_plugins(self, client, config):
-        if config and config.botocore_client_plugins is not None:
-            client_plugins = config.botocore_client_plugins
-        else:
-            client_plugins = {}
-            if plugins_list := os.environ.get(
-                'BOTOCORE_EXPERIMENTAL__PLUGINS', ''
-            ):
-                for plugin in plugins_list.split(','):
-                    try:
-                        name, module = [
-                            part.strip() for part in plugin.split('=')
-                        ]
-                        client_plugins[name] = module
-                    except ValueError:
-                        logger.warning(
-                            f"Invalid plugin format: {plugin}. Expected 'name=module'"
-                        )
+        plugins_list = get_botocore_experimental_plugins()
+        if plugins_list == "DISABLED":
+            return
+
+        client_plugins = {}
+        for plugin in plugins_list.split(','):
+            try:
+                name, module = [part.strip() for part in plugin.split('=')]
+                client_plugins[name] = module
+            except ValueError:
+                logger.warning(
+                    f"Invalid plugin format: {plugin}. Expected 'name=module'"
+                )
+
         if client_plugins:
             load_client_plugins(client, client_plugins)
 
