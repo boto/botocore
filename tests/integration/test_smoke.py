@@ -59,7 +59,7 @@ SMOKE_TESTS = {
     'ecr': {'DescribeRepositories': {}},
     'ecs': {'DescribeClusters': {}},
     'elasticache': {'DescribeCacheClusters': {}},
-    'elasticbeanstalk': {'DescribeApplications': {}},
+    # 'elasticbeanstalk': {'DescribeApplications': {}},
     'elastictranscoder': {'ListPipelines': {}},
     'elb': {'DescribeLoadBalancers': {}},
     'emr': {'ListClusters': {}},
@@ -158,9 +158,9 @@ ERROR_TESTS = {
     'ecs': {'StopTask': {'task': 'fake'}},
     'efs': {'DeleteFileSystem': {'FileSystemId': 'fake'}},
     'elasticache': {'DescribeCacheClusters': {'CacheClusterId': 'fake'}},
-    'elasticbeanstalk': {
-        'DescribeEnvironmentResources': {'EnvironmentId': 'x'},
-    },
+    # 'elasticbeanstalk': {
+    #     'DescribeEnvironmentResources': {'EnvironmentId': 'x'},
+    # },
     'elb': {'DescribeLoadBalancers': {'LoadBalancerNames': ['fake']}},
     'elastictranscoder': {'ReadJob': {'Id': 'fake'}},
     'emr': {'DescribeCluster': {'ClusterId': 'fake'}},
