@@ -36,7 +36,7 @@ TEST_QUERY_COMPAT_SERVICE_MODEL = {
             "http": {"method": "POST", "requestUri": "/QueryCompatOperation"},
             "input": {"shape": "SomeInput"},
             "output": {"shape": "SomeOutput"},
-            "errors": [{"shape": "QueryError"}],
+            "errors": [{"shape": "QueryErrorType"}],
         }
     },
     "shapes": {
@@ -46,7 +46,7 @@ TEST_QUERY_COMPAT_SERVICE_MODEL = {
         "SomeOutput": {
             "type": "structure",
         },
-        "QueryError": {
+        "QueryErrorType": {
             "type": "structure",
             "members": {
                 "message": {
@@ -102,8 +102,8 @@ def test_generic_query_compatibility(
         )
         try:
             client.query_compat_operation()
-            assert False, "Expected a QueueDoesNotExist, but wasn't thrown"
-        except client.exceptions.QueryError as e:
+            assert False, "Expected a QueryError, but wasn't thrown"
+        except client.exceptions.QueryErrorType as e:
             assert e.response['Error']['Code'] == 'QueryErrorCode'
             assert e.response['Error']['QueryErrorCode'] == 'QueryErrorType'
             assert e.response['Error']['Type'] == 'Sender'
@@ -119,16 +119,20 @@ def test_sqs_query_compatibility(
     client = patched_session.create_client('sqs', region_name='us-east-1')
     with ClientHTTPStubber(client, strict=True) as http_stubber:
         http_stubber.add_response(
-            status=200,
-            body=b'{"__type":"com.amazonaws.sqs#QueryError","message":"The specified queue does not exist."}',
+            status=400,
+            body=b'{"__type":"com.amazonaws.sqs#QueueDoesNotExist","message":"The specified queue does not exist."}',
             headers={
                 'x-amzn-query-error': 'AWS.SimpleQueueService.NonExistentQueue;Sender'
             },
         )
         try:
             client.delete_queue(QueueUrl="not-a-real-queue")
+            assert False, "Expected a QueueDoesNotExist, but wasn't thrown"
         except client.exceptions.QueueDoesNotExist as e:
-            assert e.response['Error']['Code'] == 'QueueDoesNotExist'
+            assert (
+                e.response['Error']['Code']
+                == 'AWS.SimpleQueueService.NonExistentQueue'
+            )
             assert e.response['Error']['QueryErrorCode'] == 'QueueDoesNotExist'
             assert e.response['Error']['Type'] == 'Sender'
             assert e.response['ResponseMetadata']['HTTPStatusCode'] == 400
