@@ -237,6 +237,24 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
         return signature_version
 
 
+def _handle_sqs_compatible_error(parsed, context, **kwargs):
+    """
+    Ensures backward compatibility for SQS errors.
+
+    SQS's migration from the Query protocol to JSON was done prior to SDKs allowing a
+    service to support multiple protocols.  Because of this, SQS is missing the "error"
+    key from its modeled exceptions, which is used by most query compatible services
+    to map error codes to the proper exception.  Instead, SQS uses the error's shape name,
+    which is preserved in the QueryErrorCode key.
+    """
+    parsed_error = parsed.get("Error", {})
+    if not parsed_error:
+        return
+
+    if query_code := parsed_error.get("QueryErrorCode"):
+        context['error_code_override'] = query_code
+
+
 def _resolve_sigv4a_region(context):
     region = None
     if 'client_config' in context:
@@ -1444,6 +1462,10 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
+    (
+        'after-call.sqs.*',
+        _handle_sqs_compatible_error,
+    ),
     ('before-parse.s3.*', handle_expires_header),
     ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
     ('before-parameter-build', generate_idempotent_uuid),
