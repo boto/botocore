@@ -68,13 +68,12 @@ from botocore.hooks import (
 from botocore.loaders import create_loader
 from botocore.model import ServiceModel
 from botocore.parsers import ResponseParserFactory
-from botocore.plugin import load_client_plugins
+from botocore.plugin import get_botocore_plugins, load_client_plugins
 from botocore.regions import EndpointResolver
 from botocore.useragent import UserAgentString
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
-    get_botocore_experimental_plugins,
     validate_region_name,
 )
 
@@ -1041,7 +1040,7 @@ class Session:
         monitor = self._get_internal_component('monitor')
         if monitor is not None:
             monitor.register(client.meta.events)
-        self._register_client_plugins(client, config)
+        self._register_client_plugins(client)
         return client
 
     def _resolve_region_name(self, region_name, config):
@@ -1167,7 +1166,7 @@ class Session:
             credential_inputs.append('aws_account_id')
         return ', '.join(credential_inputs) if credential_inputs else None
 
-    def _register_client_plugins(self, client, config):
+    def _register_client_plugins(self, client):
         plugins_list = get_botocore_plugins()
         if plugins_list == "DISABLED" or not plugins_list:
             return

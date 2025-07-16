@@ -14,7 +14,6 @@ import copy
 import datetime
 import io
 import operator
-import os
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -52,7 +51,6 @@ from botocore.model import (
 from botocore.regions import EndpointRulesetResolver
 from botocore.session import Session
 from botocore.utils import (
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT,
     ArgumentGenerator,
     ArnParser,
     CachedProperty,
@@ -73,7 +71,6 @@ from botocore.utils import (
     determine_content_length,
     ensure_boolean,
     fix_s3_host,
-    get_botocore_experimental_plugins,
     get_encoding_from_headers,
     get_service_module_name,
     get_token_from_environment,
@@ -99,7 +96,6 @@ from botocore.utils import (
     set_value_from_jmespath,
     switch_host_s3_accelerate,
     switch_to_virtual_host_style,
-    temp_set_ctx_var,
     validate_jmespath_for_set,
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
@@ -3647,47 +3643,3 @@ def test_get_token_from_environment_returns_none(
 ):
     monkeypatch.delenv(env_var, raising=False)
     assert get_token_from_environment(signing_name) is None
-
-
-def test_temp_set_ctx_var_sets_and_restores():
-    plugin_dict = {"a": "b"}
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.set(plugin_dict)
-    assert get_botocore_experimental_plugins() == plugin_dict
-    with temp_set_ctx_var(BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT, None):
-        assert get_botocore_experimental_plugins() is None
-    assert get_botocore_experimental_plugins() == plugin_dict
-
-
-def test_temp_set_ctx_var_missing_var():
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.set(None)
-    assert get_botocore_experimental_plugins() is None
-    with temp_set_ctx_var(BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT, None):
-        assert get_botocore_experimental_plugins() is None
-    assert get_botocore_experimental_plugins() is None
-
-
-def test_temp_set_ctx_var_restores_on_exception():
-    plugin_dict = {"a": "b"}
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.set(plugin_dict)
-    with pytest.raises(ValueError):
-        with temp_set_ctx_var(BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT, None):
-            assert get_botocore_experimental_plugins() is None
-            raise ValueError("intentional error")
-    assert get_botocore_experimental_plugins() == plugin_dict
-
-
-def test_get_botocore_experimental_plugins_env():
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.set(None)
-    with mock.patch.dict(
-        os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'a=b'}
-    ):
-        assert get_botocore_experimental_plugins() == 'a=b'
-    assert get_botocore_experimental_plugins() is None
-
-
-def test_get_botocore_experimental_plugins_ctx_takes_precedence():
-    BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.set('a=b')
-    with mock.patch.dict(
-        os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'DISABLED'}
-    ):
-        assert get_botocore_experimental_plugins() == 'a=b'

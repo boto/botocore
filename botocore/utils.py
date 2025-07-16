@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import base64
 import binascii
-import contextvars
 import datetime
 import email.message
 import functools
@@ -26,7 +25,6 @@ import socket
 import time
 import warnings
 import weakref
-from contextlib import contextmanager
 from datetime import datetime as _DatetimeClass
 from ipaddress import ip_address
 from pathlib import Path
@@ -64,6 +62,7 @@ from botocore.compat import (
     urlunsplit,
     zip_longest,
 )
+from botocore.context import get_context, start_as_current_context
 from botocore.exceptions import (
     ClientError,
     ConfigNotFound,
@@ -366,36 +365,13 @@ def is_global_accesspoint(context):
     return is_global
 
 
-# All code related to experimental plugins is considered a private interface and
-# subject to abrupt breaking changes or removal without a minor version bump
-BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT = contextvars.ContextVar(
-    'BOTOCORE_EXPERIMENTAL__PLUGINS', default=None
-)
-
-
-def get_botocore_experimental_plugins():
-    val = BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT.get()
-    return (
-        val
-        if val is not None
-        else os.environ.get('BOTOCORE_EXPERIMENTAL__PLUGINS')
-    )
-
-
-@contextmanager
-def temp_set_ctx_var(ctx_var, value):
-    token = ctx_var.set(value)
-    try:
-        yield
-    finally:
-        ctx_var.reset(token)
-
-
 def create_nested_client(session, service_name, **kwargs):
     # If a client is created from within a plugin based on the environment variable,
     # an infinite loop could arise.  Any clients created from within another client
     # must use this method to prevent infinite loops.
-    with temp_set_ctx_var(BOTOCORE_EXPERIMENTAL__PLUGINS_CONTEXT, "DISABLED"):
+    with start_as_current_context():
+        ctx = get_context()
+        ctx.plugins = "DISABLED"
         return session.create_client(service_name, **kwargs)
 
 

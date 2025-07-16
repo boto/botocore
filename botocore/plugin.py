@@ -5,8 +5,20 @@ changes without prior announcement. Please do not use it directly.
 
 import importlib
 import logging
+import os
+
+from botocore.context import get_context
 
 log = logging.getLogger(__name__)
+
+
+def get_botocore_plugins():
+    context = get_context()
+    if context is not None:
+        plugins = context.plugins
+        if plugins is not None:
+            return plugins
+    return os.environ.get('BOTOCORE_EXPERIMENTAL__PLUGINS')
 
 
 def load_client_plugins(client, plugins):

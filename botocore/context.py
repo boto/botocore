@@ -33,6 +33,7 @@ class ClientContext:
     """
 
     features: set[str] = field(default_factory=set)
+    plugins: str | None = None
 
 
 _context = ContextVar("_context")
