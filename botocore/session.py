@@ -1168,7 +1168,7 @@ class Session:
         return ', '.join(credential_inputs) if credential_inputs else None
 
     def _register_client_plugins(self, client, config):
-        plugins_list = get_botocore_experimental_plugins()
+        plugins_list = get_botocore_plugins()
         if plugins_list == "DISABLED" or not plugins_list:
             return
 
