@@ -1,5 +1,5 @@
 """
-NOTE: This interface is considered private and is subject to abrupt breaking
+NOTE: This module is considered private and is subject to abrupt breaking
 changes without prior announcement. Please do not use it directly.
 """
 
