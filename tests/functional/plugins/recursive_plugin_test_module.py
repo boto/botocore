@@ -1,5 +1,6 @@
 from botocore import utils
 from botocore.session import get_session
+from tests import ClientHTTPStubber
 
 
 class RecursivePluginModule:
@@ -19,7 +20,9 @@ class RecursivePluginModule:
         client = utils.create_nested_client(
             session, "dynamodb", region_name="us-west-2"
         )
-        client.list_tables()
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response(status=200, body=b'')
+            client.list_tables()
 
 
 plugin_instance = RecursivePluginModule()

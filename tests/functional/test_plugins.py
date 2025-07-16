@@ -43,7 +43,9 @@ def test_environment_variable():
     with mock.patch.dict(
         os.environ,
         {
-            'BOTOCORE_EXPERIMENTAL__PLUGINS': 'plugin_name=simple_plugin_test_module'
+            'AWS_ACCESS_KEY_ID': 'access_key',
+            "AWS_SECRET_ACCESS_KEY": "secret_key",
+            'BOTOCORE_EXPERIMENTAL__PLUGINS': 'plugin_name=simple_plugin_test_module',
         },
     ):
         session = get_session()
