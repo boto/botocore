@@ -25,32 +25,21 @@ def sys_mock():
         sys.path = _preserved_sys_path
 
 
-def client_test_with_plugins(plugins):
-    ctx = PluginContext(plugins=plugins)
-    token = set_plugin_context(ctx)
-    try:
-        session = get_session()
-        session.set_credentials('key', 'secret')
-        client = session.create_client('dynamodb', region_name='us-east-1')
-        with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.add_response(status=200, body=b'')
-            client.list_tables()
-        return client
-    finally:
-        reset_plugin_context(token)
+def mock_env_for_plugins(plugins_value):
+    return mock.patch.dict(
+        os.environ,
+        {
+            'AWS_ACCESS_KEY_ID': 'access_key',
+            "AWS_SECRET_ACCESS_KEY": "secret_key",
+            'BOTOCORE_EXPERIMENTAL__PLUGINS': plugins_value,
+        },
+    )
 
 
 def test_environment_variable():
     plugin_module = importlib.import_module("simple_plugin_test_module")
     test_plugin = plugin_module.plugin_instance
-    with mock.patch.dict(
-        os.environ,
-        {
-            'AWS_ACCESS_KEY_ID': 'access_key',
-            "AWS_SECRET_ACCESS_KEY": "secret_key",
-            'BOTOCORE_EXPERIMENTAL__PLUGINS': 'plugin_name=simple_plugin_test_module',
-        },
-    ):
+    with mock_env_for_plugins('plugin_name=simple_plugin_test_module'):
         session = get_session()
         client = session.create_client('dynamodb', region_name='us-east-1')
         with ClientHTTPStubber(client) as http_stubber:
@@ -63,14 +52,31 @@ def test_environment_variable():
 def test_recursive_plugin_module():
     plugin_module = importlib.import_module("recursive_plugin_test_module")
     recursive_plugin = plugin_module.plugin_instance
-    client_test_with_plugins(plugins="recursive=recursive_plugin_test_module")
+    with mock_env_for_plugins('recursive=recursive_plugin_test_module'):
+        session = get_session()
+        session.set_credentials('key', 'secret')
+        client = session.create_client('dynamodb', region_name='us-east-1')
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response(status=200, body=b'')
+            client.list_tables()
     assert recursive_plugin.called
 
 
 def test_plugin_not_loaded_when_disabled():
     plugin_mod = importlib.import_module("disabled_test_plugin")
     disabled_plugin = plugin_mod.plugin_instance
-    client_test_with_plugins(plugins="DISABLED")
+    with mock_env_for_plugins('disabled_plugin=disabled_test_plugin'):
+        ctx = PluginContext(plugins="DISABLED")
+        token = set_plugin_context(ctx)
+        try:
+            session = get_session()
+            session.set_credentials('key', 'secret')
+            client = session.create_client('dynamodb', region_name='us-east-1')
+            with ClientHTTPStubber(client) as http_stubber:
+                http_stubber.add_response(status=200, body=b'')
+                client.list_tables()
+        finally:
+            reset_plugin_context(token)
     assert disabled_plugin.invocations == 0
 
 
@@ -79,9 +85,14 @@ def test_multiple_plugins_and_malformed():
     plugin2_mod = importlib.import_module("second_of_two_plugins")
     first_plugin = plugin1_mod.plugin_instance
     second_plugin = plugin2_mod.plugin_instance
-
-    client_test_with_plugins(
-        plugins="plugin1=first_of_two_plugins,plugin2=second_of_two_plugins,malformedplugin"
-    )
+    with mock_env_for_plugins(
+        'plugin1=first_of_two_plugins,plugin2=second_of_two_plugins,malformedplugin'
+    ):
+        session = get_session()
+        session.set_credentials('key', 'secret')
+        client = session.create_client('dynamodb', region_name='us-east-1')
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response(status=200, body=b'')
+            client.list_tables()
     assert first_plugin.invocations == 1
     assert second_plugin.invocations == 1

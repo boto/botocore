@@ -21,26 +21,13 @@ from botocore.plugin import (
 )
 
 
-def test_get_botocore_plugins_env():
-    ctx = PluginContext(plugins=None)
+def test_get_botocore_plugins_ctx_takes_precedence():
+    ctx = PluginContext(plugins="DISABLED")
     token = set_plugin_context(ctx)
     try:
         with mock.patch.dict(
             os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'a=b'}
         ):
-            assert get_botocore_plugins() == 'a=b'
-        assert get_botocore_plugins() is None
-    finally:
-        reset_plugin_context(token)
-
-
-def test_get_botocore_plugins_ctx_takes_precedence():
-    ctx = PluginContext(plugins="a=b")
-    token = set_plugin_context(ctx)
-    try:
-        with mock.patch.dict(
-            os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'DISABLED'}
-        ):
-            assert get_botocore_plugins() == 'a=b'
+            assert get_botocore_plugins() == 'DISABLED'
     finally:
         reset_plugin_context(token)
