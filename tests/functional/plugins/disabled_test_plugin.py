@@ -3,8 +3,10 @@ class DisabledPluginModule:
         self.invocations = 0
 
     def register_event(self, client):
-        # Intentionally does nothing
-        pass
+        client.meta.events.register('before-call', self.increment_invocations)
+
+    def increment_invocations(self, **kwargs):
+        self.invocations += 1
 
 
 plugin_instance = DisabledPluginModule()
