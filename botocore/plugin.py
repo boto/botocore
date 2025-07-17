@@ -42,9 +42,10 @@ def reset_plugin_context(token):
 
 
 def get_botocore_plugins():
-    context = get_plugin_context()
-    if context is not None and context.plugins is not None:
-        return context.plugins
+    if context := get_plugin_context() is not None:
+        if plugins := context.plugins is not None:
+            return plugins
+        context.plugins = os.environ.get('BOTOCORE_EXPERIMENTAL__PLUGINS')
     return os.environ.get('BOTOCORE_EXPERIMENTAL__PLUGINS')
 
 
