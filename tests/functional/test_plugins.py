@@ -7,7 +7,6 @@ import pytest
 
 from botocore.plugin import (
     PluginContext,
-    get_plugin_context,
     reset_plugin_context,
     set_plugin_context,
 )
@@ -30,8 +29,8 @@ def client_test_with_plugins(plugins):
     ctx = PluginContext(plugins=plugins)
     token = set_plugin_context(ctx)
     try:
-        ctx = get_plugin_context()
         session = get_session()
+        session.set_credentials('key', 'secret')
         client = session.create_client('dynamodb', region_name='us-east-1')
         with ClientHTTPStubber(client) as http_stubber:
             http_stubber.add_response(status=200, body=b'')

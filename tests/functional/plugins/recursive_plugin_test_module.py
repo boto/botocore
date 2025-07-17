@@ -17,6 +17,7 @@ class RecursivePluginModule:
     def create_client(self, **kwargs):
         self.called = True
         session = get_session()
+        session.set_credentials('key', 'secret')
         client = utils.create_nested_client(
             session, "dynamodb", region_name="us-west-2"
         )
