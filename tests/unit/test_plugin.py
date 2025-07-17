@@ -13,32 +13,34 @@
 import os
 from unittest import mock
 
-from botocore.context import (
-    ClientContext,
-    get_context,
-    start_as_current_context,
+from botocore.plugin import (
+    PluginContext,
+    get_botocore_plugins,
+    reset_plugin_context,
+    set_plugin_context,
 )
-from botocore.plugin import get_botocore_plugins
 
 
 def test_get_botocore_plugins_env():
-    with start_as_current_context(ClientContext()):
-        ctx = get_context()
-        ctx.plugins = None  # Explicitly unset to test env fallback
+    ctx = PluginContext(plugins=None)
+    token = set_plugin_context(ctx)
+    try:
         with mock.patch.dict(
             os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'a=b'}
         ):
             assert get_botocore_plugins() == 'a=b'
         assert get_botocore_plugins() is None
+    finally:
+        reset_plugin_context(token)
 
 
 def test_get_botocore_plugins_ctx_takes_precedence():
-    with (
-        start_as_current_context(ClientContext()),
-        mock.patch.dict(
+    ctx = PluginContext(plugins="a=b")
+    token = set_plugin_context(ctx)
+    try:
+        with mock.patch.dict(
             os.environ, {'BOTOCORE_EXPERIMENTAL__PLUGINS': 'DISABLED'}
-        ),
-    ):
-        ctx = get_context()
-        ctx.plugins = "a=b"
-        assert get_botocore_plugins() == 'a=b'
+        ):
+            assert get_botocore_plugins() == 'a=b'
+    finally:
+        reset_plugin_context(token)
