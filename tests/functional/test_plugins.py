@@ -5,10 +5,11 @@ from unittest import mock
 
 import pytest
 
-from botocore.context import (
-    ClientContext,
-    get_context,
-    start_as_current_context,
+from botocore.plugin import (
+    PluginContext,
+    get_plugin_context,
+    reset_plugin_context,
+    set_plugin_context,
 )
 from botocore.session import get_session
 from tests import ClientHTTPStubber
@@ -26,15 +27,18 @@ def sys_mock():
 
 
 def client_test_with_plugins(plugins):
-    with start_as_current_context(ClientContext()):
-        ctx = get_context()
-        ctx.plugins = plugins
+    ctx = PluginContext(plugins=plugins)
+    token = set_plugin_context(ctx)
+    try:
+        ctx = get_plugin_context()
         session = get_session()
         client = session.create_client('dynamodb', region_name='us-east-1')
         with ClientHTTPStubber(client) as http_stubber:
             http_stubber.add_response(status=200, body=b'')
             client.list_tables()
         return client
+    finally:
+        reset_plugin_context(token)
 
 
 def test_environment_variable():

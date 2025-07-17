@@ -62,7 +62,6 @@ from botocore.compat import (
     urlunsplit,
     zip_longest,
 )
-from botocore.context import get_context, start_as_current_context
 from botocore.exceptions import (
     ClientError,
     ConfigNotFound,
@@ -87,6 +86,11 @@ from botocore.exceptions import (
     UnsupportedS3ConfigurationError,
     UnsupportedS3ControlArnError,
     UnsupportedS3ControlConfigurationError,
+)
+from botocore.plugin import (
+    PluginContext,
+    reset_plugin_context,
+    set_plugin_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -369,10 +373,12 @@ def create_nested_client(session, service_name, **kwargs):
     # If a client is created from within a plugin based on the environment variable,
     # an infinite loop could arise.  Any clients created from within another client
     # must use this method to prevent infinite loops.
-    with start_as_current_context():
-        ctx = get_context()
-        ctx.plugins = "DISABLED"
+    ctx = PluginContext(plugins="DISABLED")
+    token = set_plugin_context(ctx)
+    try:
         return session.create_client(service_name, **kwargs)
+    finally:
+        reset_plugin_context(token)
 
 
 class _RetriesExceededError(Exception):

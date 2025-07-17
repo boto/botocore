@@ -6,14 +6,43 @@ changes without prior announcement. Please do not use it directly.
 import importlib
 import logging
 import os
-
-from botocore.context import get_context
+from contextvars import ContextVar
+from dataclasses import dataclass
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
 
+@dataclass
+class PluginContext:
+    """
+    Encapsulation of plugins tracked within the `_plugin_context` context variable.
+    """
+
+    plugins: Optional[str] = None
+
+
+_plugin_context = ContextVar("_plugin_context")
+
+
+def get_plugin_context():
+    """Get the current `_plugin_context` context variable if set, else None."""
+    return _plugin_context.get(None)
+
+
+def set_plugin_context(ctx):
+    """Set the current `_plugin_context` context variable."""
+    token = _plugin_context.set(ctx)
+    return token
+
+
+def reset_plugin_context(token):
+    """Reset the current `_plugin_context` context variable."""
+    _plugin_context.reset(token)
+
+
 def get_botocore_plugins():
-    context = get_context()
+    context = get_plugin_context()
     if context is not None:
         plugins = context.plugins
         if plugins is not None:
