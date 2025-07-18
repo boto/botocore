@@ -50,6 +50,7 @@ from botocore.utils import (
     InstanceMetadataFetcher,
     JSONFileCache,
     SSOTokenLoader,
+    create_nested_client,
     parse_key_val_file,
     resolve_imds_endpoint_mode,
 )
@@ -265,7 +266,9 @@ def _get_client_creator(session, region_name):
     def client_creator(service_name, **kwargs):
         create_client_kwargs = {'region_name': region_name}
         create_client_kwargs.update(**kwargs)
-        return session.create_client(service_name, **create_client_kwargs)
+        return create_nested_client(
+            session, service_name, **create_client_kwargs
+        )
 
     return client_creator
 
