@@ -68,6 +68,7 @@ from botocore.hooks import (
 from botocore.loaders import create_loader
 from botocore.model import ServiceModel
 from botocore.parsers import ResponseParserFactory
+from botocore.plugin import get_botocore_plugins, load_client_plugins
 from botocore.regions import EndpointResolver
 from botocore.useragent import UserAgentString
 from botocore.utils import (
@@ -1039,6 +1040,7 @@ class Session:
         monitor = self._get_internal_component('monitor')
         if monitor is not None:
             monitor.register(client.meta.events)
+        self._register_client_plugins(client)
         return client
 
     def _resolve_region_name(self, region_name, config):
@@ -1163,6 +1165,24 @@ class Session:
         if aws_account_id:
             credential_inputs.append('aws_account_id')
         return ', '.join(credential_inputs) if credential_inputs else None
+
+    def _register_client_plugins(self, client):
+        plugins_list = get_botocore_plugins()
+        if plugins_list == "DISABLED" or not plugins_list:
+            return
+
+        client_plugins = {}
+        for plugin in plugins_list.split(','):
+            try:
+                name, module = [part.strip() for part in plugin.split('=')]
+                client_plugins[name] = module
+            except ValueError:
+                logger.warning(
+                    f"Invalid plugin format: {plugin}. Expected 'name=module'"
+                )
+
+        if client_plugins:
+            load_client_plugins(client, client_plugins)
 
 
 class ComponentLocator:

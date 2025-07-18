@@ -87,6 +87,11 @@ from botocore.exceptions import (
     UnsupportedS3ControlArnError,
     UnsupportedS3ControlConfigurationError,
 )
+from botocore.plugin import (
+    PluginContext,
+    reset_plugin_context,
+    set_plugin_context,
+)
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
@@ -362,6 +367,18 @@ def is_global_accesspoint(context):
     s3_accesspoint = context.get('s3_accesspoint', {})
     is_global = s3_accesspoint.get('region') == ''
     return is_global
+
+
+def create_nested_client(session, service_name, **kwargs):
+    # If a client is created from within a plugin based on the environment variable,
+    # an infinite loop could arise.  Any clients created from within another client
+    # must use this method to prevent infinite loops.
+    ctx = PluginContext(plugins="DISABLED")
+    token = set_plugin_context(ctx)
+    try:
+        return session.create_client(service_name, **kwargs)
+    finally:
+        reset_plugin_context(token)
 
 
 class _RetriesExceededError(Exception):
