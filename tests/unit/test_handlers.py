@@ -2117,6 +2117,14 @@ def test_set_auth_scheme_preference_signer(
             "test_token",
             None,
         ),
+        # Case 6: Service has 'bedrock' signing name but does not support bearer auth.
+        (
+            "bedrock",
+            {"signature_version": "v4"},
+            ["aws.auth#sigv4"],
+            "test_token",
+            None,
+        ),
     ],
 )
 def test_set_auth_scheme_preference_signer_with_bearer_token(
