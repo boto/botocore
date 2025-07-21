@@ -134,6 +134,8 @@ class Config:
 
     :type retries: dict
     :param retries: A dictionary for configuration related to retry behavior.
+        You can read more about retries in `boto3's retries page
+        <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html>`__.
         Valid keys are:
 
         * ``total_max_attempts`` -- An integer representing the maximum number of
@@ -149,16 +151,21 @@ class Config:
           example, setting this value to 2 will result in the request
           being retried at most two times after the initial request. Setting
           this value to 0 will result in no retries ever being attempted after
-          the initial request. If not provided, the number of retries will
-          default to the value specified in the service model, which is
-          typically four retries.
+          the initial request. If not provided, it will default to using the
+          number of retries in ```standard``` retry mode.
+
         * ``mode`` -- A string representing the type of retry mode botocore
-          should use.  Valid values are:
+          should use. Valid values are:
 
-          * ``legacy`` - The pre-existing retry behavior.
+          * ``legacy`` - Legacy mode uses an older (v1) retry handler that
+            has limited functionality. The number of retries in this retry
+            mode for some services is specified in the service model. This
+            will default to 4 retries unless specified in the service model.
 
-          * ``standard`` - The standardized set of retry rules. This will also
-            default to 3 max attempts unless overridden.
+          * ``standard`` - Standard mode is a default retry mode that was
+            introduced with the updated retry handler (v2). It contains the
+            standardized set of retry rules. This will default to 3 max
+            attempts unless overridden.
 
           * ``adaptive`` - Retries with additional client side throttling.
 

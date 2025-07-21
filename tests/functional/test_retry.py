@@ -393,20 +393,3 @@ class TestRetriesV2(BaseRetryTest):
         feature_lists = self._get_feature_id_lists_from_retries(client)
         # Confirm all requests register `'RETRY_MODE_ADAPTIVE': 'F'`
         assert all('F' in feature_list for feature_list in feature_lists)
-
-    def test_service_specific_defaults_do_not_mutate_general_defaults(self):
-        # This tests for a bug where if you created a client for a service
-        # with specific retry configurations and then created a client for
-        # a service whose retry configurations fallback to the general
-        # defaults, the second client would actually use the defaults of
-        # the first client.
-
-        client = self.session.create_client('dynamodb', self.region)
-        with self.assert_will_retry_n_times(client, 2):
-            client.list_tables()
-
-        # A codecommit client will at most make 3 requests (2 retries)
-        # for its default.
-        client = self.session.create_client('codecommit', self.region)
-        with self.assert_will_retry_n_times(client, 2):
-            client.list_repositories()
