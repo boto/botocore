@@ -684,6 +684,50 @@
         "description": "The following example creates four geolocation alias resource record sets that route traffic to ELB load balancers. Traffic is routed to one of four IP addresses, for North America (NA), for South America (SA), for Europe (EU), and for all other locations (*).",
         "id": "to-create-geolocation-alias-resource-record-sets-1484612871203",
         "title": "To create geolocation alias resource record sets"
+      },
+      {
+        "input": {
+          "HostedZoneId": "Z3M3LMPEXAMPLE",
+          "ChangeBatch": {
+            "Changes": [
+              {
+                "Action": "DELETE",
+                "ResourceRecordSet": {
+                  "Name": "test.example.com",
+                  "Type": "A",
+                  "TTL": 300,
+                  "ResourceRecords": [
+                    {
+                      "Value": "192.0.2.1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "output": {
+          "ChangeInfo": {
+            "Id": "/change/C2682N5HXP0BZ4",
+            "Status": "PENDING",
+            "SubmittedAt": "2025-05-20T18:16:46.598Z"
+          }
+        },
+        "comments": {
+          "input": {
+            "Action": "DELETE operation requires all original record values",
+            "Name": "The name of the record to delete",
+            "Type": "Record type (A, AAAA, etc)",
+            "TTL": "Must match the original TTL value",
+            "ResourceRecords": "Must match the original record values"
+          },
+          "output": {
+            "SubmittedAt": "The date and time are in Coordinated Universal Time (UTC) and ISO 8601 format."
+          }
+        },
+        "description": "To delete a resource record set, you must specify all the same values that you specified when you created it. This includes the Name, Type, TTL, and ResourceRecords values.",
+        "id": "to-delete-resource-record-set",
+        "title": "To delete a resource record set"
       }
     ],
     "ChangeTagsForResource": [
