@@ -993,7 +993,7 @@ class HmacV1Auth(BaseSigner):
         string_to_sign = self.canonical_string(
             method, split, headers, auth_path=auth_path
         )
-        logger.debug(f'StringToSign:\n{string_to_sign}')
+        logger.debug('StringToSign:\n%s', string_to_sign)
         return self.sign_string(string_to_sign)
 
     def add_auth(self, request):
@@ -1001,7 +1001,7 @@ class HmacV1Auth(BaseSigner):
             raise NoCredentialsError
         logger.debug("Calculating signature using hmacv1 auth.")
         split = urlsplit(request.url)
-        logger.debug(f'HTTP request method: {request.method}')
+        logger.debug("HTTP request method: %s", request.method)
         signature = self.get_signature(
             request.method, split, request.headers, auth_path=request.auth_path
         )
@@ -1158,7 +1158,7 @@ def resolve_auth_scheme_preference(preference_list, auth_options):
     ]
     if unsupported:
         logger.debug(
-            f"Unsupported auth schemes in preference list: {', '.join(unsupported)}"
+            "Unsupported auth schemes in preference list: %r", unsupported
         )
 
     combined = preference_list + service_supported

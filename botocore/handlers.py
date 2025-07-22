@@ -283,7 +283,9 @@ def generate_idempotent_uuid(params, model, **kwargs):
         if name not in params:
             params[name] = str(uuid.uuid4())
             logger.debug(
-                f"injecting idempotency token ({params[name]}) into param '{name}'."
+                "injecting idempotency token (%s) into param '%s'.",
+                params[name],
+                name,
             )
 
 
@@ -1215,8 +1217,9 @@ def handle_expires_header(
                 utils.parse_timestamp(expires_value)
             except (ValueError, RuntimeError):
                 logger.warning(
-                    f'Failed to parse the "Expires" member as a timestamp: {expires_value}. '
-                    f'The unparsed value is available in the response under "ExpiresString".'
+                    'Failed to parse the "Expires" member as a timestamp: %s. '
+                    'The unparsed value is available in the response under "ExpiresString".',
+                    expires_value,
                 )
                 del response_dict['headers']['Expires']
 
@@ -1280,7 +1283,8 @@ def _handle_200_error(operation_model, response_dict, **kwargs):
     ):
         response_dict['status_code'] = 500
         logger.debug(
-            f"Error found for response with 200 status code: {response_dict['body']}."
+            "Error found for response with 200 status code: %s.",
+            response_dict['body'],
         )
 
 
