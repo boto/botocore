@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "retries",
+  "description": "Update the\u00a0default retry strategy to\u00a0standard"
+}
