@@ -17,7 +17,7 @@ import os
 import re
 from logging import NullHandler
 
-__version__ = '1.39.10'
+__version__ = '1.39.11'
 
 
 # Configure default logger to do nothing
