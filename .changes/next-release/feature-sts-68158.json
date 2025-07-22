@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "``sts``",
+  "description": "This release changes the default sts service endpoint to `regional` from `legacy`."
+}
