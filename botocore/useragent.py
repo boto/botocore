@@ -195,10 +195,13 @@ class UserAgentComponent(NamedTuple):
 
         if string == '':
             logger.debug(
-                f"User agent component `{orig}` could not be truncated to "
-                f"`{max_size}` bytes with delimiter "
-                f"`{delimiter}` without losing all contents. "
-                f"Value will be omitted from user agent string."
+                "User agent component `%s` could not be truncated to "
+                "`%s` bytes with delimiter "
+                "`%s` without losing all contents. "
+                "Value will be omitted from user agent string.",
+                orig,
+                max_size,
+                delimiter,
             )
         return string
 

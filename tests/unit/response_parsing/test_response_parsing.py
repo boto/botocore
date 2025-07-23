@@ -93,11 +93,11 @@ def _test_parsed_response(xmlfile, operation_model, expected):
 
     if d1 != d2:
         log.debug('-' * 40)
-        log.debug("XML FILE:\n" + xmlfile)
+        log.debug("XML FILE:\n%s", xmlfile)
         log.debug('-' * 40)
-        log.debug("ACTUAL:\n" + pprint.pformat(parsed))
+        log.debug("ACTUAL:\n%s", pprint.pformat(parsed))
         log.debug('-' * 40)
-        log.debug("EXPECTED:\n" + pprint.pformat(expected))
+        log.debug("EXPECTED:\n%s", pprint.pformat(expected))
     if not d1 == d2:
         # Borrowed from assertDictEqual, though this doesn't
         # handle the case when unicode literals are used in one

@@ -548,8 +548,8 @@ class PageIterator:
         coerce them into the new style.
         """
         log.debug(
-            "Attempting to fall back to old starting token parser. For "
-            f"token: {self._starting_token}"
+            "Attempting to fall back to old starting token parser. For token: %s",
+            self._starting_token,
         )
         if self._starting_token is None:
             return None

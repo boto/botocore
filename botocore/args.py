@@ -839,7 +839,8 @@ class ClientArgsCreator:
         ):
             logger.warning(
                 'The configured value for user_agent_appid exceeds the '
-                f'maximum length of {USERAGENT_APPID_MAXLEN} characters.'
+                'maximum length of %d characters.',
+                USERAGENT_APPID_MAXLEN,
             )
         config_kwargs['user_agent_appid'] = user_agent_appid
 
