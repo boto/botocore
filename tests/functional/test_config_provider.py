@@ -118,6 +118,6 @@ class TestConfigurationDefaults:
             config = Config(defaults_mode='invalid_default_mode')
             session.create_client('sts', 'us-west-2', config=config)
 
-    def test_defaults_mode_resolved_standard(self, session):
+    def test_defaults_mode_resolved_legacy(self, session):
         client = session.create_client('sts', 'us-west-2')
         assert_client_uses_defaults(client)
