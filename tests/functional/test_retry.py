@@ -309,12 +309,21 @@ class TestRetriesV2(BaseRetryTest):
         )
         return client
 
-    def test_standard_mode_has_default_3_retries(self):
+    def test_standard_mode_has_default_10_retries_for_service_specific_case(
+        self,
+    ):
         client = self.create_client_with_retry_mode(
             'dynamodb', retry_mode='standard'
         )
-        with self.assert_will_retry_n_times(client, 2):
+        with self.assert_will_retry_n_times(client, 9):
             client.list_tables()
+
+    def test_standard_mode_has_default_3_retries(self):
+        client = self.create_client_with_retry_mode(
+            's3', retry_mode='standard'
+        )
+        with self.assert_will_retry_n_times(client, 2):
+            client.list_buckets()
 
     def test_standard_mode_can_configure_max_attempts(self):
         client = self.create_client_with_retry_mode(
@@ -331,51 +340,96 @@ class TestRetriesV2(BaseRetryTest):
             http_stubber.add_response(status=200, body=b'{}')
             client.list_tables()
 
-    def test_standard_mode_retry_throttling_error(self):
+    def test_standard_mode_retry_throttling_error_for_service_specific_case(
+        self,
+    ):
         client = self.create_client_with_retry_mode(
             'dynamodb', retry_mode='standard'
         )
         error_body = {"__type": "ThrottlingException", "message": "Error"}
         with self.assert_will_retry_n_times(
-            client, 2, status=400, body=error_body
+            client, 9, status=400, body=error_body
         ):
             client.list_tables()
 
+    def test_standard_mode_retry_throttling_error(self):
+        client = self.create_client_with_retry_mode(
+            's3', retry_mode='standard'
+        )
+        error_body = (
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b'<Error>'
+            b'<Code>SlowDown</Code>'
+            b'<Message>Please reduce your request rate</Message>'
+            b'</Error>'
+        )
+        with self.assert_will_retry_n_times(
+            client, 2, status=400, body=error_body
+        ):
+            client.list_buckets()
+
     def test_standard_mode_retry_transient_error(self):
+        client = self.create_client_with_retry_mode(
+            's3', retry_mode='standard'
+        )
+        with self.assert_will_retry_n_times(client, 2, status=502):
+            client.list_buckets()
+
+    def test_standard_mode_retry_transient_error_for_service_specific_case(
+        self,
+    ):
         client = self.create_client_with_retry_mode(
             'dynamodb', retry_mode='standard'
         )
-        with self.assert_will_retry_n_times(client, 2, status=502):
+        with self.assert_will_retry_n_times(client, 9, status=502):
             client.list_tables()
 
     def test_adaptive_mode_still_retries_errors(self):
         # Verify that adaptive mode is just adding on to standard mode.
         client = self.create_client_with_retry_mode(
-            'dynamodb', retry_mode='adaptive'
+            's3', retry_mode='adaptive'
         )
         with self.assert_will_retry_n_times(client, 2):
+            client.list_buckets()
+
+    def test_adaptive_mode_still_retries_for_service_specific_case(self):
+        # Verify that adaptive mode is just adding on to standard mode
+        # for a service specific case (dynamodb)
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='adaptive'
+        )
+        with self.assert_will_retry_n_times(client, 9):
             client.list_tables()
 
     def test_adaptive_mode_retry_transient_error(self):
         client = self.create_client_with_retry_mode(
-            'dynamodb', retry_mode='adaptive'
+            's3', retry_mode='adaptive'
         )
         with self.assert_will_retry_n_times(client, 2, status=502):
+            client.list_buckets()
+
+    def test_service_specific_case_for_standard_retries_dynamodb(self):
+        # Test that DynamoDB maintains legacy behavior of 10 max retry attempts
+        # when using standard retry mode, instead of the default 3 attempts
+        client = self.create_client_with_retry_mode(
+            'dynamodb', retry_mode='standard'
+        )
+        with self.assert_will_retry_n_times(client, 9):
             client.list_tables()
 
     def test_can_exhaust_default_retry_quota(self):
         # Quota of 500 / 5 retry costs == 100 retry attempts
         # 100 retry attempts / 2 retries per API call == 50 client calls
-        client = self.session.create_client('dynamodb', self.region)
+        client = self.session.create_client('s3', self.region)
         for i in range(50):
             with self.assert_will_retry_n_times(client, 2, status=502):
-                client.list_tables()
+                client.list_buckets()
         # Now on the 51th attempt we should see quota errors, which we can
         # verify by looking at the request metadata.
         with ClientHTTPStubber(client) as http_stubber:
             http_stubber.add_response(status=502, body=b'{}')
             with self.assertRaises(ClientError) as e:
-                client.list_tables()
+                client.list_buckets()
         self.assertTrue(
             e.exception.response['ResponseMetadata'].get('RetryQuotaReached')
         )

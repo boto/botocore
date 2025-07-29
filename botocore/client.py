@@ -255,9 +255,14 @@ class ClientCreator:
 
     def _register_v2_standard_retries(self, client):
         max_attempts = client.meta.config.retries.get('total_max_attempts')
+        service_name = client.meta.service_model.service_name
         kwargs = {'client': client}
         if max_attempts is not None:
             kwargs['max_attempts'] = max_attempts
+        elif service_name in standard.service_retry_defaults:
+            kwargs['max_attempts'] = standard.service_retry_defaults[
+                service_name
+            ]
         standard.register_retry_handler(**kwargs)
 
     def _register_v2_adaptive_retries(self, client):
