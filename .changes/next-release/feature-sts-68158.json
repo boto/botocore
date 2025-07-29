@@ -1,5 +1,5 @@
 {
   "type": "feature",
   "category": "``sts``",
-  "description": "Update the default sts service endpoint to `regional` from `legacy`"
+  "description": "Update the default sts service endpoint to ``regional`` from ``legacy``"
 }
