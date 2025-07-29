@@ -1,5 +1,5 @@
 {
   "type": "feature",
   "category": "retries",
-  "description": "Update the default retry mode from ``legacy`` to ``standard``. See [Boto3 Retries](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html) for more information about retry behavior and how to configure different retry options."
+  "description": "Update the default retry mode from ``legacy`` to ``standard``. See `Boto3 Retries <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html>`__ for more information about retry behavior and how to configure different retry options."
 }
