@@ -1,5 +1,5 @@
 {
   "type": "feature",
   "category": "``sts``",
-  "description": "Update the default sts service endpoint to ``regional`` from ``legacy``"
+  "description": "Update the default sts service endpoint to ``regional`` from ``legacy``. This can be updated using either the ``sts_regional_endpoints`` parameter in shared AWS config file or the ``AWS_STS_REGIONAL_ENDPOINTS`` environment variable."
 }
