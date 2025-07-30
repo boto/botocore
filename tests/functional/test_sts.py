@@ -212,12 +212,20 @@ class TestSTSEndpoints(BaseSessionTest):
             expected_signing_region='us-east-1',
         )
 
-    def test_defaults_to_regional_endpoint_for_default_region(self):
+    def test_defaults_to_regional_endpoint(self):
         sts = self.create_sts_client('us-west-2')
         self.assert_request_sent(
             sts,
             expected_url='https://sts.us-west-2.amazonaws.com/',
             expected_signing_region='us-west-2',
+        )
+
+    def test_defaults_to_regional_endpoint_for_us_east_1(self):
+        sts = self.create_sts_client('us-east-1')
+        self.assert_request_sent(
+            sts,
+            expected_url='https://sts.us-east-1.amazonaws.com/',
+            expected_signing_region='us-east-1',
         )
 
     def test_defaults_to_global_endpoint_for_legacy(self):
