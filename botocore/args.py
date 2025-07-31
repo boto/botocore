@@ -512,7 +512,7 @@ class ClientArgsCreator:
             'sts_regional_endpoints'
         )
         if not sts_regional_endpoints_config:
-            sts_regional_endpoints_config = 'legacy'
+            sts_regional_endpoints_config = 'regional'
         if (
             sts_regional_endpoints_config
             not in VALID_REGIONAL_ENDPOINTS_CONFIG
