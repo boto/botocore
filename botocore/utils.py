@@ -53,6 +53,7 @@ from botocore.compat import (
     UNSAFE_URL_CHARS,
     ZONE_ID_PAT,  # noqa: F401
     OrderedDict,
+    get_current_datetime,
     get_md5,
     get_tzinfo_options,
     json,
@@ -693,9 +694,7 @@ class InstanceMetadataFetcher(IMDSFetcher):
             )
             jitter = random.randint(120, 600)  # Between 2 to 10 minutes
             refresh_interval_with_jitter = refresh_interval + jitter
-            current_time = datetime.datetime.now(
-                datetime.timezone.utc
-            ).replace(tzinfo=None)
+            current_time = get_current_datetime()
             refresh_offset = datetime.timedelta(
                 seconds=refresh_interval_with_jitter
             )
