@@ -27,7 +27,7 @@ from botocore.compat import (
     get_current_datetime,
     parse_qs,
     urlsplit,
-    urlunsplit
+    urlunsplit,
 )
 from botocore.exceptions import NoCredentialsError
 from botocore.useragent import register_feature_id
