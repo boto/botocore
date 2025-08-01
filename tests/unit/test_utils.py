@@ -100,7 +100,9 @@ from botocore.utils import (
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
 
-DATE = datetime.datetime(2021, 12, 10, 00, 00, 00)
+DATE = datetime.datetime(
+    2021, 12, 10, 00, 00, 00, tzinfo=datetime.timezone.utc
+)
 DT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
