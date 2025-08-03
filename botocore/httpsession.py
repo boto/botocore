@@ -94,7 +94,7 @@ def get_cert_path(verify):
         return verify
 
     cert_path = where()
-    logger.debug(f"Certificate path: {cert_path}")
+    logger.debug("Certificate path: %s", cert_path)
 
     return cert_path
 

@@ -824,7 +824,7 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
             account_id = arn_parser.parse_arn(role_arn)['account']
             response['Credentials']['AccountId'] = account_id
         else:
-            logger.debug(f"Unable to extract account ID from Arn: {role_arn}")
+            logger.debug("Unable to extract account ID from Arn: %s", role_arn)
 
 
 class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
