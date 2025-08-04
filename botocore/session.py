@@ -979,8 +979,9 @@ class Session:
                 aws_session_token, aws_account_id
             ):
                 logger.debug(
-                    f"Ignoring the following credential-related values which were set without "
-                    f"an access key id and secret key on the session or client: {ignored_credentials}"
+                    "Ignoring the following credential-related values which were set without "
+                    "an access key id and secret key on the session or client: %s",
+                    ignored_credentials,
                 )
             credentials = self.get_credentials()
         auth_token = self.get_auth_token()
@@ -1178,7 +1179,7 @@ class Session:
                 client_plugins[name] = module
             except ValueError:
                 logger.warning(
-                    f"Invalid plugin format: {plugin}. Expected 'name=module'"
+                    "Invalid plugin format: %s. Expected 'name=module'", plugin
                 )
 
         if client_plugins:
