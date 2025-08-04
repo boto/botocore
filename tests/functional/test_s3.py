@@ -1300,16 +1300,48 @@ class TestAccesspointArn(BaseS3ClientConfigurationTest):
         )
 
 
-class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
-    def test_validates_non_ascii_chars_trigger_validation_error(self):
+class TestUnicodeCharsAllowed(BaseS3OperationTest):
+    def test_validates_non_unicode_chars_trigger_validation_error(self):
         self.http_stubber.add_response()
         with self.http_stubber:
             with self.assertRaises(ParamValidationError):
                 self.client.put_object(
-                    Bucket="foo",
+                    Bucket="test",
                     Key="bar",
-                    Metadata={"goodkey": "good", "non-ascii": "\u2713"},
+                    Metadata={"goodkey": "good", "non-unicode": b"\xff"},
                 )
+
+    def test_validate_non_ascii_unicode_chars_are_accepted_and_encoded(self):
+        op_kwargs = {
+            "Bucket": "mybucket",
+            "Key": "mykey",
+            "Body": b"foo",
+            "Metadata": {"key": "漢字"},
+        }
+        client = _create_s3_client()
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response()
+            client.put_object(**op_kwargs)
+            request_headers = http_stubber.requests[0].headers[
+                "x-amz-meta-key"
+            ]
+            assert request_headers == b'\xe6\xbc\xa2\xe5\xad\x97'
+
+    def test_validates_ascii_chars_are_accepted(self):
+        op_kwargs = {
+            "Bucket": "mybucket",
+            "Key": "mykey",
+            "Body": b"foo",
+            "Metadata": {"key": "metadata_value"},
+        }
+        client = _create_s3_client()
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response()
+            client.put_object(**op_kwargs)
+            request_headers = http_stubber.requests[0].headers[
+                "x-amz-meta-key"
+            ]
+            assert request_headers == b'metadata_value'
 
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
