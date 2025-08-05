@@ -1,3 +1,44 @@
+[project]
+name = "botocore"
+description = "Low-level, data-driven core of boto3."
+readme = "README.md"
+authors = [
+  {name = "Amazon Web Services"},
+]
+requires-python = ">=3.9"
+keywords = ["aws", "sdk", "models"]
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Natural Language :: English",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dynamic = ["version"]
+
+dependencies = [
+    "jmespath>=0.7.1,<2.0.0",
+    "python-dateutil>=2.1,<3.0.0",
+    # Prior to Python 3.10, Python doesn't require openssl 1.1.1
+    # but urllib3 2.0+ does. This means all botocore users will be
+    # broken by default on Amazon Linux 2 and AWS Lambda without this pin.
+    "urllib3>=1.25.4,<1.27 ; python_version < '3.10'",
+    "urllib3>=1.25.4,!=2.2.0,<3 ; python_version >= '3.10'",
+]
+
+[project.optional-dependencies]
+crt = ["awscrt==0.23.8"]
+
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow",
