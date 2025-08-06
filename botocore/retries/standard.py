@@ -37,6 +37,8 @@ from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
 
 DEFAULT_MAX_ATTEMPTS = 3
+# Service-specific overrides for the default max_attempts.
+service_retry_defaults = {"dynamodb": 10}
 logger = logging.getLogger(__name__)
 
 
