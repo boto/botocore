@@ -1311,6 +1311,22 @@ class TestUnicodeCharsAllowed(BaseS3OperationTest):
                     Metadata={"goodkey": "good", "non-unicode": b"\xff"},
                 )
 
+    def test_validate_non_ascii_unicode_chars_are_accepted(self):
+        op_kwargs = {
+            "Bucket": "mybucket",
+            "Key": "mykey",
+            "Body": b"foo",
+            "Metadata": {"key": "漢字"},
+        }
+        client = _create_s3_client()
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response()
+            client.put_object(**op_kwargs)
+            request_headers = http_stubber.requests[0].headers[
+                "x-amz-meta-key"
+            ]
+            assert request_headers == b'\xe6\xbc\xa2\xe5\xad\x97'
+
     def test_metadata_with_ascii_only_value_is_returned_as_is(self):
         s3 = self.session.create_client("s3")
         with ClientHTTPStubber(s3) as http_stubber:
