@@ -216,6 +216,11 @@ class Stubber:
             self._get_response_handler,
             unique_id=self._event_id,
         )
+        self.client.meta.events.unregister(
+            'before-endpoint-resolution.*',
+            self._stub_account_id_event_id,
+            unique_id=self._stub_account_id_event_id,
+        )
 
     def add_response(self, method, service_response, expected_params=None):
         """

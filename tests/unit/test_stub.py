@@ -81,6 +81,9 @@ class TestStubber(unittest.TestCase):
         self.event_emitter.unregister.assert_any_call(
             'before-call.*.*', mock.ANY, unique_id=mock.ANY
         )
+        self.event_emitter.unregister.assert_any_call(
+            'before-endpoint-resolution.*', mock.ANY, unique_id=mock.ANY
+        )
 
     def test_context_manager(self):
         self.event_emitter = mock.Mock()
@@ -103,15 +106,18 @@ class TestStubber(unittest.TestCase):
             )
 
         # Ensure events are no longer registered once we leave the context
-        self.event_emitter.unregister.assert_any_call(
-            'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY
-        )
+
         self.event_emitter.unregister.assert_has_calls(
             [
                 mock.call(
                     'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY
                 ),
                 mock.call('before-call.*.*', mock.ANY, unique_id=mock.ANY),
+                mock.call(
+                    'before-endpoint-resolution.*',
+                    mock.ANY,
+                    unique_id=mock.ANY,
+                ),
             ]
         )
 
