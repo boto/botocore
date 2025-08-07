@@ -106,7 +106,6 @@ class TestStubber(unittest.TestCase):
             )
 
         # Ensure events are no longer registered once we leave the context
-
         self.event_emitter.unregister.assert_has_calls(
             [
                 mock.call(
