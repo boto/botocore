@@ -1311,37 +1311,63 @@ class TestUnicodeCharsAllowed(BaseS3OperationTest):
                     Metadata={"goodkey": "good", "non-unicode": b"\xff"},
                 )
 
-    def test_validate_non_ascii_unicode_chars_are_accepted_and_encoded(self):
-        op_kwargs = {
-            "Bucket": "mybucket",
-            "Key": "mykey",
-            "Body": b"foo",
-            "Metadata": {"key": "漢字"},
-        }
-        client = _create_s3_client()
-        with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.add_response()
-            client.put_object(**op_kwargs)
-            request_headers = http_stubber.requests[0].headers[
-                "x-amz-meta-key"
-            ]
-            assert request_headers == b'\xe6\xbc\xa2\xe5\xad\x97'
+    def test_metadata_with_ascii_only_value_is_returned_as_is(self):
+        s3 = self.session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response(headers={'x-amz-meta-foo': 'bar123'})
+            response = s3.head_object(Bucket='mybucket', Key='mykey')
+            self.assertEqual(response.get('Metadata'), {'foo': 'bar123'})
 
-    def test_validates_ascii_chars_are_accepted(self):
-        op_kwargs = {
-            "Bucket": "mybucket",
-            "Key": "mykey",
-            "Body": b"foo",
-            "Metadata": {"key": "metadata_value"},
-        }
-        client = _create_s3_client()
-        with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.add_response()
-            client.put_object(**op_kwargs)
-            request_headers = http_stubber.requests[0].headers[
-                "x-amz-meta-key"
-            ]
-            assert request_headers == b'metadata_value'
+    def test_metadata_with_one_encoded_value_is_decoded(self):
+        s3 = self.session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response(
+                headers={
+                    'x-amz-meta-foo': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKX?='
+                }
+            )
+            response = s3.head_object(Bucket='mybucket', Key='mykey')
+            self.assertEqual(response.get('Metadata'), {'foo': '云计算'})
+
+    def test_metadata_with_multiple_encoded_values_are_decoded(self):
+        s3 = self.session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response(
+                headers={
+                    'x-amz-meta-foo1': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKX?=',
+                    'x-amz-meta-foo2': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKXw6bCtcKLw6jCr8KV?=',
+                    'x-amz-meta-foo3': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKXw6bCtcKLw6jCr8KVw6XChsKzw6jCtcKb?=',
+                },
+            )
+            response = s3.head_object(Bucket='mybucket', Key='mykey')
+            self.assertEqual(
+                response.get('Metadata'),
+                {
+                    'foo2': '云计算测试',
+                    'foo3': '云计算测试决赛',
+                    'foo1': '云计算',
+                },
+            )
+
+    def test_metadata_with_mixed_values_are_decoded(self):
+        s3 = self.session.create_client("s3")
+        with ClientHTTPStubber(s3) as http_stubber:
+            http_stubber.add_response(
+                headers={
+                    'x-amz-meta-foo1': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKX?=',
+                    'x-amz-meta-foo2': 'test foo two',  # Should be returned as is
+                    'x-amz-meta-foo3': '=?UTF-8?B?w6TCusKRw6jCrsKhw6fCrsKXw6bCtcKLw6jCr8KVw6XChsKzw6jCtcKb?=',
+                },
+            )
+            response = s3.head_object(Bucket='mybucket', Key='mykey')
+            self.assertEqual(
+                response.get('Metadata'),
+                {
+                    'foo2': 'test foo two',
+                    'foo3': '云计算测试决赛',
+                    'foo1': '云计算',
+                },
+            )
 
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):

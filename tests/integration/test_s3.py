@@ -1465,16 +1465,3 @@ class TestBucketWithVersions(BaseS3ClientTest):
         versions = self.client.list_object_versions(Bucket=bucket)
         version_ids = self.extract_version_ids(versions)
         self.assertEqual(len(version_ids), 2)
-
-
-class TestS3Metadata(BaseS3ClientTest):
-    def test_can_use_non_ascii_unicode_value_for_metadata(self):
-        # Ensure we get no errors when we use non-ascii
-        # unicode for metadata key or value.
-        response = self.client.put_object(
-            Bucket=self.bucket_name,
-            Key='foo.txt',
-            Body=b'foobar',
-            Metadata={'foo': '云计算'},
-        )
-        self.assert_status_code(response, 200)
