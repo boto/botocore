@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from unittest import mock
+
 import botocore
 import botocore.client
 import botocore.config
@@ -19,6 +21,7 @@ import botocore.stub as stub
 import botocore.translate
 from botocore.exceptions import (
     ClientError,
+    NoCredentialsError,
     ParamValidationError,
     StubAssertionError,
     StubResponseError,
@@ -401,3 +404,30 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
         response = self.client.get_bucket_location(Bucket='foo')
         self.assertEqual(response, service_response)
+
+    def test_dynamodb_can_stub_without_credentials(self):
+        assume_role_config = {
+            'role_arn': 'arn:aws:iam::123456789012:role/demo',
+            'source_profile': 'default',
+            'external_id': 'fake-external-id',
+        }
+        with mock.patch(
+            "botocore.credentials.RefreshableCredentials.account_id",
+            side_effect=NoCredentialsError(),
+        ):
+            with mock.patch.object(
+                botocore.session.Session,
+                "get_scoped_config",
+                return_value=assume_role_config,
+            ):
+                session = botocore.session.get_session()
+                client = session.create_client(
+                    "dynamodb",
+                    region_name="us-east-1",
+                )
+                stubber = Stubber(client)
+                service_response = {}
+                stubber.add_response("list_tables", service_response)
+                with stubber:
+                    response = client.list_tables()
+                self.assertEqual(response, service_response)
