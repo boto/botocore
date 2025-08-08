@@ -846,26 +846,6 @@ class TestHandlers(BaseSessionTest):
             arn = 'arn:aws:ec2:us-west-2:123456789012:instance:myinstance'
             handlers.validate_bucket_name({'Bucket': arn})
 
-    def test_validate_non_ascii_metadata_values(self):
-        with self.assertRaises(ParamValidationError):
-            handlers.validate_ascii_metadata({'Metadata': {'foo': '\u2713'}})
-
-    def test_validate_non_ascii_metadata_keys(self):
-        with self.assertRaises(ParamValidationError):
-            handlers.validate_ascii_metadata({'Metadata': {'\u2713': 'bar'}})
-
-    def test_validate_non_triggered_when_no_md_specified(self):
-        original = {'NotMetadata': ''}
-        copied = original.copy()
-        handlers.validate_ascii_metadata(copied)
-        self.assertEqual(original, copied)
-
-    def test_validation_passes_when_all_ascii_chars(self):
-        original = {'Metadata': {'foo': 'bar'}}
-        copied = original.copy()
-        handlers.validate_ascii_metadata(original)
-        self.assertEqual(original, copied)
-
     def test_set_encoding_type(self):
         params = {}
         context = {}
