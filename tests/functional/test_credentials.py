@@ -20,6 +20,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 import pytest
 from dateutil.tz import tzlocal
@@ -37,6 +38,7 @@ from botocore.credentials import (
     JSONFileCache,
     ProfileProviderBuilder,
     ReadOnlyCredentials,
+    RefreshableCredentials,
     create_credential_resolver,
 )
 from botocore.exceptions import (
@@ -50,6 +52,7 @@ from botocore.tokens import SSOTokenProvider
 from botocore.utils import datetime2timestamp
 from tests import (
     BaseEnvVar,
+    ClientHTTPStubber,
     IntegerRefresher,
     SessionHTTPStubber,
     StubbedSession,
@@ -57,6 +60,10 @@ from tests import (
     random_chars,
     temporary_file,
     unittest,
+)
+from tests.functional.test_useragent import (
+    get_captured_ua_strings,
+    parse_registered_feature_ids,
 )
 
 TIME_IN_ONE_HOUR = datetime.now(tz=timezone.utc) + timedelta(hours=1)
@@ -1183,3 +1190,89 @@ class TestContextCredentials(unittest.TestCase):
             s3.list_buckets()
             request = stubber.requests[0]
             assert self.ACCESS_KEY in str(request.headers.get('Authorization'))
+
+
+class TestFeatureIdRegistered:
+    @patch(
+        "botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials"
+    )
+    @patch("botocore.credentials.ContainerProvider.load", return_value=None)
+    @patch("botocore.credentials.ConfigProvider.load", return_value=None)
+    @patch(
+        "botocore.credentials.SharedCredentialProvider.load", return_value=None
+    )
+    @patch("botocore.credentials.EnvProvider.load", return_value=None)
+    def test_user_agent_has_imds_credentials_feature_id(
+        self,
+        _unused_mock_env_load,
+        _unused_mock_shared_load,
+        _unused_mock_config_load,
+        _unused_mock_container_load,
+        mock_retrieve_iam_role_credentials,
+        patched_session,
+        monkeypatch,
+    ):
+        fake_creds = {
+            "role_name": "FAKEROLE",
+            "access_key": "FAKEACCESSKEY",
+            "secret_key": "FAKESECRET",
+            "token": "FAKETOKEN",
+            "expiry_time": "2099-01-01T00:00:00Z",
+        }
+        mock_retrieve_iam_role_credentials.return_value = fake_creds
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            http_stubber.add_response()
+            client.list_buckets()
+
+        ua_string = get_captured_ua_strings(http_stubber)[0]
+        feature_list = parse_registered_feature_ids(ua_string)
+        assert '0' in feature_list
+
+    @patch("botocore.credentials.ContainerProvider.load")
+    @patch("botocore.credentials.ConfigProvider.load", return_value=None)
+    @patch(
+        "botocore.credentials.SharedCredentialProvider.load", return_value=None
+    )
+    @patch("botocore.credentials.EnvProvider.load", return_value=None)
+    def test_user_agent_has_http_credentials_feature_id(
+        self,
+        _unused_mock_env_load,
+        _unused_mock_shared_load,
+        _unused_mock_config_load,
+        mock_load_http_credentials,
+        monkeypatch,
+        patched_session,
+    ):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'Basic auth-token',
+        }
+        for var in environ:
+            monkeypatch.setenv(var, environ[var])
+
+        fake_creds = {
+            "access_key": "FAKEACCESSKEY",
+            "secret_key": "FAKESECRET",
+            "token": "FAKETOKEN",
+            "method": "FAKEMETHOD",
+            "expiry_time": datetime(2099, 1, 1, tzinfo=timezone.utc),
+            "refresh_using": "FAKEFETCHER",
+            "account_id": "01234567890",
+        }
+        mock_load_http_credentials.return_value = RefreshableCredentials(
+            **fake_creds
+        )
+
+        client = patched_session.create_client("sts", region_name="us-east-1")
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            http_stubber.add_response()
+            try:
+                client.get_caller_identity()
+            except Exception:
+                pass
+
+        ua_string = get_captured_ua_strings(http_stubber)[0]
+        feature_list = parse_registered_feature_ids(ua_string)
+        assert 'z' in feature_list

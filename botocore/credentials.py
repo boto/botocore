@@ -44,6 +44,7 @@ from botocore.exceptions import (
     UnknownCredentialError,
 )
 from botocore.tokens import SSOTokenProvider
+from botocore.useragent import register_feature_id
 from botocore.utils import (
     ArnParser,
     ContainerMetadataFetcher,
@@ -2170,6 +2171,7 @@ class CredentialResolver:
             logger.debug("Looking for credentials via: %s", provider.METHOD)
             creds = provider.load()
             if creds is not None:
+                self.check_and_register_feature_id(provider.METHOD)
                 return creds
 
         # If we got here, no credentials could be found.
@@ -2179,6 +2181,15 @@ class CredentialResolver:
         # +1
         # -js
         return None
+
+    def check_and_register_feature_id(self, method_name):
+        METHOD_FEATURE_MAP = {
+            "container-role": "CREDENTIALS_HTTP",
+            "iam-role": "CREDENTIALS_IMDS",
+        }
+
+        if method_name in METHOD_FEATURE_MAP:
+            register_feature_id(METHOD_FEATURE_MAP[method_name])
 
 
 class SSOCredentialFetcher(CachedCredentialFetcher):
