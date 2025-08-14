@@ -478,9 +478,9 @@ class TestS3200ErrorResponse(BaseS3OperationTest):
             b"<Message>Please reduce your request rate.</Message>"
             b"</Error>"
         )
-        # Populate 5 attempts for SlowDown to validate
-        # we reached four max retries and raised an exception.
-        for i in range(5):
+        # Populate 3 attempts for SlowDown to validate
+        # we reached two max retries and raised an exception.
+        for i in range(3):
             self.http_stubber.add_response(status=200, body=error_body)
         with self.assertRaises(botocore.exceptions.ClientError) as context:
             self.client.copy_object(
@@ -488,7 +488,7 @@ class TestS3200ErrorResponse(BaseS3OperationTest):
                 CopySource="other-bucket/test.txt",
                 Key="test.txt",
             )
-        self.assertEqual(len(self.http_stubber.requests), 5)
+        self.assertEqual(len(self.http_stubber.requests), 3)
         self.assertEqual(
             context.exception.response["ResponseMetadata"]["HTTPStatusCode"],
             500,
