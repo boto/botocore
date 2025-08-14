@@ -1256,7 +1256,7 @@ class TestFeatureIdRegistered:
             "access_key": "FAKEACCESSKEY",
             "secret_key": "FAKESECRET",
             "token": "FAKETOKEN",
-            "method": "FAKEMETHOD",
+            "method": "container-role",
             "expiry_time": datetime(2099, 1, 1, tzinfo=timezone.utc),
             "refresh_using": "FAKEFETCHER",
             "account_id": "01234567890",
