@@ -357,6 +357,56 @@ def _sse_md5(params, sse_member_prefix='SSECustomer'):
     params[sse_md5_member] = key_md5_str
 
 
+def decode_metadata(parsed, **kwargs):
+    if "Metadata" not in parsed:
+        return
+    object_metadata = parsed['Metadata']
+    metadata_in_a_list = list(object_metadata.items())
+    final_metadata_dict = {}
+    for i in range(len(metadata_in_a_list)):
+        metadata_key, metadata_value = metadata_in_a_list[i]
+        if is_mime_encoded(metadata_value):
+            decoded_value = decode_mime_encoded_metadata_value(metadata_value)
+            final_metadata_dict[metadata_key] = decoded_value
+        else:
+            final_metadata_dict[metadata_key] = metadata_value
+    parsed['Metadata'] = final_metadata_dict
+
+
+def is_mime_encoded(metadata_value):
+    import re
+
+    pattern = r'=\?[-\w]+\?[BQbq]\?[A-Za-z0-9+/=]+\?='
+    return bool(re.match(pattern, metadata_value))
+
+
+def decode_mime_encoded_metadata_value(encoded_value):
+    # Metadata is first utf-8 encoded before being sent in the s3 request.
+    # If there are non-ASCII characters in the metadata, S3 uses RFC 2047
+    # to encode them. Which involves encoding again with utf-8 followed by
+    # base64 encoding. Therefore, when decoding, we must first decode from
+    # base64 then decode twice using utf-8 to retrieve the original value.
+
+    encoded_chunks = encoded_value.split(' ')
+    final_decoded_value = []
+    combined_base64_decoded_value = b""
+    for encoded_chunk in encoded_chunks:
+        charset, encoding, encoded_text = encoded_chunk.strip("=?").split("?")
+        # Added trailing '=' because the length of base64 encoded string
+        # intended for decoding should be a multiple of 4.
+        encoded_text = encoded_text + (4 - (len(encoded_text) % 4)) * '='
+        decoded_text = base64.b64decode(encoded_text)
+        combined_base64_decoded_value += decoded_text
+    if encoding.upper() == "B":
+        first_utf_decode = combined_base64_decoded_value.decode(charset)
+        intermediate_string = first_utf_decode.encode("latin1")
+        second_utf_decode = intermediate_string.decode(charset)
+    else:
+        raise ValueError(f"Unknown encoding: {encoding}")
+    final_decoded_value.append(second_utf_decode)
+    return "".join(final_decoded_value)
+
+
 def _needs_s3_sse_customization(params, sse_member_prefix):
     return (
         params.get(sse_member_prefix + 'Key') is not None
@@ -637,37 +687,6 @@ def document_base64_encoding(param):
     )
     append = AppendParamDocumentation(param, description)
     return append.append_documentation
-
-
-def validate_ascii_metadata(params, **kwargs):
-    """Verify S3 Metadata only contains ascii characters.
-
-    From: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
-
-    "Amazon S3 stores user-defined metadata in lowercase. Each name, value pair
-    must conform to US-ASCII when using REST and UTF-8 when using SOAP or
-    browser-based uploads via POST."
-
-    """
-    metadata = params.get('Metadata')
-    if not metadata or not isinstance(metadata, dict):
-        # We have to at least type check the metadata as a dict type
-        # because this handler is called before param validation.
-        # We'll go ahead and return because the param validator will
-        # give a descriptive error message for us.
-        # We might need a post-param validation event.
-        return
-    for key, value in metadata.items():
-        try:
-            key.encode('ascii')
-            value.encode('ascii')
-        except UnicodeEncodeError:
-            error_msg = (
-                'Non ascii characters found in S3 metadata '
-                f'for key "{key}", value: "{value}".  \nS3 metadata can only '
-                'contain ASCII characters. '
-            )
-            raise ParamValidationError(report=error_msg)
 
 
 def fix_route53_ids(params, model, **kwargs):
@@ -1499,12 +1518,6 @@ BUILTIN_HANDLERS = [
     ),
     ('before-parameter-build.s3.CopyObject', handle_copy_source_param),
     ('before-parameter-build.s3.UploadPartCopy', handle_copy_source_param),
-    ('before-parameter-build.s3.CopyObject', validate_ascii_metadata),
-    ('before-parameter-build.s3.PutObject', validate_ascii_metadata),
-    (
-        'before-parameter-build.s3.CreateMultipartUpload',
-        validate_ascii_metadata,
-    ),
     ('before-parameter-build.s3-control', remove_accid_host_prefix_from_model),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
     ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
@@ -1561,6 +1574,7 @@ BUILTIN_HANDLERS = [
     ('after-call.s3.ListObjects', decode_list_object),
     ('after-call.s3.ListObjectsV2', decode_list_object_v2),
     ('after-call.s3.ListObjectVersions', decode_list_object_versions),
+    ('after-call.s3.HeadObject', decode_metadata),
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search', change_get_to_post),
     # Glacier documentation customizations
