@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.40.13
+=======
+
+* api-change:``cleanrooms``: Support error message configuration for analysis templates
+* api-change:``ec2``: Add support for "warning" volume status.
+* api-change:``polly``: Added support for new output format - Opus.
+
+
 1.40.12
 =======
 
