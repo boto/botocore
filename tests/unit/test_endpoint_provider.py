@@ -542,3 +542,136 @@ def test_aws_is_virtual_hostable_s3_bucket_allow_subdomains(
 def test_get_attr(rule_lib, value, path, expected_value):
     result = rule_lib.get_attr(value, path)
     assert result == expected_value
+
+
+@pytest.fixture()
+def ssl_resolver_true():
+    return EndpointRulesetResolver(
+        endpoint_ruleset_data={
+            'version': '1.0',
+            'parameters': {},
+            'rules': [],
+        },
+        partition_data={},
+        service_model=None,
+        builtins={},
+        client_context=None,
+        event_emitter=None,
+        use_ssl=True,
+        requested_auth_scheme=None,
+    )
+
+
+@pytest.fixture()
+def ssl_resolver_false():
+    return EndpointRulesetResolver(
+        endpoint_ruleset_data={
+            'version': '1.0',
+            'parameters': {},
+            'rules': [],
+        },
+        partition_data={},
+        service_model=None,
+        builtins={},
+        client_context=None,
+        event_emitter=None,
+        use_ssl=False,
+        requested_auth_scheme=None,
+    )
+
+
+def test_use_ssl_endpoint_combinations(ssl_resolver_true, ssl_resolver_false):
+    """Test all combinations of use_ssl and endpoint_url parameters"""
+    from unittest.mock import patch
+
+    from botocore.endpoint_provider import RuleSetEndpoint
+
+    # use_ssl=True, endpoint_url="http://..." → HTTP (use_ssl seems ignored)
+    with patch.object(
+        ssl_resolver_true._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='http://custom.com', properties={}, headers={}
+        )
+        with patch.object(
+            ssl_resolver_true,
+            '_get_provider_params',
+            return_value={'Endpoint': 'http://custom.com'},
+        ):
+            result = ssl_resolver_true.construct_endpoint(None, None, None)
+            assert result.url == 'http://custom.com'
+
+    # use_ssl=True, endpoint_url="https://..." → HTTPS (not doing anything - https is used anyway)
+    with patch.object(
+        ssl_resolver_true._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='https://custom.com', properties={}, headers={}
+        )
+        with patch.object(
+            ssl_resolver_true,
+            '_get_provider_params',
+            return_value={'Endpoint': 'https://custom.com'},
+        ):
+            result = ssl_resolver_true.construct_endpoint(None, None, None)
+            assert result.url == 'https://custom.com'
+
+    # use_ssl=False, endpoint_url="http://..." → HTTP (http is not used anyway)
+    with patch.object(
+        ssl_resolver_false._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='http://custom.com', properties={}, headers={}
+        )
+        with patch.object(
+            ssl_resolver_false,
+            '_get_provider_params',
+            return_value={'Endpoint': 'http://custom.com'},
+        ):
+            result = ssl_resolver_false.construct_endpoint(None, None, None)
+            assert result.url == 'http://custom.com'
+
+    # use_ssl=False, endpoint_url="https://..." → HTTPS (bug fixed)  (before use_ssl was NOT ignored - it causes protocol downgrade)
+    with patch.object(
+        ssl_resolver_false._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='https://custom.com', properties={}, headers={}
+        )
+        with patch.object(
+            ssl_resolver_false,
+            '_get_provider_params',
+            return_value={'Endpoint': 'https://custom.com'},
+        ):
+            result = ssl_resolver_false.construct_endpoint(None, None, None)
+            assert result.url == 'https://custom.com'
+
+    # use_ssl=True, no endpoint → HTTPS
+    with patch.object(
+        ssl_resolver_true._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='https://s3-test-only-domain.amazonaws.com',
+            properties={},
+            headers={},
+        )
+        with patch.object(
+            ssl_resolver_true, '_get_provider_params', return_value={}
+        ):
+            result = ssl_resolver_true.construct_endpoint(None, None, None)
+            assert result.url == 'https://s3-test-only-domain.amazonaws.com'
+
+    # use_ssl=False, no endpoint → HTTP (downgrade applied)
+    with patch.object(
+        ssl_resolver_false._provider, 'resolve_endpoint'
+    ) as mock_resolve:
+        mock_resolve.return_value = RuleSetEndpoint(
+            url='https://s3-test-only-domain.amazonaws.com',
+            properties={},
+            headers={},
+        )
+        with patch.object(
+            ssl_resolver_false, '_get_provider_params', return_value={}
+        ):
+            result = ssl_resolver_false.construct_endpoint(None, None, None)
+            assert result.url == 'http://s3-test-only-domain.amazonaws.com'
