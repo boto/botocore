@@ -38,7 +38,6 @@ from botocore.credentials import (
     JSONFileCache,
     ProfileProviderBuilder,
     ReadOnlyCredentials,
-    RefreshableCredentials,
     create_credential_resolver,
 )
 from botocore.exceptions import (
@@ -1210,7 +1209,6 @@ class TestFeatureIdRegistered:
         _unused_mock_container_load,
         mock_retrieve_iam_role_credentials,
         patched_session,
-        monkeypatch,
     ):
         fake_creds = {
             "role_name": "FAKEROLE",
@@ -1230,7 +1228,7 @@ class TestFeatureIdRegistered:
         feature_list = parse_registered_feature_ids(ua_string)
         assert '0' in feature_list
 
-    @patch("botocore.credentials.ContainerProvider.load")
+    @patch("botocore.credentials.ContainerMetadataFetcher.retrieve_full_uri")
     @patch("botocore.credentials.ConfigProvider.load", return_value=None)
     @patch(
         "botocore.credentials.SharedCredentialProvider.load", return_value=None
@@ -1253,25 +1251,18 @@ class TestFeatureIdRegistered:
             monkeypatch.setenv(var, environ[var])
 
         fake_creds = {
-            "access_key": "FAKEACCESSKEY",
-            "secret_key": "FAKESECRET",
-            "token": "FAKETOKEN",
-            "method": "container-role",
-            "expiry_time": datetime(2099, 1, 1, tzinfo=timezone.utc),
-            "refresh_using": "FAKEFETCHER",
-            "account_id": "01234567890",
+            "AccessKeyId": "FAKEACCESSKEY",
+            "SecretAccessKey": "FAKESECRET",
+            "Token": "FAKETOKEN",
+            "Expiration": "2099-01-01T00:00:00Z",
+            "AccountId": "01234567890",
         }
-        mock_load_http_credentials.return_value = RefreshableCredentials(
-            **fake_creds
-        )
+        mock_load_http_credentials.return_value = fake_creds
 
-        client = patched_session.create_client("sts", region_name="us-east-1")
+        client = patched_session.create_client("s3", region_name="us-east-1")
         with ClientHTTPStubber(client, strict=True) as http_stubber:
             http_stubber.add_response()
-            try:
-                client.get_caller_identity()
-            except Exception:
-                pass
+            client.list_buckets()
 
         ua_string = get_captured_ua_strings(http_stubber)[0]
         feature_list = parse_registered_feature_ids(ua_string)
