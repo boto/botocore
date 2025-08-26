@@ -22,11 +22,11 @@ import logging
 import shlex
 import re
 import os
+import warnings
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from math import floor
 
-from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
 from dateutil.tz import tzlocal
 from urllib3 import exceptions
@@ -363,3 +363,20 @@ try:
     HAS_GZIP = True
 except ImportError:
     HAS_GZIP = False
+
+
+def __getattr__(name):
+    """
+    Module override to raise warnings when deprecated libraries
+    are imported in external code.
+    """
+    if name == "six":
+        warnstr = (
+            "The botocore.compat.six module is deprecated and will be removed "
+            "in a future version. Please use six as a direct dependency."
+        )
+        warnings.warn(warnstr, DeprecationWarning, stacklevel=2)
+        from botocore.vendored import six
+        return six
+
+    raise AttributeError(f"Module {__name__} has no attribute {name}.")
