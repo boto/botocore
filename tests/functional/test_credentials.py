@@ -1221,12 +1221,17 @@ class TestFeatureIdRegistered:
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         with ClientHTTPStubber(client, strict=True) as http_stubber:
+            # We want to call this twice to assert that the feature id exists
+            # for multiple calls with the same credentials
+            http_stubber.add_response()
             http_stubber.add_response()
             client.list_buckets()
+            client.list_buckets()
 
-        ua_string = get_captured_ua_strings(http_stubber)[0]
-        feature_list = parse_registered_feature_ids(ua_string)
-        assert '0' in feature_list
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert '0' in feature_list_one and '0' in feature_list_two
 
     @patch("botocore.credentials.ContainerMetadataFetcher.retrieve_full_uri")
     @patch("botocore.credentials.ConfigProvider.load", return_value=None)
@@ -1261,9 +1266,14 @@ class TestFeatureIdRegistered:
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         with ClientHTTPStubber(client, strict=True) as http_stubber:
+            # We want to call this twice to assert that the feature id exists
+            # for multiple calls with the same credentials
+            http_stubber.add_response()
             http_stubber.add_response()
             client.list_buckets()
+            client.list_buckets()
 
-        ua_string = get_captured_ua_strings(http_stubber)[0]
-        feature_list = parse_registered_feature_ids(ua_string)
-        assert 'z' in feature_list
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert 'z' in feature_list_one and 'z' in feature_list_two
