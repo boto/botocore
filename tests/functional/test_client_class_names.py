@@ -49,7 +49,6 @@ SERVICE_TO_CLASS_NAME = {
     'lambda': 'Lambda',
     'logs': 'CloudWatchLogs',
     'machinelearning': 'MachineLearning',
-    'opsworks': 'OpsWorks',
     'rds': 'RDS',
     'redshift': 'Redshift',
     'route53': 'Route53',

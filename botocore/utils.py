@@ -167,7 +167,6 @@ EVENT_ALIASES = {
     "models.lex": "lex-model-building-service",
     "monitoring": "cloudwatch",
     "mturk-requester": "mturk",
-    "opsworks-cm": "opsworkscm",
     "resourcegroupstaggingapi": "resource-groups-tagging-api",
     "route53": "route-53",
     "route53domains": "route-53-domains",

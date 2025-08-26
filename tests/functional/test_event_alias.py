@@ -242,11 +242,6 @@ SERVICES = {
     "mq": {"endpoint_prefix": "mq", "service_id": "mq"},
     "mturk": {"endpoint_prefix": "mturk-requester", "service_id": "mturk"},
     "neptune": {"service_id": "neptune"},
-    "opsworks": {"endpoint_prefix": "opsworks", "service_id": "opsworks"},
-    "opsworkscm": {
-        "endpoint_prefix": "opsworks-cm",
-        "service_id": "opsworkscm",
-    },
     "organizations": {
         "endpoint_prefix": "organizations",
         "service_id": "organizations",
