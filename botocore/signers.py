@@ -772,6 +772,16 @@ def generate_presigned_url(
 ):
     """Generate a presigned url given a client, its method, and arguments
 
+    .. note::
+
+        Boto3 defaults to Signature Version 4 for S3 requests. However, in some environments, Signature Version 2 may be used and could potentially cause ``SignatureDoesNotMatch`` errors with presigned URLs.
+        As per `S3 API <https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html>`_, AWS Regions created before January 30, 2014 continue to support Signature Version 2, while newer Regions support only Signature Version 4.
+
+        To ensure consistent Signature Version 4 usage and avoid authentication errors, explicitly configure your client using `Configuration <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html>`_:
+        ``Config(signature_version="s3v4")``
+
+        For presigned URLs with expiry greater than 7 days, specify Signature Version 2: ``Config(signature_version="s3")``
+
     :type ClientMethod: string
     :param ClientMethod: The client method to presign for
 
@@ -854,6 +864,16 @@ def generate_presigned_post(
     self, Bucket, Key, Fields=None, Conditions=None, ExpiresIn=3600
 ):
     """Builds the url and the form fields used for a presigned s3 post
+
+    .. note::
+
+        Boto3 defaults to Signature Version 4 for S3 requests. However, in some environments, Signature Version 2 may be used and could potentially cause ``SignatureDoesNotMatch`` errors with presigned URLs.
+        As per `S3 API <https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html>`_, AWS Regions created before January 30, 2014 continue to support Signature Version 2, while newer Regions support only Signature Version 4.
+
+        To ensure consistent Signature Version 4 usage and avoid authentication errors, explicitly configure your client using `Configuration <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html>`_:
+        ``Config(signature_version="s3v4")``
+
+        For presigned URLs with expiry greater than 7 days, specify Signature Version 2: ``Config(signature_version="s3")``
 
     :type Bucket: string
     :param Bucket: The name of the bucket to presign the post to. Note that
