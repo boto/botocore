@@ -26,7 +26,6 @@ from botocore.exceptions import (
     UnsupportedSignatureVersionError,
 )
 from botocore.tokens import FrozenAuthToken
-from botocore.useragent import register_feature_id
 from botocore.utils import (
     ArnParser,
     datetime2timestamp,
@@ -68,11 +67,6 @@ class RequestSigner:
     :type event_emitter: :py:class:`~botocore.hooks.BaseEventHooks`
     :param event_emitter: Extension mechanism to fire events.
     """
-
-    METHOD_FEATURE_MAP = {
-        "container-role": "CREDENTIALS_HTTP",
-        "iam-role": "CREDENTIALS_IMDS",
-    }
 
     def __init__(
         self,
@@ -303,10 +297,6 @@ class RequestSigner:
             return auth
 
         credentials = request_credentials or self._credentials
-        if credentials and (
-            cred_method := getattr(credentials, 'method', None)
-        ):
-            self.check_and_register_feature_id(cred_method)
         if getattr(cls, "REQUIRES_IDENTITY_CACHE", None) is True:
             cache = kwargs["identity_cache"]
             key = kwargs["cache_key"]
@@ -331,10 +321,6 @@ class RequestSigner:
 
     # Alias get_auth for backwards compatibility.
     get_auth = get_auth_instance
-
-    def check_and_register_feature_id(self, method_name):
-        if feature_id := self.METHOD_FEATURE_MAP.get(method_name):
-            register_feature_id(feature_id)
 
     def generate_presigned_url(
         self,
