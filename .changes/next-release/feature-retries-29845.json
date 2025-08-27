@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "retries",
+  "description": "Update the default retry mode from ``legacy`` to ``standard``."
+}
