@@ -294,7 +294,6 @@ KNOWN_REGIONS = {
         'machinelearning': 'machinelearning.us-east-1.amazonaws.com',
         'mobileanalytics': 'mobileanalytics.us-east-1.amazonaws.com',
         'monitoring': 'monitoring.us-east-1.amazonaws.com',
-        'opsworks': 'opsworks.us-east-1.amazonaws.com',
         'rds': 'rds.us-east-1.amazonaws.com',
         'redshift': 'redshift.us-east-1.amazonaws.com',
         'route53': 'route53.amazonaws.com',
