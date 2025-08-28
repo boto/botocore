@@ -50,6 +50,9 @@
       "ap-southeast-5" : {
         "description" : "Asia Pacific (Malaysia)"
       },
+      "ap-southeast-6" : {
+        "description" : "Asia Pacific (New Zealand)"
+      },
       "ap-southeast-7" : {
         "description" : "Asia Pacific (Thailand)"
       },
