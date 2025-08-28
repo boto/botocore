@@ -346,6 +346,8 @@ class Credentials:
         self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
 
     def get_frozen_credentials(self):
+        if self.method == 'explicit':
+            register_feature_id('CREDENTIALS_CODE')
         return ReadOnlyCredentials(
             self.access_key, self.secret_key, self.token, self.account_id
         )
@@ -1219,6 +1221,7 @@ class EnvProvider(CredentialProvider):
             logger.info('Found credentials in environment variables.')
             fetcher = self._create_credentials_fetcher()
             credentials = fetcher(require_expiry=False)
+            register_feature_id('CREDENTIALS_ENV_VARS')
 
             expiry_time = credentials['expiry_time']
             if expiry_time is not None:

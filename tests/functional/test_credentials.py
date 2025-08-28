@@ -1277,3 +1277,59 @@ class TestFeatureIdRegistered:
         feature_list_one = parse_registered_feature_ids(ua_string[0])
         feature_list_two = parse_registered_feature_ids(ua_string[1])
         assert 'z' in feature_list_one and 'z' in feature_list_two
+
+    def test_user_agent_has_feature_id_set_for_credentials_set_via_env_vars(
+        self,
+        monkeypatch,
+        patched_session,
+    ):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
+            'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
+            'AWS_SESSION_TOKEN': 'FAKETOKEN',
+        }
+        for var in environ:
+            monkeypatch.setenv(var, environ[var])
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            # We want to call this twice to assert that the feature id exists
+            # for multiple calls with the same credentials
+            http_stubber.add_response()
+            http_stubber.add_response()
+            client.list_buckets()
+            client.list_buckets()
+
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert 'g' in feature_list_one and 'g' in feature_list_two
+
+    def test_user_agent_has_feature_id_set_for_credentials_set_via_code(
+        self,
+        monkeypatch,
+        patched_session,
+    ):
+        aws_access_key_id = 'FAKEACCESSKEY'
+        aws_secret_access_key = 'FAKESECRET'
+        aws_session_token = 'FAKETOKEN'
+
+        client = patched_session.create_client(
+            "s3",
+            region_name="us-east-1",
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            aws_session_token=aws_session_token,
+        )
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            # We want to call this twice to assert that the feature id exists
+            # for multiple calls with the same credentials
+            http_stubber.add_response()
+            http_stubber.add_response()
+            client.list_buckets()
+            client.list_buckets()
+
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert 'e' in feature_list_one and 'e' in feature_list_two
