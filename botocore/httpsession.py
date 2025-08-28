@@ -4,6 +4,7 @@ import os.path
 import socket
 import sys
 import warnings
+from asyncio import CancelledError
 from base64 import b64encode
 
 from urllib3 import PoolManager, Timeout, proxy_from_url
@@ -503,6 +504,12 @@ class URLLib3Session:
             raise ConnectionClosedError(
                 error=e, request=request, endpoint_url=request.url
             )
+
+        # For uses of concurrentFuture, we raise a cancelledError when we need to stop a future; such as a keyboard interrupt.
+        # Catching this here will prevent these errors from being seen as generic HTTPClientErrors which will get retried
+        except CancelledError:
+            raise
+
         except Exception as e:
             message = 'Exception received when sending urllib3 HTTP request'
             logger.debug(message, exc_info=True)
