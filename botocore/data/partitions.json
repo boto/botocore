@@ -146,7 +146,7 @@
       "dualStackDnsSuffix" : "api.amazonwebservices.eu",
       "implicitGlobalRegion" : "eusc-de-east-1",
       "name" : "aws-eusc",
-      "supportsDualStack" : false,
+      "supportsDualStack" : true,
       "supportsFIPS" : true
     },
     "regionRegex" : "^eusc\\-(de)\\-\\w+\\-\\d+$",
