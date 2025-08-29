@@ -346,8 +346,6 @@ class Credentials:
         self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
 
     def get_frozen_credentials(self):
-        if self.method == 'explicit':
-            register_feature_id('CREDENTIALS_CODE')
         return ReadOnlyCredentials(
             self.access_key, self.secret_key, self.token, self.account_id
         )

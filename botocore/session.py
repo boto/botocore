@@ -70,7 +70,7 @@ from botocore.model import ServiceModel
 from botocore.parsers import ResponseParserFactory
 from botocore.plugin import get_botocore_plugins, load_client_plugins
 from botocore.regions import EndpointResolver
-from botocore.useragent import UserAgentString
+from botocore.useragent import UserAgentString, register_feature_id
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
@@ -516,6 +516,10 @@ class Session:
         credentials.
 
         """
+        # This enables feature id registration at the time credentials are set in a session
+        # and that session is used for client creation.
+        if getattr(self._credentials, 'method', None) == 'explicit':
+            register_feature_id('CREDENTIALS_CODE')
         if self._credentials is None:
             self._credentials = self._components.get_component(
                 'credential_provider'
@@ -967,6 +971,9 @@ class Session:
                 token=aws_session_token,
                 account_id=aws_account_id,
             )
+            # This enables feature id registration at the time credentials are set during client creation.
+            if getattr(credentials, 'method', None) == 'explicit':
+                register_feature_id('CREDENTIALS_CODE')
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
                 provider='explicit',
