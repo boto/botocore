@@ -516,7 +516,7 @@ class Session:
         credentials.
 
         """
-        # This enables feature id registration at the time credentials are set in a session
+        # This enables feature id registration when credentials are set in a session
         # and that session is used for client creation.
         if getattr(self._credentials, 'method', None) == 'explicit':
             register_feature_id('CREDENTIALS_CODE')
@@ -971,7 +971,7 @@ class Session:
                 token=aws_session_token,
                 account_id=aws_account_id,
             )
-            # This enables feature id registration at the time credentials are set during client creation.
+            # This enables feature id registration when credentials are set during client creation.
             if getattr(credentials, 'method', None) == 'explicit':
                 register_feature_id('CREDENTIALS_CODE')
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
