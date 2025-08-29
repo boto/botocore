@@ -5,6 +5,7 @@ import socket
 import sys
 import warnings
 from base64 import b64encode
+from concurrent.futures import CancelledError
 
 from urllib3 import PoolManager, Timeout, proxy_from_url
 from urllib3.exceptions import (
@@ -503,6 +504,8 @@ class URLLib3Session:
             raise ConnectionClosedError(
                 error=e, request=request, endpoint_url=request.url
             )
+        except CancelledError:
+            raise
         except Exception as e:
             message = 'Exception received when sending urllib3 HTTP request'
             logger.debug(message, exc_info=True)
