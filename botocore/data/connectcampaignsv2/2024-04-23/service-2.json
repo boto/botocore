@@ -854,6 +854,7 @@
       "type":"structure",
       "members":{
         "telephony":{"shape":"TelephonyChannelSubtypeConfig"},
+        "sms":{"shape":"SmsChannelSubtypeConfig"},
         "email":{"shape":"EmailChannelSubtypeConfig"}
       },
       "documentation":"<p>Campaign Channel Subtype config</p>"
@@ -867,6 +868,7 @@
       "type":"structure",
       "members":{
         "telephony":{"shape":"TelephonyChannelSubtypeParameters"},
+        "sms":{"shape":"SmsChannelSubtypeParameters"},
         "email":{"shape":"EmailChannelSubtypeParameters"}
       },
       "documentation":"<p>ChannelSubtypeParameters for an outbound request</p>",
@@ -949,6 +951,7 @@
       "members":{
         "localTimeZoneConfig":{"shape":"LocalTimeZoneConfig"},
         "telephony":{"shape":"TimeWindow"},
+        "sms":{"shape":"TimeWindow"},
         "email":{"shape":"TimeWindow"}
       },
       "documentation":"<p>Campaign communication time config</p>"

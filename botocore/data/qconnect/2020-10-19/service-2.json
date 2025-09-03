@@ -7489,6 +7489,10 @@
           "shape":"EmailMessageTemplateContent",
           "documentation":"<p>The content of the message template that applies to the email channel subtype.</p>"
         },
+        "sms":{
+          "shape":"SMSMessageTemplateContent",
+          "documentation":"<p>The content of the message template that applies to the SMS channel subtype.</p>"
+        }
       },
       "documentation":"<p>The container of message template content.</p>",
       "union":true
