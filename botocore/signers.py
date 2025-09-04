@@ -737,6 +737,18 @@ class S3PostPresigner:
         for condition in conditions:
             policy['conditions'].append(condition)
 
+        # Deduplicate conditions before signing
+        unique_conditions = []
+        seen_conditions = set()
+
+        for condition in policy['conditions']:
+            condition_str = json.dumps(condition, sort_keys=True)
+            if condition_str not in seen_conditions:
+                unique_conditions.append(condition)
+                seen_conditions.add(condition_str)
+
+        policy['conditions'] = unique_conditions
+
         # Store the policy and the fields in the request for signing
         request = create_request_object(request_dict)
         request.context['s3-presign-post-fields'] = fields
