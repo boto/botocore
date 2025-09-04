@@ -1454,23 +1454,18 @@ def test_user_agent_has_assume_role_feature_ids(
     is_web_identity_test = 'web_identity' in test_case
 
     # Set up web identity file if needed
-    token_file = None
     if is_web_identity_test:
         token_file = tmp_path / 'token.jwt'
         token_file.write_text('fake-jwt-token')
-
-    # Set up env vars
-    for var, value in env_vars.items():
-        if var == 'AWS_WEB_IDENTITY_TOKEN_FILE' and token_file:
-            value = str(token_file)
-        monkeypatch.setenv(var, value)
-
-    # Set up config file
-    if config_content:
-        if 'web_identity_token_file' in config_content and token_file:
+        if 'AWS_WEB_IDENTITY_TOKEN_FILE' in env_vars:
+            env_vars['AWS_WEB_IDENTITY_TOKEN_FILE'] = str(token_file)
+        elif config_content and 'web_identity_token_file' in config_content:
             config_content = config_content.replace(
                 '{token_file}', str(token_file)
             )
+
+    # Set up config file if needed
+    if config_content:
         config_file = tmp_path / 'config'
         config_file.write_text(config_content)
         session = Session(profile='assume-role-test')
@@ -1478,15 +1473,17 @@ def test_user_agent_has_assume_role_feature_ids(
     else:
         session = Session()
 
-    with SessionHTTPStubber(session) as stubber:
-        _add_assume_role_http_response(
-            stubber, with_web_identity=is_web_identity_test
-        )
-        s3 = session.create_client('s3', region_name='us-east-1')
-        stubber.add_response()
-        stubber.add_response()
-        s3.list_buckets()
-        s3.list_buckets()
+    # Set env vars if needed
+    with patch.dict(os.environ, env_vars, clear=True):
+        with SessionHTTPStubber(session) as stubber:
+            s3 = session.create_client('s3', region_name='us-east-1')
+            _add_assume_role_http_response(
+                stubber, with_web_identity=is_web_identity_test
+            )
+            stubber.add_response()
+            stubber.add_response()
+            s3.list_buckets()
+            s3.list_buckets()
 
     ua_strings = get_captured_ua_strings(stubber)
     _assert_deferred_credential_feature_ids(
