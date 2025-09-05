@@ -150,7 +150,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'regional',
         None,
     ),
-    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'legacy', None),
+    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'standard', None),
     'defaults_mode': ('defaults_mode', 'AWS_DEFAULTS_MODE', 'legacy', None),
     # We can't have a default here for v1 because we need to defer to
     # whatever the defaults are in _retry.json.
