@@ -297,7 +297,6 @@ SERVICES = {
     },
     "ses": {"endpoint_prefix": "email", "service_id": "ses"},
     "shield": {"endpoint_prefix": "shield", "service_id": "shield"},
-    "sms": {"endpoint_prefix": "sms", "service_id": "sms"},
     "snowball": {"endpoint_prefix": "snowball", "service_id": "snowball"},
     "sns": {"endpoint_prefix": "sns", "service_id": "sns"},
     "sqs": {"endpoint_prefix": "sqs", "service_id": "sqs"},
