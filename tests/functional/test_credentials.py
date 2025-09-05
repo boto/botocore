@@ -1277,3 +1277,214 @@ class TestFeatureIdRegistered:
         feature_list_one = parse_registered_feature_ids(ua_string[0])
         feature_list_two = parse_registered_feature_ids(ua_string[1])
         assert 'z' in feature_list_one and 'z' in feature_list_two
+
+    @patch("botocore.credentials.EnvProvider.load", return_value=None)
+    def test_user_agent_has_shared_credentials_file_feature_id(
+        self,
+        _unused_mock_env_load,
+        monkeypatch,
+        tmp_path,
+    ):
+        credentials_file = tmp_path / "credentials"
+        credentials_file.write_text(
+            '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET'
+        )
+        monkeypatch.setenv(
+            "AWS_SHARED_CREDENTIALS_FILE", str(credentials_file)
+        )
+
+        session = Session()
+        client = session.create_client("s3", region_name="us-east-1")
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            http_stubber.add_response()
+            http_stubber.add_response()
+            client.list_buckets()
+            client.list_buckets()
+
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert 'n' in feature_list_one and 'n' in feature_list_two
+
+    @patch("botocore.credentials.EnvProvider.load", return_value=None)
+    def test_user_agent_has_config_file_feature_id(
+        self,
+        _unused_mock_env_load,
+        monkeypatch,
+        tmp_path,
+    ):
+        config_file = tmp_path / "config"
+        config_file.write_text(
+            '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET'
+        )
+        monkeypatch.setenv("AWS_CONFIG_FILE", str(config_file))
+
+        session = Session()
+        client = session.create_client("s3", region_name="us-east-1")
+        with ClientHTTPStubber(client, strict=True) as http_stubber:
+            http_stubber.add_response()
+            http_stubber.add_response()
+            client.list_buckets()
+            client.list_buckets()
+
+        ua_string = get_captured_ua_strings(http_stubber)
+        feature_list_one = parse_registered_feature_ids(ua_string[0])
+        feature_list_two = parse_registered_feature_ids(ua_string[1])
+        assert 'n' in feature_list_one and 'n' in feature_list_two
+
+
+@pytest.mark.parametrize(
+    "test_case,config_content,env_vars,expected_source_features,expected_provider_feature",
+    [
+        # Test Case 1: Assume Role with source profile
+        (
+            "assume_role_with_source_profile",
+            '''[profile assume-role-test]
+role_arn = arn:aws:iam::123456789012:role/test-role
+source_profile = base
+
+[profile base]
+aws_access_key_id = FAKEACCESSKEY
+aws_secret_access_key = FAKESECRET''',
+            {},
+            [
+                'o',
+                'n',
+            ],  # CREDENTIALS_PROFILE_SOURCE_PROFILE and CREDENTIALS_PROFILE
+            'i',  # CREDENTIALS_STS_ASSUME_ROLE
+        ),
+        # Test Case 2: Assume Role with named provider
+        (
+            "assume_role_with_named_provider",
+            '''[profile assume-role-test]
+role_arn = arn:aws:iam::123456789012:role/test-role
+credential_source = Environment''',
+            {
+                'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
+                'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
+            },
+            ['p'],  # CREDENTIALS_PROFILE_NAMED_PROVIDER
+            'i',  # CREDENTIALS_STS_ASSUME_ROLE
+        ),
+        # Test Case 3: Assume Role with Web Identity through config profile
+        (
+            "assume_role_with_web_identity_profile",
+            '''[profile assume-role-test]
+role_arn = arn:aws:iam::123456789012:role/test-role
+web_identity_token_file = {token_file}''',
+            {},
+            ['q'],  # CREDENTIALS_PROFILE_STS_WEB_ID_TOKEN
+            'k',  # CREDENTIALS_STS_ASSUME_ROLE_WEB_ID
+        ),
+        # Test Case 4: Assume Role with Web Identity through env vars
+        (
+            "assume_role_with_web_identity_env_vars",
+            '',
+            {
+                'AWS_ROLE_ARN': 'arn:aws:iam::123456789012:role/test-role',
+                'AWS_WEB_IDENTITY_TOKEN_FILE': '{token_file}',
+                'AWS_ROLE_SESSION_NAME': 'test-session',
+            },
+            ['h'],  # CREDENTIALS_ENV_VARS_STS_WEB_ID_TOKEN
+            'k',  # CREDENTIALS_STS_ASSUME_ROLE_WEB_ID
+        ),
+    ],
+)
+def test_user_agent_has_assume_role_feature_ids(
+    test_case,
+    config_content,
+    env_vars,
+    expected_source_features,
+    expected_provider_feature,
+    monkeypatch,
+    tmp_path,
+):
+    is_web_identity_test = 'web_identity' in test_case
+
+    # Set up web identity file if needed
+    if is_web_identity_test:
+        token_file = tmp_path / 'token.jwt'
+        token_file.write_text('fake-jwt-token')
+        if 'AWS_WEB_IDENTITY_TOKEN_FILE' in env_vars:
+            env_vars['AWS_WEB_IDENTITY_TOKEN_FILE'] = str(token_file)
+        elif config_content and 'web_identity_token_file' in config_content:
+            config_content = config_content.replace(
+                '{token_file}', str(token_file)
+            )
+
+    # Set up config file if needed
+    if config_content:
+        config_file = tmp_path / 'config'
+        config_file.write_text(config_content)
+        session = Session(profile='assume-role-test')
+        session.set_config_variable('config_file', str(config_file))
+    else:
+        session = Session()
+
+    # Set env vars if needed
+    with patch.dict(os.environ, env_vars, clear=True):
+        with SessionHTTPStubber(session) as stubber:
+            s3 = session.create_client('s3', region_name='us-east-1')
+            _add_assume_role_http_response(
+                stubber, with_web_identity=is_web_identity_test
+            )
+            stubber.add_response()
+            stubber.add_response()
+            s3.list_buckets()
+            s3.list_buckets()
+
+    ua_strings = get_captured_ua_strings(stubber)
+    _assert_deferred_credential_feature_ids(
+        ua_strings, expected_source_features, expected_provider_feature
+    )
+
+
+def _add_assume_role_http_response(stubber, with_web_identity):
+    """Add HTTP response for AssumeRole or AssumeRoleWithWebIdentity call with proper credentials"""
+    expiration = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime(
+        '%Y-%m-%dT%H:%M:%SZ'
+    )
+    method_name = (
+        'AssumeRoleWithWebIdentity' if with_web_identity else 'AssumeRole'
+    )
+    body = (
+        f'<{method_name}Response>'
+        f'  <{method_name}Result>'
+        '    <AssumedRoleUser>'
+        '      <Arn>arn:aws:sts::123456789012:user</Arn>'
+        '      <AssumedRoleId>AKID:test-session-123</AssumedRoleId>'
+        '    </AssumedRoleUser>'
+        '    <Credentials>'
+        f'      <AccessKeyId>FAKEASSUMEROLEKEY</AccessKeyId>'
+        f'      <SecretAccessKey>FAKEASSUMEROLSECRET</SecretAccessKey>'
+        '      <SessionToken>FAKETOKEN</SessionToken>'
+        f'      <Expiration>{expiration}</Expiration>'
+        '    </Credentials>'
+        f'  </{method_name}Result>'
+        f'</{method_name}Response>'
+    )
+    stubber.add_response(body=body.encode('utf-8'))
+
+
+def _assert_deferred_credential_feature_ids(
+    ua_strings,
+    expected_source_features,
+    expected_provider_feature,
+):
+    """Helper to assert feature IDs for deferred credential provider tests"""
+    assert len(ua_strings) == 3
+
+    # Request to fetch credentials should only register feature ids for the credential source
+    credential_source_feature_list = parse_registered_feature_ids(
+        ua_strings[0]
+    )
+    for feature in expected_source_features:
+        assert feature in credential_source_feature_list
+    assert expected_provider_feature not in credential_source_feature_list
+
+    # Original operation request should register feature ids for both the credential source and the provider
+    for i in [1, 2]:
+        operation_feature_list = parse_registered_feature_ids(ua_strings[i])
+        for feature in expected_source_features:
+            assert feature in operation_feature_list
+        assert expected_provider_feature in operation_feature_list
