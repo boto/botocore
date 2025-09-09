@@ -969,7 +969,6 @@ class Session:
                 token=aws_session_token,
                 account_id=aws_account_id,
             )
-            # This enables feature id registration when credentials are set during client creation.
         elif self._missing_cred_vars(aws_access_key_id, aws_secret_access_key):
             raise PartialCredentialsError(
                 provider='explicit',
@@ -987,7 +986,8 @@ class Session:
                     ignored_credentials,
                 )
             credentials = self.get_credentials()
-        register_feature_id('CREDENTIALS_CODE')
+        if getattr(credentials, 'method', None) == 'explicit':
+            register_feature_id('CREDENTIALS_CODE')
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
