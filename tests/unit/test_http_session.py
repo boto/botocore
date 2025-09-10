@@ -1,4 +1,5 @@
 import socket
+from concurrent.futures import CancelledError
 
 import pytest
 from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
@@ -461,6 +462,12 @@ class TestURLLib3Session(unittest.TestCase):
         error = ProtocolError(None)
         with pytest.raises(ConnectionClosedError):
             self.make_request_with_error(error)
+
+    def test_catches_cancelled_error(self):
+        self.connection.urlopen.side_effect = CancelledError()
+        session = URLLib3Session()
+        with pytest.raises(CancelledError):
+            session.send(self.request.prepare())
 
     def test_catches_proxy_error(self):
         self.connection.urlopen.side_effect = ProxyError('test', None)
