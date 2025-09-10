@@ -70,7 +70,7 @@ from botocore.model import ServiceModel
 from botocore.parsers import ResponseParserFactory
 from botocore.plugin import get_botocore_plugins, load_client_plugins
 from botocore.regions import EndpointResolver
-from botocore.useragent import UserAgentString
+from botocore.useragent import UserAgentString, register_feature_id
 from botocore.utils import (
     EVENT_ALIASES,
     IMDSRegionProvider,
@@ -984,6 +984,8 @@ class Session:
                     ignored_credentials,
                 )
             credentials = self.get_credentials()
+        if getattr(credentials, 'method', None) == 'explicit':
+            register_feature_id('CREDENTIALS_CODE')
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
