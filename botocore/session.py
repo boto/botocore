@@ -516,8 +516,6 @@ class Session:
         credentials.
 
         """
-        # This enables feature id registration when credentials are set in a session
-        # and that session is used for client creation.
         if self._credentials is None:
             self._credentials = self._components.get_component(
                 'credential_provider'
