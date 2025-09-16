@@ -1370,6 +1370,59 @@ def test_user_agent_feature_ids(
             patch_obj.stop()
 
 
+@pytest.mark.parametrize(
+    "creds_env_var,creds_file_content,patches,expected_feature_id",
+    [
+        (
+            'AWS_SHARED_CREDENTIALS_FILE',
+            '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET',
+            [
+                patch(
+                    "botocore.credentials.EnvProvider.load", return_value=None
+                ),
+            ],
+            'n',
+        ),
+        (
+            'AWS_CONFIG_FILE',
+            '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET',
+            [
+                patch(
+                    "botocore.credentials.EnvProvider.load", return_value=None
+                ),
+                patch(
+                    "botocore.credentials.SharedCredentialProvider.load",
+                    return_value=None,
+                ),
+            ],
+            'n',
+        ),
+    ],
+)
+def test_user_agent_has_file_based_feature_ids(
+    creds_env_var,
+    creds_file_content,
+    patches,
+    expected_feature_id,
+    tmp_path,
+    monkeypatch,
+):
+    credentials_file = tmp_path / "creds"
+    credentials_file.write_text(creds_file_content)
+    monkeypatch.setenv(creds_env_var, str(credentials_file))
+
+    for patch_obj in patches:
+        patch_obj.start()
+
+    try:
+        session = Session()
+        client = session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, expected_feature_id)
+    finally:
+        for patch_obj in patches:
+            patch_obj.stop()
+
+
 def _assert_feature_ids_in_ua(client, expected_feature_ids):
     """Helper to test feature IDs appear in user agent for multiple calls."""
     with ClientHTTPStubber(client, strict=True) as http_stubber:
@@ -1386,11 +1439,10 @@ def _assert_feature_ids_in_ua(client, expected_feature_ids):
 
 
 @pytest.mark.parametrize(
-    "test_case,config_content,env_vars,expected_source_features,expected_provider_feature",
+    "config_content,env_vars,expected_source_features,expected_provider_feature",
     [
         # Test Case 1: Assume Role with source profile
         (
-            "assume_role_with_source_profile",
             '''[profile assume-role-test]
 role_arn = arn:aws:iam::123456789012:role/test-role
 source_profile = base
@@ -1400,14 +1452,13 @@ aws_access_key_id = FAKEACCESSKEY
 aws_secret_access_key = FAKESECRET''',
             {},
             [
-                'o',
-                'n',
-            ],  # CREDENTIALS_PROFILE_SOURCE_PROFILE and CREDENTIALS_PROFILE
+                'n',  # CREDENTIALS_PROFILE
+                'o',  # CREDENTIALS_PROFILE_SOURCE_PROFILE
+            ],
             'i',  # CREDENTIALS_STS_ASSUME_ROLE
         ),
         # Test Case 2: Assume Role with named provider
         (
-            "assume_role_with_named_provider",
             '''[profile assume-role-test]
 role_arn = arn:aws:iam::123456789012:role/test-role
 credential_source = Environment''',
@@ -1415,12 +1466,44 @@ credential_source = Environment''',
                 'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
                 'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
             },
-            ['p'],  # CREDENTIALS_PROFILE_NAMED_PROVIDER
+            [
+                'g',  # CREDENTIALS_ENV_VARS
+                'p',  # CREDENTIALS_PROFILE_NAMED_PROVIDER
+            ],
             'i',  # CREDENTIALS_STS_ASSUME_ROLE
         ),
-        # Test Case 3: Assume Role with Web Identity through config profile
+    ],
+)
+def test_user_agent_has_assume_role_feature_ids(
+    config_content,
+    env_vars,
+    expected_source_features,
+    expected_provider_feature,
+    tmp_path,
+):
+    session = _create_assume_role_session(config_content, tmp_path)
+
+    # Set env vars if needed
+    with patch.dict(os.environ, env_vars, clear=True):
+        with SessionHTTPStubber(session) as stubber:
+            s3 = session.create_client('s3', region_name='us-east-1')
+            _add_assume_role_http_response(stubber, with_web_identity=False)
+            stubber.add_response()
+            stubber.add_response()
+            s3.list_buckets()
+            s3.list_buckets()
+
+    ua_strings = get_captured_ua_strings(stubber)
+    _assert_deferred_credential_feature_ids(
+        ua_strings, expected_source_features, expected_provider_feature
+    )
+
+
+@pytest.mark.parametrize(
+    "config_content,env_vars,expected_source_features,expected_provider_feature",
+    [
+        # Test Case 1: Assume Role with Web Identity through config profile
         (
-            "assume_role_with_web_identity_profile",
             '''[profile assume-role-test]
 role_arn = arn:aws:iam::123456789012:role/test-role
 web_identity_token_file = {token_file}''',
@@ -1428,9 +1511,8 @@ web_identity_token_file = {token_file}''',
             ['q'],  # CREDENTIALS_PROFILE_STS_WEB_ID_TOKEN
             'k',  # CREDENTIALS_STS_ASSUME_ROLE_WEB_ID
         ),
-        # Test Case 4: Assume Role with Web Identity through env vars
+        # Test Case 2: Assume Role with Web Identity through env vars
         (
-            "assume_role_with_web_identity_env_vars",
             '',
             {
                 'AWS_ROLE_ARN': 'arn:aws:iam::123456789012:role/test-role',
@@ -1442,44 +1524,29 @@ web_identity_token_file = {token_file}''',
         ),
     ],
 )
-def test_user_agent_has_assume_role_feature_ids(
-    test_case,
+def test_user_agent_has_assume_role_with_web_identity_feature_ids(
     config_content,
     env_vars,
     expected_source_features,
     expected_provider_feature,
-    monkeypatch,
     tmp_path,
 ):
-    is_web_identity_test = 'web_identity' in test_case
+    token_file = tmp_path / 'token.jwt'
+    token_file.write_text('fake-jwt-token')
+    if 'AWS_WEB_IDENTITY_TOKEN_FILE' in env_vars:
+        env_vars['AWS_WEB_IDENTITY_TOKEN_FILE'] = str(token_file)
+    elif config_content and 'web_identity_token_file' in config_content:
+        config_content = config_content.replace(
+            '{token_file}', str(token_file)
+        )
 
-    # Set up web identity file if needed
-    if is_web_identity_test:
-        token_file = tmp_path / 'token.jwt'
-        token_file.write_text('fake-jwt-token')
-        if 'AWS_WEB_IDENTITY_TOKEN_FILE' in env_vars:
-            env_vars['AWS_WEB_IDENTITY_TOKEN_FILE'] = str(token_file)
-        elif config_content and 'web_identity_token_file' in config_content:
-            config_content = config_content.replace(
-                '{token_file}', str(token_file)
-            )
-
-    # Set up config file if needed
-    if config_content:
-        config_file = tmp_path / 'config'
-        config_file.write_text(config_content)
-        session = Session(profile='assume-role-test')
-        session.set_config_variable('config_file', str(config_file))
-    else:
-        session = Session()
+    session = _create_assume_role_session(config_content, tmp_path)
 
     # Set env vars if needed
     with patch.dict(os.environ, env_vars, clear=True):
         with SessionHTTPStubber(session) as stubber:
             s3 = session.create_client('s3', region_name='us-east-1')
-            _add_assume_role_http_response(
-                stubber, with_web_identity=is_web_identity_test
-            )
+            _add_assume_role_http_response(stubber, with_web_identity=True)
             stubber.add_response()
             stubber.add_response()
             s3.list_buckets()
@@ -1489,6 +1556,17 @@ def test_user_agent_has_assume_role_feature_ids(
     _assert_deferred_credential_feature_ids(
         ua_strings, expected_source_features, expected_provider_feature
     )
+
+
+def _create_assume_role_session(config_content, tmp_path):
+    if config_content:
+        config_file = tmp_path / 'config'
+        config_file.write_text(config_content)
+        session = Session(profile='assume-role-test')
+        session.set_config_variable('config_file', str(config_file))
+    else:
+        session = Session()
+    return session
 
 
 def _add_assume_role_http_response(stubber, with_web_identity):

@@ -746,23 +746,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         self.assertEqual(response, expected_response)
         self.assertEqual(response['account_id'], None)
 
-    def test_feature_ids_property(self):
-        client_creator = self.create_client_creator(with_response={})
-        fetcher = credentials.AssumeRoleCredentialFetcher(
-            client_creator, self.source_creds, self.role_arn
-        )
-
-        # Test initial state
-        self.assertEqual(fetcher.feature_ids, set())
-
-        # Test setter
-        test_feature_ids = {'test_feature_1', 'test_feature_2'}
-        fetcher.feature_ids = test_feature_ids
-
-        # Test that setting modifies the internal _feature_ids
-        self.assertEqual(fetcher._feature_ids, test_feature_ids)
-
-    @mock.patch('botocore.credentials.register_credential_feature_ids')
+    @mock.patch('botocore.credentials.register_feature_ids')
     def test_feature_ids_registered_during_get_credentials(
         self, mock_register
     ):
@@ -943,23 +927,7 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
         self.assertEqual(response, expected_response)
         self.assertEqual(response['account_id'], None)
 
-    def test_feature_ids_property(self):
-        client_creator = self.create_client_creator(with_response={})
-        fetcher = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
-            client_creator, self.load_token, self.role_arn
-        )
-
-        # Test initial state
-        self.assertEqual(fetcher.feature_ids, set())
-
-        # Test setter
-        test_feature_ids = {'test_feature_1', 'test_feature_2'}
-        fetcher.feature_ids = test_feature_ids
-
-        # Test that setting modifies the internal _feature_ids
-        self.assertEqual(fetcher._feature_ids, test_feature_ids)
-
-    @mock.patch('botocore.credentials.register_credential_feature_ids')
+    @mock.patch('botocore.credentials.register_feature_ids')
     def test_feature_ids_registered_during_get_credentials(
         self, mock_register
     ):

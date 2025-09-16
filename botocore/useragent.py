@@ -115,6 +115,17 @@ def register_feature_id(feature_id):
         ctx.features.add(val)
 
 
+def register_feature_ids(feature_ids):
+    """Adds multiple feature IDs to the current context object's ``features`` set.
+
+    :type feature_ids: iterable of str
+    :param feature_ids: An iterable of feature ID strings to register. Each
+        value must be a key in the ``_USERAGENT_FEATURE_MAPPINGS`` dict.
+    """
+    for feature_id in feature_ids:
+        register_feature_id(feature_id)
+
+
 def sanitize_user_agent_string_component(raw_str, allow_hash):
     """Replaces all not allowed characters in the string with a dash ("-").
 
