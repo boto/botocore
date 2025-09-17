@@ -1214,10 +1214,6 @@ class TestContextCredentials(unittest.TestCase):
                     return_value=None,
                 ),
                 patch(
-                    "botocore.credentials.BotoProvider.load",
-                    return_value=None,
-                ),
-                patch(
                     "botocore.credentials.ConfigProvider.load",
                     return_value=None,
                 ),
@@ -1248,10 +1244,6 @@ class TestContextCredentials(unittest.TestCase):
                         "Expiration": "2099-01-01T00:00:00Z",
                         "AccountId": "01234567890",
                     },
-                ),
-                patch(
-                    "botocore.credentials.BotoProvider.load",
-                    return_value=None,
                 ),
                 patch(
                     "botocore.credentials.ConfigProvider.load",
