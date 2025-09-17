@@ -1049,7 +1049,9 @@ class ProcessProvider(CredentialProvider):
         if credential_process is None:
             return
 
+        register_feature_id('CREDENTIALS_PROFILE_PROCESS')
         creds_dict = self._retrieve_credentials_using(credential_process)
+        register_feature_id('CREDENTIALS_PROCESS')
         if creds_dict.get('expiry_time') is not None:
             return RefreshableCredentials.create_from_metadata(
                 creds_dict,
@@ -1491,6 +1493,7 @@ class BotoProvider(CredentialProvider):
                     access_key, secret_key = self._extract_creds_from_mapping(
                         credentials, self.ACCESS_KEY, self.SECRET_KEY
                     )
+                    register_feature_id('CREDENTIALS_BOTO2_CONFIG_FILE')
                     return Credentials(
                         access_key, secret_key, method=self.METHOD
                     )

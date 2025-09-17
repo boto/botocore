@@ -1281,6 +1281,69 @@ class TestContextCredentials(unittest.TestCase):
             [],
             'e',
         ),
+        # Test case 5: Credentials set with Boto2 config
+        (
+            {},
+            {},
+            [
+                patch(
+                    "botocore.configloader.raw_config_parse",
+                    return_value={
+                        "Credentials": {
+                            "aws_access_key_id": "FAKEACCESSKEY",
+                            "aws_secret_access_key": "FAKESECRETKEY",
+                        }
+                    },
+                ),
+                patch(
+                    "botocore.credentials.ConfigProvider.load",
+                    return_value=None,
+                ),
+                patch(
+                    "botocore.credentials.SharedCredentialProvider.load",
+                    return_value=None,
+                ),
+                patch(
+                    "botocore.credentials.EnvProvider.load", return_value=None
+                ),
+            ],
+            'x',
+        ),
+        # Test case 6: Credentials set via process provider
+        (
+            {},
+            {},
+            [
+                patch(
+                    "botocore.credentials.ProcessProvider._retrieve_credentials_using",
+                    return_value={
+                        'access_key': "FAKEACCESSKEY",
+                        'secret_key': "FAKESECRETKEY",
+                        'token': "FAKETOKEN",
+                    },
+                ),
+                patch(
+                    "botocore.credentials.ProcessProvider._credential_process",
+                    return_value="Mock_credential_process",
+                ),
+                patch(
+                    "botocore.credentials.ContainerProvider.load",
+                    return_value=None,
+                ),
+                patch(
+                    "botocore.credentials.ConfigProvider.load",
+                    return_value=None,
+                ),
+                patch(
+                    "botocore.credentials.SharedCredentialProvider.load",
+                    return_value=None,
+                ),
+                patch(
+                    "botocore.credentials.EnvProvider.load", return_value=None
+                ),
+            ],
+            ['v', 'w'],
+        ),
     ],
 )
 def test_user_agent_feature_ids(
