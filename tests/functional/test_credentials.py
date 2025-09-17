@@ -1331,10 +1331,6 @@ class TestContextCredentials(unittest.TestCase):
                     return_value=None,
                 ),
                 patch(
-                    "botocore.credentials.BotoProvider.load",
-                    return_value=None,
-                ),
-                patch(
                     "botocore.credentials.ConfigProvider.load",
                     return_value=None,
                 ),
