@@ -705,15 +705,7 @@ class CachedCredentialFetcher:
         if expiry_window_seconds is None:
             expiry_window_seconds = self.DEFAULT_EXPIRY_WINDOW_SECONDS
         self._expiry_window_seconds = expiry_window_seconds
-        self._feature_ids = set()
-
-    @property
-    def feature_ids(self):
-        return self._feature_ids
-
-    @feature_ids.setter
-    def feature_ids(self, value):
-        self._feature_ids = value
+        self.feature_ids = set()
 
     def _create_cache_key(self):
         raise NotImplementedError('_create_cache_key()')
@@ -894,7 +886,7 @@ class AssumeRoleCredentialFetcher(BaseAssumeRoleCredentialFetcher):
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
-        register_feature_ids(self._feature_ids)
+        register_feature_ids(self.feature_ids)
         kwargs = self._assume_role_kwargs()
         client = self._create_client()
         response = client.assume_role(**kwargs)
@@ -981,7 +973,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
-        register_feature_ids(self._feature_ids)
+        register_feature_ids(self.feature_ids)
         kwargs = self._assume_role_kwargs()
         # Assume role with web identity does not require credentials other than
         # the token, explicitly configure the client to not sign requests.
