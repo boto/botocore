@@ -1445,112 +1445,92 @@ def _assert_feature_ids_in_ua(client, expected_feature_ids):
         for expected_id in expected_feature_ids:
             assert expected_id in feature_list
 
-    @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
-    @patch("botocore.credentials.SSOProvider._load_sso_config")
-    @patch("botocore.credentials.ConfigProvider.load", return_value=None)
-    @patch(
-        "botocore.credentials.SharedCredentialProvider.load", return_value=None
-    )
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
-    def test_user_agent_has_sso_legacy_credentials_feature_id(
-        self,
-        _unused_mock_env_load,
-        _unused_mock_shared_load,
-        _unused_mock_config_load,
-        mock_load_sso_config,
-        mock_load_sso_credentials,
-        monkeypatch,
-        patched_session,
-    ):
-        fake_fetcher_kwargs = {
-            'sso_start_url': "https://test.awsapps.com/start",
-            'sso_region': "us-east-1",
-            'sso_role_name': "Administrator",
-            'sso_account_id': "1234567890",
-        }
-        fake_response = {
-            "ProviderType": "sso",
-            "Credentials": {
-                "role_name": "FAKEROLE",
-                "AccessKeyId": "FAKEACCESSKEY",
-                "SecretAccessKey": "FAKESECRET",
-                "SessionToken": "FAKETOKEN",
-                "Expiration": "2099-01-01T00:00:00Z",
-            },
-        }
 
-        mock_load_sso_config.return_value = fake_fetcher_kwargs
-        client_one = patched_session.create_client(
-            "s3", region_name="us-east-1"
-        )
-        mock_load_sso_credentials.return_value = fake_response
-        with ClientHTTPStubber(client_one, strict=True) as http_stubber:
-            http_stubber.add_response()
-            http_stubber.add_response()
-            client_one.list_buckets()
-            client_one.list_buckets()
+@patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
+@patch("botocore.credentials.SSOProvider._load_sso_config")
+@patch("botocore.credentials.ConfigProvider.load", return_value=None)
+@patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
+@patch("botocore.credentials.EnvProvider.load", return_value=None)
+def test_user_agent_has_sso_legacy_credentials_feature_id(
+    _unused_mock_env_load,
+    _unused_mock_shared_load,
+    _unused_mock_config_load,
+    mock_load_sso_config,
+    mock_load_sso_credentials,
+    monkeypatch,
+    patched_session,
+):
+    fake_fetcher_kwargs = {
+        'sso_start_url': "https://test.awsapps.com/start",
+        'sso_region': "us-east-1",
+        'sso_role_name': "Administrator",
+        'sso_account_id': "1234567890",
+    }
+    fake_response = {
+        "ProviderType": "sso",
+        "Credentials": {
+            "role_name": "FAKEROLE",
+            "AccessKeyId": "FAKEACCESSKEY",
+            "SecretAccessKey": "FAKESECRET",
+            "SessionToken": "FAKETOKEN",
+            "Expiration": "2099-01-01T00:00:00Z",
+        },
+    }
 
-        ua_string = get_captured_ua_strings(http_stubber)[0]
-        feature_list = parse_registered_feature_ids(ua_string)
-        assert 't' in feature_list and 'u' in feature_list
+    mock_load_sso_config.return_value = fake_fetcher_kwargs
+    client_one = patched_session.create_client("s3", region_name="us-east-1")
+    mock_load_sso_credentials.return_value = fake_response
+    with ClientHTTPStubber(client_one, strict=True) as http_stubber:
+        http_stubber.add_response()
+        http_stubber.add_response()
+        client_one.list_buckets()
+        client_one.list_buckets()
 
-        ua_string_one = get_captured_ua_strings(http_stubber)[1]
-        feature_list_one = parse_registered_feature_ids(ua_string_one)
-        assert 't' in feature_list_one and 'u' in feature_list_one
+    _assert_feature_ids_in_ua(client_one, ['t', 'u'])
 
-    @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
-    @patch("botocore.credentials.SSOProvider._load_sso_config")
-    @patch("botocore.credentials.ConfigProvider.load", return_value=None)
-    @patch(
-        "botocore.credentials.SharedCredentialProvider.load", return_value=None
-    )
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
-    def test_user_agent_has_sso_credentials_feature_id(
-        self,
-        _unused_mock_env_load,
-        _unused_mock_shared_load,
-        _unused_mock_config_load,
-        mock_load_sso_config,
-        mock_load_sso_credentials,
-        monkeypatch,
-        patched_session,
-    ):
-        fake_fetcher_kwargs = {
-            'sso_session': 'sample_test',
-            'sso_start_url': "https://test.awsapps.com/start",
-            'sso_region': "us-east-1",
-            'sso_role_name': "Administrator",
-            'sso_account_id': "1234567890",
-        }
-        fake_response = {
-            "ProviderType": "sso",
-            "Credentials": {
-                "role_name": "FAKEROLE",
-                "AccessKeyId": "FAKEACCESSKEY",
-                "SecretAccessKey": "FAKESECRET",
-                "SessionToken": "FAKETOKEN",
-                "Expiration": "2099-01-01T00:00:00Z",
-            },
-        }
 
-        mock_load_sso_config.return_value = fake_fetcher_kwargs
-        client_one = patched_session.create_client(
-            "s3", region_name="us-east-1"
-        )
-        mock_load_sso_credentials.return_value = fake_response
-        with ClientHTTPStubber(client_one, strict=True) as http_stubber:
-            http_stubber.add_response()
-            http_stubber.add_response()
-            client_one.list_buckets()
-            client_one.list_buckets()
+@patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
+@patch("botocore.credentials.SSOProvider._load_sso_config")
+@patch("botocore.credentials.ConfigProvider.load", return_value=None)
+@patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
+@patch("botocore.credentials.EnvProvider.load", return_value=None)
+def test_user_agent_has_sso_credentials_feature_id(
+    _unused_mock_env_load,
+    _unused_mock_shared_load,
+    _unused_mock_config_load,
+    mock_load_sso_config,
+    mock_load_sso_credentials,
+    monkeypatch,
+    patched_session,
+):
+    fake_fetcher_kwargs = {
+        'sso_session': 'sample_test',
+        'sso_start_url': "https://test.awsapps.com/start",
+        'sso_region': "us-east-1",
+        'sso_role_name': "Administrator",
+        'sso_account_id': "1234567890",
+    }
+    fake_response = {
+        "ProviderType": "sso",
+        "Credentials": {
+            "role_name": "FAKEROLE",
+            "AccessKeyId": "FAKEACCESSKEY",
+            "SecretAccessKey": "FAKESECRET",
+            "SessionToken": "FAKETOKEN",
+            "Expiration": "2099-01-01T00:00:00Z",
+        },
+    }
 
-        ua_string = get_captured_ua_strings(http_stubber)[0]
-        feature_list = parse_registered_feature_ids(ua_string)
-        assert 'r' in feature_list and 's' in feature_list
+    mock_load_sso_config.return_value = fake_fetcher_kwargs
+    client_one = patched_session.create_client("s3", region_name="us-east-1")
+    mock_load_sso_credentials.return_value = fake_response
+    with ClientHTTPStubber(client_one, strict=True) as http_stubber:
+        http_stubber.add_response()
+        http_stubber.add_response()
+        client_one.list_buckets()
+        client_one.list_buckets()
 
-        ua_string_one = get_captured_ua_strings(http_stubber)[1]
-        feature_list_one = parse_registered_feature_ids(ua_string_one)
-        assert 'r' in feature_list_one and 's' in feature_list_one
+    _assert_feature_ids_in_ua(client_one, ['r', 's'])
 
 
 @pytest.mark.parametrize(

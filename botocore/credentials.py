@@ -66,7 +66,6 @@ ReadOnlyCredentials = namedtuple(
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
-credentials_feature_ids = []
 
 
 def create_credential_resolver(session, cache=None, region_name=None):
@@ -690,8 +689,6 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._frozen_credentials = None
 
     def refresh_needed(self, refresh_in=None):
-        for feature_id in credentials_feature_ids:
-            register_feature_id(feature_id)
         if self._frozen_credentials is None:
             return True
         return super().refresh_needed(refresh_in)
@@ -2363,6 +2360,7 @@ class SSOProvider(CredentialProvider):
         self._load_config = load_config
         self._client_creator = client_creator
         self._profile_name = profile_name
+        self._feature_ids = set()
 
     def _load_sso_config(self):
         loaded_config = self._load_config()
@@ -2437,17 +2435,23 @@ class SSOProvider(CredentialProvider):
             'token_loader': SSOTokenLoader(cache=self._token_cache),
             'cache': self.cache,
         }
-        if 'sso_session' in sso_config:
+        sso_session_in_config = 'sso_session' in sso_config
+        if sso_session_in_config:
             fetcher_kwargs['sso_session_name'] = sso_config['sso_session']
             fetcher_kwargs['token_provider'] = self._token_provider
-            credentials_feature_ids.append('CREDENTIALS_PROFILE_SSO')
-            register_feature_id('CREDENTIALS_SSO')
+            self._feature_ids.add('CREDENTIALS_PROFILE_SSO')
         else:
-            credentials_feature_ids.append('CREDENTIALS_PROFILE_SSO_LEGACY')
-            register_feature_id('CREDENTIALS_SSO_LEGACY')
+            self._feature_ids.add('CREDENTIALS_PROFILE_SSO_LEGACY')
 
         sso_fetcher = SSOCredentialFetcher(**fetcher_kwargs)
+        sso_fetcher.feature_ids = self._feature_ids.copy()
 
+        if sso_session_in_config:
+            self._feature_ids.add('CREDENTIALS_SSO')
+        else:
+            self._feature_ids.add('CREDENTIALS_SSO_LEGACY')
+
+        register_feature_ids(self._feature_ids)
         return DeferredRefreshableCredentials(
             method=self.METHOD,
             refresh_using=sso_fetcher.fetch_credentials,
