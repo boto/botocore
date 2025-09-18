@@ -1378,6 +1378,9 @@ def test_user_agent_feature_ids(
             '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET',
             [
                 patch(
+                    "botocore.credentials.AssumeRoleProvider.load", return_value=None,
+                ),
+                patch(
                     "botocore.credentials.EnvProvider.load", return_value=None
                 ),
             ],
@@ -1387,6 +1390,9 @@ def test_user_agent_feature_ids(
             'AWS_CONFIG_FILE',
             '[default]\naws_access_key_id = FAKEACCESSKEY\naws_secret_access_key = FAKESECRET',
             [
+                patch(
+                    "botocore.credentials.AssumeRoleProvider.load", return_value=None,
+                ),
                 patch(
                     "botocore.credentials.EnvProvider.load", return_value=None
                 ),
