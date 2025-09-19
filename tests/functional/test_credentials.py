@@ -1450,6 +1450,11 @@ def _assert_feature_ids_in_ua(client, expected_feature_ids):
 @patch("botocore.credentials.SSOProvider._load_sso_config")
 @patch("botocore.credentials.ConfigProvider.load", return_value=None)
 @patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
+@patch(
+    "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
+    return_value=None,
+)
+@patch("botocore.credentials.AssumeRoleProvider.load", return_value=None)
 @patch("botocore.credentials.EnvProvider.load", return_value=None)
 def test_user_agent_has_sso_legacy_credentials_feature_id(
     _unused_mock_env_load,
@@ -1493,6 +1498,11 @@ def test_user_agent_has_sso_legacy_credentials_feature_id(
 @patch("botocore.credentials.SSOProvider._load_sso_config")
 @patch("botocore.credentials.ConfigProvider.load", return_value=None)
 @patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
+@patch(
+    "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
+    return_value=None,
+)
+@patch("botocore.credentials.AssumeRoleProvider.load", return_value=None)
 @patch("botocore.credentials.EnvProvider.load", return_value=None)
 def test_user_agent_has_sso_credentials_feature_id(
     _unused_mock_env_load,

@@ -2305,6 +2305,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
             'accessToken': token,
         }
         try:
+            register_feature_ids(self.feature_ids)
             response = client.get_role_credentials(**kwargs)
         except client.exceptions.UnauthorizedException:
             raise UnauthorizedSSOTokenError()
