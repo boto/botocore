@@ -288,7 +288,9 @@ class TestStreamWrapper(unittest.TestCase):
 
     def test_streaming_body_as_context_manager(self):
         body = BytesIO(b'1234567890')
-        with response.StreamingBody(body, content_length=10) as stream:
+        streaming_body = response.StreamingBody(body, content_length=10)
+        with streaming_body as stream:
+            self.assertIs(stream, streaming_body)
             self.assertEqual(stream.read(), b'1234567890')
             self.assertFalse(body.closed)
         self.assertTrue(body.closed)

@@ -140,7 +140,7 @@ class StreamingBody(IOBase):
         raise StopIteration()
 
     def __enter__(self):
-        return self._raw_stream
+        return self
 
     def __exit__(self, type, value, traceback):
         self._raw_stream.close()
