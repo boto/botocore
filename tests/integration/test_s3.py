@@ -115,9 +115,10 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
                     "delete_bucket() raised an exception: %s", e, exc_info=True
                 )
                 not_exists_waiter = s3.get_waiter('bucket_not_exists')
-                not_exists_waiter.wait(Bucket=bucket)
-            except WaiterError:
-                continue
+                try:
+                    not_exists_waiter.wait(Bucket=bucket)
+                except WaiterError:
+                    continue
 
 
 def teardown_module():
