@@ -1448,8 +1448,6 @@ def _assert_feature_ids_in_ua(client, expected_feature_ids):
 
 @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
 @patch("botocore.credentials.SSOProvider._load_sso_config")
-@patch("botocore.credentials.ConfigProvider.load", return_value=None)
-@patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
 @patch(
     "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
     return_value=None,
@@ -1496,8 +1494,6 @@ def test_user_agent_has_sso_legacy_credentials_feature_id(
 
 @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
 @patch("botocore.credentials.SSOProvider._load_sso_config")
-@patch("botocore.credentials.ConfigProvider.load", return_value=None)
-@patch("botocore.credentials.SharedCredentialProvider.load", return_value=None)
 @patch(
     "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
     return_value=None,
@@ -1534,11 +1530,6 @@ def test_user_agent_has_sso_credentials_feature_id(
     mock_load_sso_config.return_value = fake_fetcher_kwargs
     client_one = patched_session.create_client("s3", region_name="us-east-1")
     mock_load_sso_credentials.return_value = fake_response
-    with ClientHTTPStubber(client_one, strict=True) as http_stubber:
-        http_stubber.add_response()
-        http_stubber.add_response()
-        client_one.list_buckets()
-        client_one.list_buckets()
 
     _assert_feature_ids_in_ua(client_one, ['r', 's'])
 
