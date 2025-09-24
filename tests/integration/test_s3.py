@@ -117,6 +117,7 @@ def clear_out_bucket(bucket, region, delete_bucket=False):
                 not_exists_waiter = s3.get_waiter('bucket_not_exists')
                 try:
                     not_exists_waiter.wait(Bucket=bucket)
+                    break
                 except WaiterError:
                     continue
 
