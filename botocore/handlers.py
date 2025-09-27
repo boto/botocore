@@ -1069,6 +1069,11 @@ def remove_bedrock_runtime_invoke_model_with_bidirectional_stream(
         del class_attributes['invoke_model_with_bidirectional_stream']
 
 
+def customize_bedrock_agentcore_serializer(serializer_kwargs, **kwargs):
+    """Event handler to enable millisecond precision for bedrock-agentcore."""
+    serializer_kwargs['timestamp_precision'] = 'millisecond'
+
+
 def add_retry_headers(request, **kwargs):
     retries_context = request.context.get('retries')
     if not retries_context:
@@ -1470,6 +1475,10 @@ BUILTIN_HANDLERS = [
     (
         'creating-client-class.bedrock-runtime',
         remove_bedrock_runtime_invoke_model_with_bidirectional_stream,
+    ),
+    (
+        'creating-serializer.bedrock-agentcore',
+        customize_bedrock_agentcore_serializer,
     ),
     ('after-call.iam', json_decode_policies),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
