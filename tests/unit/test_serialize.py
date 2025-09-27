@@ -616,3 +616,89 @@ class TestRestXMLUnicodeSerialization(unittest.TestCase):
             self.serialize_to_request(params)
         except UnicodeEncodeError:
             self.fail("RestXML serializer failed to serialize unicode text.")
+
+
+class TestTimestampPrecisionParameter(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'UnixTimestamp': {'shape': 'UnixTimestampType'},
+                        'IsoTimestamp': {'shape': 'IsoTimestampType'},
+                    },
+                },
+                'IsoTimestampType': {
+                    'type': 'timestamp',
+                    "timestampFormat": "iso8601",
+                },
+                'UnixTimestampType': {
+                    'type': 'timestamp',
+                    "timestampFormat": "unixTimestamp",
+                },
+            },
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params, timestamp_precision='second'):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'],
+            timestamp_precision=timestamp_precision,
+        )
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation')
+        )
+
+    def test_second_precision_maintains_existing_behavior(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime}
+        )
+        # To maintain backwards compatibility, unix should not include milliseconds by default
+        self.assertEqual(1704110400, request['body']['UnixTimestamp'])
+
+        # ISO always supported microseconds, so we need to continue supporting this
+        self.assertEqual(
+            '2024-01-01T12:00:00.123456Z',
+            request['body']['IsoTimestamp'],
+        )
+
+    def test_millisecond_precision_serialization(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
+
+        # Check that millisecond precision is used when it is opted in to via the input param
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
+            'millisecond',
+        )
+        self.assertEqual(1704110400.123, request['body']['UnixTimestamp'])
+        self.assertEqual(
+            '2024-01-01T12:00:00.123Z',
+            request['body']['IsoTimestamp'],
+        )
+
+    def test_millisecond_precision_with_zero_microseconds(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 0)
+
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
+            'millisecond',
+        )
+        self.assertEqual(1704110400.0, request['body']['UnixTimestamp'])
+        self.assertEqual(
+            '2024-01-01T12:00:00.000Z',
+            request['body']['IsoTimestamp'],
+        )
