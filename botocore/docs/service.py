@@ -18,7 +18,11 @@ from botocore.docs.client import (
 )
 from botocore.docs.paginator import PaginatorDocumenter
 from botocore.docs.waiter import WaiterDocumenter
+from botocore.docs.codeexamples import CodeExamplesDocumenter
 from botocore.exceptions import DataNotFoundError
+from botocore.utils import (
+    SDK_CODE_EXAMPLE_ALIASES
+)
 
 
 class ServiceDocumenter:
@@ -42,6 +46,7 @@ class ServiceDocumenter:
             'paginator-api',
             'waiter-api',
             'client-context-params',
+            'sdk-examples-api',
         ]
 
     def document_service(self):
@@ -61,6 +66,7 @@ class ServiceDocumenter:
             'client-context-params'
         )
         self.client_context_params(context_params_section)
+        self.sdk_examples_api(doc_structure.get_section('sdk-examples-api'))
         return doc_structure.flush_structure()
 
     def title(self, section):
@@ -110,6 +116,20 @@ class ServiceDocumenter:
                 self._client, service_waiter_model, self._root_docs_path
             )
             waiter_documenter.document_waiters(section)
+
+    def sdk_examples_api(self, section):
+        library_examples_list = None
+        try:
+            code_example_service_name = SDK_CODE_EXAMPLE_ALIASES.get(self._service_name, self._service_name)
+            examples_documenter = CodeExamplesDocumenter(
+                self._client, self._root_docs_path
+            )
+            library_examples_list = examples_documenter.load_code_examples_catalog(code_example_service_name)
+            # Only document the examples if there are any in the list.
+            if library_examples_list:
+                examples_documenter.document_code_examples(section, library_examples_list, code_example_service_name)
+        except DataNotFoundError:
+            pass
 
     def get_examples(self, service_name, api_version=None):
         loader = self._session.get_component('data_loader')
