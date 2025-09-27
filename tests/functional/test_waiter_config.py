@@ -165,6 +165,17 @@ def _validate_acceptor(acceptor, op_model, waiter_name):
                 f"'{waiter_name}' with non list result in JMESPath expression: "
                 f"{expression}"
             )
+    if acceptor.matcher == 'error':
+        expected_code = acceptor.expected
+        all_codes = [shape.error_code for shape in op_model.error_shapes]
+        if expected_code not in all_codes:
+            raise AssertionError(
+                f"The '{waiter_name}' waiter for the "
+                f"'{op_model.service_model.service_name}' service that defines"
+                f"a matcher with error code {expected_code} that's not in "
+                f"the error codes defined in the {op_model.name} operation "
+                f"model: {', '.join(all_codes)}"
+            )
 
 
 def _search_jmespath_expression(expression, op_model):
