@@ -715,29 +715,22 @@ class TestTimestampPrecisionParameter(unittest.TestCase):
         )
 
     def test_rfc822_timestamp_always_uses_second_precision(self):
-        """RFC822 format doesn't support sub-second precision."""
+        # RFC822 format doesn't support sub-second precision.
         test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
-
-        # Both second and millisecond modes should produce same result for RFC822
         request_second = self.serialize_to_request(
             {'Rfc822Timestamp': test_datetime},
         )
         request_milli = self.serialize_to_request(
             {'Rfc822Timestamp': test_datetime}, TIMESTAMP_PRECISION_MILLISECOND
         )
-
-        # RFC 2822 doesn't support sub-second precision, so both should be identical
         self.assertEqual(
             request_second['body']['Rfc822Timestamp'],
             request_milli['body']['Rfc822Timestamp'],
         )
-        # Verify it's a valid RFC822 format (e.g., "Mon, 01 Jan 2024 12:00:00 GMT")
         self.assertIn('2024', request_second['body']['Rfc822Timestamp'])
         self.assertIn('GMT', request_second['body']['Rfc822Timestamp'])
 
     def test_invalid_timestamp_precision_raises_error(self):
-        """Invalid timestamp precision values should raise ValueError."""
-
         with self.assertRaises(ValueError) as context:
             serialize.create_serializer(
                 self.service_model.metadata['protocol'],
