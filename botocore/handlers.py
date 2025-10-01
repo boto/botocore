@@ -60,6 +60,7 @@ from botocore.exceptions import (
     UnsupportedTLSVersionWarning,
 )
 from botocore.regions import EndpointResolverBuiltins
+from botocore.serialize import TIMESTAMP_PRECISION_MILLISECOND
 from botocore.signers import (
     add_dsql_generate_db_auth_token_methods,
     add_generate_db_auth_token,
@@ -1069,9 +1070,9 @@ def remove_bedrock_runtime_invoke_model_with_bidirectional_stream(
         del class_attributes['invoke_model_with_bidirectional_stream']
 
 
-def customize_bedrock_agentcore_serializer(serializer_kwargs, **kwargs):
-    """Event handler to enable millisecond precision for bedrock-agentcore."""
-    serializer_kwargs['timestamp_precision'] = 'millisecond'
+def enable_millisecond_timestamp_precision(serializer_kwargs, **kwargs):
+    """Event handler to enable millisecond precision"""
+    serializer_kwargs['timestamp_precision'] = TIMESTAMP_PRECISION_MILLISECOND
 
 
 def add_retry_headers(request, **kwargs):
@@ -1478,7 +1479,7 @@ BUILTIN_HANDLERS = [
     ),
     (
         'creating-serializer.bedrock-agentcore',
-        customize_bedrock_agentcore_serializer,
+        enable_millisecond_timestamp_precision,
     ),
     ('after-call.iam', json_decode_policies),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),

@@ -170,8 +170,11 @@ class ClientArgsCreator:
             proxies_config=new_config.proxies_config,
         )
 
-        serializer_kwargs = {'timestamp_precision': 'second'}
+        # Emit event to allow service-specific or customer customization of serializer kwargs
         event_name = f'creating-serializer.{service_name}'
+        serializer_kwargs = {
+            'timestamp_precision': botocore.serialize.TIMESTAMP_PRECISION_DEFAULT
+        }
         event_emitter.emit(
             event_name,
             protocol_name=protocol,

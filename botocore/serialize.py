@@ -66,17 +66,28 @@ ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 ISO8601_MICRO = '%Y-%m-%dT%H:%M:%S.%fZ'
 HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+$")
 
+TIMESTAMP_PRECISION_DEFAULT = 'default'
+TIMESTAMP_PRECISION_MILLISECOND = 'millisecond'
+TIMESTAMP_PRECISION_OPTIONS = (
+    TIMESTAMP_PRECISION_DEFAULT,
+    TIMESTAMP_PRECISION_MILLISECOND,
+)
+
 
 def create_serializer(
-    protocol_name, include_validation=True, timestamp_precision='second'
+    protocol_name,
+    include_validation=True,
+    timestamp_precision=TIMESTAMP_PRECISION_DEFAULT,
 ):
     """Create a serializer for the given protocol.
-
     :param protocol_name: The protocol name to create a serializer for.
+    :type protocol_name: str
     :param include_validation: Whether to include parameter validation.
+    :type include_validation: bool
     :param timestamp_precision: Timestamp precision level.
-        - 'second': Standard second precision (default)
-        - 'millisecond': Millisecond precision for high-accuracy timestamps
+        - 'default': Microseconds for ISO timestamps, seconds for Unix and RFC
+        - 'millisecond': Millisecond precision (ISO/Unix), seconds for RFC
+    :type timestamp_precision: str
     :return: A serializer instance for the given protocol.
     """
     # TODO: Unknown protocols.
@@ -98,9 +109,11 @@ class Serializer:
     MAP_TYPE = dict
     DEFAULT_ENCODING = 'utf-8'
 
-    def __init__(self, timestamp_precision='second'):
-        if timestamp_precision is None:
-            timestamp_precision = 'second'
+    def __init__(self, timestamp_precision=TIMESTAMP_PRECISION_DEFAULT):
+        if timestamp_precision not in TIMESTAMP_PRECISION_OPTIONS:
+            raise ValueError(
+                f"Invalid timestamp precision found while creating serializer: {timestamp_precision}"
+            )
         self._timestamp_precision = timestamp_precision
 
     def serialize_to_request(self, parameters, operation_model):
@@ -159,7 +172,7 @@ class Serializer:
     def _timestamp_iso8601(self, value):
         """Return ISO8601 timestamp with precision based on timestamp_precision."""
         # Smithy's standard is milliseconds, so we truncate the timestamp if the millisecond flag is set to true
-        if self._timestamp_precision == 'millisecond':
+        if self._timestamp_precision == TIMESTAMP_PRECISION_MILLISECOND:
             milliseconds = value.microsecond // 1000
             return (
                 value.strftime('%Y-%m-%dT%H:%M:%S') + f'.{milliseconds:03d}Z'
@@ -175,7 +188,7 @@ class Serializer:
     def _timestamp_unixtimestamp(self, value):
         """Return unix timestamp with precision based on timestamp_precision."""
         # As of the addition of the precision flag, we support millisecond precision here as well
-        if self._timestamp_precision == 'millisecond':
+        if self._timestamp_precision == TIMESTAMP_PRECISION_MILLISECOND:
             base_timestamp = calendar.timegm(value.timetuple())
             milliseconds = (value.microsecond // 1000) / 1000.0
             return base_timestamp + milliseconds
