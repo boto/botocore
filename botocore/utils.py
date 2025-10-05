@@ -3584,8 +3584,8 @@ class JSONFileCache:
                 dir=self._working_dir,
                 suffix='.tmp'
             )
-            
-            os.fchmod(temp_fd, 0o600)
+            if hasattr(os, 'fchmod'):
+                os.fchmod(temp_fd, 0o600)
             with os.fdopen(temp_fd, 'w') as f:
                 temp_fd = None
                 f.write(file_content)
