@@ -3700,11 +3700,10 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         self.cache['test_key'] = {'data': 'test_value'}
         mock_replace.assert_called_once()
 
-        call_args = mock_replace.call_args[0]
-        temp_path = call_args[0]
-        final_path = call_args[1]
-
-        assert '.tmp' in temp_path
+        temp_path, final_path = mock_replace.call_args[0]
+    
+        self.assertIn('.tmp', temp_path)
+        self.assertTrue(final_path.endswith('test_key.json'))
 
     def test_concurrent_writes_same_key(self):
         """Test concurrent writes to same key don't cause corruption."""
