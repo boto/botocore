@@ -3711,6 +3711,13 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         
         key = 'concurrent_test'
         errors = []
+        temp_files_used = []
+        original_mkstemp = tempfile.mkstemp
+
+        def track_temp_files(*args, **kwargs):
+            fd, path = original_mkstemp(*args, **kwargs)
+            temp_files_used.append(path)
+            return fd, path    
         
         def write_worker(thread_id):
             try:
@@ -3718,20 +3725,27 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
                     self.cache[key] = {'thread': thread_id, 'iteration': i}
             except Exception as e:
                 errors.append(f'Thread {thread_id}: {e}')
+
+        with mock.patch('tempfile.mkstemp', side_effect=track_temp_files):
+            threads = [threading.Thread(target=write_worker, args=(i,)) for i in range(3)]
         
-        threads = [threading.Thread(target=write_worker, args=(i,)) for i in range(3)]
-        
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
         
         self.assertEqual(len(errors), 0, f'Concurrent write errors: {errors}')
         
+        # Verify each write used a separate temporary file
+        self.assertEqual(len(temp_files_used), 9)
+        self.assertEqual(len(set(temp_files_used)), 9, 
+                        'Concurrent writes should use separate temp files')
+
         # Verify final data is valid
         final_data = self.cache[key]
         self.assertIsInstance(final_data, dict)
         self.assertIn('thread', final_data)
+        self.assertIn('iteration', final_data)
 
     def test_atomic_write_preserves_data_on_failure(self):
         """Test write failures don't corrupt existing data."""
