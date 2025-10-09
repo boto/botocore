@@ -1331,7 +1331,10 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         return ensure_boolean(value)
 
     def _handle_integer(self, shape, value):
-        return int(value)
+        if value is None:
+            return None
+        else:
+            return int(value)
 
     def _handle_float(self, shape, value):
         return float(value)
