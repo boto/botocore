@@ -14,6 +14,9 @@ import copy
 import datetime
 import io
 import operator
+import shutil
+import tempfile
+import os
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -54,6 +57,7 @@ from botocore.utils import (
     ArgumentGenerator,
     ArnParser,
     CachedProperty,
+    JSONFileCache, 
     ContainerMetadataFetcher,
     IMDSRegionProvider,
     InstanceMetadataFetcher,
@@ -3679,3 +3683,92 @@ def test_get_token_from_environment_returns_none(
 ):
     monkeypatch.delenv(env_var, raising=False)
     assert get_token_from_environment(signing_name) is None
+
+class TestJSONFileCacheAtomicWrites(unittest.TestCase):
+    """Test atomic write operations in JSONFileCache."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.cache = JSONFileCache(working_dir=self.temp_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    @mock.patch('os.replace')
+    def test_uses_tempfile_and_replace_for_atomic_write(self, mock_replace):
+
+        self.cache['test_key'] = {'data': 'test_value'}
+        mock_replace.assert_called_once()
+
+        temp_path, final_path = mock_replace.call_args[0]
+    
+        self.assertIn('.tmp', temp_path)
+        self.assertTrue(final_path.endswith('test_key.json'))
+
+    def test_concurrent_writes_same_key(self):
+        """Test concurrent writes to same key don't cause corruption."""
+        import threading
+        
+        key = 'concurrent_test'
+        errors = []
+        temp_files_used = []
+        original_mkstemp = tempfile.mkstemp
+
+        def track_temp_files(*args, **kwargs):
+            fd, path = original_mkstemp(*args, **kwargs)
+            temp_files_used.append(path)
+            return fd, path    
+        
+        def write_worker(thread_id):
+            try:
+                for i in range(3):
+                    self.cache[key] = {'thread': thread_id, 'iteration': i}
+            except Exception as e:
+                errors.append(f'Thread {thread_id}: {e}')
+
+        with mock.patch('tempfile.mkstemp', side_effect=track_temp_files):
+            threads = [threading.Thread(target=write_worker, args=(i,)) for i in range(3)]
+        
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+        
+        self.assertEqual(len(errors), 0, f'Concurrent write errors: {errors}')
+        
+        # Verify each write used a separate temporary file
+        self.assertEqual(len(temp_files_used), 9)
+        self.assertEqual(len(set(temp_files_used)), 9, 
+                        'Concurrent writes should use separate temp files')
+
+        # Verify final data is valid
+        final_data = self.cache[key]
+        self.assertIsInstance(final_data, dict)
+        self.assertIn('thread', final_data)
+        self.assertIn('iteration', final_data)
+
+    def test_atomic_write_preserves_data_on_failure(self):
+        """Test write failures don't corrupt existing data."""
+        key = 'atomic_test'
+        original_data = {'status': 'original'}
+        
+        self.cache[key] = original_data
+        
+        # Mock write failure
+        original_dumps = self.cache._dumps
+        self.cache._dumps = mock.Mock(side_effect=ValueError('Write failed'))
+        
+        with self.assertRaises(ValueError):
+            self.cache[key] = {'status': 'should_fail'}
+        
+        self.cache._dumps = original_dumps
+        
+        # Verify original data intact
+        self.assertEqual(self.cache[key], original_data)
+
+    def test_no_temp_files_after_write(self):
+        """Test temporary files cleaned up after writes."""
+        self.cache['test'] = {'data': 'value'}
+        
+        temp_files = [f for f in os.listdir(self.temp_dir) if f.endswith('.tmp')]
+        self.assertEqual(len(temp_files), 0, f'Temp files not cleaned: {temp_files}')
