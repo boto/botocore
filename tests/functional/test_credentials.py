@@ -1458,17 +1458,11 @@ def _assert_deferred_credential_feature_ids(
 
 
 class TestFeatureIdRegistered:
-    @patch("botocore.credentials.get_credentials")
     def test_user_agent_has_env_vars_credentials_feature_id(
         self,
-        mock_config_provider,
         monkeypatch,
         patched_session,
     ):
-        env_provider = EnvProvider()
-        credential_resolver = CredentialResolver([env_provider])
-        mock_config_provider.return_value = credential_resolver
-
         env_vars = {
             'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
             'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
@@ -1499,7 +1493,7 @@ class TestFeatureIdRegistered:
         self,
         _unused_env_provider,
         mock_iam_fetcher,
-        mock_config_provider,
+        mock_get_credentials,
         patched_session,
     ):
         iam_role_fetcher = InstanceMetadataFetcher()
@@ -1514,7 +1508,7 @@ class TestFeatureIdRegistered:
             "expiry_time": "2099-01-01T00:00:00Z",
         }
         mock_iam_fetcher.return_value = fake_credentials
-        mock_config_provider.return_value = credential_resolver
+        mock_get_credentials.return_value = credential_resolver
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['0'])
@@ -1526,7 +1520,7 @@ class TestFeatureIdRegistered:
         self,
         _unused_env_provider,
         mock_container_metadata_fetcher,
-        mock_config_provider,
+        mock_get_credentials,
         monkeypatch,
         patched_session,
     ):
@@ -1550,7 +1544,7 @@ class TestFeatureIdRegistered:
         }
 
         mock_container_metadata_fetcher.return_value = fake_credentials
-        mock_config_provider.return_value = credential_resolver
+        mock_get_credentials.return_value = credential_resolver
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['z'])
@@ -1562,7 +1556,7 @@ class TestFeatureIdRegistered:
         self,
         _unused_env_provider,
         mock_boto2_config,
-        mock_config_provider,
+        mock_get_credentials,
         patched_session,
     ):
         boto_provider = BotoProvider()
@@ -1575,7 +1569,7 @@ class TestFeatureIdRegistered:
             }
         }
         mock_boto2_config.return_value = fake_credentials
-        mock_config_provider.return_value = credentials_resolver
+        mock_get_credentials.return_value = credentials_resolver
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['x'])
@@ -1592,7 +1586,7 @@ class TestFeatureIdRegistered:
         _unused_env_provider,
         _unused_mock_credentials_process,
         mock_process_config,
-        mock_config_provider,
+        mock_get_credentials,
         patched_session,
     ):
         process_provider = ProcessProvider(None, None)
@@ -1604,7 +1598,7 @@ class TestFeatureIdRegistered:
             'token': "FAKETOKEN",
         }
         mock_process_config.return_value = fake_credentials
-        mock_config_provider.return_value = credentials_resolver
+        mock_get_credentials.return_value = credentials_resolver
 
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['v', 'w'])
@@ -1618,12 +1612,12 @@ class TestFeatureIdRegistered:
         _unused_env_provider,
         mock_load_sso_config,
         mock_cached_credential_fetcher,
-        mock_config_provider,
+        mock_get_credentials,
         patched_session,
     ):
         sso_provider = SSOProvider(None, None, None)
         credentials_resolver = CredentialResolver([sso_provider])
-        mock_config_provider.return_value = credentials_resolver
+        mock_get_credentials.return_value = credentials_resolver
 
         fake_fetcher_kwargs = {
             'sso_start_url': "https://test.awsapps.com/start",
@@ -1657,12 +1651,12 @@ class TestFeatureIdRegistered:
         _unused_env_provider,
         mock_load_sso_config,
         mock_cached_credential_fetcher,
-        mock_config_provider,
+        mock_get_credentials,
         patched_session,
     ):
         sso_provider = SSOProvider(None, None, None)
         credentials_resolver = CredentialResolver([sso_provider])
-        mock_config_provider.return_value = credentials_resolver
+        mock_get_credentials.return_value = credentials_resolver
 
         fake_fetcher_kwargs = {
             'sso_session': 'sample_test',  # Key difference from legacy SSO
