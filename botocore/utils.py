@@ -3581,8 +3581,7 @@ class JSONFileCache:
             os.makedirs(self._working_dir, exist_ok=True)
         try:
             temp_fd, temp_path = tempfile.mkstemp(
-                dir=self._working_dir,
-                suffix='.tmp'
+                dir=self._working_dir, suffix='.tmp'
             )
             if hasattr(os, 'fchmod'):
                 os.fchmod(temp_fd, 0o600)
