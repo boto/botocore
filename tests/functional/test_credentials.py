@@ -1484,14 +1484,12 @@ class TestFeatureIdRegistered:
         )
         _assert_feature_ids_in_ua(client, ['e'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch(
         "botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials"
     )
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_imds_credentials_feature_id(
         self,
-        _unused_env_provider,
         mock_iam_fetcher,
         mock_get_credentials,
         patched_session,
@@ -1513,12 +1511,10 @@ class TestFeatureIdRegistered:
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['0'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch("botocore.credentials.ContainerMetadataFetcher.retrieve_full_uri")
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_container_credentials_feature_id(
         self,
-        _unused_env_provider,
         mock_container_metadata_fetcher,
         mock_get_credentials,
         monkeypatch,
@@ -1532,7 +1528,9 @@ class TestFeatureIdRegistered:
             monkeypatch.setenv(var, value)
 
         container_metadata_fetcher = ContainerMetadataFetcher()
-        container_provider = ContainerProvider(container_metadata_fetcher)
+        container_provider = ContainerProvider(
+            fetcher=container_metadata_fetcher
+        )
         credential_resolver = CredentialResolver([container_provider])
 
         fake_credentials = {
@@ -1549,12 +1547,10 @@ class TestFeatureIdRegistered:
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['z'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch("botocore.configloader.raw_config_parse")
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_boto2_config_credentials_feature_id(
         self,
-        _unused_env_provider,
         mock_boto2_config,
         mock_get_credentials,
         patched_session,
@@ -1574,16 +1570,14 @@ class TestFeatureIdRegistered:
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['x'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch("botocore.credentials.ProcessProvider._retrieve_credentials_using")
     @patch(
         "botocore.credentials.ProcessProvider._credential_process",
         return_value="Mock_credential_process",
     )
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_process_provider_credentials_feature_id(
         self,
-        _unused_env_provider,
         _unused_mock_credentials_process,
         mock_process_config,
         mock_get_credentials,
@@ -1603,13 +1597,11 @@ class TestFeatureIdRegistered:
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['v', 'w'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
     @patch("botocore.credentials.SSOProvider._load_sso_config")
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_sso_legacy_credentials_feature_id(
         self,
-        _unused_env_provider,
         mock_load_sso_config,
         mock_cached_credential_fetcher,
         mock_get_credentials,
@@ -1642,13 +1634,11 @@ class TestFeatureIdRegistered:
         client = patched_session.create_client("s3", region_name="us-east-1")
         _assert_feature_ids_in_ua(client, ['t', 'u'])
 
-    @patch("botocore.credentials.get_credentials")
+    @patch("botocore.credentials.create_credential_resolver")
     @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
     @patch("botocore.credentials.SSOProvider._load_sso_config")
-    @patch("botocore.credentials.EnvProvider.load", return_value=None)
     def test_user_agent_has_sso_credentials_feature_id(
         self,
-        _unused_env_provider,
         mock_load_sso_config,
         mock_cached_credential_fetcher,
         mock_get_credentials,
