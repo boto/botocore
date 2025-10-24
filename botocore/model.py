@@ -121,6 +121,7 @@ class Shape:
         """
         self.name = shape_name
         self.type_name = shape_model['type']
+        self.boxed = shape_model.get('box', False)
         self.documentation = shape_model.get('documentation', '')
         self._shape_model = shape_model
         if shape_resolver is None:

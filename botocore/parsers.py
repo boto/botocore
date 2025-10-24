@@ -194,6 +194,15 @@ class ResponseParserError(Exception):
     pass
 
 
+def box_decorator(func):
+    def handle_box(self, shape, value):
+        if shape.boxed and value is None:
+            return None
+        return func(self, shape, value)
+
+    return handle_box
+
+
 class ResponseParser:
     """Base class for response parsing.
 
@@ -340,10 +349,18 @@ class ResponseParser:
             f"{self.__class__.__name__}._do_modeled_error_parse"
         )
 
+    BOXABLE_PRIMITIVE_TYPES = ["long", "integer", "boolean"]
+
     def _parse_shape(self, shape, node):
         handler = getattr(
             self, f'_handle_{shape.type_name}', self._default_handle
         )
+        if (
+            shape.type_name in self.BOXABLE_PRIMITIVE_TYPES
+            and shape.boxed
+            and node is None
+        ):
+            return None
         return handler(shape, node)
 
     def _handle_list(self, shape, node):
@@ -1331,10 +1348,7 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         return ensure_boolean(value)
 
     def _handle_integer(self, shape, value):
-        if value is None:
-            return None
-        else:
-            return int(value)
+        return int(value)
 
     def _handle_float(self, shape, value):
         return float(value)
