@@ -115,6 +115,17 @@ class TestCreateClientArgs(unittest.TestCase):
             'partition_data': {},
         }
         call_kwargs.update(**override_kwargs)
+
+        # Bridge test's scoped_config to config_store for new _compute_socket_options implementation
+        # The method now reads from config_store instead of receiving scoped_config as parameter
+        scoped_config = call_kwargs.get('scoped_config', {})
+        if scoped_config:
+            for key, value in scoped_config.items():
+                # Convert 'true'/'false' strings to boolean for tcp_keepalive
+                if key == 'tcp_keepalive' and isinstance(value, str):
+                    value = value.lower() == 'true'
+                self.config_store.set_config_variable(key, value)
+
         return self.args_create.get_client_args(**call_kwargs)
 
     def call_compute_client_args(self, **override_kwargs):
@@ -283,6 +294,16 @@ class TestCreateClientArgs(unittest.TestCase):
                 socket_options=self.default_socket_options
                 + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
+
+    def test_tcp_keepalive_enabled_environment_variable(self):
+        with mock.patch.dict('os.environ', {'BOTOCORE_TCP_KEEPALIVE': 'true'}):
+            with mock.patch('botocore.args.EndpointCreator') as m:
+                self.call_get_client_args()
+                self.assert_create_endpoint_call(
+                    m,
+                    socket_options=self.default_socket_options
+                    + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                )
 
     def test_tcp_keepalive_explicitly_disabled(self):
         scoped_config = {'tcp_keepalive': 'false'}
