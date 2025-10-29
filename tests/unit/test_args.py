@@ -116,7 +116,6 @@ class TestCreateClientArgs(unittest.TestCase):
         }
         call_kwargs.update(**override_kwargs)
 
-
         return self.args_create.get_client_args(**call_kwargs)
 
     def call_compute_client_args(self, **override_kwargs):
@@ -249,7 +248,7 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                               + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_tcp_keepalive_not_specified(self):
@@ -272,7 +271,7 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                               + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
             self.config_store.set_config_variable('tcp_keepalive', False)
             self.call_get_client_args(
@@ -281,7 +280,7 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                               + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_tcp_keepalive_enabled_environment_variable(self):
@@ -309,7 +308,7 @@ class TestCreateClientArgs(unittest.TestCase):
             self.assert_create_endpoint_call(
                 m,
                 socket_options=self.default_socket_options
-                               + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
             )
 
     def test_client_config_has_use_dualstack_endpoint_flag(self):
