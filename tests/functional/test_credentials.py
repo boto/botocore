@@ -29,15 +29,19 @@ from botocore import UNSIGNED
 from botocore.config import Config
 from botocore.credentials import (
     AssumeRoleProvider,
+    BotoProvider,
     CanonicalNameCredentialSourcer,
     ContainerProvider,
+    CredentialResolver,
     Credentials,
     DeferredRefreshableCredentials,
     EnvProvider,
     InstanceMetadataProvider,
     JSONFileCache,
+    ProcessProvider,
     ProfileProviderBuilder,
     ReadOnlyCredentials,
+    SSOProvider,
     create_credential_resolver,
 )
 from botocore.exceptions import (
@@ -48,7 +52,11 @@ from botocore.exceptions import (
 from botocore.session import Session
 from botocore.stub import Stubber
 from botocore.tokens import SSOTokenProvider
-from botocore.utils import datetime2timestamp
+from botocore.utils import (
+    ContainerMetadataFetcher,
+    InstanceMetadataFetcher,
+    datetime2timestamp,
+)
 from tests import (
     BaseEnvVar,
     ClientHTTPStubber,
@@ -1192,185 +1200,6 @@ class TestContextCredentials(unittest.TestCase):
 
 
 @pytest.mark.parametrize(
-    "environ_vars,fake_credentials,patches,expected_feature_id",
-    [
-        # Test case 1: IMDS credentials
-        (
-            {},
-            {},
-            [
-                patch(
-                    "botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials",
-                    return_value={
-                        "role_name": "FAKEROLE",
-                        "access_key": "FAKEACCESSKEY",
-                        "secret_key": "FAKESECRET",
-                        "token": "FAKETOKEN",
-                        "expiry_time": "2099-01-01T00:00:00Z",
-                    },
-                ),
-                patch(
-                    "botocore.credentials.ContainerProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.ConfigProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.SharedCredentialProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.EnvProvider.load", return_value=None
-                ),
-            ],
-            '0',
-        ),
-        # Test case 2: HTTP credentials (container)
-        (
-            {
-                'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
-                'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'Basic auth-token',
-            },
-            {},
-            [
-                patch(
-                    "botocore.credentials.ContainerMetadataFetcher.retrieve_full_uri",
-                    return_value={
-                        "AccessKeyId": "FAKEACCESSKEY",
-                        "SecretAccessKey": "FAKESECRET",
-                        "Token": "FAKETOKEN",
-                        "Expiration": "2099-01-01T00:00:00Z",
-                        "AccountId": "01234567890",
-                    },
-                ),
-                patch(
-                    "botocore.credentials.ConfigProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.SharedCredentialProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.EnvProvider.load", return_value=None
-                ),
-            ],
-            'z',
-        ),
-        # Test case 3: Credentials set via Environment variables
-        (
-            {
-                'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
-                'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
-                'AWS_SESSION_TOKEN': 'FAKETOKEN',
-            },
-            {},
-            [],
-            'g',
-        ),
-        # Test case 4: Credentials set via code
-        (
-            {},
-            {
-                'aws_access_key_id': 'FAKEACCESSKEY',
-                'aws_secret_access_key': 'FAKESECRET',
-                'aws_session_token': 'FAKETOKEN',
-            },
-            [],
-            'e',
-        ),
-        # Test case 5: Credentials set with Boto2 config
-        (
-            {},
-            {},
-            [
-                patch(
-                    "botocore.configloader.raw_config_parse",
-                    return_value={
-                        "Credentials": {
-                            "aws_access_key_id": "FAKEACCESSKEY",
-                            "aws_secret_access_key": "FAKESECRETKEY",
-                        }
-                    },
-                ),
-                patch(
-                    "botocore.credentials.ConfigProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.SharedCredentialProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.EnvProvider.load", return_value=None
-                ),
-            ],
-            'x',
-        ),
-        # Test case 6: Credentials set via process provider
-        (
-            {},
-            {},
-            [
-                patch(
-                    "botocore.credentials.ProcessProvider._retrieve_credentials_using",
-                    return_value={
-                        'access_key': "FAKEACCESSKEY",
-                        'secret_key': "FAKESECRETKEY",
-                        'token': "FAKETOKEN",
-                    },
-                ),
-                patch(
-                    "botocore.credentials.ProcessProvider._credential_process",
-                    return_value="Mock_credential_process",
-                ),
-                patch(
-                    "botocore.credentials.ContainerProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.ConfigProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.SharedCredentialProvider.load",
-                    return_value=None,
-                ),
-                patch(
-                    "botocore.credentials.EnvProvider.load", return_value=None
-                ),
-            ],
-            ['v', 'w'],
-        ),
-    ],
-)
-def test_user_agent_feature_ids(
-    environ_vars,
-    fake_credentials,
-    patches,
-    expected_feature_id,
-    monkeypatch,
-    patched_session,
-):
-    for var, value in environ_vars.items():
-        monkeypatch.setenv(var, value)
-
-    for patch_obj in patches:
-        patch_obj.start()
-
-    try:
-        client = patched_session.create_client(
-            "s3", region_name="us-east-1", **fake_credentials
-        )
-        _assert_feature_ids_in_ua(client, expected_feature_id)
-    finally:
-        for patch_obj in patches:
-            patch_obj.stop()
-
-
-@pytest.mark.parametrize(
     "creds_env_var,creds_file_content,patches,expected_feature_id",
     [
         (
@@ -1444,89 +1273,6 @@ def _assert_feature_ids_in_ua(client, expected_feature_ids):
         feature_list = parse_registered_feature_ids(ua_string)
         for expected_id in expected_feature_ids:
             assert expected_id in feature_list
-
-
-@patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
-@patch("botocore.credentials.SSOProvider._load_sso_config")
-@patch(
-    "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
-    return_value=None,
-)
-@patch("botocore.credentials.AssumeRoleProvider.load", return_value=None)
-@patch("botocore.credentials.EnvProvider.load", return_value=None)
-def test_user_agent_has_sso_legacy_credentials_feature_id(
-    _unused_mock_env_load,
-    _unused_mock_shared_load,
-    _unused_mock_config_load,
-    mock_load_sso_config,
-    mock_load_sso_credentials,
-    monkeypatch,
-    patched_session,
-):
-    fake_fetcher_kwargs = {
-        'sso_start_url': "https://test.awsapps.com/start",
-        'sso_region': "us-east-1",
-        'sso_role_name': "Administrator",
-        'sso_account_id': "1234567890",
-    }
-    fake_response = {
-        "ProviderType": "sso",
-        "Credentials": {
-            "role_name": "FAKEROLE",
-            "AccessKeyId": "FAKEACCESSKEY",
-            "SecretAccessKey": "FAKESECRET",
-            "SessionToken": "FAKETOKEN",
-            "Expiration": "2099-01-01T00:00:00Z",
-        },
-    }
-
-    mock_load_sso_config.return_value = fake_fetcher_kwargs
-    client_one = patched_session.create_client("s3", region_name="us-east-1")
-    mock_load_sso_credentials.return_value = fake_response
-
-    _assert_feature_ids_in_ua(client_one, ['t', 'u'])
-
-
-@patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
-@patch("botocore.credentials.SSOProvider._load_sso_config")
-@patch(
-    "botocore.credentials.AssumeRoleWithWebIdentityProvider.load",
-    return_value=None,
-)
-@patch("botocore.credentials.AssumeRoleProvider.load", return_value=None)
-@patch("botocore.credentials.EnvProvider.load", return_value=None)
-def test_user_agent_has_sso_credentials_feature_id(
-    _unused_mock_env_load,
-    _unused_mock_shared_load,
-    _unused_mock_config_load,
-    mock_load_sso_config,
-    mock_load_sso_credentials,
-    monkeypatch,
-    patched_session,
-):
-    fake_fetcher_kwargs = {
-        'sso_session': 'sample_test',
-        'sso_start_url': "https://test.awsapps.com/start",
-        'sso_region': "us-east-1",
-        'sso_role_name': "Administrator",
-        'sso_account_id': "1234567890",
-    }
-    fake_response = {
-        "ProviderType": "sso",
-        "Credentials": {
-            "role_name": "FAKEROLE",
-            "AccessKeyId": "FAKEACCESSKEY",
-            "SecretAccessKey": "FAKESECRET",
-            "SessionToken": "FAKETOKEN",
-            "Expiration": "2099-01-01T00:00:00Z",
-        },
-    }
-
-    mock_load_sso_config.return_value = fake_fetcher_kwargs
-    client_one = patched_session.create_client("s3", region_name="us-east-1")
-    mock_load_sso_credentials.return_value = fake_response
-
-    _assert_feature_ids_in_ua(client_one, ['r', 's'])
 
 
 @pytest.mark.parametrize(
@@ -1709,3 +1455,219 @@ def _assert_deferred_credential_feature_ids(
         for feature in expected_source_features:
             assert feature in operation_feature_list
         assert expected_provider_feature in operation_feature_list
+
+
+class TestFeatureIdRegistered:
+    def test_user_agent_has_env_vars_credentials_feature_id(
+        self,
+        monkeypatch,
+        patched_session,
+    ):
+        env_vars = {
+            'AWS_ACCESS_KEY_ID': 'FAKEACCESSKEY',
+            'AWS_SECRET_ACCESS_KEY': 'FAKESECRET',
+            'AWS_SESSION_TOKEN': 'FAKETOKEN',
+        }
+        for var, value in env_vars.items():
+            monkeypatch.setenv(var, value)
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['g'])
+
+    def test_user_agent_has_code_credentials_feature_id(self, patched_session):
+        client = patched_session.create_client(
+            "s3",
+            region_name="us-east-1",
+            aws_access_key_id='FAKEACCESSKEY',
+            aws_secret_access_key='FAKESECRET',
+            aws_session_token='FAKETOKEN',
+        )
+        _assert_feature_ids_in_ua(client, ['e'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch(
+        "botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials"
+    )
+    def test_user_agent_has_imds_credentials_feature_id(
+        self,
+        mock_iam_fetcher,
+        mock_get_credentials,
+        patched_session,
+    ):
+        iam_role_fetcher = InstanceMetadataFetcher()
+        imds_provider = InstanceMetadataProvider(iam_role_fetcher)
+        credential_resolver = CredentialResolver([imds_provider])
+
+        fake_credentials = {
+            "role_name": "FAKEROLE",
+            "access_key": "FAKEACCESSKEY",
+            "secret_key": "FAKESECRET",
+            "token": "FAKETOKEN",
+            "expiry_time": "2099-01-01T00:00:00Z",
+        }
+        mock_iam_fetcher.return_value = fake_credentials
+        mock_get_credentials.return_value = credential_resolver
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['0'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch("botocore.credentials.ContainerMetadataFetcher.retrieve_full_uri")
+    def test_user_agent_has_container_credentials_feature_id(
+        self,
+        mock_container_metadata_fetcher,
+        mock_get_credentials,
+        monkeypatch,
+        patched_session,
+    ):
+        env_vars = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'Basic auth-token',
+        }
+        for var, value in env_vars.items():
+            monkeypatch.setenv(var, value)
+
+        container_metadata_fetcher = ContainerMetadataFetcher()
+        container_provider = ContainerProvider(
+            fetcher=container_metadata_fetcher
+        )
+        credential_resolver = CredentialResolver([container_provider])
+
+        fake_credentials = {
+            "AccessKeyId": "FAKEACCESSKEY",
+            "SecretAccessKey": "FAKESECRET",
+            "Token": "FAKETOKEN",
+            "Expiration": "2099-01-01T00:00:00Z",
+            "AccountId": "01234567890",
+        }
+
+        mock_container_metadata_fetcher.return_value = fake_credentials
+        mock_get_credentials.return_value = credential_resolver
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['z'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch("botocore.configloader.raw_config_parse")
+    def test_user_agent_has_boto2_config_credentials_feature_id(
+        self,
+        mock_boto2_config,
+        mock_get_credentials,
+        patched_session,
+    ):
+        boto_provider = BotoProvider()
+        credentials_resolver = CredentialResolver([boto_provider])
+
+        fake_credentials = {
+            "Credentials": {
+                "aws_access_key_id": "FAKEACCESSKEY",
+                "aws_secret_access_key": "FAKESECRETKEY",
+            }
+        }
+        mock_boto2_config.return_value = fake_credentials
+        mock_get_credentials.return_value = credentials_resolver
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['x'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch("botocore.credentials.ProcessProvider._retrieve_credentials_using")
+    @patch(
+        "botocore.credentials.ProcessProvider._credential_process",
+        return_value="Mock_credential_process",
+    )
+    def test_user_agent_has_process_provider_credentials_feature_id(
+        self,
+        _unused_mock_credentials_process,
+        mock_process_config,
+        mock_get_credentials,
+        patched_session,
+    ):
+        process_provider = ProcessProvider(None, None)
+        credentials_resolver = CredentialResolver([process_provider])
+
+        fake_credentials = {
+            'access_key': "FAKEACCESSKEY",
+            'secret_key': "FAKESECRETKEY",
+            'token': "FAKETOKEN",
+        }
+        mock_process_config.return_value = fake_credentials
+        mock_get_credentials.return_value = credentials_resolver
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['v', 'w'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
+    @patch("botocore.credentials.SSOProvider._load_sso_config")
+    def test_user_agent_has_sso_legacy_credentials_feature_id(
+        self,
+        mock_load_sso_config,
+        mock_cached_credential_fetcher,
+        mock_get_credentials,
+        patched_session,
+    ):
+        sso_provider = SSOProvider(None, None, None)
+        credentials_resolver = CredentialResolver([sso_provider])
+        mock_get_credentials.return_value = credentials_resolver
+
+        fake_fetcher_kwargs = {
+            'sso_start_url': "https://test.awsapps.com/start",
+            'sso_region': "us-east-1",
+            'sso_role_name': "Administrator",
+            'sso_account_id': "1234567890",
+        }
+
+        fake_response = {
+            "ProviderType": "sso",
+            "Credentials": {
+                "role_name": "FAKEROLE",
+                "AccessKeyId": "FAKEACCESSKEY",
+                "SecretAccessKey": "FAKESECRET",
+                "SessionToken": "FAKETOKEN",
+                "Expiration": "2099-01-01T00:00:00Z",
+            },
+        }
+        mock_cached_credential_fetcher.return_value = fake_response
+        mock_load_sso_config.return_value = fake_fetcher_kwargs
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['t', 'u'])
+
+    @patch("botocore.credentials.create_credential_resolver")
+    @patch("botocore.credentials.CachedCredentialFetcher._load_from_cache")
+    @patch("botocore.credentials.SSOProvider._load_sso_config")
+    def test_user_agent_has_sso_credentials_feature_id(
+        self,
+        mock_load_sso_config,
+        mock_cached_credential_fetcher,
+        mock_get_credentials,
+        patched_session,
+    ):
+        sso_provider = SSOProvider(None, None, None)
+        credentials_resolver = CredentialResolver([sso_provider])
+        mock_get_credentials.return_value = credentials_resolver
+
+        fake_fetcher_kwargs = {
+            'sso_session': 'sample_test',  # Key difference from legacy SSO
+            'sso_start_url': "https://test.awsapps.com/start",
+            'sso_region': "us-east-1",
+            'sso_role_name': "Administrator",
+            'sso_account_id': "1234567890",
+        }
+
+        fake_response = {
+            "ProviderType": "sso",
+            "Credentials": {
+                "role_name": "FAKEROLE",
+                "AccessKeyId": "FAKEACCESSKEY",
+                "SecretAccessKey": "FAKESECRET",
+                "SessionToken": "FAKETOKEN",
+                "Expiration": "2099-01-01T00:00:00Z",
+            },
+        }
+        mock_cached_credential_fetcher.return_value = fake_response
+        mock_load_sso_config.return_value = fake_fetcher_kwargs
+
+        client = patched_session.create_client("s3", region_name="us-east-1")
+        _assert_feature_ids_in_ua(client, ['r', 's'])
