@@ -608,8 +608,12 @@ class UserAgentString:
         User-Agent header.
         """
         if self._client_config and self._client_config.user_agent_appid:
+            appid = sanitize_user_agent_string_component(
+                raw_str=self._client_config.user_agent_appid,
+                allow_hash=True
+            )
             return [
-                UserAgentComponent('app', self._client_config.user_agent_appid)
+                RawStringUserAgentComponent(f'app/{appid}')
             ]
         else:
             return []
