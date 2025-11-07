@@ -253,6 +253,7 @@ def test_non_positive_user_agent_component_size_config_raises():
         UserAgentComponentSizeConfig(-1, ',')
     assert 'Invalid `max_size_in_bytes`' in str(excinfo.value)
 
+
 def test_hash_in_user_agent_appid():
     ua = UserAgentString(
         platform_name='linux',
@@ -261,9 +262,7 @@ def test_hash_in_user_agent_appid():
         python_version='3.8.20',
         python_implementation='Dpython',
         execution_env='AWS_Lambda_python3.8',
-    ).with_client_config(
-        Config(user_agent_appid='fooapp#1.0.0')
-    )
+    ).with_client_config(Config(user_agent_appid='fooapp#1.0.0'))
 
     actual = ua.to_string()
     expected = (
