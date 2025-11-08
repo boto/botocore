@@ -27,6 +27,13 @@ import itertools
 import operator
 import sys
 import types
+import warnings
+
+warnstr = (
+    "The botocore.vendored.six module is deprecated and will be removed "
+    "in a future version. Please use six as a direct dependency."
+)
+warnings.warn(warnstr, DeprecationWarning, stacklevel=2)
 
 __author__ = "Benjamin Peterson <benjamin@python.org>"
 __version__ = "1.16.0"
