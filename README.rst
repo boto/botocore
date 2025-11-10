@@ -13,7 +13,7 @@ Botocore is maintained and published by `Amazon Web Services`_.
 Notices
 -------
 
-On 2026-04-29, support for Python 3.9 will end for Boto3. This follows the
+On 2026-04-29, support for Python 3.9 will end for Botocore. This follows the
 Python Software Foundation `end of support <https://peps.python.org/pep-0596/#lifespan>`__
 for the runtime which occurred on 2025-10-31.
 
