@@ -798,7 +798,7 @@ class TestRpcV2CBORHostPrefix(unittest.TestCase):
 
         self.assertNotIn('host_prefix', serialized)
 
-    def test_no_host_prefix_when_params_empty(self):
+    def test_no_host_prefix_when_params_invalid(self):
         operation_model = self.service_model.operation_model('TestOperation')
         serializer = serialize.create_serializer('smithy-rpc-v2-cbor')
 
