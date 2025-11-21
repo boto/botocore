@@ -3583,17 +3583,15 @@ class JSONFileCache:
             temp_fd, temp_path = tempfile.mkstemp(
                 dir=self._working_dir, suffix='.tmp'
             )
-            if hasattr(os, 'fchmod'):
-                os.fchmod(temp_fd, 0o600)
             with os.fdopen(temp_fd, 'w') as f:
                 temp_fd = None
                 f.write(file_content)
                 f.flush()
                 os.fsync(f.fileno())
-            
+
             os.replace(temp_path, full_key)
             temp_path = None
-            
+
         except Exception:
             if temp_fd is not None:
                 try:
