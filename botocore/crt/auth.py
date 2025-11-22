@@ -26,6 +26,7 @@ from botocore.compat import (
     awscrt,
     get_current_datetime,
     parse_qs,
+    quote,
     urlsplit,
     urlunsplit,
 )
@@ -117,7 +118,9 @@ class CrtSigV4Auth(BaseSigner):
             array = []
             for param, value in aws_request.params.items():
                 value = str(value)
-                array.append(f'{param}={value}')
+                encoded_param = quote(param, safe='-_.~')
+                encoded_value = quote(value, safe='-_.~')
+                array.append(f'{encoded_param}={encoded_value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
             crt_path = f'{crt_path}?{url_parts.query}'
@@ -311,7 +314,9 @@ class CrtSigV4AsymAuth(BaseSigner):
             array = []
             for param, value in aws_request.params.items():
                 value = str(value)
-                array.append(f'{param}={value}')
+                encoded_param = quote(param, safe='-_.~')
+                encoded_value = quote(value, safe='-_.~')
+                array.append(f'{encoded_param}={encoded_value}')
             crt_path = crt_path + '?' + '&'.join(array)
         elif url_parts.query:
             crt_path = f'{crt_path}?{url_parts.query}'
