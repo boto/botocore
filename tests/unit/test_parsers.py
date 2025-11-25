@@ -1621,6 +1621,48 @@ class TestParseErrorResponses(unittest.TestCase):
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
 
+    def test_query_parser_empty_body_4xx_error_with_notes(self):
+        parser = parsers.QueryParser()
+        response = {
+            'body': b'',
+            'headers': {
+                'Content-Length': '0',
+                'Date': 'Fri, 21 Nov 2025 18:18:28 GMT',
+                'Connection': 'close',
+            },
+            'status_code': 413,
+        }
+
+        with self.assertRaises(parsers.ResponseParserError) as cm:
+            parser._do_error_parse(response, None)
+
+        exception = cm.exception
+
+        self.assertTrue(hasattr(exception, '__notes__'))
+        self.assertEqual(len(exception.__notes__), 1)
+        self.assertEqual(exception.__notes__[0], "HTTP 413: Content Too Large")
+
+    def test_parse_error_from_body_empty_body_4xx_error_with_notes(self):
+        parser = parsers.RestXMLParser()
+        response = {
+            'body': b'',
+            'headers': {
+                'Content-Length': '0',
+                'Date': 'Fri, 21 Nov 2025 18:18:28 GMT',
+                'Connection': 'close',
+            },
+            'status_code': 413,
+        }
+
+        with self.assertRaises(parsers.ResponseParserError) as cm:
+            parser._parse_error_from_body(response)
+
+        exception = cm.exception
+
+        self.assertTrue(hasattr(exception, '__notes__'))
+        self.assertEqual(len(exception.__notes__), 1)
+        self.assertEqual(exception.__notes__[0], "HTTP 413: Content Too Large")
+
 
 def _generic_test_bodies():
     generic_html_body = (

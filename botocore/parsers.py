@@ -592,7 +592,15 @@ class BaseXMLResponseParser(ResponseParser):
 class QueryParser(BaseXMLResponseParser):
     def _do_error_parse(self, response, shape):
         xml_contents = response['body']
-        root = self._parse_xml_string_to_dom(xml_contents)
+        try:
+            root = self._parse_xml_string_to_dom(xml_contents)
+        except ResponseParserError as e:
+            status_message = http.client.responses.get(
+                response['status_code'], ''
+            )
+            if status_message:
+                e.add_note(f"HTTP {response['status_code']}: {status_message}")
+            raise
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
         # Once we've converted xml->dict, we need to make one or two
@@ -1447,7 +1455,15 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
 
     def _parse_error_from_body(self, response):
         xml_contents = response['body']
-        root = self._parse_xml_string_to_dom(xml_contents)
+        try:
+            root = self._parse_xml_string_to_dom(xml_contents)
+        except ResponseParserError as e:
+            status_message = http.client.responses.get(
+                response['status_code'], ''
+            )
+            if status_message:
+                e.add_note(f"HTTP {response['status_code']}: {status_message}")
+            raise
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
         if root.tag == 'Error':
