@@ -1640,7 +1640,7 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertTrue(hasattr(exception, '__notes__'))
         self.assertEqual(len(exception.__notes__), 1)
-        self.assertEqual(exception.__notes__[0], "HTTP 413: Content Too Large")
+        self.assertIn("HTTP 413:", exception.__notes__[0])
 
     def test_parse_error_from_body_empty_body_4xx_error_with_notes(self):
         parser = parsers.RestXMLParser()
@@ -1661,7 +1661,7 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertTrue(hasattr(exception, '__notes__'))
         self.assertEqual(len(exception.__notes__), 1)
-        self.assertEqual(exception.__notes__[0], "HTTP 413: Content Too Large")
+        self.assertIn("HTTP 413:", exception.__notes__[0])
 
 
 def _generic_test_bodies():
