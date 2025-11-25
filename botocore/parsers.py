@@ -598,7 +598,7 @@ class QueryParser(BaseXMLResponseParser):
             status_message = http.client.responses.get(
                 response['status_code'], ''
             )
-            if status_message:
+            if status_message and hasattr(e, 'add_note'):
                 e.add_note(f"HTTP {response['status_code']}: {status_message}")
             raise
         parsed = self._build_name_to_xml_node(root)
@@ -1461,7 +1461,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             status_message = http.client.responses.get(
                 response['status_code'], ''
             )
-            if status_message:
+            if status_message and hasattr(e, 'add_note'):
                 e.add_note(f"HTTP {response['status_code']}: {status_message}")
             raise
         parsed = self._build_name_to_xml_node(root)
