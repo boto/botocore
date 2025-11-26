@@ -1637,10 +1637,13 @@ class TestParseErrorResponses(unittest.TestCase):
             parser._do_error_parse(response, None)
 
         exception = cm.exception
-
-        self.assertTrue(hasattr(exception, '__notes__'))
-        self.assertEqual(len(exception.__notes__), 1)
-        self.assertIn("HTTP 413:", exception.__notes__[0])
+        self.assertIn("HTTP 413:", str(exception))
+        error_msg = str(exception)
+        self.assertTrue(
+            "Request Entity Too Large" in error_msg
+            or "Content Too Large" in error_msg,
+            f"Expected HTTP 413 message not found in: {error_msg}",
+        )
 
     def test_parse_error_from_body_empty_body_4xx_error_with_notes(self):
         parser = parsers.RestXMLParser()
@@ -1658,10 +1661,13 @@ class TestParseErrorResponses(unittest.TestCase):
             parser._parse_error_from_body(response)
 
         exception = cm.exception
-
-        self.assertTrue(hasattr(exception, '__notes__'))
-        self.assertEqual(len(exception.__notes__), 1)
-        self.assertIn("HTTP 413:", exception.__notes__[0])
+        self.assertIn("HTTP 413:", str(exception))
+        error_msg = str(exception)
+        self.assertTrue(
+            "Request Entity Too Large" in error_msg
+            or "Content Too Large" in error_msg,
+            f"Expected HTTP 413 message not found in: {error_msg}",
+        )
 
 
 def _generic_test_bodies():

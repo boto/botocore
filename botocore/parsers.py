@@ -595,11 +595,13 @@ class QueryParser(BaseXMLResponseParser):
         try:
             root = self._parse_xml_string_to_dom(xml_contents)
         except ResponseParserError as e:
-            status_message = http.client.responses.get(
-                response['status_code'], ''
-            )
-            if status_message and hasattr(e, 'add_note'):
-                e.add_note(f"HTTP {response['status_code']}: {status_message}")
+            status_code = response.get('status_code')
+            if status_code and status_code in http.client.responses:
+                status_message = http.client.responses[status_code]
+                error_msg_with_status = (
+                    f"{str(e)} (HTTP {status_code}: {status_message})"
+                )
+                raise ResponseParserError(error_msg_with_status)
             raise
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
@@ -1458,11 +1460,12 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         try:
             root = self._parse_xml_string_to_dom(xml_contents)
         except ResponseParserError as e:
-            status_message = http.client.responses.get(
-                response['status_code'], ''
-            )
-            if status_message and hasattr(e, 'add_note'):
-                e.add_note(f"HTTP {response['status_code']}: {status_message}")
+            status_code = response.get('status_code')
+            if status_code and status_code in http.client.responses:
+                status_message = http.client.responses[status_code]
+                raise ResponseParserError(
+                    f"{str(e)} (HTTP {status_code}: {status_message})"
+                )
             raise
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
