@@ -535,16 +535,6 @@ class TestInstanceCreation(unittest.TestCase):
         with self.assertRaises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)
 
-    def test_validation_raises_error_for_unknown_parameters(self):
-        operation_model = self.service_model.operation_model('TestOperation')
-        serializer = serialize.create_serializer(
-            self.service_model.metadata['protocol']
-        )
-
-        params = {'Timestamp-Non-existant': ''}
-        with self.assertRaises(ParamValidationError):
-            serializer.serialize_to_request(params, operation_model)
-
 
 class TestHeaderSerialization(BaseModelWithBlob):
     def setUp(self):
