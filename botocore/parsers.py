@@ -598,10 +598,9 @@ class QueryParser(BaseXMLResponseParser):
             status_code = response.get('status_code')
             if status_code and status_code in http.client.responses:
                 status_message = http.client.responses[status_code]
-                error_msg_with_status = (
+                raise ResponseParserError(
                     f"{str(e)} (HTTP {status_code}: {status_message})"
                 )
-                raise ResponseParserError(error_msg_with_status)
             raise
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
