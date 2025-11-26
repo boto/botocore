@@ -535,7 +535,7 @@ class TestInstanceCreation(unittest.TestCase):
         with self.assertRaises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)
 
-    def test_no_host_prefix_when_params_invalid(self):
+    def test_validation_raises_error_for_unknown_parameters(self):
         operation_model = self.service_model.operation_model('TestOperation')
         serializer = serialize.create_serializer(
             self.service_model.metadata['protocol']
