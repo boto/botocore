@@ -2527,8 +2527,7 @@ def _build_dpop_header(private_key, uri, uid=None, ts=None):
     )
     signing_input = f"{header_b64}.{payload_b64}".encode()
     signature = private_key.sign(sha256(signing_input).digest())
-    r, s = EC.decode_der_signature(signature)
-    signature_bytes = r + s
+    signature_bytes = EC.decode_der_signature_to_padded_pair(signature, pad_to=32)
     signature_b64 = _base64_url_encode_no_padding(signature_bytes)
 
     return f"{header_b64}.{payload_b64}.{signature_b64}"
