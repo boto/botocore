@@ -3579,31 +3579,16 @@ class JSONFileCache:
             )
         if not os.path.isdir(self._working_dir):
             os.makedirs(self._working_dir, exist_ok=True)
-        try:
-            temp_fd, temp_path = tempfile.mkstemp(
-                dir=self._working_dir, suffix='.tmp'
-            )
-            with os.fdopen(temp_fd, 'w') as f:
-                temp_fd = None
-                f.write(file_content)
-                f.flush()
-                os.fsync(f.fileno())
 
-            os.replace(temp_path, full_key)
-            temp_path = None
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=self._working_dir, suffix='.tmp'
+        )
+        with os.fdopen(temp_fd, 'w') as f:
+            f.write(file_content)
+            f.flush()
+            os.fsync(f.fileno())
 
-        except Exception:
-            if temp_fd is not None:
-                try:
-                    os.close(temp_fd)
-                except OSError:
-                    pass
-            if temp_path is not None and os.path.exists(temp_path):
-                try:
-                    os.unlink(temp_path)
-                except OSError:
-                    pass
-            raise
+        os.replace(temp_path, full_key)
 
     def _convert_cache_key(self, cache_key):
         full_path = os.path.join(self._working_dir, cache_key + '.json')
