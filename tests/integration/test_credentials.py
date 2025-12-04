@@ -287,7 +287,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         s3 = session.create_client('s3')
         s3.list_buckets()
 
-        # Calls to other services should not.Retry on InvalidClientTokenId
+        # Calls to other services should not succeed. Retry on InvalidClientTokenId
         # to handle IAM eventual consistency where credentials may not have
         # fully propagated to all services yet.
         iam = session.create_client('iam')
