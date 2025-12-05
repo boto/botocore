@@ -287,15 +287,26 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         s3 = session.create_client('s3')
         s3.list_buckets()
 
-        # Calls to other services should not
+        # Calls to other services should not succeed. Retry on InvalidClientTokenId
+        # to handle IAM eventual consistency where credentials may not have
+        # fully propagated to all services yet.
         iam = session.create_client('iam')
-        try:
-            iam.list_groups()
-            self.fail("Expected call to list_groups to fail, but it passed.")
-        except ClientError as e:
-            code = e.response.get('Error', {}).get('Code')
-            if code != 'AccessDenied':
-                raise
+        attempts = 5
+        delay = 1
+        for attempt in range(attempts):
+            try:
+                iam.list_groups()
+                self.fail(
+                    "Expected call to list_groups to fail, but it passed."
+                )
+            except ClientError as e:
+                code = e.response.get('Error', {}).get('Code')
+                if code == 'AccessDenied':
+                    return
+                elif code == 'InvalidClientTokenId' and attempt < attempts - 1:
+                    time.sleep(delay * (2**attempt))
+                else:
+                    raise
 
     def test_recursive_assume_role(self):
         # Create the final role, the one that will actually have access to s3
