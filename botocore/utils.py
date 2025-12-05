@@ -3101,6 +3101,9 @@ class ContainerMetadataFetcher:
 
     def _validate_allowed_url(self, full_url):
         parsed = botocore.compat.urlparse(full_url)
+
+        if parsed.scheme == 'https':
+            return
         if self._is_loopback_address(parsed.hostname):
             return
         is_whitelisted_host = self._check_if_whitelisted_host(parsed.hostname)
