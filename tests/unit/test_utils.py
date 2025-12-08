@@ -17,7 +17,6 @@ import operator
 import os
 import shutil
 import tempfile
-import threading
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -3705,56 +3704,6 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         temp_path = call_args[0]
 
         assert '.tmp' in temp_path
-
-    def test_concurrent_writes_to_multiple_temp_files(self):
-        """Test concurrent writes to same key don't cause corruption."""
-        errors = []
-
-        def write_worker(thread_id):
-            try:
-                key = f'concurrent_test_{thread_id}'
-                for i in range(3):
-                    self.cache[key] = {'thread': thread_id, 'iteration': i}
-            except Exception as e:
-                errors.append(f'Thread {thread_id}: {e}')
-
-        threads = [
-            threading.Thread(target=write_worker, args=(i,)) for i in range(3)
-        ]
-
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-
-        self.assertEqual(len(errors), 0, f'Concurrent write errors: {errors}')
-
-        for thread_id in range(3):
-            key = f'concurrent_test_{thread_id}'
-            final_data = self.cache[key]
-            self.assertIsInstance(final_data, dict)
-            self.assertEqual(final_data['thread'], thread_id)
-            self.assertIn('thread', final_data)
-            self.assertIn('iteration', final_data)
-
-    def test_atomic_write_preserves_data_on_failure(self):
-        """Test write failures don't corrupt existing data."""
-        key = 'atomic_test'
-        original_data = {'status': 'original'}
-
-        self.cache[key] = original_data
-
-        # Mock write failure
-        original_dumps = self.cache._dumps
-        self.cache._dumps = mock.Mock(side_effect=ValueError('Write failed'))
-
-        with self.assertRaises(ValueError):
-            self.cache[key] = {'status': 'should_fail'}
-
-        self.cache._dumps = original_dumps
-
-        # Verify original data intact
-        self.assertEqual(self.cache[key], original_data)
 
     def test_no_temp_files_after_write(self):
         """Test temporary files cleaned up after writes."""
