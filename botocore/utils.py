@@ -22,6 +22,7 @@ import os
 import random
 import re
 import socket
+import tempfile
 import time
 import warnings
 import weakref
@@ -3580,11 +3581,16 @@ class JSONFileCache:
             )
         if not os.path.isdir(self._working_dir):
             os.makedirs(self._working_dir, exist_ok=True)
-        with os.fdopen(
-            os.open(full_key, os.O_WRONLY | os.O_CREAT, 0o600), 'w'
-        ) as f:
-            f.truncate()
+
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=self._working_dir, suffix='.tmp'
+        )
+        with os.fdopen(temp_fd, 'w') as f:
             f.write(file_content)
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(temp_path, full_key)
 
     def _convert_cache_key(self, cache_key):
         full_path = os.path.join(self._working_dir, cache_key + '.json')
