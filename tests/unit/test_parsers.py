@@ -1664,5 +1664,5 @@ def test_can_handle_generic_error_message_4xx(parser_class, status_code):
         {'body': b'', 'headers': {}, 'status_code': status_code}, None
     )
     assert parsed['Error']['Code'] == str(status_code)
-    assert parsed['Error']['Message']  # Just check it's not empty
+    assert parsed['Error']['Message']
     assert parsed['ResponseMetadata']['HTTPStatusCode'] == status_code
