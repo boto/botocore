@@ -254,6 +254,15 @@ class ResponseParser:
         """
         LOG.debug('Response headers: %r', response['headers'])
         LOG.debug('Response body:\n%r', response['body'])
+
+        # We don't want to decorate event stream responses with metadata
+        if shape and shape.serialization.get('eventstream'):
+            if response['status_code'] >= 301:
+                parsed = self._do_error_parse(response, shape)
+            else:
+                parsed = self._do_parse(response, shape)
+            return parsed
+
         if response['status_code'] >= 301:
             if self._is_generic_error_response(response):
                 parsed = self._do_generic_error_parse(response)
@@ -265,10 +274,6 @@ class ResponseParser:
                 parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
-
-        # We don't want to decorate event stream responses with metadata
-        if shape and shape.serialization.get('eventstream'):
-            return parsed
 
         # Add ResponseMetadata if it doesn't exist and inject the HTTP
         # status code and headers from the response.
@@ -305,11 +310,14 @@ class ResponseParser:
         # non sensical parsed data.
         # To prevent this case from happening we first need to check
         # whether or not this response looks like the generic response.
-        if response['status_code'] >= 500:
+        if response['status_code'] >= 400:
             if 'body' not in response or response['body'] is None:
                 return True
 
-            body = response['body'].strip()
+            body = response['body']
+            if isinstance(body, str):
+                body = body.encode('utf-8')
+            body = body.strip()
             return body.startswith(b'<html>') or not body
 
     def _do_generic_error_parse(self, response):
@@ -319,6 +327,17 @@ class ResponseParser:
             "Received a non protocol specific error response from the "
             "service, unable to populate error code and message."
         )
+        headers = response.get('headers', {})
+        metadata = {
+            'HTTPStatusCode': response['status_code'],
+            'HTTPHeaders': headers,
+        }
+
+        if headers.get('x-amz-request-id'):
+            metadata['RequestId'] = headers['x-amz-request-id']
+        if headers.get('x-amz-id-2'):
+            metadata['HostId'] = headers['x-amz-id-2']
+
         return {
             'Error': {
                 'Code': str(response['status_code']),
@@ -326,7 +345,7 @@ class ResponseParser:
                     response['status_code'], ''
                 ),
             },
-            'ResponseMetadata': {},
+            'ResponseMetadata': metadata,
         }
 
     def _do_parse(self, response, shape):
