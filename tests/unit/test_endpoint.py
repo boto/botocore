@@ -488,3 +488,15 @@ class TestEndpointCreator(unittest.TestCase):
         )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('socket_options'), socket_options)
+
+    def test_source_address(self):
+        source_address = ('192.168.1.1', 1234)
+        self.creator.create_endpoint(
+            self.service_model,
+            region_name='us-west-2',
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session,
+            source_address=source_address,
+        )
+        session_args = self.mock_session.call_args[1]
+        self.assertEqual(session_args.get('source_address'), source_address)
