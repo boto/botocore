@@ -1,52 +1,52 @@
 {
   "pagination": {
-    "GetPlanEvaluationStatus": {
+    "ListBlockedGuestUsers": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "warnings"
+      "result_key": "blocklist"
     },
-    "GetPlanExecution": {
+    "ListBots": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "stepStates"
+      "result_key": "bots"
     },
-    "ListPlanExecutionEvents": {
+    "ListDevicesForUser": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "items"
+      "result_key": "devices"
     },
-    "ListPlanExecutions": {
+    "ListGuestUsers": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "items"
+      "result_key": "guestlist"
     },
-    "ListPlans": {
+    "ListNetworks": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "plans"
+      "result_key": "networks"
     },
-    "ListPlansInRegion": {
+    "ListSecurityGroupUsers": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "plans"
+      "result_key": "users"
     },
-    "ListRoute53HealthChecks": {
+    "ListSecurityGroups": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "healthChecks"
+      "result_key": "securityGroups"
     },
-    "ListRoute53HealthChecksInRegion": {
+    "ListUsers": {
       "input_token": "nextToken",
       "output_token": "nextToken",
       "limit_key": "maxResults",
-      "result_key": "healthChecks"
+      "result_key": "users"
     }
   }
 }

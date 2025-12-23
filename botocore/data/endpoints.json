@@ -4107,6 +4107,7 @@
       },
       "cases" : {
         "endpoints" : {
+          "af-south-1" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
           "ap-southeast-1" : { },
@@ -25860,6 +25861,7 @@
         "endpoints" : {
           "af-south-1" : { },
           "ap-east-1" : { },
+          "ap-east-2" : { },
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
           "ap-northeast-3" : { },
@@ -37876,6 +37878,11 @@
       }
     },
     "services" : {
+      "agreement-marketplace" : {
+        "endpoints" : {
+          "us-isob-east-1" : { }
+        }
+      },
       "api.ecr" : {
         "endpoints" : {
           "us-isob-east-1" : {
@@ -39793,6 +39800,11 @@
         },
         "isRegionalized" : false,
         "partitionEndpoint" : "aws-iso-f-global"
+      },
+      "identitystore" : {
+        "endpoints" : {
+          "us-isof-east-1" : { }
+        }
       },
       "kinesis" : {
         "endpoints" : {
