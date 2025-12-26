@@ -38,7 +38,6 @@ SERVICE_TO_CLASS_NAME = {
     'efs': 'EFS',
     'elasticache': 'ElastiCache',
     'elasticbeanstalk': 'ElasticBeanstalk',
-    'elastictranscoder': 'ElasticTranscoder',
     'elb': 'ElasticLoadBalancing',
     'emr': 'EMR',
     'glacier': 'Glacier',

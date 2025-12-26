@@ -134,10 +134,6 @@ SERVICES = {
         "endpoint_prefix": "elasticbeanstalk",
         "service_id": "elastic-beanstalk",
     },
-    "elastictranscoder": {
-        "endpoint_prefix": "elastictranscoder",
-        "service_id": "elastic-transcoder",
-    },
     "elb": {
         "endpoint_prefix": "elasticloadbalancing",
         "service_id": "elastic-load-balancing",
