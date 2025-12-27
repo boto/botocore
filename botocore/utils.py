@@ -1320,7 +1320,7 @@ def is_valid_endpoint_url(endpoint_url):
     if hostname[-1] == ".":
         hostname = hostname[:-1]
     allowed = re.compile(
-        r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
+        r"^((?!-)[\w-]{1,63}(?<!-)\.)*((?!-)[\w-]{1,63}(?<!-))$",
         re.IGNORECASE,
     )
     return allowed.match(hostname)

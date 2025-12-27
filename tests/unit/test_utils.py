@@ -947,6 +947,9 @@ class TestIsValidEndpointURL(unittest.TestCase):
     def test_hostname_no_dots(self):
         self.assertTrue(is_valid_endpoint_url('https://foo/'))
 
+    def test_hostname_can_contain_underscore(self):
+        self.assertTrue(is_valid_endpoint_url('http://example_foo-bar.com'))
+
 
 class TestFixS3Host(unittest.TestCase):
     def test_fix_s3_host_initial(self):
