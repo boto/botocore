@@ -102,8 +102,10 @@ class Config:
           be virtual.
 
         * ``payload_signing_enabled`` -- Refers to whether or not to SHA256
-          sign sigv4 payloads. By default, this is disabled for streaming
-          uploads (UploadPart and PutObject).
+          sign SigV4 payloads. For operations that support request checksums,
+          this only applies when ``request_checksum_calculation`` is set to
+          ``when_required``. Otherwise, this is disabled for
+          streaming uploads (UploadPart and PutObject) by default.
 
         * ``addressing_style`` -- Refers to the style in which to address
           s3 endpoints. Values must be a string that equals one of:
