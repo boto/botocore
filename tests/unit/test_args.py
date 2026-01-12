@@ -270,9 +270,9 @@ class TestCreateClientArgs(unittest.TestCase):
             )
             self.assert_create_endpoint_call(
                 m,
-                socket_options=self.default_socket_options
-                + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+                socket_options=self.default_socket_options,
             )
+            m.reset_mock()
             self.config_store.set_config_variable('tcp_keepalive', False)
             self.call_get_client_args(
                 client_config=Config(tcp_keepalive=True),
