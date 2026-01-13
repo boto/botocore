@@ -557,11 +557,9 @@ class ClientArgsCreator:
         # This disables Nagle's algorithm and is the default socket options
         # in urllib3.
 
-        # looks at Config object, config file and Environment variable
         socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         client_keepalive = client_config and client_config.tcp_keepalive
         if client_keepalive is None:
-            # config_store checks environment variable first, then config file.
             client_keepalive = self._config_store.get_config_variable(
                 'tcp_keepalive'
             )
