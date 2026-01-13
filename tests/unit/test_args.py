@@ -115,7 +115,6 @@ class TestCreateClientArgs(unittest.TestCase):
             'partition_data': {},
         }
         call_kwargs.update(**override_kwargs)
-
         return self.args_create.get_client_args(**call_kwargs)
 
     def call_compute_client_args(self, **override_kwargs):
