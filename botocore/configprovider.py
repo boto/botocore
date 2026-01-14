@@ -204,6 +204,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         None,
         None,
     ),
+    'tcp_keepalive': (
+        'tcp_keepalive',
+        'BOTOCORE_TCP_KEEPALIVE',
+        None,
+        utils.ensure_boolean,
+    ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
