@@ -448,12 +448,23 @@ class JSONSerializer(Serializer):
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
-        method = getattr(
-            self,
-            f'_serialize_type_{shape.type_name}',
-            self._default_serialize,
-        )
-        method(serialized, value, shape, key)
+        type_name = shape.type_name
+        if type_name == 'structure':
+            self._serialize_type_structure(serialized, value, shape, key)
+        elif type_name == 'map':
+            self._serialize_type_map(serialized, value, shape, key)
+        elif type_name == 'list':
+            self._serialize_type_list(serialized, value, shape, key)
+        elif type_name == 'timestamp':
+            self._serialize_type_timestamp(serialized, value, shape, key)
+        elif type_name == 'blob':
+            self._serialize_type_blob(serialized, value, shape, key)
+        elif type_name == 'float':
+            self._serialize_type_float(serialized, value, shape, key)
+        elif type_name == 'double':
+            self._serialize_type_double(serialized, value, shape, key)
+        else:
+            self._default_serialize(serialized, value, shape, key)
 
     def _serialize_type_structure(self, serialized, value, shape, key):
         if shape.is_document_type:

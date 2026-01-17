@@ -181,6 +181,23 @@ class ValidationErrors:
 class ParamValidator:
     """Validates parameters against a shape model."""
 
+    # Type checking for simple scalar types without constraints
+    SCALAR_TYPES = {
+        'float': (float, decimal.Decimal, int),
+        'double': (float, decimal.Decimal, int),
+        'integer': (int,),
+        'long': (int,),
+        'boolean': (bool,),
+        'string': (str,),
+    }
+
+    # Type checking for container types
+    CONTAINER_TYPES = {
+        'structure': (dict,),
+        'map': (dict,),
+        'list': (list, tuple),
+    }
+
     def validate(self, params, shape):
         """Validate parameters against a shape model.
 
@@ -210,9 +227,33 @@ class ParamValidator:
         if special_validator:
             special_validator(params, shape, errors, name)
         else:
-            getattr(self, f'_validate_{shape.type_name}')(
-                params, shape, errors, name
-            )
+            type_name = shape.type_name
+            if type_name == 'structure':
+                self._validate_structure(params, shape, errors, name)
+            elif type_name == 'list':
+                self._validate_list(params, shape, errors, name)
+            elif type_name == 'map':
+                self._validate_map(params, shape, errors, name)
+            elif type_name == 'string':
+                self._validate_string(params, shape, errors, name)
+            elif type_name == 'integer':
+                self._validate_integer(params, shape, errors, name)
+            elif type_name == 'boolean':
+                self._validate_boolean(params, shape, errors, name)
+            elif type_name == 'float':
+                self._validate_float(params, shape, errors, name)
+            elif type_name == 'double':
+                self._validate_double(params, shape, errors, name)
+            elif type_name == 'long':
+                self._validate_long(params, shape, errors, name)
+            elif type_name == 'blob':
+                self._validate_blob(params, shape, errors, name)
+            elif type_name == 'timestamp':
+                self._validate_timestamp(params, shape, errors, name)
+            else:
+                getattr(self, f'_validate_{type_name}')(
+                    params, shape, errors, name
+                )
 
     def _validate_jsonvalue_string(self, params, shape, errors, name):
         # Check to see if a value marked as a jsonvalue can be dumped to
@@ -246,6 +287,7 @@ class ParamValidator:
             )
 
     @type_check(valid_types=(dict,))
+    @type_check(valid_types=CONTAINER_TYPES['structure'])
     def _validate_structure(self, params, shape, errors, name):
         if shape.is_tagged_union:
             if len(params) == 0:
@@ -286,7 +328,7 @@ class ParamValidator:
                 f'{name}.{param}',
             )
 
-    @type_check(valid_types=(str,))
+    @type_check(valid_types=SCALAR_TYPES['string'])
     def _validate_string(self, param, shape, errors, name):
         # Validate range.  For a string, the min/max constraints
         # are of the string length.
@@ -298,14 +340,34 @@ class ParamValidator:
         #  }
         range_check(name, len(param), shape, 'invalid length', errors)
 
-    @type_check(valid_types=(list, tuple))
+    @type_check(valid_types=CONTAINER_TYPES['list'])
     def _validate_list(self, param, shape, errors, name):
         member_shape = shape.member
         range_check(name, len(param), shape, 'invalid length', errors)
+
+        # Fast path: if member is a simple scalar type without constraints
+        member_type = member_shape.type_name
+        if (
+            member_type in self.SCALAR_TYPES
+            and not member_shape.has_constraints
+        ):
+            valid_types = self.SCALAR_TYPES[member_type]
+            valid_type_names = [str(t) for t in valid_types]
+            for i, item in enumerate(param):
+                if not isinstance(item, valid_types):
+                    errors.report(
+                        f'{name}[{i}]',
+                        'invalid type',
+                        param=item,
+                        valid_types=valid_type_names,
+                    )
+            return
+
+        # Standard path: full validation for complex types or constrained types
         for i, item in enumerate(param):
             self._validate(item, member_shape, errors, f'{name}[{i}]')
 
-    @type_check(valid_types=(dict,))
+    @type_check(valid_types=CONTAINER_TYPES['map'])
     def _validate_map(self, param, shape, errors, name):
         key_shape = shape.key
         value_shape = shape.value
@@ -313,7 +375,7 @@ class ParamValidator:
             self._validate(key, key_shape, errors, f"{name} (key: {key})")
             self._validate(value, value_shape, errors, f'{name}.{key}')
 
-    @type_check(valid_types=(int,))
+    @type_check(valid_types=SCALAR_TYPES['integer'])
     def _validate_integer(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
@@ -331,17 +393,17 @@ class ParamValidator:
                 valid_types=[str(bytes), str(bytearray), 'file-like object'],
             )
 
-    @type_check(valid_types=(bool,))
+    @type_check(valid_types=SCALAR_TYPES['boolean'])
     def _validate_boolean(self, param, shape, errors, name):
         pass
 
-    @type_check(valid_types=(float, decimal.Decimal) + (int,))
+    @type_check(valid_types=SCALAR_TYPES['double'])
     def _validate_double(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
     _validate_float = _validate_double
 
-    @type_check(valid_types=(int,))
+    @type_check(valid_types=SCALAR_TYPES['long'])
     def _validate_long(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 

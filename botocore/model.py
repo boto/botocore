@@ -197,6 +197,17 @@ class Shape:
         return metadata
 
     @CachedProperty
+    def has_constraints(self):
+        """Whether the shape has validation constraints beyond type checking.
+
+        This checks if the shape has any metadata that requires extra validation
+        such as min/max ranges, patterns, enums, etc.
+
+        """
+        constraint_keys = {'min', 'max', 'pattern', 'enum'}
+        return bool(constraint_keys & set(self.metadata.keys()))
+
+    @CachedProperty
     def required_members(self):
         """A list of members that are required.
 
