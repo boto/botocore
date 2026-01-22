@@ -656,3 +656,62 @@ class TestValidateTypeBlob(BaseTestValidate):
                 'Invalid type for parameter Blob',
             ],
         )
+
+
+class TestValidateListFastPath(BaseTestValidate):
+    def setUp(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'UnvalidatedFloatList': {
+                        'shape': 'UnvalidatedFloatListType'
+                    },
+                    'ValidatedFloatList': {'shape': 'ValidatedFloatListType'},
+                    'StringList': {'shape': 'StringListType'},
+                },
+            },
+            'UnvalidatedFloatListType': {
+                'type': 'list',
+                'member': {'shape': 'UnvalidatedFloat'},
+            },
+            'ValidatedFloatListType': {
+                'type': 'list',
+                'member': {'shape': 'ValidatedFloat'},
+            },
+            'StringListType': {
+                'type': 'list',
+                'member': {'shape': 'StringType'},
+            },
+            'UnvalidatedFloat': {'type': 'float'},
+            'ValidatedFloat': {'type': 'float', 'min': 1},
+            'StringType': {'type': 'string'},
+        }
+
+    def test_fast_path_for_unconstrained_float_list(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'UnvalidatedFloatList': [1.0, 2.0, 3.0]},
+        )
+        self.assertFalse(errors.has_errors())
+
+    def test_fast_path_validates_type_for_float_list(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={'UnvalidatedFloatList': [1.0, 'not a float', 3.0]},
+            errors=['Invalid type for parameter UnvalidatedFloatList[1]'],
+        )
+
+    def test_constrained_float_list_uses_full_validation(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={'ValidatedFloatList': [0.5, 2.0, 3.0]},
+            errors=['Invalid value for parameter ValidatedFloatList[0]'],
+        )
+
+    def test_fast_path_for_unconstrained_string_list(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'StringList': ['a', 'b', 'c']},
+        )
+        self.assertFalse(errors.has_errors())

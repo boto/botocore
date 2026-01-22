@@ -97,6 +97,7 @@ class Shape:
         'clientContextParams',
         'requiresLength',
     ]
+    VALIDATED_METADATA_ATTRS = {'required', 'min', 'document', 'union'}
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -204,8 +205,7 @@ class Shape:
         such as min/max ranges, patterns, enums, etc.
 
         """
-        constraint_keys = {'min', 'max', 'pattern', 'enum'}
-        return bool(constraint_keys & set(self.metadata.keys()))
+        return bool(self.VALIDATED_METADATA_ATTRS & set(self.metadata.keys()))
 
     @CachedProperty
     def required_members(self):
