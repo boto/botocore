@@ -227,33 +227,9 @@ class ParamValidator:
         if special_validator:
             special_validator(params, shape, errors, name)
         else:
-            type_name = shape.type_name
-            if type_name == 'structure':
-                self._validate_structure(params, shape, errors, name)
-            elif type_name == 'list':
-                self._validate_list(params, shape, errors, name)
-            elif type_name == 'map':
-                self._validate_map(params, shape, errors, name)
-            elif type_name == 'string':
-                self._validate_string(params, shape, errors, name)
-            elif type_name == 'integer':
-                self._validate_integer(params, shape, errors, name)
-            elif type_name == 'boolean':
-                self._validate_boolean(params, shape, errors, name)
-            elif type_name == 'float':
-                self._validate_float(params, shape, errors, name)
-            elif type_name == 'double':
-                self._validate_double(params, shape, errors, name)
-            elif type_name == 'long':
-                self._validate_long(params, shape, errors, name)
-            elif type_name == 'blob':
-                self._validate_blob(params, shape, errors, name)
-            elif type_name == 'timestamp':
-                self._validate_timestamp(params, shape, errors, name)
-            else:
-                getattr(self, f'_validate_{type_name}')(
-                    params, shape, errors, name
-                )
+            getattr(self, f'_validate_{shape.type_name}')(
+                params, shape, errors, name
+            )
 
     def _validate_jsonvalue_string(self, params, shape, errors, name):
         # Check to see if a value marked as a jsonvalue can be dumped to
