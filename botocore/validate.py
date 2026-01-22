@@ -345,7 +345,7 @@ class ParamValidator:
         member_shape = shape.member
         range_check(name, len(param), shape, 'invalid length', errors)
 
-        # Fast path: if member is a simple scalar type without constraints
+        # If a list member does not have validation constraints, we will only check the type
         member_type = member_shape.type_name
         if (
             member_type in self.SCALAR_TYPES
@@ -363,7 +363,6 @@ class ParamValidator:
                     )
             return
 
-        # Standard path: full validation for complex types or constrained types
         for i, item in enumerate(param):
             self._validate(item, member_shape, errors, f'{name}[{i}]')
 
