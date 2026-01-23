@@ -181,7 +181,7 @@ class ValidationErrors:
 class ParamValidator:
     """Validates parameters against a shape model."""
 
-    # Type checking for simple scalar types without constraints
+    # Valid Python types for scalar c2j types
     SCALAR_TYPES = {
         'float': (float, decimal.Decimal, int),
         'double': (float, decimal.Decimal, int),
@@ -191,7 +191,7 @@ class ParamValidator:
         'string': (str,),
     }
 
-    # Type checking for container types
+    # Valid Python types for container c2j types
     CONTAINER_TYPES = {
         'structure': (dict,),
         'map': (dict,),
