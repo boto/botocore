@@ -168,6 +168,7 @@ class ClientArgsCreator:
             socket_options=socket_options,
             client_cert=new_config.client_cert,
             proxies_config=new_config.proxies_config,
+            source_address=new_config.source_address,
         )
 
         # Emit event to allow service-specific or customer customization of serializer kwargs
@@ -318,6 +319,7 @@ class ClientArgsCreator:
                 ),
                 account_id_endpoint_mode=client_config.account_id_endpoint_mode,
                 auth_scheme_preference=client_config.auth_scheme_preference,
+                source_address=client_config.source_address,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)

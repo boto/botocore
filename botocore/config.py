@@ -290,6 +290,13 @@ class Config:
         auth scheme names used to determine the client's auth scheme preference.
 
         Defaults to None.
+
+    :type source_address: tuple
+    :param source_address: A tuple with 2 values (host, port) for the socket to
+        bind to as its source address before connecting. If host or port are '' or 0
+        respectively the OS default behaviour will be used.
+
+        Defaults to None.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -323,6 +330,7 @@ class Config:
             ('response_checksum_validation', None),
             ('account_id_endpoint_mode', None),
             ('auth_scheme_preference', None),
+            ('source_address', None),
         ]
     )
 
