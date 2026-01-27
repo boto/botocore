@@ -262,7 +262,6 @@ class ParamValidator:
                 valid_types=valid_type_names,
             )
 
-    @type_check(valid_types=(dict,))
     @type_check(valid_types=CONTAINER_TYPES['structure'])
     def _validate_structure(self, params, shape, errors, name):
         if shape.is_tagged_union:
