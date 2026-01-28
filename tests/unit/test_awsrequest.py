@@ -513,6 +513,46 @@ class TestAWSHTTPConnection(unittest.TestCase):
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 
+    def test_expect_100_continue_followed_by_another_request(self):
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
+            # Shows the server first sending a 200 ok response
+            # then a 200 ok response.
+            s = FakeSocket(
+                b'HTTP/1.1 200 OK\r\n'
+                b'Content-Length: 0\r\n'
+                b'\r\n'
+                b'HTTP/1.1 100 Continue\r\n'
+                b'\r\n'
+                b'HTTP/1.1 200 OK\r\n'
+                b'Content-Length: 0\r\n'
+            )
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            wait_mock.return_value = True
+
+            # The first request expecting a 100 continue response.
+            # But the server will send a 200 ok instead.
+            conn.request(
+                'PUT', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
+            response = conn.getresponse()
+            self.assertEqual(response.status, 200)
+            response.close()
+
+            # The client send the second request, expecting 100 continue either,
+            # using the same connection
+            conn.request(
+                'PUT', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
+            self.assertEqual(wait_mock.call_count, 2)
+            response = conn.getresponse()
+
+            # The second 'HTTP/1.1 200 OK\r\n' should be consumed by http.client.HTTPResponse._read_status().
+            # Only after this, the following header will be parsed correctly by email.parser.Parser.parsestr().
+            assert not getattr(response.headers, "defects", [])
+
     def test_message_body_is_file_like_object(self):
         # Shows the server first sending a 100 continue response
         # then a 200 ok response.
