@@ -336,9 +336,9 @@ class ParamValidator:
             and not self._shape_has_constraints(member_shape)
         ):
             valid_types = self.SCALAR_TYPES[member_type]
-            valid_type_names = [str(t) for t in valid_types]
             for i, item in enumerate(param):
                 if not isinstance(item, valid_types):
+                    valid_type_names = [str(t) for t in valid_types]
                     errors.report(
                         f'{name}[{i}]',
                         'invalid type',
