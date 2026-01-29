@@ -2098,6 +2098,16 @@ class TestGeneratePresigned(BaseS3OperationTest):
         self.assertNotIn("X-Amz-Algorithm", qs_components)
         self.assertIn("Signature", qs_components)
 
+    def assert_is_v4_presigned_url(self, url):
+        qs_components = parse_qs(urlsplit(url).query)
+        # Assert that it looks like a v4 presigned url by asserting it has
+        # the v4 qs components.
+        self.assertIn("X-Amz-Credential", qs_components)
+        self.assertIn("X-Amz-Algorithm", qs_components)
+        self.assertEqual(
+            qs_components["X-Amz-Algorithm"], ["AWS4-HMAC-SHA256"]
+        )
+
     def test_generate_unauthed_url(self):
         config = Config(signature_version=botocore.UNSIGNED)
         client = self.session.create_client("s3", self.region, config=config)
@@ -2116,9 +2126,9 @@ class TestGeneratePresigned(BaseS3OperationTest):
         }
         self.assertEqual(parts, expected)
 
-    def test_default_presign_uses_sigv2(self):
+    def test_default_presign_uses_sigv4(self):
         url = self.client.generate_presigned_url(ClientMethod="list_buckets")
-        self.assertNotIn("Algorithm=AWS4-HMAC-SHA256", url)
+        self.assertIn("Algorithm=AWS4-HMAC-SHA256", url)
 
     def test_sigv4_presign(self):
         config = Config(signature_version="s3v4")
@@ -2210,43 +2220,43 @@ class TestGeneratePresigned(BaseS3OperationTest):
         }
         self.assertEqual(parts, expected)
 
-    def test_presign_uses_v2_for_aws_global(self):
+    def test_presign_uses_v4_for_aws_global(self):
         client = self.session.create_client("s3", "aws-global")
         url = client.generate_presigned_url(
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
-        self.assert_is_v2_presigned_url(url)
+        self.assert_is_v4_presigned_url(url)
 
-    def test_presign_uses_v2_for_default_region_with_us_east_1_regional(self):
+    def test_presign_uses_v4_for_default_region_with_us_east_1_regional(self):
         config = Config(s3={"us_east_1_regional_endpoint": "regional"})
         client = self.session.create_client("s3", config=config)
         url = client.generate_presigned_url(
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
-        self.assert_is_v2_presigned_url(url)
+        self.assert_is_v4_presigned_url(url)
 
-    def test_presign_uses_v2_for_aws_global_with_us_east_1_regional(self):
+    def test_presign_uses_v4_for_aws_global_with_us_east_1_regional(self):
         config = Config(s3={"us_east_1_regional_endpoint": "regional"})
         client = self.session.create_client("s3", "aws-global", config=config)
         url = client.generate_presigned_url(
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
-        self.assert_is_v2_presigned_url(url)
+        self.assert_is_v4_presigned_url(url)
 
-    def test_presign_uses_v2_for_us_east_1(self):
+    def test_presign_uses_v4_for_us_east_1(self):
         client = self.session.create_client("s3", "us-east-1")
         url = client.generate_presigned_url(
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
-        self.assert_is_v2_presigned_url(url)
+        self.assert_is_v4_presigned_url(url)
 
-    def test_presign_uses_v2_for_us_east_1_with_us_east_1_regional(self):
+    def test_presign_uses_v4_for_us_east_1_with_us_east_1_regional(self):
         config = Config(s3={"us_east_1_regional_endpoint": "regional"})
         client = self.session.create_client("s3", "us-east-1", config=config)
         url = client.generate_presigned_url(
             "get_object", {"Bucket": "mybucket", "Key": "mykey"}
         )
-        self.assert_is_v2_presigned_url(url)
+        self.assert_is_v4_presigned_url(url)
 
 
 CHECKSUM_TEST_CASES = [

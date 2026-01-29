@@ -1985,6 +1985,54 @@ class TestConfig(unittest.TestCase):
             botocore.config.Config(retries={'mode': 'turbo-mode'})
 
 
+class TestS3PresignSignatureVersion(unittest.TestCase):
+    """Test that S3 presigned URLs default to sigv4 instead of sigv2"""
+
+    def setUp(self):
+        self.client_creator = client.ClientCreator(
+            loader=mock.Mock(),
+            endpoint_resolver=mock.Mock(),
+            user_agent='test-agent',
+            event_emitter=mock.Mock(),
+            retry_handler_factory=mock.Mock(),
+            retry_config_translator=mock.Mock(),
+            response_parser_factory=mock.Mock(),
+            exceptions_factory=mock.Mock(),
+            config_store=mock.Mock(),
+            user_agent_creator=mock.Mock(),
+        )
+
+    def test_default_s3_presign_returns_s3v4_query(self):
+        result = self.client_creator._default_s3_presign_to_sigv4(
+            signature_version='v4-query'
+        )
+        self.assertEqual(result, 's3v4-query')
+
+    def test_default_s3_presign_returns_s3v4_presign_post(self):
+        result = self.client_creator._default_s3_presign_to_sigv4(
+            signature_version='v4-presign-post'
+        )
+        self.assertEqual(result, 's3v4-presign-post')
+
+    def test_default_s3_presign_ignores_v4a(self):
+        result = self.client_creator._default_s3_presign_to_sigv4(
+            signature_version='v4a-query'
+        )
+        self.assertIsNone(result)
+
+    def test_default_s3_presign_preserves_s3express(self):
+        result = self.client_creator._default_s3_presign_to_sigv4(
+            signature_version='v4-s3express-query'
+        )
+        self.assertEqual(result, 'v4-s3express-query')
+
+    def test_default_s3_presign_ignores_non_presign_signatures(self):
+        result = self.client_creator._default_s3_presign_to_sigv4(
+            signature_version='v4'
+        )
+        self.assertIsNone(result)
+
+
 class TestClientEndpointBridge(unittest.TestCase):
     def setUp(self):
         self.resolver = mock.Mock()

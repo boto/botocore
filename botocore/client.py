@@ -457,7 +457,7 @@ class ClientCreator:
         # the customer hasn't set a signature version so we default the
         # signature version to sigv2.
         client_meta.events.register(
-            'choose-signer.s3', self._default_s3_presign_to_sigv2
+            'choose-signer.s3', self._default_s3_presign_to_sigv4
         )
 
     def _inject_s3_input_parameters(self, params, context, **kwargs):
@@ -469,11 +469,11 @@ class ClientCreator:
                     inject_parameter
                 ]
 
-    def _default_s3_presign_to_sigv2(self, signature_version, **kwargs):
+    def _default_s3_presign_to_sigv4(self, signature_version, **kwargs):
         """
-        Returns the 's3' (sigv2) signer if presigning an s3 request. This is
-        intended to be used to set the default signature version for the signer
-        to sigv2. Situations where an asymmetric signature is required are the
+        Returns the 's3v4' (sigv4) signer if presigning an s3 request. This is
+        intended to be used to set the default signature version for the signer to sigv4.
+        Situations where an asymmetric signature is required are the
         exception, for example MRAP needs v4a.
 
         :type signature_version: str
@@ -482,7 +482,7 @@ class ClientCreator:
         :type signing_name: str
         :param signing_name: The signing name of the service.
 
-        :return: 's3' if the request is an s3 presign request, None otherwise
+        :return: 's3v4' if the request is an s3 presign request, None otherwise
         """
         if signature_version.startswith('v4a'):
             return
@@ -492,7 +492,7 @@ class ClientCreator:
 
         for suffix in ['-query', '-presign-post']:
             if signature_version.endswith(suffix):
-                return f's3{suffix}'
+                return f's3v4{suffix}'
 
     def _register_importexport_events(
         self,
