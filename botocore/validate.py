@@ -14,6 +14,7 @@ Validation Errors
 """
 
 import decimal
+import functools
 import json
 from datetime import datetime
 
@@ -198,6 +199,14 @@ class ParamValidator:
         'list': (list, tuple),
     }
 
+    # Metadata attributes that we validate beyond type checking
+    VALIDATED_METADATA_ATTRS = {'required', 'min', 'document', 'union'}
+
+    @functools.lru_cache
+    def _shape_has_constraints(self, shape):
+        """Whether the shape has validated constraints beyond type checking."""
+        return bool(self.VALIDATED_METADATA_ATTRS & set(shape.metadata.keys()))
+
     def validate(self, params, shape):
         """Validate parameters against a shape model.
 
@@ -324,7 +333,7 @@ class ParamValidator:
         member_type = member_shape.type_name
         if (
             member_type in self.SCALAR_TYPES
-            and not member_shape.has_constraints
+            and not self._shape_has_constraints(member_shape)
         ):
             valid_types = self.SCALAR_TYPES[member_type]
             valid_type_names = [str(t) for t in valid_types]

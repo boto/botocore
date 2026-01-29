@@ -1232,31 +1232,3 @@ class TestBuilders(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-class TestShapeHasConstraints(unittest.TestCase):
-    def test_has_constraints_with_min(self):
-        shape = model.Shape('test', {'type': 'string', 'min': 1})
-        self.assertTrue(shape.has_constraints)
-
-    def test_has_constraints_with_required(self):
-        shape = model.Shape(
-            'test', {'type': 'structure', 'required': ['field']}
-        )
-        self.assertTrue(shape.has_constraints)
-
-    def test_has_constraints_with_document(self):
-        shape = model.Shape('test', {'type': 'structure', 'document': True})
-        self.assertTrue(shape.has_constraints)
-
-    def test_has_constraints_with_union(self):
-        shape = model.Shape('test', {'type': 'structure', 'union': True})
-        self.assertTrue(shape.has_constraints)
-
-    def test_no_constraints_for_simple_type(self):
-        shape = model.Shape('test', {'type': 'string'})
-        self.assertFalse(shape.has_constraints)
-
-    def test_no_constraints_with_non_validated_metadata(self):
-        shape = model.Shape('test', {'type': 'string', 'sensitive': True})
-        self.assertFalse(shape.has_constraints)
