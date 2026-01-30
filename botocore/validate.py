@@ -14,7 +14,6 @@ Validation Errors
 """
 
 import decimal
-import functools
 import json
 from datetime import datetime
 
@@ -202,7 +201,6 @@ class ParamValidator:
     # Metadata attributes that we validate beyond type checking
     VALIDATED_METADATA_ATTRS = {'required', 'min', 'document', 'union'}
 
-    @functools.lru_cache
     def _shape_has_constraints(self, shape):
         """Whether the shape has validated constraints beyond type checking."""
         return bool(self.VALIDATED_METADATA_ATTRS & set(shape.metadata.keys()))
