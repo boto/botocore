@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Validation",
+  "description": "Updated list validation to add fast-path for validating list members that do not require more checks than just type checking."
+}
