@@ -2,6 +2,7 @@ import decimal
 import io
 from datetime import datetime
 
+from botocore import validate
 from botocore.model import ShapeResolver
 from botocore.validate import ParamValidator
 from tests import unittest
@@ -656,3 +657,108 @@ class TestValidateTypeBlob(BaseTestValidate):
                 'Invalid type for parameter Blob',
             ],
         )
+
+
+class TestValidateListFastPath(BaseTestValidate):
+    def setUp(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'UnvalidatedFloatList': {
+                        'shape': 'UnvalidatedFloatListType'
+                    },
+                    'ValidatedFloatList': {'shape': 'ValidatedFloatListType'},
+                    'StringList': {'shape': 'StringListType'},
+                },
+            },
+            'UnvalidatedFloatListType': {
+                'type': 'list',
+                'member': {'shape': 'UnvalidatedFloat'},
+            },
+            'ValidatedFloatListType': {
+                'type': 'list',
+                'member': {'shape': 'ValidatedFloat'},
+            },
+            'StringListType': {
+                'type': 'list',
+                'member': {'shape': 'StringType'},
+            },
+            'UnvalidatedFloat': {'type': 'float'},
+            'ValidatedFloat': {'type': 'float', 'min': 1},
+            'StringType': {'type': 'string'},
+        }
+
+    def test_fast_path_for_unconstrained_float_list(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'UnvalidatedFloatList': [1.0, 2.0, 3.0]},
+        )
+        self.assertFalse(errors.has_errors())
+
+    def test_fast_path_validates_type_for_float_list(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={'UnvalidatedFloatList': [1.0, 'not a float', 3.0]},
+            errors=['Invalid type for parameter UnvalidatedFloatList[1]'],
+        )
+
+    def test_constrained_float_list_uses_full_validation(self):
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={'ValidatedFloatList': [0.5, 2.0, 3.0]},
+            errors=['Invalid value for parameter ValidatedFloatList[0]'],
+        )
+
+    def test_fast_path_for_unconstrained_string_list(self):
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'StringList': ['a', 'b', 'c']},
+        )
+        self.assertFalse(errors.has_errors())
+
+
+class TestShapeHasConstraints(BaseTestValidate):
+    def setUp(self):
+        self.validator = validate.ParamValidator()
+
+    def test_shape_has_constraints_with_min(self):
+        shape = self.get_shape({'type': 'string', 'min': 1})
+        self.assertTrue(self.validator._shape_has_constraints(shape))
+
+    def test_shape_has_constraints_with_required(self):
+        shape = self.get_shape({'type': 'structure', 'required': ['field']})
+        self.assertTrue(self.validator._shape_has_constraints(shape))
+
+    def test_shape_has_constraints_with_document(self):
+        shape = self.get_shape({'type': 'structure', 'document': True})
+        self.assertTrue(self.validator._shape_has_constraints(shape))
+
+    def test_shape_has_constraints_with_union(self):
+        shape = self.get_shape({'type': 'structure', 'union': True})
+        self.assertTrue(self.validator._shape_has_constraints(shape))
+
+    def test_no_constraints_for_simple_type(self):
+        shape = self.get_shape({'type': 'string'})
+        self.assertFalse(self.validator._shape_has_constraints(shape))
+
+    def test_no_constraints_with_non_validated_metadata(self):
+        shape = self.get_shape({'type': 'string', 'sensitive': True})
+        self.assertFalse(self.validator._shape_has_constraints(shape))
+
+    def test_max_constraint_not_considered_validation_constraint(self):
+        shape = self.get_shape({'type': 'string', 'max': 10})
+        self.assertFalse(self.validator._shape_has_constraints(shape))
+
+    def test_pattern_constraint_not_considered_validation_constraint(self):
+        shape = self.get_shape({'type': 'string', 'pattern': '[a-z]+'})
+        self.assertFalse(self.validator._shape_has_constraints(shape))
+
+    def test_enum_constraint_not_considered_validation_constraint(self):
+        shape = self.get_shape({'type': 'string', 'enum': ['a', 'b']})
+        self.assertFalse(self.validator._shape_has_constraints(shape))
+
+    def get_shape(self, shape_model):
+        shapes = {'TestShape': shape_model}
+        resolver = ShapeResolver(shapes)
+        return resolver.get_shape_by_name('TestShape')
