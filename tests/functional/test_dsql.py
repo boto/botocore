@@ -13,10 +13,9 @@
 import datetime
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore.auth
-from tests import FreezeTime
+from tests import FreezeTime, tzutc
 
 HOSTNAME = "peccy.dsql.us-east-1.on.aws"
 REGION = "us-east-1"

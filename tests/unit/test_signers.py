@@ -14,7 +14,6 @@ import datetime
 import json
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore
 import botocore.auth
@@ -40,7 +39,7 @@ from botocore.signers import (
     dsql_generate_db_connect_auth_token,
     generate_db_auth_token,
 )
-from tests import FreezeTime, assert_url_equal, mock, unittest
+from tests import FreezeTime, assert_url_equal, mock, tzutc, unittest
 
 DATE = datetime.datetime(2024, 11, 7, 17, 39, 33, tzinfo=tzutc())
 

@@ -21,7 +21,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
-from dateutil.tz import tzlocal, tzutc
 
 import botocore.exceptions
 import botocore.session
@@ -65,6 +64,8 @@ from tests import (
     skip_if_crt,
     skip_if_windows,
     temporary_file,
+    tzlocal,
+    tzutc,
     unittest,
 )
 

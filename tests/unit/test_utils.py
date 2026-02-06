@@ -21,7 +21,6 @@ from contextlib import contextmanager
 from sys import getrefcount
 
 import pytest
-from dateutil.tz import tzoffset, tzutc
 
 import botocore
 from botocore import xform_name
@@ -103,7 +102,15 @@ from botocore.utils import (
     switch_to_virtual_host_style,
     validate_jmespath_for_set,
 )
-from tests import FreezeTime, RawResponse, create_session, mock, unittest
+from tests import (
+    FreezeTime,
+    RawResponse,
+    create_session,
+    mock,
+    tzoffset,
+    tzutc,
+    unittest,
+)
 
 DATE = datetime.datetime(
     2021, 12, 10, 00, 00, 00, tzinfo=datetime.timezone.utc

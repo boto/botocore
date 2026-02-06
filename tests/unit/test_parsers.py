@@ -14,11 +14,10 @@ import datetime
 import itertools
 
 import pytest
-from dateutil.tz import tzutc
 
 from botocore import model, parsers
 from botocore.compat import MutableMapping, json
-from tests import RawResponse, unittest
+from tests import RawResponse, tzutc, unittest
 
 
 # HTTP responses will typically return a custom HTTP
