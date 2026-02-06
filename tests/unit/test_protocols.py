@@ -59,7 +59,6 @@ from base64 import b64decode
 from enum import Enum
 
 import pytest
-from dateutil.tz import tzutc
 
 from botocore.awsrequest import HeadersDict, prepare_request_dict
 from botocore.compat import OrderedDict, json, urlsplit
@@ -82,6 +81,7 @@ from botocore.serialize import (
     RpcV2CBORSerializer,
 )
 from botocore.utils import parse_timestamp, percent_encode_sequence
+from tests import tzutc
 
 TEST_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'protocols'

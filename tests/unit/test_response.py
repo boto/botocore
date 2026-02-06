@@ -13,7 +13,6 @@
 import datetime
 from io import BytesIO
 
-from dateutil.tz import tzutc
 from urllib3.exceptions import ProtocolError as URLLib3ProtocolError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
@@ -25,7 +24,7 @@ from botocore.exceptions import (
     ReadTimeoutError,
     ResponseStreamingError,
 )
-from tests import unittest
+from tests import tzutc, unittest
 from tests.unit import BaseResponseTest
 
 XMLBODY1 = (

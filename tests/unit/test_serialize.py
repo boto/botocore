@@ -18,8 +18,6 @@ import decimal
 import io
 import json
 
-import dateutil.tz
-
 from botocore import serialize
 from botocore.exceptions import ParamValidationError
 from botocore.model import ServiceModel
@@ -27,7 +25,7 @@ from botocore.serialize import (
     TIMESTAMP_PRECISION_DEFAULT,
     TIMESTAMP_PRECISION_MILLISECOND,
 )
-from tests import unittest
+from tests import tzutc, unittest
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -193,7 +191,7 @@ class TestTimestampHeadersWithRestXML(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'TimestampHeader': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=dateutil.tz.tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=tzutc()
                 )
             }
         )
@@ -273,7 +271,7 @@ class TestTimestamps(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'Timestamp': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=dateutil.tz.tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=tzutc()
                 )
             }
         )

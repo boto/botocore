@@ -13,14 +13,13 @@
 import datetime
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore.session
 from botocore.auth import S3ExpressAuth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials, RefreshableCredentials
 from botocore.utils import S3ExpressIdentityCache
-from tests import ClientHTTPStubber, mock
+from tests import ClientHTTPStubber, mock, tzutc
 
 ACCESS_KEY = "AKIDEXAMPLE"
 SECRET_KEY = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"

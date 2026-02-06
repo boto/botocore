@@ -15,7 +15,6 @@ import io
 import re
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore.session
 from botocore import UNSIGNED
@@ -38,6 +37,7 @@ from tests import (
     mock,
     requires_crt,
     temporary_file,
+    tzutc,
     unittest,
 )
 
