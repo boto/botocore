@@ -834,7 +834,7 @@
           "documentation":"<p>A map of attributes to their respective values.</p>"
         }
       },
-      "documentation":"<p>A list of returned queue attributes.</p>"
+      "documentation":"<p>A dictionary containing a single member, Attributes.</p>"
     },
     "GetQueueUrlRequest":{
       "type":"structure",
