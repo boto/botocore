@@ -138,6 +138,51 @@
             "description":"Wait until ElastiCache replication group is deleted.",
             "maxAttempts":40,
             "operation":"DescribeReplicationGroups"
+        },
+       "ServerlessCacheAvailable":{
+            "acceptors":[
+                {
+                    "argument":"ServerlessCaches[].Status",
+                    "expected":"available",
+                    "matcher":"pathAll",
+                    "state":"success"
+                },
+                {
+                    "argument":"ServerlessCaches[].Status",
+                    "expected":"deleted",
+                    "matcher":"pathAny",
+                    "state":"failure"
+                }
+            ],
+            "delay":15,
+            "description":"Wait until ElastiCache serverless cacheis available.",
+            "maxAttempts":40,
+            "operation":"DescribeServerlessCaches"
+        },
+        "ServerlessCacheDeleted":{
+            "acceptors":[
+                {
+                    "argument":"ServerlessCaches[].Status",
+                    "expected":"deleted",
+                    "matcher":"pathAll",
+                    "state":"success"
+                },
+                {
+                    "argument":"ServerlessCaches[].Status",
+                    "expected":"available",
+                    "matcher":"pathAny",
+                    "state":"failure"
+                },
+                {
+                    "expected":"ServerlessCacheNotFoundFault",
+                    "matcher":"error",
+                    "state":"success"
+                }
+            ],
+            "delay":15,
+            "description":"Wait until ElastiCache serverless cache is deleted.",
+            "maxAttempts":40,
+            "operation":"DescribeServerlessCaches"
         }
     }
 }
