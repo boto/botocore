@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "url-resolution",
+  "description": "Fixes URL construction in Local Zones by using region directly instead of attempting to parse availability zone"
+}

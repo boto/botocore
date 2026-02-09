@@ -783,7 +783,7 @@ class IMDSRegionProvider:
 
 
 class InstanceMetadataRegionFetcher(IMDSFetcher):
-    _URL_PATH = 'latest/meta-data/placement/availability-zone/'
+    _URL_PATH = 'latest/meta-data/placement/region/'
 
     def retrieve_region(self):
         """Get the current region from the instance metadata service.
@@ -815,9 +815,7 @@ class InstanceMetadataRegionFetcher(IMDSFetcher):
             retry_func=self._default_retry,
             token=token,
         )
-        availability_zone = response.text
-        region = availability_zone[:-1]
-        return region
+        return response.text
 
 
 def merge_dicts(dict1, dict2, append_lists=False):
