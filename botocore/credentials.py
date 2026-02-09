@@ -1077,7 +1077,7 @@ class ProcessProvider(CredentialProvider):
 
     def load(self):
         credential_process = self._credential_process
-        if credential_process is None:
+        if not credential_process:
             return
 
         register_feature_id('CREDENTIALS_PROFILE_PROCESS')
