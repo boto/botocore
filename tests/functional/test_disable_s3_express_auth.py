@@ -19,6 +19,7 @@ from dateutil.tz import tzlocal
 
 from tests import ClientHTTPStubber
 
+
 @pytest.mark.parametrize(
     "s3_disable_express_session_auth, expected_s3_express_auth",
     [
@@ -42,7 +43,9 @@ def test_disable_s3_express_auth(
 ):
     auth_type = None
 
-    def get_auth_type(signing_name, region_name, signature_version, context, **kwargs):
+    def get_auth_type(
+            signing_name, region_name, signature_version, context, **kwargs
+    ):
         nonlocal auth_type
         auth_type = context.get('auth_type', None)
 
@@ -57,7 +60,9 @@ def test_disable_s3_express_auth(
     fixed_time = datetime.datetime(2024, 11, 30, 23, 59, 59, tzinfo=tzlocal())
     with patch('botocore.credentials.datetime') as mocked_datetime:
         mocked_datetime.datetime.now.return_value = fixed_time
-        s3_client = patched_session.create_client('s3', region_name='us-west-2')
+        s3_client = patched_session.create_client(
+            's3', region_name='us-west-2'
+        )
 
         list_objects_body = b'<?xml version="1.0" encoding="UTF-8"?>\n<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>mybucket--usw2-az1--x-s3</Name><Prefix/><KeyCount>0</KeyCount><MaxKeys>1000</MaxKeys><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated></ListBucketResult>'
 
