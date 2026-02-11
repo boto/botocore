@@ -44,7 +44,7 @@ def test_disable_s3_express_auth(
     auth_type = None
 
     def get_auth_type(
-            signing_name, region_name, signature_version, context, **kwargs
+        signing_name, region_name, signature_version, context, **kwargs
     ):
         nonlocal auth_type
         auth_type = context.get('auth_type', None)
