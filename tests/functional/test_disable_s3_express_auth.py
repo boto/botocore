@@ -29,22 +29,32 @@ class TestDisableS3ExpressAuth:
     def fixed_datetime(self):
         return datetime.datetime(2024, 11, 30, 23, 59, 59, tzinfo=tzlocal())
 
-    def test_s3_express_auth_disabled(self, patched_session, monkeypatch, fixed_datetime):
+    def test_s3_express_auth_disabled(
+            self, patched_session, monkeypatch, fixed_datetime
+    ):
         auth_type = None
 
-        def get_auth_type(signing_name, region_name, signature_version, context, **kwargs):
+        def get_auth_type(
+                signing_name, region_name, signature_version, context, **kwargs
+        ):
             nonlocal auth_type
             auth_type = context.get('auth_type', None)
 
-        patched_session.register('choose-signer.s3.ListObjectsV2', get_auth_type)
+        patched_session.register(
+            'choose-signer.s3.ListObjectsV2', get_auth_type
+        )
         monkeypatch.setenv('AWS_S3_DISABLE_EXPRESS_SESSION_AUTH', 'true')
 
         with patch('botocore.credentials.datetime') as mocked_datetime:
             mocked_datetime.datetime.now.return_value = fixed_datetime
-            s3_client = patched_session.create_client('s3', region_name='us-west-2')
+            s3_client = patched_session.create_client(
+                's3', region_name='us-west-2'
+            )
 
             with ClientHTTPStubber(s3_client, strict=True) as http_stubber:
-                http_stubber.add_response(status=200, body=self.LIST_OBJECTS_BODY)
+                http_stubber.add_response(
+                    status=200, body=self.LIST_OBJECTS_BODY
+                )
                 s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
                 
                 assert len(http_stubber.requests) == 1
@@ -52,25 +62,37 @@ class TestDisableS3ExpressAuth:
         is_s3_express = auth_type == 'v4-s3express'
         assert not is_s3_express
 
-    def test_s3_express_auth_enabled(self, patched_session, monkeypatch, fixed_datetime):
+    def test_s3_express_auth_enabled(
+            self, patched_session, monkeypatch, fixed_datetime
+    ):
         auth_type = None
 
-        def get_auth_type(signing_name, region_name, signature_version, context, **kwargs):
+        def get_auth_type(
+                signing_name, region_name, signature_version, context, **kwargs
+        ):
             nonlocal auth_type
             auth_type = context.get('auth_type', None)
 
-        patched_session.register('choose-signer.s3.ListObjectsV2', get_auth_type)
+        patched_session.register(
+            'choose-signer.s3.ListObjectsV2', get_auth_type
+        )
         monkeypatch.setenv('AWS_S3_DISABLE_EXPRESS_SESSION_AUTH', 'false')
 
         with patch('botocore.credentials.datetime') as mocked_datetime:
             mocked_datetime.datetime.now.return_value = fixed_datetime
-            s3_client = patched_session.create_client('s3', region_name='us-west-2')
+            s3_client = patched_session.create_client(
+                's3', region_name='us-west-2'
+            )
 
             with ClientHTTPStubber(s3_client, strict=True) as http_stubber:
-                http_stubber.add_response(status=200, body=self.CREATE_SESSION_BODY)
-                http_stubber.add_response(status=200, body=self.LIST_OBJECTS_BODY)
+                http_stubber.add_response(
+                    status=200, body=self.CREATE_SESSION_BODY
+                )
+                http_stubber.add_response(
+                    status=200, body=self.LIST_OBJECTS_BODY
+                )
                 s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
-                
+
                 assert len(http_stubber.requests) == 2
 
         is_s3_express = auth_type == 'v4-s3express'
