@@ -198,10 +198,7 @@ function setupKeyboardFriendlyNavigation() {
 
 function loadShortbread() {
 	if (typeof AWSCShortbread !== "undefined") {
-		const shortbread = AWSCShortbread({
-			// If you're testing in your dev environment, use ".cloudfront.net" for domain, else "botocore.amazonaws.com"
-			domain: "botocore.amazonaws.com",
-		});
+		const shortbread = AWSCShortbread();
 
 		// Check for cookie consent
 		shortbread.checkForCookieConsent();
