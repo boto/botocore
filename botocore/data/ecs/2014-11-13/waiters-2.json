@@ -38,7 +38,7 @@
         "expected" : "INACTIVE"
       }, {
         "matcher" : "path",
-        "argument" : "length(services[?!(length(deployments) == `1` && runningCount == desiredCount)]) == `0`",
+        "argument" : "length(services[?!(length(deployments || `[]`) == `1` && runningCount == desiredCount)]) == `0`",
         "state" : "success",
         "expected" : true
       } ]
