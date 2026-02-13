@@ -30,12 +30,12 @@ class TestDisableS3ExpressAuth:
         return datetime.datetime(2024, 11, 30, 23, 59, 59, tzinfo=tzlocal())
 
     def test_s3_express_auth_disabled(
-            self, patched_session, monkeypatch, fixed_datetime
+        self, patched_session, monkeypatch, fixed_datetime
     ):
         auth_type = None
 
         def get_auth_type(
-                signing_name, region_name, signature_version, context, **kwargs
+            signing_name, region_name, signature_version, context, **kwargs
         ):
             nonlocal auth_type
             auth_type = context.get('auth_type', None)
@@ -56,19 +56,19 @@ class TestDisableS3ExpressAuth:
                     status=200, body=self.LIST_OBJECTS_BODY
                 )
                 s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
-                
+
                 assert len(http_stubber.requests) == 1
 
         is_s3_express = auth_type == 'v4-s3express'
         assert not is_s3_express
 
     def test_s3_express_auth_enabled(
-            self, patched_session, monkeypatch, fixed_datetime
+        self, patched_session, monkeypatch, fixed_datetime
     ):
         auth_type = None
 
         def get_auth_type(
-                signing_name, region_name, signature_version, context, **kwargs
+            signing_name, region_name, signature_version, context, **kwargs
         ):
             nonlocal auth_type
             auth_type = context.get('auth_type', None)
