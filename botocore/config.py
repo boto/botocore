@@ -212,6 +212,24 @@ class Config:
 
         Defaults to False.
 
+    :type tcp_keepidle: int
+    :param tcp_keepidle: Time (in seconds) the connection must remain idle 
+        before sending keepalives.
+
+        Defaults to None.
+    
+    :type tcp_keepintvl: int
+    :param tcp_keepintvl: Time (in seconds) between individual keepalive 
+        probes.
+
+        Defaults to None.
+
+    :type tcp_keepcnt: int
+    :param tcp_keepcnt: Number of unacknowledged probes before the connection 
+        is considered dead.
+
+        Defaults to None.
+
     :type request_min_compression_size_bytes: int
     :param request_min_compression_size_bytes: The minimum size in bytes that a
         request body should be to trigger compression. All requests with
@@ -315,6 +333,9 @@ class Config:
             ('ignore_configured_endpoint_urls', None),
             ('defaults_mode', None),
             ('tcp_keepalive', None),
+            ('tcp_keepidle', None),
+            ('tcp_keepintvl', None),
+            ('tcp_keepcnt', None),
             ('request_min_compression_size_bytes', None),
             ('disable_request_compression', None),
             ('client_context_params', None),

@@ -568,6 +568,52 @@ class ClientArgsCreator:
             socket_options.append((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
         return socket_options
 
+    def _compute_socket_options(self, scoped_config, client_config=None):
+        # This disables Nagle's algorithm and is the default socket options in urllib3.
+        socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
+
+        # Enables TCP Keepalive if specified in client config object or shared config file.
+        client_keepalive = client_config and client_config.tcp_keepalive
+        scoped_keepalive = scoped_config and self._ensure_boolean(
+            scoped_config.get("tcp_keepalive", False)
+        )
+        if client_keepalive or scoped_keepalive:
+            socket_options.append((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
+
+        # Enables TCP Keepidle if specified in client config object or shared config file.
+        client_keepidle = client_config and client_config.tcp_keepidle
+        scoped_keepidle = scoped_config and scoped_config.get("tcp_keepidle", False)
+        if client_keepidle or scoped_keepidle:
+            socket_options.append(
+                (
+                    socket.IPPROTO_TCP,
+                    socket.TCP_KEEPIDLE,
+                    client_keepidle or scoped_keepidle,
+                )
+            )
+
+        # Enables TCP Keepinvtl if specified in client config object or shared config file.
+        client_keepintvl = client_config and client_config.tcp_keepintvl
+        scoped_keepintvl = scoped_config and scoped_config.get("tcp_keepintvl", False)
+        if client_keepintvl or scoped_keepintvl:
+            socket_options.append(
+                (
+                    socket.IPPROTO_TCP,
+                    socket.TCP_KEEPINTVL,
+                    client_keepintvl or scoped_keepintvl,
+                )
+            )
+
+        # Enables TCP Keepcnt if specified in client config object or shared config file.
+        client_keepcnt = client_config and client_config.tcp_keepcnt
+        scoped_keepcnt = scoped_config and scoped_config.get("tcp_keepcnt", False)
+        if client_keepcnt or scoped_keepcnt:
+            socket_options.append(
+                (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, client_keepcnt or scoped_keepcnt)
+            )
+
+        return socket_options
+
     def _compute_retry_config(self, config_kwargs):
         self._compute_retry_max_attempts(config_kwargs)
         self._compute_retry_mode(config_kwargs)
