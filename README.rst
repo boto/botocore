@@ -71,7 +71,7 @@ Then, set up a default region (in e.g. ``~/.aws/config``):
    [default]
    region=us-east-1
 
-Other credentials configuration method can be found `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`__
+Other credentials configuration method can be found `here <https://docs.aws.amazon.com/boto3/latest/guide/credentials.html>`__
 
 Then, from a Python interpreter:
 
