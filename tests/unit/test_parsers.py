@@ -1646,3 +1646,23 @@ def test_can_handle_generic_error_message(parser, body):
     )
     assert parsed['Error'] == {'Code': '503', 'Message': 'Service Unavailable'}
     assert parsed['ResponseMetadata']['HTTPStatusCode'] == 503
+
+
+@pytest.mark.parametrize(
+    "parser_class",
+    [
+        parsers.QueryParser,
+        parsers.EC2QueryParser,
+        parsers.RestXMLParser,
+        parsers.RestJSONParser,
+        parsers.JSONParser,
+    ],
+)
+@pytest.mark.parametrize("status_code", [413, 414])
+def test_can_handle_generic_error_message_4xx(parser_class, status_code):
+    parsed = parser_class().parse(
+        {'body': b'', 'headers': {}, 'status_code': status_code}, None
+    )
+    assert parsed['Error']['Code'] == str(status_code)
+    assert parsed['Error']['Message']
+    assert parsed['ResponseMetadata']['HTTPStatusCode'] == status_code
