@@ -28,8 +28,7 @@ class PaginatorDocumenter:
         self._service_paginator_model = service_paginator_model
         self._root_docs_path = root_docs_path
         self._USER_GUIDE_LINK = (
-            'https://boto3.amazonaws.com/'
-            'v1/documentation/api/latest/guide/paginators.html'
+            'https://docs.aws.amazon.com/boto3/latest/guide/paginators.html'
         )
 
     def document_paginators(self, section):

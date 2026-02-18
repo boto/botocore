@@ -28,8 +28,8 @@ class WaiterDocumenter:
         self._service_waiter_model = service_waiter_model
         self._root_docs_path = root_docs_path
         self._USER_GUIDE_LINK = (
-            'https://boto3.amazonaws.com/'
-            'v1/documentation/api/latest/guide/clients.html#waiters'
+            'https://docs.aws.amazon.com/'
+            'boto3/latest/guide/clients.html#waiters'
         )
 
     def document_waiters(self, section):
