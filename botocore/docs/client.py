@@ -209,8 +209,7 @@ class ClientDocumenter:
 
 class ClientExceptionsDocumenter:
     _USER_GUIDE_LINK = (
-        'https://boto3.amazonaws.com/'
-        'v1/documentation/api/latest/guide/error-handling.html'
+        'https://docs.aws.amazon.com/boto3/latest/guide/error-handling.html'
     )
     _GENERIC_ERROR_SHAPE = DocumentedShape(
         name='Error',
@@ -402,8 +401,7 @@ class ClientExceptionsDocumenter:
 
 class ClientContextParamsDocumenter:
     _CONFIG_GUIDE_LINK = (
-        'https://boto3.amazonaws.com/'
-        'v1/documentation/api/latest/guide/configuration.html'
+        'https://docs.aws.amazon.com/boto3/latest/guide/configuration.html'
     )
 
     OMITTED_CONTEXT_PARAMS = {
