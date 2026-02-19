@@ -3301,29 +3301,39 @@ def _is_s3express_request(params):
     return endpoint_properties.get('backend') == 'S3Express'
 
 
-def get_checksum_header_algorithm(params):
+def get_checksum_header_algorithms(params):
     """
-    Returns the checksum algorithm name if a header starting with "x-amz-checksum-"
-    is provided in a request, otherwise returns None.
+    Returns the a list of algorithm name if a headers starting with "x-amz-checksum-"
+    are provided in a request, otherwise returns an empty list.
 
     This function is considered private and subject to abrupt breaking changes or
     removal without prior announcement. Please do not use it directly.
     """
     headers = params['headers']
+    checksum_headers = []
 
     # If a header matching the x-amz-checksum-* pattern is present, we
     # extract and return the algorithm name.
     for header in headers:
         match = CHECKSUM_HEADER_PATTERN.match(header)
         if match:
-            return match.group(1)
+            checksum_headers.append(match.group(1))
+    return checksum_headers
 
-    return None
+
+def has_checksum_header(params):
+    """
+    Checks if a header starting with "x-amz-checksum-" is provided in a request.
+
+    This function is considered private and subject to abrupt breaking changes or
+    removal without prior announcement. Please do not use it directly.
+    """
+    return bool(get_checksum_header_algorithms(params))
 
 
 def conditionally_calculate_checksum(params, **kwargs):
     """This function has been deprecated, but is kept for backwards compatibility."""
-    if not get_checksum_header_algorithm(params):
+    if not has_checksum_header(params):
         conditionally_calculate_md5(params, **kwargs)
         conditionally_enable_crc32(params, **kwargs)
 
@@ -3358,7 +3368,7 @@ def conditionally_calculate_md5(params, **kwargs):
         # Skip for requests that will have a flexible checksum applied
         return
 
-    if get_checksum_header_algorithm(params):
+    if has_checksum_header(params):
         # Don't add a new header if one is already available.
         return
 
