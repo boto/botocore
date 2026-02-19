@@ -837,8 +837,8 @@ def test_user_agent_has_md5_feature_id(
     monkeypatch,
 ):
     """Test that ChecksumMD5 parameter usage registers the AE feature ID in user agent.
-    This test is on its own since MD5 is not calculated by the SDK, but passed through to the
-    service when povided by a user"""
+    This test is not part of test_user_agent_has_checksum_request_feature_id since automatic
+    MD5 calculation is not supported"""
 
     client = setup_test_client(
         patched_session,
@@ -850,7 +850,6 @@ def test_user_agent_has_md5_feature_id(
             status=200,
             body=b"<response/>",
         )
-        # Use ChecksumMD5 parameter to trigger AE feature ID registration since it's not supported for automatic calculation
         client.http_checksum_operation(
             body="test", ChecksumMD5="rL0Y20zC+Fzt72VPzMSk2A=="
         )
