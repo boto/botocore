@@ -352,7 +352,10 @@ class ResponseParser:
         parsed = []
         member_shape = shape.member
         for item in node:
-            parsed.append(self._parse_shape(member_shape, item))
+            if item is None:
+                parsed.append(None)
+            else:
+                parsed.append(self._parse_shape(member_shape, item))
         return parsed
 
     def _default_handle(self, shape, value):
