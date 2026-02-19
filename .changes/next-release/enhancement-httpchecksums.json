@@ -1,0 +1,6 @@
+{
+  "type": "enhancement",
+  "category": "``checksums``",
+  "description": "Add support for SHA512, XXHASH64, XXHASH3, XXHASH128, and self-computed MD5 for flexible checksums"
+}
+
