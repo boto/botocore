@@ -23,7 +23,7 @@ import base64
 import io
 import logging
 from binascii import crc32
-from hashlib import sha1, sha256
+from hashlib import sha1, sha256, sha512
 
 from botocore.compat import HAS_CRT, has_minimum_crt_version, urlparse
 from botocore.exceptions import (
@@ -37,6 +37,7 @@ from botocore.useragent import register_feature_id
 from botocore.utils import (
     conditionally_calculate_md5,
     determine_content_length,
+    get_checksum_header_algorithms,
     has_checksum_header,
 )
 
@@ -127,6 +128,42 @@ class CrtCrc64NvmeChecksum(BaseChecksum):
         return self._int_crc64nvme.to_bytes(8, byteorder="big")
 
 
+class CrtXxhash64Checksum(BaseChecksum):
+    # Note: This class is only used if the CRT is available
+    def __init__(self):
+        self._xxhash = crt_checksums.XXHash.new_xxhash64()
+
+    def update(self, chunk):
+        self._xxhash.update(chunk)
+
+    def digest(self):
+        return self._xxhash.finalize()
+
+
+class CrtXxhash3Checksum(BaseChecksum):
+    # Note: This class is only used if the CRT is available
+    def __init__(self):
+        self._xxhash = crt_checksums.XXHash.new_xxhash3_64()
+
+    def update(self, chunk):
+        self._xxhash.update(chunk)
+
+    def digest(self):
+        return self._xxhash.finalize()
+
+
+class CrtXxhash128Checksum(BaseChecksum):
+    # Note: This class is only used if the CRT is available
+    def __init__(self):
+        self._xxhash = crt_checksums.XXHash.new_xxhash3_128()
+
+    def update(self, chunk):
+        self._xxhash.update(chunk)
+
+    def digest(self):
+        return self._xxhash.finalize()
+
+
 class Sha1Checksum(BaseChecksum):
     def __init__(self):
         self._checksum = sha1()
@@ -141,6 +178,17 @@ class Sha1Checksum(BaseChecksum):
 class Sha256Checksum(BaseChecksum):
     def __init__(self):
         self._checksum = sha256()
+
+    def update(self, chunk):
+        self._checksum.update(chunk)
+
+    def digest(self):
+        return self._checksum.digest()
+
+
+class Sha512Checksum(BaseChecksum):
+    def __init__(self):
+        self._checksum = sha512()
 
     def update(self, chunk):
         self._checksum.update(chunk)
@@ -267,6 +315,7 @@ class StreamingChecksumBody(StreamingBody):
 def resolve_checksum_context(request, operation_model, params):
     resolve_request_checksum_algorithm(request, operation_model, params)
     resolve_response_checksum_algorithms(request, operation_model, params)
+    _register_checksum_feature_ids(request)
 
 
 def resolve_request_checksum_algorithm(
@@ -398,7 +447,6 @@ def _apply_request_header_checksum(request):
     checksum_cls = _CHECKSUM_CLS.get(algorithm["algorithm"])
     digest = checksum_cls().handle(request["body"])
     request["headers"][location_name] = digest
-    _register_checksum_algorithm_feature_id(algorithm)
 
 
 def _apply_request_trailer_checksum(request):
@@ -422,7 +470,6 @@ def _apply_request_trailer_checksum(request):
     else:
         headers["Content-Encoding"] = "aws-chunked"
     headers["X-Amz-Trailer"] = location_name
-    _register_checksum_algorithm_feature_id(algorithm)
 
     content_length = determine_content_length(body)
     if content_length is not None:
@@ -446,8 +493,22 @@ def _apply_request_trailer_checksum(request):
     )
 
 
+def _register_checksum_feature_ids(request):
+    """Register feature IDs for checksum algorithms used in the request."""
+    if algorithm_list := get_checksum_header_algorithms(request):
+        for algorithm_name in algorithm_list:
+            _register_checksum_algorithm_feature_id(algorithm_name)
+        return
+    # If no checksum header exists yet, check the resolved context for
+    # an algorithm that will be applied later by apply_request_checksum.
+    checksum_context = request.get("context", {}).get("checksum", {})
+    algorithm = checksum_context.get("request_algorithm")
+    if algorithm and isinstance(algorithm, dict):
+        _register_checksum_algorithm_feature_id(algorithm["algorithm"])
+
+
 def _register_checksum_algorithm_feature_id(algorithm):
-    checksum_algorithm_name = algorithm["algorithm"].upper()
+    checksum_algorithm_name = algorithm.upper()
     if checksum_algorithm_name == "CRC64NVME":
         checksum_algorithm_name = "CRC64"
     checksum_algorithm_name_feature_id = (
@@ -552,8 +613,16 @@ _CHECKSUM_CLS = {
     "crc32": Crc32Checksum,
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
+    "sha512": Sha512Checksum,
 }
-_CRT_CHECKSUM_ALGORITHMS = ["crc32", "crc32c", "crc64nvme"]
+_CRT_CHECKSUM_ALGORITHMS = [
+    "crc32",
+    "crc32c",
+    "crc64nvme",
+    "xxhash64",
+    "xxhash3",
+    "xxhash128",
+]
 if HAS_CRT:
     # Use CRT checksum implementations if available
     _CRT_CHECKSUM_CLS = {
@@ -565,10 +634,25 @@ if HAS_CRT:
         # CRC64NVME support wasn't officially added until 0.23.4
         _CRT_CHECKSUM_CLS["crc64nvme"] = CrtCrc64NvmeChecksum
 
+    if has_minimum_crt_version((0, 31, 2)):
+        _CRT_CHECKSUM_CLS["xxhash64"] = CrtXxhash64Checksum
+        _CRT_CHECKSUM_CLS["xxhash3"] = CrtXxhash3Checksum
+        _CRT_CHECKSUM_CLS["xxhash128"] = CrtXxhash128Checksum
+
     _CHECKSUM_CLS.update(_CRT_CHECKSUM_CLS)
-    # Validate this list isn't out of sync with _CRT_CHECKSUM_CLS keys
+    # Validate this list isn't out of sync with _CRT_CHECKSUM_ALGORITHMS keys
     assert all(
         name in _CRT_CHECKSUM_ALGORITHMS for name in _CRT_CHECKSUM_CLS.keys()
     )
 _SUPPORTED_CHECKSUM_ALGORITHMS = list(_CHECKSUM_CLS.keys())
-_ALGORITHMS_PRIORITY_LIST = ['crc64nvme', 'crc32c', 'crc32', 'sha1', 'sha256']
+_ALGORITHMS_PRIORITY_LIST = [
+    'xxhash128',
+    'xxhash3',
+    'crc64nvme',
+    'xxhash64',
+    'crc32c',
+    'crc32',
+    'sha1',
+    'sha256',
+    'sha512',
+]

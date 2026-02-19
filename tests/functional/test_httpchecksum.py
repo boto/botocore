@@ -53,6 +53,11 @@ TEST_CHECKSUM_SERVICE_MODEL = {
                     "CRC64NVME",
                     "SHA1",
                     "SHA256",
+                    "SHA512",
+                    "MD5",
+                    "XXHASH64",
+                    "XXHASH3",
+                    "XXHASH128",
                 ],
             },
         },
@@ -74,6 +79,11 @@ TEST_CHECKSUM_SERVICE_MODEL = {
                     "CRC64NVME",
                     "SHA1",
                     "SHA256",
+                    "SHA512",
+                    "MD5",
+                    "XXHASH64",
+                    "XXHASH3",
+                    "XXHASH128",
                 ],
             },
         },
@@ -81,7 +91,18 @@ TEST_CHECKSUM_SERVICE_MODEL = {
     "shapes": {
         "ChecksumAlgorithm": {
             "type": "string",
-            "enum": {"CRC32", "CRC32C", "CRC64NVME", "SHA1", "SHA256"},
+            "enum": {
+                "CRC32",
+                "CRC32C",
+                "CRC64NVME",
+                "SHA1",
+                "SHA256",
+                "SHA512",
+                "MD5",
+                "XXHASH64",
+                "XXHASH3",
+                "XXHASH128",
+            },
             "member": {"shape": "MockOpParam"},
         },
         "ValidationMode": {"type": "string", "enum": {"ENABLE"}},
@@ -128,11 +149,19 @@ TEST_CHECKSUM_SERVICE_MODEL = {
                     "location": "header",
                     "locationName": "x-amz-request-algorithm",
                 },
+                "ChecksumMD5": {
+                    "shape": "ChecksumMD5",
+                    "location": "header",
+                    "locationName": "x-amz-checksum-md5",
+                },
             },
             "payload": "body",
         },
         "SomeOutput": {
             "type": "structure",
+        },
+        "ChecksumMD5": {
+            "type": "string",
         },
     },
 }
@@ -201,6 +230,14 @@ def _request_checksum_calculation_cases():
                 "x-amz-checksum-sha256": "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw=",
             },
         ),
+        (
+            "SHA512",
+            request_payload,
+            {
+                "x-amz-request-algorithm": "SHA512",
+                "x-amz-checksum-sha512": "t/eDuu2Cl/DbkXRiGE/08I5pwtXl95qUJgD5cl9Yzh8pwYE5v4CwbA//K900c4RS7PQMSIwip+PYDN9vnBwNRw==",
+            },
+        ),
     ]
     if HAS_CRT:
         cases.extend(
@@ -219,6 +256,30 @@ def _request_checksum_calculation_cases():
                     {
                         "x-amz-request-algorithm": "CRC64NVME",
                         "x-amz-checksum-crc64nvme": "OOJZ0D8xKts=",
+                    },
+                ),
+                (
+                    "XXHASH64",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH64",
+                        "x-amz-checksum-xxhash64": "xQCwyRKzdtg=",
+                    },
+                ),
+                (
+                    "XXHASH3",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH3",
+                        "x-amz-checksum-xxhash3": "tqy52Eo4/3Q=",
+                    },
+                ),
+                (
+                    "XXHASH128",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH128",
+                        "x-amz-checksum-xxhash128": "c1H4mBL5c4K5HQWzHgTdfw==",
                     },
                 ),
             ]
@@ -296,6 +357,18 @@ def _streaming_request_checksum_calculation_cases():
                 "x-amz-checksum-sha256": "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw="
             },
         ),
+        (
+            "SHA512",
+            request_payload,
+            {
+                "x-amz-request-algorithm": "SHA512",
+                "content-encoding": "aws-chunked",
+                "x-amz-trailer": "x-amz-checksum-sha512",
+            },
+            {
+                "x-amz-checksum-sha512": "t/eDuu2Cl/DbkXRiGE/08I5pwtXl95qUJgD5cl9Yzh8pwYE5v4CwbA//K900c4RS7PQMSIwip+PYDN9vnBwNRw=="
+            },
+        ),
     ]
     if HAS_CRT:
         cases.extend(
@@ -319,6 +392,36 @@ def _streaming_request_checksum_calculation_cases():
                         "x-amz-trailer": "x-amz-checksum-crc64nvme",
                     },
                     {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
+                ),
+                (
+                    "XXHASH64",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH64",
+                        "content-encoding": "aws-chunked",
+                        "x-amz-trailer": "x-amz-checksum-xxhash64",
+                    },
+                    {"x-amz-checksum-xxhash64": "xQCwyRKzdtg="},
+                ),
+                (
+                    "XXHASH3",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH3",
+                        "content-encoding": "aws-chunked",
+                        "x-amz-trailer": "x-amz-checksum-xxhash3",
+                    },
+                    {"x-amz-checksum-xxhash3": "tqy52Eo4/3Q="},
+                ),
+                (
+                    "XXHASH128",
+                    request_payload,
+                    {
+                        "x-amz-request-algorithm": "XXHASH128",
+                        "content-encoding": "aws-chunked",
+                        "x-amz-trailer": "x-amz-checksum-xxhash128",
+                    },
+                    {"x-amz-checksum-xxhash128": "c1H4mBL5c4K5HQWzHgTdfw=="},
                 ),
             ]
         )
@@ -375,6 +478,13 @@ def _successful_response_checksum_validation_cases():
                 "x-amz-checksum-sha256": "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw="
             },
         ),
+        (
+            "SHA512",
+            response_payload,
+            {
+                "x-amz-checksum-sha512": "t/eDuu2Cl/DbkXRiGE/08I5pwtXl95qUJgD5cl9Yzh8pwYE5v4CwbA//K900c4RS7PQMSIwip+PYDN9vnBwNRw=="
+            },
+        ),
     ]
     if HAS_CRT:
         cases.extend(
@@ -388,6 +498,21 @@ def _successful_response_checksum_validation_cases():
                     "CRC64NVME",
                     response_payload,
                     {"x-amz-checksum-crc64nvme": "OOJZ0D8xKts="},
+                ),
+                (
+                    "XXHASH64",
+                    response_payload,
+                    {"x-amz-checksum-xxhash64": "xQCwyRKzdtg="},
+                ),
+                (
+                    "XXHASH3",
+                    response_payload,
+                    {"x-amz-checksum-xxhash3": "tqy52Eo4/3Q="},
+                ),
+                (
+                    "XXHASH128",
+                    response_payload,
+                    {"x-amz-checksum-xxhash128": "c1H4mBL5c4K5HQWzHgTdfw=="},
                 ),
             ]
         )
@@ -468,6 +593,12 @@ def _unsuccessful_response_checksum_validation_cases():
             {"x-amz-checksum-sha256": "bm90LWEtY2hlY2tzdW0="},
             "ZOyIygCyaOW6GjVnihtTFtIS9PNmskdyMlNKiuyjfzw=",
         ),
+        (
+            "SHA512",
+            response_payload,
+            {"x-amz-checksum-sha512": "bm90LWEtY2hlY2tzdW0="},
+            "t/eDuu2Cl/DbkXRiGE/08I5pwtXl95qUJgD5cl9Yzh8pwYE5v4CwbA//K900c4RS7PQMSIwip+PYDN9vnBwNRw==",
+        ),
     ]
     if HAS_CRT:
         cases.extend(
@@ -483,6 +614,24 @@ def _unsuccessful_response_checksum_validation_cases():
                     response_payload,
                     {"x-amz-checksum-crc64nvme": "bm90LWEtY2hlY2tzdW0="},
                     "OOJZ0D8xKts=",
+                ),
+                (
+                    "XXHASH64",
+                    response_payload,
+                    {"x-amz-checksum-xxhash64": "bm90LWEtY2hlY2tzdW0="},
+                    "xQCwyRKzdtg=",
+                ),
+                (
+                    "XXHASH3",
+                    response_payload,
+                    {"x-amz-checksum-xxhash3": "bm90LWEtY2hlY2tzdW0="},
+                    "tqy52Eo4/3Q=",
+                ),
+                (
+                    "XXHASH128",
+                    response_payload,
+                    {"x-amz-checksum-xxhash128": "bm90LWEtY2hlY2tzdW0="},
+                    "c1H4mBL5c4K5HQWzHgTdfw==",
                 ),
             ]
         )
@@ -587,6 +736,13 @@ def _checksum_user_agent_feature_id_cases():
             request_payload,
             ["X", "a", "b"],
         ),
+        (
+            "SHA512",
+            None,
+            None,
+            request_payload,
+            ["AF", "Z", "b"],
+        ),
     ]
     if HAS_CRT:
         cases.extend(
@@ -600,6 +756,39 @@ def _checksum_user_agent_feature_id_cases():
                     "when_required",
                     request_payload,
                     ["W", "Z", "c"],
+                )
+            ]
+        )
+        cases.extend(
+            [
+                (
+                    "XXHASH3",
+                    None,
+                    None,
+                    request_payload,
+                    ["AG", "Z", "b"],
+                )
+            ]
+        )
+        cases.extend(
+            [
+                (
+                    "XXHASH64",
+                    None,
+                    None,
+                    request_payload,
+                    ["AH", "Z", "b"],
+                )
+            ]
+        )
+        cases.extend(
+            [
+                (
+                    "XXHASH128",
+                    None,
+                    None,
+                    request_payload,
+                    ["AI", "Z", "b"],
                 )
             ]
         )
@@ -641,3 +830,31 @@ def test_user_agent_has_checksum_request_feature_id(
     feature_list = parse_registered_feature_ids(ua_string)
     for feature_id in expected_feature_ids:
         assert feature_id in feature_list
+
+
+def test_user_agent_has_md5_feature_id(
+    patched_session,
+    monkeypatch,
+):
+    """Test that ChecksumMD5 parameter usage registers the AE feature ID in user agent.
+    This test is not part of test_user_agent_has_checksum_request_feature_id since automatic
+    MD5 calculation is not supported"""
+
+    client = setup_test_client(
+        patched_session,
+        monkeypatch,
+    )
+
+    with ClientHTTPStubber(client, strict=True) as http_stubber:
+        http_stubber.add_response(
+            status=200,
+            body=b"<response/>",
+        )
+        client.http_checksum_operation(
+            body="test", ChecksumMD5="rL0Y20zC+Fzt72VPzMSk2A=="
+        )
+
+    ua_string = get_captured_ua_strings(http_stubber)[0]
+    feature_list = parse_registered_feature_ids(ua_string)
+
+    assert "AE" in feature_list

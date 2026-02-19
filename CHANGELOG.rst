@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.42.53
+=======
+
+* api-change:``bcm-dashboards``: The Billing and Cost Management GetDashboard API now returns identifier for each widget, enabling users to uniquely identify widgets within their dashboards.
+* api-change:``ecr``: Adds multiple artifact types filter support in ListImageReferrers API.
+* api-change:``pca-connector-scep``: AWS Private CA Connector for SCEP now supports AWS PrivateLink, allowing your clients to request certificates from within your Amazon Virtual Private Cloud (VPC) without traversing the public internet. With this launch, you can create VPC endpoints to connect to your SCEP connector privately.
+* enhancement:``checksums``: Added support for the SHA512 checksum algorithm. When the optional AWS CRT (``awscrt``) dependency is installed, support is also enabled for the XXHASH64, XXHASH3, and XXHASH128 checksum algorithms. Also added pass-through support for customer-provided MD5 checksum headers (without SDK-side MD5 calculation or validation).
+
+
 1.42.52
 =======
 
