@@ -13,6 +13,8 @@
 import unittest
 from io import BytesIO
 
+import pytest
+
 from botocore.awsrequest import AWSResponse
 from botocore.compat import HAS_CRT
 from botocore.config import Config
@@ -27,8 +29,12 @@ from botocore.httpchecksum import (
     CrtCrc32cChecksum,
     CrtCrc32Checksum,
     CrtCrc64NvmeChecksum,
+    CrtXxhash3Checksum,
+    CrtXxhash64Checksum,
+    CrtXxhash128Checksum,
     Sha1Checksum,
     Sha256Checksum,
+    Sha512Checksum,
     StreamingChecksumBody,
     apply_request_checksum,
     handle_checksum_body,
@@ -256,40 +262,6 @@ class TestHttpChecksumHandlers(unittest.TestCase):
                 request, operation_model, params, supported_algorithms=[]
             )
 
-    @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
-    def test_request_checksum_algorithm_model_no_crt_crc32c_unsupported(self):
-        request = self._build_request(b"")
-        operation_model = self._make_operation_model(
-            http_checksum={"requestAlgorithmMember": "Algorithm"},
-        )
-        params = {"Algorithm": "crc32c"}
-        with self.assertRaises(MissingDependencyException) as context:
-            resolve_request_checksum_algorithm(
-                request, operation_model, params
-            )
-            self.assertIn(
-                "Using CRC32C requires an additional dependency",
-                str(context.exception),
-            )
-
-    @unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
-    def test_request_checksum_algorithm_model_no_crt_crc64nvme_unsupported(
-        self,
-    ):
-        request = self._build_request(b"")
-        operation_model = self._make_operation_model(
-            http_checksum={"requestAlgorithmMember": "Algorithm"},
-        )
-        params = {"Algorithm": "crc64nvme"}
-        with self.assertRaises(MissingDependencyException) as context:
-            resolve_request_checksum_algorithm(
-                request, operation_model, params
-            )
-            self.assertIn(
-                "Using CRC64NVME requires an additional dependency",
-                str(context.exception),
-            )
-
     def test_request_checksum_algorithm_model_legacy_crc32(self):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(required=True)
@@ -476,7 +448,16 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         request = self._build_request(b"")
         operation_model = self._make_operation_model(
             http_checksum={
-                "responseAlgorithms": ["crc32", "sha1", "sha256"],
+                "responseAlgorithms": [
+                    "crc32",
+                    "sha1",
+                    "sha256",
+                    "sha512",
+                    "md5",
+                    "xxhash64",
+                    "xxhash3",
+                    "xxhash128",
+                ],
                 "requestValidationModeMember": "ChecksumMode",
             }
         )
@@ -656,6 +637,43 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         self.assertEqual(body.read(), b"hello world")
 
 
+@unittest.skipIf(HAS_CRT, "Error only expected when CRT is not available")
+@pytest.mark.parametrize(
+    "algorithm,expected_error_text",
+    [
+        ("crc32c", "Using CRC32C requires an additional dependency"),
+        ("crc64nvme", "Using CRC64NVME requires an additional dependency"),
+        ("xxhash64", "Using XXHASH64 requires an additional dependency"),
+        ("xxhash3", "Using XXHASH3 requires an additional dependency"),
+        ("xxhash128", "Using XXHASH128 requires an additional dependency"),
+    ],
+)
+def test_request_checksum_algorithm_no_crt_unsupported(
+    algorithm, expected_error_text
+):
+    operation = mock.Mock(spec=OperationModel)
+    operation.http_checksum = {"requestAlgorithmMember": "Algorithm"}
+    operation.http_checksum_required = False
+    operation.has_streaming_input = False
+    shape = mock.Mock(spec=StringShape)
+    shape.serialization = {"name": "x-amz-request-algorithm"}
+    operation.input_shape = mock.Mock(spec=StructureShape)
+    operation.input_shape.members = {"Algorithm": shape}
+    request = {
+        "headers": {},
+        "body": b"",
+        "context": {
+            "client_config": Config(
+                request_checksum_calculation="when_supported",
+            )
+        },
+        "url": "https://example.com",
+    }
+    params = {"Algorithm": algorithm}
+    with pytest.raises(MissingDependencyException, match=expected_error_text):
+        resolve_request_checksum_algorithm(request, operation, params)
+
+
 class TestAwsChunkedWrapper(unittest.TestCase):
     def test_single_chunk_body(self):
         # Test a small body that fits in a single chunk
@@ -774,56 +792,52 @@ class TestAwsChunkedWrapper(unittest.TestCase):
             wrapper.seek(1, whence=2)
 
 
-class TestChecksumImplementations(unittest.TestCase):
-    def assert_base64_checksum(self, checksum_cls, expected_digest):
-        checksum = checksum_cls()
-        checksum.update(b"hello world")
-        actual_digest = checksum.b64digest()
-        self.assertEqual(actual_digest, expected_digest)
-
-    def test_crc32(self):
-        self.assert_base64_checksum(Crc32Checksum, "DUoRhQ==")
-
-    def test_sha1(self):
-        self.assert_base64_checksum(
-            Sha1Checksum,
-            "Kq5sNclPz7QV2+lfQIuc6R7oRu0=",
-        )
-
-    def test_sha256(self):
-        self.assert_base64_checksum(
-            Sha256Checksum,
-            "uU0nuZNNPgilLlLX2n2r+sSE7+N6U4DukIj3rOLvzek=",
-        )
-
-    @requires_crt()
-    def test_crt_crc32(self):
-        self.assert_base64_checksum(CrtCrc32Checksum, "DUoRhQ==")
-
-    @requires_crt()
-    def test_crt_crc32c(self):
-        self.assert_base64_checksum(CrtCrc32cChecksum, "yZRlqg==")
-
-    @requires_crt()
-    def test_crt_crc64nvme(self):
-        self.assert_base64_checksum(CrtCrc64NvmeChecksum, "jSnVw/bqjr4=")
+_CHECKSUM_DIGEST_CASES = [
+    (Crc32Checksum, "DUoRhQ=="),
+    (Sha1Checksum, "Kq5sNclPz7QV2+lfQIuc6R7oRu0="),
+    (Sha256Checksum, "uU0nuZNNPgilLlLX2n2r+sSE7+N6U4DukIj3rOLvzek="),
+    (
+        Sha512Checksum,
+        "MJ7MSJwS1utMxA9QyQLytNDtd+5RGnx6m808qG1M2G+YndNbxf9JlnDaNCVbRbDP2DDoH2Bdz33FVC6TrpzXbw==",
+    ),
+]
+if HAS_CRT:
+    _CHECKSUM_DIGEST_CASES.extend(
+        [
+            (CrtCrc32Checksum, "DUoRhQ=="),
+            (CrtCrc32cChecksum, "yZRlqg=="),
+            (CrtCrc64NvmeChecksum, "jSnVw/bqjr4="),
+            (CrtXxhash64Checksum, "RatnNLIeaWg="),
+            (CrtXxhash3Checksum, "1Eex6kDmmIs="),
+            (CrtXxhash128Checksum, "340J6T+HSQCpm4d1zBW2xw=="),
+        ]
+    )
 
 
-class TestCrtChecksumOverrides(unittest.TestCase):
-    @requires_crt()
-    def test_crt_crc32_available(self):
-        actual_cls = get_checksum_cls("crc32")
-        self.assertEqual(actual_cls, CrtCrc32Checksum)
+@pytest.mark.parametrize(
+    "checksum_cls,expected_digest", _CHECKSUM_DIGEST_CASES
+)
+def test_checksum_digest(checksum_cls, expected_digest):
+    checksum = checksum_cls()
+    checksum.update(b"hello world")
+    assert checksum.b64digest() == expected_digest
 
-    @requires_crt()
-    def test_crt_crc32c_available(self):
-        actual_cls = get_checksum_cls("crc32c")
-        self.assertEqual(actual_cls, CrtCrc32cChecksum)
 
-    @requires_crt()
-    def test_crt_crc64nvme_available(self):
-        actual_cls = get_checksum_cls("crc64nvme")
-        self.assertEqual(actual_cls, CrtCrc64NvmeChecksum)
+@requires_crt()
+@pytest.mark.parametrize(
+    "algorithm,expected_class",
+    [
+        ("crc32", CrtCrc32Checksum),
+        ("crc32c", CrtCrc32cChecksum),
+        ("crc64nvme", CrtCrc64NvmeChecksum),
+        ("xxhash64", CrtXxhash64Checksum),
+        ("xxhash3", CrtXxhash3Checksum),
+        ("xxhash128", CrtXxhash128Checksum),
+    ],
+)
+def test_crt_checksum_available(algorithm, expected_class):
+    actual_cls = get_checksum_cls(algorithm)
+    assert actual_cls == expected_class
 
 
 class TestStreamingChecksumBody(unittest.TestCase):
