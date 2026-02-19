@@ -2,6 +2,46 @@
 CHANGELOG
 =========
 
+1.42.52
+=======
+
+* api-change:``cleanrooms``: This release adds support for federated catalogs in Athena-sourced configured tables.
+* api-change:``connect``: Correcting in-app notifications API documentation.
+
+
+1.42.51
+=======
+
+* api-change:``ec2``: Add Operator field to CreatePlacementGroup and DescribePlacementGroup APIs.
+* api-change:``evidently``: The evidently client has been removed following the deprecation of the service.
+* api-change:``grafana``: This release updates Amazon Managed Grafana's APIs to support customer managed KMS keys.
+* api-change:``iotanalytics``: The iotanalytics client has been removed following the deprecation of the service.
+* api-change:``rds``: Adds support for the StorageEncryptionType field to specify encryption type for DB clusters, DB instances, snapshots, automated backups, and global clusters.
+* api-change:``workspaces-web``: Adds support for branding customization without requiring a custom wallpaper.
+
+
+1.42.50
+=======
+
+* api-change:``arc-region-switch``: Clarify documentation on ARC Region Switch start-plan-execution operation
+* api-change:``ec2``: Documentation updates for EC2 Secondary Networks
+* api-change:``ecr``: Adds support for enabling blob mounting, and removes support for Clair based image scanning
+* api-change:``kafka``: Amazon MSK now supports dual-stack connectivity (IPv4 and IPv6) for existing MSK clusters. You can enable dual-stack on existing clusters by specifying the NetworkType parameter in updateConnectivity API.
+* api-change:``kms``: Added support for Decrypt and ReEncrypt API's to use dry run feature without ciphertext for authorization validation
+* api-change:``qconnect``: Update MessageType enum to include missing types.
+
+
+1.42.49
+=======
+
+* api-change:``cloudwatch``: Adding new evaluation states that provides information about the alarm evaluation process. Evaluation error Indicates configuration errors in alarm setup that require review and correction. Evaluation failure Indicates temporary CloudWatch issues.
+* api-change:``connect``: API release for headerr notifications in the admin website. APIs allow customers to publish brief messages (including URLs) to a specified audience, and a new header icon will indicate when unread messages are available.
+* api-change:``ec2``: This release adds geography information to EC2 region and availability zone APIs. DescribeRegions now includes a Geography field, while DescribeAvailabilityZones includes both Geography and SubGeography fields, enabling better geographic classification for AWS regions and zones.
+* api-change:``inspector2``: Added .Net 10 (dotnet10) and Node 24.x (node24.x) runtime support for lambda package scanning
+* api-change:``sagemaker``: Enable g7e instance type support for SageMaker Processing, and enable single file configuration provisioning for HyperPod Slurm, where customers have the option to use HyperPod API to provide the provisioning parameters.
+* enhancement:AWSCRT: Update awscrt version to 0.31.2
+
+
 1.42.48
 =======
 
@@ -18652,7 +18692,7 @@ AWS Marketplace OfferSets support for opportunities
 
 * api-change:``logs``: Update logs client to latest version
 * api-change:``config``: Update config client to latest version
-* feature:Events: This migrates the event system to using sevice ids instead of either client name or endpoint prefix. This prevents issues that might arise when a service changes their endpoint prefix, also fixes a long-standing bug where you could not register an event to a particular service if it happened to share its endpoint prefix with another service (e.g. ``autoscaling`` and ``application-autoscaling`` both use the endpoint prefix ``autoscaling``). Please see the `upgrade notes <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html#upgrade-notes>`_ to determine if you are impacted and how to proceed if you are.
+* feature:Events: This migrates the event system to using sevice ids instead of either client name or endpoint prefix. This prevents issues that might arise when a service changes their endpoint prefix, also fixes a long-standing bug where you could not register an event to a particular service if it happened to share its endpoint prefix with another service (e.g. ``autoscaling`` and ``application-autoscaling`` both use the endpoint prefix ``autoscaling``). Please see the `upgrade notes <https://docs.aws.amazon.com/botocore/latest/#upgrade-notes>`_ to determine if you are impacted and how to proceed if you are.
 
 
 1.11.9

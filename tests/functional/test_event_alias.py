@@ -168,10 +168,6 @@ SERVICES = {
         "endpoint_prefix": "data.jobs.iot",
         "service_id": "iot-jobs-data-plane",
     },
-    "iotanalytics": {
-        "endpoint_prefix": "iotanalytics",
-        "service_id": "iotanalytics",
-    },
     "kinesis": {"endpoint_prefix": "kinesis", "service_id": "kinesis"},
     "kinesis-video-archived-media": {
         "service_id": "kinesis-video-archived-media"
