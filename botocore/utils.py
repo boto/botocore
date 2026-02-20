@@ -3306,6 +3306,8 @@ def get_checksum_header_algorithms(params):
     Returns the a list of algorithm name if a headers starting with "x-amz-checksum-"
     are provided in a request, otherwise returns an empty list.
 
+    Returned lists exclude the x-amz-checksum-algorithm header itself.
+
     This function is considered private and subject to abrupt breaking changes or
     removal without prior announcement. Please do not use it directly.
     """
@@ -3316,7 +3318,7 @@ def get_checksum_header_algorithms(params):
     # extract and return the algorithm name.
     for header in headers:
         match = CHECKSUM_HEADER_PATTERN.match(header)
-        if match:
+        if match and match.group(1).lower() != 'algorithm':
             checksum_headers.append(match.group(1))
     return checksum_headers
 
