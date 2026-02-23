@@ -33,12 +33,10 @@ class TestDisableS3ExpressAuth:
             mock_dt.now.return_value = self.DATE
             yield mock_dt
 
-    def test_disable_s3_express_auth_enabled(self, patched_session, mock_datetime):
-        config = Config(
-            s3={
-                'disable_s3_express_session_auth': True
-            }
-        )
+    def test_disable_s3_express_auth_enabled(
+        self, patched_session, mock_datetime
+    ):
+        config = Config(s3={'disable_s3_express_session_auth': True})
         s3_client = patched_session.create_client(
             's3',
             config=config,
@@ -51,12 +49,10 @@ class TestDisableS3ExpressAuth:
 
         assert len(stubber.requests) == 1
 
-    def test_disable_s3_express_auth_disabled(self, patched_session, mock_datetime):
-        config = Config(
-            s3={
-                'disable_s3_express_session_auth': False
-            }
-        )
+    def test_disable_s3_express_auth_disabled(
+        self, patched_session, mock_datetime
+    ):
+        config = Config(s3={'disable_s3_express_session_auth': False})
         s3_client = patched_session.create_client(
             's3',
             config=config,
