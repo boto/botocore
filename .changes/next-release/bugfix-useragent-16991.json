@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "``user-agent``",
-  "description": "Fix get_checksum_header_algorithms function in utils.py to exclude ChecksumAlgorithm header."
-}
