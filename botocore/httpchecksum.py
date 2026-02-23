@@ -37,7 +37,7 @@ from botocore.useragent import register_feature_id
 from botocore.utils import (
     conditionally_calculate_md5,
     determine_content_length,
-    get_checksum_header_algorithms,
+    get_checksum_algorithm_headers,
     has_checksum_header,
 )
 
@@ -495,9 +495,11 @@ def _apply_request_trailer_checksum(request):
 
 def _register_checksum_feature_ids(request):
     """Register feature IDs for checksum algorithms used in the request."""
-    if algorithm_list := get_checksum_header_algorithms(request):
-        for algorithm_name in algorithm_list:
-            _register_checksum_algorithm_feature_id(algorithm_name)
+    if algorithm_headers := get_checksum_algorithm_headers(request):
+        for header in algorithm_headers:
+            if header != "x-amz-checksum-algorithm":
+                algorithm_name = header.removeprefix('x-amz-checksum-')
+                _register_checksum_algorithm_feature_id(algorithm_name)
         return
     # If no checksum header exists yet, check the resolved context for
     # an algorithm that will be applied later by apply_request_checksum.
