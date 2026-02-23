@@ -497,8 +497,9 @@ def _register_checksum_feature_ids(request):
     """Register feature IDs for checksum algorithms used in the request."""
     if algorithm_headers := get_checksum_algorithm_headers(request):
         for header in algorithm_headers:
-            if header != "x-amz-checksum-algorithm":
-                algorithm_name = header.removeprefix('x-amz-checksum-')
+            header = header.upper()
+            if header != "X-AMZ-CHECKSUM-":
+                algorithm_name = header.removeprefix("X-AMZ-CHECKSUM-")
                 _register_checksum_algorithm_feature_id(algorithm_name)
         return
     # If no checksum header exists yet, check the resolved context for
