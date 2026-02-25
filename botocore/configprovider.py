@@ -256,7 +256,7 @@ DEFAULT_S3_CONFIG_VARS = {
         utils.ensure_boolean,
     ),
     'disable_s3_express_session_auth': (
-        ('s3', 'disable_s3_express_session_auth'),
+        ('s3', 's3_disable_express_session_auth'),
         'AWS_S3_DISABLE_EXPRESS_SESSION_AUTH',
         None,
         utils.ensure_boolean,
