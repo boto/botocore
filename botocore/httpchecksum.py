@@ -498,7 +498,11 @@ def _register_checksum_feature_ids(request):
     if algorithm_headers := get_checksum_algorithm_headers(request):
         for header in algorithm_headers:
             header = header.upper()
-            if header != "X-AMZ-CHECKSUM-":
+            if header not in (
+                "X-AMZ-CHECKSUM-ALGORITHM",
+                "X-AMZ-CHECKSUM-MODE",
+                "X-AMZ-CHECKSUM-TYPE",
+            ):
                 algorithm_name = header.removeprefix("X-AMZ-CHECKSUM-")
                 _register_checksum_algorithm_feature_id(algorithm_name)
         return
