@@ -137,7 +137,7 @@ class Config:
           Express session authentication. The value must be a boolean. If True, the
           client will NOT use S3 Express session authentication.
 
-        Defaults to Nene.
+          Defaults to Nene.
 
 
     :type retries: dict
