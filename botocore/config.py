@@ -330,7 +330,7 @@ class Config:
             ('response_checksum_validation', None),
             ('account_id_endpoint_mode', None),
             ('auth_scheme_preference', None),
-            ('s3_disable_express_session_auth', None)
+            ('s3_disable_express_session_auth', None),
         ]
     )
 

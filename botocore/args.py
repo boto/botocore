@@ -414,9 +414,14 @@ class ClientArgsCreator:
         return s3_configuration
 
     def compute_s3_disable_express_session_auth(self, client_config):
-        if client_config is not None and client_config.s3_disable_express_session_auth is not None:
+        if (
+            client_config is not None
+            and client_config.s3_disable_express_session_auth is not None
+        ):
             return client_config.s3_disable_express_session_auth
-        disable_express = self._config_store.get_config_variable('s3_disable_express_session_auth')
+        disable_express = self._config_store.get_config_variable(
+            's3_disable_express_session_auth'
+        )
         return disable_express if disable_express is not None else False
 
     def _is_s3_service(self, service_name):
@@ -715,7 +720,9 @@ class ClientArgsCreator:
         # endpoint resolver's output, including final_args, s3_config,
         # etc.
         s3_config_raw = self.compute_s3_config(client_config) or {}
-        s3_disable_express = self.compute_s3_disable_express_session_auth(client_config)
+        s3_disable_express = self.compute_s3_disable_express_session_auth(
+            client_config
+        )
         service_name_raw = service_model.endpoint_prefix
         # Maintain complex logic for s3 and sts endpoints for backwards
         # compatibility.
@@ -744,7 +751,9 @@ class ClientArgsCreator:
         if self._is_s3_service(service_name_raw):
             client_context.update(s3_config_raw)
             if s3_disable_express is not None:
-                client_context['disable_s3_express_session_auth'] = s3_disable_express
+                client_context['disable_s3_express_session_auth'] = (
+                    s3_disable_express
+                )
 
         sig_version = (
             client_config.signature_version
