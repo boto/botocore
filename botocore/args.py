@@ -332,7 +332,6 @@ class ClientArgsCreator:
             client_config, config_kwargs
         )
         self._compute_signature_version_config(client_config, config_kwargs)
-        self._compute_s3_disable_express_session_auth(client_config, config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -1003,18 +1002,6 @@ class ClientArgsCreator:
             value = client_config.signature_version
             if isinstance(value, str):
                 config_kwargs['signature_version'] = ClientConfigString(value)
-
-    def _compute_s3_disable_express_session_auth(self, client_config, config_kwargs):
-        if client_config and client_config.s3_disable_express_session_auth:
-            config_kwargs['s3_disable_express_session_auth'] = (
-                client_config.s3_disable_express_session_auth
-            )
-        else:
-            value = self._config_store.get_config_variable(
-                's3_disable_express_session_auth'
-            )
-            if value is not None:
-                config_kwargs['s3_disable_express_session_auth'] = value
 
 
 class ConfigObjectWrapper:

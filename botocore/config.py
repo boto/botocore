@@ -133,6 +133,7 @@ class Config:
             configured to use the us-east-1 region. This is the default if
             the configuration option is not specified.
 
+
     :type retries: dict
     :param retries: A dictionary for configuration related to retry behavior.
         Valid keys are:
