@@ -36,7 +36,7 @@ class TestDisableS3ExpressAuth:
     def test_disable_s3_express_auth_enabled(
         self, patched_session, mock_datetime
     ):
-        config = Config(s3_disable_express_session_auth=True)
+        config = Config(s3={'disable_s3_express_session_auth': True})
         s3_client = patched_session.create_client(
             's3',
             config=config,
@@ -52,7 +52,7 @@ class TestDisableS3ExpressAuth:
     def test_disable_s3_express_auth_disabled(
         self, patched_session, mock_datetime
     ):
-        config = Config(s3_disable_express_session_auth=False)
+        config = Config(s3={'disable_s3_express_session_auth': False})
         s3_client = patched_session.create_client(
             's3',
             config=config,

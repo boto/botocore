@@ -133,6 +133,12 @@ class Config:
             configured to use the us-east-1 region. This is the default if
             the configuration option is not specified.
 
+        * ``disable_s3_express_session_auth`` -- Refers to whether to use S3
+          Express session authentication. The value must be a boolean. If True, the
+          client will NOT use S3 Express session authentication.
+
+        Defaults to Nene.
+
 
     :type retries: dict
     :param retries: A dictionary for configuration related to retry behavior.
@@ -290,13 +296,6 @@ class Config:
         auth scheme names used to determine the client's auth scheme preference.
 
         Defaults to None.
-
-    :type s3_disable_express_session_auth: str
-    :param s3_disable_express_session_auth: Refers to whether to use S3
-        Express session authentication. The value must be a boolean. If True, the
-        client will NOT use S3 Express session authentication.
-
-        Defaults to Nene.
     """
 
     OPTION_DEFAULTS = OrderedDict(
@@ -330,7 +329,6 @@ class Config:
             ('response_checksum_validation', None),
             ('account_id_endpoint_mode', None),
             ('auth_scheme_preference', None),
-            ('s3_disable_express_session_auth', None),
         ]
     )
 

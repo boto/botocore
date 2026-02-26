@@ -318,7 +318,6 @@ class ClientArgsCreator:
                 ),
                 account_id_endpoint_mode=client_config.account_id_endpoint_mode,
                 auth_scheme_preference=client_config.auth_scheme_preference,
-                s3_disable_express_session_auth=client_config.s3_disable_express_session_auth,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
@@ -414,14 +413,14 @@ class ClientArgsCreator:
         return s3_configuration
 
     def compute_s3_disable_express_session_auth(self, client_config):
-        if (
-            client_config is not None
-            and client_config.s3_disable_express_session_auth is not None
-        ):
-            return client_config.s3_disable_express_session_auth
         disable_express = self._config_store.get_config_variable(
             's3_disable_express_session_auth'
         )
+        if (
+            client_config is not None
+            and client_config.s3 is not None
+        ):
+            disable_express = client_config.s3.get('disable_s3_express_session_auth')
         return disable_express if disable_express is not None else False
 
     def _is_s3_service(self, service_name):
