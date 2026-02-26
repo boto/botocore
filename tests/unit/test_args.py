@@ -853,6 +853,7 @@ class TestEndpointResolverBuiltins(unittest.TestCase):
         defaults = {
             'region_name': 'ca-central-1',
             'service_name': 'fooservice',
+            's3_disable_express_session_auth': None,
             's3_config': {},
             'endpoint_bridge': self.bridge,
             'client_endpoint_url': None,
