@@ -210,6 +210,12 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         None,
         utils.ensure_boolean,
     ),
+    's3_disable_express_session_auth': (
+        's3_disable_express_session_auth',
+        'AWS_S3_DISABLE_EXPRESS_SESSION_AUTH',
+        None,
+        utils.ensure_boolean,
+    ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
@@ -252,12 +258,6 @@ DEFAULT_S3_CONFIG_VARS = {
     's3_disable_multiregion_access_points': (
         ('s3', 's3_disable_multiregion_access_points'),
         'AWS_S3_DISABLE_MULTIREGION_ACCESS_POINTS',
-        None,
-        utils.ensure_boolean,
-    ),
-    'disable_s3_express_session_auth': (
-        ('s3', 's3_disable_express_session_auth'),
-        'AWS_S3_DISABLE_EXPRESS_SESSION_AUTH',
         None,
         utils.ensure_boolean,
     ),

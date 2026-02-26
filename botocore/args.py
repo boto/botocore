@@ -318,6 +318,7 @@ class ClientArgsCreator:
                 ),
                 account_id_endpoint_mode=client_config.account_id_endpoint_mode,
                 auth_scheme_preference=client_config.auth_scheme_preference,
+                s3_disable_express_session_auth=client_config.s3_disable_express_session_auth,
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
@@ -331,6 +332,7 @@ class ClientArgsCreator:
             client_config, config_kwargs
         )
         self._compute_signature_version_config(client_config, config_kwargs)
+        self._compute_s3_disable_express_session_auth(client_config, config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -411,6 +413,12 @@ class ClientArgsCreator:
                     s3_configuration.update(client_config.s3)
 
         return s3_configuration
+
+    def compute_s3_disable_express_session_auth(self, client_config):
+        if client_config is not None and client_config.s3_disable_express_session_auth is not None:
+            return client_config.s3_disable_express_session_auth
+        disable_express = self._config_store.get_config_variable('s3_disable_express_session_auth')
+        return disable_express if disable_express is not None else False
 
     def _is_s3_service(self, service_name):
         """Whether the service is S3 or S3 Control.
@@ -708,6 +716,7 @@ class ClientArgsCreator:
         # endpoint resolver's output, including final_args, s3_config,
         # etc.
         s3_config_raw = self.compute_s3_config(client_config) or {}
+        s3_disable_express = self.compute_s3_disable_express_session_auth(client_config)
         service_name_raw = service_model.endpoint_prefix
         # Maintain complex logic for s3 and sts endpoints for backwards
         # compatibility.
@@ -718,6 +727,7 @@ class ClientArgsCreator:
         resolver_builtins = self.compute_endpoint_resolver_builtin_defaults(
             region_name=eprv2_region_name,
             service_name=service_name_raw,
+            s3_disable_express_session_auth=s3_disable_express,
             s3_config=s3_config_raw,
             endpoint_bridge=endpoint_bridge,
             client_endpoint_url=endpoint_url,
@@ -734,6 +744,8 @@ class ClientArgsCreator:
             client_context = {}
         if self._is_s3_service(service_name_raw):
             client_context.update(s3_config_raw)
+            if s3_disable_express is not None:
+                client_context['disable_s3_express_session_auth'] = s3_disable_express
 
         sig_version = (
             client_config.signature_version
@@ -755,6 +767,7 @@ class ClientArgsCreator:
         self,
         region_name,
         service_name,
+        s3_disable_express_session_auth,
         s3_config,
         endpoint_bridge,
         client_endpoint_url,
@@ -834,8 +847,8 @@ class ClientArgsCreator:
             EPRBuiltins.AWS_S3_DISABLE_MRAP: s3_config.get(
                 's3_disable_multiregion_access_points', False
             ),
-            EPRBuiltins.AWS_S3_DISABLE_EXPRESS_SESSION_AUTH: s3_config.get(
-                'disable_s3_express_session_auth', False
+            EPRBuiltins.AWS_S3_DISABLE_EXPRESS_SESSION_AUTH: (
+                s3_disable_express_session_auth
             ),
             EPRBuiltins.SDK_ENDPOINT: given_endpoint,
             EPRBuiltins.ACCOUNT_ID: credentials.get_deferred_property(
@@ -990,6 +1003,18 @@ class ClientArgsCreator:
             value = client_config.signature_version
             if isinstance(value, str):
                 config_kwargs['signature_version'] = ClientConfigString(value)
+
+    def _compute_s3_disable_express_session_auth(self, client_config, config_kwargs):
+        if client_config and client_config.s3_disable_express_session_auth:
+            config_kwargs['s3_disable_express_session_auth'] = (
+                client_config.s3_disable_express_session_auth
+            )
+        else:
+            value = self._config_store.get_config_variable(
+                's3_disable_express_session_auth'
+            )
+            if value is not None:
+                config_kwargs['s3_disable_express_session_auth'] = value
 
 
 class ConfigObjectWrapper:

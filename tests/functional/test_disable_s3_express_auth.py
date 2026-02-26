@@ -36,14 +36,14 @@ class TestDisableS3ExpressAuth:
     def test_disable_s3_express_auth_enabled(
         self, patched_session, mock_datetime
     ):
-        config = Config(s3={'disable_s3_express_session_auth': True})
+        config = Config(s3_disable_express_session_auth=True)
         s3_client = patched_session.create_client(
             's3',
             config=config,
             region_name='us-west-2',
         )
 
-        with ClientHTTPStubber(s3_client) as stubber:
+        with ClientHTTPStubber(s3_client, strict=True) as stubber:
             stubber.add_response(body=self.LIST_OBJECTS_RESPONSE)
             s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
 
@@ -52,14 +52,14 @@ class TestDisableS3ExpressAuth:
     def test_disable_s3_express_auth_disabled(
         self, patched_session, mock_datetime
     ):
-        config = Config(s3={'disable_s3_express_session_auth': False})
+        config = Config(s3_disable_express_session_auth=False)
         s3_client = patched_session.create_client(
             's3',
             config=config,
             region_name='us-west-2',
         )
 
-        with ClientHTTPStubber(s3_client) as stubber:
+        with ClientHTTPStubber(s3_client, strict=True) as stubber:
             stubber.add_response(body=self.CREATE_SESSION_RESPONSE)
             stubber.add_response(body=self.LIST_OBJECTS_RESPONSE)
             s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
