@@ -416,11 +416,10 @@ class ClientArgsCreator:
         disable_express = self._config_store.get_config_variable(
             's3_disable_express_session_auth'
         )
-        if (
-            client_config is not None
-            and client_config.s3 is not None
-        ):
-            disable_express = client_config.s3.get('disable_s3_express_session_auth')
+        if client_config is not None and client_config.s3 is not None:
+            disable_express = client_config.s3.get(
+                'disable_s3_express_session_auth'
+            )
         return disable_express if disable_express is not None else False
 
     def _is_s3_service(self, service_name):
