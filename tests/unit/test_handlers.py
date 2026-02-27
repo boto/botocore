@@ -2172,6 +2172,7 @@ def test_map_oauth2_errors_adds_message():
 @pytest.mark.parametrize(
     "status_code, body",
     [
+        # Success response
         (200, {'access_token': 'foo'}),
         # no error_description
         (400, {'error': 'invalid_grant'}),
