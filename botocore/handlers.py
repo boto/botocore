@@ -1316,8 +1316,9 @@ def _map_oauth2_errors(response_dict, **kwargs):
             return
         body = json.loads(response_dict.get('body', b'{}'))
         if message := body.get('error_description'):
-            body['Message'] = message
-            response_dict['body'] = json.dumps(body).encode('utf-8')
+            if not body.get('Message', body.get("message")):
+                body['Message'] = message
+                response_dict['body'] = json.dumps(body).encode('utf-8')
     except (ValueError, AttributeError, TypeError):
         pass
 

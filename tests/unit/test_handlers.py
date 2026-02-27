@@ -2178,6 +2178,23 @@ def test_map_oauth2_errors_adds_message():
         (400, {'error': 'invalid_grant'}),
         # Empty error description
         (400, {'error': 'invalid_grant', 'error_description': ''}),
+        # Error response already contains Message or message
+        (
+            400,
+            {
+                'error': 'invalid_grant',
+                'error_description': 'foo',
+                'Message': 'something went wrong',
+            },
+        ),
+        (
+            400,
+            {
+                'error': 'invalid_grant',
+                'error_description': 'bar',
+                'message': 'something went wrong',
+            },
+        ),
     ],
 )
 def test_map_oauth2_errors_preserves_body(status_code, body):
