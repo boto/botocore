@@ -38,6 +38,7 @@ from botocore.exceptions import (
     InvalidExpressionError,
     InvalidIMDSEndpointError,
     InvalidIMDSEndpointModeError,
+    InvalidRegionError,
     MetadataRetrievalError,
     ReadTimeoutError,
     SSOTokenLoadError,
@@ -2112,6 +2113,47 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation
         )
         self.assertEqual(redirect_response, None)
+
+    def test_get_region_validates_region_from_header(self):
+        response = (
+            None,
+            {
+                'Error': {'Code': 'PermanentRedirect'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {'x-amz-bucket-region': 'invalid region!'}
+                },
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
+    def test_get_region_validates_region_from_error_body(self):
+        response = (
+            None,
+            {
+                'Error': {
+                    'Code': 'PermanentRedirect',
+                    'Region': 'invalid region!',
+                },
+                'ResponseMetadata': {'HTTPHeaders': {}},
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
+    def test_get_region_validates_region_from_head_bucket(self):
+        self.set_client_response_headers(
+            {'x-amz-bucket-region': 'invalid region!'}
+        )
+        response = (
+            None,
+            {
+                'Error': {'Code': 'PermanentRedirect'},
+                'ResponseMetadata': {'HTTPHeaders': {}},
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
 
 
 class TestArnParser(unittest.TestCase):
