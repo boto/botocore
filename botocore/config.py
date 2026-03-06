@@ -133,6 +133,12 @@ class Config:
             configured to use the us-east-1 region. This is the default if
             the configuration option is not specified.
 
+        * ``disable_s3_express_session_auth`` -- Refers to whether to use S3
+          Express session authentication. The value must be a boolean. If True, the
+          client will NOT use S3 Express session authentication.
+
+          Defaults to Nene.
+
 
     :type retries: dict
     :param retries: A dictionary for configuration related to retry behavior.
