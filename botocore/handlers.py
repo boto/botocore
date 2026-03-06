@@ -1070,7 +1070,9 @@ def remove_bedrock_runtime_invoke_model_with_bidirectional_stream(
         del class_attributes['invoke_model_with_bidirectional_stream']
 
 
-def remove_connecthealth_start_medical_scribe_listening_session(class_attributes, **kwargs):
+def remove_connecthealth_start_medical_scribe_listening_session(
+    class_attributes, **kwargs
+):
     """Operation requires h2 which is currently unsupported in Python"""
     if 'start_medical_scribe_listening_session' in class_attributes:
         del class_attributes['start_medical_scribe_listening_session']
