@@ -3299,10 +3299,10 @@ def _is_s3express_request(params):
     return endpoint_properties.get('backend') == 'S3Express'
 
 
-def get_checksum_header_algorithms(params):
+def get_checksum_algorithm_headers(params):
     """
-    Returns the a list of algorithm name if a headers starting with "x-amz-checksum-"
-    are provided in a request, otherwise returns an empty list.
+    Returns the a list of header names from the request which start with
+    "x-amz-checksum-", otherwise returns an empty list.
 
     This function is considered private and subject to abrupt breaking changes or
     removal without prior announcement. Please do not use it directly.
@@ -3315,7 +3315,7 @@ def get_checksum_header_algorithms(params):
     for header in headers:
         match = CHECKSUM_HEADER_PATTERN.match(header)
         if match:
-            checksum_headers.append(match.group(1))
+            checksum_headers.append(header)
     return checksum_headers
 
 
@@ -3326,7 +3326,7 @@ def has_checksum_header(params):
     This function is considered private and subject to abrupt breaking changes or
     removal without prior announcement. Please do not use it directly.
     """
-    return bool(get_checksum_header_algorithms(params))
+    return bool(get_checksum_algorithm_headers(params))
 
 
 def conditionally_calculate_checksum(params, **kwargs):
