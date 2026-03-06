@@ -1318,6 +1318,19 @@ def _should_handle_200_error(operation_model, response_dict):
     return True
 
 
+def _map_oauth2_errors(response_dict, **kwargs):
+    try:
+        if response_dict.get('status_code') < 400:
+            return
+        body = json.loads(response_dict.get('body', b'{}'))
+        if message := body.get('error_description'):
+            if not body.get('Message', body.get("message")):
+                body['Message'] = message
+                response_dict['body'] = json.dumps(body).encode('utf-8')
+    except (ValueError, AttributeError, TypeError):
+        pass
+
+
 def _update_status_code(response, **kwargs):
     # Update the http_response status code when the parsed response has been
     # modified in a handler. This enables retries for cases like ``_handle_200_error``.
@@ -1503,6 +1516,7 @@ BUILTIN_HANDLERS = [
     ),
     ('before-parse.s3.*', handle_expires_header),
     ('before-parse.s3.*', _handle_200_error, REGISTER_FIRST),
+    ('before-parse.sso-oidc.*', _map_oauth2_errors),
     ('before-parameter-build', generate_idempotent_uuid),
     ('before-parameter-build', _handle_request_validation_mode_member),
     ('before-parameter-build.s3', validate_bucket_name),

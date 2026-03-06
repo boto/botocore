@@ -2153,3 +2153,74 @@ def test_set_auth_scheme_preference_signer_with_bearer_token(
     assert signature_version == expected_signature_version, (
         f"Expected '{expected_signature_version}' but got '{signature_version}'"
     )
+
+
+def test_map_oauth2_errors_adds_message():
+    body = {'error': 'invalid_grant', 'error_description': 'Token is expired'}
+    response_dict = {
+        'status_code': 400,
+        'body': json.dumps(body).encode('utf-8'),
+        'headers': {},
+    }
+    handlers._map_oauth2_errors(response_dict)
+    parsed = json.loads(response_dict['body'])
+    assert parsed['Message'] == 'Token is expired'
+    assert parsed['error'] == body['error']
+    assert parsed['error_description'] == body['error_description']
+
+
+@pytest.mark.parametrize(
+    "status_code, body",
+    [
+        # Success response
+        (200, {'access_token': 'foo'}),
+        # no error_description
+        (400, {'error': 'invalid_grant'}),
+        # Empty error description
+        (400, {'error': 'invalid_grant', 'error_description': ''}),
+        # Error response already contains Message or message
+        (
+            400,
+            {
+                'error': 'invalid_grant',
+                'error_description': 'foo',
+                'Message': 'something went wrong',
+            },
+        ),
+        (
+            400,
+            {
+                'error': 'invalid_grant',
+                'error_description': 'bar',
+                'message': 'something went wrong',
+            },
+        ),
+    ],
+)
+def test_map_oauth2_errors_preserves_body(status_code, body):
+    response_dict = {
+        'status_code': status_code,
+        'body': json.dumps(body).encode('utf-8'),
+        'headers': {},
+    }
+    original_body = response_dict['body']
+    handlers._map_oauth2_errors(response_dict)
+    assert response_dict['body'] == original_body
+
+
+@pytest.mark.parametrize(
+    "response_dict",
+    [
+        # Invalid JSON body
+        {'status_code': 400, 'body': b'not json', 'headers': {}},
+        # Empty body
+        {'status_code': 400, 'body': b'', 'headers': {}},
+        # No body
+        {'status_code': 400, 'headers': {}},
+        # Missing status_code
+        {'body': b'{}', 'headers': {}},
+    ],
+)
+def test_map_oauth2_errors_does_not_raise(response_dict):
+    # Should silently pass on malformed inputs
+    handlers._map_oauth2_errors(response_dict)
