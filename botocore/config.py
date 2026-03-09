@@ -133,11 +133,11 @@ class Config:
             configured to use the us-east-1 region. This is the default if
             the configuration option is not specified.
 
-        * ``disable_s3_express_session_auth`` -- Refers to whether to use S3
+        * ``s3_disable_express_session_auth`` -- Refers to whether to use S3
           Express session authentication. The value must be a boolean. If True, the
           client will NOT use S3 Express session authentication.
 
-          Defaults to Nene.
+          Defaults to None.
 
 
     :type retries: dict
@@ -312,6 +312,7 @@ class Config:
             ('proxies', None),
             ('proxies_config', None),
             ('s3', None),
+            ('s3_disable_express_session_auth', None),
             ('retries', None),
             ('client_cert', None),
             ('inject_host_prefix', None),

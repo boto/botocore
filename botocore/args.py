@@ -140,6 +140,9 @@ class ClientArgsCreator:
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
         account_id_endpoint_mode = config_kwargs['account_id_endpoint_mode']
+        s3_disable_express_session_auth = (
+            config_kwargs['s3_disable_express_session_auth']
+        )
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
@@ -203,6 +206,7 @@ class ClientArgsCreator:
             event_emitter,
             credentials,
             account_id_endpoint_mode,
+            s3_disable_express_session_auth,
         )
 
         # Copy the session's user agent factory and adds client configuration.
@@ -318,6 +322,9 @@ class ClientArgsCreator:
                 ),
                 account_id_endpoint_mode=client_config.account_id_endpoint_mode,
                 auth_scheme_preference=client_config.auth_scheme_preference,
+                s3_disable_express_session_auth=(
+                    s3_config.get('disable_s3_express_session_auth')
+                ),
             )
         self._compute_retry_config(config_kwargs)
         self._compute_connect_timeout(config_kwargs)
@@ -331,6 +338,7 @@ class ClientArgsCreator:
             client_config, config_kwargs
         )
         self._compute_signature_version_config(client_config, config_kwargs)
+        self._compute_s3_disable_express_session_auth(config_kwargs)
         s3_config = self.compute_s3_config(client_config)
 
         is_s3_service = self._is_s3_service(service_name)
@@ -412,16 +420,6 @@ class ClientArgsCreator:
 
         return s3_configuration
 
-    def compute_s3_disable_express_session_auth(self, client_config):
-        disable_express = self._config_store.get_config_variable(
-            's3_disable_express_session_auth'
-        )
-        if client_config is not None and client_config.s3 is not None:
-            disable_express = client_config.s3.get(
-                'disable_s3_express_session_auth'
-            )
-        return disable_express if disable_express is not None else False
-
     def _is_s3_service(self, service_name):
         """Whether the service is S3 or S3 Control.
 
@@ -490,6 +488,16 @@ class ClientArgsCreator:
         if config_val not in VALID_REGIONAL_ENDPOINTS_CONFIG:
             raise botocore.exceptions.InvalidS3UsEast1RegionalEndpointConfigError(
                 s3_us_east_1_regional_endpoint_config=config_val
+            )
+
+    def _validate_s3_disable_express_session_auth(self, config_val):
+        if not isinstance(config_val, bool) and not isinstance(config_val, str):
+            raise botocore.exceptions.InvalidConfigError(
+                error_msg=(
+                    f'Invalid value "{config_val}" for '
+                    's3_disable_express_session_auth. Value must be a boolean'
+
+                )
             )
 
     def _set_region_if_custom_s3_endpoint(
@@ -663,6 +671,23 @@ class ClientArgsCreator:
             disabled = ensure_boolean(disabled)
         config_kwargs['disable_request_compression'] = disabled
 
+    def _compute_s3_disable_express_session_auth(
+            self,
+            config_kwargs
+    ):
+        disable_express = config_kwargs.get('s3_disable_express_session_auth')
+        if disable_express is None:
+            disable_express = self._config_store.get_config_variable(
+                's3_disable_express_session_auth'
+            )
+
+        # Raise an error if the value does not represent a boolean.
+        if disable_express is not None:
+            self._validate_s3_disable_express_session_auth(disable_express)
+        config_kwargs['s3_disable_express_session_auth'] = (
+            ensure_boolean(disable_express)
+        )
+
     def _validate_min_compression_size(self, min_size):
         min_allowed_min_size = 1
         max_allowed_min_size = 1048576
@@ -708,6 +733,7 @@ class ClientArgsCreator:
         event_emitter,
         credentials,
         account_id_endpoint_mode,
+        s3_disable_express_session_auth
     ):
         if endpoints_ruleset_data is None:
             return None
@@ -718,9 +744,6 @@ class ClientArgsCreator:
         # endpoint resolver's output, including final_args, s3_config,
         # etc.
         s3_config_raw = self.compute_s3_config(client_config) or {}
-        s3_disable_express = self.compute_s3_disable_express_session_auth(
-            client_config
-        )
         service_name_raw = service_model.endpoint_prefix
         # Maintain complex logic for s3 and sts endpoints for backwards
         # compatibility.
@@ -731,13 +754,13 @@ class ClientArgsCreator:
         resolver_builtins = self.compute_endpoint_resolver_builtin_defaults(
             region_name=eprv2_region_name,
             service_name=service_name_raw,
-            s3_disable_express_session_auth=s3_disable_express,
             s3_config=s3_config_raw,
             endpoint_bridge=endpoint_bridge,
             client_endpoint_url=endpoint_url,
             legacy_endpoint_url=endpoint.host,
             credentials=credentials,
             account_id_endpoint_mode=account_id_endpoint_mode,
+            s3_disable_express_session_auth=s3_disable_express_session_auth,
         )
         # Client context params for s3 conflict with the available settings
         # in the `s3` parameter on the `Config` object. If the same parameter
@@ -748,9 +771,9 @@ class ClientArgsCreator:
             client_context = {}
         if self._is_s3_service(service_name_raw):
             client_context.update(s3_config_raw)
-            if s3_disable_express is not None:
+            if s3_disable_express_session_auth is not None:
                 client_context['disable_s3_express_session_auth'] = (
-                    s3_disable_express
+                    s3_disable_express_session_auth
                 )
 
         sig_version = (
@@ -773,13 +796,13 @@ class ClientArgsCreator:
         self,
         region_name,
         service_name,
-        s3_disable_express_session_auth,
         s3_config,
         endpoint_bridge,
         client_endpoint_url,
         legacy_endpoint_url,
         credentials,
         account_id_endpoint_mode,
+        s3_disable_express_session_auth,
     ):
         # EndpointRulesetResolver rulesets may accept an "SDK::Endpoint" as
         # input. If the endpoint_url argument of create_client() is set, it

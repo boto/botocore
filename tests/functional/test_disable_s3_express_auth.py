@@ -11,13 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import os
 from unittest import mock
 
 import pytest
 from dateutil.tz import tzutc
 
 from botocore.config import Config
-from tests import ClientHTTPStubber
+from tests import ClientHTTPStubber, temporary_file
 
 
 class TestDisableS3ExpressAuth:
@@ -42,6 +43,43 @@ class TestDisableS3ExpressAuth:
             config=config,
             region_name='us-west-2',
         )
+
+        with ClientHTTPStubber(s3_client, strict=True) as stubber:
+            stubber.add_response(body=self.LIST_OBJECTS_RESPONSE)
+            s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
+
+        assert len(stubber.requests) == 1
+
+    def test_disable_s3_express_auth_enabled_env_var(
+        self, patched_session, mock_datetime
+    ):
+        os.environ['AWS_S3_DISABLE_EXPRESS_SESSION_AUTH'] = 'true'
+        s3_client = patched_session.create_client(
+            's3',
+            region_name='us-west-2',
+        )
+
+        with ClientHTTPStubber(s3_client, strict=True) as stubber:
+            stubber.add_response(body=self.LIST_OBJECTS_RESPONSE)
+            s3_client.list_objects_v2(Bucket=self.BUCKET_NAME)
+
+        assert len(stubber.requests) == 1
+
+    def test_disable_s3_express_auth_enabled_shared_config(
+        self, patched_session, mock_datetime
+    ):
+        with temporary_file('w') as f:
+            os.environ['AWS_CONFIG_FILE'] = f.name
+            f.write('[default]\n')
+            f.write(
+                f's3_disable_express_session_auth = xyz\n'
+            )
+            f.flush()
+
+            s3_client = patched_session.create_client(
+                's3',
+                region_name='us-west-2',
+            )
 
         with ClientHTTPStubber(s3_client, strict=True) as stubber:
             stubber.add_response(body=self.LIST_OBJECTS_RESPONSE)
