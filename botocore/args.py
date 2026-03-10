@@ -493,7 +493,7 @@ class ClientArgsCreator:
     def _validate_s3_disable_express_session_auth(self, config_val):
         string_bool = isinstance(config_val, str) and config_val.lower() in [
             'true',
-            'false'
+            'false',
         ]
         if not isinstance(config_val, bool) and not string_bool:
             raise botocore.exceptions.InvalidConfigError(
