@@ -324,7 +324,8 @@ class ClientArgsCreator:
                 auth_scheme_preference=client_config.auth_scheme_preference,
                 s3_disable_express_session_auth=(
                     s3_config.get('disable_s3_express_session_auth')
-                    if s3_config is not None else None
+                    if s3_config is not None
+                    else None
                 ),
             )
         self._compute_retry_config(config_kwargs)
