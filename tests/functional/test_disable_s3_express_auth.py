@@ -71,7 +71,7 @@ class TestDisableS3ExpressAuth:
         with temporary_file('w') as f:
             os.environ['AWS_CONFIG_FILE'] = f.name
             f.write('[default]\n')
-            f.write(f's3_disable_express_session_auth = true\n')
+            f.write('s3_disable_express_session_auth = true\n')
             f.flush()
 
             s3_client = patched_session.create_client(
