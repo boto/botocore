@@ -140,9 +140,9 @@ class ClientArgsCreator:
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
         account_id_endpoint_mode = config_kwargs['account_id_endpoint_mode']
-        s3_disable_express_session_auth = (
-            config_kwargs['s3_disable_express_session_auth']
-        )
+        s3_disable_express_session_auth = config_kwargs[
+            's3_disable_express_session_auth'
+        ]
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
@@ -491,9 +491,10 @@ class ClientArgsCreator:
             )
 
     def _validate_s3_disable_express_session_auth(self, config_val):
-        string_bool = (
-                isinstance(config_val, str) and config_val.lower() in ['true', 'false']
-        )
+        string_bool = isinstance(config_val, str) and config_val.lower() in [
+            'true',
+            'false'
+        ]
         if not isinstance(config_val, bool) and not string_bool:
             raise botocore.exceptions.InvalidConfigError(
                 error_msg=(
@@ -673,10 +674,7 @@ class ClientArgsCreator:
             disabled = ensure_boolean(disabled)
         config_kwargs['disable_request_compression'] = disabled
 
-    def _compute_s3_disable_express_session_auth(
-            self,
-            config_kwargs
-    ):
+    def _compute_s3_disable_express_session_auth(self, config_kwargs):
         disable_express = config_kwargs.get('s3_disable_express_session_auth')
         if disable_express is None:
             disable_express = self._config_store.get_config_variable(
@@ -686,8 +684,8 @@ class ClientArgsCreator:
         # Raise an error if the value does not represent a boolean.
         if disable_express is not None:
             self._validate_s3_disable_express_session_auth(disable_express)
-        config_kwargs['s3_disable_express_session_auth'] = (
-            ensure_boolean(disable_express)
+        config_kwargs['s3_disable_express_session_auth'] = ensure_boolean(
+            disable_express
         )
 
     def _validate_min_compression_size(self, min_size):
@@ -735,7 +733,7 @@ class ClientArgsCreator:
         event_emitter,
         credentials,
         account_id_endpoint_mode,
-        s3_disable_express_session_auth
+        s3_disable_express_session_auth,
     ):
         if endpoints_ruleset_data is None:
             return None

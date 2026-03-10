@@ -72,7 +72,7 @@ class TestDisableS3ExpressAuth:
             os.environ['AWS_CONFIG_FILE'] = f.name
             f.write('[default]\n')
             f.write(
-                f's3_disable_express_session_auth = xyz\n'
+                f's3_disable_express_session_auth = true\n'
             )
             f.flush()
 
