@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Events",
+  "description": "Emit an ``after-endpoint-resolution`` event after endpoint resolution is completed."
+}

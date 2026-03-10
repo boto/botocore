@@ -494,6 +494,7 @@ class EndpointRulesetResolver:
         request_context,
     ):
         """Invokes the provider with params defined in the service's ruleset"""
+        service_id = self._service_model.service_id.hyphenize()
         if call_args is None:
             call_args = {}
 
@@ -537,6 +538,13 @@ class EndpointRulesetResolver:
             headers={
                 key: val[0] for key, val in provider_result.headers.items()
             }
+        )
+
+        self._event_emitter.emit(
+            f'after-endpoint-resolution.{service_id}',
+            model=operation_model,
+            context=request_context,
+            provider_result=provider_result,
         )
 
         return provider_result
