@@ -2174,7 +2174,7 @@ def test_map_oauth2_errors_adds_message():
     [
         # Success response
         (200, {'access_token': 'foo'}),
-        # no error_description
+        # No error_description
         (400, {'error': 'invalid_grant'}),
         # Empty error description
         (400, {'error': 'invalid_grant', 'error_description': ''}),

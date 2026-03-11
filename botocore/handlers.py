@@ -1311,6 +1311,8 @@ def _should_handle_200_error(operation_model, response_dict):
 
 
 def _map_oauth2_errors(response_dict, **kwargs):
+    # SSO OIDC follows the OAuth2 standard, which returns error messages in
+    # 'error_description' instead of the 'Message' field botocore expects.
     try:
         if response_dict.get('status_code') < 400:
             return
