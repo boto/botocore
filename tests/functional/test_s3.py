@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import io
 import re
 
 import pytest
@@ -41,6 +42,22 @@ from tests import (
 )
 
 DATE = datetime.datetime(2021, 8, 27, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+class NonSeekableStream(io.RawIOBase):
+    def __init__(self, data):
+        self._data = data
+        self._pos = 0
+
+    def read(self, size=-1):
+        if size == -1:
+            size = len(self._data) - self._pos
+        chunk = self._data[self._pos : self._pos + size]
+        self._pos += len(chunk)
+        return chunk
+
+    def readable(self):
+        return True
 
 
 class TestS3BucketValidation(unittest.TestCase):
@@ -1548,6 +1565,27 @@ class TestS3SigV4(BaseS3OperationTest):
         )
         body = self.http_stubber.requests[0].body.read()
         self.assertIn(b"x-amz-checksum-crc32:eCQEmA==", body)
+        self.assertNotIn("Content-Length", sent_headers)
+
+    def test_trailing_checksum_non_seekable_body_uses_content_length(self):
+        with self.http_stubber:
+            self.client.put_object(
+                Bucket="foo",
+                Key="bar",
+                Body=NonSeekableStream(b"hello world"),
+                ContentLength=11,
+            )
+        sent_headers = self.get_sent_headers()
+        self.assertEqual(sent_headers["Content-Encoding"], b"aws-chunked")
+        self.assertEqual(sent_headers["Transfer-Encoding"], b"chunked")
+        self.assertEqual(
+            sent_headers["X-Amz-Trailer"], b"x-amz-checksum-crc32"
+        )
+        self.assertEqual(sent_headers["X-Amz-Decoded-Content-Length"], b"11")
+        self.assertEqual(
+            sent_headers["x-amz-content-sha256"],
+            b"STREAMING-UNSIGNED-PAYLOAD-TRAILER",
+        )
         self.assertNotIn("Content-Length", sent_headers)
 
     def test_trailing_checksum_set_empty_body(self):
