@@ -472,6 +472,13 @@ def _apply_request_trailer_checksum(request):
     headers["X-Amz-Trailer"] = location_name
 
     content_length = determine_content_length(body)
+    if content_length is None and "Content-Length" in headers:
+        # For non-seekable streams, determine_content_length returns None,
+        # but the caller may have supplied a Content-Length header. Use it
+        # so we can set X-Amz-Decoded-Content-Length and remove the header
+        # (Transfer-Encoding: chunked and Content-Length are mutually exclusive
+        # per RFC 7230 §3.3).
+        content_length = int(headers["Content-Length"])
     if content_length is not None:
         # Send the decoded content length if we can determine it. Some
         # services such as S3 may require the decoded content length

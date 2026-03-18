@@ -377,6 +377,47 @@ class TestHttpChecksumHandlers(unittest.TestCase):
         self.assertNotIn("x-amz-checksum-crc32", request["headers"])
         self.assertIsInstance(request["body"], AwsChunkedWrapper)
 
+    def test_apply_request_checksum_flex_trailer_non_seekable_with_content_length(
+        self,
+    ):
+        # Non-seekable streams don't support seek/tell so determine_content_length
+        # returns None. When the caller has already supplied a Content-Length
+        # header (e.g. via ContentLength= in put_object), we should still
+        # move that value to X-Amz-Decoded-Content-Length and remove
+        # Content-Length, because Transfer-Encoding: chunked and Content-Length
+        # are mutually exclusive per RFC 7230 §3.3.
+        import io
+
+        class NonSeekableStream(io.RawIOBase):
+            def __init__(self, data):
+                self._data = data
+                self._pos = 0
+
+            def read(self, n=-1):
+                if n == -1:
+                    n = len(self._data) - self._pos
+                chunk = self._data[self._pos : self._pos + n]
+                self._pos += len(chunk)
+                return chunk
+
+            def readable(self):
+                return True
+
+        body = NonSeekableStream(b"hello world")
+        request = self._build_request(body)
+        request["headers"]["Content-Length"] = "11"
+        request["context"]["checksum"] = {
+            "request_algorithm": {
+                "in": "trailer",
+                "algorithm": "crc32",
+                "name": "x-amz-checksum-crc32",
+            }
+        }
+        apply_request_checksum(request)
+        self.assertNotIn("Content-Length", request["headers"])
+        self.assertEqual(request["headers"]["X-Amz-Decoded-Content-Length"], "11")
+        self.assertIsInstance(request["body"], AwsChunkedWrapper)
+
     def test_apply_request_checksum_flex_header_trailer_explicit_digest(self):
         request = self._build_request(b"")
         request["context"]["checksum"] = {
