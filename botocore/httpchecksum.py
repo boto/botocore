@@ -473,6 +473,10 @@ def _apply_request_trailer_checksum(request):
 
     content_length = determine_content_length(body)
     if content_length is None and "Content-Length" in headers:
+        # determine_content_length() cannot resolve the length of non-seekable
+        # bodies, but the caller may have set Content-Length explicitly. Reuse
+        # that value for X-Amz-Decoded-Content-Length before the header is
+        # removed for chunked transfer encoding.
         content_length = int(headers["Content-Length"])
     if content_length is not None:
         # Send the decoded content length if we can determine it. Some
