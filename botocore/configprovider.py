@@ -210,12 +210,6 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         None,
         utils.ensure_boolean,
     ),
-    's3_disable_express_session_auth': (
-        's3_disable_express_session_auth',
-        'AWS_S3_DISABLE_EXPRESS_SESSION_AUTH',
-        None,
-        None,
-    ),
 }
 # A mapping for the s3 specific configuration vars. These are the configuration
 # vars that typically go in the s3 section of the config file. This mapping
