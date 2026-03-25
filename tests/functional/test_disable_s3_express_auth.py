@@ -56,8 +56,8 @@ class TestDisableS3ExpressAuth:
         env = {'AWS_S3_DISABLE_EXPRESS_SESSION_AUTH': 'true'}
         with mock.patch.dict(os.environ, env):
             s3_client = patched_session.create_client(
-            's3',
-            region_name='us-west-2',
+                's3',
+                region_name='us-west-2',
             )
 
             with ClientHTTPStubber(s3_client, strict=True) as stubber:
