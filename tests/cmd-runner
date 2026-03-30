@@ -69,11 +69,13 @@ Here's an example::
          <-------------------------------------------
 
 """
-import botocore.session
+
 import sys
 
+import botocore.session
 
-class CommandRunner(object):
+
+class CommandRunner:
     DEFAULT_REGION = 'us-west-2'
 
     def __init__(self):
@@ -93,7 +95,7 @@ class CommandRunner(object):
                 sys.stdout.flush()
                 break
             else:
-                getattr(self, '_do_%s' % parts[0])(parts[1:])
+                getattr(self, f'_do_{parts[0]}')(parts[1:])
                 sys.stdout.write('OK\n')
                 sys.stdout.flush()
 
@@ -209,8 +211,9 @@ class CommandRunner(object):
     def _create_client(self, service_name):
         # Create a client using the provided service name.
         # It will also inject a region name of self.DEFAULT_REGION.
-        return self._session.create_client(service_name,
-                                           region_name=self.DEFAULT_REGION)
+        return self._session.create_client(
+            service_name, region_name=self.DEFAULT_REGION
+        )
 
 
 def run():

@@ -13,7 +13,7 @@
 """Abstractions to interact with service models."""
 
 from collections import defaultdict
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from botocore.auth import resolve_auth_type
 from botocore.compat import OrderedDict
@@ -284,7 +284,7 @@ class StringShape(Shape):
 
 class StaticContextParameter(NamedTuple):
     name: str
-    value: Union[bool, str]
+    value: bool | str
 
 
 class ContextParameter(NamedTuple):

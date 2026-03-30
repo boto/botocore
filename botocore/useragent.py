@@ -28,7 +28,7 @@ import os
 import platform
 from copy import copy
 from string import ascii_letters, digits
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from botocore import __version__ as botocore_version
 from botocore.compat import HAS_CRT
@@ -193,8 +193,8 @@ class UserAgentComponent(NamedTuple):
 
     prefix: str
     name: str
-    value: Optional[str] = None
-    size_config: Optional[UserAgentComponentSizeConfig] = None
+    value: str | None = None
+    size_config: UserAgentComponentSizeConfig | None = None
 
     def to_string(self):
         """Create string like 'prefix/name#value' from a UserAgentComponent."""

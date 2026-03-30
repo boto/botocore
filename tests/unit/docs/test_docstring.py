@@ -35,22 +35,22 @@ class TestLazyLoadedDocstring(unittest.TestCase):
 
     def test_expandtabs(self):
         docstring = MockedLazyLoadedDocstring()
-        docstring.mocked_writer_method.side_effect = (
-            lambda section: section.write('foo\t')
+        docstring.mocked_writer_method.side_effect = lambda section: (
+            section.write('foo\t')
         )
         self.assertEqual('foo ', docstring.expandtabs(1))
 
     def test_str(self):
         docstring = MockedLazyLoadedDocstring()
-        docstring.mocked_writer_method.side_effect = (
-            lambda section: section.write('foo')
+        docstring.mocked_writer_method.side_effect = lambda section: (
+            section.write('foo')
         )
         self.assertEqual('foo', str(docstring))
 
     def test_repr(self):
         docstring = MockedLazyLoadedDocstring()
-        docstring.mocked_writer_method.side_effect = (
-            lambda section: section.write('foo')
+        docstring.mocked_writer_method.side_effect = lambda section: (
+            section.write('foo')
         )
         self.assertEqual('foo', repr(docstring))
 
