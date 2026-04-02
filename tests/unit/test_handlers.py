@@ -2066,6 +2066,48 @@ def test_set_auth_scheme_preference_signer(
     )
 
 
+def test_set_auth_scheme_preference_signer_v4a_sets_signing_context():
+    config = Config(
+        signature_version="v4",
+        auth_scheme_preference=ClientConfigString("sigv4a"),
+        sigv4a_signing_region_set="region_1,region_2",
+    )
+    context = {
+        "client_config": config,
+        "auth_options": ["aws.auth#sigv4", "aws.auth#sigv4a"],
+        "signing": {"foo": "bar"},
+    }
+
+    signature_version = handlers._set_auth_scheme_preference_signer(
+        context, "my-service"
+    )
+
+    assert signature_version == "v4a"
+    assert context["signing"] == {
+        "foo": "bar",
+        "region": "region_1,region_2",
+        "signing_name": "my-service",
+    }
+
+
+def test_set_auth_scheme_preference_signer_explicit_v4a_sets_context():
+    config = Config(
+        signature_version=ClientConfigString("v4a"),
+        sigv4a_signing_region_set="*",
+    )
+    context = {"client_config": config}
+
+    signature_version = handlers._set_auth_scheme_preference_signer(
+        context, "my-service"
+    )
+
+    assert signature_version is None
+    assert context["signing"] == {
+        "region": "*",
+        "signing_name": "my-service",
+    }
+
+
 @pytest.mark.parametrize(
     "signing_name, config_kwargs, auth_options, env_token, expected_signature_version",
     [
