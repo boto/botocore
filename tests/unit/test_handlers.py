@@ -45,7 +45,7 @@ from botocore.model import (
 )
 from botocore.signers import RequestSigner
 from botocore.utils import conditionally_calculate_md5
-from tests import BaseSessionTest, mock, unittest
+from tests import BaseSessionTest, mock, requires_crt, unittest
 
 
 class TestHandlers(BaseSessionTest):
@@ -2066,6 +2066,7 @@ def test_set_auth_scheme_preference_signer(
     )
 
 
+@requires_crt()
 def test_set_auth_scheme_preference_signer_v4a_sets_signing_context():
     config = Config(
         signature_version="v4",
