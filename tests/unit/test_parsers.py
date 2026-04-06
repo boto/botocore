@@ -1648,6 +1648,33 @@ def test_can_handle_generic_error_message(parser, body):
     assert parsed['ResponseMetadata']['HTTPStatusCode'] == 503
 
 
+def _streaming_test_bodies():
+    generic_html_body = (
+        b'<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+    )
+    empty_body = b''
+
+    return [generic_html_body, empty_body]
+
+
+@pytest.mark.parametrize(
+    "parser, body",
+    itertools.product(
+        parsers.PROTOCOL_PARSERS.values(), _streaming_test_bodies()
+    ),
+)
+def test_can_handle_generic_error_message_with_streaming_body(parser, body):
+    # A streaming body (e.g. StreamingBody or StreamingChecksumBody)
+    # has a read() method but no strip() method. Ensure that
+    # _is_generic_error_response handles this correctly.
+    streaming_body = RawResponse(body)
+    parsed = parser().parse(
+        {'body': streaming_body, 'headers': {}, 'status_code': 500}, None
+    )
+    assert parsed['Error']['Code'] == '500'
+    assert parsed['ResponseMetadata']['HTTPStatusCode'] == 500
+
+
 class TestNullInListParsing(unittest.TestCase):
     def test_handles_null_in_list(self):
         parser = parsers.JSONParser()
