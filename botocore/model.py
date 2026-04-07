@@ -53,6 +53,20 @@ class ServiceId(str):
         return hyphenize_service_id(self)
 
 
+class ArnStr(str):
+    """A validated ARN string type for use with dataclasses or pydantic."""
+    def __new__(cls, arn: str):
+        from botocore.utils import ArnParser, InvalidArnException
+        # try catch to bubble up the exception message
+        # is_arn supresses the exception so parse_arn is used instead
+        try:
+            ArnParser.parse_arn(arn)
+        except InvalidArnException:
+            raise
+        return str.__new__(cls, arn)
+
+
+
 class Shape:
     """Object representing a shape from the service model."""
 

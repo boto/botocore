@@ -22,6 +22,33 @@ class TestServiceId(unittest.TestCase):
         self.assertEqual(model.ServiceId('MyService').hyphenize(), 'myservice')
 
 
+class TestArnStr(unittest.TestCase):
+    def test_valid_arn(self):
+        arn = model.ArnStr('arn:aws:s3:us-west-2:123456789012:myresource')
+        self.assertIsInstance(arn, model.ArnStr)
+
+    def test_invalid_arn(self):
+        from botocore.utils import InvalidArnException
+        # outright wrong string
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('arathernormal:string:thatsomeone:might:send:by:mistake')
+        # ARN is not arn
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('ARN:aws:s3:us-west2:123456789012:myresource')
+        # invalid partition
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('arn:amazon:s3:us-west-2:123456789012:myresource')
+        # invalid region
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('arn:aws:s3:us-west2:123456789012:myresource')
+        # invalid account id
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('arn:aws:s3:us-west2:1234567890123:myresource')
+        # missing resource and last colon
+        with self.assertRaises(InvalidArnException):
+            _ = model.ArnStr('arn:aws:s3:us-west2:123456789012:')
+
+
 class TestServiceModel(unittest.TestCase):
     def setUp(self):
         self.model = {

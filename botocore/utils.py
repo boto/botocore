@@ -2122,12 +2122,39 @@ class InvalidArnException(ValueError):
 
 
 class ArnParser:
-    def parse_arn(self, arn):
-        arn_parts = arn.split(':', 5)
+    @staticmethod
+    def parse_arn(arn: str) -> dict[str, str]:
+        arn_parts = arn.split(sep=':', maxsplit=5)
         if len(arn_parts) < 6:
             raise InvalidArnException(
-                f'Provided ARN: {arn} must be of the format: '
+                f'Provided ARN: {arn} is invalid. must be of the format: '
                 'arn:partition:service:region:account:resource'
+            )
+        if arn_parts[0] != 'arn':
+                raise InvalidArnException(
+                f'Invalid arn prefix "{arn_parts[0]}" in ARN: {arn}'
+            )
+        if arn_parts[1].startswith('aws') is False:
+            raise InvalidArnException(
+                f'Invalid partition "{arn_parts[1]}" in ARN: {arn}'
+            )
+        if arn_parts[2] == '':
+            raise InvalidArnException(
+                f'Service must not be empty in ARN: {arn}'
+            )
+        # empty str or lowercase alphanumeric segments separated by at least 2 hyphens and ending in a number
+        if arn_parts[3] != '' and re.match(r'^[a-z0-9]+(-[a-z0-9]+){1,}-\d+$', arn_parts[3]) is None:
+            raise InvalidArnException(
+                f'Invalid region "{arn_parts[3]}" in ARN: {arn}'
+            )
+        ## 12 0-9 digits or empty str
+        if arn_parts[3] != '' and re.match(r'^\d{12}$', arn_parts[4]) is None:
+            raise InvalidArnException(
+                f'Account ID must be 12 digits "{arn_parts[4]}" in ARN: {arn}'
+            )
+        if arn_parts[5] == '':
+            raise InvalidArnException(
+                f'Resource must not be empty in ARN: {arn}'
             )
         return {
             'partition': arn_parts[1],
@@ -2138,12 +2165,11 @@ class ArnParser:
         }
 
     @staticmethod
-    def is_arn(value):
-        if not isinstance(value, str) or not value.startswith('arn:'):
+    def is_arn(value: str):
+        if isinstance(value, str) is False or value[0:4] != 'arn:':
             return False
-        arn_parser = ArnParser()
         try:
-            arn_parser.parse_arn(value)
+            ArnParser.parse_arn(value)
             return True
         except InvalidArnException:
             return False

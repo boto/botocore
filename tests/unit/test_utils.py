@@ -2157,35 +2157,33 @@ class TestS3RegionRedirector(unittest.TestCase):
 
 
 class TestArnParser(unittest.TestCase):
-    def setUp(self):
-        self.parser = ArnParser()
 
     def test_parse(self):
-        arn = 'arn:aws:s3:us-west-2:1023456789012:myresource'
+        arn = 'arn:aws:s3:us-west-2:123456789012:myresource'
         self.assertEqual(
-            self.parser.parse_arn(arn),
+            ArnParser.parse_arn(arn),
             {
                 'partition': 'aws',
                 'service': 's3',
                 'region': 'us-west-2',
-                'account': '1023456789012',
+                'account': '123456789012',
                 'resource': 'myresource',
             },
         )
 
     def test_parse_invalid_arn(self):
         with self.assertRaises(InvalidArnException):
-            self.parser.parse_arn('arn:aws:s3')
+           ArnParser.parse_arn('arn:aws:s3')
 
     def test_parse_arn_with_resource_type(self):
-        arn = 'arn:aws:s3:us-west-2:1023456789012:bucket_name:mybucket'
+        arn = 'arn:aws:s3:us-west-2:123456789012:bucket_name:mybucket'
         self.assertEqual(
-            self.parser.parse_arn(arn),
+            ArnParser().parse_arn(arn),
             {
                 'partition': 'aws',
                 'service': 's3',
                 'region': 'us-west-2',
-                'account': '1023456789012',
+                'account': '123456789012',
                 'resource': 'bucket_name:mybucket',
             },
         )
@@ -2193,7 +2191,7 @@ class TestArnParser(unittest.TestCase):
     def test_parse_arn_with_empty_elements(self):
         arn = 'arn:aws:s3:::mybucket'
         self.assertEqual(
-            self.parser.parse_arn(arn),
+            ArnParser.parse_arn(arn),
             {
                 'partition': 'aws',
                 'service': 's3',
