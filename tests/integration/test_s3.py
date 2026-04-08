@@ -86,6 +86,21 @@ def setup_module():
         LOG.debug("create_bucket() raised an exception: %s", e, exc_info=True)
     waiter.wait(Bucket=_SHARED_BUCKET)
     s3.delete_public_access_block(Bucket=_SHARED_BUCKET)
+    s3.put_bucket_encryption(
+        Bucket=_SHARED_BUCKET,
+        ServerSideEncryptionConfiguration={
+            'Rules': [
+                {
+                    'ApplyServerSideEncryptionByDefault': {
+                        'SSEAlgorithm': 'AES256',
+                    },
+                    'BlockedEncryptionTypes': {
+                        'EncryptionType': ['NONE'],
+                    },
+                }
+            ],
+        },
+    )
 
 
 def clear_out_bucket(bucket, region, delete_bucket=False):
