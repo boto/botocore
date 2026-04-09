@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.42.87
+=======
+
+* api-change:``bcm-dashboards``: Scheduled email reports of Billing and Cost Management Dashboards
+* api-change:``bedrock-agentcore``: Introducing support for SearchRegistryRecords API on AgentCoreRegistry
+* api-change:``bedrock-agentcore-control``: Initial release for CRUDL in AgentCore Registry Service
+* api-change:``mediaconnect``: Adds support for MediaLive Channel-type Router Inputs.
+* api-change:``redshift-data``: The BatchExecuteStatement API now supports named SQL parameters, enabling secure batch queries with parameterized values. This enhancement helps prevent SQL injection vulnerabilities and improves query reusability.
+* api-change:``sagemaker``: Release support for g7e instance types for SageMaker HyperPod
+
+
 1.42.86
 =======
 
