@@ -303,6 +303,9 @@ class StreamingChecksumBody(StreamingBody):
             self._validate_checksum()
         return amount_read
 
+    def __getattr__(self, name):
+        return getattr(self._raw_stream, name)
+
     def _validate_checksum(self):
         if self._checksum.digest() != base64.b64decode(self._expected):
             error_msg = (
