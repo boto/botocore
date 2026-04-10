@@ -857,6 +857,7 @@ class Session:
         aws_session_token=None,
         config=None,
         aws_account_id=None,
+        aws_bearer_token_bedrock=None,
     ):
         """Create a botocore client.
 
@@ -927,6 +928,12 @@ class Session:
         :param aws_account_id: The account id to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
+        :type aws_bearer_token_bedrock: string
+        :param aws_bearer_token_bedrock: The Bedrock API key to use for
+            bearer token authentication with Bedrock services. If provided,
+            this takes precedence over the AWS_BEARER_TOKEN_BEDROCK environment
+            variable. Same semantics as aws_access_key_id above.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -986,6 +993,11 @@ class Session:
             credentials = self.get_credentials()
         if getattr(credentials, 'method', None) == 'explicit':
             register_feature_id('CREDENTIALS_CODE')
+
+        # Create auth token resolver that uses explicit bearer token if provided
+        auth_token_resolver = self._get_auth_token_resolver(
+            aws_bearer_token_bedrock
+        )
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
@@ -1026,7 +1038,7 @@ class Session:
             exceptions_factory,
             config_store,
             user_agent_creator=user_agent_creator,
-            auth_token_resolver=self.get_auth_token,
+            auth_token_resolver=auth_token_resolver,
         )
         client = client_creator.create_client(
             service_name=service_name,
@@ -1045,6 +1057,34 @@ class Session:
             monitor.register(client.meta.events)
         self._register_client_plugins(client)
         return client
+
+    def _get_auth_token_resolver(self, aws_bearer_token_bedrock=None):
+        """
+        Get an auth token resolver function.
+
+        If aws_bearer_token_bedrock is provided, returns a resolver that
+        uses the explicit token for 'bedrock' signing name, falling back
+        to the default resolver for other services.
+
+        If aws_bearer_token_bedrock is not provided, returns the default
+        get_auth_token method.
+        """
+        if aws_bearer_token_bedrock is None:
+            return self.get_auth_token
+
+        from botocore.tokens import FrozenAuthToken
+
+        bedrock_auth_token = FrozenAuthToken(aws_bearer_token_bedrock)
+
+        def auth_token_resolver(**kwargs):
+            signing_name = kwargs.get('signing_name')
+            # Bedrock services use 'bedrock' as the signing name
+            if signing_name == 'bedrock':
+                return bedrock_auth_token
+            # For other services, use the default resolver
+            return self.get_auth_token(**kwargs)
+
+        return auth_token_resolver
 
     def _resolve_region_name(self, region_name, config):
         # Figure out the user-provided region based on the various

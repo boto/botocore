@@ -802,6 +802,53 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(credentials.account_id, 'bin')
 
     @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_aws_bearer_token_bedrock(self, client_creator):
+        # Test that aws_bearer_token_bedrock is accepted and creates a custom
+        # auth token resolver
+        self.session.create_client(
+            'bedrock-runtime',
+            'us-west-2',
+            aws_bearer_token_bedrock='test-bearer-token',
+        )
+        # Verify the client creator was called
+        self.assertTrue(client_creator.called)
+        # Get the auth_token_resolver passed to ClientCreator
+        call_kwargs = client_creator.call_args[1]
+        auth_token_resolver = call_kwargs['auth_token_resolver']
+        # The resolver should return a FrozenAuthToken for 'bedrock' signing name
+        from botocore.tokens import FrozenAuthToken
+
+        token = auth_token_resolver(signing_name='bedrock')
+        self.assertIsInstance(token, FrozenAuthToken)
+        self.assertEqual(token.token, 'test-bearer-token')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_without_bearer_token_uses_default_resolver(
+        self, client_creator
+    ):
+        # Test that without aws_bearer_token_bedrock, the default resolver is used
+        self.session.create_client('bedrock-runtime', 'us-west-2')
+        call_kwargs = client_creator.call_args[1]
+        auth_token_resolver = call_kwargs['auth_token_resolver']
+        # The resolver should be the session's get_auth_token method
+        self.assertEqual(auth_token_resolver, self.session.get_auth_token)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_bearer_token_resolver_fallback_for_other_services(self, client_creator):
+        # Test that the custom resolver falls back to default for non-bedrock services
+        self.session.create_client(
+            's3',
+            'us-west-2',
+            aws_bearer_token_bedrock='test-bearer-token',
+        )
+        call_kwargs = client_creator.call_args[1]
+        auth_token_resolver = call_kwargs['auth_token_resolver']
+        # For non-bedrock signing name, should return None (no token)
+        token = auth_token_resolver(signing_name='s3')
+        # Should fall back to the default resolver which returns None for s3
+        self.assertIsNone(token)
+
+    @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_ignored_credentials(self, client_creator):
         with self.assertLogs('botocore.session', level='DEBUG') as log:
             self.session.create_client(

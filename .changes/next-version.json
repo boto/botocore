@@ -1,0 +1,7 @@
+[
+  {
+    "category": "Session",
+    "description": "Add support for ``aws_bearer_token_bedrock`` parameter in ``Session.create_client()`` to enable per-client Bedrock API key authentication. This allows safe multi-tenant usage without relying on the global ``AWS_BEARER_TOKEN_BEDROCK`` environment variable.",
+    "type": "feature"
+  }
+]
