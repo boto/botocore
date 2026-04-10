@@ -28,7 +28,7 @@ from botocore import UNSIGNED, xform_name
 from botocore.auth import (
     AUTH_TYPE_MAPS,
     HAS_CRT,
-    resolve_auth_scheme_preference
+    resolve_auth_scheme_preference,
 )
 from botocore.crt import CRT_SUPPORTED_AUTH_TYPES
 from botocore.endpoint_provider import EndpointProvider
@@ -739,7 +739,9 @@ class EndpointRulesetResolver:
                 self._strip_sig_prefix(s['name'].split('#')[-1]): s
                 for s in auth_schemes
             }
-            name = resolve_auth_scheme_preference(prefs, available_ruleset_names)
+            name = resolve_auth_scheme_preference(
+                prefs, available_ruleset_names
+            )
             scheme = auth_schemes_by_auth_type[name]
         else:
             try:

@@ -1015,8 +1015,8 @@ class BaseClient:
         # configured auth scheme preference, use both to compute the
         # auth type. Otherwise, fallback to auth/auth_type resolution.
         if operation_model.auth and self.meta.config.auth_scheme_preference:
-            preferred_schemes = (
-                self.meta.config.auth_scheme_preference.split(',')
+            preferred_schemes = self.meta.config.auth_scheme_preference.split(
+                ','
             )
             auth_type = resolve_auth_scheme_preference(
                 preferred_schemes, operation_model.auth

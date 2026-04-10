@@ -90,9 +90,7 @@ ENDPOINT_AUTH_SCHEMES_DICT = {
                 "disableDoubleEncoding": True,
                 "name": "foo",
                 "signingName": "s3-outposts",
-                "signingRegionSet": [
-                    "*"
-                ]
+                "signingRegionSet": ["*"],
             },
             {
                 "disableDoubleEncoding": True,
@@ -661,22 +659,22 @@ def test_construct_endpoint_parametrized(
     ],
 )
 def test_auth_scheme_preference(
-    auth_scheme_preference,
-    expected_auth_scheme_name,
-    monkeypatch
+    auth_scheme_preference, expected_auth_scheme_name, monkeypatch
 ):
-    conditions = [
-        PARSE_ARN_FUNC,
-        {
-            "fn": "not",
-            "argv": [STRING_EQUALS_FUNC],
-        },
-        {
-            "fn": "aws.partition",
-            "argv": [REGION_REF],
-            "assign": "PartitionResults",
-        },
-    ],
+    conditions = (
+        [
+            PARSE_ARN_FUNC,
+            {
+                "fn": "not",
+                "argv": [STRING_EQUALS_FUNC],
+            },
+            {
+                "fn": "aws.partition",
+                "argv": [REGION_REF],
+                "assign": "PartitionResults",
+            },
+        ],
+    )
     resolver = EndpointRulesetResolver(
         endpoint_ruleset_data={
             'version': '1.0',
@@ -706,12 +704,12 @@ def test_auth_scheme_preference(
         patch.dict(
             'botocore.auth.AUTH_TYPE_MAPS',
             {'bar': None, 'foo': None},
-            clear=True
+            clear=True,
         ),
         patch.dict(
             'botocore.auth.AUTH_PREF_TO_SIGNATURE_VERSION',
             {'bar': 'bar', 'foo': 'foo'},
-            clear=True
+            clear=True,
         )
     ):
         name, scheme = resolver.auth_schemes_to_signing_ctx(auth_schemes)
