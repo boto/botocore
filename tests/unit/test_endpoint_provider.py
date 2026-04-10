@@ -710,7 +710,7 @@ def test_auth_scheme_preference(
             'botocore.auth.AUTH_PREF_TO_SIGNATURE_VERSION',
             {'bar': 'bar', 'foo': 'foo'},
             clear=True,
-        )
+        ),
     ):
         name, scheme = resolver.auth_schemes_to_signing_ctx(auth_schemes)
     assert name == expected_auth_scheme_name
