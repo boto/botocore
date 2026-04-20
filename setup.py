@@ -24,7 +24,7 @@ def find_version(*file_paths):
 
 requires = [
     'jmespath>=0.7.1,<2.0.0',
-    'python-dateutil>=2.1,<3.0.0',
+    'python-dateutil>=2.7,<3.0.0',
     # Prior to Python 3.10, Python doesn't require openssl 1.1.1
     # but urllib3 2.0+ does. This means all botocore users will be
     # broken by default on Amazon Linux 2 and AWS Lambda without this pin.
