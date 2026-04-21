@@ -958,7 +958,7 @@ def _epoch_seconds_to_datetime(value, tzinfo):
 
 def _parse_timestamp_with_tzinfo(value, tzinfo):
     """Parse timestamp with pluggable tzinfo options."""
-    if isinstance(value, (int, float))and value > 9999999999:
+    if isinstance(value, (int, float)) and value > 9999999999:
         # Possibly an epoch time in milliseconds.
         value = value / 1000.0
         return datetime.datetime.fromtimestamp(value, tzinfo())
