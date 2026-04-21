@@ -21,7 +21,18 @@ import os
 from botocore import utils
 from botocore.exceptions import InvalidConfigError
 
+# This is not a public interface and is subject to abrupt breaking changes.
+# Currently it's only available to internal users for testing and validation.
+# Any usage is not advised or supported in external code bases.
+try:
+    from botocore.customizations.retries import STANDARD_RETRY_MODE_VERSION
+except ImportError:
+    STANDARD_RETRY_MODE_VERSION = "2.0"
+
 logger = logging.getLogger(__name__)
+_DEFAULT_RETRY_MODE = (
+    'standard' if STANDARD_RETRY_MODE_VERSION == "2.1" else 'legacy'
+)
 
 
 #: A default dictionary that maps the logical names for session variables
@@ -150,7 +161,7 @@ BOTOCORE_DEFAUT_SESSION_VARIABLES = {
         'regional',
         None,
     ),
-    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', 'legacy', None),
+    'retry_mode': ('retry_mode', 'AWS_RETRY_MODE', _DEFAULT_RETRY_MODE, None),
     'defaults_mode': ('defaults_mode', 'AWS_DEFAULTS_MODE', 'legacy', None),
     # We can't have a default here for v1 because we need to defer to
     # whatever the defaults are in _retry.json.
