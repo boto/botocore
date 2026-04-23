@@ -25,9 +25,8 @@ jobs:
             if ! jq -e '
               type == "object" and
               (keys | length) == 3 and
-              (.type | type) == "string" and
-              (.category | type) == "string" and
-              (.description | type) == "string" and
+              (.category | type == "string" and length > 0) and
+              (.description | type == "string" and length > 0) and
               (.type | IN("feature", "bugfix", "enhancement", "api-change"))
             ' "$file" > /dev/null 2>&1; then
               echo "::error file=$file::Invalid changelog entry"
