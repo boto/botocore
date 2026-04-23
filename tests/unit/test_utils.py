@@ -331,6 +331,10 @@ class TestTransformName(unittest.TestCase):
             'get-linked-whatsapp-business-account-phone-number',
         )
         self.assertEqual(
+            xform_name('GetOTelEnrichment', '-'),
+            'get-otel-enrichment',
+        )
+        self.assertEqual(
             xform_name('GetWhatsAppMessageMedia', '-'),
             'get-whatsapp-message-media',
         )
@@ -360,6 +364,14 @@ class TestTransformName(unittest.TestCase):
         )
         self.assertEqual(
             xform_name('SendWhatsAppMessage', '-'), 'send-whatsapp-message'
+        )
+        self.assertEqual(
+            xform_name('StartOTelEnrichment', '-'),
+            'start-otel-enrichment',
+        )
+        self.assertEqual(
+            xform_name('StopOTelEnrichment', '-'),
+            'stop-otel-enrichment',
         )
         self.assertEqual(
             xform_name('UpdateWhatsAppMessageTemplate', '-'),

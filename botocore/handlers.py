@@ -1495,6 +1495,18 @@ BUILTIN_HANDLERS = [
         ClientMethodAlias('delete_whatsapp_message_media'),
     ),
     (
+        'getattr.cloudwatch.get_o_tel_enrichment',
+        ClientMethodAlias('get_otel_enrichment'),
+    ),
+    (
+        'getattr.cloudwatch.start_o_tel_enrichment',
+        ClientMethodAlias('start_otel_enrichment'),
+    ),
+    (
+        'getattr.cloudwatch.stop_o_tel_enrichment',
+        ClientMethodAlias('stop_otel_enrichment'),
+    ),
+    (
         'before-parameter-build.s3.UploadPart',
         convert_body_to_file_like_object,
         REGISTER_LAST,
