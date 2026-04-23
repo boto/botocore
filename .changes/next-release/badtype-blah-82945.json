@@ -1,7 +1,6 @@
-[
-  {
-    "type": "badtype",
-    "category": "``blah``",
-    "description": "Here's a bad changelog entry to show you the validation works"
-  }
-]
+{
+  "type": "feature",
+  "category": "``proof``",
+  "description": "Here's a properly formed changelog entry to show the validation works"
+}
+
