@@ -1,0 +1,7 @@
+[
+  {
+    "type": "badtype",
+    "category": "``blah``",
+    "description": "Here's a bad changelog entry to show you the validation works"
+  }
+]

@@ -1,0 +1,37 @@
+name: Validate Changelog Entries
+
+on:
+  pull_request:
+    paths:
+      - '.changes/next-release/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        with:
+          persist-credentials: false
+
+      - name: Validate changelog JSON
+        run: |
+          errors=0
+          for file in .changes/next-release/*; do
+            [ ! -f "$file" ] && continue
+            if ! jq -e '
+              type == "object" and
+              (keys | length) == 3 and
+              (.type | type) == "string" and
+              (.category | type) == "string" and
+              (.description | type) == "string" and
+              (.type | IN("feature", "bugfix", "enhancement", "api-change"))
+            ' "$file" > /dev/null 2>&1; then
+              echo "::error file=$file::Invalid changelog entry"
+              errors=$((errors + 1))
+            fi
+          done
+          [ "$errors" -gt 0 ] && exit 1
+          echo "All changelog entries valid"
