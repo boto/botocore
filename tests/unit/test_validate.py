@@ -181,7 +181,7 @@ class TestValidateDocumentType(BaseTestValidate):
             given_shapes=self.shapes,
             input_params={
                 'inlineDocument': {
-                    'number': complex(1j),
+                    'number': 1j,
                     'date': datetime(2017, 4, 27, 0, 0),
                     'list': [invalid_document],
                     'dict': {'foo': (1, 2, 3)},
