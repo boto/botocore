@@ -404,24 +404,34 @@ class Loader:
         """
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
-        known_services = self.list_available_services(type_name)
-        if service_name not in known_services:
-            raise UnknownServiceError(
-                service_name=service_name,
-                known_service_names=', '.join(known_services),
-            )
         if api_version is None:
-            api_version = self.determine_latest_version(
-                service_name, type_name
-            )
+            try:
+                api_version = self.determine_latest_version(
+                    service_name, type_name
+                )
+            except DataNotFoundError:
+                self._raise_unknown_service_error(service_name, type_name)
         full_path = os.path.join(service_name, api_version, type_name)
-        model = self.load_data(full_path)
+        try:
+            model = self.load_data(full_path)
+        except DataNotFoundError:
+            known_services = self.list_available_services(type_name)
+            if service_name not in known_services:
+                self._raise_unknown_service_error(service_name, type_name)
+            raise
 
         # Load in all the extras
         extras_data = self._find_extras(service_name, type_name, api_version)
         self._extras_processor.process(model, extras_data)
 
         return model
+
+    def _raise_unknown_service_error(self, service_name, type_name):
+        known_services = self.list_available_services(type_name)
+        raise UnknownServiceError(
+            service_name=service_name,
+            known_service_names=', '.join(known_services),
+        )
 
     def _find_extras(self, service_name, type_name, api_version):
         """Creates an iterator over all the extras data."""
