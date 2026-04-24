@@ -404,6 +404,8 @@ class Loader:
         """
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
+        if not self._verify_service_name_casing(service_name):
+            self._raise_unknown_service_error(service_name, type_name)
         if api_version is None:
             try:
                 api_version = self.determine_latest_version(
@@ -412,19 +414,22 @@ class Loader:
             except DataNotFoundError:
                 self._raise_unknown_service_error(service_name, type_name)
         full_path = os.path.join(service_name, api_version, type_name)
-        try:
-            model = self.load_data(full_path)
-        except DataNotFoundError:
-            known_services = self.list_available_services(type_name)
-            if service_name not in known_services:
-                self._raise_unknown_service_error(service_name, type_name)
-            raise
+        model = self.load_data(full_path)
 
         # Load in all the extras
         extras_data = self._find_extras(service_name, type_name, api_version)
         self._extras_processor.process(model, extras_data)
 
         return model
+
+    def _verify_service_name_casing(self, service_name):
+        for path in self.search_paths:
+            try:
+                if service_name in os.listdir(path):
+                    return True
+            except OSError:
+                continue
+        return False
 
     def _raise_unknown_service_error(self, service_name, type_name):
         known_services = self.list_available_services(type_name)
