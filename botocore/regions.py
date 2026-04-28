@@ -31,7 +31,7 @@ from botocore.auth import (
     resolve_auth_scheme_preference,
 )
 from botocore.crt import CRT_SUPPORTED_AUTH_TYPES
-from botocore.endpoint_provider import EndpointProvider
+from botocore.endpoint_provider import S3_UNREFERENCED_PARAMS, EndpointProvider
 from botocore.exceptions import (
     EndpointProviderError,
     EndpointVariantError,
@@ -487,6 +487,11 @@ class EndpointRulesetResolver:
         self._provider = EndpointProvider(
             ruleset_data=endpoint_ruleset_data,
             partition_data=partition_data,
+            excluded_params=(
+                S3_UNREFERENCED_PARAMS
+                if service_model.service_name == 's3'
+                else None
+            ),
         )
         self._param_definitions = self._provider.ruleset.parameters
         self._service_model = service_model
