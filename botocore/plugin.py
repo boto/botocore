@@ -20,7 +20,6 @@ import logging
 import os
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class PluginContext:
     Encapsulation of plugins tracked within the `_plugin_context` context variable.
     """
 
-    plugins: Optional[str] = None
+    plugins: str | None = None
 
 
 _plugin_context = ContextVar("_plugin_context")
