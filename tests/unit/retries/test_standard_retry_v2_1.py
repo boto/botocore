@@ -308,7 +308,7 @@ class TestServiceSpecificRetries(unittest.TestCase):
             operation=context.operation_model,
         )
 
-        self.assertIsNone(result)
+        assert result is False
         retry_quota.acquire_retry_quota.assert_called_once()
         mock_sleep.assert_called_once_with(0.05)
 

@@ -53,17 +53,20 @@ _SERVICE_MAX_ATTEMPTS = {
 logger = logging.getLogger(__name__)
 
 
-def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
+def register_retry_handler(client, max_attempts=None):
     service_id = client.meta.service_model.service_id
     service_event_name = service_id.hyphenize()
+    retry_event_adapter = RetryEventAdapter()
 
     if STANDARD_RETRY_MODE_VERSION == "2.1":
         if (
-            max_attempts == DEFAULT_MAX_ATTEMPTS
+            max_attempts is None
             and service_event_name in _SERVICE_MAX_ATTEMPTS
         ):
             max_attempts = _SERVICE_MAX_ATTEMPTS[service_event_name]
-        throttling_detector = ThrottlingErrorDetector(RetryEventAdapter())
+        elif max_attempts is None:
+            max_attempts = DEFAULT_MAX_ATTEMPTS
+        throttling_detector = ThrottlingErrorDetector(retry_event_adapter)
         retry_quota = RetryQuotaChecker(
             quota.RetryQuota(), throttling_detector
         )
@@ -77,7 +80,7 @@ def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
                     throttling_detector=throttling_detector,
                 ),
             ),
-            retry_event_adapter=RetryEventAdapter(),
+            retry_event_adapter=retry_event_adapter,
             retry_quota=retry_quota,
             service_name=service_event_name,
         )
@@ -86,11 +89,11 @@ def register_retry_handler(client, max_attempts=DEFAULT_MAX_ATTEMPTS):
         handler = RetryHandler(
             retry_policy=RetryPolicy(
                 retry_checker=StandardRetryConditions(
-                    max_attempts=max_attempts
+                    max_attempts=max_attempts or DEFAULT_MAX_ATTEMPTS
                 ),
                 retry_backoff=ExponentialBackoff(),
             ),
-            retry_event_adapter=RetryEventAdapter(),
+            retry_event_adapter=retry_event_adapter,
             retry_quota=retry_quota,
         )
 
@@ -113,6 +116,9 @@ class RetryHandler:
     as an event handler.
     """
 
+    # Temporary hard-coded list of long-polling operations. This will be
+    # replaced by the aws.api#longPoll modeled trait once it is available
+    # in service models.
     _LONG_POLLING_OPERATIONS = {
         'sqs': {'ReceiveMessage'},
         'sfn': {'GetActivityTask'},
@@ -153,6 +159,17 @@ class RetryHandler:
                             context
                         )
                         self._sleep(polling_delay)
+                        logger.debug(
+                            "Retry needed but retry quota reached, "
+                            "not retrying request."
+                        )
+                        self._retry_event_adapter.adapt_retry_response_from_context(
+                            context
+                        )
+                        # Return False (non-None) to prevent any later needs-retry
+                        # handler from returning a delay that would cause
+                        # _needs_retry in endpoint.py to sleep again.
+                        return False
                 logger.debug(
                     "Retry needed but retry quota reached, "
                     "not retrying request."
@@ -323,12 +340,18 @@ class RetryPolicy:
 class ExponentialBackoff(BaseRetryBackoff):
     _BASE = 2
     _MAX_BACKOFF = 20
-    _THROTTLING_BASE_SCALE = 1
-    _NON_THROTTLING_BASE_SCALE = 0.05
-    _DYNAMODB_BASE_SCALE = 0.025
-    _DYNAMODB_SERVICES = ('dynamodb', 'dynamodb-streams')
     _RETRY_AFTER_HEADER = 'x-amz-retry-after'
     _RETRY_AFTER_MAX_ADDITIONAL = 5  # seconds
+
+    _DEFAULT_BACKOFF_CONFIG = {
+        'throttling_base_scale': 1,
+        'non_throttling_base_scale': 0.05,
+    }
+
+    _SERVICE_BACKOFF_CONFIG = {
+        'dynamodb': {'non_throttling_base_scale': 0.025},
+        'dynamodb-streams': {'non_throttling_base_scale': 0.025},
+    }
 
     def __init__(
         self,
@@ -387,10 +410,12 @@ class ExponentialBackoff(BaseRetryBackoff):
                 context
             )
         ):
-            return self._THROTTLING_BASE_SCALE
-        if self._service_name in self._DYNAMODB_SERVICES:
-            return self._DYNAMODB_BASE_SCALE
-        return self._NON_THROTTLING_BASE_SCALE
+            return self._DEFAULT_BACKOFF_CONFIG['throttling_base_scale']
+        if self._service_name in self._SERVICE_BACKOFF_CONFIG:
+            return self._SERVICE_BACKOFF_CONFIG[self._service_name][
+                'non_throttling_base_scale'
+            ]
+        return self._DEFAULT_BACKOFF_CONFIG['non_throttling_base_scale']
 
     def _get_retry_after_delay(self, context):
         if context.http_response is None:
