@@ -38,7 +38,7 @@ exclude = [
 line-length = 79
 indent-width = 4
 
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
