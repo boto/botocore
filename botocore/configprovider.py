@@ -21,19 +21,22 @@ import os
 from botocore import utils
 from botocore.exceptions import InvalidConfigError
 
-# This is not a public interface and is subject to abrupt breaking changes.
-# Currently it's only available to internal users for testing and validation.
-# Any usage is not advised or supported in external code bases.
 try:
-    from botocore.customizations.retries import STANDARD_RETRY_MODE_VERSION
+    # This is not a public interface and is subject to abrupt breaking changes.
+    # Currently it's only available to internal users for testing and validation.
+    # Any usage is not advised or supported in external code bases.
+    from botocore.customizations.retries import DEFAULT_NEW_RETRIES
 except ImportError:
-    STANDARD_RETRY_MODE_VERSION = "2.0"
+    DEFAULT_NEW_RETRIES = False
+
+_env_new_retries = os.environ.get('AWS_NEW_RETRIES_2026')
+if _env_new_retries is not None:
+    NEW_RETRIES_ENABLED = _env_new_retries.lower() == 'true'
+else:
+    NEW_RETRIES_ENABLED = DEFAULT_NEW_RETRIES
+_DEFAULT_RETRY_MODE = 'standard' if NEW_RETRIES_ENABLED else 'legacy'
 
 logger = logging.getLogger(__name__)
-_DEFAULT_RETRY_MODE = (
-    'standard' if STANDARD_RETRY_MODE_VERSION == "2.1" else 'legacy'
-)
-
 
 #: A default dictionary that maps the logical names for session variables
 #: to the specific environment variables and configuration file names

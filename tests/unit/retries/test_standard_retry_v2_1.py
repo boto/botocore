@@ -7,17 +7,20 @@ publicly, these tests will replace the corresponding tests in
 test_standard.py and this file will be removed.
 """
 
+import importlib
+import os
 from collections import Counter
 
 import pytest
 
+from botocore import configprovider
 from botocore.awsrequest import AWSResponse
 from botocore.exceptions import ReadTimeoutError
 from botocore.retries import quota, standard
 from tests import mock, unittest
 
 
-@mock.patch('botocore.retries.standard.STANDARD_RETRY_MODE_VERSION', '2.1')
+@mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True)
 class TestExponentialBackoff(unittest.TestCase):
     def setUp(self):
         self.random = lambda: 1
@@ -76,7 +79,7 @@ class TestExponentialBackoff(unittest.TestCase):
             )
 
 
-@mock.patch('botocore.retries.standard.STANDARD_RETRY_MODE_VERSION', '2.1')
+@mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True)
 class TestRetryQuotaChecker(unittest.TestCase):
     def setUp(self):
         self.quota = quota.RetryQuota(500)
@@ -221,7 +224,7 @@ class TestRetryQuotaChecker(unittest.TestCase):
         self.assertEqual(self.quota.available_capacity, 450)
 
 
-@mock.patch('botocore.retries.standard.STANDARD_RETRY_MODE_VERSION', '2.1')
+@mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True)
 class TestServiceSpecificRetries(unittest.TestCase):
     def _make_retry_context(self, attempt, status_code, error_code=None):
         http_response = AWSResponse(
@@ -347,7 +350,7 @@ class TestServiceSpecificRetries(unittest.TestCase):
         mock_sleep.assert_not_called()
 
 
-@mock.patch('botocore.retries.standard.STANDARD_RETRY_MODE_VERSION', '2.1')
+@mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True)
 class TestRetryAfterHeaderInRetries:
     def setup_method(self):
         throttling_detector = standard.ThrottlingErrorDetector(
@@ -423,3 +426,21 @@ class TestRetryAfterHeaderInRetries:
             self.retry_quota_bucket.available_capacity
             == expected_capacity_after_success
         )
+
+
+class TestNewRetriesEnvironmentVariable(unittest.TestCase):
+    @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'true'})
+    def test_env_var_true_enables_new_retries(self):
+        importlib.reload(configprovider)
+        self.assertTrue(configprovider.NEW_RETRIES_ENABLED)
+
+    @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'false'})
+    def test_env_var_false_disables_new_retries(self):
+        importlib.reload(configprovider)
+        self.assertFalse(configprovider.NEW_RETRIES_ENABLED)
+
+    @mock.patch.dict(os.environ, {}, clear=False)
+    def test_no_env_var_uses_default(self):
+        os.environ.pop('AWS_NEW_RETRIES_2026', None)
+        importlib.reload(configprovider)
+        self.assertFalse(configprovider.NEW_RETRIES_ENABLED)

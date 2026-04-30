@@ -28,6 +28,10 @@ import logging
 import random
 import time
 
+# This is not a public interface and is subject to abrupt breaking changes.
+# Currently it's only available to internal users for testing and validation.
+# Any usage is not advised or supported in external code bases.
+from botocore.configprovider import NEW_RETRIES_ENABLED
 from botocore.exceptions import (
     ConnectionError,
     ConnectTimeoutError,
@@ -36,14 +40,6 @@ from botocore.exceptions import (
 )
 from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
-
-try:
-    # This is not a public interface and is subject to abrupt breaking changes.
-    # Currently it's only available to internal users for testing and validation.
-    # Any usage is not advised or supported in external code bases.
-    from botocore.customizations.retries import STANDARD_RETRY_MODE_VERSION
-except ImportError:
-    STANDARD_RETRY_MODE_VERSION = "2.0"
 
 DEFAULT_MAX_ATTEMPTS = 3
 _SERVICE_MAX_ATTEMPTS = {
@@ -58,7 +54,7 @@ def register_retry_handler(client, max_attempts=None):
     service_event_name = service_id.hyphenize()
     retry_event_adapter = RetryEventAdapter()
 
-    if STANDARD_RETRY_MODE_VERSION == "2.1":
+    if NEW_RETRIES_ENABLED:
         if (
             max_attempts is None
             and service_event_name in _SERVICE_MAX_ATTEMPTS
@@ -153,7 +149,7 @@ class RetryHandler:
                     retry_delay,
                 )
             else:
-                if STANDARD_RETRY_MODE_VERSION == "2.1":
+                if NEW_RETRIES_ENABLED:
                     if self._is_long_polling_operation(context):
                         polling_delay = self._retry_policy.compute_retry_delay(
                             context
@@ -380,7 +376,7 @@ class ExponentialBackoff(BaseRetryBackoff):
         # The context.attempt_number is a 1-based value, but we have
         # to calculate the delay based on i based a 0-based value.  We
         # want the first delay to just be ``rand(0, 1)``.
-        if STANDARD_RETRY_MODE_VERSION == "2.1":
+        if NEW_RETRIES_ENABLED:
             t_i = self._random() * min(
                 self._get_base_scale(context)
                 * (self._base ** (context.attempt_number - 1)),
@@ -662,7 +658,7 @@ class RetryQuotaChecker:
         self._last_amount_acquired = None
 
     def acquire_retry_quota(self, context):
-        if STANDARD_RETRY_MODE_VERSION == '2.1':
+        if NEW_RETRIES_ENABLED:
             if self._is_throttling_error(context):
                 capacity_amount = self._THROTTLING_RETRY_COST
             else:
