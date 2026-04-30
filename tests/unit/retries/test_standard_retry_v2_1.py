@@ -392,6 +392,7 @@ class TestRetryAfterHeaderInRetries:
             ('0', 486, 0.05, 500),
             ('10000', 486, 5.05, 500),
             ('invalid', 486, 0.05, 500),
+            ('-100', 486, 0.05, 500),
         ],
     )
     def test_x_amz_retry_after_header_is_honored(

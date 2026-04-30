@@ -426,12 +426,16 @@ class ExponentialBackoff(BaseRetryBackoff):
         if retry_after_ms is None:
             return None
         try:
-            return int(retry_after_ms) / 1000.0
-        except (ValueError, OverflowError):
+            value = int(retry_after_ms) / 1000.0
+            if value < 0:
+                raise ValueError("Negative retry-after value")
+            return value
+        except (ValueError, OverflowError) as e:
             logger.debug(
-                "Invalid %s header value: %s, ignoring.",
+                "Invalid %s header value: %s, ignoring. Error: %s",
                 self._RETRY_AFTER_HEADER,
                 retry_after_ms,
+                e,
             )
             return None
 
