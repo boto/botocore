@@ -29,11 +29,16 @@ try:
 except ImportError:
     DEFAULT_NEW_RETRIES = False
 
-_env_new_retries = os.environ.get('AWS_NEW_RETRIES_2026')
-if _env_new_retries is not None:
-    NEW_RETRIES_ENABLED = _env_new_retries.lower() == 'true'
-else:
-    NEW_RETRIES_ENABLED = DEFAULT_NEW_RETRIES
+
+def _resolve_new_retries():
+    _env_new_retries = os.environ.get('AWS_NEW_RETRIES_2026')
+    if _env_new_retries is not None:
+        return _env_new_retries.lower() == 'true'
+    else:
+        return DEFAULT_NEW_RETRIES
+
+
+NEW_RETRIES_ENABLED = _resolve_new_retries()
 _DEFAULT_RETRY_MODE = 'standard' if NEW_RETRIES_ENABLED else 'legacy'
 
 logger = logging.getLogger(__name__)

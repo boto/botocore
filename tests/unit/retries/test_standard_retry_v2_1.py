@@ -7,7 +7,6 @@ publicly, these tests will replace the corresponding tests in
 test_standard.py and this file will be removed.
 """
 
-import importlib
 import os
 from collections import Counter
 
@@ -431,16 +430,13 @@ class TestRetryAfterHeaderInRetries:
 class TestNewRetriesEnvironmentVariable(unittest.TestCase):
     @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'true'})
     def test_env_var_true_enables_new_retries(self):
-        importlib.reload(configprovider)
-        self.assertTrue(configprovider.NEW_RETRIES_ENABLED)
+        self.assertTrue(configprovider._resolve_new_retries())
 
     @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'false'})
     def test_env_var_false_disables_new_retries(self):
-        importlib.reload(configprovider)
-        self.assertFalse(configprovider.NEW_RETRIES_ENABLED)
+        self.assertFalse(configprovider._resolve_new_retries())
 
-    @mock.patch.dict(os.environ, {}, clear=False)
     def test_no_env_var_uses_default(self):
-        os.environ.pop('AWS_NEW_RETRIES_2026', None)
-        importlib.reload(configprovider)
-        self.assertFalse(configprovider.NEW_RETRIES_ENABLED)
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('AWS_NEW_RETRIES_2026', None)
+            self.assertFalse(configprovider._resolve_new_retries())
