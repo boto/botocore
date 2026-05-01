@@ -7,7 +7,6 @@ publicly, these tests will replace the corresponding tests in
 test_standard.py and this file will be removed.
 """
 
-import os
 from collections import Counter
 
 import pytest
@@ -16,7 +15,7 @@ from botocore import configprovider
 from botocore.awsrequest import AWSResponse
 from botocore.exceptions import ReadTimeoutError
 from botocore.retries import quota, standard
-from tests import mock, unittest
+from tests import BaseEnvVar, mock, unittest
 
 
 @mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True)
@@ -427,16 +426,14 @@ class TestRetryAfterHeaderInRetries:
         )
 
 
-class TestNewRetriesEnvironmentVariable(unittest.TestCase):
-    @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'true'})
+class TestNewRetriesEnvironmentVariable(BaseEnvVar):
     def test_env_var_true_enables_new_retries(self):
+        self.environ['AWS_NEW_RETRIES_2026'] = 'true'
         self.assertTrue(configprovider._resolve_new_retries())
 
-    @mock.patch.dict(os.environ, {'AWS_NEW_RETRIES_2026': 'false'})
     def test_env_var_false_disables_new_retries(self):
+        self.environ['AWS_NEW_RETRIES_2026'] = 'false'
         self.assertFalse(configprovider._resolve_new_retries())
 
     def test_no_env_var_uses_default(self):
-        with mock.patch.dict(os.environ, {}, clear=False):
-            os.environ.pop('AWS_NEW_RETRIES_2026', None)
-            self.assertFalse(configprovider._resolve_new_retries())
+        self.assertFalse(configprovider._resolve_new_retries())
