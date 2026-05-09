@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import sysconfig
+
 from tests import BaseClientDriverTest
 
 
@@ -22,10 +24,15 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
     # a substantial amount of time to the total test run time.
     INJECT_DUMMY_CREDS = True
     # We're making up numbers here, but let's say arbitrarily
-    # that the memory can't increase by more than 13MB.
+    # that the memory can't increase by more than {SCALING_FACTOR} MBs.
 
-    # TODO: Attempt to bring this back to 10MB once Python 3.14 releases
-    MAX_GROWTH_BYTES = 13 * 1024 * 1024
+    if sysconfig.get_config_var("Py_GIL_DISABLED") == 1:
+        # Free-threaded Python objects require additional
+        # memory for per-object locks and synchronization.
+        SCALING_FACTOR = 16
+    else:
+        SCALING_FACTOR = 13
+    MAX_GROWTH_BYTES = SCALING_FACTOR * 1024 * 1024
 
     def test_create_single_client_memory_constant(self):
         self.cmd('create_client', 's3')
