@@ -31,7 +31,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
         # memory for per-object locks and synchronization.
         SCALING_FACTOR = 16
     else:
-        SCALING_FACTOR = 13
+        SCALING_FACTOR = 4
     MAX_GROWTH_BYTES = SCALING_FACTOR * 1024 * 1024
 
     def test_create_single_client_memory_constant(self):
