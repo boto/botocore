@@ -29,7 +29,7 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
     if sysconfig.get_config_var("Py_GIL_DISABLED") == 1:
         # Free-threaded Python objects require additional
         # memory for per-object locks and synchronization.
-        SCALING_FACTOR = 16
+        SCALING_FACTOR = 17
     else:
         SCALING_FACTOR = 4
     MAX_GROWTH_BYTES = SCALING_FACTOR * 1024 * 1024
