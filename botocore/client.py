@@ -37,6 +37,7 @@ from botocore.docs.docstring import ClientMethodDocstring, PaginatorDocstring
 from botocore.exceptions import (
     ClientError,  # noqa: F401
     DataNotFoundError,
+    InvalidConfigError,
     InvalidEndpointDiscoveryConfigurationError,
     OperationNotPageableError,
     UnknownServiceError,
@@ -773,11 +774,19 @@ class ClientEndpointBridge:
             # Client config trumps scoped config.
             return client_config.s3['use_dualstack_endpoint']
         if self.scoped_config is not None:
-            enabled = self.scoped_config.get('s3', {}).get(
-                'use_dualstack_endpoint'
-            )
-            if enabled in [True, 'True', 'true']:
-                return True
+            s3_config = self.scoped_config.get('s3')
+            if s3_config is not None and not isinstance(s3_config, dict):
+                raise InvalidConfigError(
+                    error_msg=(
+                        "The s3 config key in the AWS config file must be a "
+                        "nested section with indented sub-keys, not a plain "
+                        "string value. Check your config file."
+                    )
+                )
+            if isinstance(s3_config, dict):
+                enabled = s3_config.get('use_dualstack_endpoint')
+                if enabled in [True, 'True', 'true']:
+                    return True
 
     def _assume_endpoint(
         self, service_name, region_name, endpoint_url, is_secure
