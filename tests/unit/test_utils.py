@@ -1634,7 +1634,7 @@ class TestS3RegionRedirector(unittest.TestCase):
                 'rules': [],
             },
             partition_data={},
-            service_model=None,
+            service_model=mock.Mock(service_name='test'),
             builtins={},
             client_context=None,
             event_emitter=None,
