@@ -951,7 +951,9 @@ def _epoch_seconds_to_datetime(value, tzinfo):
     :type tzinfo: datetime.tzinfo
     :param tzinfo: A ``datetime.tzinfo`` instance.
     """
-    epoch_zero = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+    epoch_zero = datetime.datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+    )
     epoch_zero_localized = epoch_zero.astimezone(tzinfo)
     return epoch_zero_localized + datetime.timedelta(seconds=value)
 
@@ -1062,9 +1064,9 @@ def parse_to_aware_datetime(value):
         # we should use the local time.  However, to restore backwards
         # compat, the previous behavior was to assume UTC, which is
         # what we're going to do here.
-        datetime_obj = datetime_obj.replace(tzinfo=tzutc())
+        datetime_obj = datetime_obj.replace(tzinfo=datetime.timezone.utc)
     else:
-        datetime_obj = datetime_obj.astimezone(tzutc())
+        datetime_obj = datetime_obj.astimezone(datetime.timezone.utc)
     return datetime_obj
 
 
@@ -1074,14 +1076,14 @@ def datetime2timestamp(dt, default_timezone=None):
     :type dt: datetime
     :param dt: A datetime object to be converted into timestamp
     :type default_timezone: tzinfo
-    :param default_timezone: If it is provided as None, we treat it as tzutc().
+    :param default_timezone: If it is provided as None, we treat it as UTC.
                              But it is only used when dt is a naive datetime.
     :returns: The timestamp
     """
     epoch = datetime.datetime(1970, 1, 1)
     if dt.tzinfo is None:
         if default_timezone is None:
-            default_timezone = tzutc()
+            default_timezone = datetime.timezone.utc
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     return d.total_seconds()
