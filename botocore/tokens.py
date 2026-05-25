@@ -14,11 +14,10 @@ import json
 import logging
 import os
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
 import dateutil.parser
-from dateutil.tz import tzutc
 
 from botocore import UNSIGNED
 from botocore.compat import total_seconds
@@ -40,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 def _utc_now():
-    return datetime.now(tzutc())
+    return datetime.now(timezone.utc)
 
 
 def create_token_resolver(session):

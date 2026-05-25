@@ -27,7 +27,6 @@ from hashlib import sha1, sha256
 
 import dateutil.parser
 from dateutil.parser import parse
-from dateutil.tz import tzutc
 
 import botocore.compat
 import botocore.configloader
@@ -2302,7 +2301,9 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
     def _parse_timestamp(self, timestamp_ms):
         # fromtimestamp expects seconds so: milliseconds / 1000 = seconds
         timestamp_seconds = timestamp_ms / 1000.0
-        timestamp = datetime.datetime.fromtimestamp(timestamp_seconds, tzutc())
+        timestamp = datetime.datetime.fromtimestamp(
+            timestamp_seconds, datetime.timezone.utc
+        )
         return timestamp.strftime(self._UTC_DATE_FORMAT)
 
     def _get_credentials(self):
@@ -2657,7 +2658,7 @@ class LoginCredentialFetcher:
         output = response.get('tokenOutput')
 
         expires_timestamp = self._time_fetcher().astimezone(
-            tzutc()
+            datetime.timezone.utc
         ) + datetime.timedelta(seconds=output['expiresIn'])
 
         # Overwrite token with refreshed fields
