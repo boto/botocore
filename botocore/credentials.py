@@ -27,7 +27,7 @@ from hashlib import sha1, sha256
 
 import dateutil.parser
 from dateutil.parser import parse
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzutc
 
 import botocore.compat
 import botocore.configloader
@@ -275,7 +275,7 @@ def get_credentials(session):
 
 
 def _local_now():
-    return datetime.datetime.now(tzlocal())
+    return datetime.datetime.now().astimezone()
 
 
 def _parse_if_needed(value):

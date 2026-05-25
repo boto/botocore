@@ -948,11 +948,11 @@ def _epoch_seconds_to_datetime(value, tzinfo):
     :type value: float or int
     :param value: The Unix timestamps as number.
 
-    :type tzinfo: callable
-    :param tzinfo: A ``datetime.tzinfo`` class or compatible callable.
+    :type tzinfo: datetime.tzinfo
+    :param tzinfo: A ``datetime.tzinfo`` instance.
     """
     epoch_zero = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-    epoch_zero_localized = epoch_zero.astimezone(tzinfo())
+    epoch_zero_localized = epoch_zero.astimezone(tzinfo)
     return epoch_zero_localized + datetime.timedelta(seconds=value)
 
 
@@ -960,10 +960,10 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
     """Parse timestamp with pluggable tzinfo options."""
     if isinstance(value, (int, float)):
         # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzinfo())
+        return datetime.datetime.fromtimestamp(value, tzinfo)
     else:
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzinfo())
+            return datetime.datetime.fromtimestamp(float(value), tzinfo)
         except (TypeError, ValueError):
             pass
     try:
@@ -994,7 +994,7 @@ def parse_timestamp(value):
         except (OSError, OverflowError) as e:
             logger.debug(
                 'Unable to parse timestamp with "%s" timezone info.',
-                tzinfo.__name__,
+                tzinfo,
                 exc_info=e,
             )
     # For numeric values attempt fallback to using fromtimestamp-free method.
@@ -1015,7 +1015,7 @@ def parse_timestamp(value):
             logger.debug(
                 'Unable to parse timestamp using fallback method with "%s" '
                 'timezone info.',
-                tzinfo.__name__,
+                tzinfo,
                 exc_info=e,
             )
     raise RuntimeError(
