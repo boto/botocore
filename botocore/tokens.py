@@ -17,8 +17,6 @@ import threading
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
-import dateutil.parser
-
 from botocore import UNSIGNED
 from botocore.compat import total_seconds
 from botocore.config import Config
@@ -40,6 +38,17 @@ logger = logging.getLogger(__name__)
 
 def _utc_now():
     return datetime.now(timezone.utc)
+
+
+def _parse_iso_utc(value):
+    # Normalize UTC suffixes. "Z" is accepted by fromisoformat natively in
+    # Python 3.11+; "UTC" is a historical AWS CLI cache format. Drop the
+    # "Z" branch when 3.10 support ends.
+    if value.endswith("UTC"):
+        value = value[:-3] + "+00:00"
+    elif value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    return datetime.fromisoformat(value)
 
 
 def create_token_resolver(session):
@@ -294,7 +303,7 @@ class SSOTokenProvider:
             logger.info(msg)
             return None
 
-        expiry = dateutil.parser.parse(token["registrationExpiresAt"])
+        expiry = _parse_iso_utc(token["registrationExpiresAt"])
         if total_seconds(expiry - self._now()) <= 0:
             logger.info("SSO token registration expired at %s", expiry)
             return None
@@ -310,7 +319,7 @@ class SSOTokenProvider:
         session_name = self._sso_config["session_name"]
         logger.info("Loading cached SSO token for %s", session_name)
         token_dict = self._token_loader(start_url, session_name=session_name)
-        expiration = dateutil.parser.parse(token_dict["expiresAt"])
+        expiration = _parse_iso_utc(token_dict["expiresAt"])
         logger.debug("Cached SSO token expires at %s", expiration)
 
         remaining = total_seconds(expiration - self._now())
