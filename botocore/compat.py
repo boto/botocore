@@ -28,7 +28,6 @@ from math import floor
 
 from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
-from dateutil.tz import tzlocal
 from urllib3 import exceptions
 
 logger = logging.getLogger(__name__)
@@ -269,15 +268,12 @@ def _windows_shell_split(s):
 
 
 def get_tzinfo_options():
-    # Due to dateutil/dateutil#197, Windows may fail to parse times in the past
-    # with the system clock. We can alternatively fallback to tzwininfo when
-    # this happens, which will get time info from the Windows registry.
-    if sys.platform == 'win32':
-        from dateutil.tz import tzwinlocal
-
-        return (tzlocal, tzwinlocal)
-    else:
-        return (tzlocal,)
+    # Historical compatibility shim for tzinfo options.
+    # Previously had to use the third party `dateutil` library to get tzinfo objects,
+    # but now that botocore require Python 3.10+, use the built in tzinfo support.
+    # TODO: Remove this function and implement directly in the codebase,
+    # and simplify since there's now only a single option.
+    return (datetime.datetime.now().astimezone().tzinfo,)
 
 
 # Detect if CRT is available for use

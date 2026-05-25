@@ -214,7 +214,7 @@ class TestTimezoneOperations(unittest.TestCase):
         self.assertTrue(len(options) > 0)
 
         for tzinfo in options:
-            self.assertIsInstance(tzinfo(), datetime.tzinfo)
+            self.assertIsInstance(tzinfo, datetime.tzinfo)
 
 
 class TestCRTIntegration(unittest.TestCase):
