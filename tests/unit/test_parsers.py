@@ -17,7 +17,7 @@ import pytest
 
 from botocore import model, parsers
 from botocore.compat import MutableMapping, json
-from tests import RawResponse, tzutc, unittest
+from tests import RawResponse, unittest
 
 
 # HTTP responses will typically return a custom HTTP
@@ -657,7 +657,7 @@ class TestResponseParsingDatetimes(unittest.TestCase):
         parser = parsers.JSONParser()
         timestamp_as_float = b'1407538750.49'
         expected_parsed = datetime.datetime(
-            2014, 8, 8, 22, 59, 10, 490000, tzinfo=tzutc()
+            2014, 8, 8, 22, 59, 10, 490000, tzinfo=datetime.timezone.utc
         )
         parsed = parser.parse(
             {'body': timestamp_as_float, 'headers': [], 'status_code': 200},

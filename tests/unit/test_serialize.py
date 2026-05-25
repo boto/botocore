@@ -25,7 +25,7 @@ from botocore.serialize import (
     TIMESTAMP_PRECISION_DEFAULT,
     TIMESTAMP_PRECISION_MILLISECOND,
 )
-from tests import tzutc, unittest
+from tests import unittest
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -191,7 +191,7 @@ class TestTimestampHeadersWithRestXML(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'TimestampHeader': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=datetime.timezone.utc
                 )
             }
         )
@@ -271,7 +271,7 @@ class TestTimestamps(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'Timestamp': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=datetime.timezone.utc
                 )
             }
         )

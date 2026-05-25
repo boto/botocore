@@ -39,9 +39,9 @@ from botocore.signers import (
     dsql_generate_db_connect_auth_token,
     generate_db_auth_token,
 )
-from tests import FreezeTime, assert_url_equal, mock, tzutc, unittest
+from tests import FreezeTime, assert_url_equal, mock, unittest
 
-DATE = datetime.datetime(2024, 11, 7, 17, 39, 33, tzinfo=tzutc())
+DATE = datetime.datetime(2024, 11, 7, 17, 39, 33, tzinfo=datetime.timezone.utc)
 
 
 @pytest.fixture
@@ -1147,7 +1147,9 @@ class TestGenerateDBAuthToken(BaseSignerTest):
         hostname = 'prod-instance.us-east-1.rds.amazonaws.com'
         port = 3306
         username = 'someusername'
-        clock = datetime.datetime(2016, 11, 7, 17, 39, 33, tzinfo=tzutc())
+        clock = datetime.datetime(
+            2016, 11, 7, 17, 39, 33, tzinfo=datetime.timezone.utc
+        )
 
         with mock.patch('datetime.datetime') as dt:
             dt.now.return_value = clock

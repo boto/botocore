@@ -641,11 +641,6 @@ def get_checksum_cls(algorithm=DEFAULT_CHECKSUM_ALGORITHM.lower()):
 
 
 # Timezone test utilities
-def tzutc():
-    """Return UTC timezone for test assertions."""
-    return datetime.timezone.utc
-
-
 def tzlocal():
     """Return local timezone for test assertions."""
     return datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
