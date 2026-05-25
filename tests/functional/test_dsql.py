@@ -15,13 +15,13 @@ import datetime
 import pytest
 
 import botocore.auth
-from tests import FreezeTime, tzutc
+from tests import FreezeTime
 
 HOSTNAME = "peccy.dsql.us-east-1.on.aws"
 REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "akid"
 AWS_SECRET_ACCESS_KEY = "secret"
-DATE = datetime.datetime(2024, 8, 27, tzinfo=tzutc())
+DATE = datetime.datetime(2024, 8, 27, tzinfo=datetime.timezone.utc)
 
 
 @pytest.fixture()

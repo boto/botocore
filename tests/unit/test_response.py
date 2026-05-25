@@ -24,7 +24,7 @@ from botocore.exceptions import (
     ReadTimeoutError,
     ResponseStreamingError,
 )
-from tests import tzutc, unittest
+from tests import unittest
 from tests.unit import BaseResponseTest
 
 XMLBODY1 = (
@@ -405,7 +405,7 @@ class TestGetResponse(BaseResponseTest):
                         'ETag': '"00000000000000000000000000000000"',
                         'Key': 'test.png',
                         'LastModified': datetime.datetime(
-                            2014, 3, 1, 17, 6, 40, tzinfo=tzutc()
+                            2014, 3, 1, 17, 6, 40, tzinfo=datetime.timezone.utc
                         ),
                         'Owner': {
                             'DisplayName': 'dummy',

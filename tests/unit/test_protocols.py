@@ -56,6 +56,7 @@ import copy
 import os
 import xml.etree.ElementTree as ET
 from base64 import b64decode
+from datetime import timezone
 from enum import Enum
 
 import pytest
@@ -81,7 +82,6 @@ from botocore.serialize import (
     RpcV2CBORSerializer,
 )
 from botocore.utils import parse_timestamp, percent_encode_sequence
-from tests import tzutc
 
 TEST_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'protocols'
@@ -369,7 +369,7 @@ def _convert_special_floats_to_string(parsed):
 def _compliance_timestamp_parser(value):
     datetime = parse_timestamp(value)
     # Convert from our time zone to UTC
-    datetime = datetime.astimezone(tzutc())
+    datetime = datetime.astimezone(timezone.utc)
     # Convert to epoch.
     return datetime.timestamp()
 

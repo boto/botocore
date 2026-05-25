@@ -37,7 +37,6 @@ from tests import (
     mock,
     requires_crt,
     temporary_file,
-    tzutc,
     unittest,
 )
 
@@ -1428,7 +1427,7 @@ class TestS3ExpiresHeaderResponse(BaseS3OperationTest):
             response = s3.get_object(Bucket='mybucket', Key='mykey')
             self.assertEqual(
                 response.get('Expires'),
-                datetime.datetime(1970, 1, 1, tzinfo=tzutc()),
+                datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
             )
             self.assertEqual(response.get('ExpiresString'), expires_value)
 
