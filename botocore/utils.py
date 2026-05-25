@@ -967,6 +967,8 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
             return datetime.datetime.fromtimestamp(float(value), tzinfo)
         except (TypeError, ValueError):
             pass
+    if not isinstance(value, str):
+        raise ValueError(f'Invalid timestamp "{value}"')
     # Non-numeric string. Try ISO 8601 first (the common AWS shape), then
     # RFC 2822 / HTTP-date / asctime via email.utils, then a couple of
     # lenient strptime fallbacks for legacy HTTP Expires-header shapes
