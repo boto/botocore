@@ -14,6 +14,7 @@ import base64
 import binascii
 import datetime
 import email.message
+import email.utils
 import functools
 import hashlib
 import io
@@ -31,8 +32,6 @@ from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
 
-import dateutil.parser
-from dateutil.tz import tzutc
 from urllib3.exceptions import LocationParseError
 
 import botocore
@@ -54,6 +53,7 @@ from botocore.compat import (
     UNSAFE_URL_CHARS,
     ZONE_ID_PAT,  # noqa: F401
     OrderedDict,
+    _normalize_iso8601_for_python_310,
     get_current_datetime,
     get_md5,
     get_tzinfo_options,
@@ -968,13 +968,35 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
             return datetime.datetime.fromtimestamp(float(value), tzinfo)
         except (TypeError, ValueError):
             pass
+    if not isinstance(value, str):
+        raise ValueError(f'Invalid timestamp "{value}"')
+    # Non-numeric string. Try ISO 8601 first (the common AWS shape), then
+    # RFC 2822 / HTTP-date / asctime via email.utils, then a couple of
+    # lenient strptime fallbacks for legacy HTTP Expires-header shapes
+    # seen in the wild.
+    iso_value = _normalize_iso8601_for_python_310(value)
     try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
-    except (TypeError, ValueError) as e:
-        raise ValueError(f'Invalid timestamp "{value}": {e}')
+        return datetime.datetime.fromisoformat(iso_value)
+    except (TypeError, ValueError):
+        pass
+    # A handful of AWS shared examples have a malformed ISO hour like
+    # "T016:15:21" — collapse the leading zero and retry.
+    fixed_iso = re.sub(r"T0(\d{2}):", r"T\1:", iso_value, count=1)
+    if fixed_iso != iso_value:
+        try:
+            return datetime.datetime.fromisoformat(fixed_iso)
+        except (TypeError, ValueError):
+            pass
+    try:
+        return email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        pass
+    for fmt in ("%m/%d/%Y", "%d %b %Y"):
+        try:
+            return datetime.datetime.strptime(value.title(), fmt)
+        except ValueError:
+            continue
+    raise ValueError(f'Invalid timestamp "{value}"')
 
 
 def parse_timestamp(value):

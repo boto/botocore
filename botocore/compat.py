@@ -276,6 +276,47 @@ def get_tzinfo_options():
     return (datetime.datetime.now().astimezone().tzinfo,)
 
 
+_ISO_ZONE_SUFFIX_RE = re.compile(r"\s*(Z|UTC|GMT)$", re.IGNORECASE)
+_ISO_COMPACT_RE = re.compile(
+    r"^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2}(?:\.\d+)?)?"
+)
+_ISO_SPACE_SEPARATOR_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})"
+)
+_ISO_OFFSET_NO_COLON_RE = re.compile(r"\s*([+-])(\d{2})(\d{2})$")
+_ISO_FRACTIONAL_SECONDS_RE = re.compile(r"\.(\d+)")
+
+
+def _normalize_iso8601_for_python_310(value):
+    """Normalize an ISO 8601 string into a shape Python 3.10's strict
+    ``datetime.fromisoformat`` accepts. Python 3.11+ accepts these shapes
+    natively.
+
+    Handled: ``Z``/``UTC``/``GMT`` zone suffixes (any case, with optional
+    leading whitespace), compact basic form ``YYYYMMDDTHHMM[SS]``,
+    space-separated date and time, tz offsets without a colon
+    (``+HHMM``), and fractional seconds with anything other than 3 or 6
+    digits.
+
+    Drop this helper and its call sites when 3.10 support ends.
+    """
+    value = _ISO_ZONE_SUFFIX_RE.sub("+00:00", value)
+    compact = _ISO_COMPACT_RE.match(value)
+    if compact:
+        y, mo, d, h, mi, s = compact.groups()
+        value = (
+            f"{y}-{mo}-{d}T{h}:{mi}:{s or '00'}{value[compact.end():]}"
+        )
+    value = _ISO_SPACE_SEPARATOR_RE.sub(r"\1T\2", value)
+    value = _ISO_OFFSET_NO_COLON_RE.sub(r"\1\2:\3", value)
+    value = _ISO_FRACTIONAL_SECONDS_RE.sub(
+        lambda m: "." + m.group(1).ljust(6, "0")[:6],
+        value,
+        count=1,
+    )
+    return value
+
+
 # Detect if CRT is available for use
 try:
     import awscrt.auth
