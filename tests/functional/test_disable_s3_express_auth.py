@@ -31,9 +31,19 @@ class TestDisableS3ExpressAuth:
 
     @pytest.fixture
     def mock_datetime(self):
-        with mock.patch('datetime.datetime', spec=True) as mock_dt:
-            mock_dt.now.return_value = self.DATE
-            yield mock_dt
+        # Pin ``now()`` to a fixed point via a subclass override. Replacing
+        # the whole ``datetime.datetime`` class would also intercept the
+        # parsing methods used to read the CreateSession Expiration
+        # timestamp.
+        fixed_date = self.DATE
+
+        class _FrozenDatetime(datetime.datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_date
+
+        with mock.patch('datetime.datetime', _FrozenDatetime):
+            yield _FrozenDatetime
 
     def test_disable_s3_express_auth_enabled(
         self, patched_session, mock_datetime
