@@ -168,7 +168,7 @@ class TokenProviderChain:
     def __init__(self, providers=None):
         if providers is None:
             providers = []
-        self.providers = providers
+        self._providers = providers
 
     def insert_before(self, name, token_provider):
         """Insert a token provider before an existing provider in the chain.
@@ -184,7 +184,7 @@ class TokenProviderChain:
             ``name`` exists in the chain.
         """
         offset = self._get_provider_offset(name)
-        self.providers.insert(offset, token_provider)
+        self._providers.insert(offset, token_provider)
 
     def insert_after(self, name, token_provider):
         """Insert a token provider after an existing provider in the chain.
@@ -200,7 +200,7 @@ class TokenProviderChain:
             ``name`` exists in the chain.
         """
         offset = self._get_provider_offset(name)
-        self.providers.insert(offset + 1, token_provider)
+        self._providers.insert(offset + 1, token_provider)
 
     def remove(self, name):
         """Remove a token provider from the chain by name.
@@ -210,12 +210,12 @@ class TokenProviderChain:
         :param name: The name of the token provider to remove.
         :type name: str
         """
-        available_methods = [p.METHOD for p in self.providers]
+        available_methods = [p.METHOD for p in self._providers]
         if name not in available_methods:
             return
 
         offset = available_methods.index(name)
-        self.providers.pop(offset)
+        self._providers.pop(offset)
 
     def get_provider(self, name):
         """Return a token provider by name.
@@ -226,16 +226,16 @@ class TokenProviderChain:
         :raises UnknownTokenProviderError: If no provider named
             ``name`` exists in the chain.
         """
-        return self.providers[self._get_provider_offset(name)]
+        return self._providers[self._get_provider_offset(name)]
 
     def _get_provider_offset(self, name):
         try:
-            return [p.METHOD for p in self.providers].index(name)
+            return [p.METHOD for p in self._providers].index(name)
         except ValueError:
             raise UnknownTokenProviderError(name=name)
 
     def load_token(self, **kwargs):
-        for provider in self.providers:
+        for provider in self._providers:
             token = provider.load_token(**kwargs)
             if token is not None:
                 return token
