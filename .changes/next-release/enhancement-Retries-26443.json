@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Retries",
+  "description": "Added opt-in support for updated standard retry behavior via the `AWS_NEW_RETRIES_2026` environment variable. This environment variable is temporary and will be removed in a future release when the updated behavior becomes the default. Changes include updated default retry mode to ``standard``, service-specific max attempts for DynamoDB, revised retry quota costs based on error type, updated exponential backoff with service-specific scale factors, ``x-amz-retry-after`` header support, and long-polling operation backoff on quota exhaustion."
+}
