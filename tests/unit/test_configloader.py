@@ -125,6 +125,24 @@ class TestConfigLoader(unittest.TestCase):
             '\nsignature_version = s3v4\naddressing_style = path',
         )
 
+    def test_nested_hierarchy_with_empty_subsection(self):
+        filename = path('aws_config_nested_empty')
+        loaded_config = load_config(filename)
+        config = loaded_config['profiles']['default']
+        self.assertEqual(config['aws_access_key_id'], 'foo')
+        self.assertEqual(config['region'], 'us-west-2')
+        # An empty subsection value (e.g. "s3 =" with nothing after
+        # it) should be treated as an empty dict, not an empty string.
+        self.assertEqual(config['s3'], {})
+
+    def test_nested_hierarchy_empty_subsection_allows_get(self):
+        filename = path('aws_config_nested_empty')
+        loaded_config = load_config(filename)
+        config = loaded_config['profiles']['default']
+        # This should not raise AttributeError on the empty dict.
+        result = config.get('s3', {}).get('use_dualstack_endpoint')
+        self.assertIsNone(result)
+
     def test_nested_bad_config(self):
         filename = path('aws_config_nested_bad')
         with self.assertRaises(botocore.exceptions.ConfigParseError):
