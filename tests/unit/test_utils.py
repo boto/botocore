@@ -299,6 +299,10 @@ class TestTransformName(unittest.TestCase):
             'associate-whatsapp-business-account',
         )
         self.assertEqual(
+            xform_name('CreateWhatsAppFlow', '-'),
+            'create-whatsapp-flow',
+        )
+        self.assertEqual(
             xform_name('CreateWhatsAppMessageTemplate', '-'),
             'create-whatsapp-message-template',
         )
@@ -311,12 +315,20 @@ class TestTransformName(unittest.TestCase):
             'create-whatsapp-message-template-media',
         )
         self.assertEqual(
+            xform_name('DeleteWhatsAppFlow', '-'),
+            'delete-whatsapp-flow',
+        )
+        self.assertEqual(
             xform_name('DeleteWhatsAppMessageMedia', '-'),
             'delete-whatsapp-message-media',
         )
         self.assertEqual(
             xform_name('DeleteWhatsAppMessageTemplate', '-'),
             'delete-whatsapp-message-template',
+        )
+        self.assertEqual(
+            xform_name('DeprecateWhatsAppFlow', '-'),
+            'deprecate-whatsapp-flow',
         )
         self.assertEqual(
             xform_name('DisassociateWhatsAppBusinessAccount', '-'),
@@ -335,6 +347,14 @@ class TestTransformName(unittest.TestCase):
             'get-otel-enrichment',
         )
         self.assertEqual(
+            xform_name('GetWhatsAppFlow', '-'),
+            'get-whatsapp-flow',
+        )
+        self.assertEqual(
+            xform_name('GetWhatsAppFlowPreview', '-'),
+            'get-whatsapp-flow-preview',
+        )
+        self.assertEqual(
             xform_name('GetWhatsAppMessageMedia', '-'),
             'get-whatsapp-message-media',
         )
@@ -347,6 +367,14 @@ class TestTransformName(unittest.TestCase):
             'list-linked-whatsapp-business-accounts',
         )
         self.assertEqual(
+            xform_name('ListWhatsAppFlowAssets', '-'),
+            'list-whatsapp-flow-assets',
+        )
+        self.assertEqual(
+            xform_name('ListWhatsAppFlows', '-'),
+            'list-whatsapp-flows',
+        )
+        self.assertEqual(
             xform_name('ListWhatsAppMessageTemplates', '-'),
             'list-whatsapp-message-templates',
         )
@@ -357,6 +385,10 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(
             xform_name('PostWhatsAppMessageMedia', '-'),
             'post-whatsapp-message-media',
+        )
+        self.assertEqual(
+            xform_name('PublishWhatsAppFlow', '-'),
+            'publish-whatsapp-flow',
         )
         self.assertEqual(
             xform_name('PutWhatsAppBusinessAccountEventDestinations', '-'),
@@ -372,6 +404,14 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(
             xform_name('StopOTelEnrichment', '-'),
             'stop-otel-enrichment',
+        )
+        self.assertEqual(
+            xform_name('UpdateWhatsAppFlow', '-'),
+            'update-whatsapp-flow',
+        )
+        self.assertEqual(
+            xform_name('UpdateWhatsAppFlowAssets', '-'),
+            'update-whatsapp-flow-assets',
         )
         self.assertEqual(
             xform_name('UpdateWhatsAppMessageTemplate', '-'),
