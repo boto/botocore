@@ -287,7 +287,8 @@ class DocumentModifiedShape:
                 type_section.write(f':type {section.name}: {self._new_type}')
             else:
                 type_section.clear_text()
-                type_section.style.italics(f'({self._new_type}) -- ')
+                type_section.style.italics(f'({self._new_type}) --')
+                type_section.write(' ')
 
 
 _CONTROLS = {
