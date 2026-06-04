@@ -267,7 +267,10 @@ class DocumentModifiedShape:
                     section.delete_section(section_name)
 
             # Update the documentation.
-            if self._new_description is not None:
+            if (
+                self._new_description is not None
+                and 'param-documentation' in section.available_sections
+            ):
                 description_section = section.get_section(
                     'param-documentation'
                 )
