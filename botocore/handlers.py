@@ -50,6 +50,7 @@ from botocore.compat import (
 from botocore.docs.utils import (
     AppendParamDocumentation,
     AutoPopulatedParam,
+    DocumentModifiedShape,
     HideParamFromOperations,
 )
 from botocore.endpoint_provider import VALID_HOST_LABEL_RE
@@ -1538,6 +1539,18 @@ BUILTIN_HANDLERS = [
         enable_millisecond_timestamp_precision,
     ),
     ('after-call.iam', json_decode_policies),
+    (
+        'docs.*.iam.*.complete-section',
+        DocumentModifiedShape(
+            'policyDocumentType',
+            new_type='dict',
+            new_description=(
+                'The policy document as a URL-encoded JSON-decoded dict. '
+                'This is automatically decoded from the original JSON string.'
+            ),
+            new_example_value='{}',
+        ).replace_documentation_for_matching_shape,
+    ),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
