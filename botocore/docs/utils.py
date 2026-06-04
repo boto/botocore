@@ -215,12 +215,18 @@ class DocumentModifiedShape:
     """
 
     def __init__(
-        self, shape_name, new_type, new_description, new_example_value
+        self,
+        shape_name,
+        new_type,
+        new_description,
+        new_example_value,
+        append_description=False,
     ):
         self._shape_name = shape_name
         self._new_type = new_type
         self._new_description = new_description
         self._new_example_value = new_example_value
+        self._append_description = append_description
 
     def replace_documentation_for_matching_shape(
         self, event_name, section, **kwargs
@@ -260,10 +266,16 @@ class DocumentModifiedShape:
                 if section_name not in allowed_sections:
                     section.delete_section(section_name)
 
-            # Update the documentation
-            description_section = section.get_section('param-documentation')
-            description_section.clear_text()
-            description_section.write(self._new_description)
+            # Update the documentation.
+            if self._new_description is not None:
+                description_section = section.get_section(
+                    'param-documentation'
+                )
+                if self._append_description:
+                    description_section.write(self._new_description)
+                else:
+                    description_section.clear_text()
+                    description_section.write(self._new_description)
 
             # Update the param type
             type_section = section.get_section('param-type')

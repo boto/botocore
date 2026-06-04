@@ -1545,10 +1545,11 @@ BUILTIN_HANDLERS = [
             'policyDocumentType',
             new_type='dict',
             new_description=(
-                'The policy document as a URL-encoded JSON-decoded dict. '
-                'This is automatically decoded from the original JSON string.'
+                ' This value is automatically parsed from the'
+                ' JSON string returned by the service.'
             ),
             new_example_value='{}',
+            append_description=True,
         ).replace_documentation_for_matching_shape,
     ),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
