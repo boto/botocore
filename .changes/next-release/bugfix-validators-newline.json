@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Validators",
+  "description": "Anchor the host label, region, bucket name and host prefix validators with ``\\Z`` so a value with a trailing newline is rejected instead of slipping through ``$`` into the request host."
+}
