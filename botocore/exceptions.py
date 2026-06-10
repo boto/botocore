@@ -185,6 +185,12 @@ class TokenRetrievalError(BotoCoreError):
     fmt = 'Error when retrieving token from {provider}: {error_msg}'
 
 
+class UnknownTokenProviderError(BotoCoreError):
+    """Tried to insert before/after an unregistered token provider."""
+
+    fmt = 'Token provider named {name} not found.'
+
+
 class PartialCredentialsError(BotoCoreError):
     """
     Only partial credentials were found.

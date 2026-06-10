@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import unittest
 
 import dateutil.parser
 import pytest
@@ -18,12 +19,14 @@ from botocore.exceptions import (
     InvalidConfigError,
     SSOTokenLoadError,
     TokenRetrievalError,
+    UnknownTokenProviderError,
 )
 from botocore.session import Session
 from botocore.tokens import (
     FrozenAuthToken,
     ScopedEnvTokenProvider,
     SSOTokenProvider,
+    TokenProviderChain,
 )
 from tests import mock
 
@@ -384,3 +387,77 @@ def test_scoped_env_token_provider_returns_none_when_signing_name_missing():
     auth_token = provider.load_token()
 
     assert auth_token is None
+
+
+class TokenProviderChainTest(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.provider1 = mock.Mock()
+        self.provider1.METHOD = 'provider1'
+        self.provider2 = mock.Mock()
+        self.provider2.METHOD = 'provider2'
+
+    def test_inject_provider_before_existing(self):
+        custom_provider = mock.Mock()
+        custom_provider.METHOD = 'custom_provider'
+
+        provider_chain = TokenProviderChain([self.provider1, self.provider2])
+        provider_chain.insert_before(self.provider1.METHOD, custom_provider)
+        provider_chain.load_token()
+
+        custom_provider.load_token.assert_called_once()
+        self.provider1.load_token.assert_not_called()
+
+    def test_insert_before_raises_on_unknown_provider(self):
+        custom_provider = mock.Mock()
+        custom_provider.METHOD = 'custom_provider'
+        provider_chain = TokenProviderChain([self.provider1])
+        with pytest.raises(UnknownTokenProviderError):
+            provider_chain.insert_before('nonexistent', custom_provider)
+
+    def test_inject_provider_after_existing(self):
+        custom_provider = mock.Mock()
+        custom_provider.METHOD = 'custom_provider'
+        custom_provider.load_token.return_value = 'custom-token'
+        self.provider1.load_token.return_value = None
+
+        provider_chain = TokenProviderChain([self.provider1, self.provider2])
+        provider_chain.insert_after(self.provider1.METHOD, custom_provider)
+        loaded_token = provider_chain.load_token()
+
+        assert loaded_token == 'custom-token'
+        self.provider2.load_token.assert_not_called()
+
+    def test_insert_after_raises_on_unknown_provider(self):
+        custom_provider = mock.Mock()
+        custom_provider.METHOD = 'custom_provider'
+        provider_chain = TokenProviderChain([self.provider1])
+        with pytest.raises(UnknownTokenProviderError):
+            provider_chain.insert_after('nonexistent', custom_provider)
+
+    def test_remove_existing_provider(self):
+        provider_chain = TokenProviderChain([self.provider1, self.provider2])
+        provider_chain.remove(self.provider1.METHOD)
+        provider_chain.load_token()
+
+        self.provider1.load_token.assert_not_called()
+        self.provider2.load_token.assert_called_once()
+
+    def test_remove_noops_when_provider_not_present(self):
+        custom_provider = mock.Mock()
+        custom_provider.METHOD = 'custom_provider'
+        provider_chain = TokenProviderChain([self.provider1, self.provider2])
+        provider_chain.remove(custom_provider.METHOD)
+        provider_chain.load_token()
+
+        self.provider1.load_token.assert_called_once()
+
+    def test_get_provider(self):
+        provider_chain = TokenProviderChain([self.provider1, self.provider2])
+        provider = provider_chain.get_provider(self.provider1.METHOD)
+        assert provider == self.provider1
+
+    def test_get_provider_raises_on_unknown_provider(self):
+        provider_chain = TokenProviderChain([self.provider1])
+        with pytest.raises(UnknownTokenProviderError):
+            provider_chain.get_provider('nonexistent')

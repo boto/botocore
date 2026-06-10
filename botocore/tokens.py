@@ -27,6 +27,7 @@ from botocore.exceptions import (
     ClientError,
     InvalidConfigError,
     TokenRetrievalError,
+    UnknownTokenProviderError,
 )
 from botocore.utils import (
     CachedProperty,
@@ -168,6 +169,70 @@ class TokenProviderChain:
         if providers is None:
             providers = []
         self._providers = providers
+
+    def insert_before(self, name, token_provider):
+        """Insert a token provider before an existing provider in the chain.
+
+        :param name: The name of the token provider to insert before
+            (e.g. ``env`` or ``sso``). Existing names can be discovered
+            by accessing provider ``METHOD`` attributes.
+        :type name: str
+
+        :param token_provider: The token provider instance to insert.
+
+        :raises UnknownTokenProviderError: If no provider named
+            ``name`` exists in the chain.
+        """
+        offset = self._get_provider_offset(name)
+        self._providers.insert(offset, token_provider)
+
+    def insert_after(self, name, token_provider):
+        """Insert a token provider after an existing provider in the chain.
+
+        :param name: The name of the token provider to insert after
+            (e.g. ``env`` or ``sso``). Existing names can be discovered
+            by accessing provider ``METHOD`` attributes.
+        :type name: str
+
+        :param token_provider: The token provider instance to insert.
+
+        :raises UnknownTokenProviderError: If no provider named
+            ``name`` exists in the chain.
+        """
+        offset = self._get_provider_offset(name)
+        self._providers.insert(offset + 1, token_provider)
+
+    def remove(self, name):
+        """Remove a token provider from the chain by name.
+
+        If no provider with the given name exists, this is a no-op.
+
+        :param name: The name of the token provider to remove.
+        :type name: str
+        """
+        available_methods = [p.METHOD for p in self._providers]
+        if name not in available_methods:
+            return
+
+        offset = available_methods.index(name)
+        self._providers.pop(offset)
+
+    def get_provider(self, name):
+        """Return a token provider by name.
+
+        :param name: The name of the provider to retrieve.
+        :type name: str
+
+        :raises UnknownTokenProviderError: If no provider named
+            ``name`` exists in the chain.
+        """
+        return self._providers[self._get_provider_offset(name)]
+
+    def _get_provider_offset(self, name):
+        try:
+            return [p.METHOD for p in self._providers].index(name)
+        except ValueError:
+            raise UnknownTokenProviderError(name=name)
 
     def load_token(self, **kwargs):
         for provider in self._providers:
