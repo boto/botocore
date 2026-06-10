@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "``Session``",
+  "description": "Removes list_available_services from the happy path for client creation to save time on client creation"
+}

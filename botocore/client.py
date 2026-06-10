@@ -127,7 +127,7 @@ class ClientCreator:
                 service_name, api_version
             )
             partition_data = self._loader.load_data('partitions')
-        except UnknownServiceError:
+        except (UnknownServiceError, DataNotFoundError):
             endpoints_ruleset_data = None
             partition_data = None
             logger.info(
