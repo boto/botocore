@@ -102,6 +102,7 @@ from botocore.utils import (
     switch_host_s3_accelerate,
     switch_to_virtual_host_style,
     validate_jmespath_for_set,
+    validate_region_name,
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
 
@@ -999,6 +1000,22 @@ class TestIsValidEndpointURL(unittest.TestCase):
 
     def test_hostname_no_dots(self):
         self.assertTrue(is_valid_endpoint_url('https://foo/'))
+
+
+class TestValidateRegionName(unittest.TestCase):
+    def test_valid_region(self):
+        self.assertIsNone(validate_region_name('us-east-1'))
+
+    def test_none_is_allowed(self):
+        self.assertIsNone(validate_region_name(None))
+
+    def test_trailing_newline_is_rejected(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('us-east-1\n')
+
+    def test_embedded_newline_is_rejected(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('us-east\n-1')
 
 
 class TestFixS3Host(unittest.TestCase):
