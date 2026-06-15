@@ -1544,12 +1544,8 @@ BUILTIN_HANDLERS = [
         DocumentModifiedShape(
             'policyDocumentType',
             new_type='dict',
-            new_description=(
-                ' This value is automatically parsed from the'
-                ' JSON string returned by the service.'
-            ),
+            new_description=None,
             new_example_value='{}',
-            append_description=True,
         ).replace_documentation_for_matching_shape,
     ),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),

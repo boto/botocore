@@ -220,13 +220,11 @@ class DocumentModifiedShape:
         new_type,
         new_description,
         new_example_value,
-        append_description=False,
     ):
         self._shape_name = shape_name
         self._new_type = new_type
         self._new_description = new_description
         self._new_example_value = new_example_value
-        self._append_description = append_description
 
     def replace_documentation_for_matching_shape(
         self, event_name, section, **kwargs
@@ -274,11 +272,8 @@ class DocumentModifiedShape:
                 description_section = section.get_section(
                     'param-documentation'
                 )
-                if self._append_description:
-                    description_section.write(self._new_description)
-                else:
-                    description_section.clear_text()
-                    description_section.write(self._new_description)
+                description_section.clear_text()
+                description_section.write(self._new_description)
 
             # Update the param type
             type_section = section.get_section('param-type')
