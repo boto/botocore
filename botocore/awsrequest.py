@@ -92,7 +92,7 @@ class AWSConnection:
             self._expect_header_set = True
         else:
             self._expect_header_set = False
-            self.response_class = self._original_response_cls
+        self.response_class = self._original_response_cls
         rval = super().request(method, url, body, headers, *args, **kwargs)
         self._expect_header_set = False
         return rval
