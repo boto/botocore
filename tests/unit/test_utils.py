@@ -2815,6 +2815,11 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def test_localhost_with_port_http_is_allowed(self):
         self.assert_can_retrieve_metadata_from('http://localhost:8000/foo')
 
+    def test_docker_host_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://host.docker.internal/foo'
+        )
+
     def test_localhost_https_is_allowed(self):
         self.assert_can_retrieve_metadata_from('https://localhost/foo')
 
