@@ -599,6 +599,14 @@ class RefreshableCredentials(Credentials):
         try:
             metadata = self._refresh_using()
         except Exception:
+            if is_mandatory:
+                # If this is a mandatory refresh, then
+                # all errors that occur when we attempt to refresh
+                # credentials are propagated back to the user.
+                raise
+            # Only warn if we aren't raising an exception, since that exception
+            # carries the relevant information and can be suppressed more
+            # directly.
             period_name = 'mandatory' if is_mandatory else 'advisory'
             logger.warning(
                 "Refreshing temporary credentials failed "
@@ -606,11 +614,6 @@ class RefreshableCredentials(Credentials):
                 period_name,
                 exc_info=True,
             )
-            if is_mandatory:
-                # If this is a mandatory refresh, then
-                # all errors that occur when we attempt to refresh
-                # credentials are propagated back to the user.
-                raise
             # Otherwise we'll just return.
             # The end result will be that we'll use the current
             # set of temporary credentials we have.
