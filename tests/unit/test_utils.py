@@ -13,6 +13,7 @@
 import copy
 import datetime
 import io
+import logging
 import operator
 import os
 import shutil
@@ -3764,6 +3765,14 @@ def test_get_token_from_environment_returns_token(
 ):
     monkeypatch.setenv(env_var, token)
     assert get_token_from_environment(signing_name) == token
+
+
+def test_get_token_from_environment_warns_for_empty_token(monkeypatch, caplog):
+    monkeypatch.setenv("AWS_BEARER_TOKEN_MY_SERVICE", "")
+    caplog.set_level(logging.WARNING, logger="botocore.utils")
+
+    assert get_token_from_environment("my-service") == ""
+    assert "AWS_BEARER_TOKEN_MY_SERVICE is set to an empty value" in caplog.text
 
 
 @pytest.mark.parametrize(
