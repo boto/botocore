@@ -1957,6 +1957,13 @@ class AssumeRoleWithWebIdentityProvider(CredentialProvider):
         if role_session_name is not None:
             extra_args['RoleSessionName'] = role_session_name
 
+        duration_seconds = self._get_profile_config('duration_seconds')
+        if duration_seconds is not None:
+            try:
+                extra_args['DurationSeconds'] = int(duration_seconds)
+            except ValueError:
+                pass
+
         fetcher = AssumeRoleWithWebIdentityCredentialFetcher(
             client_creator=self._client_creator,
             web_identity_token_loader=token_loader,
