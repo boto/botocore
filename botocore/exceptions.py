@@ -243,7 +243,12 @@ class BaseEndpointResolverError(BotoCoreError):
 class NoRegionError(BaseEndpointResolverError):
     """No region was specified."""
 
-    fmt = 'You must specify a region.'
+    fmt = (
+        'You must specify a region. Set it via the region_name argument '
+        'to the client/Session, the AWS_DEFAULT_REGION environment '
+        'variable, or "region" in ~/.aws/config (note: region goes in '
+        '~/.aws/config, not ~/.aws/credentials).'
+    )
 
 
 class EndpointVariantError(BaseEndpointResolverError):
