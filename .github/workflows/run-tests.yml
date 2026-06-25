@@ -25,7 +25,7 @@ jobs:
       PYO3_USE_ABI3_FORWARD_COMPATIBILITY: ${{ matrix.python-version == '3.15-dev' && '1' || '' }}
 
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
       - name: 'Set up Python ${{ matrix.python-version }}'
@@ -42,7 +42,7 @@ jobs:
         run: |
           python scripts/ci/run-tests --with-cov --with-xdist
       - name: Run codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           directory: tests
 
@@ -54,7 +54,7 @@ jobs:
       fail-fast: true
 
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
       - name: 'Set up Python 3.10'
