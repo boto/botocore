@@ -19,7 +19,6 @@ from botocore.compat import (
     compat_shell_split,
     ensure_bytes,
     get_md5,
-    get_tzinfo_options,
     total_seconds,
     unquote_str,
 )
@@ -206,15 +205,6 @@ class ShellSplitTestRunner:
     def assert_raises(self, s, exception_cls, platform):
         with pytest.raises(exception_cls):
             compat_shell_split(s, platform)
-
-
-class TestTimezoneOperations(unittest.TestCase):
-    def test_get_tzinfo_options(self):
-        options = get_tzinfo_options()
-        self.assertTrue(len(options) > 0)
-
-        for tzinfo in options:
-            self.assertIsInstance(tzinfo(), datetime.tzinfo)
 
 
 class TestCRTIntegration(unittest.TestCase):
