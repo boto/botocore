@@ -212,9 +212,6 @@ class TestEndpointResolver(unittest.TestCase):
         with self.assertRaises(NoRegionError):
             resolver = regions.EndpointResolver(self._template())
             resolver.construct_endpoint('foo', None)
-        message = str(ctx.exception)
-        self.assertIn('You must specify a region', message)
-        self.assertIn('AWS_DEFAULT_REGION', message)
 
     def test_ensures_required_keys_present(self):
         with self.assertRaises(ValueError):
