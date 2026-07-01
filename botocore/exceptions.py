@@ -244,10 +244,9 @@ class NoRegionError(BaseEndpointResolverError):
     """No region was specified."""
 
     fmt = (
-        'You must specify a region. Set it via the region_name argument '
-        'to the client/Session, the AWS_DEFAULT_REGION environment '
-        'variable, or "region" in ~/.aws/config (note: region goes in '
-        '~/.aws/config, not ~/.aws/credentials).'
+        'You must specify a region. This can be done by passing the region_name '
+        'argument to the client or session, using the AWS_DEFAULT_REGION '
+        'environment variable, or setting "region" in the aws config file.'
     )
 
 
