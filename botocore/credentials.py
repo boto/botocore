@@ -25,15 +25,12 @@ from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1, sha256
 
-import dateutil.parser
-from dateutil.parser import parse
-from dateutil.tz import tzlocal, tzutc
-
 import botocore.compat
 import botocore.configloader
 from botocore import UNSIGNED
 from botocore.compat import (
     EC,
+    _normalize_iso8601_for_python_310,
     compat_shell_split,
     total_seconds,
 )
@@ -275,13 +272,19 @@ def get_credentials(session):
 
 
 def _local_now():
-    return datetime.datetime.now(tzlocal())
+    return datetime.datetime.now().astimezone()
+
+
+def _parse_iso_utc(value):
+    return datetime.datetime.fromisoformat(
+        _normalize_iso8601_for_python_310(value)
+    )
 
 
 def _parse_if_needed(value):
     if isinstance(value, datetime.datetime):
         return value
-    return parse(value)
+    return _parse_iso_utc(value)
 
 
 def _serialize_if_needed(value, iso=False):
@@ -634,7 +637,7 @@ class RefreshableCredentials(Credentials):
 
     @staticmethod
     def _expiry_datetime(time_str):
-        return parse(time_str)
+        return _parse_iso_utc(time_str)
 
     def _set_from_data(self, data):
         expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
@@ -653,7 +656,7 @@ class RefreshableCredentials(Credentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
+        self._expiry_time = _parse_iso_utc(data['expiry_time'])
         self.account_id = data.get('account_id')
         logger.debug(
             "Retrieved credentials will expire at: %s", self._expiry_time
@@ -1256,7 +1259,7 @@ class EnvProvider(CredentialProvider):
 
             expiry_time = credentials['expiry_time']
             if expiry_time is not None:
-                expiry_time = parse(expiry_time)
+                expiry_time = _parse_iso_utc(expiry_time)
                 return RefreshableCredentials(
                     credentials['access_key'],
                     credentials['secret_key'],
@@ -2302,7 +2305,9 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
     def _parse_timestamp(self, timestamp_ms):
         # fromtimestamp expects seconds so: milliseconds / 1000 = seconds
         timestamp_seconds = timestamp_ms / 1000.0
-        timestamp = datetime.datetime.fromtimestamp(timestamp_seconds, tzutc())
+        timestamp = datetime.datetime.fromtimestamp(
+            timestamp_seconds, datetime.timezone.utc
+        )
         return timestamp.strftime(self._UTC_DATE_FORMAT)
 
     def _get_credentials(self):
@@ -2322,7 +2327,7 @@ class SSOCredentialFetcher(CachedCredentialFetcher):
             # raise an UnauthorizedSSOTokenError if the loaded legacy token
             # is expired to save a call to GetRoleCredentials with an
             # expired token.
-            expiration = dateutil.parser.parse(token_dict['expiresAt'])
+            expiration = _parse_iso_utc(token_dict['expiresAt'])
             remaining = total_seconds(expiration - self._time_fetcher())
             if remaining <= 0:
                 raise UnauthorizedSSOTokenError()
@@ -2657,7 +2662,7 @@ class LoginCredentialFetcher:
         output = response.get('tokenOutput')
 
         expires_timestamp = self._time_fetcher().astimezone(
-            tzutc()
+            datetime.timezone.utc
         ) + datetime.timedelta(seconds=output['expiresIn'])
 
         # Overwrite token with refreshed fields

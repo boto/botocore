@@ -23,7 +23,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
-from dateutil.tz import tzlocal
 
 from botocore import UNSIGNED
 from botocore.config import Config
@@ -66,6 +65,7 @@ from tests import (
     mock,
     random_chars,
     temporary_file,
+    tzlocal,
     unittest,
 )
 from tests.functional.test_useragent import (
