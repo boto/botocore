@@ -116,14 +116,18 @@ class DeferredRefreshableToken:
             self._next_refresh = now + timedelta(seconds=self._attempt_timeout)
             self._frozen_token = self._refresh_using()
         except Exception:
+            if refresh_type == "mandatory":
+                # This refresh was mandatory, error must be propagated back
+                raise
+
+            # Only warn if we aren't raising an exception, since that exception
+            # carries the relevant information and can be suppressed more
+            # directly.
             logger.warning(
                 "Refreshing token failed during the %s refresh period.",
                 refresh_type,
                 exc_info=True,
             )
-            if refresh_type == "mandatory":
-                # This refresh was mandatory, error must be propagated back
-                raise
 
         if self._is_expired():
             # Fresh credentials should never be expired
