@@ -1508,6 +1508,10 @@ BUILTIN_HANDLERS = [
         ClientMethodAlias('stop_otel_enrichment'),
     ),
     (
+        'getattr.signin.create_o_auth2_token',
+        ClientMethodAlias('create_oauth2_token'),
+    ),
+    (
         'before-parameter-build.s3.UploadPart',
         convert_body_to_file_like_object,
         REGISTER_LAST,
