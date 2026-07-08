@@ -50,6 +50,20 @@ _xform_cache = {
     ('ExecutePartiQLTransaction', '-'): 'execute-partiql-transaction',
     ('ExecutePartiQLBatch', '_'): 'execute_partiql_batch',
     ('ExecutePartiQLBatch', '-'): 'execute-partiql-batch',
+    ('CreateOAuth2Token', '_'): 'create_oauth2_token',
+    ('CreateOAuth2Token', '-'): 'create-oauth2-token',
+    ('CreateOAuth2TokenWithIAM', '_'): 'create_oauth2_token_with_iam',
+    ('CreateOAuth2TokenWithIAM', '-'): 'create-oauth2-token-with-iam',
+    (
+        'IntrospectOAuth2TokenWithIAM',
+        '_',
+    ): 'introspect_oauth2_token_with_iam',
+    (
+        'IntrospectOAuth2TokenWithIAM',
+        '-',
+    ): 'introspect-oauth2-token-with-iam',
+    ('RevokeOAuth2TokenWithIAM', '_'): 'revoke_oauth2_token_with_iam',
+    ('RevokeOAuth2TokenWithIAM', '-'): 'revoke-oauth2-token-with-iam',
     (
         'AssociateWhatsAppBusinessAccount',
         '_',
