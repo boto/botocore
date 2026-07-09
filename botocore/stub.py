@@ -258,6 +258,19 @@ class Stubber:
         http_response = AWSResponse(None, 200, {}, None)
 
         operation_name = self.client.meta.method_to_api_mapping.get(method)
+        if not operation_name:
+            raise ParamValidationError(
+                report=(
+                    "Unable to map method '{}' to api operation. ".format(
+                        method
+                    )
+                    + "Please note that some client methods do not map to api calls "
+                    + "and are therefore unsupported by stubs. "
+                    + "Supported client methods:\n{}".format(
+                        list(self.client.meta.method_to_api_mapping.keys())
+                    )
+                )
+            )
         self._validate_operation_response(operation_name, service_response)
 
         # Add the service_response to the queue for returning responses
