@@ -562,6 +562,15 @@ def handle_checksum_body(http_response, response, context, operation_model):
     if not algorithms:
         return
 
+    # Skip checksum body wrapping for error responses (status >= 400).
+    # The body for these responses is already http_response.content (bytes)
+    # from convert_to_response_dict, which supports .strip() and other string
+    # operations expected by the parser.  Wrapping with a streaming body would
+    # consume the already-read raw stream and fail checksum validation.
+    # See boto3/boto3#4754.
+    if response["status_code"] >= 400:
+        return
+
     for algorithm in algorithms:
         header_name = f"x-amz-checksum-{algorithm}"
         # If the header is not found, check the next algorithm
