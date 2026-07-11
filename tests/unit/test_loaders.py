@@ -174,6 +174,7 @@ class TestLoader(BaseEnvVar):
             loader.determine_latest_version('unknownservice', 'service-2')
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    @mock.patch('os.listdir', mock.Mock(return_value=['baz']))
     def test_load_service_model(self):
         class FakeLoader:
             def load_file(self, name):
@@ -263,10 +264,14 @@ class TestMergeExtras(BaseEnvVar):
         isdir_mock = mock.Mock(return_value=True)
         self.isdir_patch = mock.patch('os.path.isdir', isdir_mock)
         self.isdir_patch.start()
+        listdir_mock = mock.Mock(return_value=['myservice'])
+        self.listdir_patch = mock.patch('os.listdir', listdir_mock)
+        self.listdir_patch.start()
 
     def tearDown(self):
         super().tearDown()
         self.isdir_patch.stop()
+        self.listdir_patch.stop()
 
     def test_merge_extras(self):
         service_data = {'foo': 'service', 'bar': 'service'}
