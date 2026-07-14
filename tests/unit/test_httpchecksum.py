@@ -33,6 +33,7 @@ from botocore.httpchecksum import (
     CrtXxhash3Checksum,
     CrtXxhash64Checksum,
     CrtXxhash128Checksum,
+    Md5Checksum,
     Sha1Checksum,
     Sha256Checksum,
     Sha512Checksum,
@@ -830,6 +831,7 @@ _CHECKSUM_DIGEST_CASES = [
         Sha512Checksum,
         "MJ7MSJwS1utMxA9QyQLytNDtd+5RGnx6m808qG1M2G+YndNbxf9JlnDaNCVbRbDP2DDoH2Bdz33FVC6TrpzXbw==",
     ),
+    (Md5Checksum, "XrY7u+Ae7tCTyyK7j1rNww=="),
 ]
 if HAS_CRT:
     _CHECKSUM_DIGEST_CASES.extend(

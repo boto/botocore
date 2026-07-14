@@ -23,7 +23,7 @@ import base64
 import io
 import logging
 from binascii import crc32
-from hashlib import sha1, sha256, sha512
+from hashlib import md5, sha1, sha256, sha512
 
 from botocore.compat import HAS_CRT, has_minimum_crt_version, urlparse
 from botocore.exceptions import (
@@ -100,6 +100,16 @@ class CrtCrc32Checksum(BaseChecksum):
 
     def digest(self):
         return self._int_crc32.to_bytes(4, byteorder="big")
+
+class Md5Checksum(BaseChecksum):
+    def __init__(self):
+        self._checksum = md5()
+
+    def update(self, chunk):
+        self._checksum.update(chunk)
+
+    def digest(self):
+        return self._checksum.digest()
 
 
 class CrtCrc32cChecksum(BaseChecksum):
@@ -627,6 +637,7 @@ _CHECKSUM_CLS = {
     "sha1": Sha1Checksum,
     "sha256": Sha256Checksum,
     "sha512": Sha512Checksum,
+    "md5": Md5Checksum,
 }
 _CRT_CHECKSUM_ALGORITHMS = [
     "crc32",
