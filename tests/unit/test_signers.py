@@ -644,6 +644,17 @@ class TestCloudfrontSigner(BaseSignerTest):
         )
         assert_url_equal(signed_url, expected)
 
+    def test_generate_presign_url_with_wildcard_question_mark(self):
+        signed_url = self.signer.generate_presigned_url(
+            'http://test.com/example_202?.zip',
+            date_less_than=datetime.datetime(2016, 1, 1),
+        )
+        expected = (
+            'http://test.com/example_202?.zip?Expires=1451606400'
+            '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID'
+        )
+        self.assertEqual(signed_url, expected)
+
     def test_generate_presign_url_with_custom_policy(self):
         policy = self.signer.build_policy(
             'foo',
