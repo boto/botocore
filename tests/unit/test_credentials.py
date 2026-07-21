@@ -1131,6 +1131,36 @@ class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
             WebIdentityToken='totally.a.token',
         )
 
+    def test_duration_seconds_provided(self):
+        self.config['duration_seconds'] = '7200'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        mock_loader_cls = self._mock_loader_cls('totally.a.token')
+        provider = credentials.AssumeRoleWithWebIdentityProvider(
+            load_config=self._load_config,
+            client_creator=client_creator,
+            cache={},
+            profile_name=self.profile_name,
+            token_loader_cls=mock_loader_cls,
+        )
+
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.assume_role_with_web_identity.assert_called_with(
+            RoleArn='arn:aws:iam::123:role/role-name',
+            DurationSeconds=7200,
+            RoleSessionName=mock.ANY,
+            WebIdentityToken='totally.a.token',
+        )
+
     def test_role_arn_not_set(self):
         del self.config['role_arn']
         client_creator = self.create_client_creator(with_response={})
