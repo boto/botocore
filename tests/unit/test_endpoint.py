@@ -19,7 +19,7 @@ import pytest
 import botocore.endpoint
 from botocore.config import Config
 from botocore.endpoint import DEFAULT_TIMEOUT, Endpoint, EndpointCreator
-from botocore.exceptions import HTTPClientError
+from botocore.exceptions import HTTPClientError, InvalidConfigError
 from botocore.httpsession import URLLib3Session
 from botocore.model import (
     OperationModel,
@@ -465,6 +465,36 @@ class TestEndpointCreator(unittest.TestCase):
         session_args = self.mock_session.call_args[1]
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
+
+    def test_empty_verify_value_raises(self):
+        with self.assertRaises(InvalidConfigError):
+            self.creator.create_endpoint(
+                self.service_model,
+                region_name='us-west-2',
+                endpoint_url='https://example.com',
+                verify='',
+                http_session_cls=self.mock_session,
+            )
+
+    def test_whitespace_verify_value_raises(self):
+        with self.assertRaises(InvalidConfigError):
+            self.creator.create_endpoint(
+                self.service_model,
+                region_name='us-west-2',
+                endpoint_url='https://example.com',
+                verify='   ',
+                http_session_cls=self.mock_session,
+            )
+
+    def test_empty_cert_bundle_env_var_raises(self):
+        self.environ['REQUESTS_CA_BUNDLE'] = ''
+        with self.assertRaises(InvalidConfigError):
+            self.creator.create_endpoint(
+                self.service_model,
+                region_name='us-west-2',
+                endpoint_url='https://example.com',
+                http_session_cls=self.mock_session,
+            )
 
     def test_can_specify_max_pool_conns(self):
         self.creator.create_endpoint(
