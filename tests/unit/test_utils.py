@@ -3412,6 +3412,87 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         assert results['expiry_time'] == bad_datetime
 
 
+class TestInstanceMetadataRegionFetcher(unittest.TestCase):
+    def setUp(self):
+        urllib3_session_send = 'botocore.httpsession.URLLib3Session.send'
+        self._urllib3_patch = mock.patch(urllib3_session_send)
+        self._send = self._urllib3_patch.start()
+        self._imds_responses = []
+        self._send.side_effect = self.get_imds_response
+        self._region = 'us-mars-1'
+
+    def tearDown(self):
+        self._urllib3_patch.stop()
+
+    def add_imds_response(self, body, status_code=200):
+        response = botocore.awsrequest.AWSResponse(
+            url='http://169.254.169.254/',
+            status_code=status_code,
+            headers={},
+            raw=RawResponse(body),
+        )
+        self._imds_responses.append(response)
+
+    def add_imds_token_response(self, token='token'):
+        self.add_imds_response(body=token.encode('utf-8'))
+
+    def add_get_region_imds_response(self, region=None):
+        if region is None:
+            region = self._region
+        self.add_imds_response(body=region.encode('utf-8'))
+
+    def get_imds_response(self, request):
+        response = self._imds_responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    def test_uses_placement_region_endpoint(self):
+        self.add_imds_token_response()
+        self.add_get_region_imds_response()
+        result = InstanceMetadataRegionFetcher().retrieve_region()
+        self.assertEqual(result, 'us-mars-1')
+        # The region must come from the placement/region endpoint, not the
+        # availability-zone endpoint.
+        region_request = self._send.call_args[0][0]
+        self.assertTrue(region_request.url.endswith('placement/region/'))
+
+    def test_local_zone_resolves_to_parent_region(self):
+        # For a Local Zone, placement/region returns the parent region
+        # directly. Deriving it from the AZ (e.g. stripping the last char of
+        # ``us-east-2-sbn-1a``) would yield the invalid ``us-east-2-sbn-1``.
+        self.add_imds_token_response()
+        self.add_get_region_imds_response(region='us-east-2')
+        result = InstanceMetadataRegionFetcher().retrieve_region()
+        self.assertEqual(result, 'us-east-2')
+
+    def test_falls_back_to_availability_zone(self):
+        # If placement/region is unavailable (older or third-party IMDS),
+        # fall back to deriving the region from the availability zone.
+        self.add_imds_token_response()
+        self.add_imds_response(status_code=404, body=b'')
+        self.add_get_region_imds_response(region='us-mars-1a')
+        result = InstanceMetadataRegionFetcher(
+            num_attempts=1
+        ).retrieve_region()
+        self.assertEqual(result, 'us-mars-1')
+        # First the region endpoint is tried, then the AZ endpoint.
+        urls = [call[0][0].url for call in self._send.call_args_list]
+        self.assertTrue(urls[-2].endswith('placement/region/'))
+        self.assertTrue(urls[-1].endswith('placement/availability-zone/'))
+
+    def test_returns_none_when_region_and_az_unavailable(self):
+        self.add_imds_token_response()
+        # The region endpoint fails, and so does the availability-zone
+        # fallback, so no region can be resolved.
+        self.add_imds_response(status_code=500, body=b'')
+        self.add_imds_response(status_code=500, body=b'')
+        result = InstanceMetadataRegionFetcher(
+            num_attempts=1
+        ).retrieve_region()
+        self.assertIsNone(result)
+
+
 class TestIMDSRegionProvider(unittest.TestCase):
     def setUp(self):
         self.environ = {}
