@@ -433,7 +433,7 @@ class EndpointCreator:
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,
         # but for now proxy support is taken from the environment.
-        return get_environ_proxies(url)
+        return get_environ_proxies(url, no_proxy_filter=False)
 
     def _get_verify_value(self, verify):
         # This is to account for:

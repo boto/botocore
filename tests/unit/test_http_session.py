@@ -1,3 +1,4 @@
+import os
 import socket
 from concurrent.futures import CancelledError
 
@@ -57,6 +58,21 @@ class TestProxyConfiguration(unittest.TestCase):
     def test_fix_proxy_url_has_protocol_http(self):
         proxy_url = self.proxy_config.proxy_url_for(self.url)
         self.assertEqual('http://localhost:8081/', proxy_url)
+
+    def test_proxy_url_for_honors_no_proxy_per_call(self):
+        config = ProxyConfiguration(
+            proxies={'https': 'http://proxy.example.com'}
+        )
+        with mock.patch.dict(
+            os.environ, {'NO_PROXY': 'bypass.example.com'}, clear=True
+        ):
+            self.assertIsNone(
+                config.proxy_url_for('https://bypass.example.com/key')
+            )
+            self.assertEqual(
+                'http://proxy.example.com',
+                config.proxy_url_for('https://other.example.com/key'),
+            )
 
 
 class TestHttpSessionUtils(unittest.TestCase):
@@ -510,6 +526,70 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session()
         session.close()
         self.pool_manager.clear.assert_called_once_with()
+
+    def test_no_proxy_env_var_bypasses_proxy_per_request(self):
+        proxies = {'https': 'http://proxy.com'}
+        non_proxy_manager = mock.Mock()
+        non_proxy_manager.connection_from_url.return_value = self.connection
+        self.pool_manager_cls.return_value = non_proxy_manager
+
+        proxy_manager = mock.Mock()
+        proxy_manager.connection_from_url.return_value = self.connection
+        self.proxy_manager_fun.return_value = proxy_manager
+
+        session = URLLib3Session(proxies=proxies)
+        bypass_url = 'https://bypass.example.com/'
+        proxied_url = 'https://other.example.com/'
+
+        with mock.patch.dict(
+            os.environ, {'NO_PROXY': 'bypass.example.com'}, clear=True
+        ):
+            req1 = AWSRequest(
+                method='GET', url=bypass_url, headers={}, data=b''
+            )
+            session.send(req1.prepare())
+            non_proxy_manager.connection_from_url.assert_called_with(
+                bypass_url
+            )
+            proxy_manager.connection_from_url.assert_not_called()
+
+            req2 = AWSRequest(
+                method='GET', url=proxied_url, headers={}, data=b''
+            )
+            session.send(req2.prepare())
+            proxy_manager.connection_from_url.assert_called_with(proxied_url)
+
+    def test_no_proxy_env_var_matches_redirect_target(self):
+        proxies = {'https': 'http://proxy.com'}
+        non_proxy_manager = mock.Mock()
+        non_proxy_manager.connection_from_url.return_value = self.connection
+        self.pool_manager_cls.return_value = non_proxy_manager
+
+        proxy_manager = mock.Mock()
+        proxy_manager.connection_from_url.return_value = self.connection
+        self.proxy_manager_fun.return_value = proxy_manager
+
+        session = URLLib3Session(proxies=proxies)
+        proxied_url = 'https://api.example.com/'
+        bypass_url = 'https://bypass.example.com/'
+
+        with mock.patch.dict(
+            os.environ, {'NO_PROXY': 'bypass.example.com'}, clear=True
+        ):
+            req1 = AWSRequest(
+                method='GET', url=proxied_url, headers={}, data=b''
+            )
+            session.send(req1.prepare())
+            proxy_manager.connection_from_url.assert_called_with(proxied_url)
+            non_proxy_manager.connection_from_url.assert_not_called()
+
+            req2 = AWSRequest(
+                method='GET', url=bypass_url, headers={}, data=b''
+            )
+            session.send(req2.prepare())
+            non_proxy_manager.connection_from_url.assert_called_with(
+                bypass_url
+            )
 
     def test_close_proxied(self):
         proxies = {'https': 'http://proxy.com', 'http': 'http://proxy2.com'}
