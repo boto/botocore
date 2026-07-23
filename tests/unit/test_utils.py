@@ -17,6 +17,7 @@ import operator
 import os
 import shutil
 import tempfile
+import warnings
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -66,6 +67,7 @@ from botocore.utils import (
     JSONFileCache,
     S3ArnParamHandler,
     S3EndpointSetter,
+    S3RegionRedirector,
     S3RegionRedirectorv2,
     SSOTokenLoader,
     _get_bearer_env_var_name,
@@ -2196,6 +2198,61 @@ class TestS3RegionRedirector(unittest.TestCase):
     def test_get_region_validates_region_from_head_bucket(self):
         self.set_client_response_headers(
             {'x-amz-bucket-region': 'invalid region!'}
+        )
+        response = (
+            None,
+            {
+                'Error': {'Code': 'PermanentRedirect'},
+                'ResponseMetadata': {'HTTPHeaders': {}},
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
+
+class TestDeprecatedS3RegionRedirector(unittest.TestCase):
+    def setUp(self):
+        self.client = mock.Mock()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', FutureWarning)
+            self.redirector = S3RegionRedirector(mock.Mock(), self.client)
+
+    def test_get_region_validates_region_from_header(self):
+        response = (
+            None,
+            {
+                'Error': {'Code': 'PermanentRedirect'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {'x-amz-bucket-region': 'invalid region!'}
+                },
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
+    def test_get_region_validates_region_from_error_body(self):
+        response = (
+            None,
+            {
+                'Error': {
+                    'Code': 'PermanentRedirect',
+                    'Region': 'invalid region!',
+                },
+                'ResponseMetadata': {'HTTPHeaders': {}},
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
+    def test_get_region_validates_region_from_head_bucket(self):
+        self.client.head_bucket.side_effect = ClientError(
+            {
+                'Error': {'Code': '', 'Message': ''},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {'x-amz-bucket-region': 'invalid region!'}
+                },
+            },
+            'HeadBucket',
         )
         response = (
             None,

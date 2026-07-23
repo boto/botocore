@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "s3",
+  "description": "Validate the bucket region sourced from S3 redirect responses in the deprecated ``S3RegionRedirector``, matching ``S3RegionRedirectorv2``."
+}
