@@ -3569,7 +3569,19 @@ class JSONFileCache:
         try:
             with open(actual_key) as f:
                 return json.load(f)
-        except (OSError, ValueError):
+        except OSError:
+            raise KeyError(cache_key)
+        except ValueError as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "Failed to parse cache file '%s': %s. "
+                "The file will be removed and treated as a cache miss.",
+                actual_key, e,
+            )
+            try:
+                os.remove(actual_key)
+            except OSError:
+                pass
             raise KeyError(cache_key)
 
     def __delitem__(self, cache_key):
