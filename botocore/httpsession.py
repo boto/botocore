@@ -389,7 +389,11 @@ class URLLib3Session:
     def _setup_ssl_cert(self, conn, url, verify):
         if url.lower().startswith('https') and verify:
             conn.cert_reqs = 'CERT_REQUIRED'
-            conn.ca_certs = get_cert_path(verify)
+            cert_path = get_cert_path(verify)
+            if os.path.isdir(cert_path):
+                conn.ca_cert_dir = cert_path
+            else:
+                conn.ca_certs = cert_path
         else:
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
