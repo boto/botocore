@@ -793,6 +793,15 @@ class TestHandlers(BaseSessionTest):
         with self.assertRaises(ParamValidationError):
             handlers.validate_bucket_name(params)
 
+    def test_trailing_newline_in_bucket_raises_exception(self):
+        params = {
+            'Bucket': 'my-bucket-name\n',
+            'Key': 'foo',
+            'Body': b'asdf',
+        }
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_bucket_name(params)
+
     def test_not_dns_compat_but_still_valid_bucket_name(self):
         params = {
             'Bucket': 'foasdf......bar--baz-a_b_CD10',
@@ -1622,6 +1631,10 @@ class TestPrependToHost(unittest.TestCase):
     def test_does_validate_host_with_illegal_char(self):
         with self.assertRaises(ParamValidationError):
             self._prepend_to_host('https://example.com/path', 'host#name')
+
+    def test_does_validate_host_with_trailing_newline(self):
+        with self.assertRaises(ParamValidationError):
+            self._prepend_to_host('https://example.com/path', 'host\n')
 
 
 @pytest.mark.parametrize(

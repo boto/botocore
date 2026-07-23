@@ -89,7 +89,7 @@ REGISTER_LAST = object()
 # to be as long as 255 characters, and bucket names can contain any
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
-VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
+VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}\Z')
 _ACCESSPOINT_ARN = (
     r'^arn:(aws).*:(s3|s3-object-lambda):[a-z\-0-9]*:[0-9]{12}:accesspoint[/:]'
     r'[a-zA-Z0-9\-.]{1,63}$'
@@ -1003,7 +1003,7 @@ class ClientMethodAlias:
 class HeaderToHostHoister:
     """Takes a header and moves it to the front of the hoststring."""
 
-    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)$', re.IGNORECASE)
+    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)\Z', re.IGNORECASE)
 
     def __init__(self, header_name):
         self._header_name = header_name
