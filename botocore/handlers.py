@@ -1003,7 +1003,7 @@ class ClientMethodAlias:
 class HeaderToHostHoister:
     """Takes a header and moves it to the front of the hoststring."""
 
-    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)$', re.IGNORECASE)
+    _VALID_HOSTNAME = re.compile(r'(?!-)[a-z\d-]{1,63}(?<!-)\Z', re.IGNORECASE)
 
     def __init__(self, header_name):
         self._header_name = header_name

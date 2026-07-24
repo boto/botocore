@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 TEMPLATE_STRING_RE = re.compile(r"\{[a-zA-Z#]+\}")
 GET_ATTR_RE = re.compile(r"(\w*)\[(\d+)\]")
 VALID_HOST_LABEL_RE = re.compile(
-    r"^(?!-)[a-zA-Z\d-]{1,63}(?<!-)$",
+    r"^(?!-)[a-zA-Z\d-]{1,63}(?<!-)\Z",
 )
 CACHE_SIZE = 100
 # S3 endpoint ruleset parameters that are defined but not currently referenced.

@@ -2207,6 +2207,19 @@ class TestS3RegionRedirector(unittest.TestCase):
         with self.assertRaises(InvalidRegionError):
             self.redirector.get_bucket_region('foo', response)
 
+    def test_get_region_rejects_region_with_trailing_newline(self):
+        response = (
+            None,
+            {
+                'Error': {'Code': 'PermanentRedirect'},
+                'ResponseMetadata': {
+                    'HTTPHeaders': {'x-amz-bucket-region': 'us-west-2\n'}
+                },
+            },
+        )
+        with self.assertRaises(InvalidRegionError):
+            self.redirector.get_bucket_region('foo', response)
+
 
 class TestArnParser(unittest.TestCase):
     def setUp(self):
