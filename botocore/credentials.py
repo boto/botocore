@@ -605,6 +605,12 @@ class RefreshableCredentials(Credentials):
         # A previous refresh attempt failed; wait before attempting
         # another refresh.
         if self._in_refresh_backoff():
+            logger.debug(
+                "Credential refresh is in backoff following a failed attempt. "
+                "Using cached credentials. The next refresh attempt is allowed "
+                "at %s.",
+                self._refresh_blocked_until,
+            )
             return
 
         # acquire() doesn't accept kwargs, but False is indicating
