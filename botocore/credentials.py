@@ -591,8 +591,9 @@ class RefreshableCredentials(Credentials):
 
     def _refresh(self):
         if DEFAULT_NEW_CREDENTIAL_REFRESH:
-            return self._refresh_with_backoff()
-        return self._refresh_legacy()
+            self._refresh_with_backoff()
+        else:
+            self._refresh_legacy()
 
     def _refresh_with_backoff(self):
         # In the common case where we don't need a refresh, we
