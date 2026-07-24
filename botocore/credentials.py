@@ -686,12 +686,6 @@ class RefreshableCredentials(Credentials):
         return None
 
     def _handle_refresh_failure(self, error):
-        if self._frozen_credentials is None:
-            # No credentials have been successfully obtained yet, so we
-            # have nothing to fall back to.
-            raise CredentialRetrievalError(
-                provider=self.method, error_msg=str(error)
-            )
         backoff = self._enter_refresh_backoff()
         logger.warning(
             "Credential refresh failed: %s. The SDK will continue using "
@@ -859,6 +853,15 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         if self._frozen_credentials is None:
             return True
         return super().refresh_needed(refresh_in)
+
+    def _handle_refresh_failure(self, error):
+        if self._frozen_credentials is None:
+            # No credentials have been successfully obtained yet, so we
+            # have nothing to fall back to.
+            raise CredentialRetrievalError(
+                provider=self.method, error_msg=str(error)
+            )
+        super()._handle_refresh_failure(error)
 
 
 class CachedCredentialFetcher:
