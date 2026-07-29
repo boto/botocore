@@ -155,7 +155,7 @@ class TestRefreshLogic(unittest.TestCase):
     def test_advisory_refresh_needed(self):
         creds = IntegerRefresher(
             # These values will immediately trigger
-            # a mandatory refresh.
+            # an advisory refresh.
             creds_last_for=4,
             mandatory_refresh=2,
             advisory_refresh=5,
