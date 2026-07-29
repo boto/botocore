@@ -63,7 +63,7 @@ class TestRefreshableCredentials(BaseEnvVar):
             'role_name': 'rolename',
         }
         self.refresher.return_value = self.metadata
-        self.mock_time = mock.Mock()
+        self.mock_time = mock.Mock(return_value=datetime.now(tzlocal()))
         self.creds = credentials.RefreshableCredentials(
             'ORIGINAL-ACCESS',
             'ORIGINAL-SECRET',
@@ -292,6 +292,178 @@ def _valid_metadata(mock_time, expires_in=timedelta(hours=24)):
         'token': 'NEW-TOKEN',
         'expiry_time': expiry_time.isoformat(),
     }
+
+
+def _create_refreshable_credentials(
+    mock_time,
+    refresher=None,
+    expires_in=timedelta(hours=24),
+    **kwargs,
+):
+    if refresher is None:
+        refresher = mock.Mock()
+    return credentials.RefreshableCredentials(
+        'ORIGINAL-ACCESS',
+        'ORIGINAL-SECRET',
+        'ORIGINAL-TOKEN',
+        mock_time() + expires_in,
+        refresher,
+        'iam-role',
+        time_fetcher=mock_time,
+        **kwargs,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Refresh-window tests: these cover the advisory/mandatory defaults and their
+# interactions with successful and failed refreshes.
+# ---------------------------------------------------------------------------
+
+
+def _assert_refresh_boundary(
+    creds, mock_time, issued_at, expires_in, refresh_window
+):
+    expiry_time = issued_at + expires_in
+
+    # Just outside the window: no refresh yet.
+    mock_time.return_value = expiry_time - timedelta(
+        seconds=refresh_window + 1
+    )
+    assert creds.refresh_needed() is False
+
+    # Just inside the window: refresh needed.
+    mock_time.return_value = expiry_time - timedelta(
+        seconds=refresh_window - 1
+    )
+    assert creds.refresh_needed() is True
+
+
+def test_15_minute_credentials_do_not_refresh_immediately(mock_time):
+    creds = _create_refreshable_credentials(
+        mock_time, expires_in=timedelta(minutes=15)
+    )
+
+    assert creds.refresh_needed() is False
+
+
+@pytest.mark.parametrize(
+    "expires_in, expected_timeout",
+    [
+        (timedelta(minutes=20), 5 * 60),
+        (timedelta(minutes=20, seconds=1), 15 * 60),
+        (timedelta(minutes=89, seconds=59), 15 * 60),
+        (timedelta(minutes=90), 60 * 60),
+    ],
+)
+def test_effective_advisory_window_tier_boundaries(
+    mock_time, expires_in, expected_timeout
+):
+    issued_at = mock_time()
+    creds = _create_refreshable_credentials(mock_time, expires_in=expires_in)
+
+    _assert_refresh_boundary(
+        creds, mock_time, issued_at, expires_in, expected_timeout
+    )
+
+
+def test_effective_advisory_window_uses_lifetime_at_set_time(mock_time):
+    issued_at = mock_time()
+    creds = _create_refreshable_credentials(
+        mock_time,
+        expires_in=timedelta(hours=2),
+    )
+
+    mock_time.return_value = issued_at + timedelta(minutes=70)
+
+    assert creds.refresh_needed() is True
+
+
+def test_effective_advisory_window_recomputed_after_successful_refresh(
+    mock_time, refresher
+):
+    issued_at = mock_time()
+    refresher.return_value = _valid_metadata(
+        mock_time, expires_in=timedelta(hours=6)
+    )
+    creds = _create_refreshable_credentials(
+        mock_time,
+        refresher=refresher,
+        expires_in=timedelta(seconds=30),
+    )
+
+    frozen = creds.get_frozen_credentials()
+
+    assert frozen.access_key == 'NEW-ACCESS'
+    _assert_refresh_boundary(
+        creds, mock_time, issued_at, timedelta(hours=6), 60 * 60
+    )
+
+
+def test_effective_advisory_window_not_recomputed_on_failure(
+    mock_time, refresher
+):
+    issued_at = mock_time()
+    creds = _create_refreshable_credentials(
+        mock_time,
+        refresher=refresher,
+        expires_in=timedelta(minutes=30),
+    )
+
+    refresher.side_effect = Exception("source down")
+    mock_time.return_value = issued_at + timedelta(minutes=16)
+
+    assert creds.refresh_needed() is True
+
+    frozen = creds.get_frozen_credentials()
+
+    assert frozen.access_key == 'ORIGINAL-ACCESS'
+    assert creds.refresh_needed() is True
+
+
+def test_new_path_uses_one_minute_mandatory_window_by_default(mock_time):
+    creds = _create_refreshable_credentials(mock_time)
+
+    assert creds._resolve_mandatory_refresh_timeout() == 60
+
+
+def test_explicit_refresh_windows_are_preserved_on_new_path(mock_time):
+    issued_at = mock_time()
+    expires_in = timedelta(minutes=2)
+    creds = _create_refreshable_credentials(
+        mock_time,
+        expires_in=expires_in,
+        advisory_timeout=45,
+        mandatory_timeout=10,
+    )
+
+    _assert_refresh_boundary(creds, mock_time, issued_at, expires_in, 45)
+    assert creds._resolve_mandatory_refresh_timeout() == 10
+
+
+def test_deferred_first_fetch_uses_recomputed_advisory_window(mock_time):
+    issued_at = mock_time()
+    refresher = mock.Mock(
+        return_value=_valid_metadata(mock_time, expires_in=timedelta(hours=6))
+    )
+    creds = credentials.DeferredRefreshableCredentials(
+        refresher,
+        'iam-role',
+        time_fetcher=mock_time,
+    )
+
+    frozen = creds.get_frozen_credentials()
+
+    assert frozen.access_key == 'NEW-ACCESS'
+    assert refresher.call_count == 1
+    _assert_refresh_boundary(
+        creds, mock_time, issued_at, timedelta(hours=6), 60 * 60
+    )
+
+
+# ---------------------------------------------------------------------------
+# Backoff tests: these cover behavior that has no counterpart in the legacy
+# code path.
+# ---------------------------------------------------------------------------
 
 
 def test_refresh_failure_returns_cached(creds, refresher):

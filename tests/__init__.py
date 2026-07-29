@@ -348,12 +348,17 @@ class IntegerRefresher(credentials.RefreshableCredentials):
         if refresh_function is None:
             refresh_function = self._do_refresh
         super().__init__(
-            '0', '0', '0', expires_in, refresh_function, 'INTREFRESH'
+            '0',
+            '0',
+            '0',
+            expires_in,
+            refresh_function,
+            'INTREFRESH',
+            advisory_timeout=advisory_refresh,
+            mandatory_timeout=mandatory_refresh,
         )
         self.creds_last_for = creds_last_for
         self.refresh_counter = 0
-        self._advisory_refresh_timeout = advisory_refresh
-        self._mandatory_refresh_timeout = mandatory_refresh
 
     def _do_refresh(self):
         self.refresh_counter += 1
