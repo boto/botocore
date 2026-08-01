@@ -663,7 +663,7 @@ class RefreshableCredentials(Credentials):
                 if not self.refresh_needed():
                     return
                 is_mandatory_refresh = self.refresh_needed(
-                    self._mandatory_refresh_timeout
+                    self._resolve_mandatory_refresh_timeout()
                 )
                 self._protected_refresh(is_mandatory=is_mandatory_refresh)
                 return

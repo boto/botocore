@@ -325,13 +325,13 @@ def _assert_refresh_boundary(
 ):
     expiry_time = issued_at + expires_in
 
-    # Just outside the window: no refresh yet.
+    # 1 second outside the window: no refresh yet.
     mock_time.return_value = expiry_time - timedelta(
         seconds=refresh_window + 1
     )
     assert creds.refresh_needed() is False
 
-    # Just inside the window: refresh needed.
+    # 1 second inside the window: refresh needed.
     mock_time.return_value = expiry_time - timedelta(
         seconds=refresh_window - 1
     )
@@ -420,13 +420,31 @@ def test_effective_advisory_window_not_recomputed_on_failure(
     assert creds.refresh_needed() is True
 
 
-def test_new_path_uses_one_minute_mandatory_window_by_default(mock_time):
-    creds = _create_refreshable_credentials(mock_time)
+def test_mandatory_refresh_boundary_is_one_minute(mock_time):
+    issued_at = mock_time()
+    expires_in = timedelta(minutes=30)
+    creds = _create_refreshable_credentials(
+        mock_time,
+        expires_in=expires_in,
+    )
+    expiry_time = issued_at + expires_in
 
-    assert creds._resolve_mandatory_refresh_timeout() == 60
+    # RefreshableCredentials does not branch on is_mandatory directly, but
+    # _refresh() still computes it and _StrictRefreshableCredentials depends
+    # on the mandatory-window classification.
+    mock_time.return_value = expiry_time - timedelta(seconds=61)
+    with mock.patch.object(creds, '_protected_refresh') as protected_refresh:
+        creds.get_frozen_credentials()
+    protected_refresh.assert_called_once_with(is_mandatory=False)
+
+    # Inside the 60-second mandatory window.
+    mock_time.return_value = expiry_time - timedelta(seconds=59)
+    with mock.patch.object(creds, '_protected_refresh') as protected_refresh:
+        creds.get_frozen_credentials()
+    protected_refresh.assert_called_once_with(is_mandatory=True)
 
 
-def test_explicit_refresh_windows_are_preserved_on_new_path(mock_time):
+def test_explicit_refresh_windows_are_preserved(mock_time):
     issued_at = mock_time()
     expires_in = timedelta(minutes=2)
     creds = _create_refreshable_credentials(
@@ -435,9 +453,21 @@ def test_explicit_refresh_windows_are_preserved_on_new_path(mock_time):
         advisory_timeout=45,
         mandatory_timeout=10,
     )
+    expiry_time = issued_at + expires_in
 
     _assert_refresh_boundary(creds, mock_time, issued_at, expires_in, 45)
-    assert creds._resolve_mandatory_refresh_timeout() == 10
+
+    # Outside the explicit 10-second mandatory window.
+    mock_time.return_value = expiry_time - timedelta(seconds=11)
+    with mock.patch.object(creds, '_protected_refresh') as protected_refresh:
+        creds.get_frozen_credentials()
+    protected_refresh.assert_called_once_with(is_mandatory=False)
+
+    # Inside the explicit 10-second mandatory window.
+    mock_time.return_value = expiry_time - timedelta(seconds=9)
+    with mock.patch.object(creds, '_protected_refresh') as protected_refresh:
+        creds.get_frozen_credentials()
+    protected_refresh.assert_called_once_with(is_mandatory=True)
 
 
 def test_deferred_first_fetch_uses_recomputed_advisory_window(mock_time):
