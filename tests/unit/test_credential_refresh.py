@@ -30,6 +30,18 @@ from dateutil.tz import tzlocal
 from botocore import credentials
 from botocore.exceptions import CredentialRetrievalError
 from tests import BaseEnvVar, IntegerRefresher, mock, unittest
+from tests.unit.test_credentials import (
+    TestEnvVar as _TestEnvVar,
+)
+from tests.unit.test_credentials import (
+    TestProcessProvider as _TestProcessProvider,
+)
+
+
+@pytest.fixture(autouse=True)
+def _enable_new_credential_refresh(monkeypatch):
+    monkeypatch.setattr(credentials, 'DEFAULT_NEW_CREDENTIAL_REFRESH', True)
+
 
 # ---------------------------------------------------------------------------
 # Replacement classes: these mirror the classes in test_credentials.py with
@@ -37,7 +49,6 @@ from tests import BaseEnvVar, IntegerRefresher, mock, unittest
 # ---------------------------------------------------------------------------
 
 
-@mock.patch('botocore.credentials.DEFAULT_NEW_CREDENTIAL_REFRESH', True)
 class TestRefreshableCredentials(BaseEnvVar):
     def setUp(self):
         super().setUp()
@@ -139,7 +150,6 @@ class TestRefreshableCredentials(BaseEnvVar):
         self.assertTrue(self.refresher.called)
 
 
-@mock.patch('botocore.credentials.DEFAULT_NEW_CREDENTIAL_REFRESH', True)
 class TestRefreshLogic(unittest.TestCase):
     def test_mandatory_refresh_needed(self):
         creds = IntegerRefresher(
@@ -231,14 +241,22 @@ class TestRefreshLogic(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# Mirrored provider suites: these reuse the existing Env and Process provider
+# tests with the flag enabled. Because these providers are out of scope for
+# static stability, their provider behavior should remain unchanged.
+# ---------------------------------------------------------------------------
+class TestEnvVarFlagOn(_TestEnvVar):
+    pass
+
+
+class TestProcessProviderFlagOn(_TestProcessProvider):
+    pass
+
+
+# ---------------------------------------------------------------------------
 # Net-new tests: these cover backoff behavior that has no counterpart in the
 # legacy code path. At GA they will be added to test_credentials.py.
 # ---------------------------------------------------------------------------
-
-
-@pytest.fixture(autouse=True)
-def _enable_new_credential_refresh(monkeypatch):
-    monkeypatch.setattr(credentials, 'DEFAULT_NEW_CREDENTIAL_REFRESH', True)
 
 
 @pytest.fixture
@@ -325,5 +343,18 @@ def test_refresh_failure_without_cached_creds_raises(mock_time):
         'iam-role',
         time_fetcher=mock_time,
     )
-    with pytest.raises(CredentialRetrievalError):
+    with pytest.raises(Exception, match='source down'):
+        creds.get_frozen_credentials()
+
+
+def test_invalid_refresh_data_without_cached_creds_raises(mock_time):
+    refresher = mock.Mock(return_value={})
+    creds = credentials.DeferredRefreshableCredentials(
+        refresher,
+        'iam-role',
+        time_fetcher=mock_time,
+    )
+    with pytest.raises(
+        CredentialRetrievalError, match='Response did not contain'
+    ):
         creds.get_frozen_credentials()
