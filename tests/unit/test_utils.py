@@ -3412,6 +3412,40 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         assert results['expiry_time'] == bad_datetime
 
 
+class TestInstanceMetadataRegionFetcher(unittest.TestCase):
+    _IMDS_RESPONSES = {
+        'api/token': b'my-token',
+        'placement/region': b'us-east-1',
+        'placement/availability-zone': b'us-east-1-atl-2a',
+    }
+
+    def setUp(self):
+        urllib3_session_send = 'botocore.httpsession.URLLib3Session.send'
+        self._urllib3_patch = mock.patch(urllib3_session_send)
+        self._send = self._urllib3_patch.start()
+        self._send.side_effect = self._get_imds_response
+
+    def tearDown(self):
+        self._urllib3_patch.stop()
+
+    def _get_imds_response(self, request):
+        for path, body in self._IMDS_RESPONSES.items():
+            if path in request.url:
+                return botocore.awsrequest.AWSResponse(
+                    url=request.url,
+                    status_code=200,
+                    headers={},
+                    raw=RawResponse(body),
+                )
+        raise ValueError(f'Unexpected IMDS request: {request.url}')
+
+    def _make_fetcher(self):
+        return InstanceMetadataRegionFetcher()
+
+    def test_retrieve_region_local_zone_instance(self):
+        self.assertEqual(self._make_fetcher().retrieve_region(), 'us-east-1')
+
+
 class TestIMDSRegionProvider(unittest.TestCase):
     def setUp(self):
         self.environ = {}
