@@ -95,6 +95,13 @@ class TestHttpSessionUtils(unittest.TestCase):
         ('http://user:pass@192.168.1.1', 'http://***:***@192.168.1.1'),
         ('http://user:pass@[::1]', 'http://***:***@[::1]'),
         ('http://user:pass@[::1]:80', 'http://***:***@[::1]:80'),
+        # credential value also appears earlier in the url
+        (
+            'https://user:https@proxy.example.com',
+            'https://***:***@proxy.example.com',
+        ),
+        ('http://ttp:secret@host.com', 'http://***:***@host.com'),
+        ('http://myproxy.amazonaws.com', 'http://myproxy.amazonaws.com'),
     ),
 )
 def test_mask_proxy_url(proxy_url, expected_mask_url):
