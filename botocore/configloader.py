@@ -165,6 +165,13 @@ def raw_config_parse(config_filename, parse_subsections=True):
                             raise botocore.exceptions.ConfigParseError(
                                 path=_unicode_path(path), error=e
                             ) from None
+                    elif parse_subsections and config_value == '':
+                        # An empty value for a subsection key (e.g.
+                        # "s3 =" with nothing after it) should be
+                        # treated as an empty mapping rather than an
+                        # empty string, so that downstream code
+                        # expecting a dict does not break.
+                        config_value = {}
                     config[section][option] = config_value
     return config
 
