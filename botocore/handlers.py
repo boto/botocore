@@ -694,7 +694,7 @@ def fix_route53_ids(params, model, **kwargs):
     ]
 
     for name in members:
-        if name in params:
+        if name in params and isinstance(params[name], str):
             orig_value = params[name]
             params[name] = orig_value.split('/')[-1]
             logger.debug('%s %s -> %s', name, orig_value, params[name])
