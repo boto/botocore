@@ -3058,8 +3058,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         ).retrieve_iam_role_credentials()
 
         self.assertEqual(self._send.call_count, 3)
-        for call in self._send.calls:
-            self.assertTrue(call[0][0].headers['User-Agent'], user_agent)
+        for call in self._send.call_args_list:
+            self.assertEqual(call[0][0].headers['User-Agent'], user_agent)
 
     def test_non_200_response_for_role_name_is_retried(self):
         # Response for role name that have a non 200 status code should
