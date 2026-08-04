@@ -334,6 +334,31 @@ class Waiter:
         self.name = name
         self.config = config
 
+    @staticmethod
+    def _validate_waiter_config(sleep_amount, max_attempts):
+        if (
+            isinstance(sleep_amount, bool)
+            or not isinstance(sleep_amount, (int, float))
+            or sleep_amount < 0
+        ):
+            raise WaiterConfigError(
+                error_msg=(
+                    f'Invalid value for WaiterConfig option Delay: '
+                    f'{sleep_amount!r}. Expected a non-negative number.'
+                )
+            )
+        if (
+            isinstance(max_attempts, bool)
+            or not isinstance(max_attempts, int)
+            or max_attempts < 1
+        ):
+            raise WaiterConfigError(
+                error_msg=(
+                    f'Invalid value for WaiterConfig option MaxAttempts: '
+                    f'{max_attempts!r}. Expected a positive integer.'
+                )
+            )
+
     @with_current_context(partial(register_feature_id, 'WAITER'))
     def wait(self, **kwargs):
         acceptors = list(self.config.acceptors)
@@ -342,6 +367,7 @@ class Waiter:
         config = kwargs.pop('WaiterConfig', {})
         sleep_amount = config.get('Delay', self.config.delay)
         max_attempts = config.get('MaxAttempts', self.config.max_attempts)
+        self._validate_waiter_config(sleep_amount, max_attempts)
         last_matched_acceptor = None
         num_attempts = 0
 
