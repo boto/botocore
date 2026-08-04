@@ -15,7 +15,9 @@ import datetime
 import io
 import operator
 import os
+import platform
 import shutil
+import stat
 import tempfile
 from contextlib import contextmanager
 from sys import getrefcount
@@ -3809,3 +3811,18 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         self.assertEqual(
             len(temp_files), 0, f'Temp files not cleaned: {temp_files}'
         )
+
+    @unittest.skipIf(
+        platform.system() == 'Windows', 'POSIX permissions not applicable'
+    )
+    def test_creates_working_dir_with_restricted_permissions(self):
+        working_dir = os.path.join(self.temp_dir, 'sso', 'cache')
+        cache = JSONFileCache(working_dir=working_dir)
+        original_umask = os.umask(0o000)
+        try:
+            cache['token'] = {'accessToken': 'secret'}
+        finally:
+            os.umask(original_umask)
+
+        mode = stat.S_IMODE(os.stat(working_dir).st_mode)
+        self.assertEqual(mode, 0o700, f'Cache dir is {oct(mode)}')
