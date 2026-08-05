@@ -28,10 +28,6 @@ KNOWN_PAGE_KEYS = {
     'non_aggregate_keys',
 }
 MEMBER_NAME_CHARS = set(string.ascii_letters + string.digits)
-KNOWN_PAGINATORS_WITH_INTEGER_OUTPUTS = (
-    ('dynamodb', 'Query'),
-    ('dynamodb', 'Scan'),
-)
 
 
 def _pagination_configs():
