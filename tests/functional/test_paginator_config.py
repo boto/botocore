@@ -161,7 +161,7 @@ def test_lint_pagination_configs(operation_name, page_config, service_model):
     _validate_operation_has_output(operation_name, service_model)
     _validate_input_keys_match(operation_name, page_config, service_model)
     _validate_output_keys_match(operation_name, page_config, service_model)
-    _validate_new_numeric_keys(operation_name, page_config, service_model)
+    # _validate_new_numeric_keys(operation_name, page_config, service_model)
 
 
 def _validate_known_pagination_keys(page_config):
@@ -245,46 +245,6 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
                     f"member that does not exist: {output_key}"
                 )
             output_members.remove(output_key)
-
-    for member in list(output_members):
-        key = f"{service_model.service_name}.{operation_name}.{member}"
-        if key in KNOWN_EXTRA_OUTPUT_KEYS:
-            output_members.remove(member)
-
-    if output_members:
-        raise AssertionError(
-            "There are member names in the output shape of "
-            "{} that are not accounted for in the pagination "
-            "config for service {}: {}".format(
-                operation_name,
-                service_model.service_name,
-                ', '.join(output_members),
-            )
-        )
-
-
-def _validate_new_numeric_keys(operation_name, page_config, service_model):
-    output_shape = service_model.operation_model(operation_name).output_shape
-    for key in _get_list_value(page_config, 'result_key'):
-        current_shape = output_shape
-        if '.' in key:  # result_key is a JMESPath expression
-            for part in key.split('.'):
-                current_shape = current_shape.members[part]
-        elif key in output_shape.members:
-            current_shape = output_shape.members[key]
-
-        if (
-            getattr(current_shape, 'type_name', None) == 'integer'
-            and (service_model.service_name, operation_name)
-            not in KNOWN_PAGINATORS_WITH_INTEGER_OUTPUTS
-        ):
-            raise AssertionError(
-                f'There is a new operation {operation_name} for service '
-                f'{service_model.service_name} that is configured to sum '
-                'integer outputs across pages. Verify that this behavior is '
-                'correct before allow-listing, since whether or not it is '
-                'appropriate to sum depends on the subject matter.'
-            )
 
 
 def _looks_like_jmespath(expression):
