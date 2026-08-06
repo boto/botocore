@@ -91,6 +91,7 @@ ReadOnlyCredentials = namedtuple(
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
+_DEFAULT_MANDATORY_REFRESH_TIMEOUT_V2 = 1 * 60  # 1 min
 
 
 def create_credential_resolver(session, cache=None, region_name=None):
@@ -446,10 +447,19 @@ class RefreshableCredentials(Credentials):
             access_key, secret_key, token, account_id
         )
         self._normalize()
+        self._explicit_advisory_refresh_timeout = advisory_timeout
+        self._explicit_mandatory_refresh_timeout = mandatory_timeout
         if advisory_timeout is not None:
             self._advisory_refresh_timeout = advisory_timeout
         if mandatory_timeout is not None:
             self._mandatory_refresh_timeout = mandatory_timeout
+        self._effective_advisory_refresh_timeout = None
+        if DEFAULT_NEW_CREDENTIAL_REFRESH and self._expiry_time is not None:
+            # Set the effective advisory refresh timeout for the initial
+            # credential set.
+            self._effective_advisory_refresh_timeout = (
+                self._compute_effective_advisory_refresh_timeout()
+            )
 
     def _normalize(self):
         self._access_key = botocore.compat.ensure_unicode(self._access_key)
@@ -543,8 +553,8 @@ class RefreshableCredentials(Credentials):
 
         A refresh is needed if the expiry time associated
         with the temporary credentials is less than the
-        provided ``refresh_in``.  If ``time_delta`` is not
-        provided, ``self.advisory_refresh_needed`` will be used.
+        provided ``refresh_in``. If ``refresh_in`` is not
+        provided, the default advisory refresh timeout will be used.
 
         For example, if your temporary credentials expire
         in 10 minutes and the provided ``refresh_in`` is
@@ -563,9 +573,9 @@ class RefreshableCredentials(Credentials):
             return False
 
         if refresh_in is None:
-            refresh_in = self._advisory_refresh_timeout
+            refresh_in = self._resolve_advisory_refresh_timeout()
         # The credentials should be refreshed if they're going to expire
-        # in less than 5 minutes.
+        # within the requested refresh window.
         if self._seconds_remaining() >= refresh_in:
             # There's enough time left. Don't refresh.
             return False
@@ -595,6 +605,33 @@ class RefreshableCredentials(Credentials):
             backoff,
         )
 
+    def _resolve_advisory_refresh_timeout(self):
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            return self._advisory_refresh_timeout
+        if self._explicit_advisory_refresh_timeout is not None:
+            return self._explicit_advisory_refresh_timeout
+        return self._effective_advisory_refresh_timeout
+
+    def _resolve_mandatory_refresh_timeout(self):
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            return self._mandatory_refresh_timeout
+        if self._explicit_mandatory_refresh_timeout is not None:
+            return self._explicit_mandatory_refresh_timeout
+        return _DEFAULT_MANDATORY_REFRESH_TIMEOUT_V2
+
+    def _compute_effective_advisory_refresh_timeout(self):
+        # Compute the effective advisory refresh timeout from the credential
+        # lifetime at the time the credential set is created or refreshed:
+        # <= 20 min -> 5 min
+        # > 20 min and < 90 min -> 15 min
+        # >= 90 min -> 60 min
+        lifetime = total_seconds(self._expiry_time - self._time_fetcher())
+        if lifetime <= 20 * 60:
+            return 5 * 60
+        if lifetime < 90 * 60:
+            return 15 * 60
+        return 60 * 60
+
     def _refresh(self):
         if not DEFAULT_NEW_CREDENTIAL_REFRESH:
             self._refresh_legacy()
@@ -603,7 +640,7 @@ class RefreshableCredentials(Credentials):
         # In the common case where we don't need a refresh, we
         # can immediately exit and not require acquiring the
         # refresh lock.
-        if not self.refresh_needed(self._advisory_refresh_timeout):
+        if not self.refresh_needed():
             return
 
         # A previous refresh attempt failed; wait before attempting
@@ -623,20 +660,22 @@ class RefreshableCredentials(Credentials):
         # the else clause.
         if self._refresh_lock.acquire(False):
             try:
-                if not self.refresh_needed(self._advisory_refresh_timeout):
+                if not self.refresh_needed():
                     return
                 is_mandatory_refresh = self.refresh_needed(
-                    self._mandatory_refresh_timeout
+                    self._resolve_mandatory_refresh_timeout()
                 )
                 self._protected_refresh(is_mandatory=is_mandatory_refresh)
                 return
             finally:
                 self._refresh_lock.release()
-        elif self.refresh_needed(self._mandatory_refresh_timeout):
+        elif self.refresh_needed(self._resolve_mandatory_refresh_timeout()):
             # If we're within the mandatory refresh window,
             # we must block until we get refreshed credentials.
             with self._refresh_lock:
-                if not self.refresh_needed(self._mandatory_refresh_timeout):
+                if not self.refresh_needed(
+                    self._resolve_mandatory_refresh_timeout()
+                ):
                     return
                 self._protected_refresh(is_mandatory=True)
 
@@ -674,6 +713,11 @@ class RefreshableCredentials(Credentials):
             "Retrieved credentials will expire at: %s", self._expiry_time
         )
         self._normalize()
+        # Update the effective advisory refresh timeout for the refreshed
+        # credential set.
+        self._effective_advisory_refresh_timeout = (
+            self._compute_effective_advisory_refresh_timeout()
+        )
 
     def _validate_data(self, data):
         expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
@@ -898,6 +942,9 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._refresh_blocked_until = None
         self.method = method
         self._frozen_credentials = None
+        self._explicit_advisory_refresh_timeout = None
+        self._explicit_mandatory_refresh_timeout = None
+        self._effective_advisory_refresh_timeout = None
 
     def refresh_needed(self, refresh_in=None):
         if self._frozen_credentials is None:
