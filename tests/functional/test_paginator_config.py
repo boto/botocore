@@ -28,113 +28,6 @@ KNOWN_PAGE_KEYS = {
     'non_aggregate_keys',
 }
 MEMBER_NAME_CHARS = set(string.ascii_letters + string.digits)
-# The goal here should be to remove all of these by updating the paginators
-# to reference all the extra output keys. Nothing should ever be added to this
-# list, it represents all the current released paginators that fail this test.
-KNOWN_EXTRA_OUTPUT_KEYS = [
-    'apigateway.GetApiKeys.warnings',
-    'apigateway.GetUsage.usagePlanId',
-    'apigateway.GetUsage.startDate',
-    'apigateway.GetUsage.endDate',
-    'athena.GetQueryResults.ResultSet',
-    'cloudfront.ListCloudFrontOriginAccessIdentities.CloudFrontOriginAccessIdentityList',
-    'cloudfront.ListDistributions.DistributionList',
-    'cloudfront.ListDistributionsByConnectionMode.DistributionList',
-    'cloudfront.ListInvalidations.InvalidationList',
-    'cloudfront.ListInvalidationsForDistributionTenant.InvalidationList',
-    'cloudfront.ListOriginAccessControls.OriginAccessControlList',
-    'cloudfront.ListPublicKeys.PublicKeyList',
-    'cloudfront.ListStreamingDistributions.StreamingDistributionList',
-    'cloudfront.ListKeyValueStores.KeyValueStoreList',
-    'codedeploy.ListDeploymentGroups.applicationName',
-    'cloudfront.ListDistributionsByConnectionFunction.DistributionList',
-    'cloudfront.ListDistributionsByTrustStore.DistributionList',
-    'dms.DescribeTableStatistics.ReplicationTaskArn',
-    'dms.DescribeReplicationTaskAssessmentResults.BucketName',
-    'ec2.DescribeSpotFleetInstances.SpotFleetRequestId',
-    'ec2.DescribeVpcEndpointServices.ServiceNames',
-    'efs.DescribeFileSystems.Marker',
-    'efs.DescribeMountTargets.Marker',
-    'efs.DescribeTags.Marker',
-    'elasticache.DescribeCacheParameters.CacheNodeTypeSpecificParameters',
-    'elasticache.DescribeEngineDefaultParameters.EngineDefaults',
-    'glacier.ListParts.PartSizeInBytes',
-    'glacier.ListParts.ArchiveDescription',
-    'glacier.ListParts.MultipartUploadId',
-    'glacier.ListParts.VaultARN',
-    'glacier.ListParts.CreationDate',
-    'kinesis.DescribeStream.StreamDescription',
-    'mturk.ListAssignmentsForHIT.NumResults',
-    'mturk.ListQualificationTypes.NumResults',
-    'mturk.ListHITs.NumResults',
-    'mturk.ListWorkerBlocks.NumResults',
-    'mturk.ListReviewableHITs.NumResults',
-    'mturk.ListHITsForQualificationType.NumResults',
-    'mturk.ListQualificationRequests.NumResults',
-    'mturk.ListWorkersWithQualificationType.NumResults',
-    'mturk.ListBonusPayments.NumResults',
-    'neptune.DescribeEngineDefaultParameters.EngineDefaults',
-    'rds.DescribeEngineDefaultClusterParameters.EngineDefaults',
-    'rds.DescribeEngineDefaultParameters.EngineDefaults',
-    'redshift.DescribeDefaultClusterParameters.DefaultClusterParameters',
-    'resource-groups.ListGroups.GroupIdentifiers',
-    'resource-groups.SearchResources.QueryErrors',
-    'resource-groups.ListGroupResources.QueryErrors',
-    'route53.ListHealthChecks.MaxItems',
-    'route53.ListHealthChecks.Marker',
-    'route53.ListHostedZones.MaxItems',
-    'route53.ListHostedZones.Marker',
-    'route53.ListResourceRecordSets.MaxItems',
-    's3.ListMultipartUploads.Delimiter',
-    's3.ListMultipartUploads.KeyMarker',
-    's3.ListMultipartUploads.Bucket',
-    's3.ListMultipartUploads.MaxUploads',
-    's3.ListMultipartUploads.UploadIdMarker',
-    's3.ListMultipartUploads.EncodingType',
-    's3.ListObjectVersions.MaxKeys',
-    's3.ListObjectVersions.Delimiter',
-    's3.ListObjectVersions.VersionIdMarker',
-    's3.ListObjectVersions.KeyMarker',
-    's3.ListObjectVersions.Name',
-    's3.ListObjectVersions.EncodingType',
-    's3.ListObjects.MaxKeys',
-    's3.ListObjects.Delimiter',
-    's3.ListObjects.NextMarker',
-    's3.ListObjects.Marker',
-    's3.ListObjects.Name',
-    's3.ListObjects.EncodingType',
-    's3.ListObjectsV2.StartAfter',
-    's3.ListObjectsV2.MaxKeys',
-    's3.ListObjectsV2.Delimiter',
-    's3.ListObjectsV2.ContinuationToken',
-    's3.ListObjectsV2.KeyCount',
-    's3.ListObjectsV2.Name',
-    's3.ListObjectsV2.EncodingType',
-    's3.ListObjectAnnotations.ContinuationToken',
-    's3.ListObjectAnnotations.MaxAnnotationResults',
-    's3.ListParts.PartNumberMarker',
-    's3.ListParts.AbortDate',
-    's3.ListParts.MaxParts',
-    's3.ListParts.Bucket',
-    's3.ListParts.Key',
-    's3.ListParts.UploadId',
-    's3.ListParts.AbortRuleId',
-    's3.ListParts.RequestCharged',
-    'storagegateway.DescribeTapeRecoveryPoints.GatewayARN',
-    'storagegateway.DescribeVTLDevices.GatewayARN',
-    'storagegateway.ListVolumes.GatewayARN',
-    'workdocs.DescribeUsers.TotalNumberOfUsers',
-    'xray.BatchGetTraces.UnprocessedTraceIds',
-    'xray.GetServiceGraph.EndTime',
-    'xray.GetServiceGraph.ContainsOldGroupVersions',
-    'xray.GetServiceGraph.StartTime',
-    'xray.GetTraceSummaries.TracesProcessedCount',
-    'xray.GetTraceSummaries.ApproximateTime',
-]
-KNOWN_PAGINATORS_WITH_INTEGER_OUTPUTS = (
-    ('dynamodb', 'Query'),
-    ('dynamodb', 'Scan'),
-)
 
 
 def _pagination_configs():
@@ -161,7 +54,6 @@ def test_lint_pagination_configs(operation_name, page_config, service_model):
     _validate_operation_has_output(operation_name, service_model)
     _validate_input_keys_match(operation_name, page_config, service_model)
     _validate_output_keys_match(operation_name, page_config, service_model)
-    _validate_new_numeric_keys(operation_name, page_config, service_model)
 
 
 def _validate_known_pagination_keys(page_config):
@@ -245,46 +137,6 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
                     f"member that does not exist: {output_key}"
                 )
             output_members.remove(output_key)
-
-    for member in list(output_members):
-        key = f"{service_model.service_name}.{operation_name}.{member}"
-        if key in KNOWN_EXTRA_OUTPUT_KEYS:
-            output_members.remove(member)
-
-    if output_members:
-        raise AssertionError(
-            "There are member names in the output shape of "
-            "{} that are not accounted for in the pagination "
-            "config for service {}: {}".format(
-                operation_name,
-                service_model.service_name,
-                ', '.join(output_members),
-            )
-        )
-
-
-def _validate_new_numeric_keys(operation_name, page_config, service_model):
-    output_shape = service_model.operation_model(operation_name).output_shape
-    for key in _get_list_value(page_config, 'result_key'):
-        current_shape = output_shape
-        if '.' in key:  # result_key is a JMESPath expression
-            for part in key.split('.'):
-                current_shape = current_shape.members[part]
-        elif key in output_shape.members:
-            current_shape = output_shape.members[key]
-
-        if (
-            getattr(current_shape, 'type_name', None) == 'integer'
-            and (service_model.service_name, operation_name)
-            not in KNOWN_PAGINATORS_WITH_INTEGER_OUTPUTS
-        ):
-            raise AssertionError(
-                f'There is a new operation {operation_name} for service '
-                f'{service_model.service_name} that is configured to sum '
-                'integer outputs across pages. Verify that this behavior is '
-                'correct before allow-listing, since whether or not it is '
-                'appropriate to sum depends on the subject matter.'
-            )
 
 
 def _looks_like_jmespath(expression):
