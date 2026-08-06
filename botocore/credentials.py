@@ -17,6 +17,7 @@ import getpass
 import json
 import logging
 import os
+import random
 import subprocess
 import threading
 import time
@@ -69,6 +70,17 @@ from botocore.utils import (
     parse_key_val_file,
     resolve_imds_endpoint_mode,
 )
+
+try:
+    # This is not a public interface and is subject to abrupt breaking changes.
+    # Currently, it's only available to internal users for testing and validation
+    # of the new credential refresh behavior. Any usage is not advised or
+    # supported in external code bases.
+    from botocore.customizations.credentials import (
+        DEFAULT_NEW_CREDENTIAL_REFRESH,
+    )
+except ImportError:
+    DEFAULT_NEW_CREDENTIAL_REFRESH = False
 
 logger = logging.getLogger(__name__)
 ReadOnlyCredentials = namedtuple(
@@ -428,6 +440,7 @@ class RefreshableCredentials(Credentials):
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
+        self._refresh_blocked_until = None
         self.method = method
         self._frozen_credentials = ReadOnlyCredentials(
             access_key, secret_key, token, account_id
@@ -563,11 +576,45 @@ class RefreshableCredentials(Credentials):
         # Checks if the current credentials are expired.
         return self.refresh_needed(refresh_in=0)
 
+    def _in_refresh_backoff(self):
+        if self._refresh_blocked_until is None:
+            return False
+        return self._time_fetcher() < self._refresh_blocked_until
+
+    def _enter_refresh_backoff(self, error):
+        # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
+        # overwhelming the credential source during an outage.
+        backoff = random.uniform(300, 600)
+        now = self._time_fetcher()
+        self._refresh_blocked_until = now + datetime.timedelta(seconds=backoff)
+        logger.warning(
+            "Credential refresh failed: %s. The SDK will continue using "
+            "cached credentials. A refresh of these credentials will be "
+            "attempted again after %.0f seconds.",
+            error,
+            backoff,
+        )
+
     def _refresh(self):
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            self._refresh_legacy()
+            return
+
         # In the common case where we don't need a refresh, we
         # can immediately exit and not require acquiring the
         # refresh lock.
         if not self.refresh_needed(self._advisory_refresh_timeout):
+            return
+
+        # A previous refresh attempt failed; wait before attempting
+        # another refresh.
+        if self._in_refresh_backoff():
+            logger.debug(
+                "Credential refresh is in backoff following a failed attempt. "
+                "Using cached credentials. The next refresh attempt is allowed "
+                "at %s.",
+                self._refresh_blocked_until,
+            )
             return
 
         # acquire() doesn't accept kwargs, but False is indicating
@@ -594,6 +641,93 @@ class RefreshableCredentials(Credentials):
                 self._protected_refresh(is_mandatory=True)
 
     def _protected_refresh(self, is_mandatory):
+        # precondition: this method should only be called if you've acquired
+        # the self._refresh_lock.
+        if self._in_refresh_backoff():
+            # Another caller entered refresh backoff while we were waiting
+            # for the lock. Skip the refresh attempt.
+            return
+        try:
+            metadata = self._refresh_using()
+        except Exception as e:
+            self._handle_refresh_exception(e)
+            return
+        error = self._validate_data(metadata)
+        if error is not None:
+            self._handle_invalid_refresh_response(error)
+            return
+        self._set_from_validated_data(metadata)
+        self._refresh_blocked_until = None
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
+        )
+
+    def _set_from_validated_data(self, data):
+        # Only called once the data has passed ``_validate_data``, so we never
+        # cache missing or expired credentials.
+        self.access_key = data['access_key']
+        self.secret_key = data['secret_key']
+        self.token = data['token']
+        self._expiry_time = parse(data['expiry_time'])
+        self.account_id = data.get('account_id')
+        logger.debug(
+            "Retrieved credentials will expire at: %s", self._expiry_time
+        )
+        self._normalize()
+
+    def _validate_data(self, data):
+        expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
+        if not data:
+            missing_keys = expected_keys
+        else:
+            missing_keys = [k for k in expected_keys if k not in data]
+
+        if missing_keys:
+            return f"Response did not contain: {', '.join(missing_keys)}"
+
+        if parse(data['expiry_time']) <= self._time_fetcher():
+            return "Credential source returned expired credentials"
+        return None
+
+    def _handle_refresh_exception(self, error):
+        self._enter_refresh_backoff(error)
+
+    def _handle_invalid_refresh_response(self, error):
+        self._enter_refresh_backoff(error)
+
+    def _refresh_legacy(self):
+        # In the common case where we don't need a refresh, we
+        # can immediately exit and not require acquiring the
+        # refresh lock.
+        if not self.refresh_needed(self._advisory_refresh_timeout):
+            return
+
+        # acquire() doesn't accept kwargs, but False is indicating
+        # that we should not block if we can't acquire the lock.
+        # If we aren't able to acquire the lock, we'll trigger
+        # the else clause.
+        if self._refresh_lock.acquire(False):
+            try:
+                if not self.refresh_needed(self._advisory_refresh_timeout):
+                    return
+                is_mandatory_refresh = self.refresh_needed(
+                    self._mandatory_refresh_timeout
+                )
+                self._protected_refresh_legacy(
+                    is_mandatory=is_mandatory_refresh
+                )
+                return
+            finally:
+                self._refresh_lock.release()
+        elif self.refresh_needed(self._mandatory_refresh_timeout):
+            # If we're within the mandatory refresh window,
+            # we must block until we get refreshed credentials.
+            with self._refresh_lock:
+                if not self.refresh_needed(self._mandatory_refresh_timeout):
+                    return
+                self._protected_refresh_legacy(is_mandatory=True)
+
+    def _protected_refresh_legacy(self, is_mandatory):
         # precondition: this method should only be called if you've acquired
         # the self._refresh_lock.
         try:
@@ -698,6 +832,54 @@ class RefreshableCredentials(Credentials):
         return self._frozen_credentials
 
 
+class _StrictRefreshableCredentials(RefreshableCredentials):
+    """Refreshable credentials that surface refresh failures to the caller
+    instead of falling back to the cached credentials.
+    """
+
+    def _in_refresh_backoff(self):
+        return False
+
+    def _protected_refresh(self, is_mandatory):
+        # precondition: this method should only be called if you've acquired
+        # the self._refresh_lock.
+        try:
+            metadata = self._refresh_using()
+        except Exception:
+            period_name = 'mandatory' if is_mandatory else 'advisory'
+            logger.warning(
+                "Refreshing temporary credentials failed "
+                "during %s refresh period.",
+                period_name,
+                exc_info=True,
+            )
+            if is_mandatory:
+                # If this is a mandatory refresh, then
+                # all errors that occur when we attempt to refresh
+                # credentials are propagated back to the user.
+                raise
+            # Otherwise we'll just return.
+            # The end result will be that we'll use the current
+            # set of temporary credentials we have.
+            return
+        self._set_from_data(metadata)
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
+        )
+        if self._is_expired():
+            # We successfully refreshed credentials but for whatever
+            # reason, our refreshing function returned credentials
+            # that are still expired.  In this scenario, the only
+            # thing we can do is let the user know and raise
+            # an exception.
+            msg = (
+                "Credentials were refreshed, but the "
+                "refreshed credentials are still expired."
+            )
+            logger.warning(msg)
+            raise RuntimeError(msg)
+
+
 class DeferredRefreshableCredentials(RefreshableCredentials):
     """Refreshable credentials that don't require initial credentials.
 
@@ -713,6 +895,7 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
+        self._refresh_blocked_until = None
         self.method = method
         self._frozen_credentials = None
 
@@ -720,6 +903,20 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         if self._frozen_credentials is None:
             return True
         return super().refresh_needed(refresh_in)
+
+    # Before the first successful deferred fetch, there are no cached
+    # credentials to fall back to, so initial failures must be surfaced.
+    def _handle_refresh_exception(self, error):
+        if self._frozen_credentials is None:
+            raise error
+        super()._handle_refresh_exception(error)
+
+    def _handle_invalid_refresh_response(self, error):
+        if self._frozen_credentials is None:
+            raise CredentialRetrievalError(
+                provider=self.method, error_msg=str(error)
+            )
+        super()._handle_invalid_refresh_response(error)
 
 
 class CachedCredentialFetcher:
@@ -1084,7 +1281,15 @@ class ProcessProvider(CredentialProvider):
         creds_dict = self._retrieve_credentials_using(credential_process)
         register_feature_id('CREDENTIALS_PROCESS')
         if creds_dict.get('expiry_time') is not None:
-            return RefreshableCredentials.create_from_metadata(
+            if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+                return RefreshableCredentials.create_from_metadata(
+                    creds_dict,
+                    lambda: self._retrieve_credentials_using(
+                        credential_process
+                    ),
+                    self.METHOD,
+                )
+            return _StrictRefreshableCredentials.create_from_metadata(
                 creds_dict,
                 lambda: self._retrieve_credentials_using(credential_process),
                 self.METHOD,
@@ -1257,7 +1462,17 @@ class EnvProvider(CredentialProvider):
             expiry_time = credentials['expiry_time']
             if expiry_time is not None:
                 expiry_time = parse(expiry_time)
-                return RefreshableCredentials(
+                if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+                    return RefreshableCredentials(
+                        credentials['access_key'],
+                        credentials['secret_key'],
+                        credentials['token'],
+                        expiry_time,
+                        refresh_using=fetcher,
+                        method=self.METHOD,
+                        account_id=credentials['account_id'],
+                    )
+                return _StrictRefreshableCredentials(
                     credentials['access_key'],
                     credentials['secret_key'],
                     credentials['token'],

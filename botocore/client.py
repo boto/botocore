@@ -27,7 +27,11 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.compress import maybe_compress_request
 from botocore.config import Config
 from botocore.context import with_current_context
-from botocore.credentials import RefreshableCredentials
+from botocore.credentials import (
+    DEFAULT_NEW_CREDENTIAL_REFRESH,
+    RefreshableCredentials,
+    _StrictRefreshableCredentials,
+)
 from botocore.discovery import (
     EndpointDiscoveryHandler,
     EndpointDiscoveryManager,
@@ -389,7 +393,14 @@ class ClientCreator:
     ):
         if client.meta.service_model.service_name != 's3':
             return
-        S3ExpressIdentityResolver(client, RefreshableCredentials).register()
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            S3ExpressIdentityResolver(
+                client, RefreshableCredentials
+            ).register()
+            return
+        S3ExpressIdentityResolver(
+            client, _StrictRefreshableCredentials
+        ).register()
 
     def _register_s3_events(
         self,
