@@ -65,8 +65,10 @@ def register_retry_handler(client, max_attempts=None):
         # The ``max`` token of the ``amz-sdk-request`` header is otherwise
         # only populated once a retry is attempted, so it's missing from
         # the initial attempt.  Seeding it here ensures that it's present
-        # on every attempt.  This is registered first so that it runs before
-        # ``add_retry_headers`` builds the header.
+        # on every attempt. This handler runs before ``add_retry_headers``
+        # because the emitter invokes more specific events first, and
+        # ``add_retry_headers`` is registered on the generic
+        # ``request-created``.
         client.meta.events.register(
             f'request-created.{service_event_name}',
             MaxAttemptsSeeder(max_attempts).seed_max_attempts,
