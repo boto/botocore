@@ -369,8 +369,11 @@ class AWSRequestPreparer:
         body = self._prepare_body(original)
         headers = self._prepare_headers(original, body)
         stream_output = original.stream_output
+        context = original.context
 
-        return AWSPreparedRequest(method, url, headers, body, stream_output)
+        return AWSPreparedRequest(
+            method, url, headers, body, stream_output, context
+        )
 
     def _prepare_url(self, original):
         url = original.url
@@ -499,14 +502,18 @@ class AWSPreparedRequest:
     :ivar headers: The HTTP headers to send.
     :ivar body: The HTTP body.
     :ivar stream_output: If the response for this request should be streamed.
+    :ivar context: The request context from the originating ``AWSRequest``.
     """
 
-    def __init__(self, method, url, headers, body, stream_output):
+    def __init__(
+        self, method, url, headers, body, stream_output, context=None
+    ):
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
         self.stream_output = stream_output
+        self.context = context
 
     def __repr__(self):
         fmt = (
