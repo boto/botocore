@@ -2,6 +2,7 @@ import socket
 from concurrent.futures import CancelledError
 
 import pytest
+from urllib3 import Timeout
 from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
 
 from botocore.awsrequest import (
@@ -379,6 +380,42 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         self.assert_request_sent()
         self.response.stream.assert_called_once_with()
+
+    def test_no_timeout_kwarg_without_context_override(self):
+        session = URLLib3Session(timeout=(10, 20))
+        session.send(self.request.prepare())
+        # assert_request_sent asserts the exact set of kwargs, so this
+        # also verifies that no timeout kwarg was passed to urlopen.
+        self.assert_request_sent()
+        call_kwargs = self.connection.urlopen.call_args[1]
+        self.assertNotIn('timeout', call_kwargs)
+
+    def test_context_read_timeout_overrides_read_timeout(self):
+        session = URLLib3Session(timeout=(10, 20))
+        self.request.context['read_timeout'] = 300
+        session.send(self.request.prepare())
+        timeout = self.connection.urlopen.call_args[1]['timeout']
+        self.assertIsInstance(timeout, Timeout)
+        self.assertEqual(timeout.connect_timeout, 10)
+        self.assertEqual(timeout.read_timeout, 300)
+
+    def test_context_read_timeout_with_scalar_session_timeout(self):
+        session = URLLib3Session(timeout=10)
+        self.request.context['read_timeout'] = 300
+        session.send(self.request.prepare())
+        timeout = self.connection.urlopen.call_args[1]['timeout']
+        self.assertIsInstance(timeout, Timeout)
+        self.assertEqual(timeout.connect_timeout, 10)
+        self.assertEqual(timeout.read_timeout, 300)
+
+    def test_send_no_context_attribute(self):
+        # Request objects that don't have a context attribute should
+        # still be sendable and use the session's default timeout.
+        prepared_request = self.request.prepare()
+        del prepared_request.context
+        session = URLLib3Session()
+        session.send(prepared_request)
+        self.assert_request_sent()
 
     def test_basic_streaming_request(self):
         session = URLLib3Session()
