@@ -452,6 +452,31 @@ class URLLib3Session:
         transfer_encoding = ensure_bytes(transfer_encoding)
         return transfer_encoding.lower() == b'chunked'
 
+    def _get_request_timeout(self, request):
+        """Resolve a per-request timeout override from the request context.
+
+        Returns a ``urllib3.Timeout`` when the request context contains a
+        ``read_timeout`` override, otherwise ``None`` to defer to the
+        connection pool's default timeout which is configured through client
+        config.
+
+        """
+        # We could use `request.context` directly, but we're being
+        # intentionally cautious here.  `context` is the first addition to
+        # AWSPreparedRequest in many years, and it's possible we might
+        # see an AWSPreparedRequest that doesn't have the `context` attribute.
+        context = getattr(request, 'context', None)
+        if context is None:
+            return None
+        read_timeout = context.get('read_timeout')
+        if read_timeout is None:
+            return None
+        if isinstance(self._timeout, Timeout):
+            connect_timeout = self._timeout.connect_timeout
+        else:
+            connect_timeout = self._timeout
+        return Timeout(connect=connect_timeout, read=read_timeout)
+
     def close(self):
         self._manager.clear()
         for manager in self._proxy_managers.values():
@@ -474,6 +499,13 @@ class URLLib3Session:
                 conn.proxy_headers['host'] = host
 
             request_target = self._get_request_target(request.url, proxy_url)
+            extra_kwargs = {}
+            request_timeout = self._get_request_timeout(request)
+            if request_timeout is not None:
+                # Only include the timeout kwarg when overridden; passing
+                # timeout=None to urlopen would disable timeouts entirely
+                # rather than defer to the pool's default timeout.
+                extra_kwargs['timeout'] = request_timeout
             urllib_response = conn.urlopen(
                 method=request.method,
                 url=request_target,
@@ -484,6 +516,7 @@ class URLLib3Session:
                 preload_content=False,
                 decode_content=False,
                 chunked=self._chunked(request.headers),
+                **extra_kwargs,
             )
 
             http_response = botocore.awsrequest.AWSResponse(

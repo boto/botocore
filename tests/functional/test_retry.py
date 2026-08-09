@@ -122,7 +122,12 @@ class TestRetryHeader(BaseRetryTest):
         return test_cases
 
     def _test_amz_sdk_request_header_with_test_case(
-        self, responses, utcnow_side_effects, expected_headers, client_config
+        self,
+        responses,
+        utcnow_side_effects,
+        expected_headers,
+        client_config,
+        read_timeout_override=None,
     ):
         datetime_patcher = mock.patch.object(
             botocore.endpoint.datetime,
@@ -135,6 +140,17 @@ class TestRetryHeader(BaseRetryTest):
         client = self.session.create_client(
             'dynamodb', self.region, config=client_config
         )
+        if read_timeout_override is not None:
+            # Simulate a handler setting a per-invocation read timeout in the
+            # request context. This is the same context dict the endpoint uses
+            # to compute the retry TTL, so the override should take precedence
+            # over the client config's read_timeout.
+            def set_read_timeout(context, **kwargs):
+                context['read_timeout'] = read_timeout_override
+
+            client.meta.events.register(
+                'before-parameter-build.dynamodb.ListTables', set_read_timeout
+            )
         with ClientHTTPStubber(client) as http_stubber:
             for response in responses:
                 http_stubber.add_response(
@@ -157,6 +173,42 @@ class TestRetryHeader(BaseRetryTest):
                 self._test_amz_sdk_request_header_with_test_case(
                     *test_case, client_config=client_config
                 )
+
+    def test_amz_sdk_request_header_uses_read_timeout_override(self):
+        # When a per-invocation read timeout is set in the request context,
+        # the retry TTL is computed from that override rather than the client
+        # config's read_timeout. Here the config read_timeout is 10s but the
+        # override is 300s, so the ttl values are 5 minutes past the mocked
+        # local timestamp instead of 10 seconds past it.
+        responses = [
+            (500, {'Date': 'Sat, 01 Jun 2019 00:00:00 GMT'}),
+            (500, {'Date': 'Sat, 01 Jun 2019 00:00:01 GMT'}),
+            (200, {'Date': 'Sat, 01 Jun 2019 00:00:02 GMT'}),
+        ]
+        utcnow_side_effects = [
+            datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 1, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 1, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 2, 0),
+            datetime.datetime(2019, 6, 1, 0, 0, 0, 0),
+        ]
+        expected_headers = [
+            b'attempt=1',
+            b'ttl=20190601T000501Z; attempt=2; max=3',
+            b'ttl=20190601T000502Z; attempt=3; max=3',
+        ]
+        for retry_mode in RETRY_MODES:
+            retries_config = {'mode': retry_mode, 'total_max_attempts': 3}
+            client_config = Config(read_timeout=10, retries=retries_config)
+            self._test_amz_sdk_request_header_with_test_case(
+                responses,
+                utcnow_side_effects,
+                expected_headers,
+                client_config=client_config,
+                read_timeout_override=300,
+            )
 
     def test_amz_sdk_invocation_id_header_persists(self):
         for retry_mode in RETRY_MODES:
