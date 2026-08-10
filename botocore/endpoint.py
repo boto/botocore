@@ -186,7 +186,9 @@ class Endpoint:
             retries_context['invocation-id'] = str(uuid.uuid4())
 
         if success_response:
-            read_timeout = context['client_config'].read_timeout
+            read_timeout = context.get('read_timeout')
+            if read_timeout is None:
+                read_timeout = context['client_config'].read_timeout
             self._set_ttl(retries_context, read_timeout, success_response)
 
     def _send_request(self, request_dict, operation_model):

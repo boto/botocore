@@ -208,6 +208,12 @@ class TestAWSRequest(unittest.TestCase):
         prepared_request = self.request.prepare()
         self.assertEqual(prepared_request.headers.get('Content-Length'), None)
 
+    def test_prepare_carries_context(self):
+        self.request.context['read_timeout'] = 120
+        prepared_request = self.request.prepare()
+        self.assertIs(prepared_request.context, self.request.context)
+        self.assertEqual(prepared_request.context['read_timeout'], 120)
+
     def test_can_reset_stream_handles_binary(self):
         contents = b'notastream'
         self.prepared_request.body = contents
