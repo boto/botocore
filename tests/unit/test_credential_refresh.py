@@ -48,7 +48,6 @@ from botocore.exceptions import (
 )
 from tests import (
     BaseEnvVar,
-    FreezeTime,
     IntegerRefresher,
     RawResponse,
     mock,
@@ -281,18 +280,16 @@ class TestInstanceMetadataProviderFlagOn(
 ):
     # GA: keep all tests from test_credentials.TestInstanceMetadataProvider and
     # add the shared static-stability coverage below.
-    def test_imds_refresh_failure_returns_cached_credentials(self):
+    def test_refresh_failure_returns_cached_credentials(self):
         # IMDS should pick up shared static stability from
         # RefreshableCredentials on the new path.
-        timeobj = datetime.now(tzlocal())
-        timestamp = (timeobj + timedelta(minutes=4)).isoformat()
         fetcher = mock.Mock()
         fetcher.retrieve_iam_role_credentials.side_effect = [
             {
                 'access_key': 'a',
                 'secret_key': 'b',
                 'token': 'c',
-                'expiry_time': timestamp,
+                'expiry_time': '2000-01-01T00:00:00Z',
                 'role_name': 'myrole',
             },
             Exception("imds down"),
@@ -723,7 +720,7 @@ class TestInstanceMetadataFetcherFlagOn(unittest.TestCase):
 
     def _get_datetime(self, dt=None, offset=None, offset_func=operator.add):
         if dt is None:
-            dt = datetime.now(timezone.utc).replace(tzinfo=None)
+            dt = DATE.replace(tzinfo=None)
         if offset is not None:
             dt = offset_func(dt, offset)
 
@@ -751,8 +748,12 @@ class TestInstanceMetadataFetcherFlagOn(unittest.TestCase):
             'role_name': self._role_name,
         }
 
-    @FreezeTime(module=utils.datetime, date=DATE)
-    def test_returned_expiry_is_not_extended(self):
+    def mock_randint(self, int_val=600):
+        randint_mock = mock.Mock()
+        randint_mock.return_value = int_val
+        return randint_mock
+
+    def test_near_expiry_credentials_are_not_extended(self):
         current_time = self._get_datetime()
         expiration_time = self._get_datetime(
             dt=current_time, offset=timedelta(seconds=14 * 60)
@@ -769,9 +770,34 @@ class TestInstanceMetadataFetcherFlagOn(unittest.TestCase):
             status_code=200, body=json.dumps(creds).encode('utf-8')
         )
 
-        fetcher = utils.InstanceMetadataFetcher()
-        result = fetcher.retrieve_iam_role_credentials()
-        assert result == expected_data
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = utils.InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
+
+    def test_already_expired_credentials_are_not_extended(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time,
+            offset=timedelta(seconds=14 * 60),
+            offset_func=operator.sub,
+        )
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(
+            status_code=200, body=json.dumps(creds).encode('utf-8')
+        )
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = utils.InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
 
 
 # ---------------------------------------------------------------------------
@@ -787,7 +813,7 @@ def refresher():
 
 @pytest.fixture
 def mock_time():
-    return mock.Mock(return_value=datetime.now(tzlocal()))
+    return mock.Mock(return_value=DATE)
 
 
 @pytest.fixture
@@ -798,7 +824,7 @@ def creds(refresher, mock_time):
         'ORIGINAL-ACCESS',
         'ORIGINAL-SECRET',
         'ORIGINAL-TOKEN',
-        datetime.now(tzlocal()) - timedelta(minutes=30),
+        mock_time() - timedelta(minutes=30),
         refresher,
         'iam-role',
         time_fetcher=mock_time,
@@ -1051,7 +1077,7 @@ def test_refresh_is_retried_after_backoff(creds, refresher, mock_time):
 
     # Advance time past the maximum backoff window (10 minutes) so the next
     # access is allowed to retry.
-    mock_time.return_value = datetime.now(tzlocal()) + timedelta(minutes=11)
+    mock_time.return_value = DATE + timedelta(minutes=11)
     frozen = creds.get_frozen_credentials()
     assert refresher.call_count == 2
     assert frozen.access_key == 'NEW-ACCESS'
