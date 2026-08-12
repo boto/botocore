@@ -215,6 +215,12 @@ class CredentialRetrievalError(BotoCoreError):
     fmt = 'Error when retrieving credentials from {provider}: {error_msg}'
 
 
+class RefreshNonRecoverableError:
+    """Marker for refresh failures that should bypass backoff."""
+
+    pass
+
+
 class UnknownSignatureVersionError(BotoCoreError):
     """
     Requested Signature Version is not known.
@@ -764,11 +770,11 @@ class SSOError(BotoCoreError):
     )
 
 
-class SSOTokenLoadError(SSOError):
+class SSOTokenLoadError(SSOError, RefreshNonRecoverableError):
     fmt = "Error loading SSO Token: {error_msg}"
 
 
-class UnauthorizedSSOTokenError(SSOError):
+class UnauthorizedSSOTokenError(SSOError, RefreshNonRecoverableError):
     fmt = (
         "The SSO session associated with this profile has expired or is "
         "otherwise invalid. To refresh this SSO session run aws sso login "
@@ -783,11 +789,11 @@ class LoginError(BotoCoreError):
     )
 
 
-class LoginRefreshRequired(LoginError):
+class LoginRefreshRequired(LoginError, RefreshNonRecoverableError):
     fmt = "Your session has expired or credentials have changed. Please reauthenticate using 'aws login'."
 
 
-class LoginInsufficientPermissions(LoginError):
+class LoginInsufficientPermissions(LoginError, RefreshNonRecoverableError):
     fmt = (
         "Unable to create or refresh login credentials due to insufficient "
         "permissions. You may be missing permission for the 'signin:CreateOAuth2Token' action."
@@ -796,6 +802,12 @@ class LoginInsufficientPermissions(LoginError):
 
 class LoginTokenLoadError(LoginError):
     fmt = "Error loading login session token: {error_msg}"
+
+
+class LoginInvalidCachedTokenError(
+    LoginTokenLoadError, RefreshNonRecoverableError
+):
+    pass
 
 
 class LoginAuthorizationCodeError(LoginError):
