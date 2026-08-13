@@ -1043,7 +1043,23 @@ def test_deferred_first_fetch_uses_recomputed_advisory_window(mock_time):
 # ---------------------------------------------------------------------------
 
 
-def test_refresh_failure_returns_cached(creds, refresher):
+def test_in_refresh_backoff_does_not_reread_blocked_until(mock_time):
+    creds = _create_refreshable_credentials(
+        mock_time, expires_in=timedelta(hours=1)
+    )
+    creds._refresh_blocked_until = DATE + timedelta(minutes=5)
+
+    def clear_backoff_during_read():
+        creds._refresh_blocked_until = None
+        return DATE
+
+    creds._time_fetcher = clear_backoff_during_read
+
+    assert creds._in_refresh_backoff() is True
+    assert creds._refresh_blocked_until is None
+
+
+def test_failed_refresh_returns_cached_credentials(creds, refresher):
     # When the source fails, we keep serving the cached credentials instead
     # of raising.
     refresher.side_effect = Exception("source down")
@@ -1064,7 +1080,7 @@ def test_failed_refresh_is_not_retried_immediately(creds, refresher):
     assert frozen.access_key == 'ORIGINAL-ACCESS'
 
 
-def test_refresh_is_retried_after_backoff(creds, refresher, mock_time):
+def test_failed_refresh_is_retried_after_backoff(creds, refresher, mock_time):
     # The first refresh fails and the source is not contacted again right
     # away. Once enough time has passed, the next access retries the source
     # and picks up the new credentials.
@@ -1083,7 +1099,7 @@ def test_refresh_is_retried_after_backoff(creds, refresher, mock_time):
     assert frozen.access_key == 'NEW-ACCESS'
 
 
-def test_refresh_failure_without_cached_creds_raises(mock_time):
+def test_failed_refresh_without_cached_credentials_raises(mock_time):
     # If we've never successfully fetched credentials, a refresh failure has
     # nothing to fall back to and must be surfaced.
     refresher = mock.Mock(side_effect=Exception("source down"))
@@ -1096,7 +1112,9 @@ def test_refresh_failure_without_cached_creds_raises(mock_time):
         creds.get_frozen_credentials()
 
 
-def test_invalid_refresh_data_without_cached_creds_raises(mock_time):
+def test_incomplete_refresh_response_without_cached_credentials_raises(
+    mock_time,
+):
     refresher = mock.Mock(return_value={})
     creds = credentials.DeferredRefreshableCredentials(
         refresher,
@@ -1107,3 +1125,40 @@ def test_invalid_refresh_data_without_cached_creds_raises(mock_time):
         CredentialRetrievalError, match='Response did not contain'
     ):
         creds.get_frozen_credentials()
+
+
+def test_malformed_expiry_without_cached_credentials_raises(mock_time):
+    refresher = mock.Mock(
+        return_value={
+            'access_key': 'NEW-ACCESS',
+            'secret_key': 'NEW-SECRET',
+            'token': 'NEW-TOKEN',
+            'expiry_time': 'not-a-datetime',
+        }
+    )
+    creds = credentials.DeferredRefreshableCredentials(
+        refresher,
+        'iam-role',
+        time_fetcher=mock_time,
+    )
+    with pytest.raises(CredentialRetrievalError, match='invalid expiry_time'):
+        creds.get_frozen_credentials()
+
+
+def test_malformed_expiry_returns_cached_credentials(creds, refresher):
+    refresher.return_value = {
+        'access_key': 'NEW-ACCESS',
+        'secret_key': 'NEW-SECRET',
+        'token': 'NEW-TOKEN',
+        'expiry_time': 'not-a-datetime',
+    }
+
+    frozen = creds.get_frozen_credentials()
+
+    assert frozen.access_key == 'ORIGINAL-ACCESS'
+    assert refresher.call_count == 1
+
+    frozen = creds.get_frozen_credentials()
+
+    assert frozen.access_key == 'ORIGINAL-ACCESS'
+    assert refresher.call_count == 1
