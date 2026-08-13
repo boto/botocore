@@ -1225,7 +1225,9 @@ def test_mandatory_nonrecoverable_error_is_not_retried_within_ttl(
     assert refresher.call_count == 1
 
 
-def test_nonrecoverable_error_is_retried_after_ttl_expires(mock_time):
+def test_advisory_nonrecoverable_error_is_retried_after_ttl_expires(
+    mock_time,
+):
     refresher = mock.Mock(
         side_effect=[
             _CacheableNonRecoverableError("reauth required"),
@@ -1246,6 +1248,38 @@ def test_nonrecoverable_error_is_retried_after_ttl_expires(mock_time):
             _CacheableNonRecoverableError, match='reauth required'
         ):
             creds.get_frozen_credentials()
+
+    mock_time.return_value = issued_at + timedelta(seconds=6)
+    frozen = creds.get_frozen_credentials()
+
+    assert refresher.call_count == 2
+    assert frozen.access_key == 'NEW-ACCESS'
+
+
+def test_deferred_nonrecoverable_error_retries_after_ttl_expires(mock_time):
+    refresher = mock.Mock(
+        side_effect=[
+            _CacheableNonRecoverableError("reauth required"),
+            _valid_metadata(mock_time),
+        ]
+    )
+    issued_at = mock_time()
+    creds = credentials.DeferredRefreshableCredentials(
+        refresher,
+        'iam-role',
+        time_fetcher=mock_time,
+    )
+
+    with mock.patch('botocore.credentials.random.uniform', return_value=5):
+        with pytest.raises(
+            _CacheableNonRecoverableError, match='reauth required'
+        ):
+            creds.get_frozen_credentials()
+
+    with pytest.raises(_CacheableNonRecoverableError, match='reauth required'):
+        creds.get_frozen_credentials()
+
+    assert refresher.call_count == 1
 
     mock_time.return_value = issued_at + timedelta(seconds=6)
     frozen = creds.get_frozen_credentials()
@@ -1307,38 +1341,6 @@ def test_sts_nonrecoverable_codes_do_not_apply_to_non_sts_providers(mock_time):
 
     assert frozen.access_key == 'ORIGINAL-ACCESS'
     assert refresher.call_count == 1
-
-
-def test_deferred_nonrecoverable_error_retries_after_ttl_expires(mock_time):
-    refresher = mock.Mock(
-        side_effect=[
-            _CacheableNonRecoverableError("reauth required"),
-            _valid_metadata(mock_time),
-        ]
-    )
-    issued_at = mock_time()
-    creds = credentials.DeferredRefreshableCredentials(
-        refresher,
-        'iam-role',
-        time_fetcher=mock_time,
-    )
-
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
-        with pytest.raises(
-            _CacheableNonRecoverableError, match='reauth required'
-        ):
-            creds.get_frozen_credentials()
-
-    with pytest.raises(_CacheableNonRecoverableError, match='reauth required'):
-        creds.get_frozen_credentials()
-
-    assert refresher.call_count == 1
-
-    mock_time.return_value = issued_at + timedelta(seconds=6)
-    frozen = creds.get_frozen_credentials()
-
-    assert refresher.call_count == 2
-    assert frozen.access_key == 'NEW-ACCESS'
 
 
 def test_sso_unauthorized_service_error_raises_nonrecoverable_error():

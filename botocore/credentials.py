@@ -759,10 +759,10 @@ class RefreshableCredentials(Credentials):
             self._handle_invalid_refresh_response(error)
             return
         self._set_from_validated_data(metadata)
-        self._clear_refresh_failure_state()
         self._frozen_credentials = ReadOnlyCredentials(
             self._access_key, self._secret_key, self._token, self._account_id
         )
+        self._clear_refresh_failure_state()
 
     def _set_from_validated_data(self, data):
         # Only called once the data has passed ``_validate_data``, so we never
