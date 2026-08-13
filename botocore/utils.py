@@ -39,6 +39,17 @@ import botocore
 import botocore.awsrequest
 import botocore.httpsession
 
+try:
+    # This is not a public interface and is subject to abrupt breaking changes.
+    # Currently, it's only available to internal users for testing and validation
+    # of the new credential refresh behavior. Any usage is not advised or
+    # supported in external code bases.
+    from botocore.customizations.credentials import (
+        DEFAULT_NEW_CREDENTIAL_REFRESH,
+    )
+except ImportError:
+    DEFAULT_NEW_CREDENTIAL_REFRESH = False
+
 # IP Regexes retained for backwards compatibility
 from botocore.compat import (
     HAS_CRT,
@@ -609,7 +620,8 @@ class InstanceMetadataFetcher(IMDSFetcher):
                     'token': credentials['Token'],
                     'expiry_time': credentials['Expiration'],
                 }
-                self._evaluate_expiration(credentials)
+                if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+                    self._evaluate_expiration(credentials)
                 return credentials
             else:
                 # IMDS can return a 200 response that has a JSON formatted
