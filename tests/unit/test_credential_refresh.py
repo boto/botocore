@@ -20,27 +20,49 @@ yet available to external users. Once the changes are validated
 internally and released publicly, the classes below will replace the
 corresponding classes in test_credentials.py and the standalone tests
 will be added to test_credentials.py. This file will then be removed.
+
+Mirror policy for GA migration:
+- use ``pass`` when the original class is unchanged on the new path
+- subclass the original class when all original tests still apply and we
+  only need additive flag-on coverage
+- fully copy the class when the new path needs removals or replacements,
+  so this file is the GA-ready replacement
 """
 
-from datetime import datetime, timedelta
+import operator
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from dateutil.tz import tzlocal
 
-from botocore import credentials
-from botocore.exceptions import CredentialRetrievalError
-from tests import BaseEnvVar, IntegerRefresher, mock, unittest
-from tests.unit.test_credentials import (
-    TestEnvVar as _TestEnvVar,
+from botocore import credentials, utils
+from botocore.awsrequest import AWSResponse
+from botocore.compat import json
+from botocore.exceptions import (
+    ConnectionClosedError,
+    ConnectTimeoutError,
+    CredentialRetrievalError,
+    InvalidIMDSEndpointError,
+    MetadataRetrievalError,
+    ReadTimeoutError,
 )
-from tests.unit.test_credentials import (
-    TestProcessProvider as _TestProcessProvider,
+from tests import (
+    BaseEnvVar,
+    IntegerRefresher,
+    RawResponse,
+    mock,
+    unittest,
 )
+from tests.unit import test_credentials
+
+DATE = datetime(2021, 12, 10, 0, 0, 0, tzinfo=timezone.utc)
+DT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 @pytest.fixture(autouse=True)
 def _enable_new_credential_refresh(monkeypatch):
     monkeypatch.setattr(credentials, 'DEFAULT_NEW_CREDENTIAL_REFRESH', True)
+    monkeypatch.setattr(utils, 'DEFAULT_NEW_CREDENTIAL_REFRESH', True)
 
 
 # ---------------------------------------------------------------------------
@@ -245,12 +267,537 @@ class TestRefreshLogic(unittest.TestCase):
 # tests with the flag enabled. Because these providers are out of scope for
 # static stability, their provider behavior should remain unchanged.
 # ---------------------------------------------------------------------------
-class TestEnvVarFlagOn(_TestEnvVar):
+class TestEnvVarFlagOn(test_credentials.TestEnvVar):
     pass
 
 
-class TestProcessProviderFlagOn(_TestProcessProvider):
+class TestProcessProviderFlagOn(test_credentials.TestProcessProvider):
     pass
+
+
+class TestInstanceMetadataProviderFlagOn(
+    test_credentials.TestInstanceMetadataProvider
+):
+    # GA: keep all tests from test_credentials.TestInstanceMetadataProvider and
+    # add the shared static-stability coverage below.
+    def test_refresh_failure_returns_cached_credentials(self):
+        # IMDS should pick up shared static stability from
+        # RefreshableCredentials on the new path.
+        fetcher = mock.Mock()
+        fetcher.retrieve_iam_role_credentials.side_effect = [
+            {
+                'access_key': 'a',
+                'secret_key': 'b',
+                'token': 'c',
+                'expiry_time': '2000-01-01T00:00:00Z',
+                'role_name': 'myrole',
+            },
+            Exception("imds down"),
+        ]
+        provider = credentials.InstanceMetadataProvider(
+            iam_role_fetcher=fetcher
+        )
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(fetcher.retrieve_iam_role_credentials.call_count, 2)
+
+
+class TestInstanceMetadataFetcherFlagOn(unittest.TestCase):
+    # GA replacement for test_utils.TestInstanceMetadataFetcher.
+    #
+    # Relative to the legacy class, this version:
+    # - keeps the general IMDS fetcher coverage that still applies
+    # - removes:
+    #   - test_expiry_time_extension
+    #   - test_expired_expiry_extension
+    #   - test_expiry_extension_with_config
+    #   - test_expiry_extension_with_bad_datetime
+    # - adds new-path coverage for IMDS returning the real expiry unchanged
+    def setUp(self):
+        urllib3_session_send = 'botocore.httpsession.URLLib3Session.send'
+        self._urllib3_patch = mock.patch(urllib3_session_send)
+        self._send = self._urllib3_patch.start()
+        self._imds_responses = []
+        self._send.side_effect = self.get_imds_response
+        self._role_name = 'role-name'
+        self._creds = {
+            'AccessKeyId': 'spam',
+            'SecretAccessKey': 'eggs',
+            'Token': 'spam-token',
+            'Expiration': 'something',
+        }
+        self._expected_creds = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name,
+        }
+
+    def tearDown(self):
+        self._urllib3_patch.stop()
+
+    def add_imds_response(self, body, status_code=200):
+        response = AWSResponse(
+            url='http://169.254.169.254/',
+            status_code=status_code,
+            headers={},
+            raw=RawResponse(body),
+        )
+        self._imds_responses.append(response)
+
+    def add_get_role_name_imds_response(self, role_name=None):
+        if role_name is None:
+            role_name = self._role_name
+        self.add_imds_response(body=role_name.encode('utf-8'))
+
+    def add_get_credentials_imds_response(self, creds=None):
+        if creds is None:
+            creds = self._creds
+        self.add_imds_response(
+            status_code=200, body=json.dumps(creds).encode('utf-8')
+        )
+
+    def add_get_token_imds_response(self, token, status_code=200):
+        self.add_imds_response(
+            body=token.encode('utf-8'), status_code=status_code
+        )
+
+    def add_metadata_token_not_supported_response(self):
+        self.add_imds_response(b'', status_code=404)
+
+    def add_imds_connection_error(self, exception):
+        self._imds_responses.append(exception)
+
+    def add_default_imds_responses(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+    def get_imds_response(self, request):
+        response = self._imds_responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    def _test_imds_base_url(self, config, expected_url):
+        self.add_default_imds_responses()
+
+        fetcher = utils.InstanceMetadataFetcher(config=config)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(fetcher.get_base_url(), expected_url)
+
+    def test_disabled_by_environment(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'true'}
+        fetcher = utils.InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._send.assert_not_called()
+
+    def test_disabled_by_environment_mixed_case(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
+        fetcher = utils.InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._send.assert_not_called()
+
+    def test_disabling_env_var_not_true(self):
+        url = 'https://example.com/'
+        env = {'AWS_EC2_METADATA_DISABLED': 'false'}
+
+        self.add_default_imds_responses()
+
+        fetcher = utils.InstanceMetadataFetcher(base_url=url, env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds)
+
+    def test_ec2_metadata_endpoint_service_mode(self):
+        configs = [
+            (
+                {'ec2_metadata_service_endpoint_mode': 'ipv6'},
+                'http://[fd00:ec2::254]/',
+            ),
+            (
+                {'ec2_metadata_service_endpoint_mode': 'ipv6'},
+                'http://[fd00:ec2::254]/',
+            ),
+            (
+                {'ec2_metadata_service_endpoint_mode': 'ipv4'},
+                'http://169.254.169.254/',
+            ),
+            (
+                {'ec2_metadata_service_endpoint_mode': 'foo'},
+                'http://169.254.169.254/',
+            ),
+            (
+                {
+                    'ec2_metadata_service_endpoint_mode': 'ipv6',
+                    'ec2_metadata_service_endpoint': 'http://[fd00:ec2::010]/',
+                },
+                'http://[fd00:ec2::010]/',
+            ),
+        ]
+
+        for config, expected_url in configs:
+            self._test_imds_base_url(config, expected_url)
+
+    def test_metadata_endpoint(self):
+        urls = [
+            'http://fd00:ec2:0000:0000:0000:0000:0000:0000/',
+            'http://[fd00:ec2::010]/',
+            'http://192.168.1.1/',
+        ]
+        for url in urls:
+            self.assertTrue(utils.is_valid_uri(url))
+
+    def test_ipv6_endpoint_no_brackets_env_var_set(self):
+        url = 'http://fd00:ec2::010/'
+        self.assertFalse(utils.is_valid_ipv6_endpoint_url(url))
+
+    def test_ipv6_invalid_endpoint(self):
+        url = 'not.a:valid:dom@in'
+        config = {'ec2_metadata_service_endpoint': url}
+        with self.assertRaises(InvalidIMDSEndpointError):
+            utils.InstanceMetadataFetcher(config=config)
+
+    def test_ipv6_endpoint_env_var_set_and_args(self):
+        url = 'http://[fd00:ec2::254]/'
+        url_arg = 'http://fd00:ec2:0000:0000:0000:8a2e:0370:7334/'
+        config = {'ec2_metadata_service_endpoint': url}
+
+        self.add_default_imds_responses()
+
+        fetcher = utils.InstanceMetadataFetcher(
+            config=config, base_url=url_arg
+        )
+        result = fetcher.retrieve_iam_role_credentials()
+
+        self.assertEqual(result, self._expected_creds)
+        self.assertEqual(fetcher.get_base_url(), url_arg)
+
+    def test_ipv6_imds_not_allocated(self):
+        url = 'http://fd00:ec2:0000:0000:0000:0000:0000:0000/'
+        config = {'ec2_metadata_service_endpoint': url}
+
+        self.add_imds_response(status_code=400, body=b'{}')
+
+        fetcher = utils.InstanceMetadataFetcher(config=config)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_ipv6_imds_empty_config(self):
+        configs = [
+            ({'ec2_metadata_service_endpoint': ''}, 'http://169.254.169.254/'),
+            (
+                {'ec2_metadata_service_endpoint_mode': ''},
+                'http://169.254.169.254/',
+            ),
+            ({}, 'http://169.254.169.254/'),
+            (None, 'http://169.254.169.254/'),
+        ]
+
+        for config, expected_url in configs:
+            self._test_imds_base_url(config, expected_url)
+
+    def test_includes_user_agent_header(self):
+        user_agent = 'my-user-agent'
+        self.add_default_imds_responses()
+
+        utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        self.assertEqual(self._send.call_count, 3)
+        for call in self._send.calls:
+            self.assertTrue(call[0][0].headers['User-Agent'], user_agent)
+
+    def test_non_200_response_for_role_name_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(
+            status_code=429, body=b'{"message": "Slow down"}'
+        )
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_http_connection_error_for_role_name_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_empty_response_for_role_name_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(body=b'')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_non_200_response_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(
+            status_code=429, body=b'{"message": "Slow down"}'
+        )
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_http_connection_errors_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_empty_response_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(body=b'')
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_invalid_json_is_retried(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(body=b'{"AccessKey":')
+        self.add_get_credentials_imds_response()
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=2
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, self._expected_creds)
+
+    def test_exhaust_retries_on_role_name_request(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_imds_response(status_code=400, body=b'')
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=1
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_exhaust_retries_on_credentials_request(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(status_code=400, body=b'')
+        result = utils.InstanceMetadataFetcher(
+            num_attempts=1
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_missing_fields_in_credentials_response(self):
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(
+            body=b'{"Code":"AssumeRoleUnauthorizedAccess","Message":"error"}'
+        )
+        result = (
+            utils.InstanceMetadataFetcher().retrieve_iam_role_credentials()
+        )
+        self.assertEqual(result, {})
+
+    def test_token_is_included(self):
+        user_agent = 'my-user-agent'
+        self.add_default_imds_responses()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        self.assertEqual(self._send.call_count, 3)
+        for call in self._send.call_args_list[1:]:
+            self.assertEqual(
+                call[0][0].headers['x-aws-ec2-metadata-token'], 'token'
+            )
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_404(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=404)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_403(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=403)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_405(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=405)
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_not_supported_timeout(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_connection_error(ReadTimeoutError(endpoint_url='url'))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_token_not_supported_exhaust_retries(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_connection_error(ConnectTimeoutError(endpoint_url='url'))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+
+        for call in self._send.call_args_list[1:]:
+            self.assertNotIn('x-aws-ec2-metadata-token', call[0][0].headers)
+        self.assertEqual(result, self._expected_creds)
+
+    def test_metadata_token_bad_request_yields_no_credentials(self):
+        user_agent = 'my-user-agent'
+        self.add_imds_response(b'', status_code=400)
+        result = utils.InstanceMetadataFetcher(
+            user_agent=user_agent
+        ).retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_v1_disabled_by_config(self):
+        config = {'ec2_metadata_v1_disabled': True}
+        self.add_imds_response(b'', status_code=404)
+        fetcher = utils.InstanceMetadataFetcher(num_attempts=1, config=config)
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_iam_role_credentials()
+
+    def _get_datetime(self, dt=None, offset=None, offset_func=operator.add):
+        if dt is None:
+            dt = DATE.replace(tzinfo=None)
+        if offset is not None:
+            dt = offset_func(dt, offset)
+
+        return dt
+
+    def _get_default_creds(self, overrides=None):
+        if overrides is None:
+            overrides = {}
+
+        creds = {
+            'AccessKeyId': 'access',
+            'SecretAccessKey': 'secret',
+            'Token': 'token',
+            'Expiration': '1970-01-01T00:00:00',
+        }
+        creds.update(overrides)
+        return creds
+
+    def _convert_creds_to_imds_fetcher(self, creds):
+        return {
+            'access_key': creds['AccessKeyId'],
+            'secret_key': creds['SecretAccessKey'],
+            'token': creds['Token'],
+            'expiry_time': creds['Expiration'],
+            'role_name': self._role_name,
+        }
+
+    def mock_randint(self, int_val=600):
+        randint_mock = mock.Mock()
+        randint_mock.return_value = int_val
+        return randint_mock
+
+    def test_near_expiry_credentials_are_not_extended(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time, offset=timedelta(seconds=14 * 60)
+        )
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(
+            status_code=200, body=json.dumps(creds).encode('utf-8')
+        )
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = utils.InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
+
+    def test_already_expired_credentials_are_not_extended(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time,
+            offset=timedelta(seconds=14 * 60),
+            offset_func=operator.sub,
+        )
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response()
+        self.add_imds_response(
+            status_code=200, body=json.dumps(creds).encode('utf-8')
+        )
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = utils.InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
 
 
 # ---------------------------------------------------------------------------
@@ -266,7 +813,7 @@ def refresher():
 
 @pytest.fixture
 def mock_time():
-    return mock.Mock(return_value=datetime.now(tzlocal()))
+    return mock.Mock(return_value=DATE)
 
 
 @pytest.fixture
@@ -277,7 +824,7 @@ def creds(refresher, mock_time):
         'ORIGINAL-ACCESS',
         'ORIGINAL-SECRET',
         'ORIGINAL-TOKEN',
-        datetime.now(tzlocal()) - timedelta(minutes=30),
+        mock_time() - timedelta(minutes=30),
         refresher,
         'iam-role',
         time_fetcher=mock_time,
@@ -530,7 +1077,7 @@ def test_refresh_is_retried_after_backoff(creds, refresher, mock_time):
 
     # Advance time past the maximum backoff window (10 minutes) so the next
     # access is allowed to retry.
-    mock_time.return_value = datetime.now(tzlocal()) + timedelta(minutes=11)
+    mock_time.return_value = DATE + timedelta(minutes=11)
     frozen = creds.get_frozen_credentials()
     assert refresher.call_count == 2
     assert frozen.access_key == 'NEW-ACCESS'
