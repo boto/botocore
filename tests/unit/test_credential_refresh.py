@@ -1175,264 +1175,259 @@ def test_malformed_expiry_returns_cached_credentials(creds, refresher):
 
 
 # ---------------------------------------------------------------------------
-# Non-recoverable tests: these cover the flag-on-only behavior for immediate
-# surfacing and short-lived retry suppression.
+# Non-recoverable tests: these cover the flag-on-only behavior for providers
+# surfacing non-recoverable errors and short-lived retry suppression.
 # ---------------------------------------------------------------------------
 
 
-def test_advisory_nonrecoverable_error_is_not_retried_within_ttl(mock_time):
-    refresher = mock.Mock(
-        side_effect=_CacheableNonRecoverableError("reauth required")
-    )
-    creds = _create_refreshable_credentials(
-        mock_time,
-        refresher=refresher,
-        expires_in=timedelta(seconds=90),
-        advisory_timeout=120,
-        mandatory_timeout=60,
-    )
+class TestNonRecoverableRefresh:
+    @pytest.fixture
+    def patched_jitter(self):
+        with mock.patch('botocore.credentials.random.uniform', return_value=5):
+            yield
 
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
+    def _assert_reauth_raised(self, creds):
         with pytest.raises(
             _CacheableNonRecoverableError, match='reauth required'
         ):
             creds.get_frozen_credentials()
 
-    assert refresher.call_count == 1
+    def test_advisory_nonrecoverable_error_is_not_retried_within_ttl(
+        self, patched_jitter, mock_time
+    ):
+        refresher = mock.Mock(
+            side_effect=_CacheableNonRecoverableError("reauth required")
+        )
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=90),
+            advisory_timeout=120,
+            mandatory_timeout=60,
+        )
 
-    with pytest.raises(_CacheableNonRecoverableError, match='reauth required'):
-        creds.get_frozen_credentials()
+        self._assert_reauth_raised(creds)
+        assert refresher.call_count == 1
 
-    assert refresher.call_count == 1
+        self._assert_reauth_raised(creds)
+        assert refresher.call_count == 1
 
+    def test_mandatory_nonrecoverable_error_is_not_retried_within_ttl(
+        self, patched_jitter, creds, refresher
+    ):
+        refresher.side_effect = _CacheableNonRecoverableError(
+            "reauth required"
+        )
 
-def test_mandatory_nonrecoverable_error_is_not_retried_within_ttl(
-    creds, refresher
-):
-    refresher.side_effect = _CacheableNonRecoverableError("reauth required")
+        self._assert_reauth_raised(creds)
+        assert refresher.call_count == 1
 
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
-        with pytest.raises(
-            _CacheableNonRecoverableError, match='reauth required'
-        ):
-            creds.get_frozen_credentials()
+        self._assert_reauth_raised(creds)
+        assert refresher.call_count == 1
 
-    assert refresher.call_count == 1
+    def test_advisory_nonrecoverable_error_is_retried_after_ttl_expires(
+        self, patched_jitter, mock_time
+    ):
+        refresher = mock.Mock(
+            side_effect=[
+                _CacheableNonRecoverableError("reauth required"),
+                _valid_metadata(mock_time),
+            ]
+        )
+        issued_at = mock_time()
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=90),
+            advisory_timeout=120,
+            mandatory_timeout=60,
+        )
 
-    with pytest.raises(_CacheableNonRecoverableError, match='reauth required'):
-        creds.get_frozen_credentials()
+        self._assert_reauth_raised(creds)
 
-    assert refresher.call_count == 1
+        mock_time.return_value = issued_at + timedelta(seconds=6)
+        frozen = creds.get_frozen_credentials()
 
+        assert refresher.call_count == 2
+        assert frozen.access_key == 'NEW-ACCESS'
 
-def test_advisory_nonrecoverable_error_is_retried_after_ttl_expires(
-    mock_time,
-):
-    refresher = mock.Mock(
-        side_effect=[
-            _CacheableNonRecoverableError("reauth required"),
-            _valid_metadata(mock_time),
-        ]
+    def test_deferred_nonrecoverable_error_retries_after_ttl_expires(
+        self, patched_jitter, mock_time
+    ):
+        refresher = mock.Mock(
+            side_effect=[
+                _CacheableNonRecoverableError("reauth required"),
+                _valid_metadata(mock_time),
+            ]
+        )
+        issued_at = mock_time()
+        creds = credentials.DeferredRefreshableCredentials(
+            refresher,
+            'iam-role',
+            time_fetcher=mock_time,
+        )
+
+        self._assert_reauth_raised(creds)
+
+        self._assert_reauth_raised(creds)
+        assert refresher.call_count == 1
+
+        mock_time.return_value = issued_at + timedelta(seconds=6)
+        frozen = creds.get_frozen_credentials()
+
+        assert refresher.call_count == 2
+        assert frozen.access_key == 'NEW-ACCESS'
+
+    @pytest.mark.parametrize(
+        'method',
+        ['assume-role', 'assume-role-with-web-identity'],
     )
-    issued_at = mock_time()
-    creds = _create_refreshable_credentials(
-        mock_time,
-        refresher=refresher,
-        expires_in=timedelta(seconds=90),
-        advisory_timeout=120,
-        mandatory_timeout=60,
-    )
+    def test_sts_nonrecoverable_error_is_not_retried_within_ttl(
+        self, patched_jitter, mock_time, method
+    ):
+        refresher = mock.Mock()
+        refresher.side_effect = ClientError(
+            {
+                'Error': {
+                    'Code': 'InvalidIdentityToken',
+                    'Message': 'bad token',
+                }
+            },
+            'AssumeRole',
+        )
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method=method,
+        )
 
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
-        with pytest.raises(
-            _CacheableNonRecoverableError, match='reauth required'
-        ):
-            creds.get_frozen_credentials()
-
-    mock_time.return_value = issued_at + timedelta(seconds=6)
-    frozen = creds.get_frozen_credentials()
-
-    assert refresher.call_count == 2
-    assert frozen.access_key == 'NEW-ACCESS'
-
-
-def test_deferred_nonrecoverable_error_retries_after_ttl_expires(mock_time):
-    refresher = mock.Mock(
-        side_effect=[
-            _CacheableNonRecoverableError("reauth required"),
-            _valid_metadata(mock_time),
-        ]
-    )
-    issued_at = mock_time()
-    creds = credentials.DeferredRefreshableCredentials(
-        refresher,
-        'iam-role',
-        time_fetcher=mock_time,
-    )
-
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
-        with pytest.raises(
-            _CacheableNonRecoverableError, match='reauth required'
-        ):
-            creds.get_frozen_credentials()
-
-    with pytest.raises(_CacheableNonRecoverableError, match='reauth required'):
-        creds.get_frozen_credentials()
-
-    assert refresher.call_count == 1
-
-    mock_time.return_value = issued_at + timedelta(seconds=6)
-    frozen = creds.get_frozen_credentials()
-
-    assert refresher.call_count == 2
-    assert frozen.access_key == 'NEW-ACCESS'
-
-
-@pytest.mark.parametrize(
-    'method',
-    ['assume-role', 'assume-role-with-web-identity'],
-)
-def test_sts_nonrecoverable_error_is_not_retried_within_ttl(mock_time, method):
-    refresher = mock.Mock()
-    refresher.side_effect = ClientError(
-        {'Error': {'Code': 'InvalidIdentityToken', 'Message': 'bad token'}},
-        'AssumeRole',
-    )
-    creds = _create_refreshable_credentials(
-        mock_time,
-        refresher=refresher,
-        expires_in=timedelta(seconds=30),
-        method=method,
-    )
-
-    with mock.patch('botocore.credentials.random.uniform', return_value=5):
         with pytest.raises(ClientError, match='InvalidIdentityToken'):
             creds.get_frozen_credentials()
 
-    with pytest.raises(ClientError, match='InvalidIdentityToken'):
-        creds.get_frozen_credentials()
+        with pytest.raises(ClientError, match='InvalidIdentityToken'):
+            creds.get_frozen_credentials()
 
-    assert refresher.call_count == 1
+        assert refresher.call_count == 1
+
+    def test_sts_nonrecoverable_codes_do_not_apply_to_non_sts_providers(
+        self, mock_time
+    ):
+        # Even if a non-STS provider raises a ClientError with an STS-listed
+        # non-recoverable code, we should not classify it as STS
+        # non-recoverable unless the provider method is actually STS-backed.
+        refresher = mock.Mock(
+            side_effect=ClientError(
+                {'Error': {'Code': 'AccessDenied', 'Message': 'denied'}},
+                'GetRoleCredentials',
+            )
+        )
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method='sso',
+        )
+
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
 
 
-def test_sts_nonrecoverable_codes_do_not_apply_to_non_sts_providers(mock_time):
-    # Even if a non-STS provider raises a ClientError with an STS-listed
-    # non-recoverable code, we should not classify it as STS non-recoverable
-    # unless the provider method is actually STS-backed.
-    refresher = mock.Mock(
-        side_effect=ClientError(
-            {'Error': {'Code': 'AccessDenied', 'Message': 'denied'}},
+class TestNonRecoverableProviderErrors:
+    def test_sso_unauthorized_service_error_raises_nonrecoverable_error(self):
+        # Service-side unauthorized responses are non-recoverable.
+        token_loader = mock.Mock(
+            return_value={
+                'accessToken': 'some.sso.token',
+                'expiresAt': '2099-10-18T22:26:40Z',
+            }
+        )
+        client = mock.Mock()
+        client.exceptions.UnauthorizedException = ClientError
+        client.get_role_credentials.side_effect = ClientError(
+            {'Error': {'Code': 'UnauthorizedException'}},
             'GetRoleCredentials',
         )
+        fetcher = credentials.SSOCredentialFetcher(
+            start_url='https://d-92671207e4.awsapps.com/start',
+            sso_region='us-east-1',
+            role_name='test-role',
+            account_id='1234567890',
+            client_creator=mock.Mock(return_value=client),
+            token_loader=token_loader,
+            cache={},
+            time_fetcher=mock.Mock(return_value=DATE),
+        )
+
+        with pytest.raises(UnauthorizedSSOTokenError):
+            fetcher.fetch_credentials()
+
+    def test_sso_expired_cached_token_raises_nonrecoverable_error(self):
+        # Client-side expired cached tokens are non-recoverable and should
+        # fail before calling SSO.
+        token_loader = mock.Mock(
+            return_value={
+                'accessToken': 'some.sso.token',
+                'expiresAt': '2018-10-18T22:26:40Z',
+            }
+        )
+        client = mock.Mock()
+        fetcher = credentials.SSOCredentialFetcher(
+            start_url='https://d-92671207e4.awsapps.com/start',
+            sso_region='us-east-1',
+            role_name='test-role',
+            account_id='1234567890',
+            client_creator=mock.Mock(return_value=client),
+            token_loader=token_loader,
+            cache={},
+            time_fetcher=mock.Mock(return_value=DATE),
+        )
+
+        with pytest.raises(UnauthorizedSSOTokenError):
+            fetcher.fetch_credentials()
+        client.get_role_credentials.assert_not_called()
+
+    def test_sso_missing_cached_token_raises_nonrecoverable_error(self):
+        # Client-side token cache load failures are also non-recoverable.
+        loader = utils.SSOTokenLoader(cache={})
+
+        with pytest.raises(SSOTokenLoadError):
+            loader('https://d-92671207e4.awsapps.com/start')
+
+    @pytest.mark.parametrize(
+        'token,error_msg',
+        [
+            (
+                None,
+                'Unable to load a existing login session for session test-session.',
+            ),
+            (
+                {'accessToken': {}, 'refreshToken': 'refresh'},
+                'missing required fields',
+            ),
+        ],
     )
-    creds = _create_refreshable_credentials(
-        mock_time,
-        refresher=refresher,
-        expires_in=timedelta(seconds=30),
-        method='sso',
-    )
-
-    frozen = creds.get_frozen_credentials()
-
-    assert frozen.access_key == 'ORIGINAL-ACCESS'
-    assert refresher.call_count == 1
-
-    frozen = creds.get_frozen_credentials()
-
-    assert frozen.access_key == 'ORIGINAL-ACCESS'
-    assert refresher.call_count == 1
-
-
-def test_sso_unauthorized_service_error_raises_nonrecoverable_error():
-    # Service-side unauthorized responses are non-recoverable.
-    token_loader = mock.Mock(
-        return_value={
-            'accessToken': 'some.sso.token',
-            'expiresAt': '2099-10-18T22:26:40Z',
-        }
-    )
-    client = mock.Mock()
-    client.exceptions.UnauthorizedException = ClientError
-    client.get_role_credentials.side_effect = ClientError(
-        {'Error': {'Code': 'UnauthorizedException'}},
-        'GetRoleCredentials',
-    )
-    fetcher = credentials.SSOCredentialFetcher(
-        start_url='https://d-92671207e4.awsapps.com/start',
-        sso_region='us-east-1',
-        role_name='test-role',
-        account_id='1234567890',
-        client_creator=mock.Mock(return_value=client),
-        token_loader=token_loader,
-        cache={},
-        time_fetcher=mock.Mock(return_value=DATE),
-    )
-
-    with pytest.raises(UnauthorizedSSOTokenError):
-        fetcher.fetch_credentials()
-
-
-def test_sso_expired_cached_token_raises_nonrecoverable_error():
-    # Client-side expired cached tokens are non-recoverable and should
-    # fail before calling SSO.
-    token_loader = mock.Mock(
-        return_value={
-            'accessToken': 'some.sso.token',
-            'expiresAt': '2018-10-18T22:26:40Z',
-        }
-    )
-    client = mock.Mock()
-    fetcher = credentials.SSOCredentialFetcher(
-        start_url='https://d-92671207e4.awsapps.com/start',
-        sso_region='us-east-1',
-        role_name='test-role',
-        account_id='1234567890',
-        client_creator=mock.Mock(return_value=client),
-        token_loader=token_loader,
-        cache={},
-        time_fetcher=mock.Mock(return_value=DATE),
-    )
-
-    with pytest.raises(UnauthorizedSSOTokenError):
-        fetcher.fetch_credentials()
-    client.get_role_credentials.assert_not_called()
-
-
-def test_sso_missing_cached_token_raises_nonrecoverable_error():
-    # Client-side token cache load failures are also non-recoverable.
-    loader = utils.SSOTokenLoader(cache={})
-
-    with pytest.raises(SSOTokenLoadError):
-        loader('https://d-92671207e4.awsapps.com/start')
-
-
-@pytest.mark.parametrize(
-    'token,error_msg',
-    [
-        (
-            None,
-            'Unable to load a existing login session for session test-session.',
-        ),
-        (
-            {'accessToken': {}, 'refreshToken': 'refresh'},
-            'missing required fields',
-        ),
-    ],
-)
-def test_login_refresh_invalid_cached_token_raises_nonrecoverable_error(
-    token, error_msg
-):
-    # Client-side invalid cached login tokens are non-recoverable.
-    token_loader = mock.Mock()
-    token_loader.load_token.return_value = token
-    fetcher = credentials.LoginCredentialFetcher(
-        session_name='test-session',
-        token_loader=token_loader,
-        client_creator=mock.Mock(),
-    )
-
-    with pytest.raises(
-        LoginInvalidCachedTokenError,
-        match=error_msg,
+    def test_login_refresh_invalid_cached_token_raises_nonrecoverable_error(
+        self, token, error_msg
     ):
-        fetcher.refresh_credentials()
+        # Client-side invalid cached login tokens are non-recoverable.
+        token_loader = mock.Mock()
+        token_loader.load_token.return_value = token
+        fetcher = credentials.LoginCredentialFetcher(
+            session_name='test-session',
+            token_loader=token_loader,
+            client_creator=mock.Mock(),
+        )
+
+        with pytest.raises(
+            LoginInvalidCachedTokenError,
+            match=error_msg,
+        ):
+            fetcher.refresh_credentials()
