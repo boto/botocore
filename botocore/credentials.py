@@ -587,9 +587,10 @@ class RefreshableCredentials(Credentials):
         return self.refresh_needed(refresh_in=0)
 
     def _in_refresh_backoff(self):
-        if self._refresh_blocked_until is None:
+        refresh_blocked_until = self._refresh_blocked_until
+        if refresh_blocked_until is None:
             return False
-        return self._time_fetcher() < self._refresh_blocked_until
+        return self._time_fetcher() < refresh_blocked_until
 
     def _enter_refresh_backoff(self, error):
         # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
@@ -729,7 +730,13 @@ class RefreshableCredentials(Credentials):
         if missing_keys:
             return f"Response did not contain: {', '.join(missing_keys)}"
 
-        if parse(data['expiry_time']) <= self._time_fetcher():
+        expiry_time = data['expiry_time']
+        try:
+            expiry_time = parse(expiry_time)
+        except (TypeError, ValueError, OverflowError) as e:
+            return f"Response contained an invalid expiry_time {expiry_time!r}: {e}"
+
+        if expiry_time <= self._time_fetcher():
             return "Credential source returned expired credentials"
         return None
 
