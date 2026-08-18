@@ -104,7 +104,7 @@ _NONRECOVERABLE_STS_ERROR_CODES = frozenset(
         'InvalidIdentityToken',
         'MalformedPolicyDocument',
         'PackedPolicyTooLarge',
-        'RegionDisabled',
+        'RegionDisabledException',
     )
 )
 _NONRECOVERABLE_STS_METHODS = frozenset(
