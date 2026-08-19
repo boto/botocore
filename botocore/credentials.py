@@ -803,6 +803,8 @@ class RefreshableCredentials(Credentials):
         return None
 
     def _handle_refresh_exception(self, error):
+        # Surface non-recoverable failures immediately because
+        # they require customer action rather than retry or backoff.
         if _is_nonrecoverable_refresh_error(self.method, error):
             self._cache_nonrecoverable_error(error)
             raise error
