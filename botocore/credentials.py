@@ -627,14 +627,15 @@ class RefreshableCredentials(Credentials):
             return False
         return self._time_fetcher() < refresh_blocked_until
 
-    def _has_cached_nonrecoverable_error(self):
-        # Only suppress refresh attempts while the cached error's TTL
-        # is in effect.
-        if self._cached_nonrecoverable_error is None:
-            return False
-        return (
-            self._time_fetcher() < self._cached_nonrecoverable_error_expires_at
-        )
+    def _get_cached_nonrecoverable_error(self):
+        # Return the cached non-recoverable error while its TTL is still active.
+        cached_error = self._cached_nonrecoverable_error
+        expires_at = self._cached_nonrecoverable_error_expires_at
+        if cached_error is None or expires_at is None:
+            return None
+        if self._time_fetcher() >= expires_at:
+            return None
+        return cached_error
 
     def _cache_nonrecoverable_error(self, error):
         cache_ttl = random.uniform(
@@ -743,8 +744,9 @@ class RefreshableCredentials(Credentials):
     def _protected_refresh(self, is_mandatory):
         # precondition: this method should only be called if you've acquired
         # the self._refresh_lock.
-        if self._has_cached_nonrecoverable_error():
-            raise self._cached_nonrecoverable_error
+        cached_error = self._get_cached_nonrecoverable_error()
+        if cached_error is not None:
+            raise cached_error
         if self._in_refresh_backoff():
             # Another caller entered refresh backoff while we were waiting
             # for the lock. Skip the refresh attempt.
