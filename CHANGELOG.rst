@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.43.78
+=======
+
+* api-change:``backup``: Updating CLI Docs for Backup Audit Manager List Job Summaries APIs.
+* api-change:``bedrock-agentcore``: Increase spans count from 1k to 20k
+* api-change:``bedrock-agentcore-control``: Update Dataset schema to THIRDPARTYEVALUATIONV1
+* api-change:``cloudwatch``: Allows customers to specify an initial warm up period to wait for metrics to arrive when creating metric or log alarms
+* api-change:``devicefarm``: Added support to CreateRemoveAccessSession for selecting a server version on the mobile WebDriver endpoint.
+* api-change:``endpoint-rules``: Update endpoint-rules client to latest version
+* api-change:``kinesis``: Generate account endpoint for Kinesis Data Streams requests when the account ID is available
+* api-change:``wafv2``: DataProtectionConfig field Key Documentation Update
+
+
 1.43.77
 =======
 
