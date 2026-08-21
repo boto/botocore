@@ -216,7 +216,11 @@ class CredentialRetrievalError(BotoCoreError):
 
 
 class RefreshNonRecoverableError:
-    """Marker for refresh failures that should bypass backoff."""
+    """Marker for refresh failures that should bypass backoff.
+
+    This is intended to be mixed into provider-specific exceptions and is not
+    raised directly.
+    """
 
     pass
 
