@@ -40,17 +40,20 @@ from botocore.compat import (
 )
 from botocore.config import Config
 from botocore.exceptions import (
+    ClientError,
     ConfigNotFound,
     CredentialRetrievalError,
     InfiniteLoopConfigError,
     InvalidConfigError,
     LoginError,
     LoginInsufficientPermissions,
+    LoginInvalidCachedTokenError,
     LoginRefreshRequired,
     LoginTokenLoadError,
     MetadataRetrievalError,
     MissingDependencyException,
     PartialCredentialsError,
+    RefreshNonRecoverableError,
     RefreshWithMFAUnsupportedError,
     UnauthorizedSSOTokenError,
     UnknownCredentialError,
@@ -92,6 +95,36 @@ ReadOnlyCredentials = namedtuple(
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT_V2 = 1 * 60  # 1 min
+_NONRECOVERABLE_ERROR_CACHE_MIN_TTL = 1
+_NONRECOVERABLE_ERROR_CACHE_MAX_TTL = 5
+_NONRECOVERABLE_STS_ERROR_CODES = frozenset(
+    (
+        'AccessDenied',
+        'IDPRejectedClaim',
+        'InvalidIdentityToken',
+        'MalformedPolicyDocument',
+        'PackedPolicyTooLarge',
+        'RegionDisabledException',
+    )
+)
+_NONRECOVERABLE_STS_METHODS = frozenset(
+    ('assume-role', 'assume-role-with-web-identity')
+)
+
+
+def _is_sts_nonrecoverable_error(method, error):
+    if method not in _NONRECOVERABLE_STS_METHODS:
+        return False
+    if not isinstance(error, ClientError):
+        return False
+    error_code = error.response.get('Error', {}).get('Code')
+    return error_code in _NONRECOVERABLE_STS_ERROR_CODES
+
+
+def _is_nonrecoverable_refresh_error(method, error):
+    return isinstance(
+        error, RefreshNonRecoverableError
+    ) or _is_sts_nonrecoverable_error(method, error)
 
 
 def create_credential_resolver(session, cache=None, region_name=None):
@@ -442,6 +475,8 @@ class RefreshableCredentials(Credentials):
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self._refresh_blocked_until = None
+        self._cached_nonrecoverable_error = None
+        self._cached_nonrecoverable_error_expires_at = None
         self.method = method
         self._frozen_credentials = ReadOnlyCredentials(
             access_key, secret_key, token, account_id
@@ -592,6 +627,32 @@ class RefreshableCredentials(Credentials):
             return False
         return self._time_fetcher() < refresh_blocked_until
 
+    def _get_cached_nonrecoverable_error(self):
+        # Return the cached non-recoverable error while its TTL is still active.
+        cached_error = self._cached_nonrecoverable_error
+        expires_at = self._cached_nonrecoverable_error_expires_at
+        if cached_error is None or expires_at is None:
+            return None
+        if self._time_fetcher() >= expires_at:
+            return None
+        return cached_error
+
+    def _cache_nonrecoverable_error(self, error):
+        cache_ttl = random.uniform(
+            _NONRECOVERABLE_ERROR_CACHE_MIN_TTL,
+            _NONRECOVERABLE_ERROR_CACHE_MAX_TTL,
+        )
+        now = self._time_fetcher()
+        self._cached_nonrecoverable_error = error
+        self._cached_nonrecoverable_error_expires_at = (
+            now + datetime.timedelta(seconds=cache_ttl)
+        )
+
+    def _clear_refresh_failure_state(self):
+        self._refresh_blocked_until = None
+        self._cached_nonrecoverable_error = None
+        self._cached_nonrecoverable_error_expires_at = None
+
     def _enter_refresh_backoff(self, error):
         # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
         # overwhelming the credential source during an outage.
@@ -683,6 +744,9 @@ class RefreshableCredentials(Credentials):
     def _protected_refresh(self, is_mandatory):
         # precondition: this method should only be called if you've acquired
         # the self._refresh_lock.
+        cached_error = self._get_cached_nonrecoverable_error()
+        if cached_error is not None:
+            raise cached_error
         if self._in_refresh_backoff():
             # Another caller entered refresh backoff while we were waiting
             # for the lock. Skip the refresh attempt.
@@ -697,10 +761,10 @@ class RefreshableCredentials(Credentials):
             self._handle_invalid_refresh_response(error)
             return
         self._set_from_validated_data(metadata)
-        self._refresh_blocked_until = None
         self._frozen_credentials = ReadOnlyCredentials(
             self._access_key, self._secret_key, self._token, self._account_id
         )
+        self._clear_refresh_failure_state()
 
     def _set_from_validated_data(self, data):
         # Only called once the data has passed ``_validate_data``, so we never
@@ -741,6 +805,11 @@ class RefreshableCredentials(Credentials):
         return None
 
     def _handle_refresh_exception(self, error):
+        # Surface non-recoverable failures immediately because
+        # they require customer action rather than retry or backoff.
+        if _is_nonrecoverable_refresh_error(self.method, error):
+            self._cache_nonrecoverable_error(error)
+            raise error
         self._enter_refresh_backoff(error)
 
     def _handle_invalid_refresh_response(self, error):
@@ -947,6 +1016,8 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self._refresh_blocked_until = None
+        self._cached_nonrecoverable_error = None
+        self._cached_nonrecoverable_error_expires_at = None
         self.method = method
         self._frozen_credentials = None
         self._explicit_advisory_refresh_timeout = None
@@ -961,6 +1032,9 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
     # Before the first successful deferred fetch, there are no cached
     # credentials to fall back to, so initial failures must be surfaced.
     def _handle_refresh_exception(self, error):
+        if _is_nonrecoverable_refresh_error(self.method, error):
+            super()._handle_refresh_exception(error)
+            return
         if self._frozen_credentials is None:
             raise error
         super()._handle_refresh_exception(error)
@@ -2847,31 +2921,18 @@ class LoginCredentialFetcher:
 
     def load_cached_credentials(self):
         """Loads cached credentials without checking their expiry."""
-        token = self._token_loader.load_token(self._session_name)
-
-        if token is None:
-            raise LoginTokenLoadError(
-                error_msg='Unable to load a existing login session for session '
-                f'{self._session_name}. Please reauthenticate with '
-                "'aws login'.",
-            )
-
-        missing_fields = [
-            key for key in self._REQUIRED_TOKEN_FIELDS if key not in token
-        ]
-        if missing_fields:
-            raise LoginTokenLoadError(
-                error_msg=f'Failed to load access token from token cache, missing required fields: {", ".join(missing_fields)}.'
-            )
-
+        token = self._load_token(LoginTokenLoadError)
         return self._token_to_credentials(token)
 
     def refresh_credentials(self):
         """Refreshes login credentials, including saving them to the cache."""
         if self.feature_ids:
             register_feature_ids(self.feature_ids)
+        invalid_cached_token_error_cls = LoginInvalidCachedTokenError
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            invalid_cached_token_error_cls = LoginTokenLoadError
         # Reload the token from disk, we need the refresh info
-        token = self._token_loader.load_token(self._session_name)
+        token = self._load_token(invalid_cached_token_error_cls)
         private_key = self._load_private_key(token)
 
         # Check if token has already been refreshed and is still valid
@@ -2949,6 +3010,26 @@ class LoginCredentialFetcher:
         self._token_loader.save_token(self._session_name, token)
 
         return self._token_to_credentials(token)
+
+    def _load_token(self, error_cls):
+        token = self._token_loader.load_token(self._session_name)
+
+        if token is None:
+            raise error_cls(
+                error_msg='Unable to load a existing login session for session '
+                f'{self._session_name}. Please reauthenticate with '
+                "'aws login'.",
+            )
+
+        missing_fields = [
+            key for key in self._REQUIRED_TOKEN_FIELDS if key not in token
+        ]
+        if missing_fields:
+            raise error_cls(
+                error_msg=f'Failed to load access token from token cache, missing required fields: {", ".join(missing_fields)}.'
+            )
+
+        return token
 
     @staticmethod
     def _token_to_credentials(token):
