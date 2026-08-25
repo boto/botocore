@@ -1542,6 +1542,28 @@ class TestInvalidate:
         assert frozen.access_key == 'NEW-ACCESS'
         assert refresher.call_count == 2
 
+    def test_refresh_lock_held_skips_invalidation(self, mock_time, refresher):
+        refresher.return_value = _valid_metadata(mock_time)
+        invalidate_provider_cache = mock.Mock()
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=1),
+            invalidate_provider_cache=invalidate_provider_cache,
+        )
+
+        assert creds._refresh_lock.acquire(False)
+        try:
+            creds._invalidate('ORIGINAL-ACCESS')
+        finally:
+            creds._refresh_lock.release()
+
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 0
+        invalidate_provider_cache.assert_not_called()
+
 
 class TestProviderCacheInvalidation:
     @pytest.fixture
