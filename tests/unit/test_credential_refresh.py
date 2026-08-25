@@ -2100,6 +2100,8 @@ class TestCredentialRefreshConcurrency:
             clock,
             refresher=refresher,
             expires_in=expires_in,
+            advisory_timeout=120,
+            mandatory_timeout=60,
         )
 
         refresh_owner_thread = CredentialFetchThread(creds)
