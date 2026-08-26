@@ -73,6 +73,36 @@ from botocore.utils import (
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
+_AUTH_ERROR_INVALIDATION_CODES = frozenset(['ExpiredToken', 'InvalidToken'])
+
+
+class AuthErrorInvalidationHandler:
+    """Invalidates cached credentials after auth-failure responses."""
+
+    def __init__(self, get_credentials):
+        self._get_credentials = get_credentials
+
+    def register(self, events, service_id):
+        events.register(
+            f'after-call.{service_id}', self.invalidate_on_auth_error
+        )
+
+    def invalidate_on_auth_error(self, parsed, context, **kwargs):
+        error_code = context.get('error_code_override') or parsed.get(
+            'Error', {}
+        ).get('Code')
+        if error_code not in _AUTH_ERROR_INVALIDATION_CODES:
+            return
+        credentials = self._get_credentials()
+        if credentials is None:
+            return
+        try:
+            credentials._invalidate(context.get('signing_access_key'))
+        except Exception:
+            logger.debug(
+                "Failed to invalidate cached credentials after auth error.",
+                exc_info=True,
+            )
 
 
 class ClientCreator:
@@ -191,6 +221,7 @@ class ClientCreator:
         self._register_endpoint_discovery(
             service_client, endpoint_url, client_config
         )
+        self._register_credential_refresh_events(service_client)
         return service_client
 
     def create_client_class(self, service_name, api_version=None):
@@ -382,6 +413,14 @@ class ClientCreator:
             region=client.meta.region_name,
             endpoint_url=endpoint_url,
         ).register(client.meta.events)
+
+    def _register_credential_refresh_events(self, client):
+        if not DEFAULT_NEW_CREDENTIAL_REFRESH:
+            return
+        service_id = client.meta.service_model.service_id.hyphenize()
+        AuthErrorInvalidationHandler(client._get_credentials).register(
+            client.meta.events, service_id
+        )
 
     def _register_s3express_events(
         self,
