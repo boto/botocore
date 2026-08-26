@@ -430,6 +430,9 @@ class Credentials:
 
         return get_property
 
+    def _invalidate(self, access_key):
+        return
+
 
 class RefreshableCredentials(Credentials):
     """
@@ -444,6 +447,9 @@ class RefreshableCredentials(Credentials):
     :param str method: A string which identifies where the credentials
         were found.
     :param function time_fetcher: Callback function to retrieve current time.
+    :param function invalidate_provider_cache: Callback used by providers
+        with an underlying credential cache to invalidate it so the next
+        refresh retrieves credentials from the underlying source.
     """
 
     # The time at which we'll attempt to refresh, but not
@@ -465,8 +471,10 @@ class RefreshableCredentials(Credentials):
         advisory_timeout=None,
         mandatory_timeout=None,
         account_id=None,
+        invalidate_provider_cache=None,
     ):
         self._refresh_using = refresh_using
+        self._invalidate_provider_cache = invalidate_provider_cache
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
@@ -578,6 +586,30 @@ class RefreshableCredentials(Credentials):
     @account_id.setter
     def account_id(self, value):
         self._account_id = value
+
+    def _invalidate(self, access_key):
+        if access_key is None:
+            return
+        # If the lock is already held, a refresh or another invalidation is
+        # already in progress, so skip invalidation rather than blocking.
+        if not self._refresh_lock.acquire(False):
+            return
+        try:
+            if self._access_key != access_key:
+                return
+            self._expiry_time = self._time_fetcher()
+            if self._invalidate_provider_cache is not None:
+                # If provider-cache invalidation fails, these credentials
+                # remain marked stale and eligible for refresh.
+                try:
+                    self._invalidate_provider_cache(access_key)
+                except Exception:
+                    logger.debug(
+                        "Failed to invalidate provider cache during credential invalidation.",
+                        exc_info=True,
+                    )
+        finally:
+            self._refresh_lock.release()
 
     def _seconds_remaining(self):
         delta = self._expiry_time - self._time_fetcher()
@@ -1006,8 +1038,15 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
     refresh_using will be called upon first access.
     """
 
-    def __init__(self, refresh_using, method, time_fetcher=_local_now):
+    def __init__(
+        self,
+        refresh_using,
+        method,
+        time_fetcher=_local_now,
+        invalidate_provider_cache=None,
+    ):
         self._refresh_using = refresh_using
+        self._invalidate_provider_cache = invalidate_provider_cache
         self._access_key = None
         self._secret_key = None
         self._token = None
@@ -1073,6 +1112,17 @@ class CachedCredentialFetcher:
 
     def fetch_credentials(self):
         return self._get_cached_credentials()
+
+    def _invalidate(self, access_key):
+        """Expire matching cached credentials so the next refresh fetches new ones."""
+        if access_key is None or self._cache_key not in self._cache:
+            return
+        cached = deepcopy(self._cache[self._cache_key])
+        cached_credentials = cached.get('Credentials', {})
+        if cached_credentials.get('AccessKeyId') != access_key:
+            return
+        cached_credentials['Expiration'] = _local_now()
+        self._cache[self._cache_key] = cached
 
     def _get_cached_credentials(self):
         """Get up-to-date credentials.
@@ -2021,6 +2071,7 @@ class AssumeRoleProvider(CredentialProvider):
             method=self.METHOD,
             refresh_using=refresher,
             time_fetcher=_local_now,
+            invalidate_provider_cache=fetcher._invalidate,
         )
 
     def _get_role_config(self, profile_name):
@@ -2317,6 +2368,7 @@ class AssumeRoleWithWebIdentityProvider(CredentialProvider):
         return DeferredRefreshableCredentials(
             method=self.METHOD,
             refresh_using=fetcher.fetch_credentials,
+            invalidate_provider_cache=fetcher._invalidate,
         )
 
 
@@ -2827,6 +2879,7 @@ class SSOProvider(CredentialProvider):
         return DeferredRefreshableCredentials(
             method=self.METHOD,
             refresh_using=sso_fetcher.fetch_credentials,
+            invalidate_provider_cache=sso_fetcher._invalidate,
         )
 
 

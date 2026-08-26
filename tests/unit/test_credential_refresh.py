@@ -1431,3 +1431,337 @@ class TestNonRecoverableProviderErrors:
             match=error_msg,
         ):
             fetcher.refresh_credentials()
+
+
+class TestInvalidate:
+    def test_matching_access_key_forces_refresh(self, mock_time, refresher):
+        refresher.return_value = _valid_metadata(mock_time)
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=1),
+        )
+
+        creds._invalidate('ORIGINAL-ACCESS')
+        frozen = creds.get_frozen_credentials()
+
+        assert refresher.call_count == 1
+        assert frozen.access_key == 'NEW-ACCESS'
+
+    def test_mismatched_access_key_is_noop(self, mock_time, refresher):
+        refresher.return_value = _valid_metadata(mock_time)
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=1),
+        )
+
+        creds._invalidate('DIFFERENT-ACCESS')
+        frozen = creds.get_frozen_credentials()
+
+        assert refresher.call_count == 0
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+
+    def test_provider_cache_invalidation_failure_still_refreshes(
+        self, mock_time, refresher
+    ):
+        refresher.return_value = _valid_metadata(mock_time)
+        invalidate_provider_cache = mock.Mock(
+            side_effect=RuntimeError("error")
+        )
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=1),
+            invalidate_provider_cache=invalidate_provider_cache,
+        )
+
+        creds._invalidate('ORIGINAL-ACCESS')
+        frozen = creds.get_frozen_credentials()
+
+        invalidate_provider_cache.assert_called_once_with('ORIGINAL-ACCESS')
+        assert refresher.call_count == 1
+        assert frozen.access_key == 'NEW-ACCESS'
+
+    def test_does_not_bypass_refresh_backoff(
+        self, creds, refresher, mock_time
+    ):
+        refresher.side_effect = [
+            Exception("source down"),
+            _valid_metadata(mock_time),
+        ]
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+        creds._invalidate('ORIGINAL-ACCESS')
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+        mock_time.return_value = DATE + timedelta(minutes=11)
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 2
+
+    def test_strict_credentials_invalidation_surfaces_refresh_failure(
+        self, mock_time
+    ):
+        # Strict providers still invalidate, but they do not fall back to
+        # stale credentials when the forced refresh fails.
+        refresher = mock.Mock(
+            side_effect=[
+                Exception("source down"),
+                _valid_metadata(mock_time),
+            ]
+        )
+        creds = credentials._StrictRefreshableCredentials(
+            'ORIGINAL-ACCESS',
+            'ORIGINAL-SECRET',
+            'ORIGINAL-TOKEN',
+            mock_time() + timedelta(hours=1),
+            refresher,
+            'custom-process',
+            time_fetcher=mock_time,
+        )
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 0
+
+        creds._invalidate('ORIGINAL-ACCESS')
+
+        with pytest.raises(Exception, match='source down'):
+            creds.get_frozen_credentials()
+        assert refresher.call_count == 1
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 2
+
+    def test_refresh_lock_held_skips_invalidation(self, mock_time, refresher):
+        refresher.return_value = _valid_metadata(mock_time)
+        invalidate_provider_cache = mock.Mock()
+        creds = _create_refreshable_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=1),
+            invalidate_provider_cache=invalidate_provider_cache,
+        )
+
+        assert creds._refresh_lock.acquire(False)
+        try:
+            creds._invalidate('ORIGINAL-ACCESS')
+        finally:
+            creds._refresh_lock.release()
+
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 0
+        invalidate_provider_cache.assert_not_called()
+
+
+class TestProviderCacheInvalidation:
+    @pytest.fixture
+    def assume_role_load_config(self):
+        return mock.Mock(
+            return_value={
+                'profiles': {
+                    'development': {
+                        'role_arn': 'arn:aws:iam::123456789012:role/test-role',
+                        'source_profile': 'source',
+                    },
+                    'source': {
+                        'aws_access_key_id': 'SOURCE-ACCESS',
+                        'aws_secret_access_key': 'SOURCE-SECRET',
+                        'aws_session_token': 'SOURCE-TOKEN',
+                    },
+                }
+            }
+        )
+
+    @pytest.fixture
+    def web_identity_load_config(self):
+        return mock.Mock(
+            return_value={
+                'profiles': {
+                    'development': {
+                        'role_arn': 'arn:aws:iam::123456789012:role/test-role',
+                        'web_identity_token_file': '/tmp/token',
+                    }
+                }
+            }
+        )
+
+    @pytest.fixture
+    def web_identity_token_loader_cls(self):
+        token_loader = mock.Mock(return_value='OIDC-TOKEN')
+        return mock.Mock(return_value=token_loader)
+
+    @pytest.fixture
+    def sso_start_url(self):
+        return 'https://test.awsapps.com/start'
+
+    @pytest.fixture
+    def sso_load_config(self, sso_start_url):
+        return mock.Mock(
+            return_value={
+                'profiles': {
+                    'sso-profile': {
+                        'sso_start_url': sso_start_url,
+                        'sso_region': 'us-east-1',
+                        'sso_role_name': 'Administrator',
+                        'sso_account_id': '1234567890',
+                    }
+                }
+            }
+        )
+
+    @pytest.fixture
+    def future_expiration(self):
+        return datetime(2099, 1, 1, tzinfo=timezone.utc)
+
+    @pytest.fixture
+    def sso_token_cache(self, sso_start_url, future_expiration):
+        access_token_expiry = future_expiration
+        token_cache = {}
+        utils.SSOTokenLoader(cache=token_cache).save_token(
+            sso_start_url,
+            {
+                'accessToken': 'ACCESS-TOKEN',
+                'expiresAt': access_token_expiry.strftime(
+                    '%Y-%m-%dT%H:%M:%SUTC'
+                ),
+            },
+        )
+        return token_cache
+
+    def test_assume_role_refreshes_source_credentials(
+        self, assume_role_load_config, future_expiration
+    ):
+        expiration = future_expiration
+        client = mock.Mock()
+        client.assume_role.side_effect = [
+            {
+                'Credentials': {
+                    'AccessKeyId': 'OLD-ACCESS',
+                    'SecretAccessKey': 'OLD-ACCESS-SECRET',
+                    'SessionToken': 'OLD-ACCESS-TOKEN',
+                    'Expiration': expiration,
+                }
+            },
+            {
+                'Credentials': {
+                    'AccessKeyId': 'NEW-ACCESS',
+                    'SecretAccessKey': 'NEW-ACCESS-SECRET',
+                    'SessionToken': 'NEW-ACCESS-TOKEN',
+                    'Expiration': expiration,
+                }
+            },
+        ]
+        client_creator = mock.Mock(return_value=client)
+        provider = credentials.AssumeRoleProvider(
+            assume_role_load_config,
+            client_creator,
+            cache={},
+            profile_name='development',
+        )
+
+        creds = provider.load()
+        first = creds.get_frozen_credentials()
+        creds._invalidate('OLD-ACCESS')
+        second = creds.get_frozen_credentials()
+
+        assert first.access_key == 'OLD-ACCESS'
+        assert second.access_key == 'NEW-ACCESS'
+        assert client.assume_role.call_count == 2
+
+    def test_web_identity_refreshes_source_credentials(
+        self,
+        web_identity_load_config,
+        web_identity_token_loader_cls,
+        future_expiration,
+    ):
+        expiration = future_expiration
+        client = mock.Mock()
+        client.assume_role_with_web_identity.side_effect = [
+            {
+                'Credentials': {
+                    'AccessKeyId': 'OLD-ACCESS',
+                    'SecretAccessKey': 'OLD-ACCESS-SECRET',
+                    'SessionToken': 'OLD-ACCESS-TOKEN',
+                    'Expiration': expiration,
+                }
+            },
+            {
+                'Credentials': {
+                    'AccessKeyId': 'NEW-ACCESS',
+                    'SecretAccessKey': 'NEW-ACCESS-SECRET',
+                    'SessionToken': 'NEW-ACCESS-TOKEN',
+                    'Expiration': expiration,
+                }
+            },
+        ]
+        client_creator = mock.Mock(return_value=client)
+        provider = credentials.AssumeRoleWithWebIdentityProvider(
+            load_config=web_identity_load_config,
+            client_creator=client_creator,
+            profile_name='development',
+            cache={},
+            token_loader_cls=web_identity_token_loader_cls,
+        )
+
+        creds = provider.load()
+        first = creds.get_frozen_credentials()
+        creds._invalidate('OLD-ACCESS')
+        second = creds.get_frozen_credentials()
+
+        assert first.access_key == 'OLD-ACCESS'
+        assert second.access_key == 'NEW-ACCESS'
+        assert client.assume_role_with_web_identity.call_count == 2
+        web_identity_token_loader_cls.assert_called_once_with('/tmp/token')
+
+    def test_sso_refreshes_source_credentials(
+        self, sso_load_config, sso_token_cache, future_expiration
+    ):
+        expiration = future_expiration
+        client = mock.Mock()
+        client.get_role_credentials.side_effect = [
+            {
+                'roleCredentials': {
+                    'accessKeyId': 'OLD-ACCESS',
+                    'secretAccessKey': 'OLD-ACCESS-SECRET',
+                    'sessionToken': 'OLD-ACCESS-TOKEN',
+                    'expiration': int(expiration.timestamp() * 1000),
+                }
+            },
+            {
+                'roleCredentials': {
+                    'accessKeyId': 'NEW-ACCESS',
+                    'secretAccessKey': 'NEW-ACCESS-SECRET',
+                    'sessionToken': 'NEW-ACCESS-TOKEN',
+                    'expiration': int(expiration.timestamp() * 1000),
+                }
+            },
+        ]
+        client_creator = mock.Mock(return_value=client)
+        provider = credentials.SSOProvider(
+            load_config=sso_load_config,
+            client_creator=client_creator,
+            profile_name='sso-profile',
+            cache={},
+            token_cache=sso_token_cache,
+        )
+
+        creds = provider.load()
+        first = creds.get_frozen_credentials()
+        creds._invalidate('OLD-ACCESS')
+        second = creds.get_frozen_credentials()
+
+        assert first.access_key == 'OLD-ACCESS'
+        assert second.access_key == 'NEW-ACCESS'
+        assert client.get_role_credentials.call_count == 2
