@@ -30,6 +30,8 @@ Mirror policy for GA migration:
 """
 
 import operator
+import os
+import threading
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -62,6 +64,11 @@ from tests.unit import test_credentials
 
 DATE = datetime(2021, 12, 10, 0, 0, 0, tzinfo=timezone.utc)
 DT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+CREDENTIAL_REFRESH_TEST_CASES_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'credential_refresh',
+    'credential-refresh-tests.json',
+)
 
 
 @pytest.fixture(autouse=True)
@@ -1765,3 +1772,356 @@ class TestProviderCacheInvalidation:
         assert first.access_key == 'OLD-ACCESS'
         assert second.access_key == 'NEW-ACCESS'
         assert client.get_role_credentials.call_count == 2
+
+
+class CredentialRefreshClock:
+    def __init__(self, now=DATE):
+        self._now = now
+
+    def __call__(self):
+        return self._now
+
+    def advance(self, seconds):
+        self._now += timedelta(seconds=seconds)
+
+
+class CredentialRefreshLifecycleHarness:
+    def __init__(self, test_case):
+        self._test_case = test_case
+        self._clock = CredentialRefreshClock()
+        self._next_refresh_response = None
+        self._next_lifetime_seconds = 3600
+        self._refresh_count = 0
+        self._refresh_backoff_seconds = test_case['given'].get(
+            'refreshBackoffSeconds', 420
+        )
+        self._creds = self._create_credentials()
+
+    def uniform_random(self, low, high):
+        """Pins jittered backoff values so modeled cases stay deterministic."""
+        if (low, high) == (300, 600):
+            return self._refresh_backoff_seconds
+        if (low, high) == (1, 5):
+            return 5
+        raise AssertionError(
+            f"Unexpected random.uniform call with bounds {(low, high)}"
+        )
+
+    def run_step(self, step):
+        step_type = step['type']
+        if step_type == 'advanceTime':
+            self._clock.advance(step['seconds'])
+            return None
+        if step_type == 'invalidate':
+            self._creds._invalidate(step['rejectedAccessKeyId'])
+            return None
+        if step_type != 'getCredentials':
+            raise AssertionError(f"Unknown step type: {step_type}")
+
+        # Fresh-credential steps can override the lifetime returned by the
+        # next refresh.
+        self._next_lifetime_seconds = step.get('lifetimeSeconds', 3600)
+        response = step.get('response')
+        if response is None:
+            self._next_refresh_response = None
+        else:
+            self._next_refresh_response = self._build_refresh_response(step)
+
+        rate_limited = self._creds._in_refresh_backoff()
+        had_cached_credentials = self._creds._frozen_credentials is not None
+        previous_access_key = self._current_access_key()
+        refresh_count = self._refresh_count
+        try:
+            frozen = self._creds.get_frozen_credentials()
+        except Exception as error:
+            source_contacted = self._refresh_count != refresh_count
+            if self._next_refresh_response is not None and source_contacted:
+                self._next_refresh_response = None
+            return {
+                'result': self._result_from_error(
+                    error, had_cached_credentials
+                ),
+                'sourceContacted': source_contacted,
+                'rateLimited': rate_limited,
+            }
+
+        source_contacted = self._refresh_count != refresh_count
+        if self._next_refresh_response is not None and source_contacted:
+            self._next_refresh_response = None
+        result = 'cachedCredentials'
+        if previous_access_key != frozen.access_key:
+            result = 'newCredentials'
+        actual = {
+            'result': result,
+            'sourceContacted': source_contacted,
+            'rateLimited': rate_limited,
+        }
+        if result == 'newCredentials':
+            actual['advisoryWindowSeconds'] = (
+                self._creds._resolve_advisory_refresh_timeout()
+            )
+        return actual
+
+    def _create_credentials(self):
+        given = self._test_case['given']
+        state = given['cachedCredentials']
+        if state == 'none':
+            creds = credentials.DeferredRefreshableCredentials(
+                self._refresh_using,
+                'iam-role',
+                time_fetcher=self._clock,
+            )
+            # Deferred credentials do not accept refresh-window kwargs, so keep
+            # the configured override on the instance for the shared resolver.
+            creds._explicit_advisory_refresh_timeout = given.get(
+                'configuredAdvisoryWindowSeconds'
+            )
+            return creds
+
+        advisory_timeout = given.get('configuredAdvisoryWindowSeconds')
+        access_key = given.get('accessKeyId', 'ORIGINAL-ACCESS')
+        return credentials.RefreshableCredentials(
+            access_key,
+            'ORIGINAL-SECRET',
+            'ORIGINAL-TOKEN',
+            self._seed_expiry_time(state),
+            self._refresh_using,
+            'iam-role',
+            time_fetcher=self._clock,
+            advisory_timeout=advisory_timeout,
+        )
+
+    def _seed_expiry_time(self, state):
+        """Returns an expiry time that places credentials in the requested state."""
+        if state == 'valid':
+            return self._clock() + timedelta(minutes=20)
+        if state == 'advisory':
+            return self._clock() + timedelta(minutes=4)
+        if state == 'mandatory':
+            return self._clock() + timedelta(seconds=30)
+        if state == 'expired':
+            return self._clock() - timedelta(seconds=30)
+        raise AssertionError(f"Unknown cached credential state: {state}")
+
+    def _refresh_using(self):
+        if self._next_refresh_response is None:
+            raise AssertionError(
+                "Credential source was contacted unexpectedly"
+            )
+        self._refresh_count += 1
+        return self._next_refresh_response()
+
+    def _build_refresh_response(self, step):
+        response_type = step['response']
+        if response_type == 'freshCredentials':
+            return self._fresh_credentials_response
+        if response_type == 'staleCredentials':
+            return self._stale_credentials_response
+        if response_type == 'error':
+            return self._recoverable_error_response
+        if response_type == 'nonRecoverableError':
+            return self._nonrecoverable_error_response
+        raise AssertionError(f"Unknown refresh response: {response_type}")
+
+    def _fresh_credentials_response(self):
+        access_key = f'NEW-ACCESS-{self._refresh_count + 1}'
+        expiry_time = self._clock() + timedelta(
+            seconds=self._next_lifetime_seconds
+        )
+        return {
+            'access_key': access_key,
+            'secret_key': 'NEW-SECRET',
+            'token': 'NEW-TOKEN',
+            'expiry_time': expiry_time.isoformat(),
+        }
+
+    def _stale_credentials_response(self):
+        return {
+            'access_key': f'STALE-ACCESS-{self._refresh_count}',
+            'secret_key': 'STALE-SECRET',
+            'token': 'STALE-TOKEN',
+            'expiry_time': self._clock().isoformat(),
+        }
+
+    def _recoverable_error_response(self):
+        raise Exception("source down")
+
+    def _nonrecoverable_error_response(self):
+        raise _CacheableNonRecoverableError("reauth required")
+
+    def _current_access_key(self):
+        if self._creds._frozen_credentials is None:
+            return None
+        return self._creds._frozen_credentials.access_key
+
+    def _result_from_error(self, error, had_cached_credentials):
+        if credentials._is_nonrecoverable_refresh_error(
+            self._creds.method, error
+        ):
+            return 'nonRecoverableError'
+        if not had_cached_credentials:
+            return 'noCredentialsError'
+        raise AssertionError(
+            f"Unexpected exception for modeled lifecycle case: {error!r}"
+        )
+
+
+class PausingRefresher:
+    """Pauses a refresh so concurrent callers can be observed."""
+
+    def __init__(self, response):
+        self._response = response
+        self.started = threading.Event()
+        self.resume = threading.Event()
+        self.call_count = 0
+
+    def __call__(self):
+        self.call_count += 1
+        self.started.set()
+        if not self.resume.wait(timeout=1):
+            raise AssertionError("Timed out waiting to resume refresh")
+        return self._response
+
+
+class CredentialFetchThread(threading.Thread):
+    """Fetches frozen credentials on a background thread."""
+
+    def __init__(self, creds):
+        super().__init__()
+        self._creds = creds
+        self.frozen_credentials = None
+        self.error = None
+
+    def run(self):
+        try:
+            self.frozen_credentials = self._creds.get_frozen_credentials()
+        except Exception as error:
+            self.error = error
+
+
+def _get_credential_refresh_test_id():
+    if 'BOTOCORE_TEST_ID' not in os.environ:
+        return None
+    try:
+        return int(os.environ['BOTOCORE_TEST_ID'])
+    except ValueError:
+        raise TypeError(
+            "Invalid format for BOTOCORE_TEST_ID, should be a single integer."
+        )
+
+
+def _load_credential_refresh_lifecycle_cases():
+    with open(CREDENTIAL_REFRESH_TEST_CASES_FILE, encoding='utf-8') as f:
+        test_cases = json.load(f)
+
+    requested_case_id = _get_credential_refresh_test_id()
+    loaded_cases = []
+    for case_id, test_case in enumerate(test_cases):
+        if requested_case_id is not None and case_id != requested_case_id:
+            continue
+        loaded_cases.append(dict(test_case, case_id=case_id))
+    return loaded_cases
+
+
+def _credential_refresh_case_id(test_case):
+    return f"{test_case['case_id']}: {test_case['documentation']}"
+
+
+class TestCredentialRefreshLifecycle:
+    @pytest.mark.parametrize(
+        'test_case',
+        _load_credential_refresh_lifecycle_cases(),
+        ids=_credential_refresh_case_id,
+    )
+    def test_credential_refresh_lifecycle(self, test_case):
+        harness = CredentialRefreshLifecycleHarness(test_case)
+        with mock.patch(
+            'botocore.credentials.random.uniform',
+            side_effect=harness.uniform_random,
+        ):
+            for step in test_case['steps']:
+                actual = harness.run_step(step)
+                if actual is None:
+                    continue
+                for key, expected in step['expected'].items():
+                    assert actual[key] == expected
+
+
+class TestCredentialRefreshConcurrency:
+    def test_advisory_refresh_concurrent_callers_reuse_cached_credentials(
+        self,
+    ):
+        clock = CredentialRefreshClock()
+        pausing_refresher = PausingRefresher(
+            _valid_metadata(clock, expires_in=timedelta(hours=1))
+        )
+        refresher = mock.Mock(side_effect=pausing_refresher)
+        creds = _create_refreshable_credentials(
+            clock,
+            refresher=refresher,
+            expires_in=timedelta(seconds=90),
+            advisory_timeout=120,
+            mandatory_timeout=60,
+        )
+
+        refreshing_thread = CredentialFetchThread(creds)
+        refreshing_thread.start()
+
+        assert pausing_refresher.started.wait(timeout=1)
+
+        cached = creds.get_frozen_credentials()
+
+        assert cached.access_key == 'ORIGINAL-ACCESS'
+        assert cached.secret_key == 'ORIGINAL-SECRET'
+        assert cached.token == 'ORIGINAL-TOKEN'
+        assert refreshing_thread.is_alive()
+
+        pausing_refresher.resume.set()
+        refreshing_thread.join(timeout=1)
+
+        assert refreshing_thread.error is None
+        assert refreshing_thread.frozen_credentials.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 1
+
+    @pytest.mark.parametrize(
+        'expires_in',
+        [timedelta(seconds=30), timedelta(seconds=-30)],
+        ids=['mandatory', 'expired'],
+    )
+    def test_mandatory_refresh_concurrent_callers_wait_for_single_refresh(
+        self, expires_in
+    ):
+        clock = CredentialRefreshClock()
+        pausing_refresher = PausingRefresher(
+            _valid_metadata(clock, expires_in=timedelta(hours=1))
+        )
+        refresher = mock.Mock(side_effect=pausing_refresher)
+        creds = _create_refreshable_credentials(
+            clock,
+            refresher=refresher,
+            expires_in=expires_in,
+            advisory_timeout=120,
+            mandatory_timeout=60,
+        )
+
+        refresh_owner_thread = CredentialFetchThread(creds)
+        waiting_thread = CredentialFetchThread(creds)
+        refresh_owner_thread.start()
+
+        assert pausing_refresher.started.wait(timeout=1)
+
+        waiting_thread.start()
+        waiting_thread.join(timeout=0.05)
+        assert waiting_thread.is_alive()
+
+        pausing_refresher.resume.set()
+        refresh_owner_thread.join(timeout=1)
+        waiting_thread.join(timeout=1)
+
+        assert refresh_owner_thread.error is None
+        assert waiting_thread.error is None
+        assert (
+            refresh_owner_thread.frozen_credentials.access_key == 'NEW-ACCESS'
+        )
+        assert waiting_thread.frozen_credentials.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 1
