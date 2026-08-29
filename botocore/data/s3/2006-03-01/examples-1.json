@@ -1642,7 +1642,7 @@
       },
       {
         "input": {
-          "Body": "c:\\HappyFace.jpg",
+          "Body": "HappyFace.jpg",
           "Bucket": "examplebucket",
           "Key": "HappyFace.jpg",
           "Tagging": "key1=value1&key2=value2"
