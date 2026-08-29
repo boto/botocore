@@ -13,7 +13,6 @@
 import datetime
 from io import BytesIO
 
-from dateutil.tz import tzutc
 from urllib3.exceptions import ProtocolError as URLLib3ProtocolError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
@@ -406,7 +405,7 @@ class TestGetResponse(BaseResponseTest):
                         'ETag': '"00000000000000000000000000000000"',
                         'Key': 'test.png',
                         'LastModified': datetime.datetime(
-                            2014, 3, 1, 17, 6, 40, tzinfo=tzutc()
+                            2014, 3, 1, 17, 6, 40, tzinfo=datetime.timezone.utc
                         ),
                         'Owner': {
                             'DisplayName': 'dummy',

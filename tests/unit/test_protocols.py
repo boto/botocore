@@ -56,10 +56,10 @@ import copy
 import os
 import xml.etree.ElementTree as ET
 from base64 import b64decode
+from datetime import timezone
 from enum import Enum
 
 import pytest
-from dateutil.tz import tzutc
 
 from botocore.awsrequest import HeadersDict, prepare_request_dict
 from botocore.compat import OrderedDict, json, urlsplit
@@ -369,7 +369,7 @@ def _convert_special_floats_to_string(parsed):
 def _compliance_timestamp_parser(value):
     datetime = parse_timestamp(value)
     # Convert from our time zone to UTC
-    datetime = datetime.astimezone(tzutc())
+    datetime = datetime.astimezone(timezone.utc)
     # Convert to epoch.
     return datetime.timestamp()
 

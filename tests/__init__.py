@@ -28,8 +28,6 @@ from io import BytesIO
 from subprocess import PIPE, Popen
 from unittest import mock
 
-from dateutil.tz import tzlocal
-
 import botocore.loaders
 import botocore.session
 from botocore import credentials, utils
@@ -383,7 +381,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
         return self._to_timestamp(self._current_datetime())
 
     def _current_datetime(self):
-        return datetime.datetime.now(tzlocal())
+        return datetime.datetime.now(datetime.timezone.utc).astimezone()
 
 
 def _urlparse(url):
@@ -640,3 +638,16 @@ def get_checksum_cls(algorithm=DEFAULT_CHECKSUM_ALGORITHM.lower()):
     if one isn't specified.
     """
     return _CHECKSUM_CLS[algorithm]
+
+
+# Timezone test utilities
+def tzlocal():
+    """Return local timezone for test assertions."""
+    return datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+
+
+def tzoffset(name, offset_seconds):
+    """Return a timezone with a fixed offset for test assertions."""
+    return datetime.timezone(
+        datetime.timedelta(seconds=offset_seconds), name=name
+    )
