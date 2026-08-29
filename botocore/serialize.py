@@ -64,7 +64,7 @@ DEFAULT_TIMESTAMP_FORMAT = 'iso8601'
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 # Same as ISO8601, but with microsecond precision.
 ISO8601_MICRO = '%Y-%m-%dT%H:%M:%S.%fZ'
-HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+$")
+HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+\Z")
 
 TIMESTAMP_PRECISION_DEFAULT = 'default'
 TIMESTAMP_PRECISION_MILLISECOND = 'millisecond'
