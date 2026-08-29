@@ -3589,7 +3589,7 @@ class JSONFileCache:
                 f"Value cannot be cached, must be JSON serializable: {value}"
             )
         if not os.path.isdir(self._working_dir):
-            os.makedirs(self._working_dir, exist_ok=True)
+            os.makedirs(self._working_dir, mode=0o700, exist_ok=True)
 
         temp_fd, temp_path = tempfile.mkstemp(
             dir=self._working_dir, suffix='.tmp'
