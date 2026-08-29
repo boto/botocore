@@ -210,13 +210,17 @@ def mask_proxy_url(proxy_url):
 
     :return: Masked proxy url, i.e. https://***:***@proxy.com
     """
-    mask = '*' * 3
     parsed_url = urlparse(proxy_url)
-    if parsed_url.username:
-        proxy_url = proxy_url.replace(parsed_url.username, mask, 1)
-    if parsed_url.password:
-        proxy_url = proxy_url.replace(parsed_url.password, mask, 1)
-    return proxy_url
+    if not parsed_url.username:
+        return proxy_url
+    mask = '*' * 3
+    # Rebuild the netloc from the parsed userinfo/host so only the credential
+    # fields are masked. A substring replace can spend the mask on an earlier
+    # occurrence of the credential value (e.g. in the scheme or host) and leave
+    # the real secret in place.
+    _, _, host = parsed_url.netloc.rpartition('@')
+    userinfo = f'{mask}:{mask}' if parsed_url.password else mask
+    return parsed_url._replace(netloc=f'{userinfo}@{host}').geturl()
 
 
 def _is_ipaddress(host):
