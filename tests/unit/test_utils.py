@@ -3155,6 +3155,30 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         ).retrieve_iam_role_credentials()
         self.assertEqual(result, self._expected_creds)
 
+    def test_role_name_is_percent_encoded_in_credentials_url(self):
+        # The role name is read from the IMDS response body and appended to the
+        # credentials URL. A value with path separators must not be able to
+        # point the credentials request at a different metadata resource.
+        requested_urls = []
+        get_imds_response = self.get_imds_response
+
+        def record_url(request):
+            requested_urls.append(request.url)
+            return get_imds_response(request)
+
+        self._send.side_effect = record_url
+        self.add_get_token_imds_response(token='token')
+        self.add_get_role_name_imds_response(
+            role_name='../../../../latest/meta-data/iam/info'
+        )
+        self.add_get_credentials_imds_response()
+
+        InstanceMetadataFetcher(num_attempts=1).retrieve_iam_role_credentials()
+
+        creds_url = requested_urls[-1]
+        self.assertNotIn('security-credentials/../', creds_url)
+        self.assertIn('security-credentials/..%2F', creds_url)
+
     def test_exhaust_retries_on_role_name_request(self):
         self.add_get_token_imds_response(token='token')
         self.add_imds_response(status_code=400, body=b'')
