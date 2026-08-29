@@ -585,6 +585,29 @@ class TestHandlers(BaseSessionTest):
 
         self.assertEqual(params['HostedZoneId'], '/hostedzone/ABC123')
 
+    def test_route53_resource_id_non_string_left_alone(self):
+        event = 'before-parameter-build.route53.GetHostedZone'
+        params = {'HostedZoneId': None}
+        operation_def = {
+            'name': 'GetHostedZone',
+            'input': {'shape': 'GetHostedZoneInput'},
+        }
+        service_def = {
+            'metadata': {},
+            'shapes': {
+                'GetHostedZoneInput': {
+                    'type': 'structure',
+                    'members': {
+                        'HostedZoneId': {'shape': 'ResourceId'},
+                    },
+                },
+                'ResourceId': {'type': 'string'},
+            },
+        }
+        model = OperationModel(operation_def, ServiceModel(service_def))
+        self.session.emit(event, params=params, model=model)
+        self.assertIsNone(params['HostedZoneId'])
+
     def test_run_instances_userdata(self):
         user_data = 'This is a test'
         b64_user_data = base64.b64encode(user_data.encode('latin-1')).decode(
