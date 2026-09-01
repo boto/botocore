@@ -5013,23 +5013,6 @@ class TestRefreshWindows:
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert creds.refresh_needed() is True
 
-    def test_mandatory_refresh_boundary_is_one_minute(self, mock_time):
-        issued_at = mock_time()
-        creds = _create_resilient_credentials(
-            mock_time, expires_in=timedelta(seconds=90)
-        )
-        expiry_time = issued_at + timedelta(seconds=90)
-
-        mock_time.return_value = expiry_time - timedelta(seconds=61)
-        with mock.patch.object(creds, '_protected_refresh') as refresh:
-            creds.get_frozen_credentials()
-        refresh.assert_called_once_with(is_mandatory=False)
-
-        mock_time.return_value = expiry_time - timedelta(seconds=59)
-        with mock.patch.object(creds, '_protected_refresh') as refresh:
-            creds.get_frozen_credentials()
-        refresh.assert_called_once_with(is_mandatory=True)
-
 
 class TestRefreshBackoff:
     def test_in_refresh_backoff_does_not_reread_blocked_until(self, mock_time):

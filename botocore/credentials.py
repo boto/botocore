@@ -864,10 +864,7 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             try:
                 if not self.refresh_needed():
                     return
-                is_mandatory_refresh = self.refresh_needed(
-                    self._mandatory_refresh_timeout
-                )
-                self._protected_refresh(is_mandatory=is_mandatory_refresh)
+                self._protected_refresh()
                 return
             finally:
                 self._refresh_lock.release()
@@ -877,9 +874,9 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             with self._refresh_lock:
                 if not self.refresh_needed(self._mandatory_refresh_timeout):
                     return
-                self._protected_refresh(is_mandatory=True)
+                self._protected_refresh()
 
-    def _protected_refresh(self, is_mandatory):
+    def _protected_refresh(self):
         # Precondition: the refresh lock is held by the current thread.
         cached_error = self._get_cached_nonrecoverable_error()
         if cached_error is not None:
