@@ -813,6 +813,98 @@ class TestCreateClientArgs(unittest.TestCase):
         )
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()
+    
+    def test_tcp_keepalive_legacy_enabled(self):
+        config = Config(tcp_keepalive=True)
+        opts = self.args_create._compute_socket_options({}, config)
+        self.assertEqual(
+            opts,
+            self.default_socket_options + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+        )
+
+
+    def test_tcp_keepalive_legacy_disabled(self):
+        config = Config(tcp_keepalive=False)
+        opts = self.args_create._compute_socket_options({}, config)
+        self.assertEqual(opts, self.default_socket_options)
+
+
+    def test_tcp_keepalive_enabled_with_advanced_options(self):
+        config = Config(
+            tcp_keepalive=True,
+            tcp_keepidle=120,
+            tcp_keepintvl=30,
+            tcp_keepcnt=5,
+        )
+        opts = self.args_create._compute_socket_options({}, config)
+        self.assertIn((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 30), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5), opts)
+
+
+    def test_tcp_keepalive_enabled_with_partial_advanced_options(self):
+        config = Config(
+            tcp_keepalive=True,
+            tcp_keepidle=120,
+            tcp_keepcnt=7,
+        )
+        opts = self.args_create._compute_socket_options({}, config)
+        self.assertIn((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 7), opts)
+        # TCP_KEEPINTVL should not be set if not specified
+        self.assertTrue(all(opt[1] != socket.TCP_KEEPINTVL for opt in opts))
+
+
+    def test_tcp_keepalive_enabled_scoped_config_only(self):
+        scoped_config = {"tcp_keepalive": "true"}
+        opts = self.args_create._compute_socket_options(scoped_config, None)
+        self.assertEqual(
+            opts,
+            self.default_socket_options + [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)],
+        )
+
+
+    def test_tcp_keepalive_disabled_scoped_config(self):
+        scoped_config = {"tcp_keepalive": "false"}
+        opts = self.args_create._compute_socket_options(scoped_config, None)
+        self.assertEqual(opts, self.default_socket_options)
+
+
+    def test_tcp_keepalive_enabled_with_scoped_and_client_config(self):
+        scoped_config = {"tcp_keepalive": "true"}
+        config = Config(tcp_keepalive=True)
+        opts = self.args_create._compute_socket_options(scoped_config, config)
+        self.assertIn((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1), opts)
+
+
+    def test_tcp_keepalive_enabled_with_scoped_and_partial_advanced_options(self):
+        scoped_config = {"tcp_keepalive": "true", "tcp_keepidle": 120}
+        opts = self.args_create._compute_socket_options(scoped_config, None)
+        self.assertIn((socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120), opts)
+
+        self.assertTrue(
+            all(
+                opt[1] != socket.TCP_KEEPINTVL and opt[1] != socket.TCP_KEEPCNT
+                for opt in opts
+            )
+        )
+
+
+    def test_tcp_keepalive_enabled_with_scoped_and_advanced_client_config(self):
+        scoped_config = {"tcp_keepalive": "true"}
+        config = Config(
+            tcp_keepalive=True,
+            tcp_keepidle=100,
+            tcp_keepintvl=20,
+            tcp_keepcnt=3,
+        )
+        opts = self.args_create._compute_socket_options(scoped_config, config)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 100), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 20), opts)
+        self.assertIn((socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3), opts)
 
 
 class TestEndpointResolverBuiltins(unittest.TestCase):
