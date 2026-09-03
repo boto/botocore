@@ -766,7 +766,7 @@ def generate_presigned_url(
         conditionals and ``Range``, are also silently dropped.
 
         It is recommended to configure the S3 client with Signature
-        Version 4, setting ``signature_version='s3v4'`` in the client's
+        Version 4 by setting ``signature_version='s3v4'`` in the client's
         ``Config``.
 
     :type ClientMethod: string
