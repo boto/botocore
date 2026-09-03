@@ -2862,6 +2862,33 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def test_can_use_external_host_if_https(self):
         self.assert_can_retrieve_metadata_from('https://somewhere.com/foo')
 
+    def test_default_session_verifies_with_default_cert(self):
+        with mock.patch(
+            'botocore.utils.botocore.httpsession.URLLib3Session'
+        ) as mock_session_cls:
+            ContainerMetadataFetcher()
+        mock_session_cls.assert_called_with(
+            timeout=ContainerMetadataFetcher.TIMEOUT_SECONDS, verify=True
+        )
+
+    def test_default_session_honors_ca_bundle(self):
+        with mock.patch(
+            'botocore.utils.botocore.httpsession.URLLib3Session'
+        ) as mock_session_cls:
+            ContainerMetadataFetcher(verify='/path/to/bundle')
+        mock_session_cls.assert_called_with(
+            timeout=ContainerMetadataFetcher.TIMEOUT_SECONDS,
+            verify='/path/to/bundle',
+        )
+
+    def test_injected_session_ignores_verify(self):
+        # If a session is explicitly provided, it is used as-is and the
+        # verify argument has no effect.
+        fetcher = ContainerMetadataFetcher(
+            self.http, sleep=self.sleep, verify='/path/to/bundle'
+        )
+        self.assertIs(fetcher._session, self.http)
+
 
 class TestUnsigned(unittest.TestCase):
     def test_copy_returns_same_object(self):

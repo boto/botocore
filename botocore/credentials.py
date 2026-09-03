@@ -93,6 +93,7 @@ def create_credential_resolver(session, cache=None, region_name=None):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
     disable_env_vars = session.instance_variables().get('profile') is not None
+    ca_bundle = session.get_config_variable('ca_bundle')
 
     imds_config = {
         'ec2_metadata_service_endpoint': session.get_config_variable(
@@ -111,7 +112,9 @@ def create_credential_resolver(session, cache=None, region_name=None):
         cache = {}
 
     env_provider = EnvProvider()
-    container_provider = ContainerProvider()
+    container_provider = ContainerProvider(
+        fetcher=ContainerMetadataFetcher(verify=ca_bundle)
+    )
     instance_metadata_provider = InstanceMetadataProvider(
         iam_role_fetcher=InstanceMetadataFetcher(
             timeout=metadata_timeout,
