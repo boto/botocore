@@ -758,6 +758,17 @@ def generate_presigned_url(
 ):
     """Generate a presigned url given a client, its method, and arguments
 
+    .. warning::
+
+        For backwards compatibility, S3 presigned URLs use Signature
+        Version 2 by default in regions where S3 supports it. As a result,
+        some ``Params`` entries are not signed. Some headers, including the
+        conditionals and ``Range``, are also silently dropped.
+
+        It is recommended to configure the S3 client with Signature
+        Version 4 by setting ``signature_version='s3v4'`` in the client's
+        ``Config``.
+
     :type ClientMethod: string
     :param ClientMethod: The client method to presign for
 
