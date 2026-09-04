@@ -102,6 +102,7 @@ from botocore.utils import (
     switch_host_s3_accelerate,
     switch_to_virtual_host_style,
     validate_jmespath_for_set,
+    validate_region_name,
 )
 from tests import FreezeTime, RawResponse, create_session, mock, unittest
 
@@ -3817,3 +3818,36 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         self.assertEqual(
             len(temp_files), 0, f'Temp files not cleaned: {temp_files}'
         )
+
+
+class TestValidateRegionName(unittest.TestCase):
+    def test_valid_region_names(self):
+        for name in ['us-east-1', 'eu-west-1', 'ap-southeast-2', 'us-gov-west-1']:
+            validate_region_name(name)
+
+    def test_rejects_empty_string(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('')
+
+    def test_rejects_trailing_newline(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('us-east-1\n')
+
+    def test_rejects_spaces(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('invalid region!')
+
+    def test_rejects_leading_hyphen(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('-us-east-1')
+
+    def test_rejects_trailing_hyphen(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('us-east-1-')
+
+    def test_rejects_numeric_only(self):
+        with self.assertRaises(InvalidRegionError):
+            validate_region_name('12345')
+
+    def test_none_returns_none(self):
+        self.assertIsNone(validate_region_name(None))
