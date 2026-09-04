@@ -309,7 +309,10 @@ class ResponseParser:
             if 'body' not in response or response['body'] is None:
                 return True
 
-            body = response['body'].strip()
+            body = response['body']
+            if not hasattr(body, 'strip'):
+                body = body.read()
+            body = body.strip()
             return body.startswith(b'<html>') or not body
 
     def _do_generic_error_parse(self, response):
