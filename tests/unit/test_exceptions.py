@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
 import pickle
 
 import botocore.awsrequest
@@ -167,3 +168,31 @@ class TestPickleExceptions(unittest.TestCase):
         self.assertIsInstance(
             unpickled_exception.response, botocore.awsrequest.AWSResponse
         )
+
+    def test_waiter_error(self):
+        exception = botocore.exceptions.WaiterError(
+            name='MyWaiter',
+            reason='MyReason',
+            last_response={'State': 'pending'},
+        )
+        unpickled_exception = pickle.loads(pickle.dumps(exception))
+        self.assertIsInstance(
+            unpickled_exception, botocore.exceptions.WaiterError
+        )
+        self.assertEqual(str(unpickled_exception), str(exception))
+        self.assertEqual(unpickled_exception.kwargs, exception.kwargs)
+        self.assertEqual(
+            unpickled_exception.last_response, exception.last_response
+        )
+
+    def test_waiter_error_can_be_copied(self):
+        exception = botocore.exceptions.WaiterError(
+            name='MyWaiter',
+            reason='MyReason',
+            last_response={'State': 'pending'},
+        )
+        copied_exception = copy.copy(exception)
+        self.assertIsInstance(copied_exception, botocore.exceptions.WaiterError)
+        self.assertEqual(str(copied_exception), str(exception))
+        self.assertEqual(copied_exception.kwargs, exception.kwargs)
+        self.assertEqual(copied_exception.last_response, exception.last_response)
