@@ -102,6 +102,7 @@ class Session:
         event_hooks=None,
         include_builtin_handlers=True,
         profile=None,
+        session_profiles=None,
     ):
         """
         Create a new Session object.
@@ -126,6 +127,12 @@ class Session:
             session.  Note that the profile can only be set when
             the session is created.
 
+        :type session_profiles: dict
+        :param session_profiles: A dictionary that is used add or override
+            profile configuration asociated with this session.  The
+            keys are profile names and the values are profile
+            configurations with the same structure as the config file.
+
         """
         if event_hooks is None:
             self._original_handler = HierarchicalEmitter()
@@ -145,6 +152,7 @@ class Session:
         self._credentials = None
         self._auth_token = None
         self._profile_map = None
+        self._session_profiles = {}
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
@@ -158,6 +166,8 @@ class Session:
         self.session_var_map = SessionVarDict(self, self.SESSION_VARIABLES)
         if session_vars is not None:
             self.session_var_map.update(session_vars)
+        if session_profiles is not None:
+            self._session_profiles = session_profiles
         invoke_initializers(self)
 
     def _register_components(self):
@@ -459,6 +469,7 @@ class Session:
                         self._config['profiles'][profile].update(cred_vars)
             except ConfigNotFound:
                 pass
+            self._config['profiles'].update(self._session_profiles)
         return self._config
 
     def get_default_client_config(self):
