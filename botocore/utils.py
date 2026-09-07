@@ -3630,7 +3630,14 @@ def get_token_from_environment(signing_name, environ=None):
     if environ is None:
         environ = os.environ
     env_var = _get_bearer_env_var_name(signing_name)
-    return environ.get(env_var)
+    token = environ.get(env_var)
+    if token == '':
+        logger.warning(
+            "%s is set to an empty value; requests using bearer "
+            "authentication may fail",
+            env_var,
+        )
+    return token
 
 
 def _get_bearer_env_var_name(signing_name):
