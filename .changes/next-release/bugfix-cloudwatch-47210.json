@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "``cloudwatch``",
+  "description": "Transform the ``UpdateOTelEnrichment`` operation to ``update_otel_enrichment`` / ``update-otel-enrichment`` instead of ``update_o_tel_enrichment`` / ``update-o-tel-enrichment``, consistent with the other ``OTelEnrichment`` operations."
+}
