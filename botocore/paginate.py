@@ -254,7 +254,16 @@ class PageIterator:
 
     def __iter__(self):
         current_kwargs = self._op_kwargs
-        previous_next_token = None
+        # Every next token we've injected into a request so far, used to
+        # detect a service handing back a token that doesn't make forward
+        # progress. A single "previous token" slot only catches the token
+        # being repeated on consecutive pages; it misses longer cycles
+        # (e.g. a token sequence that alternates A, B, A, B, ...), which
+        # would otherwise paginate forever.
+        # next_token is a dict, so it isn't hashable as-is; store a
+        # frozenset of its items instead so membership checks stay O(1)
+        # even across paginations with very large numbers of pages.
+        seen_next_tokens = set()
         next_token = {key: None for key in self._input_token}
         if self._starting_token is not None:
             # If the starting token exists, populate the next_token with the
@@ -319,16 +328,24 @@ class PageIterator:
                     # next token to be the resume token.
                     self.resume_token = next_token
                     break
-                if (
-                    previous_next_token is not None
-                    and previous_next_token == next_token
-                ):
+                next_token_key = self._hashable_token_key(next_token)
+                if next_token_key in seen_next_tokens:
                     message = (
                         f"The same next token was received twice: {next_token}"
                     )
                     raise PaginationError(message=message)
                 self._inject_token_into_kwargs(current_kwargs, next_token)
-                previous_next_token = next_token
+                seen_next_tokens.add(next_token_key)
+
+    def _hashable_token_key(self, next_token):
+        # next_token's values are normally simple scalars (str/int/etc.),
+        # but fall back to a stable string representation if a service
+        # ever returns a nested/unhashable value so we still get O(1)
+        # membership checks instead of raising here.
+        try:
+            return frozenset(next_token.items())
+        except TypeError:
+            return repr(sorted(next_token.items(), key=lambda item: item[0]))
 
     def search(self, expression):
         """Applies a JMESPath expression to a paginator
