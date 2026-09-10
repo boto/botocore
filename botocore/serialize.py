@@ -85,7 +85,8 @@ def create_serializer(
     :param include_validation: Whether to include parameter validation.
     :type include_validation: bool
     :param timestamp_precision: Timestamp precision level.
-        - 'default': Microseconds for ISO timestamps, seconds for Unix and RFC
+        - 'default': Full precision of the provided value (up to
+          microseconds) for ISO and Unix timestamps, seconds for RFC
         - 'millisecond': Millisecond precision (ISO/Unix), seconds for RFC
     :type timestamp_precision: str
     :return: A serializer instance for the given protocol.
@@ -187,13 +188,16 @@ class Serializer:
 
     def _timestamp_unixtimestamp(self, value):
         """Return unix timestamp with precision based on timestamp_precision."""
-        # As of the addition of the precision flag, we support millisecond precision here as well
+        timestamp = calendar.timegm(value.timetuple())
         if self._timestamp_precision == TIMESTAMP_PRECISION_MILLISECOND:
-            base_timestamp = calendar.timegm(value.timetuple())
             milliseconds = (value.microsecond // 1000) / 1000.0
-            return base_timestamp + milliseconds
-        else:
-            return int(calendar.timegm(value.timetuple()))
+            return timestamp + milliseconds
+        elif value.microsecond > 0:
+            # Preserve the sub-second precision the caller provided. Integer
+            # arithmetic followed by a single division yields the correctly
+            # rounded float for the exact microsecond value.
+            return (timestamp * 10**6 + value.microsecond) / 10**6
+        return timestamp
 
     def _timestamp_rfc822(self, value):
         """Return RFC822 timestamp (always second precision - RFC doesn't support sub-second)."""
@@ -660,22 +664,12 @@ class CBORSerializer(Serializer):
         tag = 1  # Use tag 1 for unix timestamp
         initial_byte = self._get_initial_byte(self.TAG_MAJOR_TYPE, tag)
         serialized.extend(initial_byte)  # Tagging the timestamp
-        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
-            timestamp
-        )
-
-        if num_bytes == 0:
-            initial_byte = self._get_initial_byte(
-                self.UNSIGNED_INT_MAJOR_TYPE, timestamp
-            )
-            serialized.extend(initial_byte)
+        # Tag 1 permits either an integer or a floating-point epoch seconds
+        # value; a float is used when sub-second precision is present.
+        if isinstance(timestamp, float):
+            self._serialize_type_double(serialized, timestamp, shape, key)
         else:
-            initial_byte = self._get_initial_byte(
-                self.UNSIGNED_INT_MAJOR_TYPE, additional_info
-            )
-            serialized.extend(
-                initial_byte + timestamp.to_bytes(num_bytes, "big")
-            )
+            self._serialize_type_integer(serialized, timestamp, shape, key)
 
     def _serialize_type_float(self, serialized, value, shape, key):
         if self._is_special_number(value):

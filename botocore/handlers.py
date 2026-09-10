@@ -61,7 +61,6 @@ from botocore.exceptions import (
     UnsupportedTLSVersionWarning,
 )
 from botocore.regions import EndpointResolverBuiltins
-from botocore.serialize import TIMESTAMP_PRECISION_MILLISECOND
 from botocore.signers import (
     add_dsql_generate_db_auth_token_methods,
     add_generate_db_auth_token,
@@ -1089,11 +1088,6 @@ def remove_polly_start_speech_synthesis_stream(class_attributes, **kwargs):
         del class_attributes['start_speech_synthesis_stream']
 
 
-def enable_millisecond_timestamp_precision(serializer_kwargs, **kwargs):
-    """Event handler to enable millisecond precision"""
-    serializer_kwargs['timestamp_precision'] = TIMESTAMP_PRECISION_MILLISECOND
-
-
 def add_retry_headers(request, **kwargs):
     retries_context = request.context.get('retries')
     if not retries_context:
@@ -1537,10 +1531,6 @@ BUILTIN_HANDLERS = [
     (
         'creating-client-class.polly',
         remove_polly_start_speech_synthesis_stream,
-    ),
-    (
-        'creating-serializer.bedrock-agentcore',
-        enable_millisecond_timestamp_precision,
     ),
     ('after-call.iam', json_decode_policies),
     (
