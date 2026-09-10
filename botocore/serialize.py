@@ -199,9 +199,10 @@ class Serializer:
         elif self._timestamp_precision == TIMESTAMP_PRECISION_LEGACY:
             return timestamp
         elif value.microsecond > 0:
-            # Preserve the sub-second precision the caller provided. Integer
-            # arithmetic followed by a single division yields the correctly
-            # rounded float for the exact microsecond value.
+            # Add the microseconds as integers before dividing so the float is only
+            # rounded once. Dividing first and then adding rounds twice, which can
+            # produce a slightly different value, e.g. 1 + 3691 / 10**6 gives
+            # 1.0036909999999999 instead of 1.003691.
             return (timestamp * 10**6 + value.microsecond) / 10**6
         return timestamp
 
