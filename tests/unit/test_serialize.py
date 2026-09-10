@@ -26,6 +26,7 @@ from botocore.exceptions import ParamValidationError
 from botocore.model import ServiceModel
 from botocore.serialize import (
     TIMESTAMP_PRECISION_DEFAULT,
+    TIMESTAMP_PRECISION_LEGACY,
     TIMESTAMP_PRECISION_MILLISECOND,
 )
 from tests import unittest
@@ -757,6 +758,28 @@ class TestTimestampPrecision(unittest.TestCase):
         self.assertEqual(request['body']['UnixTimestamp'], 1704110400.0)
         self.assertEqual(
             request['body']['IsoTimestamp'], '2024-01-01T12:00:00.000Z'
+        )
+
+    def test_legacy_precision_option_truncates_unix_to_seconds(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
+        request = self.serialize_to_request(
+            {
+                'UnixTimestamp': test_datetime,
+                'IsoTimestamp': test_datetime,
+                'Rfc822Timestamp': test_datetime,
+            },
+            TIMESTAMP_PRECISION_LEGACY,
+        )
+        # Legacy behavior: whole seconds for unix, but ISO8601 has always
+        # carried microseconds.
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400)
+        self.assertIsInstance(request['body']['UnixTimestamp'], int)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.123456Z'
+        )
+        self.assertEqual(
+            request['body']['Rfc822Timestamp'],
+            'Mon, 01 Jan 2024 12:00:00 GMT',
         )
 
     def test_invalid_timestamp_precision_raises_error(self):

@@ -68,9 +68,11 @@ HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+$")
 
 TIMESTAMP_PRECISION_DEFAULT = 'default'
 TIMESTAMP_PRECISION_MILLISECOND = 'millisecond'
+TIMESTAMP_PRECISION_LEGACY = 'legacy'
 TIMESTAMP_PRECISION_OPTIONS = (
     TIMESTAMP_PRECISION_DEFAULT,
     TIMESTAMP_PRECISION_MILLISECOND,
+    TIMESTAMP_PRECISION_LEGACY,
 )
 
 
@@ -88,6 +90,8 @@ def create_serializer(
         - 'default': Full precision of the provided value (up to
           microseconds) for ISO and Unix timestamps, seconds for RFC
         - 'millisecond': Millisecond precision (ISO/Unix), seconds for RFC
+        - 'legacy': Behavior prior to sub-second Unix timestamp support.
+          Microseconds for ISO timestamps, seconds for Unix and RFC
     :type timestamp_precision: str
     :return: A serializer instance for the given protocol.
     """
@@ -192,6 +196,8 @@ class Serializer:
         if self._timestamp_precision == TIMESTAMP_PRECISION_MILLISECOND:
             milliseconds = (value.microsecond // 1000) / 1000.0
             return timestamp + milliseconds
+        elif self._timestamp_precision == TIMESTAMP_PRECISION_LEGACY:
+            return timestamp
         elif value.microsecond > 0:
             # Preserve the sub-second precision the caller provided. Integer
             # arithmetic followed by a single division yields the correctly
