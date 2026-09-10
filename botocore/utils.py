@@ -3077,10 +3077,11 @@ class ContainerMetadataFetcher:
         'localhost',
     ]
 
-    def __init__(self, session=None, sleep=time.sleep):
+    def __init__(self, session=None, sleep=time.sleep, verify=None):
         if session is None:
             session = botocore.httpsession.URLLib3Session(
-                timeout=self.TIMEOUT_SECONDS
+                timeout=self.TIMEOUT_SECONDS,
+                verify=verify if verify is not None else True,
             )
         self._session = session
         self._sleep = sleep
