@@ -68,9 +68,11 @@ HOST_PREFIX_RE = re.compile(r"^[A-Za-z0-9\.\-]+$")
 
 TIMESTAMP_PRECISION_DEFAULT = 'default'
 TIMESTAMP_PRECISION_MILLISECOND = 'millisecond'
+TIMESTAMP_PRECISION_LEGACY = 'legacy'
 TIMESTAMP_PRECISION_OPTIONS = (
     TIMESTAMP_PRECISION_DEFAULT,
     TIMESTAMP_PRECISION_MILLISECOND,
+    TIMESTAMP_PRECISION_LEGACY,
 )
 
 
@@ -85,8 +87,11 @@ def create_serializer(
     :param include_validation: Whether to include parameter validation.
     :type include_validation: bool
     :param timestamp_precision: Timestamp precision level.
-        - 'default': Microseconds for ISO timestamps, seconds for Unix and RFC
+        - 'default': Full precision of the provided value (up to
+          microseconds) for ISO and Unix timestamps, seconds for RFC
         - 'millisecond': Millisecond precision (ISO/Unix), seconds for RFC
+        - 'legacy': Behavior prior to sub-second Unix timestamp support.
+          Microseconds for ISO timestamps, seconds for Unix and RFC
     :type timestamp_precision: str
     :return: A serializer instance for the given protocol.
     """
@@ -187,13 +192,19 @@ class Serializer:
 
     def _timestamp_unixtimestamp(self, value):
         """Return unix timestamp with precision based on timestamp_precision."""
-        # As of the addition of the precision flag, we support millisecond precision here as well
+        timestamp = calendar.timegm(value.timetuple())
         if self._timestamp_precision == TIMESTAMP_PRECISION_MILLISECOND:
-            base_timestamp = calendar.timegm(value.timetuple())
             milliseconds = (value.microsecond // 1000) / 1000.0
-            return base_timestamp + milliseconds
-        else:
-            return int(calendar.timegm(value.timetuple()))
+            return timestamp + milliseconds
+        elif self._timestamp_precision == TIMESTAMP_PRECISION_LEGACY:
+            return timestamp
+        elif value.microsecond > 0:
+            # Add the microseconds as integers before dividing so the float is only
+            # rounded once. Dividing first and then adding rounds twice, which can
+            # produce a slightly different value, e.g. 1 + 3691 / 10**6 gives
+            # 1.0036909999999999 instead of 1.003691.
+            return (timestamp * 10**6 + value.microsecond) / 10**6
+        return timestamp
 
     def _timestamp_rfc822(self, value):
         """Return RFC822 timestamp (always second precision - RFC doesn't support sub-second)."""
@@ -660,22 +671,12 @@ class CBORSerializer(Serializer):
         tag = 1  # Use tag 1 for unix timestamp
         initial_byte = self._get_initial_byte(self.TAG_MAJOR_TYPE, tag)
         serialized.extend(initial_byte)  # Tagging the timestamp
-        additional_info, num_bytes = self._get_additional_info_and_num_bytes(
-            timestamp
-        )
-
-        if num_bytes == 0:
-            initial_byte = self._get_initial_byte(
-                self.UNSIGNED_INT_MAJOR_TYPE, timestamp
-            )
-            serialized.extend(initial_byte)
+        # Tag 1 permits either an integer or a floating-point epoch seconds
+        # value; a float is used when sub-second precision is present.
+        if isinstance(timestamp, float):
+            self._serialize_type_double(serialized, timestamp, shape, key)
         else:
-            initial_byte = self._get_initial_byte(
-                self.UNSIGNED_INT_MAJOR_TYPE, additional_info
-            )
-            serialized.extend(
-                initial_byte + timestamp.to_bytes(num_bytes, "big")
-            )
+            self._serialize_type_integer(serialized, timestamp, shape, key)
 
     def _serialize_type_float(self, serialized, value, shape, key):
         if self._is_special_number(value):

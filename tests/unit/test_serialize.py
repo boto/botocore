@@ -17,6 +17,7 @@ import datetime
 import decimal
 import io
 import json
+import struct
 
 import dateutil.tz
 
@@ -25,6 +26,7 @@ from botocore.exceptions import ParamValidationError
 from botocore.model import ServiceModel
 from botocore.serialize import (
     TIMESTAMP_PRECISION_DEFAULT,
+    TIMESTAMP_PRECISION_LEGACY,
     TIMESTAMP_PRECISION_MILLISECOND,
 )
 from tests import unittest
@@ -622,7 +624,7 @@ class TestRestXMLUnicodeSerialization(unittest.TestCase):
             self.fail("RestXML serializer failed to serialize unicode text.")
 
 
-class TestTimestampPrecisionParameter(unittest.TestCase):
+class TestTimestampPrecision(unittest.TestCase):
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
@@ -673,62 +675,112 @@ class TestTimestampPrecisionParameter(unittest.TestCase):
             input_params, self.service_model.operation_model('TestOperation')
         )
 
-    def test_second_precision_maintains_existing_behavior(self):
+    def test_whole_seconds_serialize_without_fraction(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0)
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime}
+        )
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400)
+        self.assertIsInstance(request['body']['UnixTimestamp'], int)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00Z'
+        )
+
+    def test_millisecond_precision_is_preserved(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123000)
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime}
+        )
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400.123)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.123000Z'
+        )
+
+    def test_microsecond_precision_is_preserved(self):
         test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
         request = self.serialize_to_request(
             {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime}
         )
-        # To maintain backwards compatibility, unix should not include milliseconds by default
-        self.assertEqual(1704110400, request['body']['UnixTimestamp'])
-
-        # ISO always supported microseconds, so we need to continue supporting this
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400.123456)
         self.assertEqual(
-            '2024-01-01T12:00:00.123456Z',
-            request['body']['IsoTimestamp'],
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.123456Z'
         )
 
-    def test_millisecond_precision_serialization(self):
+    def test_unix_timestamp_fraction_round_trips_through_repr(self):
+        # The float must render with exactly the digits the caller provided
+        # (no binary floating point noise) when written to a request body.
         test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
-
-        # Check that millisecond precision is used when it is opted in to via the input param
-        request = self.serialize_to_request(
-            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
-            TIMESTAMP_PRECISION_MILLISECOND,
-        )
-        self.assertEqual(1704110400.123, request['body']['UnixTimestamp'])
+        request = self.serialize_to_request({'UnixTimestamp': test_datetime})
         self.assertEqual(
-            '2024-01-01T12:00:00.123Z',
-            request['body']['IsoTimestamp'],
+            str(request['body']['UnixTimestamp']), '1704110400.123456'
         )
 
-    def test_millisecond_precision_with_zero_microseconds(self):
-        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 0)
-
-        request = self.serialize_to_request(
-            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
-            TIMESTAMP_PRECISION_MILLISECOND,
-        )
-        self.assertEqual(1704110400.0, request['body']['UnixTimestamp'])
-        self.assertEqual(
-            '2024-01-01T12:00:00.000Z',
-            request['body']['IsoTimestamp'],
-        )
+    def test_unix_timestamp_before_epoch_with_fraction(self):
+        test_datetime = datetime.datetime(1969, 12, 31, 23, 59, 59, 250000)
+        request = self.serialize_to_request({'UnixTimestamp': test_datetime})
+        self.assertEqual(request['body']['UnixTimestamp'], -0.75)
 
     def test_rfc822_timestamp_always_uses_second_precision(self):
         # RFC822 format doesn't support sub-second precision.
         test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
-        request_second = self.serialize_to_request(
-            {'Rfc822Timestamp': test_datetime},
+        request_default = self.serialize_to_request(
+            {'Rfc822Timestamp': test_datetime}
         )
         request_milli = self.serialize_to_request(
             {'Rfc822Timestamp': test_datetime}, TIMESTAMP_PRECISION_MILLISECOND
         )
         self.assertEqual(
-            request_second['body']['Rfc822Timestamp'],
-            request_milli['body']['Rfc822Timestamp'],
+            request_default['body']['Rfc822Timestamp'],
+            'Mon, 01 Jan 2024 12:00:00 GMT',
         )
-        self.assertIn('2024', request_second['body']['Rfc822Timestamp'])
-        self.assertIn('GMT', request_second['body']['Rfc822Timestamp'])
+        self.assertEqual(
+            request_milli['body']['Rfc822Timestamp'],
+            request_default['body']['Rfc822Timestamp'],
+        )
+
+    def test_millisecond_precision_option_truncates_to_milliseconds(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
+            TIMESTAMP_PRECISION_MILLISECOND,
+        )
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400.123)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.123Z'
+        )
+
+    def test_millisecond_precision_option_with_zero_microseconds(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 0)
+        request = self.serialize_to_request(
+            {'UnixTimestamp': test_datetime, 'IsoTimestamp': test_datetime},
+            TIMESTAMP_PRECISION_MILLISECOND,
+        )
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400.0)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.000Z'
+        )
+
+    def test_legacy_precision_option_truncates_unix_to_seconds(self):
+        test_datetime = datetime.datetime(2024, 1, 1, 12, 0, 0, 123456)
+        request = self.serialize_to_request(
+            {
+                'UnixTimestamp': test_datetime,
+                'IsoTimestamp': test_datetime,
+                'Rfc822Timestamp': test_datetime,
+            },
+            TIMESTAMP_PRECISION_LEGACY,
+        )
+        # Legacy behavior: whole seconds for unix, but ISO8601 has always
+        # carried microseconds.
+        self.assertEqual(request['body']['UnixTimestamp'], 1704110400)
+        self.assertIsInstance(request['body']['UnixTimestamp'], int)
+        self.assertEqual(
+            request['body']['IsoTimestamp'], '2024-01-01T12:00:00.123456Z'
+        )
+        self.assertEqual(
+            request['body']['Rfc822Timestamp'],
+            'Mon, 01 Jan 2024 12:00:00 GMT',
+        )
 
     def test_invalid_timestamp_precision_raises_error(self):
         with self.assertRaises(ValueError) as context:
@@ -737,6 +789,73 @@ class TestTimestampPrecisionParameter(unittest.TestCase):
                 timestamp_precision='invalid',
             )
         self.assertIn("Invalid timestamp precision", str(context.exception))
+
+
+class TestRpcV2CBORTimestampSerialization(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {
+                'protocol': 'smithy-rpc-v2-cbor',
+                'apiVersion': '2014-01-01',
+                'serviceId': 'MyService',
+                'targetPrefix': 'sampleservice',
+                'documentation': '',
+            },
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Timestamp': {'shape': 'TimestampType'},
+                    },
+                },
+                'TimestampType': {'type': 'timestamp'},
+            },
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_timestamp(self, value):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol']
+        )
+        request = request_serializer.serialize_to_request(
+            {'Timestamp': value},
+            self.service_model.operation_model('TestOperation'),
+        )
+        # Skip the leading map header and "Timestamp" key; return the
+        # encoded value only.
+        body = bytes(request['body'])
+        prefix = b'\xa1\x69Timestamp'
+        self.assertTrue(body.startswith(prefix))
+        return body[len(prefix) :]
+
+    def test_whole_seconds_serialize_as_tagged_integer(self):
+        encoded = self.serialize_timestamp(
+            datetime.datetime(2024, 1, 1, 12, 0, 0)
+        )
+        # Tag 1, then uint32 1704110400
+        self.assertEqual(encoded, b'\xc1\x1a\x65\x92\xa9\x40')
+
+    def test_fractional_seconds_serialize_as_tagged_double(self):
+        encoded = self.serialize_timestamp(
+            datetime.datetime(2024, 1, 1, 12, 0, 0, 500000)
+        )
+        # Tag 1, then float64 1704110400.5
+        self.assertEqual(
+            encoded, b'\xc1\xfb' + struct.pack('>d', 1704110400.5)
+        )
+
+    def test_negative_timestamp_serializes_as_tagged_negative_integer(self):
+        encoded = self.serialize_timestamp(
+            datetime.datetime(1969, 12, 31, 23, 59, 59)
+        )
+        # Tag 1, then negative integer -1 (major type 1, value 0)
+        self.assertEqual(encoded, b'\xc1\x20')
 
 
 class TestRpcV2CBORHostPrefix(unittest.TestCase):
