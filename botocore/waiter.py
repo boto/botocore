@@ -372,7 +372,7 @@ class Waiter:
                 logger.debug(
                     "Waiting complete, waiter matched the success state."
                 )
-                return
+                return response
             if current_state == 'failure':
                 reason = f'Waiter encountered a terminal failure state: {acceptor.explanation}'
                 raise WaiterError(
