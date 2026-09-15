@@ -645,8 +645,13 @@ class InstanceMetadataFetcher(IMDSFetcher):
         ).text
 
     def _get_credentials(self, role_name, token=None):
+        # role_name is read from the IMDS response body in _get_iam_role, so
+        # percent-encode it before splicing it into the path. The safe set keeps
+        # every character that is legal in an IAM role name unchanged while
+        # encoding separators like '/', '?' and '#' that would otherwise let the
+        # response redirect the credentials request to a different resource.
         r = self._get_request(
-            url_path=self._URL_PATH + role_name,
+            url_path=self._URL_PATH + quote(role_name, safe='+=,.@-'),
             retry_func=self._needs_retry_for_credentials,
             token=token,
         )
