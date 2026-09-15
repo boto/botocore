@@ -14,6 +14,7 @@ import base64
 import binascii
 import datetime
 import email.message
+import email.utils
 import functools
 import hashlib
 import io
@@ -31,8 +32,6 @@ from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
 
-import dateutil.parser
-from dateutil.tz import tzutc
 from urllib3.exceptions import LocationParseError
 
 import botocore
@@ -54,6 +53,7 @@ from botocore.compat import (
     UNSAFE_URL_CHARS,
     ZONE_ID_PAT,  # noqa: F401
     OrderedDict,
+    _normalize_iso8601_for_python_310,
     get_current_datetime,
     get_md5,
     get_tzinfo_options,
@@ -948,11 +948,13 @@ def _epoch_seconds_to_datetime(value, tzinfo):
     :type value: float or int
     :param value: The Unix timestamps as number.
 
-    :type tzinfo: callable
-    :param tzinfo: A ``datetime.tzinfo`` class or compatible callable.
+    :type tzinfo: datetime.tzinfo
+    :param tzinfo: A ``datetime.tzinfo`` instance.
     """
-    epoch_zero = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-    epoch_zero_localized = epoch_zero.astimezone(tzinfo())
+    epoch_zero = datetime.datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+    )
+    epoch_zero_localized = epoch_zero.astimezone(tzinfo)
     return epoch_zero_localized + datetime.timedelta(seconds=value)
 
 
@@ -960,19 +962,41 @@ def _parse_timestamp_with_tzinfo(value, tzinfo):
     """Parse timestamp with pluggable tzinfo options."""
     if isinstance(value, (int, float)):
         # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzinfo())
+        return datetime.datetime.fromtimestamp(value, tzinfo)
     else:
         try:
-            return datetime.datetime.fromtimestamp(float(value), tzinfo())
+            return datetime.datetime.fromtimestamp(float(value), tzinfo)
+        except (TypeError, ValueError):
+            pass
+    if not isinstance(value, str):
+        raise ValueError(f'Invalid timestamp "{value}"')
+    # Non-numeric string. Try ISO 8601 first (the common AWS shape), then
+    # RFC 2822 / HTTP-date / asctime via email.utils, then a couple of
+    # lenient strptime fallbacks for legacy HTTP Expires-header shapes
+    # seen in the wild.
+    iso_value = _normalize_iso8601_for_python_310(value)
+    try:
+        return datetime.datetime.fromisoformat(iso_value)
+    except (TypeError, ValueError):
+        pass
+    # A handful of AWS shared examples have a malformed ISO hour like
+    # "T016:15:21" — collapse the leading zero and retry.
+    fixed_iso = re.sub(r"T0(\d{2}):", r"T\1:", iso_value, count=1)
+    if fixed_iso != iso_value:
+        try:
+            return datetime.datetime.fromisoformat(fixed_iso)
         except (TypeError, ValueError):
             pass
     try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
-    except (TypeError, ValueError) as e:
-        raise ValueError(f'Invalid timestamp "{value}": {e}')
+        return email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        pass
+    for fmt in ("%m/%d/%Y", "%d %b %Y"):
+        try:
+            return datetime.datetime.strptime(value.title(), fmt)
+        except ValueError:
+            continue
+    raise ValueError(f'Invalid timestamp "{value}"')
 
 
 def parse_timestamp(value):
@@ -994,7 +1018,7 @@ def parse_timestamp(value):
         except (OSError, OverflowError) as e:
             logger.debug(
                 'Unable to parse timestamp with "%s" timezone info.',
-                tzinfo.__name__,
+                tzinfo,
                 exc_info=e,
             )
     # For numeric values attempt fallback to using fromtimestamp-free method.
@@ -1015,7 +1039,7 @@ def parse_timestamp(value):
             logger.debug(
                 'Unable to parse timestamp using fallback method with "%s" '
                 'timezone info.',
-                tzinfo.__name__,
+                tzinfo,
                 exc_info=e,
             )
     raise RuntimeError(
@@ -1062,9 +1086,9 @@ def parse_to_aware_datetime(value):
         # we should use the local time.  However, to restore backwards
         # compat, the previous behavior was to assume UTC, which is
         # what we're going to do here.
-        datetime_obj = datetime_obj.replace(tzinfo=tzutc())
+        datetime_obj = datetime_obj.replace(tzinfo=datetime.timezone.utc)
     else:
-        datetime_obj = datetime_obj.astimezone(tzutc())
+        datetime_obj = datetime_obj.astimezone(datetime.timezone.utc)
     return datetime_obj
 
 
@@ -1074,14 +1098,14 @@ def datetime2timestamp(dt, default_timezone=None):
     :type dt: datetime
     :param dt: A datetime object to be converted into timestamp
     :type default_timezone: tzinfo
-    :param default_timezone: If it is provided as None, we treat it as tzutc().
+    :param default_timezone: If it is provided as None, we treat it as UTC.
                              But it is only used when dt is a naive datetime.
     :returns: The timestamp
     """
     epoch = datetime.datetime(1970, 1, 1)
     if dt.tzinfo is None:
         if default_timezone is None:
-            default_timezone = tzutc()
+            default_timezone = datetime.timezone.utc
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     return d.total_seconds()
