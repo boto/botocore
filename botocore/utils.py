@@ -3187,11 +3187,15 @@ class ContainerMetadataFetcher:
         return f'http://{self.IP_ADDRESS}{relative_uri}'
 
 
-def get_environ_proxies(url):
-    if should_bypass_proxies(url):
+def get_environ_proxies(url, no_proxy_filter=True):
+    """Return proxy URLs configured via the environment.
+
+    When ``no_proxy_filter`` is False, ``NO_PROXY`` is not applied here; the
+    caller is responsible for re-checking ``should_bypass_proxies`` per request.
+    """
+    if no_proxy_filter and should_bypass_proxies(url):
         return {}
-    else:
-        return getproxies()
+    return getproxies()
 
 
 def should_bypass_proxies(url):
