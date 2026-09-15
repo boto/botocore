@@ -483,7 +483,16 @@ class PageIterator:
         ]
 
     def build_full_result(self):
+        """Aggregate all pages into a single combined result.
+
+        ``result_key`` values are concatenated/summed across pages and
+        ``non_aggregate_keys`` are taken from the first page (assumed static).
+        Other top-level members are not guaranteed and are generally dropped;
+        iterate the pages directly if you need them.
+        """
         complete_result = {}
+        # Last page's top-level members, for the dropped-member debug log.
+        last_page_keys = set()
         for response in self:
             page = response
             # We want to try to catch operation object pagination
@@ -493,6 +502,8 @@ class PageIterator:
             # uses. We can remove it though once operation objects are removed.
             if isinstance(response, tuple) and len(response) == 2:
                 page = response[1]
+            if isinstance(page, dict):
+                last_page_keys = set(page)
             # We're incrementally building the full response page
             # by page.  For each page in the response we need to
             # inject the necessary components from the page
@@ -529,6 +540,19 @@ class PageIterator:
         merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
             complete_result['NextToken'] = self.resume_token
+        # Log top-level members that weren't aggregated (not a result_key or
+        # non_aggregate_key) and so were dropped from the combined result.
+        if log.isEnabledFor(logging.DEBUG):
+            dropped = last_page_keys - set(complete_result)
+            dropped.discard('ResponseMetadata')  # never part of paginated data
+            if dropped:
+                log.debug(
+                    "The following top-level output members are not "
+                    "accounted for in the pagination config and were dropped "
+                    "from build_full_result: %s. Iterate the pages directly "
+                    "if you need these values.",
+                    ', '.join(sorted(dropped)),
+                )
         return complete_result
 
     def _parse_starting_token(self):
