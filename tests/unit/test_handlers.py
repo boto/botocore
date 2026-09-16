@@ -17,6 +17,8 @@ import io
 import json
 import logging
 import os
+import re
+import time
 
 import pytest
 
@@ -46,6 +48,57 @@ from botocore.model import (
 from botocore.signers import RequestSigner
 from botocore.utils import conditionally_calculate_md5
 from tests import BaseSessionTest, mock, requires_crt, unittest
+
+# The pattern that ``handlers._find_version_id_suffix`` replaces.  It is
+# compiled here, rather than read from ``handlers.VERSION_ID_SUFFIX``, so the
+# deprecated module constant can be deleted without touching these tests.
+_OLD_VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
+
+# Adversarial CopySource values built from the pieces that matter to the
+# version id parse: the marker and its prefixes, ordinary key characters and
+# assorted (including non-ASCII) whitespace.
+_VERSION_ID_PARITY_CASES = [
+    '',
+    ' ',
+    '   ',
+    '\n',
+    '\r\n',
+    '\xa0',
+    'b/k',
+    '?',
+    '?versionId',
+    'versionId=1',
+    '?versionId=',
+    '?versionId= ',
+    '?versionId=1',
+    'b/k?versionId=',
+    'b/k?versionId=\n',
+    'b/k?versionId=1',
+    'b/k?versionId=1 ',
+    'b/k?versionId=1\n',
+    'b/k?versionId=1\n\n',
+    'b/k?versionId=1\n\r',
+    'b/k?versionId=1\r',
+    'b/k?versionId=1\r\n',
+    'b/k?versionId=1\t',
+    'b/k?versionId=1\x0b',
+    'b/k?versionId=1\xa0',
+    'b/k?versionId=\xa0',
+    'b/k?versionId=1?versionId=2',
+    'b/a?versionId=1 c?versionId=2',
+    '?versionId=1 ?versionId=2',
+    'a ?versionId=1',
+    'a\n?versionId=1',
+    '\xa0?versionId=1',
+    'a?versionId=1a?versionId=2',
+    'a?versionId=1 ',
+    'a?versionId=\xa0',
+    'a?versionId=1\x0b',
+    'a?versionId=1\n\r',
+    'a/b?versionId=1?versionId=',
+    'a?versionId==?versionId=1',
+    '?versionId=?versionId=1\n',
+]
 
 
 class TestHandlers(BaseSessionTest):
@@ -143,6 +196,116 @@ class TestHandlers(BaseSessionTest):
         params = {'CopySource': '/foo/bar?versionId=123'}
         handlers.handle_copy_source_param(params)
         self.assertEqual(params['CopySource'], '/foo/bar?versionId=123')
+
+    def _assert_copy_source_becomes(self, value, expected):
+        params = {'CopySource': value}
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'], expected)
+
+    def _assert_copy_source_fully_encoded(self, value):
+        self._assert_copy_source_becomes(
+            value,
+            handlers.percent_encode(value, safe=handlers.SAFE_CHARS + '/'),
+        )
+
+    def test_copy_source_earliest_version_id_wins(self):
+        self._assert_copy_source_becomes(
+            'b/k?versionId=1?versionId=2', 'b/k?versionId=1?versionId=2'
+        )
+
+    def test_copy_source_version_id_tail_with_whitespace_skipped(self):
+        self._assert_copy_source_becomes(
+            'b/a?versionId=1 c?versionId=2',
+            handlers.percent_encode(
+                'b/a?versionId=1 c', safe=handlers.SAFE_CHARS + '/'
+            )
+            + '?versionId=2',
+        )
+
+    def test_copy_source_empty_version_id_is_encoded(self):
+        self._assert_copy_source_becomes(
+            'b/k?versionId=', 'b/k%3FversionId%3D'
+        )
+
+    def test_copy_source_version_id_with_trailing_space_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=1 ')
+
+    def test_copy_source_version_id_keeps_single_trailing_newline(self):
+        self._assert_copy_source_becomes(
+            'b/k?versionId=1\n', 'b/k?versionId=1\n'
+        )
+
+    def test_copy_source_version_id_with_two_newlines_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=1\n\n')
+
+    def test_copy_source_version_id_with_crlf_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=1\r\n')
+
+    def test_copy_source_version_id_with_carriage_return_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=1\r')
+
+    def test_copy_source_version_id_with_unicode_space_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=1\xa0')
+
+    def test_copy_source_empty_version_id_before_newline_is_encoded(self):
+        self._assert_copy_source_fully_encoded('b/k?versionId=\n')
+
+    def test_copy_source_version_id_at_start(self):
+        self._assert_copy_source_becomes('?versionId=1', '?versionId=1')
+
+    def test_copy_source_empty_string(self):
+        self._assert_copy_source_becomes('', '')
+
+    def test_copy_source_whitespace_only(self):
+        self._assert_copy_source_fully_encoded('   ')
+        self._assert_copy_source_fully_encoded('\n')
+
+    def test_copy_source_without_version_id(self):
+        self._assert_copy_source_becomes('b/k', 'b/k')
+
+    def test_find_version_id_suffix_matches_previous_pattern(self):
+        for value in _VERSION_ID_PARITY_CASES:
+            with self.subTest(value=value):
+                match = _OLD_VERSION_ID_SUFFIX.search(value)
+                expected = None if match is None else match.start()
+                self.assertEqual(
+                    handlers._find_version_id_suffix(value), expected
+                )
+
+    def _fastest_quote_source_header(self, value, runs=5):
+        # The fastest of several runs, so one scheduling stall or garbage
+        # collection pause on a loaded machine cannot inflate the result.
+        best = None
+        for _ in range(runs):
+            start = time.perf_counter()
+            result = handlers._quote_source_header(value)
+            duration = time.perf_counter() - start
+            if best is None or duration < best:
+                best = duration
+        return best, result
+
+    def test_quote_source_header_adversarial_version_id_is_linear(self):
+        # Quadratic backtracking in the old ``?versionId=[^\s]+$`` pattern
+        # made the adversarial value take tens of seconds, roughly 2800 times
+        # the cost of percent encoding it.  The control value has the same
+        # length and no marker, so it measures that encoding cost on this
+        # machine and the bound needs no absolute wall clock threshold.  Both
+        # values end in a space, so neither has a version id suffix and both
+        # are percent encoded whole.
+        adversarial = 'mybucket/' + 'a?versionId=' * 20_000 + ' '
+        control = 'mybucket/' + 'aaaaaaaaaaaa' * 20_000 + ' '
+        self.assertEqual(len(adversarial), len(control))
+        control_duration, _ = self._fastest_quote_source_header(control)
+        duration, result = self._fastest_quote_source_header(adversarial)
+        self.assertEqual(
+            result,
+            handlers.percent_encode(
+                adversarial, safe=handlers.SAFE_CHARS + '/'
+            ),
+        )
+        # Measured ratio is about 1.1, so this leaves an order of magnitude of
+        # headroom for a slow or busy machine.
+        self.assertLess(duration, 20 * control_duration)
 
     def test_presigned_url_already_present_ec2(self):
         operation_model = mock.Mock()

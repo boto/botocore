@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "``s3``",
+  "description": "Fixed quadratic-time parsing of the ``CopySource`` string parameter, which could consume excessive CPU for long values."
+}

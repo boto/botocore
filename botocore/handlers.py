@@ -101,7 +101,12 @@ VALID_S3_ARN = re.compile('|'.join([_ACCESSPOINT_ARN, _OUTPOST_ARN]))
 # signing names used for the services s3 and s3-control, for example in
 # botocore/data/s3/2006-03-01/endpoints-rule-set-1.json
 S3_SIGNING_NAMES = ('s3', 's3-outposts', 's3-object-lambda', 's3express')
+# Deprecated and no longer used: this pattern backtracks quadratically on
+# caller-supplied CopySource values.  It is kept only so that any external
+# importer of botocore.handlers keeps working.  Use
+# _find_version_id_suffix() instead.
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
+_VERSION_ID_MARKER = '?versionId='
 
 
 def handle_service_name_alias(service_name, **kwargs):
@@ -495,12 +500,50 @@ def _quote_source_header_from_dict(source_dict):
     return final
 
 
+def _find_version_id_suffix(value):
+    r"""Find the start of a trailing ``?versionId=...`` in a CopySource string.
+
+    Returns the index of the marker, or ``None`` if ``value`` has no version
+    id suffix.
+
+    This is a linear-time equivalent of the regular expression this function
+    replaces, ``VERSION_ID_SUFFIX.search(value)``, whose pattern is
+    ``r'\?versionId=[^\s]+$'``.  That pattern is unanchored, greedy and end
+    anchored, so every ``?versionId=`` occurrence started a fresh scan of the
+    rest of the string and an attacker-supplied CopySource cost O(n**2) CPU
+    with the GIL held.
+
+    A match must run to the end of ``value`` and contain no whitespace, so
+    that condition is checked once instead of once per candidate:  only the
+    whitespace-free suffix of ``value`` can contain the marker.
+    """
+    if value.endswith('\n'):
+        # ``$`` also matches just before a single trailing newline, and
+        # ``[^\s]`` can never consume the newline itself.  Slicing off a
+        # suffix keeps every index below valid for the original value.
+        value = value[:-1]
+    end = len(value)
+    if not end or value[-1].isspace():
+        # No whitespace-free run reaches the end of the value.
+        return None
+    # With a non-whitespace final character, the last field of ``rsplit`` is
+    # exactly the trailing run of non-whitespace characters.  ``rsplit``
+    # stops after one split, so this is a single linear C-level scan.
+    suffix_start = end - len(value.rsplit(None, 1)[-1])
+    index = value.find(_VERSION_ID_MARKER, suffix_start)
+    if index == -1 or index + len(_VERSION_ID_MARKER) == end:
+        # No marker, or no version id characters after it.  A later marker
+        # cannot match either, it would not reach the end of the value.
+        return None
+    return index
+
+
 def _quote_source_header(value):
-    result = VERSION_ID_SUFFIX.search(value)
-    if result is None:
+    start = _find_version_id_suffix(value)
+    if start is None:
         return percent_encode(value, safe=SAFE_CHARS + '/')
     else:
-        first, version_id = value[: result.start()], value[result.start() :]
+        first, version_id = value[:start], value[start:]
         return percent_encode(first, safe=SAFE_CHARS + '/') + version_id
 
 
