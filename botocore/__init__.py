@@ -17,7 +17,7 @@ import os
 import re
 from logging import NullHandler
 
-__version__ = '1.43.96'
+__version__ = '1.43.97'
 
 
 # Configure default logger to do nothing
@@ -130,6 +130,8 @@ _xform_cache = {
     ('GetOTelEnrichment', '-'): 'get-otel-enrichment',
     ('GetWhatsAppBusinessPublicKey', '_'): 'get_whatsapp_business_public_key',
     ('GetWhatsAppBusinessPublicKey', '-'): 'get-whatsapp-business-public-key',
+    ('GetWhatsAppCallPermission', '_'): 'get_whatsapp_call_permission',
+    ('GetWhatsAppCallPermission', '-'): 'get-whatsapp-call-permission',
     ('GetWhatsAppFlow', '_'): 'get_whatsapp_flow',
     ('GetWhatsAppFlow', '-'): 'get-whatsapp-flow',
     ('GetWhatsAppFlowPreview', '_'): 'get_whatsapp_flow_preview',
@@ -172,6 +174,8 @@ _xform_cache = {
     ('SendWhatsAppConversionEvent', '-'): 'send-whatsapp-conversion-event',
     ('SendWhatsAppMessage', '_'): 'send_whatsapp_message',
     ('SendWhatsAppMessage', '-'): 'send-whatsapp-message',
+    ('SendWhatsAppCallEvent', '_'): 'send_whatsapp_call_event',
+    ('SendWhatsAppCallEvent', '-'): 'send-whatsapp-call-event',
     ('StartOTelEnrichment', '_'): 'start_otel_enrichment',
     ('StartOTelEnrichment', '-'): 'start-otel-enrichment',
     ('StopOTelEnrichment', '_'): 'stop_otel_enrichment',
@@ -180,6 +184,14 @@ _xform_cache = {
     ('UpdateWhatsAppFlow', '-'): 'update-whatsapp-flow',
     ('UpdateWhatsAppFlowAssets', '_'): 'update_whatsapp_flow_assets',
     ('UpdateWhatsAppFlowAssets', '-'): 'update-whatsapp-flow-assets',
+    (
+        'UpdateLinkedWhatsAppBusinessAccountPhoneNumber',
+        '_',
+    ): 'update_linked_whatsapp_business_account_phone_number',
+    (
+        'UpdateLinkedWhatsAppBusinessAccountPhoneNumber',
+        '-',
+    ): 'update-linked-whatsapp-business-account-phone-number',
     ('UpdateWhatsAppMessageTemplate', '_'): 'update_whatsapp_message_template',
     ('UpdateWhatsAppMessageTemplate', '-'): 'update-whatsapp-message-template',
 }
