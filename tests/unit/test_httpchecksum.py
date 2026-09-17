@@ -909,6 +909,22 @@ class TestStreamingChecksumBody(unittest.TestCase):
         with self.assertRaises(FlexibleChecksumError):
             self.wrapper.read(1)
 
+    def test_exposes_checksum(self):
+        self.wrapper.read()
+        self.assertEqual(self.wrapper.checksum.b64digest(), "DUoRhQ==")
+
+    def test_read_without_expected_checksum(self):
+        self._make_wrapper(None)
+        self.assertEqual(self.wrapper.read(), self.raw_bytes)
+        self.assertEqual(self.wrapper.checksum.b64digest(), "DUoRhQ==")
+
+    def test_readinto_without_expected_checksum(self):
+        self._make_wrapper(None)
+        chunk = bytearray(11)
+        self.assertEqual(11, self.wrapper.readinto(chunk))
+        self.wrapper.readinto(chunk)
+        self.assertEqual(self.wrapper.checksum.b64digest(), "DUoRhQ==")
+
     def test_handles_variable_padding(self):
         # This digest is equivalent but with more padding
         self._make_wrapper("DUoRhQ=====")
