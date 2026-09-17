@@ -351,6 +351,10 @@ class TestTransformName(unittest.TestCase):
             'get-otel-enrichment',
         )
         self.assertEqual(
+            xform_name('GetWhatsAppCallPermission', '-'),
+            'get-whatsapp-call-permission',
+        )
+        self.assertEqual(
             xform_name('GetWhatsAppFlow', '-'),
             'get-whatsapp-flow',
         )
@@ -406,6 +410,10 @@ class TestTransformName(unittest.TestCase):
             xform_name('SendWhatsAppMessage', '-'), 'send-whatsapp-message'
         )
         self.assertEqual(
+            xform_name('SendWhatsAppCallEvent', '-'),
+            'send-whatsapp-call-event',
+        )
+        self.assertEqual(
             xform_name('StartOTelEnrichment', '-'),
             'start-otel-enrichment',
         )
@@ -420,6 +428,10 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(
             xform_name('UpdateWhatsAppFlowAssets', '-'),
             'update-whatsapp-flow-assets',
+        )
+        self.assertEqual(
+            xform_name('UpdateLinkedWhatsAppBusinessAccountPhoneNumber', '-'),
+            'update-linked-whatsapp-business-account-phone-number',
         )
         self.assertEqual(
             xform_name('UpdateWhatsAppMessageTemplate', '-'),
