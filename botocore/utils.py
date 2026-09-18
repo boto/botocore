@@ -1335,7 +1335,9 @@ def validate_region_name(region_name):
     """Provided region_name must be a valid host label."""
     if region_name is None:
         return
-    valid_host_label = re.compile(r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+    valid_host_label = re.compile(
+        r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)\Z'
+    )
     valid = valid_host_label.match(region_name)
     if not valid:
         raise InvalidRegionError(region_name=region_name)
