@@ -483,6 +483,12 @@ class WaiterError(BotoCoreError):
         super().__init__(name=name, reason=reason)
         self.last_response = last_response
 
+    def __reduce__(self):
+        return _exception_from_packed_args, (
+            self.__class__,
+            (self.kwargs['name'], self.kwargs['reason'], self.last_response),
+        )
+
 
 class IncompleteReadError(BotoCoreError):
     """HTTP response did not return expected number of bytes."""
