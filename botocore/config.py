@@ -475,10 +475,12 @@ class Config:
             config objects.
         """
         # Make a copy of the current attributes in the config object.
-        config_options = copy.copy(self._user_provided_options)
+        config_options = copy.deepcopy(self._user_provided_options)
 
         # Merge in the user provided options from the other config
-        config_options.update(other_config._user_provided_options)
+        config_options.update(
+            copy.deepcopy(other_config._user_provided_options)
+        )
 
         # Return a new config object with the merged properties.
         return Config(**config_options)
