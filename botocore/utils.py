@@ -1924,6 +1924,7 @@ class S3RegionRedirectorv2:
         if bucket is not None and bucket in self._cache:
             new_region = self._cache.get(bucket)
             builtins['AWS::Region'] = new_region
+            register_feature_id('S3_REGION_REDIRECT')
 
     def annotate_request_context(self, params, context, **kwargs):
         """Store the bucket name in context for later use when redirecting.

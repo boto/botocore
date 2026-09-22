@@ -242,6 +242,33 @@ def test_user_agent_has_s3_region_redirect_feature_id(patched_session):
     assert 'Ah' in parse_registered_feature_ids(ua_strings[1])
 
 
+def test_user_agent_has_s3_region_redirect_feature_id_from_cache(
+    patched_session,
+):
+    client_s3 = patched_session.create_client('s3', region_name='us-west-2')
+    with ClientHTTPStubber(client_s3) as stub_client:
+        # The first call redirects and caches the bucket's real region.
+        stub_client.add_response(
+            status=301,
+            headers={'x-amz-bucket-region': 'eu-central-1'},
+            body=(
+                b'<Error><Code>PermanentRedirect</Code>'
+                b'<Bucket>mybucket</Bucket></Error>'
+            ),
+        )
+        stub_client.add_response()
+        client_s3.list_objects_v2(Bucket='mybucket')
+
+        # The second call is served from the redirect cache, so it never
+        # sees an error response but is still a region redirect.
+        stub_client.add_response()
+        client_s3.list_objects_v2(Bucket='mybucket')
+
+    ua_strings = get_captured_ua_strings(stub_client)
+    assert len(ua_strings) == 3
+    assert 'Ah' in parse_registered_feature_ids(ua_strings[2])
+
+
 def test_registered_feature_ids_dont_bleed_between_requests(patched_session):
     client_s3 = patched_session.create_client('s3')
     with ClientHTTPStubber(client_s3) as stub_client:
