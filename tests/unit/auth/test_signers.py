@@ -432,6 +432,15 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_blocklist_upgrade_header(self):
         self._test_blocklist_header('upgrade', 'websocket')
 
+    def test_blocklist_traceparent_header(self):
+        self._test_blocklist_header(
+            'traceparent',
+            '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+        )
+
+    def test_blocklist_tracestate_header(self):
+        self._test_blocklist_header('tracestate', 'vendor=state')
+
     def test_uses_sha256_if_config_value_is_true(self):
         self.client_config.s3['payload_signing_enabled'] = True
         self.auth.add_auth(self.request)
