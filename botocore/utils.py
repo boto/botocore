@@ -94,6 +94,7 @@ from botocore.plugin import (
     reset_plugin_context,
     set_plugin_context,
 )
+from botocore.useragent import register_feature_id
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
@@ -1842,6 +1843,8 @@ class S3RegionRedirectorv2:
             bucket,
             new_region,
         )
+        register_feature_id('S3_REGION_REDIRECT')
+
         # Adding the new region to _cache will make construct_endpoint() to
         # use the new region as value for the AWS::Region builtin parameter.
         self._cache[bucket] = new_region
@@ -1921,6 +1924,7 @@ class S3RegionRedirectorv2:
         if bucket is not None and bucket in self._cache:
             new_region = self._cache.get(bucket)
             builtins['AWS::Region'] = new_region
+            register_feature_id('S3_REGION_REDIRECT')
 
     def annotate_request_context(self, params, context, **kwargs):
         """Store the bucket name in context for later use when redirecting.
