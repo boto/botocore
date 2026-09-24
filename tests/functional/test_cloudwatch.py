@@ -20,6 +20,7 @@ _OTEL_OPERATIONS = [
     'GetOTelEnrichment',
     'StartOTelEnrichment',
     'StopOTelEnrichment',
+    'UpdateOTelEnrichment',
 ]
 
 
@@ -47,6 +48,7 @@ class TestCloudWatchOTelEnrichment:
             ),
             ('start_o_tel_enrichment', 'start_otel_enrichment', {}),
             ('stop_o_tel_enrichment', 'stop_otel_enrichment', {}),
+            ('update_o_tel_enrichment', 'update_otel_enrichment', {}),
         ],
     )
     def test_otel_enrichment_aliased(self, old_name, new_name, response):

@@ -1502,6 +1502,10 @@ BUILTIN_HANDLERS = [
         ClientMethodAlias('stop_otel_enrichment'),
     ),
     (
+        'getattr.cloudwatch.update_o_tel_enrichment',
+        ClientMethodAlias('update_otel_enrichment'),
+    ),
+    (
         'getattr.signin.create_o_auth2_token',
         ClientMethodAlias('create_oauth2_token'),
     ),
