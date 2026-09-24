@@ -17,7 +17,7 @@ import os
 import re
 from logging import NullHandler
 
-__version__ = '1.43.101'
+__version__ = '1.43.102'
 
 
 # Configure default logger to do nothing
@@ -180,6 +180,8 @@ _xform_cache = {
     ('StartOTelEnrichment', '-'): 'start-otel-enrichment',
     ('StopOTelEnrichment', '_'): 'stop_otel_enrichment',
     ('StopOTelEnrichment', '-'): 'stop-otel-enrichment',
+    ('UpdateOTelEnrichment', '_'): 'update_otel_enrichment',
+    ('UpdateOTelEnrichment', '-'): 'update-otel-enrichment',
     ('UpdateWhatsAppFlow', '_'): 'update_whatsapp_flow',
     ('UpdateWhatsAppFlow', '-'): 'update-whatsapp-flow',
     ('UpdateWhatsAppFlowAssets', '_'): 'update_whatsapp_flow_assets',
