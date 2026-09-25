@@ -27,6 +27,7 @@ from botocore.credentials import Credentials
 from botocore.endpoint import DEFAULT_TIMEOUT
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore.exceptions import (
+    InvalidConfigError,
     InvalidMaxRetryAttemptsError,
     InvalidRetryConfigurationError,
     InvalidRetryModeError,
@@ -2320,6 +2321,13 @@ class TestClientEndpointBridge(unittest.TestCase):
         )
         resolved = bridge.resolve('s3', 'us-east-1')
         self.assertEqual(resolved['endpoint_url'], 'https://s3.amazonaws.com')
+
+    def test_s3_config_as_plain_string_raises_invalid_config_error(self):
+        scoped_config = {'s3': ''}
+        bridge = ClientEndpointBridge(self.resolver, scoped_config)
+        with self.assertRaises(InvalidConfigError) as ctx:
+            bridge.resolve('s3', 'us-east-1')
+        self.assertIn('nested section', str(ctx.exception))
 
     def test_use_dualstack_endpoint(self):
         config = botocore.config.Config(use_dualstack_endpoint=True)
