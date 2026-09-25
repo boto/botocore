@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Endpoint",
+  "description": "Re-evaluate the ``NO_PROXY`` environment variable per-request inside ``URLLib3Session`` so proxy selection follows redirected URLs (e.g. S3 cross-region ``PermanentRedirect`` responses), rather than freezing the bypass decision against the initial endpoint URL."
+}
