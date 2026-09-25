@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Serialization",
+  "description": "Handle null values in sparse map serialization for JSON and CBOR protocols, and fix the CBOR map parser which was silently dropping null values instead of preserving them."
+}
