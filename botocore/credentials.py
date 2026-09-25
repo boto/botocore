@@ -2172,10 +2172,7 @@ class CredentialResolver:
             you'd like to add to the chain.
         :type cred_instance: A subclass of ``Credentials``
         """
-        try:
-            offset = [p.METHOD for p in self.providers].index(name)
-        except ValueError:
-            raise UnknownCredentialError(name=name)
+        offset = self._get_provider_offset(name)
         self.providers.insert(offset, credential_provider)
 
     def insert_after(self, name, credential_provider):
