@@ -15,14 +15,15 @@ import os
 from unittest import mock
 
 import pytest
-from dateutil.tz import tzutc
 
 from botocore.config import Config
 from tests import ClientHTTPStubber, temporary_file
 
 
 class TestDisableS3ExpressAuth:
-    DATE = datetime.datetime(2024, 11, 30, 23, 59, 59, tzinfo=tzutc())
+    DATE = datetime.datetime(
+        2024, 11, 30, 23, 59, 59, tzinfo=datetime.timezone.utc
+    )
     BUCKET_NAME = 'mybucket--usw2-az1--x-s3'
 
     CREATE_SESSION_RESPONSE = b'<?xml version="1.0" encoding="UTF-8"?>\n<CreateSessionResult><Credentials><AccessKeyId>test-key</AccessKeyId><Expiration>2024-12-31T23:59:59Z</Expiration><SecretAccessKey>test-secret</SecretAccessKey><SessionToken>test-token</SessionToken></Credentials></CreateSessionResult>'
@@ -30,9 +31,19 @@ class TestDisableS3ExpressAuth:
 
     @pytest.fixture
     def mock_datetime(self):
-        with mock.patch('datetime.datetime', spec=True) as mock_dt:
-            mock_dt.now.return_value = self.DATE
-            yield mock_dt
+        # Pin ``now()`` to a fixed point via a subclass override. Replacing
+        # the whole ``datetime.datetime`` class would also intercept the
+        # parsing methods used to read the CreateSession Expiration
+        # timestamp.
+        fixed_date = self.DATE
+
+        class _FrozenDatetime(datetime.datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_date
+
+        with mock.patch('datetime.datetime', _FrozenDatetime):
+            yield _FrozenDatetime
 
     def test_disable_s3_express_auth_enabled(
         self, patched_session, mock_datetime
