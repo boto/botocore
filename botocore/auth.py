@@ -68,6 +68,8 @@ SIGNED_HEADERS_BLACKLIST = [
     'proxy-authenticate',
     'proxy-authorization',
     'te',
+    'traceparent',
+    'tracestate',
     'trailer',
     'transfer-encoding',
     'upgrade',
