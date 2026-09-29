@@ -155,9 +155,14 @@ def document_paginate_method(
         documentation=(
             '<p>The total number of items to return. If the total '
             'number of items available is more than the value '
-            'specified in max-items then a <code>NextToken</code> '
-            'will be provided in the output that you can use to '
-            'resume pagination.</p>'
+            'specified, a <code>NextToken</code> is provided in the '
+            'dictionary returned by <code>build_full_result()</code>, '
+            'and on the <code>resume_token</code> attribute of the '
+            'page iterator, that you can use to resume pagination. '
+            'Individual pages yielded by the iterator carry only the '
+            'pagination tokens the service itself returned, which are '
+            'affected by <code>PageSize</code> rather than by '
+            '<code>MaxItems</code>.</p>'
         ),
     )
 
