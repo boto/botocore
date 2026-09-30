@@ -86,8 +86,6 @@
           "RestJsonFooErrorUsingXAmznErrorTypeWithUriAndNamespace",
           "RestJsonHttpPayloadTraitsWithNoBlobBody",
           "RestJsonHttpPayloadWithUnsetUnion",
-          "RestJsonInputAndOutputWithTimestampHeaders",
-          "RestJsonInputAndOutputWithQuotedStringHeaders",
           "RestJsonDeserializesDenseSetMapAndSkipsNull",
           "MediaTypeHeaderOutputBase64"
         ]
@@ -108,7 +106,6 @@
       },
       "output": {
         "cases": [
-          "InputAndOutputWithTimestampHeaders",
           "RestXmlHttpPayloadWithUnsetUnion",
           "HttpPayloadTraitsWithNoBlobBody",
           "ComplexError",
