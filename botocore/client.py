@@ -86,13 +86,11 @@ class AuthErrorInvalidationHandler:
 
     def register(self, events, service_id):
         events.register(
-            f'after-call.{service_id}', self.invalidate_on_auth_error
+            f'response-received.{service_id}', self.invalidate_on_auth_error
         )
 
-    def invalidate_on_auth_error(self, parsed, context, **kwargs):
-        error_code = context.get('error_code_override') or parsed.get(
-            'Error', {}
-        ).get('Code')
+    def invalidate_on_auth_error(self, parsed_response, context, **kwargs):
+        error_code = (parsed_response or {}).get('Error', {}).get('Code')
         if error_code not in self._auth_error_invalidation_codes:
             return
         credentials = self._get_credentials()
