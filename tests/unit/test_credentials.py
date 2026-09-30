@@ -5978,14 +5978,7 @@ class CredentialRefreshLifecycleHarness:
 
 
 def _get_credential_refresh_test_id():
-    if 'BOTOCORE_TEST_ID' not in os.environ:
-        return None
-    try:
-        return int(os.environ['BOTOCORE_TEST_ID'])
-    except ValueError:
-        raise TypeError(
-            "Invalid format for BOTOCORE_TEST_ID, should be a single integer."
-        )
+    return os.environ.get('BOTOCORE_TEST_ID')
 
 
 def _load_credential_refresh_lifecycle_cases():
@@ -5999,15 +5992,18 @@ def _load_credential_refresh_lifecycle_cases():
 
     requested_case_id = _get_credential_refresh_test_id()
     loaded_cases = []
-    for case_id, test_case in enumerate(test_cases):
-        if requested_case_id is not None and case_id != requested_case_id:
+    for test_case in test_cases:
+        if (
+            requested_case_id is not None
+            and test_case['id'] != requested_case_id
+        ):
             continue
-        loaded_cases.append(dict(test_case, case_id=case_id))
+        loaded_cases.append(test_case)
     return loaded_cases
 
 
 def _credential_refresh_case_id(test_case):
-    return f"{test_case['case_id']}: {test_case['documentation']}"
+    return f"{test_case['id']}: {test_case['documentation']}"
 
 
 class TestCredentialRefreshLifecycle:
