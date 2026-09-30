@@ -557,6 +557,15 @@ class ThrottledRetryableChecker(BaseRetryableChecker):
         return context.get_error_code() in self._throttled_error_codes
 
 
+class InvalidCredentialErrorChecker(BaseRetryableChecker):
+    _INVALID_CREDENTIAL_ERROR_CODES = ['ExpiredToken', 'InvalidToken']
+
+    def is_retryable(self, context):
+        # Only the error code from a parsed service response is used
+        # to determine if the response is an invalid credential error.
+        return context.get_error_code() in self._INVALID_CREDENTIAL_ERROR_CODES
+
+
 class ModeledRetryableChecker(BaseRetryableChecker):
     """Check if an error has been modeled as retryable."""
 
@@ -642,6 +651,7 @@ class StandardRetryConditions(BaseRetryableChecker):
             [
                 TransientRetryableChecker(),
                 ThrottledRetryableChecker(),
+                InvalidCredentialErrorChecker(),
                 ModeledRetryableChecker(),
                 OrRetryChecker(
                     [
