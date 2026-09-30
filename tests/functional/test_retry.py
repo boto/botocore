@@ -16,8 +16,9 @@ import json
 
 import botocore.endpoint
 from botocore.config import Config
+from botocore.credentials import _ResilientRefreshableCredentials
 from botocore.exceptions import ClientError
-from tests import BaseSessionTest, ClientHTTPStubber, mock
+from tests import BaseSessionTest, ClientHTTPStubber, create_session, mock
 from tests.functional.test_useragent import (
     get_captured_ua_strings,
     parse_registered_feature_ids,
@@ -439,3 +440,95 @@ class TestRetriesV2(BaseRetryTest):
         feature_lists = self._get_feature_id_lists_from_retries(client)
         # Confirm all requests register `'RETRY_MODE_ADAPTIVE': 'F'`
         assert all('F' in feature_list for feature_list in feature_lists)
+
+
+class TestInvalidCredentialRetry(BaseRetryTest):
+    def create_client_with_resilient_credentials(
+        self, retry_mode, total_max_attempts
+    ):
+        now = datetime.datetime.now(datetime.timezone.utc)
+        refresh_using = mock.Mock(
+            return_value={
+                'access_key': 'NEW-ACCESS',
+                'secret_key': 'NEW-SECRET',
+                'token': 'NEW-TOKEN',
+                'expiry_time': (now + datetime.timedelta(hours=1)).isoformat(),
+            }
+        )
+        credentials = _ResilientRefreshableCredentials(
+            'OLD-ACCESS',
+            'OLD-SECRET',
+            'OLD-TOKEN',
+            now + datetime.timedelta(hours=1),
+            refresh_using,
+            'iam-role',
+        )
+        credential_provider = mock.Mock()
+        credential_provider.load_credentials.return_value = credentials
+        session = create_session()
+        session.register_component('credential_provider', credential_provider)
+        client = session.create_client(
+            'dynamodb',
+            self.region,
+            config=Config(
+                retries={
+                    'mode': retry_mode,
+                    'total_max_attempts': total_max_attempts,
+                }
+            ),
+        )
+        return client, credentials, refresh_using
+
+    def assert_invalid_credential_error_refreshes_retry(self, error_code):
+        for retry_mode in RETRY_MODES:
+            client, _, refresh_using = (
+                self.create_client_with_resilient_credentials(
+                    retry_mode, total_max_attempts=2
+                )
+            )
+            with ClientHTTPStubber(client) as http_stubber:
+                http_stubber.add_response(
+                    status=400,
+                    body=json.dumps(
+                        {
+                            '__type': error_code,
+                            'message': 'invalid credentials',
+                        }
+                    ).encode(),
+                )
+                http_stubber.add_response(
+                    status=200, body=b'{"TableNames":[]}'
+                )
+                response = client.list_tables()
+
+            self.assertEqual(response['ResponseMetadata']['RetryAttempts'], 1)
+            self.assertEqual(refresh_using.call_count, 1)
+            self.assertEqual(len(http_stubber.requests), 2)
+            first_auth = http_stubber.requests[0].headers['Authorization']
+            second_auth = http_stubber.requests[1].headers['Authorization']
+            self.assertIn(b'Credential=OLD-ACCESS/', first_auth)
+            self.assertIn(b'Credential=NEW-ACCESS/', second_auth)
+
+    def test_expired_token_refreshes_and_resigns_retry(self):
+        self.assert_invalid_credential_error_refreshes_retry('ExpiredToken')
+
+    def test_invalid_token_refreshes_and_resigns_retry(self):
+        self.assert_invalid_credential_error_refreshes_retry('InvalidToken')
+
+    def test_max_attempts_prevents_retry_but_not_invalidation(self):
+        client, credentials, refresh_using = (
+            self.create_client_with_resilient_credentials(
+                'standard', total_max_attempts=1
+            )
+        )
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response(
+                status=400,
+                body=b'{"__type":"InvalidToken","message":"invalid"}',
+            )
+            with self.assertRaises(ClientError):
+                client.list_tables()
+
+        self.assertEqual(len(http_stubber.requests), 1)
+        refresh_using.assert_not_called()
+        self.assertTrue(credentials.refresh_needed())
