@@ -732,6 +732,108 @@ class TestWaitersObjects(unittest.TestCase):
 
         self.assertEqual(operation_method.call_count, 2)
 
+    def test_waiter_config_rejects_negative_delay(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'Delay': -1})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_non_numeric_delay(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'Delay': 'fast'})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_zero_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'MaxAttempts': 0})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_negative_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'MaxAttempts': -1})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_non_integer_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'MaxAttempts': 'abc'})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_none_delay(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'Delay': None})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_boolean_delay(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'Delay': True})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_boolean_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'MaxAttempts': True})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_rejects_float_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterConfigError):
+            waiter.wait(WaiterConfig={'MaxAttempts': 1.5})
+        operation_method.assert_not_called()
+
+    def test_waiter_config_accepts_valid_values(self):
+        config = self.create_waiter_config(
+            acceptors=[
+                {'state': 'success', 'matcher': 'status', 'expected': 200},
+            ],
+        )
+        operation_method = mock.Mock()
+        self.client_responses_are(
+            {'ResponseMetadata': {'HTTPStatusCode': 200}},
+            for_operation=operation_method,
+        )
+        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter.wait(WaiterConfig={'Delay': 0, 'MaxAttempts': 1})
+        self.assertEqual(operation_method.call_count, 1)
+
+    def test_waiter_config_accepts_float_delay(self):
+        config = self.create_waiter_config(
+            acceptors=[
+                {'state': 'success', 'matcher': 'status', 'expected': 200},
+            ],
+        )
+        operation_method = mock.Mock()
+        self.client_responses_are(
+            {'ResponseMetadata': {'HTTPStatusCode': 200}},
+            for_operation=operation_method,
+        )
+        waiter = Waiter('MyWaiter', config, operation_method)
+        waiter.wait(WaiterConfig={'Delay': 0.5, 'MaxAttempts': 1})
+        self.assertEqual(operation_method.call_count, 1)
+
 
 class TestCreateWaiter(unittest.TestCase):
     def setUp(self):
