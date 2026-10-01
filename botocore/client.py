@@ -81,8 +81,8 @@ class AuthErrorInvalidationHandler:
         ['ExpiredToken', 'InvalidToken']
     )
 
-    def __init__(self, get_credentials):
-        self._get_credentials = get_credentials
+    def __init__(self, credentials):
+        self._credentials = credentials
 
     def register(self, events, service_id):
         events.register(
@@ -93,7 +93,7 @@ class AuthErrorInvalidationHandler:
         error_code = (parsed_response or {}).get('Error', {}).get('Code')
         if error_code not in self._auth_error_invalidation_codes:
             return
-        credentials = self._get_credentials()
+        credentials = self._credentials
         if not isinstance(credentials, _ResilientRefreshableCredentials):
             return
         try:
@@ -416,7 +416,7 @@ class ClientCreator:
 
     def _register_credential_refresh_events(self, client):
         service_id = client.meta.service_model.service_id.hyphenize()
-        AuthErrorInvalidationHandler(client._get_credentials).register(
+        AuthErrorInvalidationHandler(client._get_credentials()).register(
             client.meta.events, service_id
         )
 
