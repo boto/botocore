@@ -17,6 +17,7 @@ import getpass
 import json
 import logging
 import os
+import random
 import subprocess
 import threading
 import time
@@ -39,17 +40,20 @@ from botocore.compat import (
 )
 from botocore.config import Config
 from botocore.exceptions import (
+    ClientError,
     ConfigNotFound,
     CredentialRetrievalError,
     InfiniteLoopConfigError,
     InvalidConfigError,
     LoginError,
     LoginInsufficientPermissions,
+    LoginInvalidCachedTokenError,
     LoginRefreshRequired,
     LoginTokenLoadError,
     MetadataRetrievalError,
     MissingDependencyException,
     PartialCredentialsError,
+    RefreshNonRecoverableError,
     RefreshWithMFAUnsupportedError,
     UnauthorizedSSOTokenError,
     UnknownCredentialError,
@@ -101,7 +105,6 @@ def create_credential_resolver(session, cache=None, region_name=None):
         'ec2_metadata_service_endpoint_mode': resolve_imds_endpoint_mode(
             session
         ),
-        'ec2_credential_refresh_window': _DEFAULT_ADVISORY_REFRESH_TIMEOUT,
         'ec2_metadata_v1_disabled': session.get_config_variable(
             'ec2_metadata_v1_disabled'
         ),
@@ -722,6 +725,313 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         return super().refresh_needed(refresh_in)
 
 
+class _ResilientRefreshableCredentials(RefreshableCredentials):
+    """Refreshable credentials that fall back to cached credentials when refresh fails."""
+
+    _mandatory_refresh_timeout = 60  # 1 min
+    _refresh_backoff_min_seconds = 5 * 60  # 5 min
+    _refresh_backoff_max_seconds = 10 * 60  # 10 min
+    _nonrecoverable_error_cache_min_ttl = 1  # 1 sec
+    _nonrecoverable_error_cache_max_ttl = 5  # 5 sec
+    _nonrecoverable_sts_error_codes = frozenset(
+        (
+            'AccessDenied',
+            'IDPRejectedClaim',
+            'InvalidIdentityToken',
+            'MalformedPolicyDocument',
+            'PackedPolicyTooLarge',
+            'RegionDisabled',
+            'RegionDisabledException',
+        )
+    )
+    _nonrecoverable_sts_methods = frozenset(
+        ('assume-role', 'assume-role-with-web-identity')
+    )
+
+    def __init__(
+        self,
+        access_key,
+        secret_key,
+        token,
+        expiry_time,
+        refresh_using,
+        method,
+        time_fetcher=_local_now,
+        account_id=None,
+        invalidate_provider_cache=None,
+    ):
+        super().__init__(
+            access_key,
+            secret_key,
+            token,
+            expiry_time,
+            refresh_using,
+            method,
+            time_fetcher=time_fetcher,
+            account_id=account_id,
+        )
+        self._init_refresh_failure_state(invalidate_provider_cache)
+        if self._expiry_time is not None:
+            self._advisory_refresh_timeout = (
+                self._compute_advisory_refresh_timeout()
+            )
+
+    def _init_refresh_failure_state(self, invalidate_provider_cache=None):
+        self._invalidate_provider_cache = invalidate_provider_cache
+        self._refresh_blocked_until = None
+        self._cached_nonrecoverable_error = None
+        self._cached_nonrecoverable_error_expires_at = None
+
+    def _compute_advisory_refresh_timeout(self):
+        # Compute the advisory refresh timeout from the credential lifetime at
+        # the time the credential set is created or refreshed:
+        # <= 20 min -> 5 min
+        # > 20 min and < 90 min -> 15 min
+        # >= 90 min -> 60 min
+        lifetime = total_seconds(self._expiry_time - self._time_fetcher())
+        if lifetime <= 20 * 60:
+            return 5 * 60
+        if lifetime < 90 * 60:
+            return 15 * 60
+        return 60 * 60
+
+    def _in_refresh_backoff(self):
+        refresh_blocked_until = self._refresh_blocked_until
+        if refresh_blocked_until is None:
+            return False
+        return self._time_fetcher() < refresh_blocked_until
+
+    def _get_cached_nonrecoverable_error(self):
+        # Return the cached non-recoverable error while its TTL is still active.
+        cached_error = self._cached_nonrecoverable_error
+        expires_at = self._cached_nonrecoverable_error_expires_at
+        if cached_error is None or expires_at is None:
+            return None
+        if self._time_fetcher() >= expires_at:
+            return None
+        return cached_error
+
+    def _cache_nonrecoverable_error(self, error):
+        cache_ttl = random.uniform(
+            self._nonrecoverable_error_cache_min_ttl,
+            self._nonrecoverable_error_cache_max_ttl,
+        )
+        self._cached_nonrecoverable_error = error
+        self._cached_nonrecoverable_error_expires_at = (
+            self._time_fetcher() + datetime.timedelta(seconds=cache_ttl)
+        )
+
+    def _clear_refresh_failure_state(self):
+        self._refresh_blocked_until = None
+        self._cached_nonrecoverable_error = None
+        self._cached_nonrecoverable_error_expires_at = None
+
+    def _enter_refresh_backoff(self, error):
+        # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
+        # overwhelming the credential source during an outage.
+        backoff = random.uniform(
+            self._refresh_backoff_min_seconds,
+            self._refresh_backoff_max_seconds,
+        )
+        self._refresh_blocked_until = (
+            self._time_fetcher() + datetime.timedelta(seconds=backoff)
+        )
+        logger.warning(
+            "Credential refresh failed: %s. The SDK will continue using "
+            "cached credentials and retry refresh after %.0f seconds.",
+            error,
+            backoff,
+        )
+
+    def _refresh(self):
+        # Avoid acquiring the refresh lock when credentials are still usable.
+        if not self.refresh_needed():
+            return
+
+        # A recent refresh failed, so continue using cached credentials
+        # until another refresh attempt is allowed.
+        if self._in_refresh_backoff():
+            logger.debug(
+                "Credential refresh is in backoff following a failed attempt. "
+                "Using cached credentials. The next refresh attempt is allowed "
+                "at %s.",
+                self._refresh_blocked_until,
+            )
+            return
+
+        # Don't block if another thread is already refreshing credentials.
+        if self._refresh_lock.acquire(False):
+            try:
+                if not self.refresh_needed():
+                    return
+                self._protected_refresh()
+                return
+            finally:
+                self._refresh_lock.release()
+        elif self.refresh_needed(self._mandatory_refresh_timeout):
+            # Inside the mandatory window, wait for the in-progress refresh
+            # attempt before deciding whether another refresh is needed.
+            with self._refresh_lock:
+                if not self.refresh_needed(self._mandatory_refresh_timeout):
+                    return
+                self._protected_refresh()
+
+    def _protected_refresh(self):
+        # Precondition: the refresh lock is held by the current thread.
+        cached_error = self._get_cached_nonrecoverable_error()
+        if cached_error is not None:
+            raise cached_error
+        if self._in_refresh_backoff():
+            # Another caller entered refresh backoff while we were waiting
+            # for the lock. Skip the refresh attempt.
+            return
+        try:
+            metadata = self._refresh_using()
+        except Exception as e:
+            self._handle_refresh_exception(e)
+            return
+        error = self._validate_data(metadata)
+        if error is not None:
+            self._handle_invalid_refresh_response(error)
+            return
+        self._set_from_validated_data(metadata)
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
+        )
+        self._clear_refresh_failure_state()
+
+    def _validate_data(self, data):
+        expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
+        if not data:
+            missing_keys = expected_keys
+        else:
+            missing_keys = [k for k in expected_keys if k not in data]
+        if missing_keys:
+            return f"Response did not contain: {', '.join(missing_keys)}"
+
+        expiry_time = data['expiry_time']
+        try:
+            expiry_time = parse(expiry_time)
+            if expiry_time <= self._time_fetcher():
+                return "Credential source returned expired credentials"
+        except (TypeError, ValueError, OverflowError) as e:
+            return f"Response contained an invalid expiry_time {expiry_time!r}: {e}"
+
+        return None
+
+    def _set_from_validated_data(self, data):
+        self.access_key = data['access_key']
+        self.secret_key = data['secret_key']
+        self.token = data['token']
+        self._expiry_time = parse(data['expiry_time'])
+        self.account_id = data.get('account_id')
+        logger.debug(
+            "Retrieved credentials will expire at: %s", self._expiry_time
+        )
+        self._normalize()
+        self._advisory_refresh_timeout = (
+            self._compute_advisory_refresh_timeout()
+        )
+
+    def _handle_refresh_exception(self, error):
+        # Surface non-recoverable failures immediately because they require
+        # customer action rather than retry or backoff.
+        if self._is_nonrecoverable_refresh_error(error):
+            self._cache_nonrecoverable_error(error)
+            raise error
+        self._enter_refresh_backoff(error)
+
+    def _handle_invalid_refresh_response(self, error):
+        self._enter_refresh_backoff(error)
+
+    def _is_nonrecoverable_refresh_error(self, error):
+        return isinstance(
+            error, RefreshNonRecoverableError
+        ) or self._is_sts_nonrecoverable_error(error)
+
+    def _is_sts_nonrecoverable_error(self, error):
+        if self.method not in self._nonrecoverable_sts_methods:
+            return False
+        if not isinstance(error, ClientError):
+            return False
+        error_code = error.response.get('Error', {}).get('Code')
+        return error_code in self._nonrecoverable_sts_error_codes
+
+    def _invalidate(self, access_key):
+        if access_key is None:
+            return
+        # If the lock is already held, a refresh or another invalidation is
+        # already in progress, so skip invalidation rather than blocking.
+        if not self._refresh_lock.acquire(False):
+            return
+        try:
+            if self._access_key != access_key:
+                return
+            self._expiry_time = self._time_fetcher()
+            if self._invalidate_provider_cache is not None:
+                # If provider-cache invalidation fails, these credentials
+                # remain marked stale and eligible for refresh.
+                try:
+                    self._invalidate_provider_cache(access_key)
+                except Exception:
+                    logger.debug(
+                        "Failed to invalidate provider cache during credential "
+                        "invalidation.",
+                        exc_info=True,
+                    )
+        finally:
+            self._refresh_lock.release()
+
+
+class _DeferredResilientRefreshableCredentials(
+    _ResilientRefreshableCredentials
+):
+    """Refreshable credentials that don't require initial credentials and
+    use cached credentials when a refresh fails.
+    """
+
+    def __init__(
+        self,
+        refresh_using,
+        method,
+        time_fetcher=_local_now,
+        invalidate_provider_cache=None,
+    ):
+        self._refresh_using = refresh_using
+        self._access_key = None
+        self._secret_key = None
+        self._token = None
+        self._account_id = None
+        self._expiry_time = None
+        self._time_fetcher = time_fetcher
+        self._refresh_lock = threading.Lock()
+        self.method = method
+        self._frozen_credentials = None
+        self._advisory_refresh_timeout = None
+        self._init_refresh_failure_state(invalidate_provider_cache)
+
+    def refresh_needed(self, refresh_in=None):
+        if self._frozen_credentials is None:
+            return True
+        return super().refresh_needed(refresh_in)
+
+    # Before the first successful deferred fetch, there are no cached
+    # credentials to fall back to, so initial failures must be surfaced.
+    def _handle_refresh_exception(self, error):
+        if self._is_nonrecoverable_refresh_error(error):
+            return super()._handle_refresh_exception(error)
+        if self._frozen_credentials is None:
+            raise error
+        return super()._handle_refresh_exception(error)
+
+    def _handle_invalid_refresh_response(self, error):
+        if self._frozen_credentials is None:
+            raise CredentialRetrievalError(
+                provider=self.method, error_msg=str(error)
+            )
+        return super()._handle_invalid_refresh_response(error)
+
+
 class CachedCredentialFetcher:
     DEFAULT_EXPIRY_WINDOW_SECONDS = 60 * 15
 
@@ -748,6 +1058,17 @@ class CachedCredentialFetcher:
 
     def fetch_credentials(self):
         return self._get_cached_credentials()
+
+    def _invalidate(self, access_key):
+        """Expire matching cached credentials so refresh fetches new ones."""
+        if access_key is None or self._cache_key not in self._cache:
+            return
+        cached = deepcopy(self._cache[self._cache_key])
+        cached_credentials = cached.get('Credentials', {})
+        if cached_credentials.get('AccessKeyId') != access_key:
+            return
+        cached_credentials['Expiration'] = _local_now()
+        self._cache[self._cache_key] = cached
 
     def _get_cached_credentials(self):
         """Get up-to-date credentials.
@@ -1174,7 +1495,7 @@ class InstanceMetadataProvider(CredentialProvider):
         # We manually set the data here, since we already made the request &
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
-        creds = RefreshableCredentials.create_from_metadata(
+        creds = _ResilientRefreshableCredentials.create_from_metadata(
             metadata,
             method=self.METHOD,
             refresh_using=fetcher.retrieve_iam_role_credentials,
@@ -1674,10 +1995,11 @@ class AssumeRoleProvider(CredentialProvider):
         # The initial credentials are empty and the expiration time is set
         # to now so that we can delay the call to assume role until it is
         # strictly needed.
-        return DeferredRefreshableCredentials(
+        return _DeferredResilientRefreshableCredentials(
             method=self.METHOD,
             refresh_using=refresher,
             time_fetcher=_local_now,
+            invalidate_provider_cache=fetcher._invalidate,
         )
 
     def _get_role_config(self, profile_name):
@@ -1971,9 +2293,11 @@ class AssumeRoleWithWebIdentityProvider(CredentialProvider):
         # The initial credentials are empty and the expiration time is set
         # to now so that we can delay the call to assume role until it is
         # strictly needed.
-        return DeferredRefreshableCredentials(
+        return _DeferredResilientRefreshableCredentials(
             method=self.METHOD,
             refresh_using=fetcher.fetch_credentials,
+            time_fetcher=_local_now,
+            invalidate_provider_cache=fetcher._invalidate,
         )
 
 
@@ -2094,7 +2418,7 @@ class ContainerProvider(CredentialProvider):
             full_uri = self._environ[self.ENV_VAR_FULL]
         fetcher = self._create_fetcher(full_uri)
         creds = fetcher()
-        return RefreshableCredentials(
+        return _ResilientRefreshableCredentials(
             access_key=creds['access_key'],
             secret_key=creds['secret_key'],
             token=creds['token'],
@@ -2481,9 +2805,11 @@ class SSOProvider(CredentialProvider):
             self._feature_ids.add('CREDENTIALS_SSO_LEGACY')
 
         register_feature_ids(self._feature_ids)
-        return DeferredRefreshableCredentials(
+        return _DeferredResilientRefreshableCredentials(
             method=self.METHOD,
             refresh_using=sso_fetcher.fetch_credentials,
+            time_fetcher=_local_now,
+            invalidate_provider_cache=sso_fetcher._invalidate,
         )
 
 
@@ -2578,23 +2904,7 @@ class LoginCredentialFetcher:
 
     def load_cached_credentials(self):
         """Loads cached credentials without checking their expiry."""
-        token = self._token_loader.load_token(self._session_name)
-
-        if token is None:
-            raise LoginTokenLoadError(
-                error_msg='Unable to load a existing login session for session '
-                f'{self._session_name}. Please reauthenticate with '
-                "'aws login'.",
-            )
-
-        missing_fields = [
-            key for key in self._REQUIRED_TOKEN_FIELDS if key not in token
-        ]
-        if missing_fields:
-            raise LoginTokenLoadError(
-                error_msg=f'Failed to load access token from token cache, missing required fields: {", ".join(missing_fields)}.'
-            )
-
+        token = self._load_token()
         return self._token_to_credentials(token)
 
     def refresh_credentials(self):
@@ -2602,7 +2912,7 @@ class LoginCredentialFetcher:
         if self.feature_ids:
             register_feature_ids(self.feature_ids)
         # Reload the token from disk, we need the refresh info
-        token = self._token_loader.load_token(self._session_name)
+        token = self._load_token(LoginInvalidCachedTokenError)
         private_key = self._load_private_key(token)
 
         # Check if token has already been refreshed and is still valid
@@ -2680,6 +2990,26 @@ class LoginCredentialFetcher:
         self._token_loader.save_token(self._session_name, token)
 
         return self._token_to_credentials(token)
+
+    def _load_token(self, error_cls=LoginTokenLoadError):
+        token = self._token_loader.load_token(self._session_name)
+
+        if token is None:
+            raise error_cls(
+                error_msg='Unable to load a existing login session for session '
+                f'{self._session_name}. Please reauthenticate with '
+                "'aws login'.",
+            )
+
+        missing_fields = [
+            key for key in self._REQUIRED_TOKEN_FIELDS if key not in token
+        ]
+        if missing_fields:
+            raise error_cls(
+                error_msg=f'Failed to load access token from token cache, missing required fields: {", ".join(missing_fields)}.'
+            )
+
+        return token
 
     @staticmethod
     def _token_to_credentials(token):
@@ -2769,7 +3099,7 @@ class LoginProvider(CredentialProvider):
         # regardless if they're expired
         cached_credentials = fetcher.load_cached_credentials()
 
-        return RefreshableCredentials(
+        return _ResilientRefreshableCredentials(
             access_key=cached_credentials['access_key'],
             secret_key=cached_credentials['secret_key'],
             token=cached_credentials['token'],
