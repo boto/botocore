@@ -3079,6 +3079,7 @@ class ContainerMetadataFetcher:
         '169.254.170.23',
         'fd00:ec2::23',
         'localhost',
+        'host.docker.internal',
     ]
 
     def __init__(self, session=None, sleep=time.sleep):
