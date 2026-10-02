@@ -55,6 +55,7 @@ class StreamingBody(IOBase):
         self._raw_stream = raw_stream
         self._content_length = content_length
         self._amount_read = 0
+        self._pending_line_data = []
 
     def __del__(self):
         # Extending destructor in order to preserve the underlying raw_stream.
@@ -153,14 +154,28 @@ class StreamingBody(IOBase):
         This is achieved by reading chunk of bytes (of size chunk_size) at a
         time from the raw stream, and then yielding lines from there.
         """
-        pending = b''
+
+        def _maybe_trim(line):
+            if keepends or not line.endswith(b'\n'):
+                return line
+            return line[:-2] if line.endswith(b'\r\n') else line[:-1]
+
+        def _flush(final_segment):
+            line = b''.join(self._pending_line_data + [final_segment])
+            self._pending_line_data = []
+            return _maybe_trim(line)
+
         for chunk in self.iter_chunks(chunk_size):
-            lines = (pending + chunk).splitlines(True)
-            for line in lines[:-1]:
-                yield line.splitlines(keepends)[0]
-            pending = lines[-1]
-        if pending:
-            yield pending.splitlines(keepends)[0]
+            lines = chunk.splitlines(True)
+            if len(lines) > 1:
+                for segment in lines[0:-1]:
+                    yield _flush(segment)
+            if lines[-1].endswith(b'\n'):
+                yield _flush(lines[-1])
+            else:
+                self._pending_line_data += lines[-1:]
+        if last := _flush(b''):
+            yield last
 
     def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
         """Return an iterator to yield chunks of chunk_size bytes from the raw
