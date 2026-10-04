@@ -1336,7 +1336,11 @@ def validate_region_name(region_name):
     """Provided region_name must be a valid host label."""
     if region_name is None:
         return
-    valid_host_label = re.compile(r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+    # `{,63}` is `{0,63}`, so the empty string matched, and `$` matches just
+    # before a trailing newline, so a region ending in `\n` matched too (#3786).
+    # `\Z` is the real end-of-string anchor; use `{1,63}` so a host label has
+    # at least one character.
+    valid_host_label = re.compile(r'^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)\Z')
     valid = valid_host_label.match(region_name)
     if not valid:
         raise InvalidRegionError(region_name=region_name)
