@@ -46,6 +46,7 @@ _SERVICE_MAX_ATTEMPTS = {
     'dynamodb': 4,
     'dynamodb-streams': 4,
 }
+INVALID_CREDENTIAL_ERROR_CODES = frozenset(('ExpiredToken', 'InvalidToken'))
 logger = logging.getLogger(__name__)
 
 
@@ -557,13 +558,11 @@ class ThrottledRetryableChecker(BaseRetryableChecker):
         return context.get_error_code() in self._throttled_error_codes
 
 
-class InvalidCredentialErrorChecker(BaseRetryableChecker):
-    _INVALID_CREDENTIAL_ERROR_CODES = ['ExpiredToken', 'InvalidToken']
-
+class InvalidCredentialRetryableChecker(BaseRetryableChecker):
     def is_retryable(self, context):
         # Only the error code from a parsed service response is used
         # to determine if the response is an invalid credential error.
-        return context.get_error_code() in self._INVALID_CREDENTIAL_ERROR_CODES
+        return context.get_error_code() in INVALID_CREDENTIAL_ERROR_CODES
 
 
 class ModeledRetryableChecker(BaseRetryableChecker):
@@ -651,7 +650,7 @@ class StandardRetryConditions(BaseRetryableChecker):
             [
                 TransientRetryableChecker(),
                 ThrottledRetryableChecker(),
-                InvalidCredentialErrorChecker(),
+                InvalidCredentialRetryableChecker(),
                 ModeledRetryableChecker(),
                 OrRetryChecker(
                     [
