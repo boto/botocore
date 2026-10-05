@@ -886,21 +886,21 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             # for the lock. Skip the refresh attempt.
             return
         try:
-            metadata = self._refresh_using()
+            credential_data = self._refresh_using()
         except Exception as e:
             self._handle_refresh_exception(e)
             return
-        error = self._validate_data(metadata)
-        if error is not None:
-            self._handle_invalid_refresh_response(error)
+        validation_error = self._validate_credential_data(credential_data)
+        if validation_error is not None:
+            self._handle_invalid_refresh_response(validation_error)
             return
-        self._set_from_validated_data(metadata)
+        self._set_from_validated_data(credential_data)
         self._frozen_credentials = ReadOnlyCredentials(
             self._access_key, self._secret_key, self._token, self._account_id
         )
         self._clear_refresh_failure_state()
 
-    def _validate_data(self, data):
+    def _validate_credential_data(self, data):
         expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
         if not data:
             missing_keys = expected_keys
