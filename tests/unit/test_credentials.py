@@ -2025,6 +2025,19 @@ class TestCreateCredentialResolver(BaseEnvVar):
         cache = resolver.get_provider('assume-role').cache
         self.assertIs(cache, custom_cache)
 
+    def test_container_provider_defaults_to_no_ca_bundle(self):
+        resolver = credentials.create_credential_resolver(self.session)
+        container_provider = resolver.get_provider('container-role')
+        self.assertTrue(container_provider._fetcher._session._verify)
+
+    def test_container_provider_honors_ca_bundle(self):
+        self.config_loader.set_config_variable('ca_bundle', '/path/to/bundle')
+        resolver = credentials.create_credential_resolver(self.session)
+        container_provider = resolver.get_provider('container-role')
+        self.assertEqual(
+            container_provider._fetcher._session._verify, '/path/to/bundle'
+        )
+
 
 class TestCanonicalNameSourceProvider(BaseEnvVar):
     def setUp(self):
