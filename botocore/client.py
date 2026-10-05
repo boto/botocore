@@ -77,10 +77,6 @@ history_recorder = get_global_history_recorder()
 class AuthErrorInvalidationHandler:
     """Invalidates cached credentials after auth-failure responses."""
 
-    _auth_error_invalidation_codes = frozenset(
-        ['ExpiredToken', 'InvalidToken']
-    )
-
     def __init__(self, credentials):
         self._credentials = credentials
 
@@ -91,7 +87,7 @@ class AuthErrorInvalidationHandler:
 
     def invalidate_on_auth_error(self, parsed_response, context, **kwargs):
         error_code = (parsed_response or {}).get('Error', {}).get('Code')
-        if error_code not in self._auth_error_invalidation_codes:
+        if error_code not in standard.INVALID_CREDENTIAL_ERROR_CODES:
             return
         credentials = self._credentials
         if not isinstance(credentials, _ResilientRefreshableCredentials):

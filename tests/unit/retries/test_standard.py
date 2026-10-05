@@ -175,7 +175,7 @@ def test_can_detect_retryable_throttled_errors(case):
 
 @pytest.mark.parametrize('case', INVALID_CREDENTIAL_ERRORS)
 def test_can_detect_invalid_credential_errors(case):
-    checker = standard.InvalidCredentialErrorChecker()
+    checker = standard.InvalidCredentialRetryableChecker()
     _verify_retryable(checker, None, *case)
 
 
