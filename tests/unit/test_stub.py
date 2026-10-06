@@ -132,6 +132,17 @@ class TestStubber(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.stubber.add_response('foo', {})
 
+    def test_add_response_fails_when_missing_api_mapping(self):
+        self.client.meta.method_to_api_mapping.get.return_value = None
+        self.client.meta.method_to_api_mapping.keys.return_value = ["method_1"]
+        with self.assertRaises(ParamValidationError) as error:
+            self.stubber.add_response('foo', {})
+
+        self.assertIn(
+            "Unable to map method 'foo' to api operation.",
+            str(error.exception),
+        )
+
     def test_validates_service_response(self):
         self.stubber.add_response('foo', {})
         self.assertTrue(self.validate_parameters_mock.called)
