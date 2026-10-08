@@ -19,8 +19,6 @@ import io
 import json
 import struct
 
-import dateutil.tz
-
 from botocore import serialize
 from botocore.exceptions import ParamValidationError
 from botocore.model import ServiceModel
@@ -195,7 +193,7 @@ class TestTimestampHeadersWithRestXML(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'TimestampHeader': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=dateutil.tz.tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=datetime.timezone.utc
                 )
             }
         )
@@ -275,7 +273,7 @@ class TestTimestamps(unittest.TestCase):
         request = self.serialize_to_request(
             {
                 'Timestamp': datetime.datetime(
-                    2014, 1, 1, 12, 12, 12, tzinfo=dateutil.tz.tzutc()
+                    2014, 1, 1, 12, 12, 12, tzinfo=datetime.timezone.utc
                 )
             }
         )

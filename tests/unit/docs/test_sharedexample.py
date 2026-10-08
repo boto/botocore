@@ -177,7 +177,7 @@ class TestSharedExampleDocumenter(BaseDocsTest):
         self.assert_contains_lines_in_order(
             [
                 "foo.bar(",
-                "    foo=datetime(2015, 11, 20, 21, 13, 12, 4, 324, 0)",
+                "    foo=datetime(2015, 11, 20, 21, 13, 12, 4, 324, -1)",
                 ")",
             ]
         )

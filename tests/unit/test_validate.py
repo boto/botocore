@@ -382,9 +382,8 @@ class TestValidateTypes(BaseTestValidate):
         self.assertEqual(error_msg, '')
 
     def test_can_handle_none_datetimes(self):
-        # This is specifically to test a workaround a bug in dateutil
-        # where low level exceptions can propogate back up to
-        # us.
+        # A None timestamp should surface as a clean "Invalid type" error
+        # from validation, not a lower-level parsing exception leaking out.
         errors = self.get_validation_error_message(
             given_shapes=self.shapes, input_params={'Timestamp': None}
         )

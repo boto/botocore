@@ -16,6 +16,7 @@ import pytest
 
 from botocore.compat import (
     HAS_CRT,
+    _normalize_iso8601_for_python_310,
     compat_shell_split,
     ensure_bytes,
     get_md5,
@@ -214,7 +215,44 @@ class TestTimezoneOperations(unittest.TestCase):
         self.assertTrue(len(options) > 0)
 
         for tzinfo in options:
-            self.assertIsInstance(tzinfo(), datetime.tzinfo)
+            self.assertIsInstance(tzinfo, datetime.tzinfo)
+
+
+@pytest.mark.parametrize(
+    "raw, normalized",
+    [
+        # Zone suffixes (case-insensitive) collapse to "+00:00"
+        ("2024-01-01T00:00:00Z", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00z", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00UTC", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00utc", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00 GMT", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00 gmt", "2024-01-01T00:00:00+00:00"),
+        # Compact basic form (with and without seconds, with fractional)
+        ("20240115T1234Z", "2024-01-15T12:34:00+00:00"),
+        ("20240115T123456Z", "2024-01-15T12:34:56+00:00"),
+        ("20240115T123456.5Z", "2024-01-15T12:34:56.500000+00:00"),
+        # Space date/time separator
+        ("2024-01-15 12:34:56", "2024-01-15T12:34:56"),
+        # Tz offset without a colon (with and without leading space)
+        ("2024-01-15T12:34:56+0530", "2024-01-15T12:34:56+05:30"),
+        ("2024-01-15T12:34:56 -0400", "2024-01-15T12:34:56-04:00"),
+        # Fractional seconds padded to 6 digits
+        ("2024-01-15T12:34:56.1", "2024-01-15T12:34:56.100000"),
+        ("2024-01-15T12:34:56.12+00:00", "2024-01-15T12:34:56.120000+00:00"),
+        # Fractional seconds truncated to 6 digits
+        ("2024-01-15T12:34:56.1234567", "2024-01-15T12:34:56.123456"),
+        # Already-compliant input is unchanged
+        ("2024-01-15T12:34:56+00:00", "2024-01-15T12:34:56+00:00"),
+    ],
+)
+def test_normalize_iso8601_for_python_310(raw, normalized):
+    assert _normalize_iso8601_for_python_310(raw) == normalized
+    # Guards against typos in the table above: the expected value must
+    # be parseable by datetime.fromisoformat or the helper is pointless.
+    assert isinstance(
+        datetime.datetime.fromisoformat(normalized), datetime.datetime
+    )
 
 
 class TestCRTIntegration(unittest.TestCase):

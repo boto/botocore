@@ -12,7 +12,8 @@
 # language governing permissions and limitations under the License.
 import unittest
 
-import dateutil.parser
+from datetime import datetime
+
 import pytest
 
 from botocore.exceptions import (
@@ -305,7 +306,11 @@ def test_sso_token_provider_refresh(test_case):
     refresh_response = test_case.pop("refreshResponse", None)
     mock_sso_oidc.create_token.return_value = refresh_response
 
-    current_time = dateutil.parser.parse(test_case.pop("currentTime"))
+    # fromisoformat accepts "Z" natively in Python 3.11+; drop the replace
+    # when 3.10 support ends.
+    current_time = datetime.fromisoformat(
+        test_case.pop("currentTime").replace("Z", "+00:00")
+    )
 
     def _time_fetcher():
         return current_time
@@ -337,7 +342,11 @@ def test_sso_token_provider_refresh(test_case):
 
     raw_expiration = expected_token.get("expiration")
     if raw_expiration is not None:
-        expected_expiration = dateutil.parser.parse(raw_expiration)
+        # fromisoformat accepts "Z" natively in Python 3.11+; drop the replace
+        # when 3.10 support ends.
+        expected_expiration = datetime.fromisoformat(
+            raw_expiration.replace("Z", "+00:00")
+        )
         assert actual_token.expiration == expected_expiration
 
     expected_token_write_back = test_case.pop("expectedTokenWriteback", None)
@@ -349,8 +358,12 @@ def test_sso_token_provider_refresh(test_case):
             refreshToken=cached_token["refreshToken"],
         )
         raw_expiration = expected_token_write_back["expiresAt"]
-        # The in-memory cache doesn't serialize to JSON so expect a datetime
-        expected_expiration = dateutil.parser.parse(raw_expiration)
+        # The in-memory cache doesn't serialize to JSON so expect a datetime.
+        # fromisoformat accepts "Z" natively in Python 3.11+; drop the replace
+        # when 3.10 support ends.
+        expected_expiration = datetime.fromisoformat(
+            raw_expiration.replace("Z", "+00:00")
+        )
         expected_token_write_back["expiresAt"] = expected_expiration
         assert expected_token_write_back == token_cache[cache_key]
 
