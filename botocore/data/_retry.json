@@ -86,6 +86,22 @@
           "http_status_code": 400
         }
       }
+    },
+    "expired_token": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "ExpiredToken",
+          "http_status_code": 400
+        }
+      }
+    },
+    "invalid_token": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "InvalidToken",
+          "http_status_code": 400
+        }
+      }
     }
   },
   "retry": {
@@ -108,7 +124,9 @@
           "request_throttled_exception": {"$ref": "request_throttled_exception"},
           "throttling": {"$ref": "throttling"},
           "too_many_requests": {"$ref": "too_many_requests"},
-          "throughput_exceeded": {"$ref": "throughput_exceeded"}
+          "throughput_exceeded": {"$ref": "throughput_exceeded"},
+          "expired_token": {"$ref": "expired_token"},
+          "invalid_token": {"$ref": "invalid_token"}
       }
     },
     "organizations": {
