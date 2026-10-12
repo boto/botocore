@@ -656,8 +656,16 @@ class RuleSet:
     """Collection of rules to derive a routable service endpoint."""
 
     def __init__(
-        self, version, parameters, rules, partitions, documentation=None
+        self,
+        version,
+        parameters,
+        rules,
+        partitions,
+        documentation=None,
+        **kwargs,
     ):
+        # Unrecognized top-level keys (e.g. ``serviceId``) are ignored so
+        # that additions to the ruleset schema don't break client creation.
         self.version = version
         self.parameters = self._ingest_parameter_spec(parameters)
         self.rules = [RuleCreator.create(**rule) for rule in rules]
