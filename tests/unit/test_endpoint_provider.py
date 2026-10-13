@@ -415,6 +415,36 @@ def test_ruleset_unknown_parameter_type_raises(partitions):
     assert "Unknown parameter type: list." in str(exc_info.value)
 
 
+def test_ruleset_ignores_unknown_top_level_keys(partitions):
+    ruleset = RuleSet(
+        version='1.0',
+        serviceId='Foo Service',
+        parameters={},
+        rules=[],
+        partitions=partitions,
+    )
+    assert ruleset.version == '1.0'
+
+
+def test_endpoint_provider_ignores_unknown_top_level_keys(partitions):
+    provider = EndpointProvider(
+        ruleset_data={
+            'version': '1.0',
+            'serviceId': 'Foo Service',
+            'parameters': {},
+            'rules': [
+                {
+                    'type': 'endpoint',
+                    'conditions': [],
+                    'endpoint': {'url': 'https://foo.bar'},
+                }
+            ],
+        },
+        partition_data=partitions,
+    )
+    assert provider.resolve_endpoint().url == 'https://foo.bar'
+
+
 @pytest.fixture()
 def empty_resolver():
     return EndpointRulesetResolver(
