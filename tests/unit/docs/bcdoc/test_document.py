@@ -20,7 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-from botocore.docs.bcdoc.restdoc import DocumentStructure, ReSTDocument
+from botocore.docs.bcdoc.restdoc import (
+    SECTION_LINE_LIMIT_CONFIG,
+    DocumentStructure,
+    ReSTDocument,
+)
 from tests import unittest
 
 
@@ -67,6 +71,33 @@ class TestDocumentStructure(unittest.TestCase):
         self.assertEqual(self.doc_structure.path, [self.name])
         self.doc_structure.path = ['foo']
         self.assertEqual(self.doc_structure.path, ['foo'])
+
+    def _flush_syntax_section(self, section_name, line_count):
+        section = self.doc_structure.add_new_section(section_name)
+        for line in range(line_count):
+            section.writeln(str(line))
+        return self.doc_structure.flush_structure()
+
+    def test_syntax_section_at_line_limit_is_kept(self):
+        limit = SECTION_LINE_LIMIT_CONFIG['request-example']['line_limit']
+        contents = self._flush_syntax_section('request-example', limit)
+        self.assertNotIn(b'too large to render', contents)
+        self.assertIn(b'\n%d\n' % (limit - 1), contents)
+
+    def test_syntax_section_over_line_limit_is_replaced(self):
+        limit = SECTION_LINE_LIMIT_CONFIG['response-example']['line_limit']
+        contents = self._flush_syntax_section('response-example', limit + 1)
+        self.assertIn(b'too large to render', contents)
+        self.assertIn(b'**Response Syntax**', contents)
+        self.assertNotIn(b'\n%d\n' % limit, contents)
+
+    def test_syntax_section_line_limit_is_2000(self):
+        # MediaLive's Channel syntax sections run about 1,570 to 1,590
+        # lines; the former 1,500-line limit dropped them (boto/botocore#2839).
+        for name in ('request-example', 'response-example'):
+            self.assertEqual(
+                SECTION_LINE_LIMIT_CONFIG[name]['line_limit'], 2000
+            )
 
     def test_add_new_section(self):
         section = self.doc_structure.add_new_section('mysection')
