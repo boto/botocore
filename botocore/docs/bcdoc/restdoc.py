@@ -35,9 +35,9 @@ LARGE_SECTION_MESSAGE = """
     """
 LOG = logging.getLogger('bcdocs')
 SECTION_LINE_LIMIT_CONFIG = {
-    'response-example': {'name': 'Response Syntax', 'line_limit': 1500},
+    'response-example': {'name': 'Response Syntax', 'line_limit': 2000},
     'description': {'name': 'Response Structure', 'line_limit': 5000},
-    'request-example': {'name': 'Request Syntax', 'line_limit': 1500},
+    'request-example': {'name': 'Request Syntax', 'line_limit': 2000},
     'request-params': {'name': 'Parameters', 'line_limit': 5000},
 }
 SECTION_METHOD_PATH_DEPTH = {
