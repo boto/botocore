@@ -616,9 +616,6 @@ class RefreshableCredentials(Credentials):
             # set of temporary credentials we have.
             return
         self._set_from_data(metadata)
-        self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token, self._account_id
-        )
         if self._is_expired():
             # We successfully refreshed credentials but for whatever
             # reason, our refreshing function returned credentials
@@ -653,12 +650,23 @@ class RefreshableCredentials(Credentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
         self.account_id = data.get('account_id')
+        self._normalize()
+
+        # Publish the new frozen credentials BEFORE the new expiry time.
+        # Readers that don't hold the refresh lock (see _refresh) use
+        # _expiry_time to decide whether to keep using the existing
+        # frozen credentials. If the expiry were updated first, such a
+        # reader could observe the new expiry, conclude no refresh is
+        # needed, and return the old frozen credentials even though a
+        # refresh has already completed.
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
+        )
+        self._expiry_time = parse(data['expiry_time'])
         logger.debug(
             "Retrieved credentials will expire at: %s", self._expiry_time
         )
-        self._normalize()
 
     def get_frozen_credentials(self):
         """Return immutable credentials.

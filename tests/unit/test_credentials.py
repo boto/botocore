@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -216,6 +217,77 @@ class TestRefreshableCredentials(TestCredentials):
         with self.assertRaises(botocore.exceptions.CredentialRetrievalError):
             self.creds.access_key
 
+    def test_get_frozen_credentials_during_refresh_gets_new_credentials(self):
+        # Regression test for GH-3827: a reader calling
+        # get_frozen_credentials while a refresh is in progress, after
+        # the new expiry time has been stored but before the new frozen
+        # credentials are published, must not be handed the stale
+        # frozen credentials.
+        creds = credentials.RefreshableCredentials(
+            'OLD-ACCESS',
+            'OLD-SECRET',
+            'OLD-TOKEN',
+            datetime.now(tzlocal()) - timedelta(minutes=30),
+            self.refresher,
+            'iam-role',
+            time_fetcher=lambda: datetime.now(tzlocal()),
+        )
+
+        in_gap = threading.Event()
+        release_refresh = threading.Event()
+        original_set_from_data = creds._set_from_data
+
+        def paused_set_from_data(data):
+            # Pause after the refreshed data has been applied, inside
+            # the window where a concurrent reader could observe the
+            # new expiry together with the old frozen credentials.
+            original_set_from_data(data)
+            in_gap.set()
+            release_refresh.wait(5)
+
+        creds._set_from_data = paused_set_from_data
+
+        original_refresh_needed = creds.refresh_needed
+        reader_at_decision = threading.Event()
+
+        def tracking_refresh_needed(refresh_in=None):
+            result = original_refresh_needed(refresh_in)
+            if threading.current_thread() is reader_thread:
+                reader_at_decision.set()
+            return result
+
+        creds.refresh_needed = tracking_refresh_needed
+
+        result = []
+
+        def reader():
+            result.append(creds.get_frozen_credentials())
+
+        reader_thread = threading.Thread(target=reader)
+        refresh_thread = threading.Thread(target=creds.get_frozen_credentials)
+
+        refresh_thread.start()
+        try:
+            # Park the refreshing thread inside the refresh window.
+            self.assertTrue(in_gap.wait(5))
+            reader_thread.start()
+            # Wait until the reader has evaluated whether a refresh is
+            # needed, then let the paused refresh finish.
+            self.assertTrue(reader_at_decision.wait(5))
+            release_refresh.set()
+            refresh_thread.join(5)
+            reader_thread.join(5)
+            self.assertFalse(refresh_thread.is_alive())
+            self.assertFalse(reader_thread.is_alive())
+            # The reader must never be handed the stale credentials.
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0].access_key, 'NEW-ACCESS')
+            # The single refresh must have served both threads.
+            self.assertEqual(self.refresher.call_count, 1)
+        finally:
+            release_refresh.set()
+            refresh_thread.join(5)
+            reader_thread.join(5)
 
 class TestDeferredRefreshableCredentials(unittest.TestCase):
     def setUp(self):
