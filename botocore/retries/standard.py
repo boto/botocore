@@ -28,16 +28,7 @@ import logging
 import random
 import time
 
-# This is not a public interface and is subject to abrupt breaking changes.
-# Currently it's only available to internal users for testing and validation.
-# Any usage is not advised or supported in external code bases.
-from botocore.configprovider import NEW_RETRIES_ENABLED
-from botocore.exceptions import (
-    ConnectionError,
-    ConnectTimeoutError,
-    HTTPClientError,
-    ReadTimeoutError,
-)
+from botocore.exceptions import ConnectionError, HTTPClientError
 from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
 
@@ -54,56 +45,36 @@ def register_retry_handler(client, max_attempts=None):
     service_event_name = service_id.hyphenize()
     retry_event_adapter = RetryEventAdapter()
 
-    if NEW_RETRIES_ENABLED:
-        if (
-            max_attempts is None
-            and service_event_name in _SERVICE_MAX_ATTEMPTS
-        ):
-            max_attempts = _SERVICE_MAX_ATTEMPTS[service_event_name]
-        elif max_attempts is None:
-            max_attempts = DEFAULT_MAX_ATTEMPTS
-        # The ``max`` token of the ``amz-sdk-request`` header is otherwise
-        # only populated once a retry is attempted, so it's missing from
-        # the initial attempt.  Seeding it here ensures that it's present
-        # on every attempt. This handler runs before ``add_retry_headers``
-        # because the emitter invokes more specific events first, and
-        # ``add_retry_headers`` is registered on the generic
-        # ``request-created``.
-        client.meta.events.register(
-            f'request-created.{service_event_name}',
-            MaxAttemptsSeeder(max_attempts).seed_max_attempts,
-            unique_id=f'seed-max-attempts-{service_event_name}',
-        )
-        throttling_detector = ThrottlingErrorDetector(retry_event_adapter)
-        retry_quota = RetryQuotaChecker(
-            quota.RetryQuota(), throttling_detector
-        )
-        handler = RetryHandler(
-            retry_policy=RetryPolicy(
-                retry_checker=StandardRetryConditions(
-                    max_attempts=max_attempts
-                ),
-                retry_backoff=ExponentialBackoff(
-                    service_name=service_event_name,
-                    throttling_detector=throttling_detector,
-                ),
+    if max_attempts is None and service_event_name in _SERVICE_MAX_ATTEMPTS:
+        max_attempts = _SERVICE_MAX_ATTEMPTS[service_event_name]
+    elif max_attempts is None:
+        max_attempts = DEFAULT_MAX_ATTEMPTS
+    # The ``max`` token of the ``amz-sdk-request`` header is otherwise
+    # only populated once a retry is attempted, so it's missing from
+    # the initial attempt.  Seeding it here ensures that it's present
+    # on every attempt. This handler runs before ``add_retry_headers``
+    # because the emitter invokes more specific events first, and
+    # ``add_retry_headers`` is registered on the generic
+    # ``request-created``.
+    client.meta.events.register(
+        f'request-created.{service_event_name}',
+        MaxAttemptsSeeder(max_attempts).seed_max_attempts,
+        unique_id=f'seed-max-attempts-{service_event_name}',
+    )
+    throttling_detector = ThrottlingErrorDetector(retry_event_adapter)
+    retry_quota = RetryQuotaChecker(quota.RetryQuota(), throttling_detector)
+    handler = RetryHandler(
+        retry_policy=RetryPolicy(
+            retry_checker=StandardRetryConditions(max_attempts=max_attempts),
+            retry_backoff=ExponentialBackoff(
+                service_name=service_event_name,
+                throttling_detector=throttling_detector,
             ),
-            retry_event_adapter=retry_event_adapter,
-            retry_quota=retry_quota,
-            service_name=service_event_name,
-        )
-    else:
-        retry_quota = RetryQuotaChecker(quota.RetryQuota())
-        handler = RetryHandler(
-            retry_policy=RetryPolicy(
-                retry_checker=StandardRetryConditions(
-                    max_attempts=max_attempts or DEFAULT_MAX_ATTEMPTS
-                ),
-                retry_backoff=ExponentialBackoff(),
-            ),
-            retry_event_adapter=retry_event_adapter,
-            retry_quota=retry_quota,
-        )
+        ),
+        retry_event_adapter=retry_event_adapter,
+        retry_quota=retry_quota,
+        service_name=service_event_name,
+    )
 
     client.meta.events.register(
         f'after-call.{service_event_name}', retry_quota.release_retry_quota
@@ -178,23 +149,22 @@ class RetryHandler:
                     retry_delay,
                 )
             else:
-                if NEW_RETRIES_ENABLED:
-                    if self._is_long_polling_operation(context):
-                        polling_delay = self._retry_policy.compute_retry_delay(
-                            context
-                        )
-                        self._sleep(polling_delay)
-                        logger.debug(
-                            "Retry needed but retry quota reached, "
-                            "not retrying request."
-                        )
-                        self._retry_event_adapter.adapt_retry_response_from_context(
-                            context
-                        )
-                        # Return False (non-None) to prevent any later needs-retry
-                        # handler from returning a delay that would cause
-                        # _needs_retry in endpoint.py to sleep again.
-                        return False
+                if self._is_long_polling_operation(context):
+                    polling_delay = self._retry_policy.compute_retry_delay(
+                        context
+                    )
+                    self._sleep(polling_delay)
+                    logger.debug(
+                        "Retry needed but retry quota reached, "
+                        "not retrying request."
+                    )
+                    self._retry_event_adapter.adapt_retry_response_from_context(
+                        context
+                    )
+                    # Return False (non-None) to prevent any later needs-retry
+                    # handler from returning a delay that would cause
+                    # _needs_retry in endpoint.py to sleep again.
+                    return False
                 logger.debug(
                     "Retry needed but retry quota reached, "
                     "not retrying request."
@@ -397,36 +367,35 @@ class ExponentialBackoff(BaseRetryBackoff):
         This class implements truncated binary exponential backoff
         with jitter::
 
-            t_i = rand(0, 1) * min(2 ** attempt, MAX_BACKOFF)
+            t_i = rand(0, 1) * min(base_scale * 2 ** i, MAX_BACKOFF)
 
-        where ``i`` is the request attempt (0 based).
+        where ``i`` is the request attempt (0 based) and ``base_scale``
+        is 1 second for throttling errors and 50 milliseconds otherwise
+        (25 milliseconds for DynamoDB and DynamoDB Streams).
+
+        If the response carries an ``x-amz-retry-after`` header, the
+        delay is raised to that value, capped at ``t_i + 5`` seconds.
 
         """
         # The context.attempt_number is a 1-based value, but we have
         # to calculate the delay based on i based a 0-based value.  We
-        # want the first delay to just be ``rand(0, 1)``.
-        if NEW_RETRIES_ENABLED:
-            t_i = self._random() * min(
-                self._get_base_scale(context)
-                * (self._base ** (context.attempt_number - 1)),
-                self._max_backoff,
+        # want the first delay to just be ``rand(0, 1) * base_scale``.
+        t_i = self._random() * min(
+            self._get_base_scale(context)
+            * (self._base ** (context.attempt_number - 1)),
+            self._max_backoff,
+        )
+
+        # Check for x-amz-retry-after header
+        retry_after = self._get_retry_after_delay(context)
+        if retry_after is not None:
+            # min is 't_i', max is 't_i + 5'
+            return max(
+                t_i,
+                min(retry_after, self._RETRY_AFTER_MAX_ADDITIONAL + t_i),
             )
 
-            # Check for x-amz-retry-after header
-            retry_after = self._get_retry_after_delay(context)
-            if retry_after is not None:
-                # min is 't_i', max is 't_i + 5'
-                return max(
-                    t_i,
-                    min(retry_after, self._RETRY_AFTER_MAX_ADDITIONAL + t_i),
-                )
-
-            return t_i
-        else:
-            return self._random() * min(
-                (self._base ** (context.attempt_number - 1)),
-                self._max_backoff,
-            )
+        return t_i
 
     def _get_base_scale(self, context):
         if (
@@ -667,12 +636,9 @@ class OrRetryChecker(BaseRetryableChecker):
 
 
 class RetryQuotaChecker:
-    _RETRY_COST = 5
-    _RETRY_COST_V2 = 14
+    _RETRY_COST = 14
     _NO_RETRY_INCREMENT = 1
     _THROTTLING_RETRY_COST = 5
-    _TIMEOUT_RETRY_REQUEST = 10
-    _TIMEOUT_EXCEPTIONS = (ConnectTimeoutError, ReadTimeoutError)
 
     # Implementation note:  We're not making this a BaseRetryableChecker
     # because this isn't just a check if we can retry.  This also changes
@@ -687,16 +653,10 @@ class RetryQuotaChecker:
         self._last_amount_acquired = None
 
     def acquire_retry_quota(self, context):
-        if NEW_RETRIES_ENABLED:
-            if self._is_throttling_error(context):
-                capacity_amount = self._THROTTLING_RETRY_COST
-            else:
-                capacity_amount = self._RETRY_COST_V2
+        if self._is_throttling_error(context):
+            capacity_amount = self._THROTTLING_RETRY_COST
         else:
-            if self._is_timeout_error(context):
-                capacity_amount = self._TIMEOUT_RETRY_REQUEST
-            else:
-                capacity_amount = self._RETRY_COST
+            capacity_amount = self._RETRY_COST
         success = self._quota.acquire(capacity_amount)
         if success:
             # We add the capacity amount to the request context so we know
@@ -713,9 +673,6 @@ class RetryQuotaChecker:
         return self._throttling_detector.is_throttling_error_from_context(
             context
         )
-
-    def _is_timeout_error(self, context):
-        return isinstance(context.caught_exception, self._TIMEOUT_EXCEPTIONS)
 
     # This is intended to be hooked up to ``after-call``.
     def release_retry_quota(self, context, http_response, **kwargs):
