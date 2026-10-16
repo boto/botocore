@@ -13,6 +13,7 @@ from botocore.exceptions import (
     ConnectionClosedError,
     ConnectTimeoutError,
     EndpointConnectionError,
+    IncompleteReadError,
     ProxyConnectionError,
     ReadTimeoutError,
 )
@@ -193,6 +194,29 @@ class TestClientHTTPBehavior(unittest.TestCase):
             with self.assertRaises(ConnectionClosedError):
                 BadStatusHandler.event.wait(timeout=60)
                 client.describe_regions()
+
+    def test_truncated_body_raises_incomplete_read(self):
+        config = Config(retries={'max_attempts': 0}, region_name='us-weast-2')
+        client = self.session.create_client(
+            's3', endpoint_url=self.localhost, config=config
+        )
+
+        class TruncatedHandler(SimpleHandler):
+            event = threading.Event()
+            msg = b'a' * 10
+
+            def get_length(self):
+                return len(self.msg) * 2
+
+            def get_body(self):
+                return self.msg
+
+        with background(run_server, args=(TruncatedHandler, self.port)):
+            TruncatedHandler.event.wait(timeout=60)
+            body = client.get_object(Bucket='foo', Key='bar')['Body']
+            with self.assertRaises(IncompleteReadError):
+                while body.read(5):
+                    pass
 
 
 def unused_port():
