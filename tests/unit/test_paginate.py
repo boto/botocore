@@ -1101,6 +1101,64 @@ class TestMultipleResultKeys(unittest.TestCase):
         # Count/ScannedCount since the server still evaluates those items
         self.assertEqual(complete, {"Users": ["User2"], "Groups": 123})
 
+    def test_service_continuation_token_keeps_secondary_result_keys(self):
+        # No boto_truncate_amount: this is the next service page, not a
+        # MaxItems slice of a page that was already returned. Secondary
+        # keys such as S3 CommonPrefixes belong to this page.
+        responses = [
+            {
+                "Users": ["User2"],
+                "Groups": ["Group2", "Group3"],
+                "Marker": "m2",
+            },
+            {"Users": ["User4"], "Groups": ["Group4"]},
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({"Marker": "m1"})
+        pages = list(
+            self.paginator.paginate(
+                PaginationConfig={"StartingToken": starting_token}
+            )
+        )
+        self.assertEqual(pages[0]["Users"], ["User2"])
+        self.assertEqual(pages[0]["Groups"], ["Group2", "Group3"])
+        self.assertEqual(pages[1]["Groups"], ["Group4"])
+
+    def test_raw_service_token_keeps_secondary_result_keys(self):
+        # list_objects_v2 callers pass NextContinuationToken as
+        # PaginationConfig['StartingToken']. That token is not a
+        # client-side truncation index.
+        responses = [
+            {
+                "Users": ["User2"],
+                "Groups": ["Group2"],
+                "Marker": "m2",
+            },
+            {"Users": ["User3"], "Groups": ["Group3"]},
+        ]
+        self.method.side_effect = responses
+        pages = list(
+            self.paginator.paginate(
+                PaginationConfig={"StartingToken": "token-page-2"}
+            )
+        )
+        self.assertEqual(
+            self.method.call_args_list[0], mock.call(Marker="token-page-2")
+        )
+        self.assertEqual(pages[0]["Groups"], ["Group2"])
+        self.assertEqual(pages[1]["Groups"], ["Group3"])
+
+    def test_service_token_keeps_secondary_keys_when_primary_is_absent(self):
+        # Delimiter listings can omit the primary key (Contents) and
+        # only return CommonPrefixes.
+        self.method.return_value = {"Groups": ["Group2"]}
+        pages = list(
+            self.paginator.paginate(
+                PaginationConfig={"StartingToken": "token-page-2"}
+            )
+        )
+        self.assertEqual(pages[0]["Groups"], ["Group2"])
+
 
 class TestMultipleInputKeys(unittest.TestCase):
     def setUp(self):
@@ -1534,8 +1592,11 @@ class TestDeprecatedStartingToken(unittest.TestCase):
         ]
         self.method.side_effect = responses
         pagination_config = {'StartingToken': 'm0'}
+        # The deprecated token has no truncation index, so the first page's
+        # secondary key is part of this response, not a repeat of a
+        # previous partial page.
         expected = {
-            'Groups': ['Group2', 'Group3'],
+            'Groups': ['Group1', 'Group2', 'Group3'],
             'Users': ['User1', 'User2', 'User3', 'User4', 'User5'],
         }
         self.assert_pagination_result(

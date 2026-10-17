@@ -403,9 +403,13 @@ class PageIterator:
         else:
             data = None
         set_value_from_jmespath(parsed, primary_result_key.expression, data)
-        # We also need to truncate any secondary result keys
-        # because they were not truncated in the previous last
-        # response.
+        # Secondary keys were already returned in full with the previous
+        # partial page when MaxItems stopped in the middle of that page.
+        # A service continuation token has no boto_truncate_amount, so
+        # those keys belong to this new page (for example S3
+        # CommonPrefixes).
+        if not starting_truncation:
+            return starting_truncation
         for token in self.result_keys:
             if token == primary_result_key:
                 continue
