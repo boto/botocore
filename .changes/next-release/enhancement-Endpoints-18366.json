@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Endpoints",
+  "description": "Improve the NoRegionError message to explain how to set a region (region_name, AWS_DEFAULT_REGION, or ~/.aws/config)."
+}
