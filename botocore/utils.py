@@ -3607,6 +3607,17 @@ class JSONFileCache:
 
     def _convert_cache_key(self, cache_key):
         full_path = os.path.join(self._working_dir, cache_key + '.json')
+        # A cache_key that contains path separators or ".." segments (or that
+        # is an absolute path) would resolve outside of the working directory,
+        # turning a cache read/write/delete into an arbitrary file operation.
+        # Keep the resolved path contained within the working directory.
+        working_dir = os.path.abspath(self._working_dir)
+        resolved = os.path.abspath(full_path)
+        if (
+            os.path.commonpath([working_dir, resolved]) != working_dir
+            or resolved == working_dir
+        ):
+            raise ValueError(f"Invalid cache key: {cache_key!r}")
         return full_path
 
     def _serialize_if_needed(self, value, iso=False):
