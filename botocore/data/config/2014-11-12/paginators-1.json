@@ -110,6 +110,12 @@
       "output_token": "NextToken",
       "result_key": "ConformancePackStatusDetails"
     },
+    "DescribeConformancePackCompliance": {
+      "input_token": "NextToken",
+      "limit_key": "Limit",
+      "output_token": "NextToken",
+      "result_key": "ConformancePackRuleComplianceList"
+    },
     "DescribeConformancePacks": {
       "input_token": "NextToken",
       "limit_key": "Limit",
