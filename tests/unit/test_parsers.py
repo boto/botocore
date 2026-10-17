@@ -1699,3 +1699,170 @@ class TestNullInListParsing(unittest.TestCase):
             {'body': body, 'headers': {}, 'status_code': 200}, output_shape
         )
         self.assertEqual(parsed['data'][0][0]['values'], [1, None, 3])
+
+
+class TestListHeaderParsing(unittest.TestCase):
+    def _parse_headers(
+        self, headers, member_type, member_metadata=None, parser=None
+    ):
+        if parser is None:
+            parser = parsers.RestJSONParser()
+        member = {'shape': 'ItemType'}
+        if member_metadata:
+            member.update(member_metadata)
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'items': {
+                        'shape': 'ItemList',
+                        'location': 'header',
+                        'locationName': 'x-amz-item-list',
+                    }
+                },
+            },
+            model.ShapeResolver(
+                {
+                    'ItemList': {'type': 'list', 'member': member},
+                    'ItemType': {'type': member_type},
+                }
+            ),
+        )
+        body = b'' if isinstance(parser, parsers.RestXMLParser) else b'{}'
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 200},
+            output_shape,
+        )
+        return parsed['items']
+
+    def test_parses_rfc822_timestamp_list_header(self):
+        items = self._parse_headers(
+            {
+                'x-amz-item-list': (
+                    'Mon, 16 Dec 2019 23:48:18 GMT, '
+                    'Tue, 17 Dec 2019 23:48:18 GMT'
+                )
+            },
+            'timestamp',
+        )
+        self.assertEqual(
+            items,
+            [
+                datetime.datetime(2019, 12, 16, 23, 48, 18, tzinfo=tzutc()),
+                datetime.datetime(2019, 12, 17, 23, 48, 18, tzinfo=tzutc()),
+            ],
+        )
+
+    def test_parses_single_rfc822_timestamp_header(self):
+        items = self._parse_headers(
+            {'x-amz-item-list': 'Mon, 16 Dec 2019 23:48:18 GMT'},
+            'timestamp',
+        )
+        self.assertEqual(
+            items,
+            [datetime.datetime(2019, 12, 16, 23, 48, 18, tzinfo=tzutc())],
+        )
+
+    def test_parses_iso8601_timestamp_list_header(self):
+        items = self._parse_headers(
+            {'x-amz-item-list': '2019-12-16T23:48:18Z, 2019-12-17T23:48:18Z'},
+            'timestamp',
+            member_metadata={'timestampFormat': 'iso8601'},
+        )
+        self.assertEqual(
+            items,
+            [
+                datetime.datetime(2019, 12, 16, 23, 48, 18, tzinfo=tzutc()),
+                datetime.datetime(2019, 12, 17, 23, 48, 18, tzinfo=tzutc()),
+            ],
+        )
+
+    def test_parses_rfc822_timestamp_list_header_with_stray_commas(self):
+        # "Mon," alone must not parse as the current week's Monday.
+        items = self._parse_headers(
+            {
+                'x-amz-item-list': (
+                    ',Mon,, 16 Dec 2019 23:48:18 GMT, '
+                    'Tue, , 17 Dec 2019 23:48:18 GMT, '
+                )
+            },
+            'timestamp',
+        )
+        self.assertEqual(
+            items,
+            [
+                datetime.datetime(2019, 12, 16, 23, 48, 18, tzinfo=tzutc()),
+                datetime.datetime(2019, 12, 17, 23, 48, 18, tzinfo=tzutc()),
+            ],
+        )
+
+    def test_rfc822_timestamp_list_header_with_dangling_segment_raises(self):
+        # "Tue" must not parse as the current week's Tuesday.
+        with self.assertRaises(parsers.ResponseParserError):
+            self._parse_headers(
+                {'x-amz-item-list': 'Mon, 16 Dec 2019 23:48:18 GMT, Tue'},
+                'timestamp',
+            )
+
+    def test_rfc822_timestamp_list_header_with_glued_day_names_raises(self):
+        with self.assertRaises(parsers.ResponseParserError):
+            self._parse_headers(
+                {'x-amz-item-list': 'Mon,, Tue, 17 Dec 2019 23:48:18 GMT'},
+                'timestamp',
+            )
+
+    def test_parses_empty_list_header(self):
+        for member_type in ['timestamp', 'string']:
+            with self.subTest(member_type=member_type):
+                items = self._parse_headers(
+                    {'x-amz-item-list': ''}, member_type
+                )
+                self.assertEqual(items, [])
+
+    def test_parses_quoted_string_list_header(self):
+        items = self._parse_headers(
+            {'x-amz-item-list': '"b,c", "\\"def\\"", "  e  " , a'}, 'string'
+        )
+        self.assertEqual(items, ['b,c', '"def"', '  e  ', 'a'])
+
+    def test_parses_unquoted_string_list_header(self):
+        items = self._parse_headers({'x-amz-item-list': 'a, b, c'}, 'string')
+        self.assertEqual(items, ['a', 'b', 'c'])
+
+    def test_parses_string_list_header_with_empty_entries(self):
+        for value in [
+            'a, , b',
+            ',a,b',
+            'a, b,',
+            'a, b, ',
+            'a,,b,,',
+        ]:
+            with self.subTest(value=value):
+                items = self._parse_headers(
+                    {'x-amz-item-list': value}, 'string'
+                )
+                self.assertEqual(items, ['a', 'b'])
+
+    def test_parses_quoted_empty_string_list_header(self):
+        items = self._parse_headers({'x-amz-item-list': 'a, "", b'}, 'string')
+        self.assertEqual(items, ['a', '', 'b'])
+
+    def test_parses_quoted_string_list_header_with_escaped_backslash(self):
+        # The escaped backslash must not swallow the closing quote.
+        items = self._parse_headers(
+            {'x-amz-item-list': '"a\\\\", b'}, 'string'
+        )
+        self.assertEqual(items, ['a\\', 'b'])
+
+    def test_parses_string_list_header_with_unbalanced_quote(self):
+        # Malformed values should not raise.
+        items = self._parse_headers({'x-amz-item-list': 'a, "b, c'}, 'string')
+        self.assertEqual(items, ['a', '"b, c'])
+
+    def test_parses_integer_list_header(self):
+        # The trailing comma must not produce an int('') error.
+        items = self._parse_headers(
+            {'x-amz-item-list': '1, 2, 3, '}, 'integer'
+        )
+        self.assertEqual(items, [1, 2, 3])
