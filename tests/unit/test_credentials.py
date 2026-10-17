@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -256,6 +257,44 @@ class TestDeferredRefreshableCredentials(unittest.TestCase):
         # The credentials were accessed several times in a row, but only
         # should call refresh once.
         self.assertEqual(self.refresher.call_count, 1)
+
+    def test_concurrent_get_frozen_credentials_during_refresh(self):
+        past = datetime.now(timezone.utc) - timedelta(minutes=1)
+        future = datetime.now(timezone.utc) + timedelta(hours=1)
+        creds = credentials.RefreshableCredentials(
+            'ORIGINAL-ACCESS',
+            'ORIGINAL-SECRET',
+            'ORIGINAL-TOKEN',
+            past,
+            lambda: {
+                'access_key': 'NEW-ACCESS',
+                'secret_key': 'NEW-SECRET',
+                'token': 'NEW-TOKEN',
+                'expiry_time': future.isoformat(),
+            },
+            'test',
+        )
+
+        in_gap = threading.Event()
+        release = threading.Event()
+        original_set_from_data = creds._set_from_data
+
+        def paused_set_from_data(data):
+            original_set_from_data(data)
+            in_gap.set()
+            release.wait(5)
+
+        creds._set_from_data = paused_set_from_data
+
+        t = threading.Thread(target=creds.get_frozen_credentials)
+        t.start()
+        self.assertTrue(in_gap.wait(5))
+        try:
+            frozen = creds.get_frozen_credentials()
+            self.assertEqual(frozen.access_key, 'NEW-ACCESS')
+        finally:
+            release.set()
+            t.join()
 
 
 class TestAssumeRoleCredentialFetcher(BaseEnvVar):
