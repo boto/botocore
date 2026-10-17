@@ -1,0 +1,5 @@
+[default]
+aws_access_key_id = foo
+aws_secret_access_key = bar
+s3 =
+region=us-west-2
