@@ -114,7 +114,7 @@
     },
     "ServicesStable" : {
       "delay" : 15,
-      "maxAttempts" : 40,
+      "maxAttempts" : 120,
       "operation" : "DescribeServices",
       "acceptors" : [ {
         "matcher" : "pathAny",
