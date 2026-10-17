@@ -188,6 +188,23 @@ class TestPagination(unittest.TestCase):
         with self.assertRaises(PaginationError):
             list(self.paginator.paginate())
 
+    def test_exception_raised_if_next_token_cycles(self):
+        # A single "previous token" slot only detects the token repeating on
+        # two *consecutive* pages. A service that hands back tokens from a
+        # small rotating pool (e.g. alternating between two shard cursors)
+        # never repeats the immediately preceding token, so without tracking
+        # every token seen so far, pagination would loop forever instead of
+        # raising PaginationError.
+        responses = [
+            {'NextToken': 'token1'},
+            {'NextToken': 'token2'},
+            {'NextToken': 'token1'},
+            {'NextToken': 'token2'},
+        ]
+        self.method.side_effect = responses
+        with self.assertRaises(PaginationError):
+            list(self.paginator.paginate())
+
     def test_next_token_with_or_expression(self):
         self.pagination_config = {
             'output_token': 'NextToken || NextToken2',
