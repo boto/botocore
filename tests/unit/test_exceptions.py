@@ -23,6 +23,17 @@ def test_client_error_can_handle_missing_code_or_message():
     response = {'Error': {}}
     expect = 'An error occurred (Unknown) when calling the blackhole operation: Unknown'
     assert str(exceptions.ClientError(response, 'blackhole')) == expect
+    assert exceptions.ClientError.code == 'Unknown'
+    assert exceptions.ClientError.message == 'Unknown'
+
+
+def test_client_error_can_handle_missing_response_metadata():
+    response = {'Error': {}}
+    assert (
+        exceptions.ClientError(response, 'blackhole').http_status_code is None
+    )
+    assert exceptions.ClientError(response, 'blackhole').request_id is None
+    assert exceptions.ClientError(response, 'blackhole').http_headers == {}
 
 
 def test_client_error_has_operation_name_set():
