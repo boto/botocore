@@ -13,7 +13,6 @@
 import datetime
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore.session
 from botocore.auth import S3ExpressAuth
@@ -36,7 +35,7 @@ ENDPOINT = "https://s3.us-west-2.amazonaws.com"
 S3EXPRESS_BUCKET = "mytestbucket--usw2-az5--x-s3"
 
 
-DATE = datetime.datetime(2023, 11, 26, 0, 0, 0, tzinfo=tzutc())
+DATE = datetime.datetime(2023, 11, 26, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 CREATE_SESSION_RESPONSE = (
@@ -64,8 +63,16 @@ def default_s3_client():
 
 @pytest.fixture
 def mock_datetime():
-    with mock.patch('datetime.datetime', spec=True) as mock_datetime:
-        yield mock_datetime
+    # Pin ``now()`` to a fixed point via a subclass override. Replacing the
+    # whole ``datetime.datetime`` class would also intercept the parsing
+    # methods used to read the CreateSession Expiration timestamp.
+    class _FrozenDatetime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return DATE
+
+    with mock.patch('datetime.datetime', _FrozenDatetime):
+        yield _FrozenDatetime
 
 
 def _assert_expected_create_session_call(request, bucket):
@@ -107,8 +114,6 @@ class TestS3ExpressAuth:
 
 class TestS3ExpressIdentityCache:
     def test_default_s3_express_cache(self, default_s3_client, mock_datetime):
-        mock_datetime.now.return_value = DATE
-
         identity_cache = S3ExpressIdentityCache(
             default_s3_client,
             RefreshableCredentials,
@@ -124,7 +129,6 @@ class TestS3ExpressIdentityCache:
     def test_s3_express_cache_one_network_call(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
         bucket = 'my_bucket'
 
         identity_cache = S3ExpressIdentityCache(
@@ -148,7 +152,6 @@ class TestS3ExpressIdentityCache:
     def test_s3_express_cache_multiple_buckets(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
         bucket = 'my_bucket'
         other_bucket = 'other_bucket'
 
@@ -201,8 +204,6 @@ class TestS3ExpressRequests:
         )
 
     def test_create_bucket(self, default_s3_client, mock_datetime):
-        mock_datetime.now.return_value = DATE
-
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response()
 
@@ -225,8 +226,6 @@ class TestS3ExpressRequests:
         self._assert_standard_sigv4_signature(stubber.requests[0].headers)
 
     def test_get_object(self, default_s3_client, mock_datetime):
-        mock_datetime.now.return_value = DATE
-
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
             stubber.add_response()
@@ -246,8 +245,6 @@ class TestS3ExpressRequests:
     def test_cache_with_multiple_requests(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
-
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
             stubber.add_response()
@@ -270,8 +267,6 @@ class TestS3ExpressRequests:
     def test_delete_objects_injects_correct_checksum(
         self, default_s3_client, mock_datetime
     ):
-        mock_datetime.now.return_value = DATE
-
         with ClientHTTPStubber(default_s3_client) as stubber:
             stubber.add_response(body=CREATE_SESSION_RESPONSE)
             stubber.add_response()
