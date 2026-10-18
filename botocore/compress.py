@@ -22,6 +22,7 @@ from gzip import GzipFile
 from gzip import compress as gzip_compress
 
 from botocore.compat import urlencode
+from botocore.exceptions import InvalidConfigError
 from botocore.useragent import register_feature_id
 from botocore.utils import determine_content_length
 
@@ -31,11 +32,19 @@ logger = logging.getLogger(__name__)
 def maybe_compress_request(config, request_dict, operation_model):
     """Attempt to compress the request body using the modeled encodings."""
     if _should_compress_request(config, request_dict, operation_model):
-        for encoding in operation_model.request_compression['encodings']:
+        encodings = operation_model.request_compression['encodings']
+        if config.request_compression_encoding is not None:
+            encodings = [config.request_compression_encoding]
+        for encoding in encodings:
             encoder = COMPRESSION_MAPPING.get(encoding)
             if encoder is not None:
                 logger.debug('Compressing request with %s encoding.', encoding)
                 request_dict['body'] = encoder(request_dict['body'])
+                # The request preparer recalculates length for the new body,
+                # or preserves an existing transfer encoding when present.
+                for name in list(request_dict['headers']):
+                    if name.lower() == 'content-length':
+                        del request_dict['headers'][name]
                 _set_compression_header(request_dict['headers'], encoding)
                 return
             else:
@@ -43,12 +52,37 @@ def maybe_compress_request(config, request_dict, operation_model):
 
 
 def _should_compress_request(config, request_dict, operation_model):
+    encoding = config.request_compression_encoding
+    if encoding is not None:
+        if (
+            encoding not in COMPRESSION_MAPPING
+            or config.disable_request_compression is True
+            or config.signature_version == 'v2'
+            or operation_model.request_compression is None
+            or encoding
+            not in (
+                advertised.lower()
+                for advertised in operation_model.request_compression[
+                    'encodings'
+                ]
+            )
+        ):
+            raise InvalidConfigError(
+                error_msg=(
+                    f'Request compression encoding "{encoding}" is not '
+                    'supported for this operation or configuration.'
+                )
+            )
     if (
         config.disable_request_compression is not True
         and config.signature_version != 'v2'
         and operation_model.request_compression is not None
     ):
         if not _is_compressible_type(request_dict):
+            if encoding is not None:
+                raise InvalidConfigError(
+                    error_msg=f'Cannot apply {encoding} to this request body.'
+                )
             body_type = type(request_dict['body'])
             log_msg = 'Body type %s does not support compression.'
             logger.debug(log_msg, body_type)
@@ -57,8 +91,17 @@ def _should_compress_request(config, request_dict, operation_model):
         if operation_model.has_streaming_input:
             streaming_input = operation_model.get_streaming_input()
             streaming_metadata = streaming_input.metadata
+            if encoding is not None and 'requiresLength' in streaming_metadata:
+                raise InvalidConfigError(
+                    error_msg=(
+                        f'Cannot apply {encoding} to a streaming input '
+                        'that requires length.'
+                    )
+                )
             return 'requiresLength' not in streaming_metadata
 
+        if encoding is not None:
+            return True
         body_size = _get_body_size(request_dict['body'])
         min_size = config.request_min_compression_size_bytes
         return min_size <= body_size
@@ -118,11 +161,14 @@ def _gzip_compress_fileobj(body):
 
 
 def _set_compression_header(headers, encoding):
-    ce_header = headers.get('Content-Encoding')
-    if ce_header is None:
-        headers['Content-Encoding'] = encoding
-    else:
-        headers['Content-Encoding'] = f'{ce_header},{encoding}'
+    encodings = []
+    for name in list(headers):
+        if name.lower() == 'content-encoding':
+            value = headers.pop(name)
+            if value is not None:
+                encodings.append(value)
+    encodings.append(encoding)
+    headers['Content-Encoding'] = ','.join(encodings)
 
 
 COMPRESSION_MAPPING = {'gzip': _gzip_compress_body}

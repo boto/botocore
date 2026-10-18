@@ -573,6 +573,32 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(config.request_min_compression_size_bytes, 100)
         self.assertTrue(config.disable_request_compression)
 
+    def test_explicit_request_compression_encoding_client_config(self):
+        input_config = Config(request_compression_encoding='gzip')
+        config = self.call_get_client_args(client_config=input_config)[
+            'client_config'
+        ]
+        self.assertEqual(config.request_compression_encoding, 'gzip')
+
+    def test_explicit_request_compression_encoding_defaults_to_none(self):
+        config = self.call_get_client_args()['client_config']
+        self.assertIsNone(config.request_compression_encoding)
+
+    def test_explicit_request_compression_encoding_rejects_unknown_codec(self):
+        with self.assertRaisesRegex(exceptions.InvalidConfigError, 'zstd'):
+            config = Config(request_compression_encoding='zstd')
+            self.call_get_client_args(client_config=config)
+
+    def test_explicit_request_compression_encoding_rejects_disabled(self):
+        with self.assertRaisesRegex(
+            exceptions.InvalidConfigError, 'disable_request_compression'
+        ):
+            config = Config(
+                request_compression_encoding='gzip',
+                disable_request_compression=True,
+            )
+            self.call_get_client_args(client_config=config)
+
     def test_request_compression_config_store(self):
         self.config_store.set_config_variable(
             'request_min_compression_size_bytes', 100

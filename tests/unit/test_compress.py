@@ -19,6 +19,7 @@ import pytest
 import botocore
 from botocore.compress import COMPRESSION_MAPPING, maybe_compress_request
 from botocore.config import Config
+from botocore.exceptions import InvalidConfigError
 from tests import mock
 
 
@@ -326,3 +327,93 @@ def test_only_compress_once():
         OP_MULTIPLE_COMPRESSIONS,
     )
     assert_request_compressed(request_dict, REQUEST_BODY_COMPRESSED)
+
+
+@pytest.mark.parametrize(
+    'body', [b'', b'x', 'hello', bytearray(b'hello'), io.BytesIO(b'hello')]
+)
+def test_explicit_gzip_compresses_below_threshold(body):
+    expected = body.getvalue() if hasattr(body, 'getvalue') else body
+    if isinstance(expected, str):
+        expected = expected.encode('utf-8')
+    request = _request_dict(body)
+    config = Config(
+        request_compression_encoding='gzip',
+        request_min_compression_size_bytes=1048576,
+    )
+    maybe_compress_request(config, request, OP_WITH_COMPRESSION)
+    compressed = request['body']
+    if hasattr(compressed, 'read'):
+        compressed = compressed.read()
+    assert gzip.decompress(compressed) == expected
+    assert request['headers']['Content-Encoding'] == 'gzip'
+
+
+@pytest.mark.parametrize(
+    'operation', [OP_NO_COMPRESSION, OP_UNKNOWN_COMPRESSION]
+)
+def test_explicit_gzip_rejects_unadvertised_encoding(operation):
+    config = Config(request_compression_encoding='gzip')
+    request = _request_dict()
+    with pytest.raises(InvalidConfigError, match='gzip'):
+        maybe_compress_request(config, request, operation)
+    assert request['body'] == REQUEST_BODY
+    assert 'Content-Encoding' not in request['headers']
+
+
+def test_explicit_gzip_accepts_case_insensitive_modeled_encoding():
+    operation = _make_op({'encodings': ['GZIP']})
+    request = _request_dict(b'hello')
+    maybe_compress_request(
+        Config(request_compression_encoding='gzip'), request, operation
+    )
+    assert gzip.decompress(request['body']) == b'hello'
+    assert request['headers']['Content-Encoding'] == 'gzip'
+
+
+@pytest.mark.parametrize('name', ['content-encoding', 'CONTENT-ENCODING'])
+def test_explicit_gzip_preserves_case_insensitive_content_encoding(name):
+    request = _request_dict(b'hello', headers={name: 'identity'})
+    maybe_compress_request(
+        Config(request_compression_encoding='gzip'),
+        request,
+        OP_WITH_COMPRESSION,
+    )
+    encodings = [
+        value
+        for key, value in request['headers'].items()
+        if key.lower() == 'content-encoding'
+    ]
+    assert len(encodings) == 1
+    assert [value.strip() for value in encodings[0].split(',')] == [
+        'identity',
+        'gzip',
+    ]
+    assert gzip.decompress(request['body']) == b'hello'
+
+
+@pytest.mark.parametrize('name', ['Content-Length', 'content-length'])
+def test_explicit_gzip_invalidates_uncompressed_content_length(name):
+    request = _request_dict(b'hello', headers={name: '5'})
+    maybe_compress_request(
+        Config(request_compression_encoding='gzip'),
+        request,
+        OP_WITH_COMPRESSION,
+    )
+    assert gzip.decompress(request['body']) == b'hello'
+    for key, value in request['headers'].items():
+        if key.lower() == 'content-length':
+            assert int(value) == len(request['body'])
+
+
+@pytest.mark.parametrize(
+    'config_kwargs, operation',
+    [
+        ({'signature_version': 'v2'}, OP_WITH_COMPRESSION),
+        ({}, STREAMING_OP_WITH_COMPRESSION_REQUIRES_LENGTH),
+    ],
+)
+def test_explicit_gzip_rejects_incompatible_request(config_kwargs, operation):
+    config = Config(request_compression_encoding='gzip', **config_kwargs)
+    with pytest.raises(InvalidConfigError, match='gzip'):
+        maybe_compress_request(config, _request_dict(), operation)
