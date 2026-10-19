@@ -516,6 +516,7 @@ class URLLib3Session:
                 preload_content=False,
                 decode_content=False,
                 chunked=self._chunked(request.headers),
+                enforce_content_length=False,
                 **extra_kwargs,
             )
 
