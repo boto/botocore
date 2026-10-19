@@ -426,6 +426,7 @@ class RefreshableCredentials(Credentials):
         self._token = token
         self._account_id = account_id
         self._expiry_time = expiry_time
+        self._staged_expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self.method = method
@@ -615,10 +616,11 @@ class RefreshableCredentials(Credentials):
             # The end result will be that we'll use the current
             # set of temporary credentials we have.
             return
-        self._set_from_data(metadata)
-        self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token, self._account_id
-        )
+        try:
+            self._set_from_data(metadata)
+            self._publish_refresh()
+        finally:
+            self._staged_expiry_time = None
         if self._is_expired():
             # We successfully refreshed credentials but for whatever
             # reason, our refreshing function returned credentials
@@ -653,12 +655,20 @@ class RefreshableCredentials(Credentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
+        self._staged_expiry_time = parse(data['expiry_time'])
         self.account_id = data.get('account_id')
         logger.debug(
-            "Retrieved credentials will expire at: %s", self._expiry_time
+            "Retrieved credentials will expire at: %s",
+            self._staged_expiry_time,
         )
         self._normalize()
+
+    def _publish_refresh(self):
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
+        )
+        if self._staged_expiry_time is not None:
+            self._expiry_time = self._staged_expiry_time
 
     def get_frozen_credentials(self):
         """Return immutable credentials.
@@ -711,6 +721,7 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._token = None
         self._account_id = None
         self._expiry_time = None
+        self._staged_expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self.method = method
