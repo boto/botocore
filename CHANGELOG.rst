@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.43.116
+========
+
+* api-change:``bedrock``: Amazon Bedrock Guardrails now supports a configurable tier for the contextual grounding policy via a new tier option. Select the Standard tier for grounding that better supports conversations and reasoning, with expanded language coverage.
+* api-change:``cleanrooms``: This release allows customers and their partners to easily collaborate with data stored in Databricks, without having to move or share their underlying data among collaborators.
+* api-change:``cloudwatch``: Amazon CloudWatch now supports two new anomaly detector settings. AdaptationSpeed (FAST, NORMAL, SLOW) controls how fast the model adapts to baseline changes, and OutlierFilteringStrength (MINIMAL, MODERATE, STRICT) controls how aggressively outliers are filtered.
+* api-change:``cloudwatchomni``: Updating max value for maxResults in SearchPrincipals API
+* api-change:``dynamodb``: Adds support for disassociating a replica from an Amazon DynamoDB multi-Region eventual consistency global table, so you can keep it as a single-Region table with its existing data. Also adds disassociation protection, on by default, to help prevent accidental disassociation.
+* api-change:``ecs``: ECS Service Gateway makes it easier for developers to deploy ECS services without having to worry about complex ingress networking constructs.
+* api-change:``elasticache``: LiveMigration enables customers to migrate from self-hosted EC2 Redis and Valkey clusters to ElastiCache Serverless with near-zero downtime. Customers control the migration through three API-driven phases (prepare, start, complete) that handle traffic proxying, data replication, and cutover.
+* api-change:``marketplace-catalog``: Adds ListEntities filter, sort, and summary support for the ExpressPrivateOfferConfiguration entity type, including filtering by ProductId.
+* api-change:``rds``: Amazon RDS now supports On-Demand Capacity Reservations for DB instances.
+* api-change:``s3files``: S3 Files adds support for the "Misconfigured" file system status.
+* api-change:``workspaces-instances``: Documentation update release for AWS service
+
+
 1.43.115
 ========
 
