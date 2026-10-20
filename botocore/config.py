@@ -158,15 +158,18 @@ class Config:
           being retried at most two times after the initial request. Setting
           this value to 0 will result in no retries ever being attempted after
           the initial request. If not provided, the number of retries will
-          default to the value specified in the service model, which is
-          typically four retries.
+          default to two retries in the ``standard`` and ``adaptive`` retry
+          modes (three for Amazon DynamoDB and Amazon DynamoDB Streams), and
+          to the value specified in the service model in the ``legacy`` retry
+          mode, which is typically four retries.
         * ``mode`` -- A string representing the type of retry mode botocore
           should use.  Valid values are:
 
           * ``legacy`` - The pre-existing retry behavior.
 
-          * ``standard`` - The standardized set of retry rules. This will also
-            default to 3 max attempts unless overridden.
+          * ``standard`` - The standardized set of retry rules. This is the
+            default mode. This will also default to 3 max attempts (4 for
+            Amazon DynamoDB and Amazon DynamoDB Streams) unless overridden.
 
           * ``adaptive`` - Retries with additional client side throttling.
 
