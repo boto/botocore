@@ -232,6 +232,16 @@ class Config:
 
         Defaults to None.
 
+    :type request_compression_encoding: string
+    :param request_compression_encoding: Explicitly compress requests using
+        ``gzip``, regardless of ``request_min_compression_size_bytes``.
+        The operation must advertise gzip support. Unsupported operations,
+        incompatible requests, and enabling ``disable_request_compression``
+        raise ``InvalidConfigError`` rather than sending an uncompressed body.
+        This setting does not enable compression support on an AWS service.
+
+        Defaults to None, preserving automatic request compression.
+
     :type sigv4a_signing_region_set: string
     :param sigv4a_signing_region_set: A set of AWS regions to apply the signature for
         when using SigV4a for signing. Set to ``*`` to represent all regions.
@@ -324,6 +334,7 @@ class Config:
             ('tcp_keepalive', None),
             ('request_min_compression_size_bytes', None),
             ('disable_request_compression', None),
+            ('request_compression_encoding', None),
             ('client_context_params', None),
             ('sigv4a_signing_region_set', None),
             ('request_checksum_calculation', None),
