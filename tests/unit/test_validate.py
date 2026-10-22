@@ -762,3 +762,113 @@ class TestShapeHasConstraints(BaseTestValidate):
         shapes = {'TestShape': shape_model}
         resolver = ShapeResolver(shapes)
         return resolver.get_shape_by_name('TestShape')
+
+
+class TestValidateSensitiveParams(BaseTestValidate):
+    SECRET = 'not-a-real-secret-123'
+
+    def setUp(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'Password': {'shape': 'PasswordType'},
+                    # Sensitive as a member trait rather than on the shape.
+                    'Token': {'shape': 'StringType', 'sensitive': True},
+                    'Pin': {'shape': 'PinType'},
+                    'Keys': {'shape': 'KeyListType'},
+                    'KeyMaterial': {'shape': 'KeyMaterialType'},
+                    'Expires': {'shape': 'SensitiveTimestamp'},
+                    'Name': {'shape': 'StringType'},
+                },
+            },
+            'PasswordType': {'type': 'string', 'sensitive': True},
+            'PinType': {'type': 'integer', 'min': 1000, 'sensitive': True},
+            'KeyListType': {
+                'type': 'list',
+                'member': {'shape': 'PasswordType'},
+            },
+            'KeyMaterialType': {'type': 'blob', 'sensitive': True},
+            'SensitiveTimestamp': {'type': 'timestamp', 'sensitive': True},
+            'StringType': {'type': 'string'},
+        }
+
+    def get_report(self, input_params):
+        errors = self.get_validation_error_message(self.shapes, input_params)
+        self.assertTrue(errors.has_errors())
+        return errors.generate_report()
+
+    def assert_redacted(self, report, name):
+        self.assertNotIn(self.SECRET, report)
+        self.assertIn(f'parameter {name}, value: ', report)
+        self.assertIn(validate.SENSITIVE_VALUE_PLACEHOLDER, report)
+
+    def test_redacts_invalid_type_for_sensitive_string(self):
+        report = self.get_report({'Password': self.SECRET.encode()})
+        self.assert_redacted(report, 'Password')
+        self.assertIn("type: <class 'bytes'>", report)
+
+    def test_redacts_when_sensitive_is_a_member_trait(self):
+        report = self.get_report({'Token': self.SECRET.encode()})
+        self.assert_redacted(report, 'Token')
+
+    def test_redacts_invalid_type_for_sensitive_integer(self):
+        report = self.get_report({'Pin': self.SECRET})
+        self.assert_redacted(report, 'Pin')
+
+    def test_redacts_invalid_range_for_sensitive_integer(self):
+        report = self.get_report({'Pin': 123})
+        self.assertIn('Invalid value for parameter Pin', report)
+        self.assertNotIn('value: 123', report)
+        self.assertIn(validate.SENSITIVE_VALUE_PLACEHOLDER, report)
+
+    def test_redacts_sensitive_members_on_list_fast_path(self):
+        # Checked by the scalar fast path rather than per-member validation.
+        report = self.get_report({'Keys': ['fine', self.SECRET.encode()]})
+        self.assert_redacted(report, 'Keys[1]')
+
+    def test_redacts_invalid_type_for_sensitive_blob(self):
+        report = self.get_report({'KeyMaterial': [self.SECRET]})
+        self.assert_redacted(report, 'KeyMaterial')
+
+    def test_redacts_invalid_type_for_sensitive_timestamp(self):
+        report = self.get_report({'Expires': self.SECRET})
+        self.assert_redacted(report, 'Expires')
+
+    def test_still_shows_value_for_non_sensitive_params(self):
+        report = self.get_report({'Name': 12345})
+        self.assertIn('Invalid type for parameter Name, value: 12345', report)
+        self.assertNotIn(validate.SENSITIVE_VALUE_PLACEHOLDER, report)
+
+    def test_redacts_sensitive_map_values(self):
+        self.shapes['Input']['members']['Env'] = {'shape': 'EnvMap'}
+        self.shapes['EnvMap'] = {
+            'type': 'map',
+            'key': {'shape': 'StringType'},
+            'value': {'shape': 'PasswordType'},
+        }
+        report = self.get_report({'Env': {'DB_PASSWORD': 48213377}})
+        # A non-sensitive key is still shown, so the entry is identifiable.
+        self.assertIn('parameter Env.DB_PASSWORD, value: ', report)
+        self.assertNotIn('48213377', report)
+
+    def test_redacts_sensitive_map_keys_in_parameter_names(self):
+        self.shapes['Input']['members']['Secrets'] = {'shape': 'SecretMap'}
+        self.shapes['SecretMap'] = {
+            'type': 'map',
+            'key': {'shape': 'PasswordType'},
+            'value': {'shape': 'StringType'},
+        }
+        report = self.get_report({'Secrets': {self.SECRET: 1}})
+        self.assertNotIn(self.SECRET, report)
+        self.assertIn(
+            f'Secrets.{validate.SENSITIVE_VALUE_PLACEHOLDER}, value: 1', report
+        )
+
+    def test_redacts_in_raised_param_validation_error(self):
+        input_shape = ShapeResolver(self.shapes).get_shape_by_name('Input')
+        with self.assertRaises(validate.ParamValidationError) as context:
+            validate.validate_parameters(
+                {'Password': self.SECRET.encode(), 'Name': 'ok'}, input_shape
+            )
+        self.assertNotIn(self.SECRET, str(context.exception))

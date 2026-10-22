@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Validation",
+  "description": "Parameter validation errors no longer include the value of parameters that the service model marks as ``sensitive``, such as ``SecretString`` or ``MasterUserPassword``. The parameter name and the type of the value received are still reported."
+}
