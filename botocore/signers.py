@@ -13,7 +13,6 @@
 import base64
 import datetime
 import json
-import weakref
 
 import botocore
 import botocore.auth
@@ -85,8 +84,7 @@ class RequestSigner:
         self._auth_token = auth_token
         self._service_id = service_id
 
-        # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
-        self._event_emitter = weakref.proxy(event_emitter)
+        self._event_emitter = event_emitter
 
     @property
     def region_name(self):
