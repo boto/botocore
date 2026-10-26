@@ -220,9 +220,10 @@ class Config:
 
     :type request_min_compression_size_bytes: int
     :param request_min_compression_size_bytes: The minimum size in bytes that a
-        request body should be to trigger compression. All requests with
-        streaming input that don't contain the ``requiresLength`` trait will be
-        compressed regardless of this setting.
+        request body should be to trigger compression. Valid values range from
+        0 through 10485760. Set to 0 to compress all eligible request bodies.
+        All requests with streaming input that don't contain the
+        ``requiresLength`` trait will be compressed regardless of this setting.
 
         Defaults to None.
 
@@ -231,16 +232,6 @@ class Config:
         set to True.
 
         Defaults to None.
-
-    :type request_compression_encoding: string
-    :param request_compression_encoding: Explicitly compress requests using
-        ``gzip``, regardless of ``request_min_compression_size_bytes``.
-        The operation must advertise gzip support. Unsupported operations,
-        incompatible requests, and enabling ``disable_request_compression``
-        raise ``InvalidConfigError`` rather than sending an uncompressed body.
-        This setting does not enable compression support on an AWS service.
-
-        Defaults to None, preserving automatic request compression.
 
     :type sigv4a_signing_region_set: string
     :param sigv4a_signing_region_set: A set of AWS regions to apply the signature for
@@ -334,7 +325,6 @@ class Config:
             ('tcp_keepalive', None),
             ('request_min_compression_size_bytes', None),
             ('disable_request_compression', None),
-            ('request_compression_encoding', None),
             ('client_context_params', None),
             ('sigv4a_signing_region_set', None),
             ('request_checksum_calculation', None),

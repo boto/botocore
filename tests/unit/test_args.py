@@ -573,32 +573,6 @@ class TestCreateClientArgs(unittest.TestCase):
         self.assertEqual(config.request_min_compression_size_bytes, 100)
         self.assertTrue(config.disable_request_compression)
 
-    def test_explicit_request_compression_encoding_client_config(self):
-        input_config = Config(request_compression_encoding='gzip')
-        config = self.call_get_client_args(client_config=input_config)[
-            'client_config'
-        ]
-        self.assertEqual(config.request_compression_encoding, 'gzip')
-
-    def test_explicit_request_compression_encoding_defaults_to_none(self):
-        config = self.call_get_client_args()['client_config']
-        self.assertIsNone(config.request_compression_encoding)
-
-    def test_explicit_request_compression_encoding_rejects_unknown_codec(self):
-        with self.assertRaisesRegex(exceptions.InvalidConfigError, 'zstd'):
-            config = Config(request_compression_encoding='zstd')
-            self.call_get_client_args(client_config=config)
-
-    def test_explicit_request_compression_encoding_rejects_disabled(self):
-        with self.assertRaisesRegex(
-            exceptions.InvalidConfigError, 'disable_request_compression'
-        ):
-            config = Config(
-                request_compression_encoding='gzip',
-                disable_request_compression=True,
-            )
-            self.call_get_client_args(client_config=config)
-
     def test_request_compression_config_store(self):
         self.config_store.set_config_variable(
             'request_min_compression_size_bytes', 100
@@ -648,22 +622,44 @@ class TestCreateClientArgs(unittest.TestCase):
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()
 
+    def test_request_compression_threshold_boundaries_client_config(self):
+        for value in (0, 1048577, 9999999, 10485760):
+            with self.subTest(value=value):
+                config = Config(request_min_compression_size_bytes=value)
+                actual = self.call_get_client_args(client_config=config)[
+                    'client_config'
+                ]
+                self.assertEqual(
+                    actual.request_min_compression_size_bytes, value
+                )
+
+    def test_request_compression_threshold_boundaries_config_store(self):
+        for value in (0, 1048577, 9999999, 10485760):
+            with self.subTest(value=value):
+                self.config_store.set_config_variable(
+                    'request_min_compression_size_bytes', str(value)
+                )
+                actual = self.call_get_client_args()['client_config']
+                self.assertEqual(
+                    actual.request_min_compression_size_bytes, value
+                )
+
     def test_low_min_request_min_compression_size_bytes(self):
         with self.assertRaises(exceptions.InvalidConfigError):
-            config = Config(request_min_compression_size_bytes=0)
+            config = Config(request_min_compression_size_bytes=-1)
             self.call_get_client_args(client_config=config)
         self.config_store.set_config_variable(
-            'request_min_compression_size_bytes', 0
+            'request_min_compression_size_bytes', -1
         )
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()
 
     def test_high_max_request_min_compression_size_bytes(self):
         with self.assertRaises(exceptions.InvalidConfigError):
-            config = Config(request_min_compression_size_bytes=9999999)
+            config = Config(request_min_compression_size_bytes=10485761)
             self.call_get_client_args(client_config=config)
         self.config_store.set_config_variable(
-            'request_min_compression_size_bytes', 9999999
+            'request_min_compression_size_bytes', 10485761
         )
         with self.assertRaises(exceptions.InvalidConfigError):
             self.call_get_client_args()

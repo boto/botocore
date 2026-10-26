@@ -1,5 +1,0 @@
-{
-  "type": "feature",
-  "category": "Config",
-  "description": "Add request_compression_encoding=\"gzip\" to explicitly compress supported requests regardless of size. Unsupported operations and incompatible settings raise InvalidConfigError. Preserve existing content encodings and recalculate request length after compression. This does not enable compression on services that do not advertise support."
-}

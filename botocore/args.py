@@ -312,9 +312,6 @@ class ClientArgsCreator:
                 disable_request_compression=(
                     client_config.disable_request_compression
                 ),
-                request_compression_encoding=(
-                    client_config.request_compression_encoding
-                ),
                 client_context_params=client_config.client_context_params,
                 sigv4a_signing_region_set=(
                     client_config.sigv4a_signing_region_set
@@ -680,21 +677,6 @@ class ClientArgsCreator:
             # if the user provided a value we must check if it's a boolean
             disabled = ensure_boolean(disabled)
         config_kwargs['disable_request_compression'] = disabled
-        encoding = config_kwargs.get('request_compression_encoding')
-        if encoding not in (None, 'gzip'):
-            raise botocore.exceptions.InvalidConfigError(
-                error_msg=(
-                    f'Invalid request_compression_encoding: {encoding!r}. '
-                    'Value must be None or "gzip".'
-                )
-            )
-        if encoding is not None and disabled:
-            raise botocore.exceptions.InvalidConfigError(
-                error_msg=(
-                    'request_compression_encoding cannot be used with '
-                    'disable_request_compression=True.'
-                )
-            )
 
     def _compute_s3_disable_express_session_auth(self, config_kwargs):
         disable_express = config_kwargs.get('s3_disable_express_session_auth')
@@ -711,8 +693,8 @@ class ClientArgsCreator:
         )
 
     def _validate_min_compression_size(self, min_size):
-        min_allowed_min_size = 1
-        max_allowed_min_size = 1048576
+        min_allowed_min_size = 0
+        max_allowed_min_size = 10485760
         error_msg_base = (
             f'Invalid value "{min_size}" for '
             'request_min_compression_size_bytes.'
