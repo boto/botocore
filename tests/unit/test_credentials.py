@@ -118,6 +118,16 @@ class PausingRefreshableCredentials(credentials.RefreshableCredentials):
         super()._publish_refresh()
 
 
+class PausingResilientRefreshableCredentials(
+    credentials._ResilientRefreshableCredentials
+):
+    def _publish_refresh(self):
+        self.publish_started.set()
+        if not self.resume_publish.wait(timeout=1):
+            raise AssertionError("Timed out waiting to publish credentials")
+        super()._publish_refresh()
+
+
 class TestCredentials(BaseEnvVar):
     def _ensure_credential_is_normalized_as_unicode(self, access, secret):
         c = credentials.Credentials(access, secret)
@@ -6102,6 +6112,39 @@ class CredentialFetchThread(threading.Thread):
 
 
 class TestCredentialRefreshConcurrency:
+    def test_concurrent_reader_gets_refreshed_frozen_credentials(
+        self, mock_time
+    ):
+        refresher = mock.Mock(return_value=_valid_metadata(mock_time))
+        creds = PausingResilientRefreshableCredentials(
+            'ORIGINAL-ACCESS',
+            'ORIGINAL-SECRET',
+            'ORIGINAL-TOKEN',
+            mock_time() - timedelta(seconds=30),
+            refresher,
+            'iam-role',
+            time_fetcher=mock_time,
+        )
+        creds.publish_started = threading.Event()
+        creds.resume_publish = threading.Event()
+        expected_credentials = credentials.ReadOnlyCredentials(
+            'NEW-ACCESS', 'NEW-SECRET', 'NEW-TOKEN'
+        )
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            refresh = executor.submit(creds.get_frozen_credentials)
+            try:
+                assert creds.publish_started.wait(timeout=1)
+                reader = executor.submit(creds.get_frozen_credentials)
+                assert creds.refresh_needed()
+            finally:
+                creds.resume_publish.set()
+
+            assert refresh.result(timeout=1) == expected_credentials
+            assert reader.result(timeout=1) == expected_credentials
+
+        refresher.assert_called_once_with()
+
     def test_advisory_refresh_concurrent_callers_reuse_cached_credentials(
         self, mock_time
     ):
