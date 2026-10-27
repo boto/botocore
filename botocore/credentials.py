@@ -740,8 +740,6 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
     """Refreshable credentials that fall back to cached credentials when refresh fails."""
 
     _mandatory_refresh_timeout = 60  # 1 min
-    _refresh_backoff_min_seconds = 5 * 60  # 5 min
-    _refresh_backoff_max_seconds = 10 * 60  # 10 min
     _nonrecoverable_error_cache_min_ttl = 1  # 1 sec
     _nonrecoverable_error_cache_max_ttl = 5  # 5 sec
     _nonrecoverable_sts_error_codes = frozenset(
@@ -838,12 +836,13 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._cached_nonrecoverable_error_expires_at = None
 
     def _enter_refresh_backoff(self, error):
-        # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
-        # overwhelming the credential source during an outage.
-        backoff = random.uniform(
-            self._refresh_backoff_min_seconds,
-            self._refresh_backoff_max_seconds,
+        # Apply a jittered 1-10 minute backoff based on remaining credential
+        # lifetime to limit retries after a failed refresh.
+        remaining = max(
+            total_seconds(self._expiry_time - self._time_fetcher()), 0
         )
+        upper = max(90, min(remaining / 2, 600))
+        backoff = random.uniform(60, upper)
         self._refresh_blocked_until = (
             self._time_fetcher() + datetime.timedelta(seconds=backoff)
         )
