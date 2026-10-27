@@ -784,7 +784,7 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._init_refresh_failure_state(invalidate_provider_cache)
         if self._expiry_time is not None:
             self._advisory_refresh_timeout = (
-                self._compute_advisory_refresh_timeout()
+                self._compute_advisory_refresh_timeout(self._expiry_time)
             )
 
     def _init_refresh_failure_state(self, invalidate_provider_cache=None):
@@ -793,13 +793,13 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._cached_nonrecoverable_error = None
         self._cached_nonrecoverable_error_expires_at = None
 
-    def _compute_advisory_refresh_timeout(self):
+    def _compute_advisory_refresh_timeout(self, expiry_time):
         # Compute the advisory refresh timeout from the credential lifetime at
         # the time the credential set is created or refreshed:
         # <= 20 min -> 5 min
         # > 20 min and < 90 min -> 15 min
         # >= 90 min -> 60 min
-        lifetime = total_seconds(self._expiry_time - self._time_fetcher())
+        lifetime = total_seconds(expiry_time - self._time_fetcher())
         if lifetime <= 20 * 60:
             return 5 * 60
         if lifetime < 90 * 60:
@@ -905,10 +905,11 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         if validation_error is not None:
             self._handle_invalid_refresh_response(validation_error)
             return
-        self._set_from_validated_data(credential_data)
-        self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token, self._account_id
-        )
+        try:
+            self._set_from_validated_data(credential_data)
+            self._publish_refresh()
+        finally:
+            self._staged_expiry_time = None
         self._clear_refresh_failure_state()
 
     def _validate_credential_data(self, data):
@@ -934,15 +935,25 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
+        self._staged_expiry_time = parse(data['expiry_time'])
         self.account_id = data.get('account_id')
         logger.debug(
-            "Retrieved credentials will expire at: %s", self._expiry_time
+            "Retrieved credentials will expire at: %s",
+            self._staged_expiry_time,
         )
         self._normalize()
-        self._advisory_refresh_timeout = (
-            self._compute_advisory_refresh_timeout()
+
+    def _publish_refresh(self):
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
         )
+        if self._staged_expiry_time is not None:
+            self._advisory_refresh_timeout = (
+                self._compute_advisory_refresh_timeout(
+                    self._staged_expiry_time
+                )
+            )
+            self._expiry_time = self._staged_expiry_time
 
     def _handle_refresh_exception(self, error):
         # Surface non-recoverable failures immediately because they require
@@ -1014,6 +1025,7 @@ class _DeferredResilientRefreshableCredentials(
         self._token = None
         self._account_id = None
         self._expiry_time = None
+        self._staged_expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self.method = method
