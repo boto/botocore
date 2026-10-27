@@ -5067,6 +5067,42 @@ class TestRefreshWindows:
 
 
 class TestRefreshBackoff:
+    @pytest.mark.parametrize(
+        'remaining_lifetime, expected_upper',
+        [
+            (timedelta(minutes=30), 600),
+            (timedelta(minutes=20), 600),
+            (timedelta(minutes=10), 300),
+            (timedelta(minutes=5), 150),
+            (timedelta(minutes=3), 90),
+            (timedelta(minutes=1), 90),
+            (timedelta(seconds=0), 90),
+            (timedelta(minutes=-30), 90),
+        ],
+    )
+    def test_refresh_backoff_scales_with_remaining_lifetime(
+        self, mock_time, refresher, remaining_lifetime, expected_upper
+    ):
+        issued_at = mock_time()
+        refresher.side_effect = Exception("source down")
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=2),
+        )
+        mock_time.return_value = (
+            issued_at + timedelta(hours=2) - remaining_lifetime
+        )
+
+        with mock.patch(
+            'botocore.credentials.random.uniform', return_value=75
+        ) as uniform:
+            frozen = creds.get_frozen_credentials()
+
+        uniform.assert_called_once_with(60, expected_upper)
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        refresher.assert_called_once_with()
+
     def test_in_refresh_backoff_does_not_reread_blocked_until(self, mock_time):
         creds = _create_resilient_credentials(
             mock_time, expires_in=timedelta(hours=1)
@@ -5122,13 +5158,19 @@ class TestRefreshBackoff:
         )
 
         with mock.patch(
-            'botocore.credentials.random.uniform', return_value=300
+            'botocore.credentials.random.uniform', return_value=75
         ):
             frozen = creds.get_frozen_credentials()
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
-        mock_time.return_value = issued_at + timedelta(seconds=301)
+        mock_time.return_value = issued_at + timedelta(seconds=74)
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+        mock_time.return_value = issued_at + timedelta(seconds=75)
         frozen = creds.get_frozen_credentials()
 
         assert frozen.access_key == 'NEW-ACCESS'
