@@ -5198,6 +5198,27 @@ class TestRefreshResponseValidation:
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
+    def test_expired_refresh_response_returns_cached_credentials(
+        self, mock_time
+    ):
+        refresher = mock.Mock(
+            return_value=_valid_metadata(
+                mock_time, expires_in=timedelta(seconds=0)
+            )
+        )
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(minutes=-30),
+        )
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
     def test_malformed_expiry_returns_cached_credentials(self, mock_time):
         refresher = mock.Mock(
             return_value={
@@ -5244,6 +5265,29 @@ class TestDeferredResilientRefreshableCredentials:
 
         assert frozen.access_key == 'NEW-ACCESS'
         assert refresher.call_count == 1
+
+    def test_expired_first_fetch_is_used_and_refreshes_on_next_access(
+        self, mock_time
+    ):
+        refresher = mock.Mock(
+            side_effect=[
+                _valid_metadata(
+                    mock_time,
+                    access_key='FIRST-ACCESS',
+                    expires_in=timedelta(seconds=-1),
+                ),
+                _valid_metadata(mock_time),
+            ]
+        )
+        creds = _create_deferred_resilient_credentials(mock_time, refresher)
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'FIRST-ACCESS'
+        assert creds.refresh_needed() is True
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 2
 
     def test_first_fetch_failure_raises(self, mock_time):
         refresher = mock.Mock(side_effect=Exception("source down"))

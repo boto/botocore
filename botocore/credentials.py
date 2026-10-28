@@ -926,7 +926,10 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         expiry_time = data['expiry_time']
         try:
             expiry_time = parse(expiry_time)
-            if expiry_time <= self._time_fetcher():
+            if (
+                self._frozen_credentials is not None
+                and expiry_time <= self._time_fetcher()
+            ):
                 return "Credential source returned expired credentials"
         except (TypeError, ValueError, OverflowError) as e:
             return f"Response contained an invalid expiry_time {expiry_time!r}: {e}"
