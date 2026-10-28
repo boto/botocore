@@ -753,9 +753,12 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             'RegionDisabledException',
         )
     )
-    _nonrecoverable_sts_methods = frozenset(
-        ('assume-role', 'assume-role-with-web-identity')
-    )
+    _nonrecoverable_login_error_codes = frozenset(('ValidationException',))
+    _nonrecoverable_error_codes_by_method = {
+        'assume-role': _nonrecoverable_sts_error_codes,
+        'assume-role-with-web-identity': _nonrecoverable_sts_error_codes,
+        'login': _nonrecoverable_login_error_codes,
+    }
 
     def __init__(
         self,
@@ -966,17 +969,17 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._enter_refresh_backoff(error)
 
     def _is_nonrecoverable_refresh_error(self, error):
-        return isinstance(
-            error, RefreshNonRecoverableError
-        ) or self._is_sts_nonrecoverable_error(error)
-
-    def _is_sts_nonrecoverable_error(self, error):
-        if self.method not in self._nonrecoverable_sts_methods:
-            return False
+        if isinstance(error, RefreshNonRecoverableError):
+            return True
         if not isinstance(error, ClientError):
             return False
+        error_codes = self._nonrecoverable_error_codes_by_method.get(
+            self.method
+        )
+        if error_codes is None:
+            return False
         error_code = error.response.get('Error', {}).get('Code')
-        return error_code in self._nonrecoverable_sts_error_codes
+        return error_code in error_codes
 
     def _invalidate(self, access_key):
         if access_key is None:

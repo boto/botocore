@@ -5504,6 +5504,58 @@ class TestNonRecoverableRefresh:
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
+    def test_login_validation_error_raises_original_exception(self, mock_time):
+        error = ClientError(
+            {
+                'Error': {
+                    'Code': 'ValidationException',
+                    'Message': 'The provided authorization grant is invalid.',
+                }
+            },
+            'CreateOAuth2Token',
+        )
+        refresher = mock.Mock(side_effect=error)
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method='login',
+        )
+
+        with pytest.raises(ClientError) as exc_info:
+            creds.get_frozen_credentials()
+        assert exc_info.value is error
+
+    @pytest.mark.parametrize(
+        'method, error_code',
+        [
+            ('assume-role', 'ValidationException'),
+            ('login', 'TooManyRequestsError'),
+        ],
+    )
+    def test_other_service_errors_use_refresh_backoff(
+        self, mock_time, method, error_code
+    ):
+        refresher = mock.Mock(
+            side_effect=ClientError(
+                {'Error': {'Code': error_code, 'Message': 'service error'}},
+                'RefreshCredentials',
+            )
+        )
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method=method,
+        )
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
 
 class TestNonRecoverableProviderErrors:
     def test_sso_unauthorized_service_error_raises_nonrecoverable_error(
