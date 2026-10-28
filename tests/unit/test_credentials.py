@@ -6012,12 +6012,13 @@ class CredentialRefreshLifecycleHarness:
         self._next_lifetime_seconds = 3600
         self._refresh_count = 0
         self._refresh_backoff_seconds = test_case['given'].get(
-            'refreshBackoffSeconds', 420
+            'refreshBackoffSeconds', 75
         )
         self._creds = self._create_credentials()
 
     def uniform_random(self, low, high):
-        if (low, high) == (300, 600):
+        if low == 60 and 90 <= high <= 600:
+            assert low <= self._refresh_backoff_seconds <= high
             return self._refresh_backoff_seconds
         if (low, high) == (1, 5):
             return 5
