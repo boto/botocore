@@ -143,6 +143,10 @@ def _create_single_checker(config):
 
 def _create_single_response_checker(response):
     if 'service_error_code' in response:
+        if 'http_status_code' not in response:
+            return ServiceErrorCodeOnlyChecker(
+                error_code=response['service_error_code']
+            )
         checker = ServiceErrorCodeChecker(
             status_code=response['http_status_code'],
             error_code=response['service_error_code'],
@@ -351,6 +355,21 @@ class ServiceErrorCodeChecker(BaseChecker):
                     self._error_code,
                 )
                 return True
+        return False
+
+
+class ServiceErrorCodeOnlyChecker(BaseChecker):
+    def __init__(self, error_code):
+        self._error_code = error_code
+
+    def _check_response(self, attempt_number, response):
+        actual_error_code = response[1].get('Error', {}).get('Code')
+        if actual_error_code == self._error_code:
+            logger.debug(
+                "retry needed: matching error code seen: %s",
+                self._error_code,
+            )
+            return True
         return False
 
 
