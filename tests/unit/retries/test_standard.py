@@ -87,6 +87,19 @@ RETRYABLE_TRANSIENT_ERRORS = [
     (400, None, False),
 ]
 
+INVALID_CREDENTIAL_ERRORS = [
+    # From the spec's "Invalid Credential Errors" section.
+    # Status codes are included for completeness but aren't used here.
+    # StatusCode, Error, Retryable?
+    (400, 'ExpiredToken', True),
+    (400, 'InvalidToken', True),
+    # Negative cases to verify error codes are matched exactly.
+    # The *Exception variants are distinct errors and should not trigger retry.
+    (400, 'ExpiredTokenException', False),
+    (400, 'InvalidTokenException', False),
+    (400, 'AccessDenied', False),
+]
+
 
 # These tests are intended to be paired with the
 # SERVICE_DESCRIPTION_WITH_RETRIES definition.
@@ -179,6 +192,12 @@ def test_can_detect_retryable_throttled_errors(case):
     _verify_retryable(throttled_checker, None, *case)
 
 
+@pytest.mark.parametrize('case', INVALID_CREDENTIAL_ERRORS)
+def test_can_detect_invalid_credential_errors(case):
+    checker = standard.InvalidCredentialRetryableChecker()
+    _verify_retryable(checker, None, *case)
+
+
 @pytest.mark.parametrize('case', RETRYABLE_THROTTLING_STATUS_CODES)
 def test_can_detect_throttling_status_codes(case):
     status_code_checker = standard.ThrottlingStatusCodeChecker()
@@ -245,6 +264,7 @@ def test_can_detect_modeled_retryable_errors(case):
         case
         for case in RETRYABLE_TRANSIENT_ERRORS
         + RETRYABLE_THROTTLED_RESPONSES
+        + INVALID_CREDENTIAL_ERRORS
         + RETRYABLE_THROTTLING_STATUS_CODES
         + RETRYABLE_MODELED_ERRORS
         if case[2]
