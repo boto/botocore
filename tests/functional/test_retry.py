@@ -479,7 +479,9 @@ class TestInvalidCredentialRetry(BaseRetryTest):
         )
         return client, credentials, refresh_using
 
-    def assert_invalid_credential_error_refreshes_retry(self, error_code):
+    def assert_invalid_credential_error_refreshes_retry(
+        self, error_code, status=400
+    ):
         for retry_mode in RETRY_MODES:
             client, _, refresh_using = (
                 self.create_client_with_resilient_credentials(
@@ -488,7 +490,7 @@ class TestInvalidCredentialRetry(BaseRetryTest):
             )
             with ClientHTTPStubber(client) as http_stubber:
                 http_stubber.add_response(
-                    status=400,
+                    status=status,
                     body=json.dumps(
                         {
                             '__type': error_code,
@@ -512,23 +514,55 @@ class TestInvalidCredentialRetry(BaseRetryTest):
     def test_expired_token_refreshes_and_resigns_retry(self):
         self.assert_invalid_credential_error_refreshes_retry('ExpiredToken')
 
-    def test_invalid_token_refreshes_and_resigns_retry(self):
-        self.assert_invalid_credential_error_refreshes_retry('InvalidToken')
+    def test_expired_token_refreshes_and_resigns_retry_on_403(self):
+        self.assert_invalid_credential_error_refreshes_retry(
+            'ExpiredToken', status=403
+        )
+
+    def test_expired_token_exception_refreshes_and_resigns_retry(self):
+        self.assert_invalid_credential_error_refreshes_retry(
+            'ExpiredTokenException'
+        )
+
+    def test_expired_token_exception_refreshes_and_resigns_retry_on_403(self):
+        self.assert_invalid_credential_error_refreshes_retry(
+            'ExpiredTokenException', status=403
+        )
+
+    def test_invalid_token_does_not_retry_or_invalidate(self):
+        for retry_mode in RETRY_MODES:
+            client, credentials, refresh_using = (
+                self.create_client_with_resilient_credentials(
+                    retry_mode, total_max_attempts=2
+                )
+            )
+            with ClientHTTPStubber(client) as http_stubber:
+                http_stubber.add_response(
+                    status=400,
+                    body=b'{"__type":"InvalidToken","message":"invalid"}',
+                )
+                with self.assertRaises(ClientError):
+                    client.list_tables()
+
+            self.assertEqual(len(http_stubber.requests), 1)
+            refresh_using.assert_not_called()
+            self.assertFalse(credentials.refresh_needed())
 
     def test_max_attempts_prevents_retry_but_not_invalidation(self):
-        client, credentials, refresh_using = (
-            self.create_client_with_resilient_credentials(
-                'standard', total_max_attempts=1
+        for retry_mode in RETRY_MODES:
+            client, credentials, refresh_using = (
+                self.create_client_with_resilient_credentials(
+                    retry_mode, total_max_attempts=1
+                )
             )
-        )
-        with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.add_response(
-                status=400,
-                body=b'{"__type":"InvalidToken","message":"invalid"}',
-            )
-            with self.assertRaises(ClientError):
-                client.list_tables()
+            with ClientHTTPStubber(client) as http_stubber:
+                http_stubber.add_response(
+                    status=403,
+                    body=b'{"__type":"ExpiredTokenException","message":"expired"}',
+                )
+                with self.assertRaises(ClientError):
+                    client.list_tables()
 
-        self.assertEqual(len(http_stubber.requests), 1)
-        refresh_using.assert_not_called()
-        self.assertTrue(credentials.refresh_needed())
+            self.assertEqual(len(http_stubber.requests), 1)
+            refresh_using.assert_not_called()
+            self.assertTrue(credentials.refresh_needed())
