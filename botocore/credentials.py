@@ -926,9 +926,12 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         expiry_time = data['expiry_time']
         try:
             expiry_time = parse(expiry_time)
+            # Allow expired credentials on initial fetch to support
+            # static stability, but require unexpired credentials on
+            # subsequent refreshes.
             if (
-                self._frozen_credentials is not None
-                and expiry_time <= self._time_fetcher()
+                expiry_time <= self._time_fetcher()
+                and self._frozen_credentials is not None
             ):
                 return "Credential source returned expired credentials"
         except (TypeError, ValueError, OverflowError) as e:

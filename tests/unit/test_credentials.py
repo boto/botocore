@@ -5306,22 +5306,34 @@ class TestDeferredResilientRefreshableCredentials:
         ):
             creds.get_frozen_credentials()
 
-    def test_malformed_first_fetch_expiry_raises(self, mock_time):
+    @pytest.mark.parametrize(
+        'expiry_time', ['not-a-datetime', '2021-12-10T01:00:00']
+    )
+    def test_malformed_first_fetch_expiry_raises(self, mock_time, expiry_time):
         refresher = mock.Mock(
             return_value={
                 'access_key': 'NEW-ACCESS',
                 'secret_key': 'NEW-SECRET',
                 'token': 'NEW-TOKEN',
-                'expiry_time': 'not-a-datetime',
+                'expiry_time': expiry_time,
             }
         )
         creds = _create_deferred_resilient_credentials(mock_time, refresher)
 
+        # The cache is empty and the initial response has an invalid expiry.
         with pytest.raises(
             botocore.exceptions.CredentialRetrievalError,
             match='invalid expiry_time',
         ):
             creds.get_frozen_credentials()
+
+        # No credentials were accepted, so the next access must retry the source.
+        with pytest.raises(
+            botocore.exceptions.CredentialRetrievalError,
+            match='invalid expiry_time',
+        ):
+            creds.get_frozen_credentials()
+        assert refresher.call_count == 2
 
     def test_after_first_fetch_failure_keeps_cached_credentials(
         self, mock_time
