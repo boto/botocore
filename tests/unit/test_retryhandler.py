@@ -126,6 +126,13 @@ class TestRetryCheckers(unittest.TestCase):
         response = (HTTP_400_RESPONSE, {'Error': {'Code': 'NotThrottled'}})
         self.assert_should_not_be_retried(response)
 
+    def test_error_code_checker_does_not_match_wrong_status(self):
+        self.checker = retryhandler.ServiceErrorCodeChecker(
+            status_code=400, error_code='Throttled'
+        )
+        response = (HTTP_500_RESPONSE, {'Error': {'Code': 'Throttled'}})
+        self.assert_should_not_be_retried(response)
+
     def test_error_code_checker_ignore_caught_exception(self):
         self.checker = retryhandler.ServiceErrorCodeChecker(
             status_code=400, error_code='Throttled'
@@ -133,6 +140,26 @@ class TestRetryCheckers(unittest.TestCase):
         self.assert_should_not_be_retried(
             response=None, caught_exception=RuntimeError()
         )
+
+    def test_error_code_only_checker(self):
+        self.checker = retryhandler.ServiceErrorCodeOnlyChecker(
+            error_code='Throttled'
+        )
+        response = (
+            mock.Mock(status_code=401),
+            {'Error': {'Code': 'Throttled'}},
+        )
+        self.assert_should_be_retried(response)
+
+    def test_error_code_only_checker_does_not_match(self):
+        self.checker = retryhandler.ServiceErrorCodeOnlyChecker(
+            error_code='ExpiredToken'
+        )
+        response = (
+            HTTP_400_RESPONSE,
+            {'Error': {'Code': 'ExpiredTokenException'}},
+        )
+        self.assert_should_not_be_retried(response)
 
     def test_multi_checker(self):
         checker = retryhandler.ServiceErrorCodeChecker(
@@ -214,6 +241,44 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         )
         self.assertEqual(checker._checker._error_code, 'Throttling')
         self.assertEqual(checker._checker._status_code, 400)
+
+    def test_create_error_code_only_rule(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        del policy['applies_when']['response']['http_status_code']
+        checker = retryhandler.create_checker_from_retry_config(
+            self.retry_config
+        )
+
+        self.assertTrue(
+            checker(
+                attempt_number=1,
+                response=(
+                    mock.Mock(status_code=401),
+                    {'Error': {'Code': 'Throttling'}},
+                ),
+                caught_exception=None,
+                retries_context={},
+            )
+        )
+
+    def test_explicit_none_status_does_not_create_error_code_only_rule(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        policy['applies_when']['response']['http_status_code'] = None
+        checker = retryhandler.create_checker_from_retry_config(
+            self.retry_config
+        )
+
+        self.assertFalse(
+            checker(
+                attempt_number=1,
+                response=(
+                    HTTP_400_RESPONSE,
+                    {'Error': {'Code': 'Throttling'}},
+                ),
+                caught_exception=None,
+                retries_context={},
+            )
+        )
 
     def test_create_retry_for_operation(self):
         checker = retryhandler.create_checker_from_retry_config(

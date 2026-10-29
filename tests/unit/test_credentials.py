@@ -118,6 +118,16 @@ class PausingRefreshableCredentials(credentials.RefreshableCredentials):
         super()._publish_refresh()
 
 
+class PausingResilientRefreshableCredentials(
+    credentials._ResilientRefreshableCredentials
+):
+    def _publish_refresh(self):
+        self.publish_started.set()
+        if not self.resume_publish.wait(timeout=1):
+            raise AssertionError("Timed out waiting to publish credentials")
+        super()._publish_refresh()
+
+
 class TestCredentials(BaseEnvVar):
     def _ensure_credential_is_normalized_as_unicode(self, access, secret):
         c = credentials.Credentials(access, secret)
@@ -5057,6 +5067,42 @@ class TestRefreshWindows:
 
 
 class TestRefreshBackoff:
+    @pytest.mark.parametrize(
+        'remaining_lifetime, expected_upper',
+        [
+            (timedelta(minutes=30), 600),
+            (timedelta(minutes=20), 600),
+            (timedelta(minutes=10), 300),
+            (timedelta(minutes=5), 150),
+            (timedelta(minutes=3), 90),
+            (timedelta(minutes=1), 90),
+            (timedelta(seconds=0), 90),
+            (timedelta(minutes=-30), 90),
+        ],
+    )
+    def test_refresh_backoff_scales_with_remaining_lifetime(
+        self, mock_time, refresher, remaining_lifetime, expected_upper
+    ):
+        issued_at = mock_time()
+        refresher.side_effect = Exception("source down")
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(hours=2),
+        )
+        mock_time.return_value = (
+            issued_at + timedelta(hours=2) - remaining_lifetime
+        )
+
+        with mock.patch(
+            'botocore.credentials.random.uniform', return_value=75
+        ) as uniform:
+            frozen = creds.get_frozen_credentials()
+
+        uniform.assert_called_once_with(60, expected_upper)
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        refresher.assert_called_once_with()
+
     def test_in_refresh_backoff_does_not_reread_blocked_until(self, mock_time):
         creds = _create_resilient_credentials(
             mock_time, expires_in=timedelta(hours=1)
@@ -5112,13 +5158,19 @@ class TestRefreshBackoff:
         )
 
         with mock.patch(
-            'botocore.credentials.random.uniform', return_value=300
+            'botocore.credentials.random.uniform', return_value=75
         ):
             frozen = creds.get_frozen_credentials()
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
-        mock_time.return_value = issued_at + timedelta(seconds=301)
+        mock_time.return_value = issued_at + timedelta(seconds=74)
+        frozen = creds.get_frozen_credentials()
+
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+        mock_time.return_value = issued_at + timedelta(seconds=75)
         frozen = creds.get_frozen_credentials()
 
         assert frozen.access_key == 'NEW-ACCESS'
@@ -5143,6 +5195,27 @@ class TestRefreshResponseValidation:
 
         frozen = creds.get_frozen_credentials()
 
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+    def test_expired_refresh_response_returns_cached_credentials(
+        self, mock_time
+    ):
+        refresher = mock.Mock(
+            return_value=_valid_metadata(
+                mock_time, expires_in=timedelta(seconds=0)
+            )
+        )
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(minutes=-30),
+        )
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+
+        frozen = creds.get_frozen_credentials()
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
@@ -5193,6 +5266,29 @@ class TestDeferredResilientRefreshableCredentials:
         assert frozen.access_key == 'NEW-ACCESS'
         assert refresher.call_count == 1
 
+    def test_expired_first_fetch_is_used_and_refreshes_on_next_access(
+        self, mock_time
+    ):
+        refresher = mock.Mock(
+            side_effect=[
+                _valid_metadata(
+                    mock_time,
+                    access_key='FIRST-ACCESS',
+                    expires_in=timedelta(seconds=-1),
+                ),
+                _valid_metadata(mock_time),
+            ]
+        )
+        creds = _create_deferred_resilient_credentials(mock_time, refresher)
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'FIRST-ACCESS'
+        assert creds.refresh_needed() is True
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'NEW-ACCESS'
+        assert refresher.call_count == 2
+
     def test_first_fetch_failure_raises(self, mock_time):
         refresher = mock.Mock(side_effect=Exception("source down"))
         creds = _create_deferred_resilient_credentials(mock_time, refresher)
@@ -5210,22 +5306,34 @@ class TestDeferredResilientRefreshableCredentials:
         ):
             creds.get_frozen_credentials()
 
-    def test_malformed_first_fetch_expiry_raises(self, mock_time):
+    @pytest.mark.parametrize(
+        'expiry_time', ['not-a-datetime', '2021-12-10T01:00:00']
+    )
+    def test_malformed_first_fetch_expiry_raises(self, mock_time, expiry_time):
         refresher = mock.Mock(
             return_value={
                 'access_key': 'NEW-ACCESS',
                 'secret_key': 'NEW-SECRET',
                 'token': 'NEW-TOKEN',
-                'expiry_time': 'not-a-datetime',
+                'expiry_time': expiry_time,
             }
         )
         creds = _create_deferred_resilient_credentials(mock_time, refresher)
 
+        # The cache is empty and the initial response has an invalid expiry.
         with pytest.raises(
             botocore.exceptions.CredentialRetrievalError,
             match='invalid expiry_time',
         ):
             creds.get_frozen_credentials()
+
+        # No credentials were accepted, so the next access must retry the source.
+        with pytest.raises(
+            botocore.exceptions.CredentialRetrievalError,
+            match='invalid expiry_time',
+        ):
+            creds.get_frozen_credentials()
+        assert refresher.call_count == 2
 
     def test_after_first_fetch_failure_keeps_cached_credentials(
         self, mock_time
@@ -5449,6 +5557,58 @@ class TestNonRecoverableRefresh:
 
         frozen = creds.get_frozen_credentials()
 
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+    def test_login_validation_error_raises_original_exception(self, mock_time):
+        error = ClientError(
+            {
+                'Error': {
+                    'Code': 'ValidationException',
+                    'Message': 'The provided authorization grant is invalid.',
+                }
+            },
+            'CreateOAuth2Token',
+        )
+        refresher = mock.Mock(side_effect=error)
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method='login',
+        )
+
+        with pytest.raises(ClientError) as exc_info:
+            creds.get_frozen_credentials()
+        assert exc_info.value is error
+
+    @pytest.mark.parametrize(
+        'method, error_code',
+        [
+            ('assume-role', 'ValidationException'),
+            ('login', 'TooManyRequestsError'),
+        ],
+    )
+    def test_other_service_errors_use_refresh_backoff(
+        self, mock_time, method, error_code
+    ):
+        refresher = mock.Mock(
+            side_effect=ClientError(
+                {'Error': {'Code': error_code, 'Message': 'service error'}},
+                'RefreshCredentials',
+            )
+        )
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method=method,
+        )
+
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ORIGINAL-ACCESS'
+
+        frozen = creds.get_frozen_credentials()
         assert frozen.access_key == 'ORIGINAL-ACCESS'
         assert refresher.call_count == 1
 
@@ -5864,12 +6024,13 @@ class CredentialRefreshLifecycleHarness:
         self._next_lifetime_seconds = 3600
         self._refresh_count = 0
         self._refresh_backoff_seconds = test_case['given'].get(
-            'refreshBackoffSeconds', 420
+            'refreshBackoffSeconds', 75
         )
         self._creds = self._create_credentials()
 
     def uniform_random(self, low, high):
-        if (low, high) == (300, 600):
+        if low == 60 and 90 <= high <= 600:
+            assert low <= self._refresh_backoff_seconds <= high
             return self._refresh_backoff_seconds
         if (low, high) == (1, 5):
             return 5
@@ -6102,6 +6263,39 @@ class CredentialFetchThread(threading.Thread):
 
 
 class TestCredentialRefreshConcurrency:
+    def test_concurrent_reader_gets_refreshed_frozen_credentials(
+        self, mock_time
+    ):
+        refresher = mock.Mock(return_value=_valid_metadata(mock_time))
+        creds = PausingResilientRefreshableCredentials(
+            'ORIGINAL-ACCESS',
+            'ORIGINAL-SECRET',
+            'ORIGINAL-TOKEN',
+            mock_time() - timedelta(seconds=30),
+            refresher,
+            'iam-role',
+            time_fetcher=mock_time,
+        )
+        creds.publish_started = threading.Event()
+        creds.resume_publish = threading.Event()
+        expected_credentials = credentials.ReadOnlyCredentials(
+            'NEW-ACCESS', 'NEW-SECRET', 'NEW-TOKEN'
+        )
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            refresh = executor.submit(creds.get_frozen_credentials)
+            try:
+                assert creds.publish_started.wait(timeout=1)
+                reader = executor.submit(creds.get_frozen_credentials)
+                assert creds.refresh_needed()
+            finally:
+                creds.resume_publish.set()
+
+            assert refresh.result(timeout=1) == expected_credentials
+            assert reader.result(timeout=1) == expected_credentials
+
+        refresher.assert_called_once_with()
+
     def test_advisory_refresh_concurrent_callers_reuse_cached_credentials(
         self, mock_time
     ):

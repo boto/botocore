@@ -46,7 +46,9 @@ _SERVICE_MAX_ATTEMPTS = {
     'dynamodb': 4,
     'dynamodb-streams': 4,
 }
-INVALID_CREDENTIAL_ERROR_CODES = frozenset(('ExpiredToken', 'InvalidToken'))
+INVALID_CREDENTIAL_ERROR_CODES = frozenset(
+    ('ExpiredToken', 'ExpiredTokenException')
+)
 logger = logging.getLogger(__name__)
 
 

@@ -73,12 +73,17 @@ INVALID_CREDENTIAL_ERRORS = [
     # Status codes are included for completeness but aren't used here.
     # StatusCode, Error, Retryable?
     (400, 'ExpiredToken', True),
-    (400, 'InvalidToken', True),
+    (401, 'ExpiredToken', True),
+    (403, 'ExpiredToken', True),
+    (400, 'ExpiredTokenException', True),
+    (401, 'ExpiredTokenException', True),
+    (403, 'ExpiredTokenException', True),
     # Negative cases to verify error codes are matched exactly.
-    # The *Exception variants are distinct errors and should not trigger retry.
-    (400, 'ExpiredTokenException', False),
+    (400, 'InvalidToken', False),
+    (403, 'InvalidToken', False),
     (400, 'InvalidTokenException', False),
     (400, 'AccessDenied', False),
+    (403, 'AccessDenied', False),
 ]
 
 

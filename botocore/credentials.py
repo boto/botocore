@@ -740,8 +740,6 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
     """Refreshable credentials that fall back to cached credentials when refresh fails."""
 
     _mandatory_refresh_timeout = 60  # 1 min
-    _refresh_backoff_min_seconds = 5 * 60  # 5 min
-    _refresh_backoff_max_seconds = 10 * 60  # 10 min
     _nonrecoverable_error_cache_min_ttl = 1  # 1 sec
     _nonrecoverable_error_cache_max_ttl = 5  # 5 sec
     _nonrecoverable_sts_error_codes = frozenset(
@@ -751,13 +749,15 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             'InvalidIdentityToken',
             'MalformedPolicyDocument',
             'PackedPolicyTooLarge',
-            'RegionDisabled',
             'RegionDisabledException',
         )
     )
-    _nonrecoverable_sts_methods = frozenset(
-        ('assume-role', 'assume-role-with-web-identity')
-    )
+    _nonrecoverable_login_error_codes = frozenset(('ValidationException',))
+    _nonrecoverable_error_codes_by_method = {
+        'assume-role': _nonrecoverable_sts_error_codes,
+        'assume-role-with-web-identity': _nonrecoverable_sts_error_codes,
+        'login': _nonrecoverable_login_error_codes,
+    }
 
     def __init__(
         self,
@@ -784,7 +784,7 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._init_refresh_failure_state(invalidate_provider_cache)
         if self._expiry_time is not None:
             self._advisory_refresh_timeout = (
-                self._compute_advisory_refresh_timeout()
+                self._compute_advisory_refresh_timeout(self._expiry_time)
             )
 
     def _init_refresh_failure_state(self, invalidate_provider_cache=None):
@@ -793,13 +793,13 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._cached_nonrecoverable_error = None
         self._cached_nonrecoverable_error_expires_at = None
 
-    def _compute_advisory_refresh_timeout(self):
+    def _compute_advisory_refresh_timeout(self, expiry_time):
         # Compute the advisory refresh timeout from the credential lifetime at
         # the time the credential set is created or refreshed:
         # <= 20 min -> 5 min
         # > 20 min and < 90 min -> 15 min
         # >= 90 min -> 60 min
-        lifetime = total_seconds(self._expiry_time - self._time_fetcher())
+        lifetime = total_seconds(expiry_time - self._time_fetcher())
         if lifetime <= 20 * 60:
             return 5 * 60
         if lifetime < 90 * 60:
@@ -838,15 +838,13 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._cached_nonrecoverable_error_expires_at = None
 
     def _enter_refresh_backoff(self, error):
-        # Apply a jittered 5-10 minute backoff after a failed refresh to avoid
-        # overwhelming the credential source during an outage.
-        backoff = random.uniform(
-            self._refresh_backoff_min_seconds,
-            self._refresh_backoff_max_seconds,
-        )
-        self._refresh_blocked_until = (
-            self._time_fetcher() + datetime.timedelta(seconds=backoff)
-        )
+        # Apply a jittered 1-10 minute backoff based on remaining credential
+        # lifetime to limit retries after a failed refresh.
+        now = self._time_fetcher()
+        remaining = max(total_seconds(self._expiry_time - now), 0)
+        upper = max(90, min(remaining / 2, 600))
+        backoff = random.uniform(60, upper)
+        self._refresh_blocked_until = now + datetime.timedelta(seconds=backoff)
         logger.warning(
             "Credential refresh failed: %s. The SDK will continue using "
             "cached credentials and retry refresh after %.0f seconds.",
@@ -905,10 +903,11 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         if validation_error is not None:
             self._handle_invalid_refresh_response(validation_error)
             return
-        self._set_from_validated_data(credential_data)
-        self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token, self._account_id
-        )
+        try:
+            self._set_from_validated_data(credential_data)
+            self._publish_refresh()
+        finally:
+            self._staged_expiry_time = None
         self._clear_refresh_failure_state()
 
     def _validate_credential_data(self, data):
@@ -923,7 +922,13 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         expiry_time = data['expiry_time']
         try:
             expiry_time = parse(expiry_time)
-            if expiry_time <= self._time_fetcher():
+            # Allow expired credentials on initial fetch to support
+            # static stability, but require unexpired credentials on
+            # subsequent refreshes.
+            if (
+                expiry_time <= self._time_fetcher()
+                and self._frozen_credentials is not None
+            ):
                 return "Credential source returned expired credentials"
         except (TypeError, ValueError, OverflowError) as e:
             return f"Response contained an invalid expiry_time {expiry_time!r}: {e}"
@@ -934,15 +939,25 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
+        self._staged_expiry_time = parse(data['expiry_time'])
         self.account_id = data.get('account_id')
         logger.debug(
-            "Retrieved credentials will expire at: %s", self._expiry_time
+            "Retrieved credentials will expire at: %s",
+            self._staged_expiry_time,
         )
         self._normalize()
-        self._advisory_refresh_timeout = (
-            self._compute_advisory_refresh_timeout()
+
+    def _publish_refresh(self):
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token, self._account_id
         )
+        if self._staged_expiry_time is not None:
+            self._advisory_refresh_timeout = (
+                self._compute_advisory_refresh_timeout(
+                    self._staged_expiry_time
+                )
+            )
+            self._expiry_time = self._staged_expiry_time
 
     def _handle_refresh_exception(self, error):
         # Surface non-recoverable failures immediately because they require
@@ -956,17 +971,17 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
         self._enter_refresh_backoff(error)
 
     def _is_nonrecoverable_refresh_error(self, error):
-        return isinstance(
-            error, RefreshNonRecoverableError
-        ) or self._is_sts_nonrecoverable_error(error)
-
-    def _is_sts_nonrecoverable_error(self, error):
-        if self.method not in self._nonrecoverable_sts_methods:
-            return False
+        if isinstance(error, RefreshNonRecoverableError):
+            return True
         if not isinstance(error, ClientError):
             return False
+        error_codes = self._nonrecoverable_error_codes_by_method.get(
+            self.method
+        )
+        if error_codes is None:
+            return False
         error_code = error.response.get('Error', {}).get('Code')
-        return error_code in self._nonrecoverable_sts_error_codes
+        return error_code in error_codes
 
     def _invalidate(self, access_key):
         if access_key is None:
@@ -1014,6 +1029,7 @@ class _DeferredResilientRefreshableCredentials(
         self._token = None
         self._account_id = None
         self._expiry_time = None
+        self._staged_expiry_time = None
         self._time_fetcher = time_fetcher
         self._refresh_lock = threading.Lock()
         self.method = method
