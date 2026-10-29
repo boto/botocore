@@ -932,6 +932,8 @@ def generate_presigned_post(
 
     if conditions is None:
         conditions = []
+    else:
+        conditions = conditions.copy()
 
     context = {
         'is_presign_request': True,
