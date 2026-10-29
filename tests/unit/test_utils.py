@@ -3833,3 +3833,32 @@ class TestJSONFileCacheAtomicWrites(unittest.TestCase):
         self.assertEqual(
             len(temp_files), 0, f'Temp files not cleaned: {temp_files}'
         )
+
+    def test_valid_key_stays_within_working_dir(self):
+        self.cache['abc123'] = {'data': 'value'}
+        expected = os.path.join(self.temp_dir, 'abc123.json')
+        self.assertTrue(os.path.isfile(expected))
+        self.assertEqual(self.cache['abc123'], {'data': 'value'})
+
+    def test_set_rejects_path_traversal_key(self):
+        parent = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, parent, ignore_errors=True)
+        working_dir = os.path.join(parent, 'cache')
+        cache = JSONFileCache(working_dir=working_dir)
+        outside = os.path.join(parent, 'escaped')
+        key = os.path.relpath(outside, working_dir)
+        with self.assertRaises(ValueError):
+            cache[key] = {'data': 'value'}
+        self.assertFalse(os.path.exists(outside + '.json'))
+
+    def test_set_rejects_absolute_path_key(self):
+        parent = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, parent, ignore_errors=True)
+        absolute_key = os.path.join(parent, 'escaped_abs')
+        with self.assertRaises(ValueError):
+            self.cache[absolute_key] = {'data': 'value'}
+        self.assertFalse(os.path.exists(absolute_key + '.json'))
+
+    def test_get_rejects_path_traversal_key(self):
+        with self.assertRaises(ValueError):
+            self.cache['../../../../etc/hosts']
