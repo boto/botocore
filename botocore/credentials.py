@@ -749,7 +749,6 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
             'InvalidIdentityToken',
             'MalformedPolicyDocument',
             'PackedPolicyTooLarge',
-            'RegionDisabled',
             'RegionDisabledException',
         )
     )
