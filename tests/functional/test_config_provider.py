@@ -77,7 +77,9 @@ def assert_client_uses_legacy_defaults(client):
     assert client.meta.config.s3 is None
     assert client.meta.config.connect_timeout == 60
     assert client.meta.endpoint_url == 'https://sts.amazonaws.com'
-    assert client.meta.config.retries['mode'] == 'legacy'
+    # The legacy defaults mode doesn't set a retry mode, so the client
+    # falls back to botocore's own default of standard.
+    assert client.meta.config.retries['mode'] == 'standard'
 
 
 def assert_client_uses_testing_defaults(client):
