@@ -220,9 +220,10 @@ class Config:
 
     :type request_min_compression_size_bytes: int
     :param request_min_compression_size_bytes: The minimum size in bytes that a
-        request body should be to trigger compression. All requests with
-        streaming input that don't contain the ``requiresLength`` trait will be
-        compressed regardless of this setting.
+        request body should be to trigger compression. Valid values range from
+        0 through 10485760. Set to 0 to compress all eligible request bodies.
+        All requests with streaming input that don't contain the
+        ``requiresLength`` trait will be compressed regardless of this setting.
 
         Defaults to None.
 
