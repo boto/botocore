@@ -841,14 +841,11 @@ class _ResilientRefreshableCredentials(RefreshableCredentials):
     def _enter_refresh_backoff(self, error):
         # Apply a jittered 1-10 minute backoff based on remaining credential
         # lifetime to limit retries after a failed refresh.
-        remaining = max(
-            total_seconds(self._expiry_time - self._time_fetcher()), 0
-        )
+        now = self._time_fetcher()
+        remaining = max(total_seconds(self._expiry_time - now), 0)
         upper = max(90, min(remaining / 2, 600))
         backoff = random.uniform(60, upper)
-        self._refresh_blocked_until = (
-            self._time_fetcher() + datetime.timedelta(seconds=backoff)
-        )
+        self._refresh_blocked_until = now + datetime.timedelta(seconds=backoff)
         logger.warning(
             "Credential refresh failed: %s. The SDK will continue using "
             "cached credentials and retry refresh after %.0f seconds.",
