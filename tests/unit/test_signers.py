@@ -1110,6 +1110,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
         )
 
         self.assertEqual(fields, {'acl': 'public-read'})
+        self.assertEqual(conditions, [{'acl': 'public-read'}])
 
         _, post_kwargs = self.presign_post_mock.call_args
         request_dict = post_kwargs['request_dict']
