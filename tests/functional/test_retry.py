@@ -420,6 +420,46 @@ class TestRetriesV2(BaseRetryTest):
         with self.assert_will_retry_n_times(client, 2, status=502):
             client.list_repositories()
 
+    def test_default_mode_retries_429_with_empty_body(self):
+        # A 429 with an empty body gets the error code "429", which
+        # matches neither the throttling list nor the model, so the
+        # status code is used.
+        client = self.session.create_client('codecommit', self.region)
+        with self.assert_will_retry_n_times(client, 2, status=429, body=b''):
+            client.list_repositories()
+
+    def test_standard_mode_retries_429_with_unknown_error_code(self):
+        client = self.create_client_with_retry_mode(
+            'codecommit', retry_mode='standard'
+        )
+        error_body = {"__type": "NotAThrottlingError", "message": "Error"}
+        with self.assert_will_retry_n_times(
+            client, 2, status=429, body=error_body
+        ):
+            client.list_repositories()
+
+    def test_adaptive_mode_retries_429_with_empty_body(self):
+        client = self.create_client_with_retry_mode(
+            'codecommit', retry_mode='adaptive'
+        )
+        with self.assert_will_retry_n_times(client, 2, status=429, body=b''):
+            client.list_repositories()
+
+    def test_standard_mode_does_not_retry_modeled_error_on_429(self):
+        # InvalidOrderException is modeled on ListRepositories without a
+        # retryable trait, so the model wins over the 429 status code.
+        client = self.create_client_with_retry_mode(
+            'codecommit', retry_mode='standard'
+        )
+        error_body = {"__type": "InvalidOrderException", "message": "Error"}
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response(
+                status=429, body=json.dumps(error_body).encode()
+            )
+            with self.assertRaises(ClientError):
+                client.list_repositories()
+            self.assertEqual(len(http_stubber.requests), 1)
+
     def test_adaptive_mode_still_retries_errors(self):
         # Verify that adaptive mode is just adding on to standard mode.
         client = self.create_client_with_retry_mode(

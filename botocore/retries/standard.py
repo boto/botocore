@@ -526,6 +526,36 @@ class ThrottledRetryableChecker(BaseRetryableChecker):
         return context.get_error_code() in self._throttled_error_codes
 
 
+class ThrottlingStatusCodeChecker(BaseRetryableChecker):
+    """Check if the HTTP status code indicates a throttled request.
+
+    This covers responses whose error code matches none of the
+    operation's modeled errors, such as a 429 with an empty body or an
+    unknown error code.  If the error code matches a modeled error, the
+    model decides whether or not the error is retryable, so this checker
+    does not apply.
+
+    """
+
+    _THROTTLING_STATUS_CODES = [429]
+
+    def __init__(self, throttling_status_codes=None):
+        if throttling_status_codes is None:
+            throttling_status_codes = self._THROTTLING_STATUS_CODES[:]
+        self._throttling_status_codes = throttling_status_codes
+        self._modeled_error_detector = ModeledRetryErrorDetector()
+
+    def is_retryable(self, context):
+        if context.http_response is None:
+            return False
+        if (
+            context.http_response.status_code
+            not in self._throttling_status_codes
+        ):
+            return False
+        return not self._modeled_error_detector.is_modeled_error(context)
+
+
 class ModeledRetryableChecker(BaseRetryableChecker):
     """Check if an error has been modeled as retryable."""
 
@@ -565,21 +595,41 @@ class ModeledRetryErrorDetector:
             return
         for shape in op_model.error_shapes:
             if shape.metadata.get('retryable') is not None:
-                # Check if this error code matches the shape.  This can
-                # be either by name or by a modeled error code.
-                error_code_to_check = (
-                    shape.metadata.get('error', {}).get('code') or shape.name
-                )
-                if error_code == error_code_to_check:
+                if self._matches_error_code(shape, error_code):
                     if shape.metadata['retryable'].get('throttling'):
                         return self.THROTTLING_ERROR
                     return self.TRANSIENT_ERROR
+
+    def is_modeled_error(self, context):
+        """Check whether the error code matches one of the operation's
+        modeled errors, no matter whether that error is marked as retryable.
+
+        """
+        error_code = context.get_error_code()
+        if error_code is None:
+            return False
+        op_model = context.operation_model
+        if op_model is None or not op_model.error_shapes:
+            return False
+        return any(
+            self._matches_error_code(shape, error_code)
+            for shape in op_model.error_shapes
+        )
+
+    def _matches_error_code(self, shape, error_code):
+        # An error code matches a shape either by the shape name or by a
+        # modeled error code.
+        error_code_to_check = (
+            shape.metadata.get('error', {}).get('code') or shape.name
+        )
+        return error_code == error_code_to_check
 
 
 class ThrottlingErrorDetector:
     def __init__(self, retry_event_adapter):
         self._modeled_error_detector = ModeledRetryErrorDetector()
         self._fixed_error_code_detector = ThrottledRetryableChecker()
+        self._status_code_detector = ThrottlingStatusCodeChecker()
         self._retry_event_adapter = retry_event_adapter
 
     # This expects the kwargs from needs-retry to be passed through.
@@ -591,7 +641,10 @@ class ThrottlingErrorDetector:
         if self._fixed_error_code_detector.is_retryable(context):
             return True
         error_type = self._modeled_error_detector.detect_error_type(context)
-        return error_type == self._modeled_error_detector.THROTTLING_ERROR
+        if error_type is not None:
+            return error_type == self._modeled_error_detector.THROTTLING_ERROR
+        # The status code only applies to errors the model doesn't cover.
+        return self._status_code_detector.is_retryable(context)
 
 
 class StandardRetryConditions(BaseRetryableChecker):
@@ -599,7 +652,9 @@ class StandardRetryConditions(BaseRetryableChecker):
 
     Specifically:
 
-        not max_attempts and (transient or throttled or modeled_retry)
+        not max_attempts and (
+            transient or throttled or throttling_status or modeled_retry
+        )
 
     """
 
@@ -611,6 +666,7 @@ class StandardRetryConditions(BaseRetryableChecker):
             [
                 TransientRetryableChecker(),
                 ThrottledRetryableChecker(),
+                ThrottlingStatusCodeChecker(),
                 ModeledRetryableChecker(),
                 OrRetryChecker(
                     [
