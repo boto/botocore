@@ -11,9 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import shutil
 from io import BytesIO
 
 from dateutil.tz import tzutc
+from urllib3 import HTTPResponse
 from urllib3.exceptions import ProtocolError as URLLib3ProtocolError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
@@ -95,6 +97,41 @@ class TestStreamWrapper(unittest.TestCase):
         stream = response.StreamingBody(body, content_length=10)
         with self.assertRaises(IncompleteReadError):
             stream.read()
+
+    def test_streaming_body_negative_read_validates_length(self):
+        for amount in (-1, -10):
+            with self.subTest(amount=amount):
+                stream = response.StreamingBody(BytesIO(b'123'), 4)
+                with self.assertRaises(IncompleteReadError):
+                    stream.read(amount)
+
+    def test_streaming_body_negative_read_after_partial_read(self):
+        stream = response.StreamingBody(BytesIO(b'123'), 4)
+        self.assertEqual(stream.read(1), b'1')
+        with self.assertRaises(IncompleteReadError):
+            stream.read(-1)
+
+    def test_streaming_body_negative_read_with_valid_length(self):
+        stream = response.StreamingBody(BytesIO(b'123'), 3)
+        self.assertEqual(stream.read(1), b'1')
+        self.assertEqual(stream.read(-1), b'23')
+        self.assertEqual(stream.read(-1), b'')
+
+    def test_streaming_body_copyfileobj_validates_length(self):
+        stream = response.StreamingBody(BytesIO(b'hello'), 6)
+        with self.assertRaises(IncompleteReadError):
+            shutil.copyfileobj(stream, BytesIO(), length=-1)
+
+    def test_streaming_body_negative_http_read_validates_length(self):
+        raw_stream = HTTPResponse(
+            body=BytesIO(b'hello'),
+            headers={'Content-Length': '6'},
+            preload_content=False,
+            enforce_content_length=False,
+        )
+        stream = response.StreamingBody(raw_stream, 6)
+        with self.assertRaises(IncompleteReadError):
+            stream.read(-1)
 
     def test_streaming_body_readline(self):
         body = BytesIO(b'1234567890\n1234567\n12345\n')
