@@ -20,6 +20,13 @@ from datetime import datetime
 from botocore.exceptions import ParamValidationError
 from botocore.utils import is_json_value_header, parse_to_aware_datetime
 
+# Substituted for the value of a parameter whose shape is marked sensitive.
+SENSITIVE_VALUE_PLACEHOLDER = '*** Sensitive Data Redacted ***'
+
+
+def _is_sensitive(shape):
+    return bool(shape is not None and shape.metadata.get('sensitive'))
+
 
 def validate_parameters(params, shape):
     """Validates input parameters against a schema.
@@ -122,14 +129,15 @@ class ValidationErrors:
             param_type = type(param)
             valid_types = ', '.join(additional['valid_types'])
             return (
-                f'Invalid type for parameter {name}, value: {param}, '
+                f'Invalid type for parameter {name}, '
+                f'value: {self._display_value(additional)}, '
                 f'type: {param_type}, valid types: {valid_types}'
             )
         elif error_type == 'invalid range':
-            param = additional['param']
             min_allowed = additional['min_allowed']
             return (
-                f'Invalid value for parameter {name}, value: {param}, '
+                f'Invalid value for parameter {name}, '
+                f'value: {self._display_value(additional)}, '
                 f'valid min value: {min_allowed}'
             )
         elif error_type == 'invalid length':
@@ -149,7 +157,8 @@ class ValidationErrors:
             param_type = type(param)
             valid_types = ', '.join(additional['valid_types'])
             return (
-                f'Invalid type for document parameter {name}, value: {param}, '
+                f'Invalid type for document parameter {name}, '
+                f'value: {self._display_value(additional)}, '
                 f'type: {param_type}, valid types: {valid_types}'
             )
         elif error_type == 'more than one input':
@@ -165,6 +174,11 @@ class ValidationErrors:
                 f'Must set one of the following keys for tagged union'
                 f'structure {name}: {members}.'
             )
+
+    def _display_value(self, additional):
+        if additional.get('sensitive'):
+            return SENSITIVE_VALUE_PLACEHOLDER
+        return additional['param']
 
     def _get_name(self, name):
         if not name:
@@ -230,6 +244,19 @@ class ParamValidator:
             return self._validate_document
 
     def _validate(self, params, shape, errors, name):
+        if _is_sensitive(shape):
+            # Sensitivity covers everything nested inside the shape, even
+            # children whose own shapes are not marked sensitive.
+            inner = ValidationErrors()
+            self._validate_shape(params, shape, inner, name)
+            for reason, error_name, kwargs in inner._errors:
+                errors.report(
+                    error_name, reason, **{**kwargs, 'sensitive': True}
+                )
+        else:
+            self._validate_shape(params, shape, errors, name)
+
+    def _validate_shape(self, params, shape, errors, name):
         special_validator = self._check_special_validation_cases(shape)
         if special_validator:
             special_validator(params, shape, errors, name)
@@ -342,6 +369,9 @@ class ParamValidator:
                         'invalid type',
                         param=item,
                         valid_types=valid_type_names,
+                        # 'sensitive' is not in VALIDATED_METADATA_ATTRS, so a
+                        # list of sensitive scalars reaches this fast path.
+                        sensitive=_is_sensitive(member_shape),
                     )
             return
 
@@ -353,8 +383,14 @@ class ParamValidator:
         key_shape = shape.key
         value_shape = shape.value
         for key, value in param.items():
-            self._validate(key, key_shape, errors, f"{name} (key: {key})")
-            self._validate(value, value_shape, errors, f'{name}.{key}')
+            # Keys appear in the parameter name, not as a value.
+            label = (
+                SENSITIVE_VALUE_PLACEHOLDER
+                if _is_sensitive(key_shape)
+                else key
+            )
+            self._validate(key, key_shape, errors, f"{name} (key: {label})")
+            self._validate(value, value_shape, errors, f'{name}.{label}')
 
     @type_check(valid_types=SCALAR_TYPES['integer'])
     def _validate_integer(self, param, shape, errors, name):
