@@ -865,6 +865,19 @@ class TestValidateSensitiveParams(BaseTestValidate):
             f'Secrets.{validate.SENSITIVE_VALUE_PLACEHOLDER}, value: 1', report
         )
 
+    def test_redacts_children_of_sensitive_container(self):
+        # Like Cognito's AuthParametersType: the map is sensitive, its
+        # value shape is not.
+        self.shapes['Input']['members']['Auth'] = {'shape': 'AuthMap'}
+        self.shapes['AuthMap'] = {
+            'type': 'map',
+            'key': {'shape': 'StringType'},
+            'value': {'shape': 'StringType'},
+            'sensitive': True,
+        }
+        report = self.get_report({'Auth': {'PASSWORD': self.SECRET.encode()}})
+        self.assert_redacted(report, 'Auth.PASSWORD')
+
     def test_redacts_in_raised_param_validation_error(self):
         input_shape = ShapeResolver(self.shapes).get_shape_by_name('Input')
         with self.assertRaises(validate.ParamValidationError) as context:

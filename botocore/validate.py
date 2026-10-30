@@ -57,10 +57,10 @@ def validate_parameters(params, shape):
 def type_check(valid_types):
     def _create_type_check_guard(func):
         def _on_passes_type_check(self, param, shape, errors, name):
-            if _type_check(param, shape, errors, name):
+            if _type_check(param, errors, name):
                 return func(self, param, shape, errors, name)
 
-        def _type_check(param, shape, errors, name):
+        def _type_check(param, errors, name):
             if not isinstance(param, valid_types):
                 valid_type_names = [str(t) for t in valid_types]
                 errors.report(
@@ -68,7 +68,6 @@ def type_check(valid_types):
                     'invalid type',
                     param=param,
                     valid_types=valid_type_names,
-                    sensitive=_is_sensitive(shape),
                 )
                 return False
             return True
@@ -92,13 +91,7 @@ def range_check(name, value, shape, error_type, errors):
             if value < min_allowed:
                 failed = True
     if failed:
-        errors.report(
-            name,
-            error_type,
-            param=value,
-            min_allowed=min_allowed,
-            sensitive=_is_sensitive(shape),
-        )
+        errors.report(name, error_type, param=value, min_allowed=min_allowed)
 
 
 class ValidationErrors:
@@ -251,6 +244,19 @@ class ParamValidator:
             return self._validate_document
 
     def _validate(self, params, shape, errors, name):
+        if _is_sensitive(shape):
+            # Sensitivity covers everything nested inside the shape, even
+            # children whose own shapes are not marked sensitive.
+            inner = ValidationErrors()
+            self._validate_shape(params, shape, inner, name)
+            for reason, error_name, kwargs in inner._errors:
+                errors.report(
+                    error_name, reason, **{**kwargs, 'sensitive': True}
+                )
+        else:
+            self._validate_shape(params, shape, errors, name)
+
+    def _validate_shape(self, params, shape, errors, name):
         special_validator = self._check_special_validation_cases(shape)
         if special_validator:
             special_validator(params, shape, errors, name)
@@ -288,7 +294,6 @@ class ParamValidator:
                 param=params,
                 param_type=type(params),
                 valid_types=valid_type_names,
-                sensitive=_is_sensitive(shape),
             )
 
     @type_check(valid_types=CONTAINER_TYPES['structure'])
@@ -403,7 +408,6 @@ class ParamValidator:
                 'invalid type',
                 param=param,
                 valid_types=[str(bytes), str(bytearray), 'file-like object'],
-                sensitive=_is_sensitive(shape),
             )
 
     @type_check(valid_types=SCALAR_TYPES['boolean'])
@@ -428,11 +432,7 @@ class ParamValidator:
         if not is_valid_type:
             valid_type_names = [str(datetime), 'timestamp-string']
             errors.report(
-                name,
-                'invalid type',
-                param=param,
-                valid_types=valid_type_names,
-                sensitive=_is_sensitive(shape),
+                name, 'invalid type', param=param, valid_types=valid_type_names
             )
 
     def _type_check_datetime(self, value):
