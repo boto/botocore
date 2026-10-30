@@ -309,15 +309,16 @@ class Loader:
             ]
             for service_name in possible_services:
                 full_dirname = os.path.join(possible_path, service_name)
-                api_versions = os.listdir(full_dirname)
-                for api_version in api_versions:
-                    full_load_path = os.path.join(
-                        full_dirname, api_version, type_name
-                    )
-                    if self.file_loader.exists(full_load_path):
-                        services.add(service_name)
-                        break
+                if self._service_dir_has_type(full_dirname, type_name):
+                    services.add(service_name)
         return sorted(services)
+
+    def _service_dir_has_type(self, full_dirname, type_name):
+        for api_version in os.listdir(full_dirname):
+            full_load_path = os.path.join(full_dirname, api_version, type_name)
+            if self.file_loader.exists(full_load_path):
+                return True
+        return False
 
     @instance_cache
     def determine_latest_version(self, service_name, type_name):
@@ -404,12 +405,13 @@ class Loader:
         """
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
-        known_services = self.list_available_services(type_name)
-        if service_name not in known_services:
-            raise UnknownServiceError(
-                service_name=service_name,
-                known_service_names=', '.join(known_services),
-            )
+        if not self._is_known_service(service_name, type_name):
+            known_services = self.list_available_services(type_name)
+            if service_name not in known_services:
+                raise UnknownServiceError(
+                    service_name=service_name,
+                    known_service_names=', '.join(known_services),
+                )
         if api_version is None:
             api_version = self.determine_latest_version(
                 service_name, type_name
@@ -422,6 +424,26 @@ class Loader:
         self._extras_processor.process(model, extras_data)
 
         return model
+
+    def _is_known_service(self, service_name, type_name):
+        """Check whether a service has ``type_name`` data.
+
+        Looks only in the service's own directory, instead of listing
+        every service the way ``list_available_services`` does. Service
+        names must match a directory name exactly.
+        """
+        for possible_path in self._potential_locations():
+            try:
+                if service_name not in os.listdir(possible_path):
+                    continue
+                full_dirname = os.path.join(possible_path, service_name)
+                if not os.path.isdir(full_dirname):
+                    continue
+                if self._service_dir_has_type(full_dirname, type_name):
+                    return True
+            except OSError:
+                continue
+        return False
 
     def _find_extras(self, service_name, type_name, api_version):
         """Creates an iterator over all the extras data."""
