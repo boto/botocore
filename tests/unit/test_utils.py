@@ -16,7 +16,9 @@ import io
 import operator
 import os
 import shutil
+import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from sys import getrefcount
 
@@ -642,18 +644,6 @@ class TestParseTimestamps(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
 
-    def test_parse_timestamp_fails_with_bad_tzinfo(self):
-        mock_tzinfo = mock.Mock()
-        mock_tzinfo.__name__ = 'tzinfo'
-        mock_tzinfo.side_effect = OSError()
-        mock_get_tzinfo_options = mock.MagicMock(return_value=(mock_tzinfo,))
-
-        with mock.patch(
-            'botocore.utils.get_tzinfo_options', mock_get_tzinfo_options
-        ):
-            with self.assertRaises(RuntimeError):
-                parse_timestamp(0)
-
     @contextmanager
     def mocked_fromtimestamp_that_raises(self, exception_type):
         class MockDatetime(datetime.datetime):
@@ -680,6 +670,25 @@ class TestParseTimestamps(unittest.TestCase):
             self.assertEqual(with_fallback, wout_fallback)
             self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
 
+    def test_parse_timestamp_fails_when_fallback_overflows(self):
+        with self.mocked_fromtimestamp_that_raises(OverflowError):
+            with self.assertRaises(RuntimeError):
+                parse_timestamp(1e20)
+
+    def test_parse_timestamp_fallback_stays_utc_when_localizing_fails(self):
+        class MockDatetime(datetime.datetime):
+            @classmethod
+            def fromtimestamp(cls, *args, **kwargs):
+                raise OSError()
+
+            def astimezone(self, tz=None):
+                raise OSError()
+
+        with mock.patch('datetime.datetime', MockDatetime):
+            parsed = parse_timestamp(-2208988800)
+        self.assertEqual(parsed.utcoffset(), datetime.timedelta(0))
+        self.assertEqual(parsed.timestamp(), -2208988800)
+
     def test_parse_timestamp_succeeds_with_fromtimestamp_oserror(self):
         # Same as test_parse_timestamp_succeeds_with_fromtimestamp_overflowerror
         # but for systems where datetime.fromtimestamp() fails with OSerror for
@@ -689,6 +698,40 @@ class TestParseTimestamps(unittest.TestCase):
             with_fallback = parse_timestamp(0)
             self.assertEqual(with_fallback, wout_fallback)
             self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
+
+
+@pytest.fixture
+def new_york_local_time():
+    with mock.patch.dict(os.environ, {'TZ': 'America/New_York'}):
+        time.tzset()
+        yield
+    time.tzset()
+
+
+@pytest.mark.skipif(
+    sys.platform == 'win32', reason='time.tzset is unavailable on Windows'
+)
+@pytest.mark.parametrize(
+    "value, expected_offset_hours",
+    [
+        # 2026-07-02T00:00:00Z, EDT
+        (1782950400, -4),
+        ('1782950400', -4),
+        # 2026-01-15T00:00:00Z, EST
+        (1768435200, -5),
+        # 2026-11-01 01:30 local happens twice; each instant keeps its offset
+        (1793511000, -4),
+        (1793514600, -5),
+    ],
+)
+def test_parse_epoch_uses_local_offset_at_that_instant(
+    new_york_local_time, value, expected_offset_hours
+):
+    parsed = parse_timestamp(value)
+    assert parsed.utcoffset() == datetime.timedelta(
+        hours=expected_offset_hours
+    )
+    assert parsed.timestamp() == float(value)
 
 
 class TestDatetime2Timestamp(unittest.TestCase):
