@@ -15,14 +15,15 @@ import os
 from unittest import mock
 
 import pytest
-from dateutil.tz import tzutc
 
 from botocore.config import Config
 from tests import ClientHTTPStubber, temporary_file
 
 
 class TestDisableS3ExpressAuth:
-    DATE = datetime.datetime(2024, 11, 30, 23, 59, 59, tzinfo=tzutc())
+    DATE = datetime.datetime(
+        2024, 11, 30, 23, 59, 59, tzinfo=datetime.timezone.utc
+    )
     BUCKET_NAME = 'mybucket--usw2-az1--x-s3'
 
     CREATE_SESSION_RESPONSE = b'<?xml version="1.0" encoding="UTF-8"?>\n<CreateSessionResult><Credentials><AccessKeyId>test-key</AccessKeyId><Expiration>2024-12-31T23:59:59Z</Expiration><SecretAccessKey>test-secret</SecretAccessKey><SessionToken>test-token</SessionToken></Credentials></CreateSessionResult>'

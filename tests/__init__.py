@@ -640,3 +640,10 @@ def get_checksum_cls(algorithm=DEFAULT_CHECKSUM_ALGORITHM.lower()):
     if one isn't specified.
     """
     return _CHECKSUM_CLS[algorithm]
+
+
+def tzoffset(name, offset_seconds):
+    """Return a timezone with a fixed offset for test assertions."""
+    return datetime.timezone(
+        datetime.timedelta(seconds=offset_seconds), name=name
+    )
