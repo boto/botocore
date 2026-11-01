@@ -14,6 +14,7 @@ import base64
 import binascii
 import datetime
 import email.message
+import email.utils
 import functools
 import hashlib
 import io
@@ -31,7 +32,6 @@ from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
 
-import dateutil.parser
 from urllib3.exceptions import LocationParseError
 
 import botocore
@@ -1002,15 +1002,70 @@ def parse_timestamp(value):
         return _parse_epoch_seconds(float(value))
     except (TypeError, ValueError):
         pass
+    return _parse_timestamp_string(value)
+
+
+_ISO_ZONE_SUFFIX_RE = re.compile(r"\s*(Z|UTC|GMT)$", re.IGNORECASE)
+_ISO_COMPACT_RE = re.compile(
+    r"^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2}(?:\.\d+)?)?"
+)
+_ISO_OFFSET_NO_COLON_RE = re.compile(r"\s*([+-])(\d{2})(\d{2})$")
+_ISO_FRACTIONAL_SECONDS_RE = re.compile(r"\.(\d+)")
+_ISO_THREE_DIGIT_HOUR_RE = re.compile(r"T0(\d{2}):")
+
+
+def _normalize_iso8601(value):
+    """Rewrite ISO 8601 variants that ``datetime.fromisoformat`` rejects.
+
+    Every Python version rejects ``UTC``/``GMT`` zone suffixes, which
+    botocore's own credential cache writes. Python 3.10 also rejects
+    ``Z``, compact basic form ``YYYYMMDDTHHMM[SS]``, offsets without a
+    colon (``+HHMM``) and fractional seconds other than 3 or 6 digits.
+    A handful of AWS shared examples have a malformed hour like
+    ``T016:15:21``.
+    """
+    value = _ISO_ZONE_SUFFIX_RE.sub("+00:00", value)
+    compact = _ISO_COMPACT_RE.match(value)
+    if compact:
+        y, mo, d, h, mi, s = compact.groups()
+        value = f"{y}-{mo}-{d}T{h}:{mi}:{s or '00'}{value[compact.end() :]}"
+    value = _ISO_OFFSET_NO_COLON_RE.sub(r"\1\2:\3", value)
+    value = _ISO_FRACTIONAL_SECONDS_RE.sub(
+        lambda m: "." + m.group(1).ljust(6, "0")[:6],
+        value,
+        count=1,
+    )
+    return _ISO_THREE_DIGIT_HOUR_RE.sub(r"T\1:", value, count=1)
+
+
+def _parse_timestamp_string(value):
+    """Parse a non-numeric timestamp string into a ``datetime.datetime``.
+
+    Tries ISO 8601 first, then RFC 2822 / HTTP-date via ``email.utils``.
+    """
+    if not isinstance(value, str):
+        raise ValueError(f'Invalid timestamp "{value}"')
+    value = value.strip()
     try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(
-            value, tzinfos={'GMT': datetime.timezone.utc}
-        )
-    except (TypeError, ValueError) as e:
-        raise ValueError(f'Invalid timestamp "{value}": {e}')
+        return _DatetimeClass.fromisoformat(value)
+    except ValueError:
+        pass
+    try:
+        return _DatetimeClass.fromisoformat(_normalize_iso8601(value))
+    except ValueError:
+        pass
+    try:
+        return email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        pass
+    # Legacy S3 Expires header shapes covered by handle_expires_header's
+    # tests. Other non-ISO, non-RFC 2822 shapes are rejected.
+    for fmt in ("%m/%d/%Y", "%d %b %Y"):
+        try:
+            return _DatetimeClass.strptime(value, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f'Invalid timestamp "{value}"')
 
 
 def parse_to_aware_datetime(value):
