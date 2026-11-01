@@ -25,7 +25,6 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
-from dateutil.tz import tzlocal
 
 import botocore.exceptions
 import botocore.session
@@ -69,6 +68,7 @@ from tests import (
     skip_if_crt,
     skip_if_windows,
     temporary_file,
+    tzlocal,
     unittest,
 )
 
