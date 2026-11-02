@@ -53,6 +53,7 @@ from botocore.exceptions import (
     MissingDependencyException,
     RefreshNonRecoverableError,
     SSOTokenLoadError,
+    TokenRetrievalError,
     UnauthorizedSSOTokenError,
 )
 from botocore.session import Session
@@ -5558,6 +5559,34 @@ class TestNonRecoverableRefresh:
         frozen = creds.get_frozen_credentials()
 
         assert frozen.access_key == 'ORIGINAL-ACCESS'
+        assert refresher.call_count == 1
+
+    def test_sso_expired_token_refresh_failure_is_nonrecoverable(
+        self, mock_time, patched_jitter
+    ):
+        # The SSO token provider raises this when the cached token has expired
+        # and CreateToken did not produce a new one. Only a new login fixes
+        # that, so it must reach the caller rather than being absorbed by
+        # static stability.
+        refresher = mock.Mock(
+            side_effect=TokenRetrievalError(
+                provider='sso',
+                error_msg='Token has expired and refresh failed',
+            )
+        )
+        creds = _create_resilient_credentials(
+            mock_time,
+            refresher=refresher,
+            expires_in=timedelta(seconds=30),
+            method='sso',
+        )
+
+        with pytest.raises(TokenRetrievalError):
+            creds.get_frozen_credentials()
+
+        with pytest.raises(TokenRetrievalError):
+            creds.get_frozen_credentials()
+
         assert refresher.call_count == 1
 
     def test_login_validation_error_raises_original_exception(self, mock_time):

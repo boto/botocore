@@ -46,6 +46,17 @@ class BotoCoreError(Exception):
         return _exception_from_packed_args, (self.__class__, None, self.kwargs)
 
 
+class RefreshNonRecoverableError:
+    """Marker for refresh failures that should bypass refresh backoff and be
+    raised immediately to the caller.
+
+    This class is intended to be mixed into provider-specific exceptions and
+    is not raised directly.
+    """
+
+    pass
+
+
 class DataNotFoundError(BotoCoreError):
     """
     The data associated with a particular path could not be loaded.
@@ -173,7 +184,7 @@ class NoAuthTokenError(BotoCoreError):
     fmt = 'Unable to locate authorization token'
 
 
-class TokenRetrievalError(BotoCoreError):
+class TokenRetrievalError(BotoCoreError, RefreshNonRecoverableError):
     """
     Error attempting to retrieve a token from a remote source.
 
@@ -213,17 +224,6 @@ class CredentialRetrievalError(BotoCoreError):
     """
 
     fmt = 'Error when retrieving credentials from {provider}: {error_msg}'
-
-
-class RefreshNonRecoverableError:
-    """Marker for refresh failures that should bypass refresh backoff and be
-    raised immediately to the caller.
-
-    This class is intended to be mixed into provider-specific exceptions and
-    is not raised directly.
-    """
-
-    pass
 
 
 class UnknownSignatureVersionError(BotoCoreError):
