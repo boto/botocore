@@ -184,6 +184,39 @@ def test_can_detect_invalid_credential_errors(case):
     _verify_retryable(checker, None, *case)
 
 
+@pytest.mark.parametrize(
+    'error_code', ['ExpiredToken', 'ExpiredTokenException']
+)
+@pytest.mark.parametrize(
+    'status_code, is_retryable', [(400, False), (500, True)]
+)
+def test_modeled_credential_errors_do_not_override_other_retries(
+    error_code, status_code, is_retryable
+):
+    service = model.ServiceModel(
+        {
+            'shapes': {
+                'ExpiredInputToken': {
+                    'type': 'structure',
+                    'exception': True,
+                    'error': {'code': error_code},
+                }
+            }
+        },
+        service_name='my-service',
+    )
+    operation_model = model.OperationModel(
+        {'errors': [{'shape': 'ExpiredInputToken'}]}, service
+    )
+    _verify_retryable(
+        standard.StandardRetryConditions(),
+        operation_model,
+        status_code,
+        error_code,
+        is_retryable,
+    )
+
+
 @pytest.mark.parametrize('case', RETRYABLE_MODELED_ERRORS)
 def test_can_detect_modeled_retryable_errors(case):
     modeled_retry_checker = standard.ModeledRetryableChecker()

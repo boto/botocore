@@ -40,15 +40,13 @@ from botocore.exceptions import (
 )
 from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
+from botocore.utils import INVALID_CREDENTIAL_ERROR_CODES
 
 DEFAULT_MAX_ATTEMPTS = 3
 _SERVICE_MAX_ATTEMPTS = {
     'dynamodb': 4,
     'dynamodb-streams': 4,
 }
-INVALID_CREDENTIAL_ERROR_CODES = frozenset(
-    ('ExpiredToken', 'ExpiredTokenException')
-)
 logger = logging.getLogger(__name__)
 
 
@@ -569,9 +567,15 @@ class ThrottledRetryableChecker(BaseRetryableChecker):
 
 class InvalidCredentialRetryableChecker(BaseRetryableChecker):
     def is_retryable(self, context):
-        # Only the error code from a parsed service response is used
-        # to determine if the response is an invalid credential error.
-        return context.get_error_code() in INVALID_CREDENTIAL_ERROR_CODES
+        error_code = context.get_error_code()
+        if error_code not in INVALID_CREDENTIAL_ERROR_CODES:
+            return False
+        operation_model = context.operation_model
+        if operation_model is None:
+            return True
+        # A modeled error may refer to a token in the request rather
+        # than signing credentials, so skip the credential retry rule.
+        return operation_model.shape_for_error_code(error_code) is None
 
 
 class ModeledRetryableChecker(BaseRetryableChecker):

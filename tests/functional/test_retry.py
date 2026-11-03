@@ -444,7 +444,7 @@ class TestRetriesV2(BaseRetryTest):
 
 class TestInvalidCredentialRetry(BaseRetryTest):
     def create_client_with_resilient_credentials(
-        self, retry_mode, total_max_attempts
+        self, retry_mode, total_max_attempts, service_name='dynamodb'
     ):
         now = datetime.datetime.now(datetime.timezone.utc)
         refresh_using = mock.Mock(
@@ -468,7 +468,7 @@ class TestInvalidCredentialRetry(BaseRetryTest):
         session = create_session()
         session.register_component('credential_provider', credential_provider)
         client = session.create_client(
-            'dynamodb',
+            service_name,
             self.region,
             config=Config(
                 retries={
@@ -480,28 +480,41 @@ class TestInvalidCredentialRetry(BaseRetryTest):
         return client, credentials, refresh_using
 
     def assert_invalid_credential_error_refreshes_retry(
-        self, error_code, status=400
+        self,
+        error_code,
+        status=400,
+        service_name='dynamodb',
+        operation_name='list_tables',
+        operation_kwargs=None,
     ):
         for retry_mode in RETRY_MODES:
             client, _, refresh_using = (
                 self.create_client_with_resilient_credentials(
-                    retry_mode, total_max_attempts=2
+                    retry_mode,
+                    total_max_attempts=2,
+                    service_name=service_name,
                 )
             )
+            if service_name == 'sts':
+                error_body = (
+                    f'<ErrorResponse><Error><Code>{error_code}</Code>'
+                    '</Error></ErrorResponse>'
+                ).encode()
+                api_name = client.meta.method_to_api_mapping[operation_name]
+                success_body = (
+                    f'<{api_name}Response><{api_name}Result/>'
+                    f'</{api_name}Response>'
+                ).encode()
+            else:
+                error_body = json.dumps(
+                    {'__type': error_code, 'message': 'invalid credentials'}
+                ).encode()
+                success_body = b'{"TableNames":[]}'
             with ClientHTTPStubber(client) as http_stubber:
-                http_stubber.add_response(
-                    status=status,
-                    body=json.dumps(
-                        {
-                            '__type': error_code,
-                            'message': 'invalid credentials',
-                        }
-                    ).encode(),
-                )
-                http_stubber.add_response(
-                    status=200, body=b'{"TableNames":[]}'
-                )
-                response = client.list_tables()
+                http_stubber.add_response(status=status, body=error_body)
+                http_stubber.add_response(status=200, body=success_body)
+                operation = getattr(client, operation_name)
+                response = operation(**(operation_kwargs or {}))
 
             self.assertEqual(response['ResponseMetadata']['RetryAttempts'], 1)
             self.assertEqual(refresh_using.call_count, 1)
@@ -527,6 +540,59 @@ class TestInvalidCredentialRetry(BaseRetryTest):
     def test_expired_token_exception_refreshes_and_resigns_retry_on_403(self):
         self.assert_invalid_credential_error_refreshes_retry(
             'ExpiredTokenException', status=403
+        )
+
+    def test_modeled_expired_token_exception_does_not_retry_or_invalidate(
+        self,
+    ):
+        for retry_mode in RETRY_MODES:
+            client, credentials, refresh_using = (
+                self.create_client_with_resilient_credentials(
+                    retry_mode, total_max_attempts=2, service_name='sts'
+                )
+            )
+            with ClientHTTPStubber(client) as http_stubber:
+                http_stubber.add_response(
+                    status=403,
+                    body=(
+                        b'<ErrorResponse><Error><Code>ExpiredTokenException'
+                        b'</Code></Error></ErrorResponse>'
+                    ),
+                )
+                with self.assertRaisesRegex(
+                    ClientError, 'ExpiredTokenException'
+                ):
+                    client.assume_role(
+                        RoleArn='arn:aws:iam::123456789012:role/test',
+                        RoleSessionName='test-session',
+                    )
+
+            self.assertEqual(len(http_stubber.requests), 1)
+            refresh_using.assert_not_called()
+            self.assertFalse(credentials.refresh_needed())
+
+    def test_unmodeled_operation_in_same_service_refreshes_and_resigns_retry(
+        self,
+    ):
+        self.assert_invalid_credential_error_refreshes_retry(
+            'ExpiredTokenException',
+            status=403,
+            service_name='sts',
+            operation_name='get_caller_identity',
+        )
+
+    def test_expired_token_on_modeled_operation_refreshes_and_resigns_retry(
+        self,
+    ):
+        self.assert_invalid_credential_error_refreshes_retry(
+            'ExpiredToken',
+            status=403,
+            service_name='sts',
+            operation_name='assume_role',
+            operation_kwargs={
+                'RoleArn': 'arn:aws:iam::123456789012:role/test',
+                'RoleSessionName': 'test-session',
+            },
         )
 
     def test_invalid_token_does_not_retry_or_invalidate(self):

@@ -24,6 +24,7 @@ from botocore.exceptions import (
     EndpointConnectionError,
     ReadTimeoutError,
 )
+from botocore.utils import INVALID_CREDENTIAL_ERROR_CODES
 
 logger = logging.getLogger(__name__)
 # The only supported error for now is GENERAL_CONNECTION_ERROR
@@ -174,6 +175,29 @@ def _extract_retryable_exception(config):
         return exceptions
 
 
+def _exclude_credential_rule(checker, error_code):
+    # Exclude the matching credential retry rule while preserving other
+    # retry behavior. Rebuild shared wrappers to avoid affecting other requests.
+    # Leave custom checker subclasses unchanged.
+    if type(checker) is ServiceErrorCodeOnlyChecker:
+        if checker._error_code == error_code:
+            return MultiChecker([])
+    elif type(checker) is MultiChecker:
+        return MultiChecker(
+            [
+                _exclude_credential_rule(child, error_code)
+                for child in checker._checkers
+            ]
+        )
+    elif type(checker) is MaxAttemptsDecorator:
+        return MaxAttemptsDecorator(
+            _exclude_credential_rule(checker._checker, error_code),
+            checker._max_attempts,
+            checker._retryable_exceptions,
+        )
+    return checker
+
+
 class RetryHandler:
     """Retry handler.
 
@@ -199,16 +223,29 @@ class RetryHandler:
         this will process retries appropriately.
 
         """
+        checker = self._checker
+        operation_model = kwargs.get('operation')
+        if response is not None and operation_model is not None:
+            error_code = (response[1] or {}).get('Error', {}).get('Code')
+            if (
+                error_code in INVALID_CREDENTIAL_ERROR_CODES
+                and operation_model.shape_for_error_code(error_code)
+                is not None
+            ):
+                # A modeled error may refer to a token in the request rather
+                # than signing credentials, so skip the credential retry rule.
+                checker = _exclude_credential_rule(checker, error_code)
+
         checker_kwargs = {
             'attempt_number': attempts,
             'response': response,
             'caught_exception': caught_exception,
         }
-        if isinstance(self._checker, MaxAttemptsDecorator):
+        if isinstance(checker, MaxAttemptsDecorator):
             retries_context = kwargs['request_dict']['context'].get('retries')
             checker_kwargs.update({'retries_context': retries_context})
 
-        if self._checker(**checker_kwargs):
+        if checker(**checker_kwargs):
             result = self._action(attempts=attempts)
             logger.debug("Retry needed, action of: %s", result)
             return result
