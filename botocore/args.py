@@ -640,7 +640,7 @@ class ClientArgsCreator:
             return
         retry_mode = self._config_store.get_config_variable('retry_mode')
         if retry_mode is None:
-            retry_mode = 'standard'
+            retry_mode = 'legacy'
         retries['mode'] = retry_mode
 
     def _compute_connect_timeout(self, config_kwargs):
