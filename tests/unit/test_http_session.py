@@ -1,4 +1,7 @@
+import os
+import shutil
 import socket
+import tempfile
 from concurrent.futures import CancelledError
 
 import pytest
@@ -17,8 +20,11 @@ from botocore.exceptions import (
 )
 from botocore.httpsession import (
     BUFFER_SIZE,
+    DEFAULT_CA_BUNDLE,
     ProxyConfiguration,
+    SSLContext,
     URLLib3Session,
+    create_urllib3_context,
     get_cert_path,
     mask_proxy_url,
 )
@@ -72,6 +78,63 @@ class TestHttpSessionUtils(unittest.TestCase):
             where.return_value = path
             cert_path = get_cert_path(True)
             self.assertEqual(path, cert_path)
+
+
+class TestVerifyLocationsLoadedOnce(unittest.TestCase):
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.bundle = os.path.join(self.tempdir, 'bundle.pem')
+        shutil.copyfile(DEFAULT_CA_BUNDLE, self.bundle)
+        self.real_loads = []
+        real = SSLContext.load_verify_locations
+
+        def counting_load(context, *args, **kwargs):
+            self.real_loads.append(args)
+            return real(context, *args, **kwargs)
+
+        patcher = mock.patch.object(
+            SSLContext, 'load_verify_locations', counting_load
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(shutil.rmtree, self.tempdir)
+
+    def test_same_bundle_is_parsed_once(self):
+        context = create_urllib3_context()
+        for _ in range(5):
+            context.load_verify_locations(self.bundle, None, None)
+        self.assertEqual(len(self.real_loads), 1)
+        self.assertGreater(context.cert_store_stats()['x509_ca'], 0)
+
+    def test_each_context_loads_its_own_bundle(self):
+        create_urllib3_context().load_verify_locations(self.bundle)
+        create_urllib3_context().load_verify_locations(self.bundle)
+        self.assertEqual(len(self.real_loads), 2)
+
+    def test_changed_bundle_is_loaded_again(self):
+        context = create_urllib3_context()
+        context.load_verify_locations(self.bundle)
+        stat = os.stat(self.bundle)
+        os.utime(self.bundle, ns=(stat.st_atime_ns, stat.st_mtime_ns + 10**9))
+        context.load_verify_locations(self.bundle)
+        self.assertEqual(len(self.real_loads), 2)
+
+    def test_different_locations_are_each_loaded(self):
+        with open(self.bundle) as f:
+            cadata = f.read()
+        context = create_urllib3_context()
+        context.load_verify_locations(self.bundle)
+        context.load_verify_locations(cadata=cadata)
+        context.load_verify_locations(cadata=cadata)
+        self.assertEqual(len(self.real_loads), 2)
+
+    def test_failed_load_is_not_remembered(self):
+        context = create_urllib3_context()
+        missing = os.path.join(self.tempdir, 'missing.pem')
+        for _ in range(2):
+            with self.assertRaises(OSError):
+                context.load_verify_locations(missing)
+        self.assertEqual(len(self.real_loads), 2)
 
 
 @pytest.mark.parametrize(
@@ -364,7 +427,9 @@ class TestURLLib3Session(unittest.TestCase):
             'https://[::1]:789',
         ]
         for proxy_url in urls:
-            with mock.patch('botocore.httpsession.SSLContext'):
+            with mock.patch(
+                'botocore.httpsession._OnceVerifyLocationsSSLContext'
+            ):
                 proxies = {'https': proxy_url}
                 session = URLLib3Session(
                     proxies=proxies,
