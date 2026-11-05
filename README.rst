@@ -32,7 +32,7 @@ For more information, see this `blog post <https://aws.amazon.com/blogs/develope
 
 Getting Started
 ---------------
-Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this or you can install the library using ``pip``:
+Assuming that you have Python and ``virtualenv`` installed, set up your environment and install the required dependencies like this, or you can install the library using ``pip``:
 
 .. code-block:: sh
 
