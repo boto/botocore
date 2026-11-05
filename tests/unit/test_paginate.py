@@ -332,6 +332,49 @@ class TestPagination(unittest.TestCase):
         complete = pages.build_full_result()
         self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
 
+    def test_build_full_result_drops_unaccounted_members(self):
+        # Members that are neither a result_key nor a non_aggregate_key are
+        # not carried into the combined result.
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users",
+        }
+        self.paginator = Paginator(
+            self.method, self.paginate_config, self.model
+        )
+        responses = [
+            {"Users": ["User1"], "Marker": "m1", "Status": "OK"},
+            {"Users": ["User2"], "Status": "OK"},
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate()
+        complete = pages.build_full_result()
+        self.assertEqual(complete, {'Users': ['User1', 'User2']})
+        self.assertNotIn('Status', complete)
+
+    def test_build_full_result_logs_dropped_members(self):
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users",
+        }
+        self.paginator = Paginator(
+            self.method, self.paginate_config, self.model
+        )
+        responses = [
+            {"Users": ["User1"], "Status": "OK", "ResponseMetadata": {}},
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate()
+        with self.assertLogs('botocore.paginate', level='DEBUG') as log_cm:
+            pages.build_full_result()
+        messages = '\n'.join(log_cm.output)
+        # The unaccounted member is reported...
+        self.assertIn('Status', messages)
+        # ...but ResponseMetadata is not flagged as a dropped member.
+        self.assertNotIn('ResponseMetadata', messages)
+
     def test_build_multiple_results(self):
         self.paginate_config = {
             "output_token": "Marker",
