@@ -53,6 +53,17 @@ class InvalidPayloadLength(ParserError):
         super().__init__(message)
 
 
+class InvalidPreludeLength(ParserError):
+    """Prelude lengths are not consistent with each other."""
+
+    def __init__(self, total_length, headers_length):
+        message = (
+            f'Total length of {total_length} is too small to contain the '
+            f'declared header length of {headers_length}'
+        )
+        super().__init__(message)
+
+
 class ChecksumMismatch(ParserError):
     """Calculated checksum did not match the expected checksum."""
 
@@ -458,6 +469,11 @@ class EventStreamBuffer:
     def _validate_prelude(self, prelude):
         if prelude.headers_length > _MAX_HEADERS_LENGTH:
             raise InvalidHeadersLength(prelude.headers_length)
+
+        if prelude.payload_length < 0:
+            raise InvalidPreludeLength(
+                prelude.total_length, prelude.headers_length
+            )
 
         if prelude.payload_length > _MAX_PAYLOAD_LENGTH:
             raise InvalidPayloadLength(prelude.payload_length)
