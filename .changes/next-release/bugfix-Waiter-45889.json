@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Waiter",
+  "description": "Report the acceptor that last matched, not the last acceptor in the list, when a waiter exceeds its max attempts"
+}
