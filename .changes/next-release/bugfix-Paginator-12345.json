@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Paginator",
+  "description": "Fixed a bug where ``PageIterator`` only compared each next token against the immediately preceding one, so a service returning tokens from a cycling/rotating pool (e.g. alternating between two cursors) would paginate forever instead of raising ``PaginationError``. All previously-seen tokens are now tracked."
+}
