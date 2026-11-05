@@ -127,6 +127,7 @@ import logging
 import os
 import re
 import struct
+from urllib.request import parse_http_list
 
 from botocore.compat import ETree, XMLParseError
 from botocore.eventstream import EventStream, NoInitialResponseError
@@ -1231,8 +1232,61 @@ class BaseRestParser(ResponseParser):
         location = shape.serialization.get('location')
         if location == 'header' and not isinstance(node, list):
             # List in headers may be a comma separated string as per RFC7230
-            node = [e.strip() for e in node.split(',')]
+            node = self._split_header_list(shape, node)
         return super()._handle_list(shape, node)
+
+    def _split_header_list(self, shape, value):
+        member = shape.member
+        if (
+            member.type_name == 'timestamp'
+            and member.serialization.get('timestampFormat', 'rfc822')
+            == 'rfc822'
+        ):
+            return self._split_rfc822_header_list(value)
+        return self._split_quoted_header_list(value)
+
+    def _split_rfc822_header_list(self, value):
+        # An rfc822 timestamp contains a comma after the day name, so
+        # split on every second comma, skipping empty segments. Reject
+        # entries that can't be a valid timestamp (unpaired or without
+        # digits) so the date parser doesn't guess one from a fragment
+        # like "Mon".
+        entries = []
+        current = ''
+        for segment in value.split(','):
+            if not segment.strip():
+                continue
+            if current:
+                entries.append(f'{current},{segment}')
+                current = ''
+            else:
+                current = segment
+        if current:
+            raise ResponseParserError(
+                f'Invalid timestamp list header value: {value!r}'
+            )
+        entries = [entry.strip() for entry in entries]
+        for entry in entries:
+            if not any(char.isdigit() for char in entry):
+                raise ResponseParserError(
+                    f'Invalid timestamp list header value: {value!r}'
+                )
+        return entries
+
+    def _split_quoted_header_list(self, value):
+        # Per RFC 7230, entries containing commas or double quotes are
+        # serialized as double-quoted strings with backslash-escaped
+        # inner quotes. parse_http_list only splits on commas outside
+        # of quotes and removes the escapes; we strip the surrounding
+        # quotes.
+        parsed = []
+        for entry in parse_http_list(value):
+            if not entry:
+                continue
+            if len(entry) >= 2 and entry[0] == '"' and entry[-1] == '"':
+                entry = entry[1:-1]
+            parsed.append(entry)
+        return parsed
 
 
 class BaseRpcV2Parser(ResponseParser):
