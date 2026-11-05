@@ -6,6 +6,7 @@ import sys
 import warnings
 from base64 import b64encode
 from concurrent.futures import CancelledError
+from urllib.request import proxy_bypass
 
 from urllib3 import PoolManager, Timeout, proxy_from_url
 from urllib3.exceptions import (
@@ -243,11 +244,24 @@ class ProxyConfiguration:
 
     def proxy_url_for(self, url):
         """Retrieves the corresponding proxy url for a given url."""
+        if self._should_bypass_proxies(url):
+            return None
         parsed_url = urlparse(url)
         proxy = self._proxies.get(parsed_url.scheme)
         if proxy:
             proxy = self._fix_proxy_url(proxy)
         return proxy
+
+    @staticmethod
+    def _should_bypass_proxies(url):
+        # Inlined to avoid a circular import with ``botocore.utils``; mirrors
+        # ``botocore.utils.should_bypass_proxies``.
+        try:
+            if proxy_bypass(urlparse(url).netloc):
+                return True
+        except (TypeError, socket.gaierror):
+            pass
+        return False
 
     def proxy_headers_for(self, proxy_url):
         """Retrieves the corresponding proxy headers for a given proxy url."""
