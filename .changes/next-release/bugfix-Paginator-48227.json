@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Paginator",
+  "description": "Preserve secondary pagination keys, such as S3 CommonPrefixes, when resuming with a service continuation token that has no client-side truncation index. fixes `#3119 <https://github.com/boto/botocore/issues/3119>`__."
+}
