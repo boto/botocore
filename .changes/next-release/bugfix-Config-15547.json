@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Config",
+  "description": "Accept request_min_compression_size_bytes values from 0 through 10485760, matching the shared AWS SDK configuration range."
+}
