@@ -14,6 +14,7 @@ import base64
 import binascii
 import datetime
 import email.message
+import email.utils
 import functools
 import hashlib
 import io
@@ -31,8 +32,6 @@ from ipaddress import ip_address
 from pathlib import Path
 from urllib.request import getproxies, proxy_bypass
 
-import dateutil.parser
-from dateutil.tz import tzutc
 from urllib3.exceptions import LocationParseError
 
 import botocore
@@ -56,7 +55,6 @@ from botocore.compat import (
     OrderedDict,
     get_current_datetime,
     get_md5,
-    get_tzinfo_options,
     json,
     quote,
     urlparse,
@@ -941,39 +939,49 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     return quote(input_str, safe=safe)
 
 
-def _epoch_seconds_to_datetime(value, tzinfo):
-    """Parse numerical epoch timestamps (seconds since 1970) into a
-    ``datetime.datetime`` in UTC using ``datetime.timedelta``. This is intended
-    as fallback when ``fromtimestamp`` raises ``OverflowError`` or ``OSError``.
+def _epoch_seconds_to_datetime(value):
+    """Convert epoch seconds into a local ``datetime.datetime`` without
+    ``fromtimestamp``. This is intended as fallback when ``fromtimestamp``
+    raises ``OverflowError`` or ``OSError``.
 
     :type value: float or int
     :param value: The Unix timestamps as number.
-
-    :type tzinfo: callable
-    :param tzinfo: A ``datetime.tzinfo`` class or compatible callable.
     """
-    epoch_zero = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
-    epoch_zero_localized = epoch_zero.astimezone(tzinfo())
-    return epoch_zero_localized + datetime.timedelta(seconds=value)
-
-
-def _parse_timestamp_with_tzinfo(value, tzinfo):
-    """Parse timestamp with pluggable tzinfo options."""
-    if isinstance(value, (int, float)):
-        # Possibly an epoch time.
-        return datetime.datetime.fromtimestamp(value, tzinfo())
-    else:
-        try:
-            return datetime.datetime.fromtimestamp(float(value), tzinfo())
-        except (TypeError, ValueError):
-            pass
+    epoch_zero = datetime.datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+    )
+    utc_value = epoch_zero + datetime.timedelta(seconds=value)
     try:
-        # In certain cases, a timestamp marked with GMT can be parsed into a
-        # different time zone, so here we provide a context which will
-        # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
-    except (TypeError, ValueError) as e:
-        raise ValueError(f'Invalid timestamp "{value}": {e}')
+        return utc_value.astimezone()
+    except (OSError, OverflowError):
+        # Some platforms can't compute a local offset outside of
+        # 1970-2038, so keep the value in UTC.
+        return utc_value
+
+
+def _parse_epoch_seconds(value):
+    """Parse epoch seconds into a local ``datetime.datetime`` that carries
+    the UTC offset in effect at that instant.
+    """
+    try:
+        return datetime.datetime.fromtimestamp(
+            value, datetime.timezone.utc
+        ).astimezone()
+    except (OSError, OverflowError) as e:
+        logger.debug(
+            'Unable to parse timestamp with fromtimestamp.', exc_info=e
+        )
+    # From Python's ``datetime.datetime.fromtimestamp`` documentation: "This
+    # may raise ``OverflowError``, if the timestamp is out of the range of
+    # values supported by the platform C localtime() function, and ``OSError``
+    # on localtime() failure. It's common for this to be restricted to years
+    # from 1970 through 2038."
+    try:
+        return _epoch_seconds_to_datetime(value)
+    except (OSError, OverflowError) as e:
+        raise RuntimeError(
+            f'Unable to calculate correct timezone offset for "{value}"'
+        ) from e
 
 
 def parse_timestamp(value):
@@ -988,40 +996,76 @@ def parse_timestamp(value):
     This will return a ``datetime.datetime`` object.
 
     """
-    tzinfo_options = get_tzinfo_options()
-    for tzinfo in tzinfo_options:
-        try:
-            return _parse_timestamp_with_tzinfo(value, tzinfo)
-        except (OSError, OverflowError) as e:
-            logger.debug(
-                'Unable to parse timestamp with "%s" timezone info.',
-                tzinfo.__name__,
-                exc_info=e,
-            )
-    # For numeric values attempt fallback to using fromtimestamp-free method.
-    # From Python's ``datetime.datetime.fromtimestamp`` documentation: "This
-    # may raise ``OverflowError``, if the timestamp is out of the range of
-    # values supported by the platform C localtime() function, and ``OSError``
-    # on localtime() failure. It's common for this to be restricted to years
-    # from 1970 through 2038."
+    if isinstance(value, (int, float)):
+        return _parse_epoch_seconds(value)
     try:
-        numeric_value = float(value)
+        return _parse_epoch_seconds(float(value))
     except (TypeError, ValueError):
         pass
-    else:
-        try:
-            for tzinfo in tzinfo_options:
-                return _epoch_seconds_to_datetime(numeric_value, tzinfo=tzinfo)
-        except (OSError, OverflowError) as e:
-            logger.debug(
-                'Unable to parse timestamp using fallback method with "%s" '
-                'timezone info.',
-                tzinfo.__name__,
-                exc_info=e,
-            )
-    raise RuntimeError(
-        f'Unable to calculate correct timezone offset for "{value}"'
+    return _parse_timestamp_string(value)
+
+
+_ISO_ZONE_SUFFIX_RE = re.compile(r"\s*(Z|UTC|GMT)$", re.IGNORECASE)
+_ISO_COMPACT_RE = re.compile(
+    r"^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2}(?:\.\d+)?)?"
+)
+_ISO_OFFSET_NO_COLON_RE = re.compile(r"\s*([+-])(\d{2})(\d{2})$")
+_ISO_FRACTIONAL_SECONDS_RE = re.compile(r"\.(\d+)")
+_ISO_THREE_DIGIT_HOUR_RE = re.compile(r"T0(\d{2}):")
+
+
+def _normalize_iso8601(value):
+    """Rewrite ISO 8601 variants that ``datetime.fromisoformat`` rejects.
+
+    Every Python version rejects ``UTC``/``GMT`` zone suffixes, which
+    botocore's own credential cache writes. Python 3.10 also rejects
+    ``Z``, compact basic form ``YYYYMMDDTHHMM[SS]``, offsets without a
+    colon (``+HHMM``) and fractional seconds other than 3 or 6 digits.
+    A handful of AWS shared examples have a malformed hour like
+    ``T016:15:21``.
+    """
+    value = _ISO_ZONE_SUFFIX_RE.sub("+00:00", value)
+    compact = _ISO_COMPACT_RE.match(value)
+    if compact:
+        y, mo, d, h, mi, s = compact.groups()
+        value = f"{y}-{mo}-{d}T{h}:{mi}:{s or '00'}{value[compact.end() :]}"
+    value = _ISO_OFFSET_NO_COLON_RE.sub(r"\1\2:\3", value)
+    value = _ISO_FRACTIONAL_SECONDS_RE.sub(
+        lambda m: "." + m.group(1).ljust(6, "0")[:6],
+        value,
+        count=1,
     )
+    return _ISO_THREE_DIGIT_HOUR_RE.sub(r"T\1:", value, count=1)
+
+
+def _parse_timestamp_string(value):
+    """Parse a non-numeric timestamp string into a ``datetime.datetime``.
+
+    Tries ISO 8601 first, then RFC 2822 / HTTP-date via ``email.utils``.
+    """
+    if not isinstance(value, str):
+        raise ValueError(f'Invalid timestamp "{value}"')
+    value = value.strip()
+    try:
+        return _DatetimeClass.fromisoformat(value)
+    except ValueError:
+        pass
+    try:
+        return _DatetimeClass.fromisoformat(_normalize_iso8601(value))
+    except ValueError:
+        pass
+    try:
+        return email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        pass
+    # Legacy S3 Expires header shapes covered by handle_expires_header's
+    # tests. Other non-ISO, non-RFC 2822 shapes are rejected.
+    for fmt in ("%m/%d/%Y", "%d %b %Y"):
+        try:
+            return _DatetimeClass.strptime(value, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f'Invalid timestamp "{value}"')
 
 
 def parse_to_aware_datetime(value):
@@ -1063,9 +1107,9 @@ def parse_to_aware_datetime(value):
         # we should use the local time.  However, to restore backwards
         # compat, the previous behavior was to assume UTC, which is
         # what we're going to do here.
-        datetime_obj = datetime_obj.replace(tzinfo=tzutc())
+        datetime_obj = datetime_obj.replace(tzinfo=datetime.timezone.utc)
     else:
-        datetime_obj = datetime_obj.astimezone(tzutc())
+        datetime_obj = datetime_obj.astimezone(datetime.timezone.utc)
     return datetime_obj
 
 
@@ -1075,14 +1119,14 @@ def datetime2timestamp(dt, default_timezone=None):
     :type dt: datetime
     :param dt: A datetime object to be converted into timestamp
     :type default_timezone: tzinfo
-    :param default_timezone: If it is provided as None, we treat it as tzutc().
+    :param default_timezone: If it is provided as None, we treat it as UTC.
                              But it is only used when dt is a naive datetime.
     :returns: The timestamp
     """
     epoch = datetime.datetime(1970, 1, 1)
     if dt.tzinfo is None:
         if default_timezone is None:
-            default_timezone = tzutc()
+            default_timezone = datetime.timezone.utc
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     return d.total_seconds()
