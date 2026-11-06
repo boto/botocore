@@ -174,7 +174,7 @@ class AWSConnection:
                     "100 Continue response seen, now sending request body."
                 )
                 self._send_message_body(message_body)
-            elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
+            elif len(parts) >= 2 and parts[0].startswith(b'HTTP/'):
                 # From the RFC:
                 # Requirements for HTTP/1.1 origin servers:
                 #
@@ -191,10 +191,13 @@ class AWSConnection:
                     "Received a non 100 Continue response "
                     "from the server, NOT sending request body."
                 )
+                # The reason-phrase is optional (RFC 9112, Section 4),
+                # e.g. "HTTP/1.1 403 \r\n" splits into only two parts.
+                reason = parts[2].decode('ascii') if len(parts) == 3 else ''
                 status_tuple = (
                     parts[0].decode('ascii'),
                     int(parts[1]),
-                    parts[2].decode('ascii'),
+                    reason,
                 )
                 response_class = functools.partial(
                     AWSHTTPResponse, status_tuple=status_tuple
