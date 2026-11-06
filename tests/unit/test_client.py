@@ -1926,6 +1926,40 @@ class TestConfig(unittest.TestCase):
         self.assertIsNot(new_config, config)
         self.assertIsNot(new_config, other_config)
 
+    def test_merge_deep_copies_nested_dict_options(self):
+        config = botocore.config.Config(
+            retries={'max_attempts': 3, 'mode': 'standard'},
+            s3={'addressing_style': 'auto'},
+            proxies={'https': 'https://proxy.example.com'},
+        )
+        other_config = botocore.config.Config(region_name='us-west-2')
+        new_config = config.merge(other_config)
+
+        self.assertIsNot(new_config.retries, config.retries)
+        self.assertIsNot(new_config.s3, config.s3)
+        self.assertIsNot(new_config.proxies, config.proxies)
+        self.assertEqual(new_config.retries, config.retries)
+        self.assertEqual(new_config.s3, config.s3)
+        self.assertEqual(new_config.proxies, config.proxies)
+
+        new_config.retries['max_attempts'] = 10
+        new_config.s3['addressing_style'] = 'path'
+        self.assertEqual(config.retries['max_attempts'], 3)
+        self.assertEqual(config.s3['addressing_style'], 'auto')
+
+    def test_merge_deep_copies_other_config_nested_dict_options(self):
+        config = botocore.config.Config(region_name='us-east-1')
+        other_config = botocore.config.Config(
+            retries={'max_attempts': 5, 'mode': 'standard'}
+        )
+        new_config = config.merge(other_config)
+
+        self.assertIsNot(new_config.retries, other_config.retries)
+        self.assertEqual(new_config.retries, other_config.retries)
+
+        new_config.retries['max_attempts'] = 10
+        self.assertEqual(other_config.retries['max_attempts'], 5)
+
     def test_general_merge_keeps_default_values(self):
         config = botocore.config.Config()
         other_config = botocore.config.Config()
