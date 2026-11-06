@@ -887,7 +887,7 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
             tzinfo=None
         ) + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
-        cache_key = '793d6e2f27667ab2da104824407e486bfec24a47'
+        cache_key = '3f7f13ece7d7b07c65483f4ea63d31c8bdb894f4'
         cache = {
             cache_key: {
                 'Credentials': {
@@ -909,6 +909,136 @@ class TestAssumeRoleWithWebIdentityCredentialFetcher(BaseEnvVar):
 
         self.assertEqual(response, expected_response)
         client_creator.assert_not_called()
+
+    def _fetcher_with_response(self, token, cache=None):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        return credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator, lambda: token, self.role_arn, cache=cache
+        )
+
+    def test_different_tokens_produce_different_cache_keys(self):
+        fetcher_a = self._fetcher_with_response('token-a')
+        fetcher_a.fetch_credentials()
+        fetcher_b = self._fetcher_with_response('token-b')
+        fetcher_b.fetch_credentials()
+        self.assertNotEqual(fetcher_a._cache_key, fetcher_b._cache_key)
+
+    def test_different_token_does_not_reuse_cached_credentials(self):
+        cache = {}
+        response_a = {
+            'Credentials': {
+                'AccessKeyId': 'akid-a',
+                'SecretAccessKey': 'sk-a',
+                'SessionToken': 'st-a',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        response_b = {
+            'Credentials': {
+                'AccessKeyId': 'akid-b',
+                'SecretAccessKey': 'sk-b',
+                'SessionToken': 'st-b',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator_a = self.create_client_creator(with_response=response_a)
+        fetcher_a = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator_a, lambda: 'token-a', self.role_arn, cache=cache
+        )
+        fetcher_a.fetch_credentials()
+
+        client_creator_b = self.create_client_creator(with_response=response_b)
+        fetcher_b = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator_b, lambda: 'token-b', self.role_arn, cache=cache
+        )
+        creds_b = fetcher_b.fetch_credentials()
+
+        client = client_creator_b.return_value
+        client.assume_role_with_web_identity.assert_called_once()
+        self.assertEqual(creds_b['access_key'], 'akid-b')
+
+    def test_same_token_still_hits_cache(self):
+        cache = {}
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        fetcher_1 = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator, self.load_token, self.role_arn, cache=cache
+        )
+        fetcher_1.fetch_credentials()
+        self.assertEqual(len(cache), 1)
+
+        fetcher_2 = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator, self.load_token, self.role_arn, cache=cache
+        )
+        fetcher_2.fetch_credentials()
+        self.assertEqual(fetcher_1._cache_key, fetcher_2._cache_key)
+        self.assertEqual(len(cache), 1)
+        client = client_creator.return_value
+        client.assume_role_with_web_identity.assert_called_once()
+
+    def test_token_material_not_present_in_cache_key(self):
+        cache = {}
+        fetcher = self._fetcher_with_response('super-secret-token', cache)
+        fetcher.fetch_credentials()
+        self.assertNotIn('super-secret-token', fetcher._cache_key)
+        for key in cache:
+            self.assertNotIn('super-secret-token', key)
+
+    def test_token_loaded_once_per_fetch_and_used_for_key_and_call(self):
+        cache = {}
+        responses = []
+        for akid in ('akid-1', 'akid-2'):
+            responses.append(
+                {
+                    'Credentials': {
+                        'AccessKeyId': akid,
+                        'SecretAccessKey': 'bar',
+                        'SessionToken': 'baz',
+                        'Expiration': self.some_future_time().isoformat(),
+                    },
+                }
+            )
+        client_creator = self.create_client_creator(with_response=responses)
+        loader = mock.Mock(side_effect=['token-1', 'token-2'])
+        fetcher = credentials.AssumeRoleWithWebIdentityCredentialFetcher(
+            client_creator, loader, self.role_arn, cache=cache
+        )
+        # Nothing is read until a fetch.
+        self.assertEqual(loader.call_count, 0)
+
+        creds_1 = fetcher.fetch_credentials()
+        key_1 = fetcher._cache_key
+        # The token file rotates; the next fetch must key and call with the
+        # new token, not reuse the entry cached under the old one.
+        creds_2 = fetcher.fetch_credentials()
+        key_2 = fetcher._cache_key
+
+        self.assertEqual(loader.call_count, 2)
+        self.assertNotEqual(key_1, key_2)
+        self.assertEqual(creds_1['access_key'], 'akid-1')
+        self.assertEqual(creds_2['access_key'], 'akid-2')
+        client = client_creator.return_value
+        calls = client.assume_role_with_web_identity.call_args_list
+        self.assertEqual(
+            [c.kwargs['WebIdentityToken'] for c in calls],
+            ['token-1', 'token-2'],
+        )
+        self.assertEqual(set(cache), {key_1, key_2})
 
     def test_assume_role_in_cache_but_expired(self):
         response = {
@@ -1079,7 +1209,7 @@ class TestAssumeRoleWithWebIdentityCredentialProvider(unittest.TestCase):
         ) + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
 
-        cache_key = 'c29461feeacfbed43017d20612606ff76abc073d'
+        cache_key = '28500c163dbc087f6ccd4a6c1e103f76c300b953'
         cache = {
             cache_key: {
                 'Credentials': {
