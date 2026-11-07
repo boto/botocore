@@ -16511,9 +16511,7 @@
     "VpcOriginList":{
       "type":"structure",
       "required":[
-        "Marker",
         "MaxItems",
-        "IsTruncated",
         "Quantity"
       ],
       "members":{
