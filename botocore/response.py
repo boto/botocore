@@ -92,7 +92,7 @@ class StreamingBody(IOBase):
     def read(self, amt=None):
         """Read at most amt bytes from the stream.
 
-        If the amt argument is omitted, read all data.
+        If the amt argument is omitted or negative, read all data.
         """
         try:
             chunk = self._raw_stream.read(amt)
@@ -102,7 +102,7 @@ class StreamingBody(IOBase):
         except URLLib3ProtocolError as e:
             raise ResponseStreamingError(error=e)
         self._amount_read += len(chunk)
-        if amt is None or (not chunk and amt > 0):
+        if amt is None or amt < 0 or (not chunk and amt > 0):
             # If the server sends empty contents or
             # we ask to read all of the contents, then we know
             # we need to verify the content length.
