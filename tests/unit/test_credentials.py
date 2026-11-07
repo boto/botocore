@@ -48,6 +48,7 @@ from botocore.credentials import (
 )
 from botocore.exceptions import (
     ClientError,
+    EndpointConnectionError,
     LoginError,
     LoginInvalidCachedTokenError,
     MissingDependencyException,
@@ -6032,6 +6033,135 @@ class TestProviderCacheInvalidation:
         assert first.access_key == 'OLD-ACCESS'
         assert second.access_key == 'NEW-ACCESS'
         assert client.get_role_credentials.call_count == 2
+
+    def test_assume_role_refresh_fetches_new_credentials_from_source(
+        self, assume_role_load_config
+    ):
+        now = datetime(2021, 12, 10, tzinfo=timezone.utc)
+        local_now = mock.Mock(return_value=now)
+        expiration = now + timedelta(hours=2)
+        client = mock.Mock()
+        client.assume_role.side_effect = [
+            {
+                'Credentials': {
+                    'AccessKeyId': 'OLD-ACCESS',
+                    'SecretAccessKey': 'OLD-ACCESS-SECRET',
+                    'SessionToken': 'OLD-ACCESS-TOKEN',
+                    'Expiration': expiration,
+                }
+            },
+            {
+                'Credentials': {
+                    'AccessKeyId': 'NEW-ACCESS',
+                    'SecretAccessKey': 'NEW-ACCESS-SECRET',
+                    'SessionToken': 'NEW-ACCESS-TOKEN',
+                    'Expiration': expiration + timedelta(minutes=61),
+                }
+            },
+        ]
+        client_creator = mock.Mock(return_value=client)
+
+        with mock.patch('botocore.credentials._local_now', local_now):
+            provider = credentials.AssumeRoleProvider(
+                assume_role_load_config,
+                client_creator,
+                cache={},
+                profile_name='development',
+            )
+            creds = provider.load()
+            first = creds.get_frozen_credentials()
+            # Inside the 60-minute advisory window, but outside the
+            # provider cache's 15-minute expiry window.
+            local_now.return_value = now + timedelta(minutes=61)
+            second = creds.get_frozen_credentials()
+
+        assert first.access_key == 'OLD-ACCESS'
+        assert second.access_key == 'NEW-ACCESS'
+        assert client.assume_role.call_count == 2
+
+    def test_assume_role_refresh_reuses_newer_provider_cached_credentials(
+        self, assume_role_load_config
+    ):
+        now = datetime(2021, 12, 10, tzinfo=timezone.utc)
+        local_now = mock.Mock(return_value=now)
+        client = mock.Mock()
+        client.assume_role.return_value = {
+            'Credentials': {
+                'AccessKeyId': 'OLD-ACCESS',
+                'SecretAccessKey': 'OLD-ACCESS-SECRET',
+                'SessionToken': 'OLD-ACCESS-TOKEN',
+                'Expiration': now + timedelta(hours=2),
+            }
+        }
+        client_creator = mock.Mock(return_value=client)
+        cache = {}
+
+        with mock.patch('botocore.credentials._local_now', local_now):
+            provider = credentials.AssumeRoleProvider(
+                assume_role_load_config,
+                client_creator,
+                cache=cache,
+                profile_name='development',
+            )
+            creds = provider.load()
+            creds.get_frozen_credentials()
+            # Another process refreshed the shared cache in the meantime.
+            cache_key = next(iter(cache))
+            cache[cache_key] = {
+                'Credentials': {
+                    'AccessKeyId': 'NEWER-ACCESS',
+                    'SecretAccessKey': 'NEWER-ACCESS-SECRET',
+                    'SessionToken': 'NEWER-ACCESS-TOKEN',
+                    'Expiration': now + timedelta(hours=3),
+                }
+            }
+            local_now.return_value = now + timedelta(minutes=61)
+            refreshed = creds.get_frozen_credentials()
+
+        assert refreshed.access_key == 'NEWER-ACCESS'
+        assert client.assume_role.call_count == 1
+
+    def test_failed_assume_role_refresh_keeps_shared_cache_usable(
+        self, assume_role_load_config
+    ):
+        now = datetime(2021, 12, 10, tzinfo=timezone.utc)
+        local_now = mock.Mock(return_value=now)
+        client = mock.Mock()
+        client.assume_role.side_effect = [
+            {
+                'Credentials': {
+                    'AccessKeyId': 'OLD-ACCESS',
+                    'SecretAccessKey': 'OLD-ACCESS-SECRET',
+                    'SessionToken': 'OLD-ACCESS-TOKEN',
+                    'Expiration': now + timedelta(hours=2),
+                }
+            },
+            EndpointConnectionError(endpoint_url='https://sts'),
+        ]
+        client_creator = mock.Mock(return_value=client)
+        cache = {}
+
+        with mock.patch('botocore.credentials._local_now', local_now):
+            first = credentials.AssumeRoleProvider(
+                assume_role_load_config,
+                client_creator,
+                cache=cache,
+                profile_name='development',
+            ).load()
+            first.get_frozen_credentials()
+            local_now.return_value = now + timedelta(minutes=61)
+            # The refresh fails, so the first consumer keeps its credentials.
+            assert first.get_frozen_credentials().access_key == 'OLD-ACCESS'
+            second = credentials.AssumeRoleProvider(
+                assume_role_load_config,
+                client_creator,
+                cache=cache,
+                profile_name='development',
+            ).load()
+            # A second consumer can still use the still-valid cached ones.
+            assert second.get_frozen_credentials().access_key == 'OLD-ACCESS'
+
+        assert client.assume_role.call_count == 2
 
 
 class CredentialRefreshClock:
