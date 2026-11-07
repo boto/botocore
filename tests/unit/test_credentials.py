@@ -4824,6 +4824,69 @@ def test_login_credential_fetcher_access_denied_errors(
         fetcher.refresh_credentials()
 
 
+def _login_token(access_key):
+    return {
+        'clientId': 'test-client',
+        'refreshToken': 'test-refresh-token',
+        'dpopKey': SAMPLE_SIGN_IN_DPOP_PEM,
+        'accessToken': {
+            'accessKeyId': access_key,
+            'secretAccessKey': 'test-secret-key',
+            'sessionToken': 'test-session-token',
+            'accountId': '123456789012',
+            'expiresAt': '2099-01-01T00:00:00Z',
+        },
+    }
+
+
+@requires_crt()
+def test_login_credential_fetcher_refreshes_invalidated_token():
+    token_loader = mock.Mock()
+    token_loader.load_token.return_value = _login_token('OLD-ACCESS')
+    client = mock.Mock()
+    client.create_o_auth2_token.return_value = {
+        'tokenOutput': {
+            'accessToken': {
+                'accessKeyId': 'NEW-ACCESS',
+                'secretAccessKey': 'new-secret-key',
+                'sessionToken': 'new-session-token',
+            },
+            'refreshToken': 'new-refresh-token',
+            'expiresIn': 900,
+        }
+    }
+    fetcher = credentials.LoginCredentialFetcher(
+        session_name='test-session',
+        token_loader=token_loader,
+        client_creator=mock.Mock(return_value=client),
+    )
+
+    fetcher._invalidate('OLD-ACCESS')
+    refreshed = fetcher.refresh_credentials()
+
+    assert refreshed['access_key'] == 'NEW-ACCESS'
+    client.create_o_auth2_token.assert_called_once()
+
+
+@requires_crt()
+def test_login_credential_fetcher_reuses_token_with_other_credentials():
+    token_loader = mock.Mock()
+    # Another process already refreshed the cached token.
+    token_loader.load_token.return_value = _login_token('NEWER-ACCESS')
+    client_creator = mock.Mock()
+    fetcher = credentials.LoginCredentialFetcher(
+        session_name='test-session',
+        token_loader=token_loader,
+        client_creator=client_creator,
+    )
+
+    fetcher._invalidate('OLD-ACCESS')
+    refreshed = fetcher.refresh_credentials()
+
+    assert refreshed['access_key'] == 'NEWER-ACCESS'
+    client_creator.assert_not_called()
+
+
 @skip_if_crt()
 def test_login_throws_exception_with_no_crt():
     profile_name = 'test-profile'

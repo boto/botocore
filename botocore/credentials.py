@@ -2959,6 +2959,12 @@ class LoginCredentialFetcher:
         if feature_ids is None:
             feature_ids = set()
         self.feature_ids = feature_ids
+        self._invalidated_access_key = None
+
+    def _invalidate(self, access_key):
+        # Refresh if the token cache still contains the credentials we're using.
+        # Reuse fresh credentials if another process has already refreshed them.
+        self._invalidated_access_key = access_key
 
     def load_cached_credentials(self):
         """Loads cached credentials without checking their expiry."""
@@ -2981,7 +2987,13 @@ class LoginCredentialFetcher:
         ):
             expiry_time = _parse_if_needed(token['accessToken']['expiresAt'])
             remaining_time = total_seconds(expiry_time - self._time_fetcher())
-            if remaining_time > self._REFRESH_THRESHOLD:
+            # Reuse the cached token unless it holds invalidated credentials.
+            invalidated = (
+                self._invalidated_access_key is not None
+                and token['accessToken'].get('accessKeyId')
+                == self._invalidated_access_key
+            )
+            if remaining_time > self._REFRESH_THRESHOLD and not invalidated:
                 return self._token_to_credentials(token)
 
         config = botocore.config.Config(
@@ -3046,6 +3058,7 @@ class LoginCredentialFetcher:
             }
         )
         self._token_loader.save_token(self._session_name, token)
+        self._invalidated_access_key = None
 
         return self._token_to_credentials(token)
 
@@ -3166,4 +3179,6 @@ class LoginProvider(CredentialProvider):
             method=self.METHOD,
             refresh_using=fetcher.refresh_credentials,
             time_fetcher=_local_now,
+            invalidate_provider_cache=fetcher._invalidate,
+            bypass_provider_cache=fetcher._invalidate,
         )
