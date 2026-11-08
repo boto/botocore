@@ -781,13 +781,12 @@ class TestHandlers(BaseSessionTest):
     def test_request_created_on_synthesized_request_does_not_raise(self):
         # s3transfer's functional tests emit ``request-created`` on an
         # ``AWSRequest`` they build themselves, so no endpoint created the
-        # retries context first. With the new retry defaults the seeder runs
-        # before ``add_retry_headers``; it must not create a partial context
-        # that makes ``add_retry_headers`` raise.
-        with mock.patch('botocore.retries.standard.NEW_RETRIES_ENABLED', True):
-            client = self.session.create_client(
-                's3', config=Config(retries={'mode': 'standard'})
-            )
+        # retries context first. In standard mode the seeder runs before
+        # ``add_retry_headers``; it must not create a partial context that
+        # makes ``add_retry_headers`` raise.
+        client = self.session.create_client(
+            's3', config=Config(retries={'mode': 'standard'})
+        )
         request = AWSRequest(method='PUT', url='https://s3.amazonaws.com')
         client.meta.events.emit(
             'request-created.s3.PutObject',
@@ -1222,8 +1221,12 @@ class TestRetryHandlerOrder(BaseSessionTest):
                 names.append(str(handler))
         return names
 
-    def test_s3_special_case_is_before_other_retry(self):
-        client = self.session.create_client('s3')
+    def assert_s3_special_case_is_before_other_retry(
+        self, retry_mode, retry_handler_name
+    ):
+        client = self.session.create_client(
+            's3', config=Config(retries={'mode': retry_mode})
+        )
         service_model = self.session.get_service_model('s3')
         operation = service_model.operation_model('CopyObject')
         responses = client.meta.events.emit(
@@ -1242,13 +1245,25 @@ class TestRetryHandlerOrder(BaseSessionTest):
         # care about the absolute order.
         names = self.get_handler_names(responses)
         self.assertIn('_update_status_code', names)
-        self.assertIn('RetryHandler', names)
+        self.assertIn(retry_handler_name, names)
         s3_200_handler = names.index('_update_status_code')
-        general_retry_handler = names.index('RetryHandler')
+        general_retry_handler = names.index(retry_handler_name)
         self.assertTrue(
             s3_200_handler < general_retry_handler,
             "S3 200 error handler was supposed to be before "
             "the general retry handler, but it was not.",
+        )
+
+    def test_s3_special_case_is_before_other_retry(self):
+        # Standard mode registers the bound ``RetryHandler.needs_retry``.
+        self.assert_s3_special_case_is_before_other_retry(
+            'standard', 'needs_retry'
+        )
+
+    def test_s3_special_case_is_before_legacy_retry(self):
+        # Legacy mode registers a ``RetryHandler`` instance.
+        self.assert_s3_special_case_is_before_other_retry(
+            'legacy', 'RetryHandler'
         )
 
 
