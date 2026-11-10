@@ -112,6 +112,9 @@ RETRYABLE_HTTP_ERRORS = (
     ConnectionClosedError,
     ConnectTimeoutError,
 )
+INVALID_CREDENTIAL_ERROR_CODES = frozenset(
+    ('ExpiredToken', 'ExpiredTokenException')
+)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 # In switching events from using service name / endpoint prefix to service
 # id, we have to preserve compatibility. This maps the instances where either

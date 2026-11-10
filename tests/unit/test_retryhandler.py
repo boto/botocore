@@ -126,6 +126,13 @@ class TestRetryCheckers(unittest.TestCase):
         response = (HTTP_400_RESPONSE, {'Error': {'Code': 'NotThrottled'}})
         self.assert_should_not_be_retried(response)
 
+    def test_error_code_checker_does_not_match_wrong_status(self):
+        self.checker = retryhandler.ServiceErrorCodeChecker(
+            status_code=400, error_code='Throttled'
+        )
+        response = (HTTP_500_RESPONSE, {'Error': {'Code': 'Throttled'}})
+        self.assert_should_not_be_retried(response)
+
     def test_error_code_checker_ignore_caught_exception(self):
         self.checker = retryhandler.ServiceErrorCodeChecker(
             status_code=400, error_code='Throttled'
@@ -133,6 +140,26 @@ class TestRetryCheckers(unittest.TestCase):
         self.assert_should_not_be_retried(
             response=None, caught_exception=RuntimeError()
         )
+
+    def test_error_code_only_checker(self):
+        self.checker = retryhandler.ServiceErrorCodeOnlyChecker(
+            error_code='Throttled'
+        )
+        response = (
+            mock.Mock(status_code=401),
+            {'Error': {'Code': 'Throttled'}},
+        )
+        self.assert_should_be_retried(response)
+
+    def test_error_code_only_checker_does_not_match(self):
+        self.checker = retryhandler.ServiceErrorCodeOnlyChecker(
+            error_code='ExpiredToken'
+        )
+        response = (
+            HTTP_400_RESPONSE,
+            {'Error': {'Code': 'ExpiredTokenException'}},
+        )
+        self.assert_should_not_be_retried(response)
 
     def test_multi_checker(self):
         checker = retryhandler.ServiceErrorCodeChecker(
@@ -214,6 +241,44 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         )
         self.assertEqual(checker._checker._error_code, 'Throttling')
         self.assertEqual(checker._checker._status_code, 400)
+
+    def test_create_error_code_only_rule(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        del policy['applies_when']['response']['http_status_code']
+        checker = retryhandler.create_checker_from_retry_config(
+            self.retry_config
+        )
+
+        self.assertTrue(
+            checker(
+                attempt_number=1,
+                response=(
+                    mock.Mock(status_code=401),
+                    {'Error': {'Code': 'Throttling'}},
+                ),
+                caught_exception=None,
+                retries_context={},
+            )
+        )
+
+    def test_explicit_none_status_does_not_create_error_code_only_rule(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        policy['applies_when']['response']['http_status_code'] = None
+        checker = retryhandler.create_checker_from_retry_config(
+            self.retry_config
+        )
+
+        self.assertFalse(
+            checker(
+                attempt_number=1,
+                response=(
+                    HTTP_400_RESPONSE,
+                    {'Error': {'Code': 'Throttling'}},
+                ),
+                caught_exception=None,
+                retries_context={},
+            )
+        )
 
     def test_create_retry_for_operation(self):
         checker = retryhandler.create_checker_from_retry_config(
@@ -316,6 +381,154 @@ class TestCreateRetryConfiguration(unittest.TestCase):
                 request_dict=REQUEST_DICT,
             )
 
+    def test_modeled_non_credential_error_code_only_rule_still_retries(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        del policy['applies_when']['response']['http_status_code']
+        handler = retryhandler.create_retry_handler(self.retry_config)
+        operation_model = mock.Mock()
+
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=(
+                    HTTP_400_RESPONSE,
+                    {'Error': {'Code': 'Throttling'}},
+                ),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            ),
+            1,
+        )
+        operation_model.shape_for_error_code.assert_not_called()
+
+    def test_modeled_credential_error_does_not_override_http_retries(self):
+        policies = self.retry_config['__default__']['policies']
+        policies['expired_token_exception'] = {
+            'applies_when': {
+                'response': {'service_error_code': 'ExpiredTokenException'}
+            }
+        }
+        policies['server_error'] = {
+            'applies_when': {'response': {'http_status_code': 500}}
+        }
+        handler = retryhandler.create_retry_handler(self.retry_config)
+        operation_model = mock.Mock()
+        operation_model.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+        parsed_response = {
+            'Error': {'Code': 'ExpiredTokenException'},
+            'ResponseMetadata': {},
+        }
+
+        self.assertIsNone(
+            handler(
+                attempts=1,
+                response=(HTTP_400_RESPONSE, parsed_response),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            )
+        )
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=(HTTP_500_RESPONSE, parsed_response),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            ),
+            1,
+        )
+        self.assertIsNone(
+            handler(
+                attempts=5,
+                response=(HTTP_500_RESPONSE, parsed_response),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            )
+        )
+        self.assertTrue(
+            parsed_response['ResponseMetadata']['MaxAttemptsReached']
+        )
+
+    def test_modeled_credential_error_status_rule_still_retries(self):
+        policy = self.retry_config['__default__']['policies']['throttling']
+        policy['applies_when']['response']['service_error_code'] = (
+            'ExpiredTokenException'
+        )
+        handler = retryhandler.create_retry_handler(self.retry_config)
+        operation_model = mock.Mock()
+        operation_model.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+        parsed_response = {'Error': {'Code': 'ExpiredTokenException'}}
+
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=(HTTP_400_RESPONSE, parsed_response),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            ),
+            1,
+        )
+        self.assertIsNone(
+            handler(
+                attempts=1,
+                response=(HTTP_500_RESPONSE, parsed_response),
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            )
+        )
+
+    def test_modeled_credential_error_preserves_checksum_retries(self):
+        policies = self.retry_config['__default__']['policies']
+        policies['expired_token_exception'] = {
+            'applies_when': {
+                'response': {'service_error_code': 'ExpiredTokenException'}
+            }
+        }
+        handler = retryhandler.create_retry_handler(
+            self.retry_config, operation_name='OperationFoo'
+        )
+        operation_model = mock.Mock()
+        operation_model.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+        http_response = mock.Mock(
+            status_code=400,
+            headers={'x-amz-crc32': 2356372768},
+            content=b'foo',
+        )
+        response = (
+            http_response,
+            {'Error': {'Code': 'ExpiredTokenException'}},
+        )
+
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=response,
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            ),
+            1,
+        )
+        with self.assertRaises(ChecksumError):
+            handler(
+                attempts=5,
+                response=response,
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            )
+
 
 class TestRetryHandler(unittest.TestCase):
     def test_action_tied_to_policy(self):
@@ -347,6 +560,110 @@ class TestRetryHandler(unittest.TestCase):
 
         self.assertIsNone(
             handler(response=response, attempts=1, caught_exception=None)
+        )
+
+    def test_modeled_error_does_not_change_checker_for_later_calls(self):
+        checker = retryhandler.MaxAttemptsDecorator(
+            retryhandler.ServiceErrorCodeOnlyChecker('ExpiredTokenException'),
+            max_attempts=3,
+        )
+        handler = retryhandler.RetryHandler(
+            checker, retryhandler.create_exponential_delay_function(1, 2)
+        )
+        response = (
+            HTTP_400_RESPONSE,
+            {'Error': {'Code': 'ExpiredTokenException'}},
+        )
+        modeled_operation = mock.Mock()
+        modeled_operation.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+        unmodeled_operation = mock.Mock()
+        unmodeled_operation.shape_for_error_code.return_value = None
+
+        self.assertIsNone(
+            handler(
+                attempts=1,
+                response=response,
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=modeled_operation,
+            )
+        )
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=response,
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=unmodeled_operation,
+            ),
+            1,
+        )
+
+    def test_custom_checker_keeps_original_call_signature(self):
+        class CustomChecker(retryhandler.BaseChecker):
+            def __call__(self, attempt_number, response, caught_exception):
+                return True
+
+        handler = retryhandler.RetryHandler(
+            CustomChecker(),
+            retryhandler.create_exponential_delay_function(1, 2),
+        )
+        operation_model = mock.Mock()
+        operation_model.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=(
+                    HTTP_400_RESPONSE,
+                    {'Error': {'Code': 'ExpiredTokenException'}},
+                ),
+                caught_exception=None,
+                operation=operation_model,
+            ),
+            1,
+        )
+
+    def test_wrapped_custom_checker_keeps_original_call_signature(self):
+        def custom_checker(attempt_number, response, caught_exception):
+            return True
+
+        checker = retryhandler.MaxAttemptsDecorator(
+            retryhandler.MultiChecker(
+                [
+                    retryhandler.ServiceErrorCodeOnlyChecker(
+                        'ExpiredTokenException'
+                    ),
+                    custom_checker,
+                ]
+            ),
+            max_attempts=3,
+        )
+        handler = retryhandler.RetryHandler(
+            checker, retryhandler.create_exponential_delay_function(1, 2)
+        )
+        operation_model = mock.Mock()
+        operation_model.shape_for_error_code.return_value = (
+            mock.sentinel.error_shape
+        )
+        response = (
+            HTTP_400_RESPONSE,
+            {'Error': {'Code': 'ExpiredTokenException'}},
+        )
+
+        self.assertEqual(
+            handler(
+                attempts=1,
+                response=response,
+                caught_exception=None,
+                request_dict=REQUEST_DICT,
+                operation=operation_model,
+            ),
+            1,
         )
 
 

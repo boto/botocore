@@ -73,12 +73,17 @@ INVALID_CREDENTIAL_ERRORS = [
     # Status codes are included for completeness but aren't used here.
     # StatusCode, Error, Retryable?
     (400, 'ExpiredToken', True),
-    (400, 'InvalidToken', True),
+    (401, 'ExpiredToken', True),
+    (403, 'ExpiredToken', True),
+    (400, 'ExpiredTokenException', True),
+    (401, 'ExpiredTokenException', True),
+    (403, 'ExpiredTokenException', True),
     # Negative cases to verify error codes are matched exactly.
-    # The *Exception variants are distinct errors and should not trigger retry.
-    (400, 'ExpiredTokenException', False),
+    (400, 'InvalidToken', False),
+    (403, 'InvalidToken', False),
     (400, 'InvalidTokenException', False),
     (400, 'AccessDenied', False),
+    (403, 'AccessDenied', False),
 ]
 
 
@@ -177,6 +182,39 @@ def test_can_detect_retryable_throttled_errors(case):
 def test_can_detect_invalid_credential_errors(case):
     checker = standard.InvalidCredentialRetryableChecker()
     _verify_retryable(checker, None, *case)
+
+
+@pytest.mark.parametrize(
+    'error_code', ['ExpiredToken', 'ExpiredTokenException']
+)
+@pytest.mark.parametrize(
+    'status_code, is_retryable', [(400, False), (500, True)]
+)
+def test_modeled_credential_errors_do_not_override_other_retries(
+    error_code, status_code, is_retryable
+):
+    service = model.ServiceModel(
+        {
+            'shapes': {
+                'ExpiredInputToken': {
+                    'type': 'structure',
+                    'exception': True,
+                    'error': {'code': error_code},
+                }
+            }
+        },
+        service_name='my-service',
+    )
+    operation_model = model.OperationModel(
+        {'errors': [{'shape': 'ExpiredInputToken'}]}, service
+    )
+    _verify_retryable(
+        standard.StandardRetryConditions(),
+        operation_model,
+        status_code,
+        error_code,
+        is_retryable,
+    )
 
 
 @pytest.mark.parametrize('case', RETRYABLE_MODELED_ERRORS)
