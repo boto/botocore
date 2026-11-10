@@ -25,6 +25,8 @@ from botocore.compat import total_seconds
 from botocore.config import Config
 from botocore.exceptions import (
     ClientError,
+    ConnectionError,
+    HTTPClientError,
     InvalidConfigError,
     TokenRetrievalError,
     UnknownTokenProviderError,
@@ -88,6 +90,12 @@ class DeferredRefreshableToken:
 
     def get_frozen_token(self):
         self._refresh()
+        # Throttling can skip refresh, so check expiration before returning.
+        if self._is_expired():
+            raise TokenRetrievalError(
+                provider=self.method,
+                error_msg="Token has expired and refresh failed",
+            )
         return self._frozen_token
 
     def _refresh(self):
@@ -367,7 +375,8 @@ class SSOTokenProvider:
 
         try:
             return self._attempt_create_token(token)
-        except ClientError:
+        except (ClientError, ConnectionError, HTTPClientError):
+            # The cached token may still be valid even if refresh fails.
             logger.warning("SSO token refresh attempt failed", exc_info=True)
             return None
 

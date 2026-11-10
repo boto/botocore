@@ -56,6 +56,7 @@ from botocore.paginate import Paginator
 from botocore.retries import adaptive, standard
 from botocore.useragent import UserAgentString, register_feature_id
 from botocore.utils import (
+    INVALID_CREDENTIAL_ERROR_CODES,
     CachedProperty,
     EventbridgeSignerSetter,
     S3ArnParamHandler,  # noqa: F401
@@ -77,20 +78,29 @@ history_recorder = get_global_history_recorder()
 class AuthErrorInvalidationHandler:
     """Invalidates cached credentials after auth-failure responses."""
 
-    def __init__(self, credentials):
+    def __init__(self, credentials, service_model):
         self._credentials = credentials
+        self._service_model = service_model
 
     def register(self, events, service_id):
         events.register(
             f'response-received.{service_id}', self.invalidate_on_auth_error
         )
 
-    def invalidate_on_auth_error(self, parsed_response, context, **kwargs):
+    def invalidate_on_auth_error(
+        self, parsed_response, context, response_dict, **kwargs
+    ):
         error_code = (parsed_response or {}).get('Error', {}).get('Code')
-        if error_code not in standard.INVALID_CREDENTIAL_ERROR_CODES:
+        if error_code not in INVALID_CREDENTIAL_ERROR_CODES:
             return
         credentials = self._credentials
         if not isinstance(credentials, _ResilientRefreshableCredentials):
+            return
+        operation_name = response_dict['context']['operation_name']
+        operation_model = self._service_model.operation_model(operation_name)
+        if operation_model.shape_for_error_code(error_code) is not None:
+            # A modeled error may refer to a token in the request rather
+            # than signing credentials, so skip credential invalidation.
             return
         try:
             credentials._invalidate(context.get('signing_access_key'))
@@ -411,10 +421,11 @@ class ClientCreator:
         ).register(client.meta.events)
 
     def _register_credential_refresh_events(self, client):
-        service_id = client.meta.service_model.service_id.hyphenize()
-        AuthErrorInvalidationHandler(client._get_credentials()).register(
-            client.meta.events, service_id
-        )
+        service_model = client.meta.service_model
+        service_id = service_model.service_id.hyphenize()
+        AuthErrorInvalidationHandler(
+            client._get_credentials(), service_model
+        ).register(client.meta.events, service_id)
 
     def _register_s3express_events(
         self,
