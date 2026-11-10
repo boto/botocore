@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import base64
 import logging
 import os
 import shutil
@@ -21,6 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from dateutil.tz import tzlocal, tzutc
@@ -4517,6 +4519,146 @@ def test_login_credential_fetcher_access_denied_errors(
 
     with pytest.raises(expected_exception):
         fetcher.refresh_credentials()
+
+
+def _make_expired_login_token(**extra):
+    token = {
+        'clientId': 'test-client',
+        'refreshToken': 'test-refresh-token',
+        'dpopKey': SAMPLE_SIGN_IN_DPOP_PEM,
+        'accessToken': {
+            'accessKeyId': 'old-akid',
+            'secretAccessKey': 'old-secret',
+            'sessionToken': 'old-session-token',
+            'accountId': '123456789012',
+            'expiresAt': '2020-01-01T00:00:00Z',
+        },
+    }
+    token.update(extra)
+    return token
+
+
+def _make_login_refresh_client():
+    client = mock.Mock()
+    client.exceptions.AccessDeniedException = ClientError
+    client.create_o_auth2_token.return_value = {
+        'tokenOutput': {
+            'accessToken': {
+                'accessKeyId': 'new-akid',
+                'secretAccessKey': 'new-secret',
+                'sessionToken': 'new-session-token',
+            },
+            'refreshToken': 'new-refresh-token',
+            'expiresIn': 900,
+        }
+    }
+    return client
+
+
+@requires_crt()
+def test_login_credential_fetcher_uses_sign_in_region():
+    token_loader = mock.Mock()
+    token_loader.load_token.return_value = _make_expired_login_token(
+        signInRegion='eu-west-2'
+    )
+    client_creator = mock.Mock(return_value=_make_login_refresh_client())
+
+    fetcher = credentials.LoginCredentialFetcher(
+        session_name='test-session',
+        token_loader=token_loader,
+        client_creator=client_creator,
+    )
+    creds = fetcher.refresh_credentials()
+
+    assert creds['access_key'] == 'new-akid'
+    client_creator.assert_called_once_with(
+        'signin', config=mock.ANY, region_name='eu-west-2'
+    )
+    saved_token = token_loader.save_token.call_args[0][1]
+    assert saved_token['signInRegion'] == 'eu-west-2'
+
+
+@requires_crt()
+@pytest.mark.parametrize(
+    'extra',
+    [{}, {'signInRegion': ''}],
+    ids=['missing', 'empty'],
+)
+def test_login_credential_fetcher_without_sign_in_region(extra):
+    token_loader = mock.Mock()
+    token_loader.load_token.return_value = _make_expired_login_token(**extra)
+    client_creator = mock.Mock(return_value=_make_login_refresh_client())
+
+    fetcher = credentials.LoginCredentialFetcher(
+        session_name='test-session',
+        token_loader=token_loader,
+        client_creator=client_creator,
+    )
+    fetcher.refresh_credentials()
+
+    client_creator.assert_called_once_with('signin', config=mock.ANY)
+    assert 'region_name' not in client_creator.call_args.kwargs
+    saved_token = token_loader.save_token.call_args[0][1]
+    if extra:
+        assert saved_token['signInRegion'] == ''
+    else:
+        assert 'signInRegion' not in saved_token
+
+
+class _CapturedLoginRefresh(Exception):
+    pass
+
+
+@requires_crt()
+def test_login_refresh_request_targets_sign_in_region(tmp_path):
+    from botocore.utils import JSONFileCache, LoginTokenLoader
+
+    session_name = 'arn:aws:iam::123456789012:user/tester'
+    cache_dir = tmp_path / 'login-cache'
+    cache_dir.mkdir()
+    config_file = tmp_path / 'config'
+    config_file.write_text(
+        f'[default]\nregion = us-east-1\nlogin_session = {session_name}\n'
+    )
+    LoginTokenLoader(JSONFileCache(str(cache_dir))).save_token(
+        session_name, _make_expired_login_token(signInRegion='eu-west-2')
+    )
+
+    captured = {}
+
+    def before_send(request, **kwargs):
+        captured['url'] = request.url
+        captured['dpop'] = request.headers['DPoP']
+        raise _CapturedLoginRefresh()
+
+    environ = {
+        'AWS_CONFIG_FILE': str(config_file),
+        'AWS_SHARED_CREDENTIALS_FILE': str(tmp_path / 'credentials'),
+        'AWS_LOGIN_CACHE_DIRECTORY': str(cache_dir),
+        'AWS_DEFAULT_REGION': 'us-east-1',
+        'AWS_EC2_METADATA_DISABLED': 'true',
+    }
+    with mock.patch.dict(os.environ, environ):
+        for var in list(os.environ):
+            if var.startswith('AWS_') and var not in environ:
+                del os.environ[var]
+        session = botocore.session.Session()
+        session.register('before-send.signin.CreateOAuth2Token', before_send)
+        creds = session.get_credentials()
+        assert creds.method == 'login'
+        with pytest.raises(_CapturedLoginRefresh):
+            creds.get_frozen_credentials()
+
+    url = captured['url']
+    host = urlsplit(url).hostname
+    assert 'eu-west-2' in host
+    assert 'us-east-1' not in host
+    if isinstance(captured['dpop'], bytes):
+        captured['dpop'] = captured['dpop'].decode()
+    payload = json.loads(
+        base64.urlsafe_b64decode(captured['dpop'].split('.')[1] + '==')
+    )
+    assert payload['htu'] == url
 
 
 @skip_if_crt()
