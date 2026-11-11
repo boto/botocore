@@ -217,6 +217,19 @@ def test_throttling_status_code_checker_ignores_missing_response():
     assert not status_code_checker.is_retryable(context)
 
 
+def test_new_retries_enabled_is_deprecated_and_true():
+    # Kept for code that imported the flag while the 2026 retry behavior
+    # was opt-in. It must stay importable and truthy until it is removed.
+    with pytest.warns(DeprecationWarning, match='NEW_RETRIES_ENABLED'):
+        from botocore.retries.standard import NEW_RETRIES_ENABLED
+    assert NEW_RETRIES_ENABLED is True
+
+
+def test_unknown_module_attribute_raises_attribute_error():
+    with pytest.raises(AttributeError, match='NOT_A_REAL_ATTRIBUTE'):
+        standard.NOT_A_REAL_ATTRIBUTE
+
+
 @pytest.mark.parametrize('case', RETRYABLE_MODELED_ERRORS)
 def test_can_detect_modeled_retryable_errors(case):
     modeled_retry_checker = standard.ModeledRetryableChecker()

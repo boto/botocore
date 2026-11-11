@@ -27,10 +27,29 @@ based API used by botocore.
 import logging
 import random
 import time
+import warnings
 
 from botocore.exceptions import ConnectionError, HTTPClientError
 from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
+
+
+def __getattr__(name):
+    # ``NEW_RETRIES_ENABLED`` gated the 2026 retry behavior while it was
+    # opt-in. The behavior is now always enabled, so the flag is kept only
+    # so existing imports of it keep working. It will be removed in a future
+    # version.
+    if name == 'NEW_RETRIES_ENABLED':
+        warnings.warn(
+            'botocore.retries.standard.NEW_RETRIES_ENABLED is deprecated '
+            'and will be removed in a future version. The retry behavior '
+            'it gated is always enabled.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return True
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
 
 DEFAULT_MAX_ATTEMPTS = 3
 _SERVICE_MAX_ATTEMPTS = {
