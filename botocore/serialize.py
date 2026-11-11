@@ -1255,17 +1255,22 @@ class RpcV2CBORSerializer(BaseRpcV2Serializer, CBORSerializer):
         serialized['headers']['smithy-protocol'] = 'rpc-v2-cbor'
 
         if operation_model.has_event_stream_output:
-            header_val = 'application/vnd.amazon.eventstream'
+            accept = 'application/vnd.amazon.eventstream'
         else:
-            header_val = 'application/cbor'
+            accept = 'application/cbor'
+        # The Content-Type is the type of the request, not of the response.
+        if operation_model.has_event_stream_input:
+            content_type = 'application/vnd.amazon.eventstream'
+        else:
+            content_type = 'application/cbor'
         self._handle_query_compatible_trait(operation_model, serialized)
 
         has_body = serialized['body'] != b''
         has_content_type = has_header('Content-Type', serialized['headers'])
 
-        serialized['headers']['Accept'] = header_val
+        serialized['headers']['Accept'] = accept
         if not has_content_type and has_body:
-            serialized['headers']['Content-Type'] = header_val
+            serialized['headers']['Content-Type'] = content_type
 
 
 SERIALIZERS = {
