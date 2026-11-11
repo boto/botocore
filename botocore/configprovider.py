@@ -23,6 +23,11 @@ from botocore.exceptions import InvalidConfigError
 
 logger = logging.getLogger(__name__)
 
+# Deprecated: the retry behavior this flag gated while it was opt-in is now
+# always enabled. It is kept, always True, only so that existing imports keep
+# working, and will be removed in a future version.
+NEW_RETRIES_ENABLED = True
+
 #: A default dictionary that maps the logical names for session variables
 #: to the specific environment variables and configuration file names
 #: that contain the values for these variables.
