@@ -1,5 +1,5 @@
 {
   "type": "bugfix",
   "category": "retries",
-  "description": "Restore the deprecated ``NEW_RETRIES_ENABLED`` constant in ``botocore.retries.standard`` so that code which imported it keeps importing. It is always ``True`` and will be removed in a future version."
+  "description": "Restore the deprecated ``NEW_RETRIES_ENABLED`` constant in ``botocore.configprovider`` and ``botocore.retries.standard`` so that code which imported it keeps importing. It is always ``True`` and will be removed in a future version."
 }
