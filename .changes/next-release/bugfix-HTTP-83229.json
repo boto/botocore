@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "HTTP",
+  "description": "Fixed an issue where a final response to an ``Expect: 100-continue`` request with no reason-phrase in its status line (e.g. ``HTTP/1.1 403``) raised ``BadStatusLine`` instead of returning the response."
+}
