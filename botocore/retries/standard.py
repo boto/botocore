@@ -28,6 +28,7 @@ import logging
 import random
 import time
 
+from botocore.configprovider import NEW_RETRIES_ENABLED  # noqa: F401
 from botocore.exceptions import ConnectionError, HTTPClientError
 from botocore.retries import quota, special
 from botocore.retries.base import BaseRetryableChecker, BaseRetryBackoff
