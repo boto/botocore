@@ -912,3 +912,95 @@ class TestRpcV2CBORHostPrefix(unittest.TestCase):
         serialized = serializer.serialize_to_request(params, operation_model)
 
         self.assertNotIn('host_prefix', serialized)
+
+
+class TestRpcV2CBORContentType(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {
+                'protocol': 'smithy-rpc-v2-cbor',
+                'apiVersion': '2014-01-01',
+                'serviceId': 'MyService',
+                'targetPrefix': 'sampleservice',
+                'documentation': '',
+            },
+            'operations': {
+                'Buffered': {
+                    'name': 'Buffered',
+                    'input': {'shape': 'BufferedShape'},
+                    'output': {'shape': 'BufferedShape'},
+                },
+                'EventStreamOutput': {
+                    'name': 'EventStreamOutput',
+                    'input': {'shape': 'BufferedShape'},
+                    'output': {'shape': 'EventStreamShape'},
+                },
+                'EventStreamInput': {
+                    'name': 'EventStreamInput',
+                    'input': {'shape': 'EventStreamShape'},
+                    'output': {'shape': 'BufferedShape'},
+                },
+                'EventStreamDuplex': {
+                    'name': 'EventStreamDuplex',
+                    'input': {'shape': 'EventStreamShape'},
+                    'output': {'shape': 'EventStreamShape'},
+                },
+            },
+            'shapes': {
+                'BufferedShape': {
+                    'type': 'structure',
+                    'members': {'Foo': {'shape': 'StringType'}},
+                },
+                'EventStreamShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Foo': {'shape': 'StringType'},
+                        'Events': {'shape': 'Events'},
+                    },
+                },
+                'Events': {
+                    'type': 'structure',
+                    'eventstream': True,
+                    'members': {'Event': {'shape': 'Event'}},
+                },
+                'Event': {'type': 'structure', 'event': True, 'members': {}},
+                'StringType': {'type': 'string'},
+            },
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_headers(self, operation_name):
+        operation_model = self.service_model.operation_model(operation_name)
+        serializer = serialize.create_serializer('smithy-rpc-v2-cbor')
+        request = serializer.serialize_to_request(
+            {'Foo': 'bar'}, operation_model
+        )
+        return request['headers']
+
+    def test_buffered_request_and_response(self):
+        headers = self.serialize_headers('Buffered')
+        self.assertEqual(headers['Content-Type'], 'application/cbor')
+        self.assertEqual(headers['Accept'], 'application/cbor')
+
+    def test_event_stream_response(self):
+        headers = self.serialize_headers('EventStreamOutput')
+        self.assertEqual(headers['Content-Type'], 'application/cbor')
+        self.assertEqual(
+            headers['Accept'], 'application/vnd.amazon.eventstream'
+        )
+
+    def test_event_stream_request(self):
+        headers = self.serialize_headers('EventStreamInput')
+        self.assertEqual(
+            headers['Content-Type'], 'application/vnd.amazon.eventstream'
+        )
+        self.assertEqual(headers['Accept'], 'application/cbor')
+
+    def test_event_stream_request_and_response(self):
+        headers = self.serialize_headers('EventStreamDuplex')
+        self.assertEqual(
+            headers['Content-Type'], 'application/vnd.amazon.eventstream'
+        )
+        self.assertEqual(
+            headers['Accept'], 'application/vnd.amazon.eventstream'
+        )
