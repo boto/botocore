@@ -173,6 +173,7 @@ class TestLoader(BaseEnvVar):
         with self.assertRaises(DataNotFoundError):
             loader.determine_latest_version('unknownservice', 'service-2')
 
+    @mock.patch('os.listdir', mock.Mock(return_value=[]))
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_service_model(self):
         class FakeLoader:
@@ -190,6 +191,7 @@ class TestLoader(BaseEnvVar):
         loaded = loader.load_service_model('baz', type_name='service-2')
         self.assertEqual(loaded, ['loaded data'])
 
+    @mock.patch('os.listdir', mock.Mock(return_value=['baz']))
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_service_model_enforces_case(self):
         class FakeLoader:
