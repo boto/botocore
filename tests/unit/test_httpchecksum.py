@@ -812,6 +812,26 @@ class TestAwsChunkedWrapper(unittest.TestCase):
         self.assertEqual(first_read, second_read)
         self.assertIn(b"checksum:DUoRhQ==", first_read)
 
+    def test_wrapper_seek_returns_to_wrap_time_position(self):
+        # A wrapped stream may start at a non-zero position. seek(0)
+        # must rewind the wrapped stream to the position it had when it
+        # was wrapped, not to 0 (see #3873).
+        raw = BytesIO(b"XXhello")
+        raw.seek(2)
+        wrapper = AwsChunkedWrapper(
+            raw,
+            chunk_size=5,
+            checksum_cls=Crc32Checksum,
+            checksum_name="checksum",
+        )
+        first_read = wrapper.read()
+        self.assertIn(b"hello", first_read)
+        self.assertNotIn(b"XXhello", first_read)
+        wrapper.seek(0)
+        self.assertEqual(raw.tell(), 2)
+        second_read = wrapper.read()
+        self.assertEqual(first_read, second_read)
+
     def test_wrapper_can_only_seek_to_start(self):
         wrapper = AwsChunkedWrapper(BytesIO())
         with self.assertRaises(AwsChunkedWrapperError):

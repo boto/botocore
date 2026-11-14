@@ -514,6 +514,21 @@ class AWSPreparedRequest:
         self.body = body
         self.stream_output = stream_output
         self.context = context
+        # Record the body's position when the request is prepared. A
+        # seekable body may start at a non-zero position (e.g. a file
+        # object the caller positioned part-way through); reset_stream()
+        # must rewind to that position, not to 0. Bodies that do not
+        # report a position fall back to 0, the previous behaviour.
+        self._initial_body_position = self._get_initial_body_position(body)
+
+    @staticmethod
+    def _get_initial_body_position(body):
+        if body is None or isinstance(body, (bytes, str, bytearray)):
+            return 0
+        try:
+            return body.tell()
+        except (AttributeError, OSError, ValueError):
+            return 0
 
     def __repr__(self):
         fmt = (
@@ -540,7 +555,7 @@ class AWSPreparedRequest:
             return
         try:
             logger.debug("Rewinding stream: %s", self.body)
-            self.body.seek(0)
+            self.body.seek(self._initial_body_position)
         except Exception as e:
             logger.debug("Unable to rewind stream: %s", e)
             raise UnseekableStreamError(stream_object=self.body)
