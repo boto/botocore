@@ -242,6 +242,22 @@ class TestAWSRequest(unittest.TestCase):
             # the stream should be reset
             self.assertEqual(body.tell(), 0)
 
+    def test_can_reset_stream_to_nonzero_initial_position(self):
+        # A body may start at a non-zero position (e.g. a file object
+        # the caller positioned part-way through). reset_stream() must
+        # rewind to that position, not to 0 (see #3873).
+        body = io.BytesIO(b'XXhello')
+        body.seek(2)
+        request = AWSRequest(method='PUT', url='https://foo', data=body)
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.headers['Content-Length'], '5')
+        # pretend the request body was sent
+        prepared_request.body.read()
+        self.assertEqual(body.tell(), 7)
+        prepared_request.reset_stream()
+        self.assertEqual(body.tell(), 2)
+        self.assertEqual(body.read(), b'hello')
+
     def test_cannot_reset_stream_raises_error(self):
         contents = b'foobarbaz'
         with open(self.filename, 'wb') as f:
