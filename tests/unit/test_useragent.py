@@ -450,6 +450,17 @@ def test_custom_modify_components_bypasses_cache(client_context):
     assert uas._static_parts is not None
 
 
+def test_custom_modify_components_without_client_config():
+    def modify_components(components):
+        return components
+
+    uas = _create_user_agent_string()
+    with mock.patch.object(
+        botocore.useragent, 'modify_components', modify_components
+    ):
+        assert uas.to_string().startswith(f'Botocore/{botocore_version} ')
+
+
 def test_concurrent_renders_use_their_own_request_features():
     feature_ids = [
         'WAITER',
