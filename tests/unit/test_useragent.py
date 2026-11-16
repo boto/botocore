@@ -36,8 +36,7 @@ from tests import mock
 
 from .. import requires_crt
 
-# Returns a list of unmodified User-Agent components. This is botocore's
-# built-in default, so tests that patch it in still use the cached build.
+# Returns a list of unmodified User-Agent components.
 unmodified_components = botocore.useragent._default_modify_components
 
 
@@ -338,9 +337,8 @@ def test_cached_user_agent_reads_request_features_on_each_call(
 
 
 def test_supplied_user_agent_set_after_with_client_config():
-    # ``ClientArgsCreator.get_client_args()`` sets ``_supplied_user_agent``
-    # on the client config after calling ``with_client_config()``. Until
-    # then, ``Config.user_agent`` holds the preliminary string.
+    # Client creation sets ``_supplied_user_agent`` after
+    # ``with_client_config()``.
     config = Config(user_agent='preliminary/1.0', user_agent_extra='cfg/extra')
     uas = _create_user_agent_string().with_client_config(config)
     assert uas.to_string() == 'preliminary/1.0 cfg/extra'
@@ -463,7 +461,7 @@ def test_concurrent_renders_use_their_own_request_features():
         'GZIP_REQUEST_COMPRESSION',
         'PROTOCOL_RPC_V2_CBOR',
     ]
-    # The threads share one object whose cache has not been built yet.
+    # The threads share one object with an empty cache.
     uas = _create_user_agent_string().with_client_config(
         Config(retries={'mode': 'standard'})
     )

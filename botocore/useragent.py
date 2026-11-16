@@ -274,19 +274,18 @@ except ImportError:
 
 
 def _render_components(components):
-    """Render each component once and join the non-empty strings."""
+    """Join the string representations of non-empty components."""
     rendered = (comp.to_string() for comp in components)
     return ' '.join(value for value in rendered if value)
 
 
 class _StaticUserAgentParts(NamedTuple):
     """
-    Request-independent parts of a User-Agent header string.
+    Cached, request-independent parts of a User-Agent header string.
 
-    ``inputs`` holds the values the parts were built from. ``legacy`` is the
-    complete header string when a ``Config.user_agent`` override applies,
-    otherwise ``None``. ``prefix`` and ``suffix`` are the rendered components
-    that go before and after the request-specific feature component.
+    ``legacy`` is the full string when ``Config.user_agent`` is set.
+    ``prefix`` and ``suffix`` are the components before and after the
+    features component. ``inputs`` holds the values they were built from.
     """
 
     inputs: tuple
@@ -375,8 +374,7 @@ class UserAgentString:
         # Component that can be set with ``set_client_features()``
         self._client_features = None
 
-        # Request-independent parts of the header string, built on first use
-        # by ``to_string()``. Never holds request-specific data.
+        # Request-independent parts cached by ``to_string()``
         self._static_parts = None
 
     @classmethod
@@ -443,10 +441,8 @@ class UserAgentString:
         """
         Build User-Agent header string from the object's properties.
 
-        The request-independent components are rendered once and cached until
-        a session or client value they depend on changes; only the feature
-        component, which includes the current request's features, is built
-        on every call.
+        Request-independent components are cached. Only the features
+        component is built on every call.
         """
         if modify_components is not _default_modify_components:
             return self._build_uncached_ua_string()
@@ -462,11 +458,10 @@ class UserAgentString:
 
     def _build_uncached_ua_string(self):
         """
-        Build the User-Agent header string without the static parts cache.
+        Build User-Agent header string without the cache.
 
-        Used when a custom ``modify_components`` is installed, so that it
-        receives every component, including the feature component, on each
-        call.
+        Used when ``modify_components`` is customized, so it receives every
+        component on each call.
         """
         config_ua_override = self._get_config_ua_override()
         if config_ua_override is not None:
@@ -486,10 +481,7 @@ class UserAgentString:
         )
 
     def _get_config_ua_override(self):
-        """
-        Return the ``Config.user_agent`` value that replaces the standard
-        header format, or ``None`` if there is none.
-        """
+        """Return the ``Config.user_agent`` override, or ``None`` if unset."""
         if not self._client_config:
             return None
         if hasattr(self._client_config, '_supplied_user_agent'):
@@ -497,12 +489,7 @@ class UserAgentString:
         return self._client_config.user_agent
 
     def _static_inputs(self):
-        """
-        Return the session and client values the static parts depend on.
-
-        Values are read under the same conditions as in the ``_build_*``
-        methods. Values that are only set in ``__init__`` are left out.
-        """
+        """Return the session and client values the cached parts depend on."""
         session_inputs = (
             self._session_user_agent_name,
             self._session_user_agent_version,
@@ -519,8 +506,7 @@ class UserAgentString:
             )
         retries = config.retries
         if retries:
-            # Store the mode rather than the dict, so that an in-place
-            # change to ``retries['mode']`` is detected.
+            # Store the mode, not the dict, to detect in-place changes.
             retry_inputs = (
                 retries.get('mode'),
                 config.endpoint_discovery_enabled,
@@ -538,23 +524,20 @@ class UserAgentString:
         )
 
     def _get_static_parts(self):
+        """Return the cached parts, rebuilding them if an input changed."""
         inputs = self._static_inputs()
         static_parts = self._static_parts
         if static_parts is None or static_parts.inputs != inputs:
             static_parts = self._build_static_parts(inputs)
-            # Only cache the parts if no input changed during the build, so
-            # that parts built from a mix of old and new values are not
-            # stored as current. A value that changes and changes back
-            # within a single build can still leave such parts cached until
-            # the next change. That requires concurrent, unsynchronized
-            # changes to a client's configuration while it sends requests.
+            # Don't cache parts if an input changed during the build.
             if self._static_inputs() == inputs:
                 self._static_parts = static_parts
         return static_parts
 
     def _build_static_parts(self, inputs):
+        """Build the cached parts from ``_static_inputs()`` values."""
         # The last input holds the client values, starting with the
-        # ``Config.user_agent`` override. See ``_static_inputs()``.
+        # ``Config.user_agent`` override.
         config_inputs = inputs[-1]
         config_ua_override = None
         if config_inputs is not None:
@@ -575,9 +558,8 @@ class UserAgentString:
         """
         Build the request-independent components in header order.
 
-        Returns the components that go before the feature component and the
-        components that go after it. The cached and the uncached builds both
-        use this method, so they keep the same component order.
+        Returns the components that go before and after the features
+        component.
         """
         before_features = [
             *self._build_sdk_metadata(),
