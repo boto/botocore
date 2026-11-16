@@ -260,14 +260,39 @@ class RawStringUserAgentComponent:
         return self._value
 
 
+def _default_modify_components(components):
+    # Default implementation that returns unmodified User-Agent components.
+    return components
+
+
 # This is not a public interface and is subject to abrupt breaking changes.
 # Any usage is not advised or supported in external code bases.
 try:
     from botocore.customizations.useragent import modify_components
 except ImportError:
-    # Default implementation that returns unmodified User-Agent components.
-    def modify_components(components):
-        return components
+    modify_components = _default_modify_components
+
+
+def _render_components(components):
+    """Render each component once and join the non-empty strings."""
+    rendered = (comp.to_string() for comp in components)
+    return ' '.join(value for value in rendered if value)
+
+
+class _StaticUserAgentParts(NamedTuple):
+    """
+    Request-independent parts of a User-Agent header string.
+
+    ``inputs`` holds the values the parts were built from. ``legacy`` is the
+    complete header string when a ``Config.user_agent`` override applies,
+    otherwise ``None``. ``prefix`` and ``suffix`` are the rendered components
+    that go before and after the request-specific feature component.
+    """
+
+    inputs: tuple
+    legacy: str | None
+    prefix: str
+    suffix: str
 
 
 class UserAgentString:
@@ -350,6 +375,10 @@ class UserAgentString:
         # Component that can be set with ``set_client_features()``
         self._client_features = None
 
+        # Request-independent parts of the header string, built on first use
+        # by ``to_string()``. Never holds request-specific data.
+        self._static_parts = None
+
     @classmethod
     def from_environment(cls):
         crt_version = None
@@ -407,33 +436,47 @@ class UserAgentString:
         """
         cp = copy(self)
         cp._client_config = client_config
+        cp._static_parts = None
         return cp
 
     def to_string(self):
         """
         Build User-Agent header string from the object's properties.
-        """
-        config_ua_override = None
-        if self._client_config:
-            if hasattr(self._client_config, '_supplied_user_agent'):
-                config_ua_override = self._client_config._supplied_user_agent
-            else:
-                config_ua_override = self._client_config.user_agent
 
+        The request-independent components are rendered once and cached until
+        a session or client value they depend on changes; only the feature
+        component, which includes the current request's features, is built
+        on every call.
+        """
+        if modify_components is not _default_modify_components:
+            return self._build_uncached_ua_string()
+
+        static_parts = self._get_static_parts()
+        if static_parts.legacy is not None:
+            return static_parts.legacy
+        features = [
+            comp.to_string() for comp in self._build_feature_metadata()
+        ]
+        parts = (static_parts.prefix, *features, static_parts.suffix)
+        return ' '.join(part for part in parts if part)
+
+    def _build_uncached_ua_string(self):
+        """
+        Build the User-Agent header string without the static parts cache.
+
+        Used when a custom ``modify_components`` is installed, so that it
+        receives every component, including the feature component, on each
+        call.
+        """
+        config_ua_override = self._get_config_ua_override()
         if config_ua_override is not None:
             return self._build_legacy_ua_string(config_ua_override)
 
+        before_features, after_features = self._build_static_components()
         components = [
-            *self._build_sdk_metadata(),
-            RawStringUserAgentComponent('ua/2.1'),
-            *self._build_os_metadata(),
-            *self._build_architecture_metadata(),
-            *self._build_language_metadata(),
-            *self._build_execution_env_metadata(),
+            *before_features,
             *self._build_feature_metadata(),
-            *self._build_config_metadata(),
-            *self._build_app_id(),
-            *self._build_extra(),
+            *after_features,
         ]
 
         components = modify_components(components)
@@ -441,6 +484,115 @@ class UserAgentString:
         return ' '.join(
             [comp.to_string() for comp in components if comp.to_string()]
         )
+
+    def _get_config_ua_override(self):
+        """
+        Return the ``Config.user_agent`` value that replaces the standard
+        header format, or ``None`` if there is none.
+        """
+        if not self._client_config:
+            return None
+        if hasattr(self._client_config, '_supplied_user_agent'):
+            return self._client_config._supplied_user_agent
+        return self._client_config.user_agent
+
+    def _static_inputs(self):
+        """
+        Return the session and client values the static parts depend on.
+
+        Values are read under the same conditions as in the ``_build_*``
+        methods. Values that are only set in ``__init__`` are left out.
+        """
+        session_inputs = (
+            self._session_user_agent_name,
+            self._session_user_agent_version,
+            self._session_user_agent_extra,
+        )
+        config = self._client_config
+        if not config:
+            return (*session_inputs, None)
+        config_ua_override = self._get_config_ua_override()
+        if config_ua_override is not None:
+            return (
+                *session_inputs,
+                (config_ua_override, config.user_agent_extra),
+            )
+        retries = config.retries
+        if retries:
+            # Store the mode rather than the dict, so that an in-place
+            # change to ``retries['mode']`` is detected.
+            retry_inputs = (
+                retries.get('mode'),
+                config.endpoint_discovery_enabled,
+            )
+        else:
+            retry_inputs = None
+        return (
+            *session_inputs,
+            (
+                None,
+                config.user_agent_extra,
+                config.user_agent_appid,
+                retry_inputs,
+            ),
+        )
+
+    def _get_static_parts(self):
+        inputs = self._static_inputs()
+        static_parts = self._static_parts
+        if static_parts is None or static_parts.inputs != inputs:
+            static_parts = self._build_static_parts(inputs)
+            # Only cache the parts if no input changed during the build, so
+            # that parts built from a mix of old and new values are not
+            # stored as current. A value that changes and changes back
+            # within a single build can still leave such parts cached until
+            # the next change. That requires concurrent, unsynchronized
+            # changes to a client's configuration while it sends requests.
+            if self._static_inputs() == inputs:
+                self._static_parts = static_parts
+        return static_parts
+
+    def _build_static_parts(self, inputs):
+        # The last input holds the client values, starting with the
+        # ``Config.user_agent`` override. See ``_static_inputs()``.
+        config_inputs = inputs[-1]
+        config_ua_override = None
+        if config_inputs is not None:
+            config_ua_override = config_inputs[0]
+        if config_ua_override is not None:
+            legacy = self._build_legacy_ua_string(config_ua_override)
+            return _StaticUserAgentParts(inputs, legacy, '', '')
+
+        before_features, after_features = self._build_static_components()
+        return _StaticUserAgentParts(
+            inputs,
+            None,
+            _render_components(before_features),
+            _render_components(after_features),
+        )
+
+    def _build_static_components(self):
+        """
+        Build the request-independent components in header order.
+
+        Returns the components that go before the feature component and the
+        components that go after it. The cached and the uncached builds both
+        use this method, so they keep the same component order.
+        """
+        before_features = [
+            *self._build_sdk_metadata(),
+            RawStringUserAgentComponent('ua/2.1'),
+            *self._build_os_metadata(),
+            *self._build_architecture_metadata(),
+            *self._build_language_metadata(),
+            *self._build_execution_env_metadata(),
+        ]
+        after_features = [
+            *self._build_config_metadata(),
+            *self._build_app_id(),
+            *self._build_extra(),
+        ]
+        return before_features, after_features
 
     def _build_sdk_metadata(self):
         """
