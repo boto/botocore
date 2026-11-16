@@ -717,6 +717,33 @@ class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 
 
+class CredentialDaemonError(CredentialRetrievalError):
+    """Error retrieving credentials from the credential daemon.
+
+    :ivar code: The credential daemon error code, for example
+        ``NOT_RUNNING`` or ``REAUTH_REQUIRED``.
+    :ivar error_msg: The msg explaining why credentials could not be
+        retrieved.
+    """
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('provider', 'credential-daemon')
+        super().__init__(**kwargs)
+        self.code = kwargs.get('code')
+
+
+class CredentialDaemonInvalidConfigError(
+    CredentialDaemonError, InvalidConfigError
+):
+    """Invalid configuration for the credential daemon provider."""
+
+    fmt = '{error_msg}'
+
+    def __init__(self, **kwargs):
+        kwargs['code'] = 'INVALID_CONFIG'
+        super().__init__(**kwargs)
+
+
 class InfiniteLoopConfigError(InvalidConfigError):
     fmt = (
         'Infinite loop in credential configuration detected. Attempting to '

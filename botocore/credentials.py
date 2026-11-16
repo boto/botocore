@@ -17,9 +17,13 @@ import getpass
 import json
 import logging
 import os
+import re
+import socket
+import stat
 import subprocess
 import threading
 import time
+import unicodedata
 import uuid
 from collections import namedtuple
 from copy import deepcopy
@@ -40,6 +44,8 @@ from botocore.compat import (
 from botocore.config import Config
 from botocore.exceptions import (
     ConfigNotFound,
+    CredentialDaemonError,
+    CredentialDaemonInvalidConfigError,
     CredentialRetrievalError,
     InfiniteLoopConfigError,
     InvalidConfigError,
@@ -66,6 +72,7 @@ from botocore.utils import (
     SSOTokenLoader,
     create_nested_client,
     get_login_token_cache_directory,
+    load_config_file_profiles,
     parse_key_val_file,
     resolve_imds_endpoint_mode,
 )
@@ -79,6 +86,8 @@ ReadOnlyCredentials = namedtuple(
 
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
+
+_CREDENTIAL_DAEMON_KEY = 'daemon_credential'
 
 
 def create_credential_resolver(session, cache=None, region_name=None):
@@ -133,6 +142,9 @@ def create_credential_resolver(session, cache=None, region_name=None):
             [env_provider, container_provider, instance_metadata_provider]
         ),
         profile_provider_builder=profile_provider_builder,
+        load_config_file_profiles=lambda: load_config_file_profiles(
+            session.get_config_variable('config_file')
+        ),
     )
 
     pre_profile = [
@@ -204,6 +216,7 @@ class ProfileProviderBuilder:
 
     def providers(self, profile_name, disable_env_vars=False):
         return [
+            self._create_credential_daemon_provider(profile_name),
             self._create_web_identity_provider(
                 profile_name,
                 disable_env_vars,
@@ -260,6 +273,15 @@ class ProfileProviderBuilder:
             ),
         )
 
+    def _create_credential_daemon_provider(self, profile_name):
+        return CredentialDaemonProvider(
+            profile_name=profile_name,
+            load_config=lambda: self._session.full_config,
+            load_config_file_profiles=lambda: load_config_file_profiles(
+                self._session.get_config_variable('config_file')
+            ),
+        )
+
     def _create_login_provider(self, profile_name):
         return LoginProvider(
             load_config=lambda: self._session.full_config,
@@ -276,6 +298,47 @@ def get_credentials(session):
 
 def _local_now():
     return datetime.datetime.now(tzlocal())
+
+
+def _is_sso_profile(profile):
+    return 'sso_session' in profile or 'sso_start_url' in profile
+
+
+def _is_credential_daemon_profile(profile):
+    if _CREDENTIAL_DAEMON_KEY not in profile:
+        return False
+    # An SSO profile with neither sso_account_id nor sso_role_name
+    # resolves as if daemon_credential were not set.
+    return not (
+        _is_sso_profile(profile)
+        and 'sso_account_id' not in profile
+        and 'sso_role_name' not in profile
+    )
+
+
+def _restrict_daemon_credential_to_config_file(
+    loaded_config, config_file_profiles
+):
+    # The merged config includes the credentials file, where daemon_credential
+    # must be ignored.
+    new_profiles = {}
+    for name, profile in loaded_config.get('profiles', {}).items():
+        file_profile = config_file_profiles.get(name, {})
+        in_file = _CREDENTIAL_DAEMON_KEY in file_profile
+        if (_CREDENTIAL_DAEMON_KEY in profile) != in_file or profile.get(
+            _CREDENTIAL_DAEMON_KEY
+        ) != file_profile.get(_CREDENTIAL_DAEMON_KEY):
+            profile = dict(profile)
+            if in_file:
+                profile[_CREDENTIAL_DAEMON_KEY] = file_profile[
+                    _CREDENTIAL_DAEMON_KEY
+                ]
+            else:
+                profile.pop(_CREDENTIAL_DAEMON_KEY, None)
+        new_profiles[name] = profile
+    new_config = dict(loaded_config)
+    new_config['profiles'] = new_profiles
+    return new_config
 
 
 def _parse_if_needed(value):
@@ -1572,6 +1635,7 @@ class AssumeRoleProvider(CredentialProvider):
         prompter=getpass.getpass,
         credential_sourcer=None,
         profile_provider_builder=None,
+        load_config_file_profiles=None,
     ):
         """
         :type load_config: callable
@@ -1600,6 +1664,13 @@ class AssumeRoleProvider(CredentialProvider):
         :param credential_sourcer: A credential provider that takes a
             configuration, which is used to provide the source credentials
             for the STS call.
+
+        :type load_config_file_profiles: callable
+        :param load_config_file_profiles: A function that accepts no
+            arguments, and when called, will return the profiles parsed
+            from the shared config file only. It is used to read the
+            ``daemon_credential`` setting, which is only honored in the
+            shared config file.
         """
         #: The cache used to first check for assumed credentials.
         #: This is checked before making the AssumeRole API
@@ -1623,17 +1694,29 @@ class AssumeRoleProvider(CredentialProvider):
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
         self._profile_provider_builder = profile_provider_builder
+        self._load_config_file_profiles = load_config_file_profiles
         self._visited_profiles = [self._profile_name]
         self._feature_ids = set()
 
     def load(self):
         self._loaded_config = self._load_config()
+        if self._load_config_file_profiles is not None and any(
+            _CREDENTIAL_DAEMON_KEY in profile
+            for profile in self._loaded_config.get('profiles', {}).values()
+        ):
+            self._loaded_config = _restrict_daemon_credential_to_config_file(
+                self._loaded_config, self._load_config_file_profiles()
+            )
         profiles = self._loaded_config.get('profiles', {})
         profile = profiles.get(self._profile_name, {})
         if self._has_assume_role_config_vars(profile):
             return self._load_creds_via_assume_role(self._profile_name)
 
     def _has_assume_role_config_vars(self, profile):
+        if _is_credential_daemon_profile(profile):
+            # A daemon profile never assumes a role itself. The daemon
+            # provider reports role_arn in it as a configuration error.
+            return False
         return (
             self.ROLE_CONFIG_VAR in profile
             and
@@ -2792,4 +2875,448 @@ class LoginProvider(CredentialProvider):
             method=self.METHOD,
             refresh_using=fetcher.refresh_credentials,
             time_fetcher=_local_now,
+        )
+
+
+class CredentialDaemonProvider(CredentialProvider):
+    METHOD = 'credential-daemon'
+    # TODO: Replace with the public credential daemon docs page once it's
+    #  published.
+    DOC = '<CREDENTIAL_DAEMON_DOC>'
+    SOCKET_ENV_VAR = 'AWS_CREDENTIAL_DAEMON_SOCKET'
+    LINK_NAME = 'credential-daemon.sock'
+    _NAME_REGEX = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}')
+    _EXPIRES_AT_REGEX = re.compile(
+        r'([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})'
+        r'(?:\.([0-9]{1,9}))?Z'
+    )
+    _MAX_REPLY_LINE_BYTES = 64000
+    _RECV_SIZE = 4096
+    _MAX_REPORTED_VALUE_LENGTH = 64
+
+    def __init__(
+        self,
+        profile_name,
+        load_config,
+        load_config_file_profiles,
+        environ=None,
+        connect_timeout=1.0,
+        call_timeout=5.0,
+    ):
+        """
+        :type profile_name: str
+        :param profile_name: The name of the profile.
+
+        :type load_config: callable
+        :param load_config: A function that accepts no arguments, and
+            when called, will return the full configuration dictionary
+            for the session (``session.full_config``).
+
+        :type load_config_file_profiles: callable
+        :param load_config_file_profiles: A function that accepts no
+            arguments, and when called, will return the profiles parsed
+            from the shared config file only.
+
+        :type environ: dict
+        :param environ: The environment to read the socket location
+            from. Defaults to ``os.environ``, read on every fetch.
+
+        :type connect_timeout: float
+        :param connect_timeout: Seconds to wait for the connection.
+
+        :type call_timeout: float
+        :param call_timeout: Seconds to wait for the whole call.
+        """
+        super().__init__()
+        self._profile_name = profile_name
+        self._load_config = load_config
+        self._load_config_file_profiles = load_config_file_profiles
+        self._environ = environ
+        self._connect_timeout = connect_timeout
+        self._call_timeout = call_timeout
+
+    def load(self):
+        loaded_config = self._load_config()
+        profiles = loaded_config.get('profiles', {})
+        profile = profiles.get(self._profile_name, {})
+        if _CREDENTIAL_DAEMON_KEY not in profile:
+            return None
+        # daemon_credential is only honored in the shared config file.
+        file_profiles = self._load_config_file_profiles()
+        file_profile = file_profiles.get(self._profile_name, {})
+        if _CREDENTIAL_DAEMON_KEY not in file_profile:
+            return None
+        profile = dict(profile)
+        profile[_CREDENTIAL_DAEMON_KEY] = file_profile[_CREDENTIAL_DAEMON_KEY]
+        if not _is_credential_daemon_profile(profile):
+            return None
+
+        name = self._validate_name(profile[_CREDENTIAL_DAEMON_KEY])
+        self._validate_no_role_config(profile)
+        params = {'credential': name}
+        if _is_sso_profile(profile):
+            self._validate_sso_config(profile)
+            params['account_id'] = profile['sso_account_id']
+            params['role_name'] = profile['sso_role_name']
+
+        metadata = self._fetch(params)
+        return RefreshableCredentials.create_from_metadata(
+            metadata,
+            refresh_using=lambda: self._fetch(params),
+            method=self.METHOD,
+        )
+
+    def _validate_name(self, name):
+        if not isinstance(name, str) or not self._NAME_REGEX.fullmatch(name):
+            raise CredentialDaemonInvalidConfigError(
+                error_msg=(
+                    f'The {_CREDENTIAL_DAEMON_KEY} value in profile '
+                    f'"{self._profile_name}" is not a valid credential name. '
+                    'A credential name has 1 to 64 characters, may contain '
+                    'only letters, digits, ".", "_" and "-", and may not '
+                    'start with ".".'
+                )
+            )
+        return name
+
+    def _validate_no_role_config(self, profile):
+        if 'web_identity_token_file' in profile:
+            raise CredentialDaemonInvalidConfigError(
+                error_msg=(
+                    f'The profile "{self._profile_name}" has two credential '
+                    f'sources, {_CREDENTIAL_DAEMON_KEY} and '
+                    'web_identity_token_file. Remove one of them.'
+                )
+            )
+        if 'role_arn' in profile:
+            raise CredentialDaemonInvalidConfigError(
+                error_msg=(
+                    f'The profile "{self._profile_name}" sets both '
+                    f'{_CREDENTIAL_DAEMON_KEY} and role_arn. '
+                    f'Move the role configuration to its own profile '
+                    f'with source_profile = {self._profile_name}.'
+                )
+            )
+
+    def _validate_sso_config(self, profile):
+        if 'sso_account_id' in profile and 'sso_role_name' in profile:
+            return
+        # With only one of the two settings, raise the SSO provider's own
+        # error, as for any other SSO profile.
+        SSOProvider(
+            load_config=self._load_config,
+            client_creator=None,
+            profile_name=self._profile_name,
+            token_cache={},
+        )._load_sso_config()
+        raise InvalidConfigError(
+            error_msg=(
+                f'The profile "{self._profile_name}" is configured to use '
+                'SSO but is missing required configuration: '
+                'sso_account_id, sso_role_name'
+            )
+        )
+
+    def _fetch(self, params):
+        register_feature_id('CREDENTIAL_DAEMON')
+        if os.name == 'nt' or not hasattr(socket, 'AF_UNIX'):
+            raise CredentialDaemonError(
+                code='UNSUPPORTED_PLATFORM',
+                error_msg=(
+                    'The credential daemon is not supported on this '
+                    'platform because Unix domain sockets are not '
+                    f'available. See {self.DOC}'
+                ),
+            )
+        environ = self._environ if self._environ is not None else os.environ
+        path = self._resolve_socket_path(environ)
+        request = (
+            json.dumps(
+                {
+                    'jsonrpc': '2.0',
+                    'id': 1,
+                    'method': 'credential/get',
+                    'params': params,
+                },
+                separators=(',', ':'),
+            )
+            + '\n'
+        ).encode('utf-8')
+        line = self._send_request(path, request)
+        return self._parse_reply(line, params['credential'])
+
+    def _create_socket(self):
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+    def _call_timeout_error(self, path):
+        return CredentialDaemonError(
+            code='NOT_RUNNING',
+            error_msg=(
+                f'The credential daemon at {path} did not reply within the '
+                f'call timeout of {self._call_timeout:g}s. Check that the '
+                f'credential daemon is running, see {self.DOC}'
+            ),
+        )
+
+    def _set_remaining_timeout(self, sock, deadline):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError()
+        sock.settimeout(remaining)
+
+    def _send_request(self, path, request):
+        deadline = time.monotonic() + self._call_timeout
+        sock = None
+        try:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise self._call_timeout_error(path)
+            connect_limited = self._connect_timeout <= remaining
+            try:
+                # Creating the socket can fail too, for example when the
+                # process is out of file descriptors.
+                sock = self._create_socket()
+                sock.settimeout(min(self._connect_timeout, remaining))
+                sock.connect(path)
+            except TimeoutError:
+                if not connect_limited:
+                    raise self._call_timeout_error(path)
+                raise CredentialDaemonError(
+                    code='NOT_RUNNING',
+                    error_msg=(
+                        f'Could not connect to the credential daemon at '
+                        f'{path} within the connect timeout of '
+                        f'{self._connect_timeout:g}s. Start the credential '
+                        f'daemon, see {self.DOC}'
+                    ),
+                )
+            except OSError as e:
+                raise CredentialDaemonError(
+                    code='NOT_RUNNING',
+                    error_msg=(
+                        f'Could not connect to the credential daemon at '
+                        f'{path}: {e.strerror or e}. Start the credential '
+                        f'daemon, see {self.DOC}'
+                    ),
+                )
+            try:
+                return self._send_and_read_line(sock, request, deadline)
+            except TimeoutError:
+                raise self._call_timeout_error(path)
+            except OSError as e:
+                raise self._protocol_error(
+                    'the connection failed before a complete reply line '
+                    f'was received: {e.strerror or e}'
+                )
+        finally:
+            if sock is not None:
+                sock.close()
+
+    def _send_and_read_line(self, sock, request, deadline):
+        self._set_remaining_timeout(sock, deadline)
+        sock.sendall(request)
+        limit = self._MAX_REPLY_LINE_BYTES + 1
+        buf = b''
+        while True:
+            self._set_remaining_timeout(sock, deadline)
+            chunk = sock.recv(min(self._RECV_SIZE, limit - len(buf)))
+            if not chunk:
+                raise self._protocol_error(
+                    'the connection closed before a complete reply line '
+                    'was received'
+                )
+            start = len(buf)
+            buf += chunk
+            index = buf.find(b'\n', start)
+            if index != -1:
+                return buf[:index]
+            if len(buf) >= limit:
+                raise self._protocol_error(
+                    'the reply line is longer than '
+                    f'{self._MAX_REPLY_LINE_BYTES} bytes'
+                )
+
+    def _protocol_error(self, reason):
+        return CredentialDaemonError(
+            code='PROTOCOL_ERROR',
+            error_msg=f'Invalid reply from the credential daemon: {reason}.',
+        )
+
+    def _sanitize_for_message(
+        self, value, max_length=_MAX_REPORTED_VALUE_LENGTH
+    ):
+        # The daemon's text is shown to the customer, so control characters
+        # such as terminal escape codes are removed.
+        value = ''.join(ch for ch in value if unicodedata.category(ch) != 'Cc')
+        return value[:max_length]
+
+    def _parse_reply(self, line, name):
+        try:
+            reply = json.loads(line.decode('utf-8'))
+        except (ValueError, RecursionError):
+            raise self._protocol_error(
+                'the reply is not valid UTF-8 JSON'
+            ) from None
+        if not isinstance(reply, dict) or reply.get('jsonrpc') != '2.0':
+            raise self._protocol_error('the reply is not a JSON-RPC 2.0 reply')
+        # A null result or error counts as absent.
+        result = reply.get('result')
+        error = reply.get('error')
+        if (result is None) == (error is None):
+            raise self._protocol_error(
+                'the reply must contain exactly one of result or error'
+            )
+        if error is not None:
+            raise self._error_from_reply(error, name)
+        return self._metadata_from_result(result)
+
+    def _error_from_reply(self, error, name):
+        daemon_code = None
+        message = None
+        if isinstance(error, dict):
+            data = error.get('data')
+            if isinstance(data, dict) and isinstance(data.get('code'), str):
+                daemon_code = data['code']
+            if isinstance(error.get('message'), str):
+                message = self._sanitize_for_message(
+                    error['message'], max_length=None
+                )
+        detail = f' The credential daemon said: {message}' if message else ''
+        if daemon_code == 'REAUTH_REQUIRED':
+            return CredentialDaemonError(
+                code='REAUTH_REQUIRED',
+                error_msg=(
+                    f'The credential "{name}" needs you to sign in again.'
+                    f'{detail}'
+                ),
+            )
+        if daemon_code == 'CREDENTIAL_NOT_FOUND':
+            return CredentialDaemonError(
+                code='CREDENTIAL_NOT_FOUND',
+                error_msg=(
+                    f'The credential daemon has no credential named '
+                    f'"{name}" for this user. Sign in again.{detail}'
+                ),
+            )
+        reported_code = ''
+        if daemon_code is not None:
+            reported_code = f' ({self._sanitize_for_message(daemon_code)})'
+        return CredentialDaemonError(
+            code='REQUEST_REJECTED',
+            error_msg=(
+                f'The credential daemon rejected the request for '
+                f'"{name}"{reported_code}.{detail}'
+            ),
+        )
+
+    def _metadata_from_result(self, result):
+        if not isinstance(result, dict):
+            raise self._protocol_error('result is not an object')
+        material = result.get('material')
+        if not isinstance(material, dict):
+            raise self._protocol_error('result.material is not an object')
+        material_type = material.get('type')
+        if not isinstance(material_type, str):
+            raise self._protocol_error('result.material.type is not a string')
+        if material_type != 'session_credentials':
+            raise CredentialDaemonError(
+                code='UNSUPPORTED_MATERIAL',
+                error_msg=(
+                    'The credential daemon returned credential material of '
+                    f'type "{self._sanitize_for_message(material_type)}", which '
+                    'this SDK does not support. Update the SDK.'
+                ),
+            )
+        access_key = self._required_str(material, 'access_key_id')
+        secret_key = self._required_str(material, 'secret_access_key')
+        expires_at = self._required_str(result, 'expires_at')
+        token = self._optional_str(material, 'session_token')
+        account_id = self._optional_str(material, 'account_id')
+        expiry_time = self._parse_expires_at(expires_at)
+        return {
+            'access_key': access_key,
+            'secret_key': secret_key,
+            'token': token,
+            'expiry_time': expiry_time.isoformat(),
+            'account_id': account_id,
+        }
+
+    def _required_str(self, container, field):
+        value = container.get(field)
+        if value is None or value == '':
+            raise self._protocol_error(f'{field} is missing')
+        if not isinstance(value, str):
+            raise self._protocol_error(f'{field} is not a string')
+        return value
+
+    def _optional_str(self, container, field):
+        value = container.get(field)
+        if value is None or value == '':
+            return None
+        if not isinstance(value, str):
+            raise self._protocol_error(f'{field} is not a string')
+        return value
+
+    def _parse_expires_at(self, value):
+        match = self._EXPIRES_AT_REGEX.fullmatch(value)
+        if match is None:
+            raise self._protocol_error('unparseable expires_at')
+        year, month, day, hour, minute, second, fraction = match.groups()
+        microsecond = int((fraction or '0')[:6].ljust(6, '0'))
+        try:
+            return datetime.datetime(
+                int(year),
+                int(month),
+                int(day),
+                int(hour),
+                int(minute),
+                int(second),
+                microsecond,
+                tzinfo=tzutc(),
+            )
+        except ValueError:
+            raise self._protocol_error('unparseable expires_at')
+
+    def _resolve_socket_path(self, environ):
+        # Each location can be a different daemon serving different credentials
+        # under the same name, so the first one that applies is used even if
+        # connecting to it later fails.
+        env_path = environ.get(self.SOCKET_ENV_VAR)
+        if env_path and os.path.isabs(env_path):
+            return env_path
+        home = environ.get('HOME')
+        # A relative HOME would resolve under the current directory, where
+        # another user could place a socket.
+        if not home or not os.path.isabs(home):
+            raise self._no_socket_error(
+                os.path.join('$HOME', '.aws', self.LINK_NAME)
+            )
+        link = os.path.join(home, '.aws', self.LINK_NAME)
+        try:
+            link_stat = os.lstat(link)
+        except (OSError, ValueError):
+            raise self._no_socket_error(link)
+        if stat.S_ISLNK(link_stat.st_mode) and not os.path.exists(link):
+            try:
+                target = os.readlink(link)
+            except OSError:
+                target = 'a path'
+            raise CredentialDaemonError(
+                code='NOT_RUNNING',
+                error_msg=(
+                    f'The credential daemon socket link {link} points to '
+                    f'{target}, which does not exist. Start the credential '
+                    f'daemon, see {self.DOC}'
+                ),
+            )
+        return link
+
+    def _no_socket_error(self, link):
+        return CredentialDaemonError(
+            code='NOT_RUNNING',
+            error_msg=(
+                'No credential daemon socket was found. Install the credential '
+                f'daemon or link its socket to {link}, or set '
+                f'{self.SOCKET_ENV_VAR} to its path. See {self.DOC}'
+            ),
         )
