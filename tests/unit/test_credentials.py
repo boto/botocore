@@ -5286,6 +5286,23 @@ class TestCredentialDaemonProvider:
             _daemon_reply(result={'material': _DAEMON_MARKER}),
             _daemon_reply(result={'material': {'type': 5}}),
         ],
+        ids=[
+            'not-utf8',
+            'not-json',
+            'empty-line',
+            'too-deeply-nested',
+            'not-an-object',
+            'wrong-jsonrpc-version',
+            'missing-jsonrpc',
+            'result-and-error',
+            'neither-result-nor-error',
+            'null-result',
+            'null-error',
+            'null-result-and-error',
+            'result-not-an-object',
+            'material-not-an-object',
+            'material-type-not-a-string',
+        ],
     )
     def test_invalid_envelope(self, make_daemon, reply):
         daemon = make_daemon(reply=reply)
