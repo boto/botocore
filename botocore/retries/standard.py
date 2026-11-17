@@ -127,6 +127,7 @@ class RetryHandler:
         'sqs': {'ReceiveMessage'},
         'sfn': {'GetActivityTask'},
         'swf': {'PollForActivityTask', 'PollForDecisionTask'},
+        'kinesis': {'ReceiveQueueRecords', 'ReceiveDeadLetterQueueRecords'},
     }
 
     def __init__(
