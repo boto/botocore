@@ -307,13 +307,11 @@ def _is_sso_profile(profile):
 def _is_credential_daemon_profile(profile):
     if _CREDENTIAL_DAEMON_KEY not in profile:
         return False
-    # An SSO profile with neither sso_account_id nor sso_role_name
-    # resolves as if daemon_credential were not set.
-    return not (
-        _is_sso_profile(profile)
-        and 'sso_account_id' not in profile
-        and 'sso_role_name' not in profile
-    )
+    if _is_sso_profile(profile):
+        # An SSO profile with neither sso_account_id nor sso_role_name
+        # resolves as if daemon_credential were not set.
+        return 'sso_account_id' in profile or 'sso_role_name' in profile
+    return True
 
 
 def _restrict_daemon_credential_to_config_file(
@@ -2999,23 +2997,20 @@ class CredentialDaemonProvider(CredentialProvider):
             )
 
     def _validate_sso_config(self, profile):
-        if 'sso_account_id' in profile and 'sso_role_name' in profile:
-            return
-        # With only one of the two settings, raise the SSO provider's own
-        # error, as for any other SSO profile.
-        SSOProvider(
-            load_config=self._load_config,
-            client_creator=None,
-            profile_name=self._profile_name,
-            token_cache={},
-        )._load_sso_config()
-        raise InvalidConfigError(
-            error_msg=(
-                f'The profile "{self._profile_name}" is configured to use '
-                'SSO but is missing required configuration: '
-                'sso_account_id, sso_role_name'
+        missing = [
+            name
+            for name in ('sso_account_id', 'sso_role_name')
+            if name not in profile
+        ]
+        if missing:
+            # The same error the SSO provider raises for this profile.
+            raise InvalidConfigError(
+                error_msg=(
+                    f'The profile "{self._profile_name}" is configured to '
+                    'use SSO but is missing required configuration: '
+                    f'{", ".join(missing)}'
+                )
             )
-        )
 
     def _fetch(self, params):
         register_feature_id('CREDENTIAL_DAEMON')

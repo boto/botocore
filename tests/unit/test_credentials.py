@@ -5050,7 +5050,14 @@ class TestCredentialDaemonProvider:
         }
         with pytest.raises(InvalidConfigError) as exc_info:
             _daemon_provider(_sock_env(daemon), profile).load()
-        assert 'missing required configuration' in str(exc_info.value)
+        missing = (
+            'sso_role_name'
+            if sso_var == 'sso_account_id'
+            else 'sso_account_id'
+        )
+        assert str(exc_info.value).endswith(
+            f'missing required configuration: {missing}'
+        )
         assert daemon.connections == 0
 
     def test_sso_profile_without_sso_settings_is_skipped(self, make_daemon):
