@@ -305,6 +305,9 @@ def _split_feature_field(ua_string):
     return features, other_fields
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_cached_user_agent_reads_request_features_on_each_call(
     client_context,
 ):
@@ -421,6 +424,9 @@ def test_change_after_first_render_updates_user_agent(change, expected_field):
     assert ua_string == uas._build_uncached_ua_string()
 
 
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
 def test_custom_modify_components_bypasses_cache(client_context):
     received = []
 
