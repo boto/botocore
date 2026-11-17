@@ -536,12 +536,7 @@ class UserAgentString:
 
     def _build_static_parts(self, inputs):
         """Build the cached parts from ``_static_inputs()`` values."""
-        # The last input holds the client values, starting with the
-        # ``Config.user_agent`` override.
-        config_inputs = inputs[-1]
-        config_ua_override = None
-        if config_inputs is not None:
-            config_ua_override = config_inputs[0]
+        config_ua_override = self._get_config_ua_override()
         if config_ua_override is not None:
             legacy = self._build_legacy_ua_string(config_ua_override)
             return _StaticUserAgentParts(inputs, legacy, '', '')
