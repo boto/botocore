@@ -1033,6 +1033,51 @@ class TestServiceSpecificRetries:
         retry_quota.acquire_retry_quota.assert_called_once()
         mock_sleep.assert_called_once_with(0.05)
 
+    @pytest.mark.parametrize(
+        'service_name, operation_name',
+        [
+            ('sqs', 'ReceiveMessage'),
+            ('sfn', 'GetActivityTask'),
+            ('swf', 'PollForActivityTask'),
+            ('swf', 'PollForDecisionTask'),
+            ('kinesis', 'ReceiveQueueRecords'),
+            ('kinesis', 'ReceiveDeadLetterQueueRecords'),
+        ],
+    )
+    def test_long_polling_operations_backoff_when_token_empty(
+        self, service_name, operation_name
+    ):
+        mock_sleep = mock.Mock()
+        retry_policy = mock.Mock(spec=standard.RetryPolicy)
+        retry_policy.should_retry.return_value = True
+        retry_policy.compute_retry_delay.return_value = 0.05
+
+        retry_quota = mock.Mock(spec=standard.RetryQuotaChecker)
+        retry_quota.acquire_retry_quota.return_value = False
+
+        handler = standard.RetryHandler(
+            retry_policy=retry_policy,
+            retry_event_adapter=standard.RetryEventAdapter(),
+            retry_quota=retry_quota,
+            service_name=service_name,
+            sleep=mock_sleep,
+        )
+
+        context = self._make_retry_context(attempt=1, status_code=500)
+        context.operation_model = mock.Mock()
+        context.operation_model.name = operation_name
+
+        result = handler.needs_retry(
+            response=(context.http_response, {}),
+            attempts=1,
+            caught_exception=None,
+            request_dict={'context': {}},
+            operation=context.operation_model,
+        )
+
+        assert result is False
+        mock_sleep.assert_called_once_with(0.05)
+
     def test_non_long_polling_operation_does_not_sleep_when_quota_exhausted(
         self,
     ):
