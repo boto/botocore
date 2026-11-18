@@ -12,14 +12,20 @@
 # language governing permissions and limitations under the License.
 import logging
 import platform
+import threading
 
 import pytest
 
 import botocore.useragent
 from botocore import __version__ as botocore_version
 from botocore.config import Config
-from botocore.context import get_context
+from botocore.context import (
+    ClientContext,
+    get_context,
+    start_as_current_context,
+)
 from botocore.useragent import (
+    RawStringUserAgentComponent,
     UserAgentComponent,
     UserAgentComponentSizeConfig,
     UserAgentString,
@@ -30,10 +36,8 @@ from tests import mock
 
 from .. import requires_crt
 
-
 # Returns a list of unmodified User-Agent components.
-def unmodified_components(components):
-    return components
+unmodified_components = botocore.useragent._default_modify_components
 
 
 @pytest.mark.parametrize(
@@ -276,3 +280,232 @@ def test_hash_in_user_agent_appid():
         'app/fooapp#1.0.0'
     )
     assert actual == expected
+
+
+def _create_user_agent_string():
+    return UserAgentString(
+        platform_name='linux',
+        platform_version='1.2.3-foo',
+        platform_machine='x86_64',
+        python_version='3.8.20',
+        python_implementation='Dpython',
+        execution_env='AWS_Lambda_python3.8',
+    )
+
+
+def _split_feature_field(ua_string):
+    """Return the ``m/`` members as a set and the other fields as a list."""
+    features = set()
+    other_fields = []
+    for field in ua_string.split(' '):
+        if field.startswith('m/'):
+            features = set(field[2:].split(','))
+        else:
+            other_fields.append(field)
+    return features, other_fields
+
+
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
+def test_cached_user_agent_reads_request_features_on_each_call(
+    client_context,
+):
+    uas = _create_user_agent_string().with_client_config(
+        Config(retries={'mode': 'standard'})
+    )
+    uas.set_client_features({'A'})
+    first = uas.to_string()
+    static_parts = uas._static_parts
+    assert static_parts is not None
+    assert first == uas._build_uncached_ua_string()
+
+    register_feature_id('WAITER')
+    second = uas.to_string()
+    assert uas._static_parts is static_parts
+    assert second == uas._build_uncached_ua_string()
+
+    register_feature_id('PAGINATOR')
+    third = uas.to_string()
+    assert uas._static_parts is static_parts
+    assert third == uas._build_uncached_ua_string()
+
+    first_features, first_fields = _split_feature_field(first)
+    second_features, second_fields = _split_feature_field(second)
+    third_features, third_fields = _split_feature_field(third)
+    assert first_features == {'A'}
+    assert second_features == {'A', 'B'}
+    assert third_features == {'A', 'B', 'C'}
+    assert first_fields == second_fields == third_fields
+
+
+def test_supplied_user_agent_set_after_with_client_config():
+    # Client creation sets ``_supplied_user_agent`` after
+    # ``with_client_config()``.
+    config = Config(user_agent='preliminary/1.0', user_agent_extra='cfg/extra')
+    uas = _create_user_agent_string().with_client_config(config)
+    assert uas.to_string() == 'preliminary/1.0 cfg/extra'
+
+    config._supplied_user_agent = None
+    ua_string = uas.to_string()
+    assert ua_string.startswith(f'Botocore/{botocore_version} ')
+    assert ua_string.endswith(' cfg/extra')
+    assert ua_string == uas._build_uncached_ua_string()
+
+    config._supplied_user_agent = 'custom/2.0'
+    assert uas.to_string() == 'custom/2.0 cfg/extra'
+
+
+def test_with_client_config_copy_builds_its_own_cache():
+    parent = _create_user_agent_string().with_client_config(
+        Config(user_agent_appid='parentapp')
+    )
+    parent_string = parent.to_string()
+    assert 'app/parentapp' in parent_string.split(' ')
+
+    child = parent.with_client_config(Config(user_agent_appid='childapp'))
+    assert child._static_parts is None
+    child_fields = child.to_string().split(' ')
+    assert 'app/childapp' in child_fields
+    assert 'app/parentapp' not in child_fields
+    assert parent.to_string() == parent_string
+
+
+@pytest.mark.parametrize(
+    'change, expected_field',
+    [
+        pytest.param(
+            lambda uas, config: setattr(config, 'user_agent_extra', 'extra/1'),
+            'extra/1',
+            id='user_agent_extra',
+        ),
+        pytest.param(
+            lambda uas, config: setattr(config, 'user_agent_appid', 'newapp'),
+            'app/newapp',
+            id='user_agent_appid',
+        ),
+        pytest.param(
+            lambda uas, config: config.retries.update(mode='adaptive'),
+            'cfg/retry-mode#adaptive',
+            id='retries_mode_in_place',
+        ),
+        pytest.param(
+            lambda uas, config: setattr(config, 'retries', {'mode': 'legacy'}),
+            'cfg/retry-mode#legacy',
+            id='retries',
+        ),
+        pytest.param(
+            lambda uas, config: setattr(
+                config, 'endpoint_discovery_enabled', True
+            ),
+            'cfg/endpoint-discovery',
+            id='endpoint_discovery_enabled',
+        ),
+        pytest.param(
+            lambda uas, config: uas.set_session_config('MyTool', '1.0', None),
+            'MyTool/1.0',
+            id='session_name_and_version',
+        ),
+        pytest.param(
+            lambda uas, config: uas.set_session_config(None, None, 'sess/1'),
+            'sess/1',
+            id='session_extra',
+        ),
+    ],
+)
+def test_change_after_first_render_updates_user_agent(change, expected_field):
+    config = Config(retries={'mode': 'standard'})
+    uas = _create_user_agent_string().with_client_config(config)
+    assert expected_field not in uas.to_string().split(' ')
+
+    change(uas, config)
+    ua_string = uas.to_string()
+    assert expected_field in ua_string.split(' ')
+    assert ua_string == uas._build_uncached_ua_string()
+
+
+@mock.patch.object(
+    botocore.useragent, 'modify_components', unmodified_components
+)
+def test_custom_modify_components_bypasses_cache(client_context):
+    received = []
+
+    def modify_components(components):
+        received.append([comp.to_string() for comp in components])
+        return [*components, RawStringUserAgentComponent('custom/1')]
+
+    uas = _create_user_agent_string().with_client_config(Config())
+    with mock.patch.object(
+        botocore.useragent, 'modify_components', modify_components
+    ):
+        register_feature_id('WAITER')
+        first = uas.to_string()
+        register_feature_id('PAGINATOR')
+        second = uas.to_string()
+        assert uas._static_parts is None
+
+    assert len(received) == 2
+    assert 'm/B' in received[0]
+    second_features = [c for c in received[1] if c.startswith('m/')]
+    assert len(second_features) == 1
+    assert set(second_features[0][2:].split(',')) == {'B', 'C'}
+    assert first.endswith(' custom/1')
+    assert second.endswith(' custom/1')
+
+    assert 'custom/1' not in uas.to_string()
+    assert uas._static_parts is not None
+
+
+def test_custom_modify_components_without_client_config():
+    def modify_components(components):
+        return components
+
+    uas = _create_user_agent_string()
+    with mock.patch.object(
+        botocore.useragent, 'modify_components', modify_components
+    ):
+        assert uas.to_string().startswith(f'Botocore/{botocore_version} ')
+
+
+def test_concurrent_renders_use_their_own_request_features():
+    feature_ids = [
+        'WAITER',
+        'PAGINATOR',
+        'RETRY_MODE_LEGACY',
+        'RETRY_MODE_STANDARD',
+        'RETRY_MODE_ADAPTIVE',
+        'S3_TRANSFER',
+        'GZIP_REQUEST_COMPRESSION',
+        'PROTOCOL_RPC_V2_CBOR',
+    ]
+    # The threads share one object with an empty cache.
+    uas = _create_user_agent_string().with_client_config(
+        Config(retries={'mode': 'standard'})
+    )
+    uas.set_client_features({'A'})
+    barrier = threading.Barrier(len(feature_ids), timeout=30)
+    results = {}
+
+    def render(feature_id):
+        with start_as_current_context(ClientContext()):
+            register_feature_id(feature_id)
+            barrier.wait()
+            results[feature_id] = [uas.to_string() for _ in range(200)]
+
+    threads = [
+        threading.Thread(target=render, args=(feature_id,))
+        for feature_id in feature_ids
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    _, expected_fields = _split_feature_field(uas.to_string())
+    for feature_id in feature_ids:
+        code = botocore.useragent._USERAGENT_FEATURE_MAPPINGS[feature_id]
+        assert len(results[feature_id]) == 200
+        for ua_string in results[feature_id]:
+            features, other_fields = _split_feature_field(ua_string)
+            assert features == {'A', code}
+            assert other_fields == expected_fields

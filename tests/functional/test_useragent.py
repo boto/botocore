@@ -445,3 +445,21 @@ def test_chalice_user_agent(patched_session):
     assert get_captured_ua_strings(stub_client)[0].startswith(
         f'aws-chalice/0.1.2 md/Botocore#{botocore_version} '
     )
+
+
+def test_user_agent_reflects_config_changes_between_requests(patched_session):
+    client_s3 = patched_session.create_client('s3')
+    with ClientHTTPStubber(client_s3) as stub_client:
+        stub_client.add_response()
+        client_s3.list_buckets()
+
+        client_s3.meta.config.user_agent_extra = 'later/1.0'
+        client_s3.meta.config.user_agent_appid = 'laterapp'
+        stub_client.add_response()
+        client_s3.list_buckets()
+
+    first, second = get_captured_ua_strings(stub_client)
+    assert 'later/1.0' not in first
+    assert 'app/laterapp' not in first
+    assert 'app/laterapp' in second.split(' ')
+    assert second.endswith(' later/1.0')
