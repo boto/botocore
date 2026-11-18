@@ -3415,6 +3415,11 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         results = fetcher.retrieve_iam_role_credentials()
         assert results['expiry_time'] == bad_datetime
 
+    def test_evaluate_expiration_extends_expired_credentials(self):
+        credentials = {'expiry_time': '2000-01-01T00:00:00Z'}
+        InstanceMetadataFetcher()._evaluate_expiration(credentials)
+        assert credentials['expiry_time'] != '2000-01-01T00:00:00Z'
+
 
 class TestIMDSRegionProvider(unittest.TestCase):
     def setUp(self):

@@ -54,6 +54,7 @@ from botocore.compat import (
     UNSAFE_URL_CHARS,
     ZONE_ID_PAT,  # noqa: F401
     OrderedDict,
+    get_current_datetime,
     get_md5,
     get_tzinfo_options,
     json,
@@ -695,6 +696,42 @@ class InstanceMetadataFetcher(IMDSFetcher):
                 )
                 return False
         return True
+
+    def _evaluate_expiration(self, credentials):
+        """This function has been deprecated, but is kept for backwards compatibility."""
+        expiration = credentials.get("expiry_time")
+        if expiration is None:
+            return
+        try:
+            expiration = datetime.datetime.strptime(
+                expiration, "%Y-%m-%dT%H:%M:%SZ"
+            )
+            refresh_interval = self._config.get(
+                "ec2_credential_refresh_window", 60 * 10
+            )
+            jitter = random.randint(120, 600)  # Between 2 to 10 minutes
+            refresh_interval_with_jitter = refresh_interval + jitter
+            current_time = get_current_datetime()
+            refresh_offset = datetime.timedelta(
+                seconds=refresh_interval_with_jitter
+            )
+            extension_time = expiration - refresh_offset
+            if current_time >= extension_time:
+                new_time = current_time + refresh_offset
+                credentials["expiry_time"] = new_time.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                )
+                logger.info(
+                    "Attempting credential expiration extension due to a "
+                    "credential service availability issue. A refresh of "
+                    "these credentials will be attempted again within "
+                    "the next %.0f minutes.",
+                    refresh_interval_with_jitter / 60,
+                )
+        except ValueError:
+            logger.debug(
+                "Unable to parse expiry_time in %s", credentials['expiry_time']
+            )
 
 
 class IMDSRegionProvider:
