@@ -35,9 +35,16 @@ AUTH_TYPE_REQUIREMENTS = {
     'smithy.api#noAuth': 'none',
 }
 
+# Services with a `signing_name` that declare both sigv4 and bearer auth but
+# only use bearer when the caller opts in with `auth_scheme_preference`.
+# There is no fallback between signers for these services.
+PREFERENCE_ONLY_MIXED_AUTH_SERVICES = {'agent-registry'}
+
 # Services with a `signing_name` that are known to have
 # customizations for handling mixed authentication methods.
-KNOWN_MIXED_AUTH_SERVICES = get_bearer_auth_supported_services()
+KNOWN_MIXED_AUTH_SERVICES = (
+    get_bearer_auth_supported_services() | PREFERENCE_ONLY_MIXED_AUTH_SERVICES
+)
 KNOWN_MIXED_AUTH_SCHEMES = {'aws.auth#sigv4', 'smithy.api#httpBearerAuth'}
 
 
