@@ -615,8 +615,10 @@ class InstanceMetadataFetcher(IMDSFetcher):
     ]
 
     def retrieve_iam_role_credentials(self):
-        # Extends expiry for callers that rely on it. InstanceMetadataProvider
-        # skips this by calling _retrieve_iam_role_credentials directly.
+        # Extends expiry so callers using this fetcher directly keep static
+        # stability during IMDS outages. InstanceMetadataProvider calls
+        # _retrieve_iam_role_credentials instead, since its credentials
+        # already provide static stability.
         credentials = self._retrieve_iam_role_credentials()
         if credentials:
             self._evaluate_expiration(credentials)
