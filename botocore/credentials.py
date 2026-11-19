@@ -836,12 +836,20 @@ class BaseAssumeRoleCredentialFetcher(CachedCredentialFetcher):
         self._assume_kwargs['RoleSessionName'] = self._role_session_name
         self._using_default_session_name = True
 
+    def _cache_key_args(self):
+        """Return the arguments that should participate in the cache key.
+
+        Subclasses can override this to include additional caller-provided
+        arguments.
+        """
+        return self._assume_kwargs
+
     def _create_cache_key(self):
         """Create a predictable cache key for the current configuration.
 
         The cache key is intended to be compatible with file names.
         """
-        args = deepcopy(self._assume_kwargs)
+        args = deepcopy(self._cache_key_args())
 
         # The role session name gets randomly generated, so we don't want it
         # in the hash.
@@ -1001,6 +1009,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
         :param expiry_window_seconds: The amount of time, in seconds,
         """
         self._web_identity_token_loader = web_identity_token_loader
+        self._web_identity_token = None
 
         super().__init__(
             client_creator,
@@ -1009,6 +1018,20 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
             cache=cache,
             expiry_window_seconds=expiry_window_seconds,
         )
+
+    def fetch_credentials(self):
+        # Load the token once per fetch and compute the cache key from it,
+        # so the key and the AssumeRoleWithWebIdentity call always use the
+        # same token even when the token file rotates between fetches.
+        self._web_identity_token = self._web_identity_token_loader()
+        self._cache_key = self._create_cache_key()
+        return super().fetch_credentials()
+
+    def _cache_key_args(self):
+        args = dict(self._assume_kwargs)
+        if self._web_identity_token is not None:
+            args['WebIdentityToken'] = self._web_identity_token
+        return args
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
@@ -1025,8 +1048,7 @@ class AssumeRoleWithWebIdentityCredentialFetcher(
     def _assume_role_kwargs(self):
         """Get the arguments for assume role based on current configuration."""
         assume_role_kwargs = deepcopy(self._assume_kwargs)
-        identity_token = self._web_identity_token_loader()
-        assume_role_kwargs['WebIdentityToken'] = identity_token
+        assume_role_kwargs['WebIdentityToken'] = self._web_identity_token
 
         return assume_role_kwargs
 
