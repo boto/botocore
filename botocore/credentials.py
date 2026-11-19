@@ -84,6 +84,9 @@ ReadOnlyCredentials = namedtuple(
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
 
+# Keep the original function so patched or overridden versions are detected.
+_DEFAULT_IMDS_RETRIEVE = InstanceMetadataFetcher.retrieve_iam_role_credentials
+
 
 def create_credential_resolver(session, cache=None, region_name=None):
     """Create a default credential resolver.
@@ -105,6 +108,7 @@ def create_credential_resolver(session, cache=None, region_name=None):
         'ec2_metadata_service_endpoint_mode': resolve_imds_endpoint_mode(
             session
         ),
+        'ec2_credential_refresh_window': _DEFAULT_ADVISORY_REFRESH_TIMEOUT,
         'ec2_metadata_v1_disabled': session.get_config_variable(
             'ec2_metadata_v1_disabled'
         ),
@@ -1536,11 +1540,11 @@ class InstanceMetadataProvider(CredentialProvider):
         self._role_fetcher = iam_role_fetcher
 
     def load(self):
-        fetcher = self._role_fetcher
+        retrieve_credentials = self._get_credential_retriever()
         # We do the first request, to see if we get useful data back.
         # If not, we'll pass & move on to whatever's next in the credential
         # chain.
-        metadata = fetcher.retrieve_iam_role_credentials()
+        metadata = retrieve_credentials()
         if not metadata:
             return None
         register_feature_id('CREDENTIALS_IMDS')
@@ -1551,11 +1555,25 @@ class InstanceMetadataProvider(CredentialProvider):
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
         creds = _ResilientRefreshableCredentials.create_from_metadata(
-            metadata,
-            method=self.METHOD,
-            refresh_using=fetcher.retrieve_iam_role_credentials,
+            metadata, method=self.METHOD, refresh_using=retrieve_credentials
         )
         return creds
+
+    def _get_credential_retriever(self):
+        fetcher = self._role_fetcher
+        if self._uses_default_retrieve():
+            # Skip the legacy expiration extension, since the resilient
+            # credentials provide static stability.
+            return fetcher._retrieve_iam_role_credentials
+        return fetcher.retrieve_iam_role_credentials
+
+    def _uses_default_retrieve(self):
+        # False if retrieve_iam_role_credentials is overridden or patched,
+        # so that behavior is respected.
+        retrieve = getattr(
+            self._role_fetcher, 'retrieve_iam_role_credentials', None
+        )
+        return getattr(retrieve, '__func__', None) is _DEFAULT_IMDS_RETRIEVE
 
 
 class EnvProvider(CredentialProvider):
