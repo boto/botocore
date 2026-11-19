@@ -3366,8 +3366,104 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             status_code=200, body=json.dumps(creds).encode('utf-8')
         )
 
+    def mock_randint(self, int_val=600):
+        randint_mock = mock.Mock()
+        randint_mock.return_value = int_val
+        return randint_mock
+
     @FreezeTime(module=botocore.utils.datetime, date=DATE)
-    def test_near_expiry_credentials_are_not_extended(self):
+    def test_expiry_time_extension(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time, offset=datetime.timedelta(seconds=14 * 60)
+        )
+        new_expiration = self._get_datetime(
+            dt=current_time, offset=datetime.timedelta(seconds=20 * 60)
+        )
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+        expected_data["expiry_time"] = new_expiration.strftime(DT_FORMAT)
+
+        self._add_default_imds_response(200, creds)
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
+
+    @FreezeTime(module=botocore.utils.datetime, date=DATE)
+    def test_expired_expiry_extension(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time,
+            offset=datetime.timedelta(seconds=14 * 60),
+            offset_func=operator.sub,
+        )
+        new_expiration = self._get_datetime(
+            dt=current_time, offset=datetime.timedelta(seconds=20 * 60)
+        )
+        assert current_time > expiration_time
+        assert new_expiration > current_time
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+        expected_data["expiry_time"] = new_expiration.strftime(DT_FORMAT)
+
+        self._add_default_imds_response(200, creds)
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = InstanceMetadataFetcher()
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
+
+    @FreezeTime(module=botocore.utils.datetime, date=DATE)
+    def test_expiry_extension_with_config(self):
+        current_time = self._get_datetime()
+        expiration_time = self._get_datetime(
+            dt=current_time,
+            offset=datetime.timedelta(seconds=14 * 60),
+            offset_func=operator.sub,
+        )
+        new_expiration = self._get_datetime(
+            dt=current_time, offset=datetime.timedelta(seconds=25 * 60)
+        )
+        assert current_time > expiration_time
+        assert new_expiration > current_time
+
+        creds = self._get_default_creds(
+            {"Expiration": expiration_time.strftime(DT_FORMAT)}
+        )
+        expected_data = self._convert_creds_to_imds_fetcher(creds)
+        expected_data["expiry_time"] = new_expiration.strftime(DT_FORMAT)
+
+        self._add_default_imds_response(200, creds)
+
+        with mock.patch("random.randint", self.mock_randint()):
+            fetcher = InstanceMetadataFetcher(
+                config={"ec2_credential_refresh_window": 15 * 60}
+            )
+            result = fetcher.retrieve_iam_role_credentials()
+            assert result == expected_data
+
+    @FreezeTime(module=botocore.utils.datetime, date=DATE)
+    def test_expiry_extension_with_bad_datetime(self):
+        bad_datetime = "May 20th, 2020 19:00:00"
+        creds = self._get_default_creds({"Expiration": bad_datetime})
+        self._add_default_imds_response(200, creds)
+
+        fetcher = InstanceMetadataFetcher(
+            config={"ec2_credential_refresh_window": 15 * 60}
+        )
+        results = fetcher.retrieve_iam_role_credentials()
+        assert results['expiry_time'] == bad_datetime
+
+    @FreezeTime(module=botocore.utils.datetime, date=DATE)
+    def test_retrieve_without_extension_returns_near_expiry_credentials(self):
         current_time = self._get_datetime()
         expiration_time = self._get_datetime(
             dt=current_time, offset=datetime.timedelta(seconds=14 * 60)
@@ -3381,11 +3477,11 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self._add_default_imds_response(200, creds)
 
         fetcher = InstanceMetadataFetcher()
-        result = fetcher.retrieve_iam_role_credentials()
+        result = fetcher._retrieve_iam_role_credentials()
         assert result == expected_data
 
     @FreezeTime(module=botocore.utils.datetime, date=DATE)
-    def test_already_expired_credentials_are_not_extended(self):
+    def test_retrieve_without_extension_returns_expired_credentials(self):
         current_time = self._get_datetime()
         expiration_time = self._get_datetime(
             dt=current_time,
@@ -3402,23 +3498,8 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self._add_default_imds_response(200, creds)
 
         fetcher = InstanceMetadataFetcher()
-        result = fetcher.retrieve_iam_role_credentials()
+        result = fetcher._retrieve_iam_role_credentials()
         assert result == expected_data
-
-    @FreezeTime(module=botocore.utils.datetime, date=DATE)
-    def test_malformed_expiry_time_is_returned_unchanged(self):
-        bad_datetime = "May 20th, 2020 19:00:00"
-        creds = self._get_default_creds({"Expiration": bad_datetime})
-        self._add_default_imds_response(200, creds)
-
-        fetcher = InstanceMetadataFetcher()
-        results = fetcher.retrieve_iam_role_credentials()
-        assert results['expiry_time'] == bad_datetime
-
-    def test_evaluate_expiration_extends_expired_credentials(self):
-        credentials = {'expiry_time': '2000-01-01T00:00:00Z'}
-        InstanceMetadataFetcher()._evaluate_expiration(credentials)
-        assert credentials['expiry_time'] != '2000-01-01T00:00:00Z'
 
 
 class TestIMDSRegionProvider(unittest.TestCase):

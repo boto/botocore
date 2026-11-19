@@ -62,6 +62,7 @@ from botocore.stub import Stubber
 from botocore.utils import (
     ContainerMetadataFetcher,
     FileWebIdentityTokenLoader,
+    InstanceMetadataFetcher,
     SSOTokenLoader,
     datetime2timestamp,
 )
@@ -2010,6 +2011,15 @@ class TestOriginalEC2Provider(BaseEnvVar):
 
 
 class TestInstanceMetadataProvider(BaseEnvVar):
+    def _expired_imds_metadata(self):
+        return {
+            'access_key': 'a',
+            'secret_key': 'b',
+            'token': 'c',
+            'expiry_time': '2000-01-01T00:00:00Z',
+            'role_name': 'myrole',
+        }
+
     def test_load_from_instance_metadata(self):
         timeobj = datetime.now(tzlocal())
         timestamp = (timeobj + timedelta(hours=24)).isoformat()
@@ -2040,6 +2050,81 @@ class TestInstanceMetadataProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
         fetcher.retrieve_iam_role_credentials.assert_called_with()
+
+    def test_provider_skips_expiration_extension_for_botocore_fetcher(self):
+        fetcher = InstanceMetadataFetcher()
+        retrieve = mock.patch.object(
+            fetcher,
+            '_retrieve_iam_role_credentials',
+            side_effect=lambda: self._expired_imds_metadata(),
+        )
+        with (
+            retrieve,
+            mock.patch.object(fetcher, '_evaluate_expiration') as extend,
+        ):
+            creds = credentials.InstanceMetadataProvider(
+                iam_role_fetcher=fetcher
+            ).load()
+            creds.get_frozen_credentials()
+
+        self.assertIsInstance(
+            creds, credentials._ResilientRefreshableCredentials
+        )
+        extend.assert_not_called()
+
+    def test_provider_calls_patched_retrieve_iam_role_credentials(self):
+        fetcher = InstanceMetadataFetcher()
+        with mock.patch.object(
+            fetcher,
+            'retrieve_iam_role_credentials',
+            return_value=self._expired_imds_metadata(),
+        ) as patched:
+            creds = credentials.InstanceMetadataProvider(
+                iam_role_fetcher=fetcher
+            ).load()
+
+        self.assertEqual(creds.access_key, 'a')
+        patched.assert_called_with()
+
+    def test_provider_respects_class_level_retrieve_patch(self):
+        fetcher = InstanceMetadataFetcher()
+        with (
+            mock.patch.object(
+                InstanceMetadataFetcher,
+                'retrieve_iam_role_credentials',
+                autospec=True,
+                side_effect=lambda fetcher: self._expired_imds_metadata(),
+            ) as patched,
+            mock.patch.object(
+                fetcher, '_retrieve_iam_role_credentials', return_value={}
+            ) as private_retrieve,
+        ):
+            creds = credentials.InstanceMetadataProvider(
+                iam_role_fetcher=fetcher
+            ).load()
+            self.assertIsNotNone(creds)
+            self.assertEqual(creds.get_frozen_credentials().access_key, 'a')
+
+        self.assertEqual(
+            patched.call_args_list, [mock.call(fetcher), mock.call(fetcher)]
+        )
+        private_retrieve.assert_not_called()
+
+    def test_refreshable_credentials_use_extended_imds_expiration(self):
+        fetcher = InstanceMetadataFetcher()
+        with mock.patch.object(
+            fetcher,
+            '_retrieve_iam_role_credentials',
+            side_effect=lambda: self._expired_imds_metadata(),
+        ):
+            creds = credentials.RefreshableCredentials.create_from_metadata(
+                fetcher.retrieve_iam_role_credentials(),
+                method='iam-role',
+                refresh_using=fetcher.retrieve_iam_role_credentials,
+            )
+            frozen = creds.get_frozen_credentials()
+
+        self.assertEqual(frozen.access_key, 'a')
 
     def test_refresh_failure_returns_cached_credentials(self):
         fetcher = mock.Mock()

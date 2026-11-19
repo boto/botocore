@@ -615,6 +615,14 @@ class InstanceMetadataFetcher(IMDSFetcher):
     ]
 
     def retrieve_iam_role_credentials(self):
+        # Extends expiry for callers that rely on it. InstanceMetadataProvider
+        # skips this by calling _retrieve_iam_role_credentials directly.
+        credentials = self._retrieve_iam_role_credentials()
+        if credentials:
+            self._evaluate_expiration(credentials)
+        return credentials
+
+    def _retrieve_iam_role_credentials(self):
         try:
             token = self._fetch_metadata_token()
             role_name = self._get_iam_role(token)
@@ -698,7 +706,6 @@ class InstanceMetadataFetcher(IMDSFetcher):
         return True
 
     def _evaluate_expiration(self, credentials):
-        """This function has been deprecated, but is kept for backwards compatibility."""
         expiration = credentials.get("expiry_time")
         if expiration is None:
             return
