@@ -937,6 +937,28 @@ class TestStreamingChecksumBody(unittest.TestCase):
             for chunk in self.wrapper:
                 pass
 
+    def test_iter_good(self):
+        self.assertEqual(b"".join(self.wrapper), self.raw_bytes)
+        self.assertEqual(self.wrapper.checksum.b64digest(), "DUoRhQ==")
+
+    def test_iter_reads_available_data(self):
+        read1_sizes = []
+
+        class Read1Body(BytesIO):
+            def read1(self, amt=-1):
+                read1_sizes.append(amt)
+                return super().read1(min(amt, 4))
+
+        self.fake_body = Read1Body(self.raw_bytes)
+        self._make_wrapper("DUoRhQ==")
+        self.assertEqual(list(self.wrapper), [b"hell", b"o wo", b"rld"])
+        self.assertEqual(read1_sizes, [64 * 1024] * 4)
+
+    def test_iter_lines_raises_error(self):
+        self._make_wrapper("duorhq==")
+        with self.assertRaises(FlexibleChecksumError):
+            list(self.wrapper.iter_lines())
+
     def test_readinto_good(self):
         chunk = bytearray(6)
         self.assertEqual(6, self.wrapper.readinto(chunk))

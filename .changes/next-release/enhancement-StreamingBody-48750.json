@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "StreamingBody",
+  "description": "Iteration, and iter_chunks() and iter_lines() without a chunk_size, now yield data as it arrives in chunks of up to 64 KiB instead of 1 KiB. Requires urllib3 2.2.1 or later."
+}
