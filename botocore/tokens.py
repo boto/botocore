@@ -327,17 +327,17 @@ class SSOTokenProvider:
 
     def _sso_session_in_credential_daemon(self, profile_config):
         if not (
-            "daemon_credential" in profile_config
+            "credential_daemon" in profile_config
             and "sso_account_id" in profile_config
             and "sso_role_name" in profile_config
         ):
             return False
-        # daemon_credential is only honored in the shared config file.
+        # credential_daemon is only honored in the shared config file.
         config_file_profiles = load_config_file_profiles(
             self._session.get_config_variable("config_file")
         )
         file_profile = config_file_profiles.get(self._profile_name, {})
-        return "daemon_credential" in file_profile
+        return "credential_daemon" in file_profile
 
     @CachedProperty
     def _sso_config(self):

@@ -4892,7 +4892,7 @@ def _daemon_provider(
     environ, profile=None, file_profile=None, profile_name='dev', **kwargs
 ):
     if profile is None:
-        profile = {'daemon_credential': 'dev'}
+        profile = {'credential_daemon': 'dev'}
     if file_profile is None:
         file_profile = profile
     config = {'profiles': {profile_name: profile}}
@@ -4964,7 +4964,7 @@ class TestCredentialDaemonProvider:
     def test_sso_profile_sends_account_and_role(self, make_daemon):
         daemon = make_daemon()
         profile = {
-            'daemon_credential': 'dev',
+            'credential_daemon': 'dev',
             'sso_session': 'my-sso',
             'sso_account_id': '111122223333',
             'sso_role_name': 'Admin',
@@ -4977,18 +4977,18 @@ class TestCredentialDaemonProvider:
             'role_name': 'Admin',
         }
 
-    def test_returns_none_without_daemon_credential(self, make_daemon):
+    def test_returns_none_without_credential_daemon(self, make_daemon):
         daemon = make_daemon()
         provider = _daemon_provider(_sock_env(daemon), {'region': 'us-west-2'})
         assert provider.load() is None
         assert daemon.connections == 0
 
-    def test_ignores_daemon_credential_only_in_credentials_file(
+    def test_ignores_credential_daemon_only_in_credentials_file(
         self, make_daemon
     ):
         daemon = make_daemon()
         provider = _daemon_provider(
-            _sock_env(daemon), {'daemon_credential': 'dev'}, file_profile={}
+            _sock_env(daemon), {'credential_daemon': 'dev'}, file_profile={}
         )
         assert provider.load() is None
         assert daemon.connections == 0
@@ -4997,8 +4997,8 @@ class TestCredentialDaemonProvider:
         daemon = make_daemon()
         provider = _daemon_provider(
             _sock_env(daemon),
-            {'daemon_credential': 'from-creds-file'},
-            file_profile={'daemon_credential': 'dev'},
+            {'credential_daemon': 'from-creds-file'},
+            file_profile={'credential_daemon': 'dev'},
         )
         provider.load()
         assert json.loads(daemon.requests[0])['params'] == {
@@ -5007,7 +5007,7 @@ class TestCredentialDaemonProvider:
 
     def test_role_arn_is_invalid(self, make_daemon):
         daemon = make_daemon()
-        profile = {'daemon_credential': 'dev', 'role_arn': 'value'}
+        profile = {'credential_daemon': 'dev', 'role_arn': 'value'}
         with pytest.raises(InvalidConfigError) as exc_info:
             _daemon_provider(_sock_env(daemon), profile).load()
         assert exc_info.value.code == 'INVALID_CONFIG'
@@ -5025,7 +5025,7 @@ class TestCredentialDaemonProvider:
     def test_web_identity_token_file_is_invalid(self, make_daemon, extra):
         daemon = make_daemon()
         profile = {
-            'daemon_credential': 'dev',
+            'credential_daemon': 'dev',
             'web_identity_token_file': '/tmp/token',
             **extra,
         }
@@ -5034,7 +5034,7 @@ class TestCredentialDaemonProvider:
         message = str(exc_info.value)
         assert exc_info.value.code == 'INVALID_CONFIG'
         assert 'web_identity_token_file' in message
-        assert 'daemon_credential' in message
+        assert 'credential_daemon' in message
         assert 'two credential sources' in message
         assert 'source_profile' not in message
         assert daemon.connections == 0
@@ -5043,7 +5043,7 @@ class TestCredentialDaemonProvider:
     def test_sso_profile_with_one_sso_setting(self, make_daemon, sso_var):
         daemon = make_daemon()
         profile = {
-            'daemon_credential': 'dev',
+            'credential_daemon': 'dev',
             'sso_start_url': 'https://example.com/start',
             'sso_region': 'us-east-1',
             sso_var: 'value',
@@ -5062,7 +5062,7 @@ class TestCredentialDaemonProvider:
 
     def test_sso_profile_without_sso_settings_is_skipped(self, make_daemon):
         daemon = make_daemon()
-        profile = {'daemon_credential': 'dev', 'sso_session': 'my-sso'}
+        profile = {'credential_daemon': 'dev', 'sso_session': 'my-sso'}
         assert _daemon_provider(_sock_env(daemon), profile).load() is None
         assert daemon.connections == 0
 
@@ -5071,7 +5071,7 @@ class TestCredentialDaemonProvider:
     )
     def test_valid_names(self, make_daemon, name):
         daemon = make_daemon()
-        profile = {'daemon_credential': name}
+        profile = {'credential_daemon': name}
         assert _daemon_provider(_sock_env(daemon), profile).load()
         assert json.loads(daemon.requests[0])['params']['credential'] == name
 
@@ -5080,12 +5080,12 @@ class TestCredentialDaemonProvider:
     )
     def test_invalid_names(self, make_daemon, name):
         daemon = make_daemon()
-        profile = {'daemon_credential': name}
+        profile = {'credential_daemon': name}
         error = _load_error(_daemon_provider(_sock_env(daemon), profile))
         assert isinstance(error, CredentialDaemonInvalidConfigError)
         assert isinstance(error, InvalidConfigError)
         assert error.code == 'INVALID_CONFIG'
-        assert 'daemon_credential' in str(error)
+        assert 'credential_daemon' in str(error)
         assert '"dev"' in str(error)
         assert daemon.connections == 0
 
@@ -5108,6 +5108,47 @@ class TestCredentialDaemonProvider:
         assert error.code == 'NOT_RUNNING'
         assert path in str(error)
         assert CredentialDaemonProvider.DOC in str(error)
+
+    def test_socket_path_wins_over_env(self, make_daemon):
+        configured = make_daemon('configured.sock')
+        from_env = make_daemon('env.sock')
+        provider = _daemon_provider(
+            _sock_env(from_env), socket_path=configured.path
+        )
+        provider.load()
+        assert configured.connections == 1
+        assert from_env.connections == 0
+
+    def test_socket_path_not_listening_does_not_fall_back(
+        self, make_daemon, daemon_dir
+    ):
+        from_env = make_daemon('env.sock')
+        path = os.path.join(daemon_dir, 'missing.sock')
+        error = _load_error(
+            _daemon_provider(_sock_env(from_env), socket_path=path)
+        )
+        assert error.code == 'NOT_RUNNING'
+        assert path in str(error)
+        assert from_env.connections == 0
+
+    @pytest.mark.parametrize('socket_path', ['', 'relative/daemon.sock'])
+    def test_empty_or_relative_socket_path_is_ignored(
+        self, make_daemon, socket_path
+    ):
+        from_env = make_daemon('env.sock')
+        provider = _daemon_provider(
+            _sock_env(from_env), socket_path=socket_path
+        )
+        provider.load()
+        assert from_env.connections == 1
+
+    @pytest.mark.parametrize('socket_path', ['', 'relative/daemon.sock'])
+    def test_empty_or_relative_socket_path_falls_back_to_link(
+        self, make_daemon, daemon_dir, socket_path
+    ):
+        daemon, environ = self._home_with_link(daemon_dir, make_daemon)
+        _daemon_provider(environ, socket_path=socket_path).load()
+        assert daemon.connections == 1
 
     def _home_with_link(self, daemon_dir, make_daemon):
         daemon = make_daemon('daemon/daemon.sock')
@@ -5581,7 +5622,12 @@ def _daemon_case_params():
     params = []
     for case in _load_daemon_cases():
         marks = ()
-        if case.get('requiresCredentialRefresh'):
+        applies_to = case.get('appliesTo')
+        if applies_to is not None and 'python' not in applies_to:
+            marks = pytest.mark.skip(
+                reason=f'applies only to {", ".join(applies_to)}'
+            )
+        elif case.get('requiresCredentialRefresh'):
             marks = pytest.mark.xfail(
                 strict=True, reason='needs credential refresh support'
             )
@@ -5944,7 +5990,7 @@ class TestCredentialDaemonSession:
             f.write(creds)
 
     def test_aws_profile_uses_daemon(self):
-        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        self.write_files('[profile dev]\ncredential_daemon = dev\n', '')
         os.environ['AWS_PROFILE'] = 'dev'
         creds = Session().get_credentials()
         frozen = creds.get_frozen_credentials()
@@ -5953,7 +5999,7 @@ class TestCredentialDaemonSession:
         assert frozen.token == 'daemon-token'
 
     def test_env_credentials_win_over_aws_profile(self):
-        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        self.write_files('[profile dev]\ncredential_daemon = dev\n', '')
         os.environ.update(
             {
                 'AWS_PROFILE': 'dev',
@@ -5966,7 +6012,7 @@ class TestCredentialDaemonSession:
         assert self.daemon.connections == 0
 
     def test_explicit_profile_uses_daemon(self):
-        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        self.write_files('[profile dev]\ncredential_daemon = dev\n', '')
         os.environ.update(
             {
                 'AWS_ACCESS_KEY_ID': 'env-key',
@@ -5976,10 +6022,10 @@ class TestCredentialDaemonSession:
         creds = Session(profile='dev').get_credentials()
         assert creds.method == 'credential-daemon'
 
-    def test_daemon_credential_in_credentials_file_is_ignored(self):
+    def test_credential_daemon_in_credentials_file_is_ignored(self):
         self.write_files(
             '',
-            '[dev]\ndaemon_credential = dev\n'
+            '[dev]\ncredential_daemon = dev\n'
             'aws_access_key_id = file-key\n'
             'aws_secret_access_key = file-secret\n',
         )
@@ -5987,15 +6033,15 @@ class TestCredentialDaemonSession:
         creds = session.get_credentials()
         assert creds.method == 'shared-credentials-file'
         assert self.daemon.connections == 0
-        assert 'daemon_credential' in session.full_config['profiles']['dev']
+        assert 'credential_daemon' in session.full_config['profiles']['dev']
 
-    def test_assume_role_ignores_daemon_credential_in_credentials_file(
+    def test_assume_role_ignores_credential_daemon_in_credentials_file(
         self,
     ):
         self.write_files(
             '[profile dev]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
             'credential_source = Environment\n',
-            '[dev]\ndaemon_credential = dev\n',
+            '[dev]\ncredential_daemon = dev\n',
         )
         os.environ.update(
             {
@@ -6007,11 +6053,11 @@ class TestCredentialDaemonSession:
         creds = session.get_credentials()
         assert creds.method == 'assume-role'
         assert self.daemon.connections == 0
-        assert 'daemon_credential' in session.full_config['profiles']['dev']
+        assert 'credential_daemon' in session.full_config['profiles']['dev']
 
     def test_role_arn_in_daemon_profile_is_invalid(self):
         self.write_files(
-            '[profile dev]\ndaemon_credential = dev\n'
+            '[profile dev]\ncredential_daemon = dev\n'
             'role_arn = arn:aws:iam::123456789012:role/r\n'
             'credential_source = Environment\n',
             '',
@@ -6024,7 +6070,7 @@ class TestCredentialDaemonSession:
         self.write_files(
             '[profile role]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
             'source_profile = dev\n'
-            '[profile dev]\ndaemon_credential = dev\n'
+            '[profile dev]\ncredential_daemon = dev\n'
             'role_arn = arn:aws:iam::123456789012:role/other\n'
             'credential_source = Environment\n',
             '',
@@ -6037,7 +6083,7 @@ class TestCredentialDaemonSession:
         self.write_files(
             '[profile role]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
             'source_profile = dev\n'
-            '[profile dev]\ndaemon_credential = dev\n',
+            '[profile dev]\ncredential_daemon = dev\n',
             '',
         )
         session = Session(profile='role')
@@ -6074,7 +6120,7 @@ class TestCredentialDaemonSession:
 
     def test_daemon_wins_over_credential_process(self):
         self.write_files(
-            '[profile dev]\ndaemon_credential = dev\n'
+            '[profile dev]\ncredential_daemon = dev\n'
             'credential_process = /bin/false\n',
             '',
         )
@@ -6086,7 +6132,7 @@ class TestCredentialDaemonSession:
         process_load.assert_not_called()
 
     def test_daemon_profile_wins_over_env_web_identity(self):
-        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        self.write_files('[profile dev]\ncredential_daemon = dev\n', '')
         os.environ.update(
             {
                 'AWS_PROFILE': 'dev',
@@ -6104,7 +6150,7 @@ class TestCredentialDaemonSession:
 
     def test_sso_session_profile_with_daemon(self):
         self.write_files(
-            '[profile dev]\ndaemon_credential = dev\nsso_session = my-sso\n'
+            '[profile dev]\ncredential_daemon = dev\nsso_session = my-sso\n'
             'sso_account_id = 111122223333\nsso_role_name = Admin\n'
             '[sso-session my-sso]\nsso_region = us-east-1\n'
             'sso_start_url = https://example.com/start\n',
@@ -6120,7 +6166,7 @@ class TestCredentialDaemonSession:
         self,
     ):
         self.write_files(
-            '[profile dev]\ndaemon_credential = dev\nsso_session = my-sso\n'
+            '[profile dev]\ncredential_daemon = dev\nsso_session = my-sso\n'
             'sso_account_id = 111122223333\nsso_role_name = Admin\n'
             '[sso-session my-sso]\nsso_region = us-east-1\n'
             'sso_start_url = https://example.com/start\n',
@@ -6133,7 +6179,7 @@ class TestCredentialDaemonSession:
         assert session.get_auth_token() == 'later-token'
 
     def test_no_daemon_running_sends_no_request(self):
-        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        self.write_files('[profile dev]\ncredential_daemon = dev\n', '')
         os.environ['AWS_CREDENTIAL_DAEMON_SOCKET'] = os.path.join(
             self.dir, 'missing.sock'
         )
