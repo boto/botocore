@@ -2,6 +2,7 @@ import logging
 import os
 import os.path
 import socket
+import ssl
 import sys
 import warnings
 from base64 import b64encode
@@ -27,7 +28,6 @@ from urllib3.util.ssl_ import (
     OP_NO_SSLv2,
     OP_NO_SSLv3,
     is_ipaddress,
-    ssl,
 )
 from urllib3.util.url import parse_url
 
