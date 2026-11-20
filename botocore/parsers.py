@@ -559,7 +559,10 @@ class BaseXMLResponseParser(ResponseParser):
                 sub_dict = self._build_name_to_xml_node(value)
                 parsed[key] = self._replace_nodes(sub_dict)
             else:
-                parsed[key] = value.text
+                # An empty element such as <Message></Message> has no text.
+                # Parse it as an empty string, as _text_content does for
+                # modeled shapes, not as None.
+                parsed[key] = value.text or ''
         return parsed
 
     @_text_content
