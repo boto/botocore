@@ -110,6 +110,38 @@ def get_cert_path(verify):
     return cert_path
 
 
+def _file_stamp(path):
+    try:
+        st = os.stat(path)
+    except (OSError, TypeError, ValueError):
+        return None
+    return (st.st_ino, st.st_size, st.st_mtime_ns)
+
+
+class _OnceVerifyLocationsSSLContext(SSLContext):
+    """SSLContext that skips repeated identical CA loads.
+
+    urllib3 calls ``load_verify_locations`` on every new connection when
+    ``ca_certs`` is set, and each call re-parses the CA bundle. A file
+    that changed on disk is loaded again, and failed loads are not
+    recorded.
+    """
+
+    def load_verify_locations(self, cafile=None, capath=None, cadata=None):
+        if cafile is not None:
+            cafile = os.fspath(cafile)
+        if capath is not None:
+            capath = os.fspath(capath)
+        if isinstance(cadata, bytearray):
+            cadata = bytes(cadata)
+        key = (cafile, capath, cadata, _file_stamp(cafile))
+        loaded = self.__dict__.setdefault('_botocore_loaded_locations', set())
+        if key in loaded:
+            return
+        super().load_verify_locations(cafile, capath, cadata)
+        loaded.add(key)
+
+
 def create_urllib3_context(
     ssl_version=None, cert_reqs=None, options=None, ciphers=None
 ):
@@ -122,7 +154,7 @@ def create_urllib3_context(
     if not ssl_version or ssl_version == PROTOCOL_TLS:
         ssl_version = PROTOCOL_TLS_CLIENT
 
-    context = SSLContext(ssl_version)
+    context = _OnceVerifyLocationsSSLContext(ssl_version)
 
     if ciphers:
         context.set_ciphers(ciphers)
