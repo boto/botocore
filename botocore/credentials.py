@@ -2878,7 +2878,7 @@ class LoginProvider(CredentialProvider):
 
 class CredentialDaemonProvider(CredentialProvider):
     METHOD = 'credential-daemon'
-    DOC = 'https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-credential-daemon.html'
+    DOC = 'https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-credsd.html'
     SOCKET_ENV_VAR = 'AWS_CREDENTIAL_DAEMON_SOCKET'
     LINK_NAME = 'credential-daemon.sock'
     _NAME_REGEX = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}')
