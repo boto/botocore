@@ -617,6 +617,39 @@ class TestWaitersObjects(unittest.TestCase):
                 acceptors, responses, expected_msg
             )
 
+    def test_max_attempts_error_names_the_last_matched_acceptor(self):
+        # The retry acceptor matches once, then nothing matches. The error
+        # must describe the retry acceptor, not the last acceptor in the list.
+        acceptors = [
+            {
+                'state': 'retry',
+                'matcher': 'path',
+                'argument': 'Count',
+                'expected': 1,
+            },
+            {
+                'state': 'success',
+                'matcher': 'path',
+                'argument': 'Count',
+                'expected': 5,
+            },
+        ]
+        config = self.create_waiter_config(acceptors=acceptors, max_attempts=3)
+        operation_method = mock.Mock()
+        waiter = Waiter('MyWaiter', config, operation_method)
+        self.client_responses_are(
+            {'Count': 1},
+            {'Count': 0},
+            {'Count': 0},
+            for_operation=operation_method,
+        )
+        with self.assertRaises(WaiterError) as raised:
+            waiter.wait()
+        reason = raised.exception.kwargs['reason']
+        self.assertIn('Previously accepted state', reason)
+        self.assertIn('"1"', reason)
+        self.assertNotIn('"5"', reason)
+
     def test_waiter_transitions_to_failure_state(self):
         acceptors = [
             # A success state that will never be hit.
