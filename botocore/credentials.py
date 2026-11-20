@@ -87,7 +87,7 @@ ReadOnlyCredentials = namedtuple(
 _DEFAULT_MANDATORY_REFRESH_TIMEOUT = 10 * 60  # 10 min
 _DEFAULT_ADVISORY_REFRESH_TIMEOUT = 15 * 60  # 15 min
 
-_CREDENTIAL_DAEMON_KEY = 'daemon_credential'
+_CREDENTIAL_DAEMON_KEY = 'credential_daemon'
 
 
 def create_credential_resolver(session, cache=None, region_name=None):
@@ -309,15 +309,15 @@ def _is_credential_daemon_profile(profile):
         return False
     if _is_sso_profile(profile):
         # An SSO profile with neither sso_account_id nor sso_role_name
-        # resolves as if daemon_credential were not set.
+        # resolves as if credential_daemon were not set.
         return 'sso_account_id' in profile or 'sso_role_name' in profile
     return True
 
 
-def _restrict_daemon_credential_to_config_file(
+def _restrict_credential_daemon_to_config_file(
     loaded_config, config_file_profiles
 ):
-    # The merged config includes the credentials file, where daemon_credential
+    # The merged config includes the credentials file, where credential_daemon
     # must be ignored.
     new_profiles = {}
     for name, profile in loaded_config.get('profiles', {}).items():
@@ -1667,7 +1667,7 @@ class AssumeRoleProvider(CredentialProvider):
         :param load_config_file_profiles: A function that accepts no
             arguments, and when called, will return the profiles parsed
             from the shared config file only. It is used to read the
-            ``daemon_credential`` setting, which is only honored in the
+            ``credential_daemon`` setting, which is only honored in the
             shared config file.
         """
         #: The cache used to first check for assumed credentials.
@@ -1702,7 +1702,7 @@ class AssumeRoleProvider(CredentialProvider):
             _CREDENTIAL_DAEMON_KEY in profile
             for profile in self._loaded_config.get('profiles', {}).values()
         ):
-            self._loaded_config = _restrict_daemon_credential_to_config_file(
+            self._loaded_config = _restrict_credential_daemon_to_config_file(
                 self._loaded_config, self._load_config_file_profiles()
             )
         profiles = self._loaded_config.get('profiles', {})
@@ -2878,7 +2878,7 @@ class LoginProvider(CredentialProvider):
 
 class CredentialDaemonProvider(CredentialProvider):
     METHOD = 'credential-daemon'
-    DOC = 'https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-credential-daemon.html'
+    DOC = 'https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-credsd.html'
     SOCKET_ENV_VAR = 'AWS_CREDENTIAL_DAEMON_SOCKET'
     LINK_NAME = 'credential-daemon.sock'
     _NAME_REGEX = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}')
@@ -2898,6 +2898,7 @@ class CredentialDaemonProvider(CredentialProvider):
         environ=None,
         connect_timeout=1.0,
         call_timeout=5.0,
+        socket_path=None,
     ):
         """
         :type profile_name: str
@@ -2922,6 +2923,12 @@ class CredentialDaemonProvider(CredentialProvider):
 
         :type call_timeout: float
         :param call_timeout: Seconds to wait for the whole call.
+
+        :type socket_path: str
+        :param socket_path: The path of the credential daemon's socket.
+            If set to an absolute path, it is used instead of
+            ``AWS_CREDENTIAL_DAEMON_SOCKET`` and the default location.
+            An empty or relative path is ignored.
         """
         super().__init__()
         self._profile_name = profile_name
@@ -2930,6 +2937,7 @@ class CredentialDaemonProvider(CredentialProvider):
         self._environ = environ
         self._connect_timeout = connect_timeout
         self._call_timeout = call_timeout
+        self._socket_path = socket_path
 
     def load(self):
         loaded_config = self._load_config()
@@ -2937,7 +2945,7 @@ class CredentialDaemonProvider(CredentialProvider):
         profile = profiles.get(self._profile_name, {})
         if _CREDENTIAL_DAEMON_KEY not in profile:
             return None
-        # daemon_credential is only honored in the shared config file.
+        # credential_daemon is only honored in the shared config file.
         file_profiles = self._load_config_file_profiles()
         file_profile = file_profiles.get(self._profile_name, {})
         if _CREDENTIAL_DAEMON_KEY not in file_profile:
@@ -3274,9 +3282,9 @@ class CredentialDaemonProvider(CredentialProvider):
         # Each location can be a different daemon serving different credentials
         # under the same name, so the first one that applies is used even if
         # connecting to it later fails.
-        env_path = environ.get(self.SOCKET_ENV_VAR)
-        if env_path and os.path.isabs(env_path):
-            return env_path
+        for path in (self._socket_path, environ.get(self.SOCKET_ENV_VAR)):
+            if path and os.path.isabs(path):
+                return path
         home = environ.get('HOME')
         # A relative HOME would resolve under the current directory, where
         # another user could place a socket.
