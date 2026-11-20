@@ -12,9 +12,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import base64
+import errno
 import logging
 import os
+import pickle
+import platform
 import shutil
+import socket
 import subprocess
 import tempfile
 import threading
@@ -25,11 +29,13 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
+from dateutil.parser import parse
 from dateutil.tz import tzlocal, tzutc
 
 import botocore.exceptions
 import botocore.session
 from botocore import credentials
+from botocore.awsrequest import AWSResponse
 from botocore.compat import json
 from botocore.configprovider import ConfigValueStore
 from botocore.credentials import (
@@ -37,6 +43,7 @@ from botocore.credentials import (
     AssumeRoleWithWebIdentityProvider,
     BaseAssumeRoleCredentialFetcher,
     ConfigProvider,
+    CredentialDaemonProvider,
     CredentialProvider,
     Credentials,
     EnvProvider,
@@ -50,6 +57,9 @@ from botocore.credentials import (
 )
 from botocore.exceptions import (
     ClientError,
+    CredentialDaemonError,
+    CredentialDaemonInvalidConfigError,
+    InvalidConfigError,
     LoginError,
     MissingDependencyException,
 )
@@ -60,10 +70,12 @@ from botocore.utils import (
     FileWebIdentityTokenLoader,
     SSOTokenLoader,
     datetime2timestamp,
+    load_config_file_profiles,
 )
 from tests import (
     BaseEnvVar,
     IntegerRefresher,
+    RawResponse,
     mock,
     requires_crt,
     skip_if_crt,
@@ -3888,6 +3900,7 @@ class TestProfileProviderBuilder(unittest.TestCase):
     def test_profile_provider_builder_order(self):
         providers = self.builder.providers('some-profile')
         expected_providers = [
+            CredentialDaemonProvider,
             AssumeRoleWithWebIdentityProvider,
             SSOProvider,
             SharedCredentialProvider,
@@ -4746,3 +4759,1388 @@ def test_build_dpop_header_structure():
     assert payload['htu'] == uri
     assert payload['iat'] == test_timestamp
     assert payload['jti'] == test_uid
+
+
+_DAEMON_MARKER = 'REPLY-MARKER-7f3a'
+
+
+def _daemon_expires_at(delta=timedelta(hours=1)):
+    return (datetime.now(timezone.utc) + delta).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def _daemon_result(**material_overrides):
+    material = {
+        'type': 'session_credentials',
+        'access_key_id': 'ASIADAEMON',
+        'secret_access_key': 'daemon-secret',
+        'session_token': 'daemon-token',
+        'account_id': '123456789012',
+    }
+    material.update(material_overrides)
+    return {
+        'credential': 'dev',
+        'material': material,
+        'expires_at': _daemon_expires_at(),
+    }
+
+
+def _daemon_reply(result=None, error=None, **extra):
+    reply = {'jsonrpc': '2.0', 'id': 1}
+    if error is not None:
+        reply['error'] = error
+    else:
+        reply['result'] = _daemon_result() if result is None else result
+    reply.update(extra)
+    return json.dumps(reply).encode('utf-8') + b'\n'
+
+
+def _daemon_error(code, message='daemon says no'):
+    return _daemon_reply(
+        error={'code': -32000, 'message': message, 'data': {'code': code}}
+    )
+
+
+class FakeCredentialDaemon:
+    """A credential daemon on a Unix domain socket for tests.
+
+    ``reply`` is the bytes to send back, or a callable that takes the
+    request line and returns them. ``mode`` is ``reply``, ``close``
+    (close without replying) or ``hang`` (never reply).
+    """
+
+    def __init__(self, path, reply=None, mode='reply'):
+        self.path = path
+        self.reply = _daemon_reply() if reply is None else reply
+        self.mode = mode
+        self.requests = []
+        self.connections = 0
+        self._stop = threading.Event()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        self._server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._server.bind(path)
+        self._server.listen(8)
+        self._server.settimeout(0.05)
+        self._thread = threading.Thread(target=self._serve, daemon=True)
+        self._thread.start()
+
+    def _serve(self):
+        while not self._stop.is_set():
+            try:
+                conn, _ = self._server.accept()
+            except TimeoutError:
+                continue
+            except OSError:
+                return
+            self.connections += 1
+            with conn:
+                self._handle(conn)
+
+    def _handle(self, conn):
+        conn.settimeout(5)
+        buf = b''
+        try:
+            while b'\n' not in buf:
+                chunk = conn.recv(65536)
+                if not chunk:
+                    break
+                buf += chunk
+        except OSError:
+            return
+        line = buf.split(b'\n', 1)[0]
+        self.requests.append(line)
+        if self.mode == 'close':
+            return
+        if self.mode == 'hang':
+            self._stop.wait(10)
+            return
+        reply = self.reply(line) if callable(self.reply) else self.reply
+        try:
+            conn.sendall(reply)
+        except OSError:
+            pass
+
+    def stop(self):
+        self._stop.set()
+        self._server.close()
+        self._thread.join(5)
+
+
+@pytest.fixture
+def daemon_dir():
+    path = tempfile.mkdtemp(prefix='cd', dir='/tmp')
+    yield path
+    shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture
+def make_daemon(daemon_dir):
+    daemons = []
+
+    def _make(relpath='d.sock', **kwargs):
+        daemon = FakeCredentialDaemon(
+            os.path.join(daemon_dir, relpath), **kwargs
+        )
+        daemons.append(daemon)
+        return daemon
+
+    yield _make
+    for daemon in daemons:
+        daemon.stop()
+
+
+def _daemon_provider(
+    environ, profile=None, file_profile=None, profile_name='dev', **kwargs
+):
+    if profile is None:
+        profile = {'daemon_credential': 'dev'}
+    if file_profile is None:
+        file_profile = profile
+    config = {'profiles': {profile_name: profile}}
+    file_profiles = {profile_name: file_profile}
+    return CredentialDaemonProvider(
+        profile_name=profile_name,
+        load_config=lambda: config,
+        load_config_file_profiles=lambda: file_profiles,
+        environ=environ,
+        **kwargs,
+    )
+
+
+def _sock_env(daemon):
+    return {'AWS_CREDENTIAL_DAEMON_SOCKET': daemon.path}
+
+
+def _load_error(provider):
+    with pytest.raises(CredentialDaemonError) as exc_info:
+        provider.load()
+    return exc_info.value
+
+
+# The fake daemon needs Unix domain sockets.
+_skip_daemon_tests_on_windows = pytest.mark.skipif(
+    platform.system() not in ['Darwin', 'Linux'],
+    reason='The credential daemon tests need Unix domain sockets.',
+)
+
+
+def test_unsupported_platform_on_windows():
+    provider = _daemon_provider(
+        {'AWS_CREDENTIAL_DAEMON_SOCKET': '/tmp/x.sock'}
+    )
+    with mock.patch.object(provider, '_create_socket') as create_socket:
+        with mock.patch('botocore.credentials.os.name', 'nt'):
+            error = _load_error(provider)
+    assert error.code == 'UNSUPPORTED_PLATFORM'
+    assert CredentialDaemonProvider.DOC in str(error)
+    create_socket.assert_not_called()
+
+
+@_skip_daemon_tests_on_windows
+class TestCredentialDaemonProvider:
+    def test_loads_credentials(self, make_daemon):
+        daemon = make_daemon()
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ASIADAEMON'
+        assert frozen.secret_key == 'daemon-secret'
+        assert frozen.token == 'daemon-token'
+        assert frozen.account_id == '123456789012'
+        assert creds.method == 'credential-daemon'
+        assert daemon.requests == [
+            b'{"jsonrpc":"2.0","id":1,"method":"credential/get",'
+            b'"params":{"credential":"dev"}}'
+        ]
+
+    def test_optional_fields_missing(self, make_daemon):
+        result = _daemon_result()
+        del result['material']['session_token']
+        result['material']['account_id'] = ''
+        daemon = make_daemon(reply=_daemon_reply(result))
+        frozen = _daemon_provider(_sock_env(daemon)).load()
+        frozen = frozen.get_frozen_credentials()
+        assert frozen.token is None
+        assert frozen.account_id is None
+
+    def test_sso_profile_sends_account_and_role(self, make_daemon):
+        daemon = make_daemon()
+        profile = {
+            'daemon_credential': 'dev',
+            'sso_session': 'my-sso',
+            'sso_account_id': '111122223333',
+            'sso_role_name': 'Admin',
+        }
+        _daemon_provider(_sock_env(daemon), profile).load()
+        request = json.loads(daemon.requests[0])
+        assert request['params'] == {
+            'credential': 'dev',
+            'account_id': '111122223333',
+            'role_name': 'Admin',
+        }
+
+    def test_returns_none_without_daemon_credential(self, make_daemon):
+        daemon = make_daemon()
+        provider = _daemon_provider(_sock_env(daemon), {'region': 'us-west-2'})
+        assert provider.load() is None
+        assert daemon.connections == 0
+
+    def test_ignores_daemon_credential_only_in_credentials_file(
+        self, make_daemon
+    ):
+        daemon = make_daemon()
+        provider = _daemon_provider(
+            _sock_env(daemon), {'daemon_credential': 'dev'}, file_profile={}
+        )
+        assert provider.load() is None
+        assert daemon.connections == 0
+
+    def test_uses_config_file_value(self, make_daemon):
+        daemon = make_daemon()
+        provider = _daemon_provider(
+            _sock_env(daemon),
+            {'daemon_credential': 'from-creds-file'},
+            file_profile={'daemon_credential': 'dev'},
+        )
+        provider.load()
+        assert json.loads(daemon.requests[0])['params'] == {
+            'credential': 'dev'
+        }
+
+    def test_role_arn_is_invalid(self, make_daemon):
+        daemon = make_daemon()
+        profile = {'daemon_credential': 'dev', 'role_arn': 'value'}
+        with pytest.raises(InvalidConfigError) as exc_info:
+            _daemon_provider(_sock_env(daemon), profile).load()
+        assert exc_info.value.code == 'INVALID_CONFIG'
+        assert 'role_arn' in str(exc_info.value)
+        assert 'source_profile = dev' in str(exc_info.value)
+        assert daemon.connections == 0
+
+    @pytest.mark.parametrize(
+        'extra',
+        [
+            {},
+            {'role_arn': 'arn:aws:iam::123456789012:role/r'},
+        ],
+    )
+    def test_web_identity_token_file_is_invalid(self, make_daemon, extra):
+        daemon = make_daemon()
+        profile = {
+            'daemon_credential': 'dev',
+            'web_identity_token_file': '/tmp/token',
+            **extra,
+        }
+        with pytest.raises(InvalidConfigError) as exc_info:
+            _daemon_provider(_sock_env(daemon), profile).load()
+        message = str(exc_info.value)
+        assert exc_info.value.code == 'INVALID_CONFIG'
+        assert 'web_identity_token_file' in message
+        assert 'daemon_credential' in message
+        assert 'two credential sources' in message
+        assert 'source_profile' not in message
+        assert daemon.connections == 0
+
+    @pytest.mark.parametrize('sso_var', ['sso_account_id', 'sso_role_name'])
+    def test_sso_profile_with_one_sso_setting(self, make_daemon, sso_var):
+        daemon = make_daemon()
+        profile = {
+            'daemon_credential': 'dev',
+            'sso_start_url': 'https://example.com/start',
+            'sso_region': 'us-east-1',
+            sso_var: 'value',
+        }
+        with pytest.raises(InvalidConfigError) as exc_info:
+            _daemon_provider(_sock_env(daemon), profile).load()
+        missing = (
+            'sso_role_name'
+            if sso_var == 'sso_account_id'
+            else 'sso_account_id'
+        )
+        assert str(exc_info.value).endswith(
+            f'missing required configuration: {missing}'
+        )
+        assert daemon.connections == 0
+
+    def test_sso_profile_without_sso_settings_is_skipped(self, make_daemon):
+        daemon = make_daemon()
+        profile = {'daemon_credential': 'dev', 'sso_session': 'my-sso'}
+        assert _daemon_provider(_sock_env(daemon), profile).load() is None
+        assert daemon.connections == 0
+
+    @pytest.mark.parametrize(
+        'name', ['a' * 64, 'a.b', '-a', '_a', 'A-Z_0.9', 'dev']
+    )
+    def test_valid_names(self, make_daemon, name):
+        daemon = make_daemon()
+        profile = {'daemon_credential': name}
+        assert _daemon_provider(_sock_env(daemon), profile).load()
+        assert json.loads(daemon.requests[0])['params']['credential'] == name
+
+    @pytest.mark.parametrize(
+        'name', ['a' * 65, '.a', '', 'a/b', 'a b', 'café', 'a\n']
+    )
+    def test_invalid_names(self, make_daemon, name):
+        daemon = make_daemon()
+        profile = {'daemon_credential': name}
+        error = _load_error(_daemon_provider(_sock_env(daemon), profile))
+        assert isinstance(error, CredentialDaemonInvalidConfigError)
+        assert isinstance(error, InvalidConfigError)
+        assert error.code == 'INVALID_CONFIG'
+        assert 'daemon_credential' in str(error)
+        assert '"dev"' in str(error)
+        assert daemon.connections == 0
+
+    def test_socket_path_resolved_on_every_fetch(self, make_daemon):
+        first = make_daemon('first.sock')
+        second = make_daemon('second.sock')
+        environ = _sock_env(first)
+        provider = _daemon_provider(environ)
+        provider.load()
+        environ['AWS_CREDENTIAL_DAEMON_SOCKET'] = second.path
+        provider.load()
+        assert first.connections == 1
+        assert second.connections == 1
+
+    def test_no_daemon_is_not_running(self, daemon_dir):
+        path = os.path.join(daemon_dir, 'missing.sock')
+        error = _load_error(
+            _daemon_provider({'AWS_CREDENTIAL_DAEMON_SOCKET': path})
+        )
+        assert error.code == 'NOT_RUNNING'
+        assert path in str(error)
+        assert CredentialDaemonProvider.DOC in str(error)
+
+    def _home_with_link(self, daemon_dir, make_daemon):
+        daemon = make_daemon('daemon/daemon.sock')
+        home = os.path.join(daemon_dir, 'home')
+        os.makedirs(os.path.join(home, '.aws'), mode=0o700)
+        os.symlink(
+            daemon.path, os.path.join(home, '.aws', 'credential-daemon.sock')
+        )
+        return daemon, {'HOME': home}
+
+    def test_uses_link_under_home(self, make_daemon, daemon_dir):
+        daemon, environ = self._home_with_link(daemon_dir, make_daemon)
+        _daemon_provider(environ).load()
+        assert daemon.connections == 1
+
+    def test_regular_file_at_link_path_is_dialed(self, daemon_dir):
+        home = os.path.join(daemon_dir, 'home')
+        os.makedirs(os.path.join(home, '.aws'))
+        path = os.path.join(home, '.aws', 'credential-daemon.sock')
+        with open(path, 'w') as f:
+            f.write('not a socket')
+        error = _load_error(_daemon_provider({'HOME': home}))
+        assert error.code == 'NOT_RUNNING'
+        assert path in str(error)
+
+    def test_invalid_home_is_not_running(self):
+        error = _load_error(_daemon_provider({'HOME': '/tmp/bad\x00home'}))
+        assert error.code == 'NOT_RUNNING'
+
+    def test_aws_regular_file_means_no_socket(self, daemon_dir):
+        home = os.path.join(daemon_dir, 'home')
+        os.makedirs(home)
+        with open(os.path.join(home, '.aws'), 'w') as f:
+            f.write('not a folder')
+        error = _load_error(_daemon_provider({'HOME': home}))
+        assert error.code == 'NOT_RUNNING'
+        assert 'AWS_CREDENTIAL_DAEMON_SOCKET' in str(error)
+
+    def test_connect_timeout(self, daemon_dir):
+        fake_socket = mock.Mock()
+        fake_socket.connect.side_effect = TimeoutError('timed out')
+        provider = _daemon_provider(
+            {'AWS_CREDENTIAL_DAEMON_SOCKET': '/tmp/x.sock'}
+        )
+        with mock.patch.object(
+            provider, '_create_socket', return_value=fake_socket
+        ):
+            error = _load_error(provider)
+        assert error.code == 'NOT_RUNNING'
+        assert 'connect timeout of 1s' in str(error)
+        assert '/tmp/x.sock' in str(error)
+        assert CredentialDaemonProvider.DOC in str(error)
+        fake_socket.settimeout.assert_called_with(1.0)
+        fake_socket.close.assert_called_once_with()
+
+    def test_socket_creation_error_is_not_running(self):
+        provider = _daemon_provider(
+            {'AWS_CREDENTIAL_DAEMON_SOCKET': '/tmp/x.sock'}
+        )
+        with mock.patch.object(
+            provider,
+            '_create_socket',
+            side_effect=OSError(errno.EMFILE, 'Too many open files'),
+        ):
+            error = _load_error(provider)
+        assert error.code == 'NOT_RUNNING'
+        assert '/tmp/x.sock' in str(error)
+        assert 'Too many open files' in str(error)
+
+    def test_connect_limited_by_call_timeout(self):
+        fake_socket = mock.Mock()
+        fake_socket.connect.side_effect = TimeoutError('timed out')
+        provider = _daemon_provider(
+            {'AWS_CREDENTIAL_DAEMON_SOCKET': '/tmp/x.sock'},
+            call_timeout=0.5,
+        )
+        with mock.patch.object(
+            provider, '_create_socket', return_value=fake_socket
+        ):
+            error = _load_error(provider)
+        assert error.code == 'NOT_RUNNING'
+        assert 'call timeout of 0.5s' in str(error)
+
+    def test_call_timeout(self, make_daemon):
+        daemon = make_daemon(mode='hang')
+        provider = _daemon_provider(_sock_env(daemon), call_timeout=0.3)
+        start = time.monotonic()
+        error = _load_error(provider)
+        assert time.monotonic() - start < 3
+        assert error.code == 'NOT_RUNNING'
+        assert 'call timeout of 0.3s' in str(error)
+        assert daemon.path in str(error)
+        assert CredentialDaemonProvider.DOC in str(error)
+
+    def test_closed_without_reply(self, make_daemon):
+        daemon = make_daemon(mode='close')
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+
+    @pytest.mark.parametrize(
+        'os_error',
+        [
+            ConnectionResetError(errno.ECONNRESET, 'Connection reset by peer'),
+            BrokenPipeError(errno.EPIPE, 'Broken pipe'),
+        ],
+    )
+    def test_send_or_read_os_error_is_reported(self, os_error):
+        fake_socket = mock.Mock()
+        fake_socket.sendall.side_effect = os_error
+        provider = _daemon_provider(
+            {'AWS_CREDENTIAL_DAEMON_SOCKET': '/tmp/x.sock'}
+        )
+        with mock.patch.object(
+            provider, '_create_socket', return_value=fake_socket
+        ):
+            error = _load_error(provider)
+        assert error.code == 'PROTOCOL_ERROR'
+        assert os_error.strerror in str(error)
+        assert 'connection closed' not in str(error)
+        fake_socket.close.assert_called_once_with()
+
+    def test_partial_reply_then_eof(self, make_daemon):
+        daemon = make_daemon(reply=_daemon_reply().rstrip(b'\n'))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+
+    def test_reply_line_of_max_length(self, make_daemon):
+        reply = _daemon_reply(padding='')
+        padding = 64000 - (len(reply) - 1)
+        reply = _daemon_reply(padding='x' * padding)
+        assert len(reply) == 64001
+        daemon = make_daemon(reply=reply)
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        assert creds.get_frozen_credentials().access_key == 'ASIADAEMON'
+
+    def test_reply_line_over_max_length(self, make_daemon):
+        reply = _daemon_reply(padding='')
+        padding = 64001 - (len(reply) - 1)
+        reply = _daemon_reply(padding='x' * padding)
+        assert len(reply) == 64002
+        daemon = make_daemon(reply=reply)
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+        assert '64000 bytes' in str(error)
+
+    def test_reply_without_newline_over_max_length(self, make_daemon):
+        daemon = make_daemon(reply=b'x' * 200000)
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+
+    @pytest.mark.parametrize(
+        'reply',
+        [
+            b'\xff\xfe' + _DAEMON_MARKER.encode() + b'\n',
+            _DAEMON_MARKER.encode() + b'\n',
+            b'\n',
+            b'[' * 64000 + b'\n',
+            json.dumps([_DAEMON_MARKER]).encode() + b'\n',
+            json.dumps(
+                {'jsonrpc': '1.0', 'id': 1, 'result': _DAEMON_MARKER}
+            ).encode()
+            + b'\n',
+            json.dumps({'id': 1, 'result': _DAEMON_MARKER}).encode() + b'\n',
+            json.dumps(
+                {
+                    'jsonrpc': '2.0',
+                    'id': 1,
+                    'result': _DAEMON_MARKER,
+                    'error': _DAEMON_MARKER,
+                }
+            ).encode()
+            + b'\n',
+            json.dumps({'jsonrpc': '2.0', 'id': 1}).encode() + b'\n',
+            json.dumps({'jsonrpc': '2.0', 'id': 1, 'result': None}).encode()
+            + b'\n',
+            json.dumps({'jsonrpc': '2.0', 'id': 1, 'error': None}).encode()
+            + b'\n',
+            json.dumps(
+                {'jsonrpc': '2.0', 'id': 1, 'result': None, 'error': None}
+            ).encode()
+            + b'\n',
+            _daemon_reply(result=_DAEMON_MARKER),
+            _daemon_reply(result={'material': _DAEMON_MARKER}),
+            _daemon_reply(result={'material': {'type': 5}}),
+        ],
+        ids=[
+            'not-utf8',
+            'not-json',
+            'empty-line',
+            'too-deeply-nested',
+            'not-an-object',
+            'wrong-jsonrpc-version',
+            'missing-jsonrpc',
+            'result-and-error',
+            'neither-result-nor-error',
+            'null-result',
+            'null-error',
+            'null-result-and-error',
+            'result-not-an-object',
+            'material-not-an-object',
+            'material-type-not-a-string',
+        ],
+    )
+    def test_invalid_envelope(self, make_daemon, reply):
+        daemon = make_daemon(reply=reply)
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+        assert _DAEMON_MARKER not in str(error)
+
+    @pytest.mark.parametrize(
+        'field', ['access_key_id', 'secret_access_key', 'expires_at']
+    )
+    @pytest.mark.parametrize('value', ['', None, 'missing', 5])
+    def test_invalid_required_field(self, make_daemon, field, value):
+        result = _daemon_result()
+        container = result if field == 'expires_at' else result['material']
+        if value == 'missing':
+            del container[field]
+        else:
+            container[field] = value
+        daemon = make_daemon(reply=_daemon_reply(result))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+        assert field in str(error)
+
+    @pytest.mark.parametrize('field', ['session_token', 'account_id'])
+    def test_invalid_optional_field(self, make_daemon, field):
+        result = _daemon_result(**{field: 5})
+        daemon = make_daemon(reply=_daemon_reply(result))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+        assert field in str(error)
+
+    @pytest.mark.parametrize(
+        'expires_at,expected',
+        [
+            (
+                '2099-01-02T03:04:05Z',
+                datetime(2099, 1, 2, 3, 4, 5, tzinfo=tzutc()),
+            ),
+            (
+                '2099-01-02T03:04:05.1Z',
+                datetime(2099, 1, 2, 3, 4, 5, 100000, tzinfo=tzutc()),
+            ),
+            (
+                '2099-01-02T03:04:05.123456789Z',
+                datetime(2099, 1, 2, 3, 4, 5, 123456, tzinfo=tzutc()),
+            ),
+        ],
+    )
+    def test_expires_at(self, make_daemon, expires_at, expected):
+        result = _daemon_result()
+        result['expires_at'] = expires_at
+        daemon = make_daemon(reply=_daemon_reply(result))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        assert creds._expiry_time == expected
+
+    @pytest.mark.parametrize(
+        'expires_at',
+        [
+            '2099-01-02 03:04:05Z',
+            '2099-01-02T03:04:05',
+            '2099-01-02T03:04:05+00:00',
+            '2099-01-02T03:04:05.1234567890Z',
+            '2099-01-02T03:04:05.Z',
+            '2099-13-02T03:04:05Z',
+            '2099-02-30T03:04:05Z',
+            '٢٠٩٩-01-02T03:04:05Z',
+            '2099-01-02T03:04:05Z\n',
+        ],
+    )
+    def test_unparseable_expires_at(self, make_daemon, expires_at):
+        result = _daemon_result()
+        result['expires_at'] = expires_at
+        daemon = make_daemon(reply=_daemon_reply(result))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'PROTOCOL_ERROR'
+        assert 'unparseable expires_at' in str(error)
+
+    def test_unknown_fields_and_other_credential_are_ignored(
+        self, make_daemon
+    ):
+        result = _daemon_result(extra_field={'a': 1})
+        result['credential'] = 'something-else'
+        result['provenance'] = {'source': 'x'}
+        daemon = make_daemon(reply=_daemon_reply(result, id=99, other=True))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        assert creds.get_frozen_credentials().access_key == 'ASIADAEMON'
+
+    def test_unsupported_material(self, make_daemon):
+        result = {
+            'material': {'type': 'bearer\x1b[31m' + 'x' * 100},
+            'expires_at': 'not checked',
+        }
+        daemon = make_daemon(reply=_daemon_reply(result))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'UNSUPPORTED_MATERIAL'
+        assert '"bearer[31m' + 'x' * 54 + '"' in str(error)
+        assert '\x1b' not in str(error)
+        assert 'Update the SDK' in str(error)
+
+    @pytest.mark.parametrize(
+        'daemon_code,expected_code',
+        [
+            ('REAUTH_REQUIRED', 'REAUTH_REQUIRED'),
+            ('CREDENTIAL_NOT_FOUND', 'CREDENTIAL_NOT_FOUND'),
+            ('SOMETHING_ELSE', 'REQUEST_REJECTED'),
+        ],
+    )
+    def test_daemon_error_codes(self, make_daemon, daemon_code, expected_code):
+        daemon = make_daemon(
+            reply=_daemon_error(daemon_code, 'please\x07 do\x1b[0m it\n')
+        )
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == expected_code
+        assert 'please do[0m it' in str(error)
+        assert '\x07' not in str(error)
+        assert '\x1b' not in str(error)
+        assert '\n' not in str(error)
+
+    def test_null_result_with_error_uses_error(self, make_daemon):
+        reply = (
+            json.dumps(
+                {
+                    'jsonrpc': '2.0',
+                    'id': 1,
+                    'result': None,
+                    'error': {
+                        'code': -32000,
+                        'message': 'sign in',
+                        'data': {'code': 'REAUTH_REQUIRED'},
+                    },
+                }
+            ).encode()
+            + b'\n'
+        )
+        daemon = make_daemon(reply=reply)
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert error.code == 'REAUTH_REQUIRED'
+
+    def test_null_error_with_result_returns_credentials(self, make_daemon):
+        reply = (
+            json.dumps(
+                {
+                    'jsonrpc': '2.0',
+                    'id': 1,
+                    'result': _daemon_result(),
+                    'error': None,
+                }
+            ).encode()
+            + b'\n'
+        )
+        daemon = make_daemon(reply=reply)
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        assert creds.get_frozen_credentials().access_key == 'ASIADAEMON'
+
+    def test_reauth_required_message(self, make_daemon):
+        daemon = make_daemon(reply=_daemon_error('REAUTH_REQUIRED'))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert 'sign in again' in str(error)
+
+    def test_credential_not_found_message(self, make_daemon):
+        daemon = make_daemon(reply=_daemon_error('CREDENTIAL_NOT_FOUND'))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert 'no credential named "dev" for this user' in str(error)
+        assert 'Sign in again' in str(error)
+
+    @pytest.mark.parametrize(
+        'error',
+        ['not a dict', {'code': -1}, {'data': 'x'}, {'data': {'code': 5}}],
+    )
+    def test_request_rejected(self, make_daemon, error):
+        daemon = make_daemon(reply=_daemon_reply(error=error))
+        assert _load_error(_daemon_provider(_sock_env(daemon))).code == (
+            'REQUEST_REJECTED'
+        )
+
+    def test_request_rejected_reports_code(self, make_daemon):
+        daemon = make_daemon(reply=_daemon_error('THROTTLED\x00' + 'y' * 100))
+        error = _load_error(_daemon_provider(_sock_env(daemon)))
+        assert '(THROTTLED' + 'y' * 55 + ')' in str(error)
+
+    def test_unsupported_platform_without_af_unix(self, make_daemon):
+        daemon = make_daemon()
+        provider = _daemon_provider(_sock_env(daemon))
+        with mock.patch('botocore.credentials.socket', object()):
+            error = _load_error(provider)
+        assert error.code == 'UNSUPPORTED_PLATFORM'
+        assert daemon.connections == 0
+
+    def test_reauth_required_during_advisory_refresh_keeps_credentials(
+        self, make_daemon
+    ):
+        result = _daemon_result()
+        result['expires_at'] = _daemon_expires_at(timedelta(minutes=12))
+        replies = [_daemon_reply(result), _daemon_error('REAUTH_REQUIRED')]
+        daemon = make_daemon(reply=lambda line: replies.pop(0))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ASIADAEMON'
+        assert daemon.connections == 2
+
+    def test_reauth_required_during_mandatory_refresh_raises(
+        self, make_daemon
+    ):
+        result = _daemon_result()
+        result['expires_at'] = _daemon_expires_at(timedelta(minutes=5))
+        replies = [_daemon_reply(result), _daemon_error('REAUTH_REQUIRED')]
+        daemon = make_daemon(reply=lambda line: replies.pop(0))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        with pytest.raises(CredentialDaemonError) as exc_info:
+            creds.get_frozen_credentials()
+        assert exc_info.value.code == 'REAUTH_REQUIRED'
+        assert daemon.connections == 2
+
+    def test_not_running_during_advisory_refresh_keeps_credentials(
+        self, make_daemon
+    ):
+        result = _daemon_result()
+        result['expires_at'] = _daemon_expires_at(timedelta(minutes=12))
+        daemon = make_daemon(reply=_daemon_reply(result))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        daemon.stop()
+        os.remove(daemon.path)
+        frozen = creds.get_frozen_credentials()
+        assert frozen.access_key == 'ASIADAEMON'
+
+    def test_not_running_during_mandatory_refresh_raises(self, make_daemon):
+        result = _daemon_result()
+        result['expires_at'] = _daemon_expires_at(timedelta(minutes=5))
+        daemon = make_daemon(reply=_daemon_reply(result))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        daemon.stop()
+        with pytest.raises(CredentialDaemonError) as exc_info:
+            creds.get_frozen_credentials()
+        assert exc_info.value.code == 'NOT_RUNNING'
+
+    def test_expired_credentials_returned_as_received(self, make_daemon):
+        result = _daemon_result()
+        result['expires_at'] = '2000-01-01T00:00:00Z'
+        daemon = make_daemon(reply=_daemon_reply(result))
+        creds = _daemon_provider(_sock_env(daemon)).load()
+        assert creds._access_key == 'ASIADAEMON'
+        assert creds._expiry_time == datetime(2000, 1, 1, tzinfo=tzutc())
+        assert daemon.connections == 1
+
+    def test_feature_id_registered(self, make_daemon, client_context):
+        daemon = make_daemon()
+        _daemon_provider(_sock_env(daemon)).load()
+        assert 'Aq' in client_context.features
+
+
+# Shared credential daemon provider test cases.
+_DAEMON_CASES_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'credential_daemon'
+)
+_DAEMON_CASES_PATH = os.path.join(
+    _DAEMON_CASES_DIR, 'credential-daemon-provider-test-cases.json'
+)
+# The cases' expiry times are relative to this time.
+_DAEMON_CASES_NOW = datetime(2026, 11, 1, tzinfo=tzutc())
+_DAEMON_CASES_ROLE_KEY = 'ASIAROLE'
+
+
+def _load_daemon_cases():
+    with open(_DAEMON_CASES_PATH) as f:
+        return json.load(f)
+
+
+def _daemon_case_params():
+    params = []
+    for case in _load_daemon_cases():
+        marks = ()
+        if case.get('requiresCredentialRefresh'):
+            marks = pytest.mark.xfail(
+                strict=True, reason='needs credential refresh support'
+            )
+        params.append(pytest.param(case, id=case['id'], marks=marks))
+    return params
+
+
+class DaemonCaseLayout:
+    """Maps the cases' logical sockets and environment values to paths
+    under ``root``, which is also the current directory.
+    """
+
+    def __init__(self, root, case):
+        self.root = root
+        env = case.get('environment', {})
+        unset = case.get('unsetEnvironment', [])
+        self.environ = {
+            'AWS_CONFIG_FILE': os.path.join(root, 'config'),
+            'AWS_SHARED_CREDENTIALS_FILE': os.path.join(root, 'credentials'),
+            'HOME': os.path.join(root, 'home'),
+        }
+        if not case.get('explicitProfile'):
+            self.environ['AWS_PROFILE'] = case['profile']
+        for name, value in env.items():
+            self.environ[name] = self._env_value(name, value)
+        for name in unset:
+            self.environ.pop(name, None)
+        home = self.environ.get('HOME')
+        # With HOME unset or relative, the link is put under the current
+        # directory, where the SDK must not look.
+        if home and os.path.isabs(home):
+            self.home = home
+        else:
+            self.home = root
+        self.aws_folder = os.path.join(self.home, '.aws')
+        self.link = os.path.join(self.aws_folder, 'credential-daemon.sock')
+
+    def _env_value(self, name, value):
+        if name == 'AWS_CREDENTIAL_DAEMON_SOCKET':
+            if value == 'env':
+                return os.path.join(self.root, 'env', 'daemon.sock')
+            if value == 'relative':
+                return os.path.join('env', 'daemon.sock')
+        return value
+
+    def path(self, logical):
+        if logical == 'env':
+            return os.path.join(self.root, 'env', 'daemon.sock')
+        # 'link' and 'home-socket' are both dialed at the link's path.
+        return self.link
+
+    def create_aws_folder(self):
+        os.makedirs(self.aws_folder, mode=0o700)
+
+    def create_link(self, target):
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        os.symlink(target, self.link)
+
+
+def _daemon_case_reply_bytes(exchange, request_line):
+    request_id = json.loads(request_line).get('id')
+    reply = b''
+    for line in exchange['replyLines']:
+        if isinstance(line, str):
+            reply += line.encode('utf-8') + b'\n'
+            continue
+        line = dict(line)
+        if line.get('id') == '$id':
+            line['id'] = request_id
+        pad_to = line.pop('$padTo', None)
+        if pad_to is not None:
+            line['result'] = dict(line['result'], padding='')
+            unpadded = len(json.dumps(line, separators=(',', ':')))
+            line['result']['padding'] = 'x' * (pad_to - unpadded)
+        encoded = json.dumps(line, separators=(',', ':')).encode('utf-8')
+        if pad_to is not None:
+            assert len(encoded) == pad_to
+        reply += encoded + b'\n'
+    return reply
+
+
+def _daemon_case_http_send(sent):
+    expiration = (_DAEMON_CASES_NOW + timedelta(hours=1)).strftime(
+        '%Y-%m-%dT%H:%M:%SZ'
+    )
+    bodies = {
+        'AssumeRole': (
+            '<AssumeRoleResponse><AssumeRoleResult><Credentials>'
+            f'<AccessKeyId>{_DAEMON_CASES_ROLE_KEY}</AccessKeyId>'
+            '<SecretAccessKey>role-secret</SecretAccessKey>'
+            '<SessionToken>role-token</SessionToken>'
+            f'<Expiration>{expiration}</Expiration>'
+            '</Credentials><AssumedRoleUser>'
+            '<Arn>arn:aws:sts::123456789012:assumed-role/Admin/s</Arn>'
+            '<AssumedRoleId>AROA:s</AssumedRoleId>'
+            '</AssumedRoleUser></AssumeRoleResult></AssumeRoleResponse>'
+        ),
+        'GetCallerIdentity': (
+            '<GetCallerIdentityResponse><GetCallerIdentityResult>'
+            '<Account>123456789012</Account>'
+            '</GetCallerIdentityResult></GetCallerIdentityResponse>'
+        ),
+    }
+
+    def send(request):
+        body = request.body
+        if isinstance(body, bytes):
+            body = body.decode('utf-8')
+        action = dict(
+            part.split('=', 1) for part in (body or '').split('&') if part
+        ).get('Action')
+        sent.append((action, request))
+        return AWSResponse(
+            request.url,
+            200,
+            {},
+            RawResponse(bodies[action].encode('utf-8')),
+        )
+
+    return send
+
+
+def _ua_features(request):
+    user_agent = request.headers['User-Agent']
+    if isinstance(user_agent, bytes):
+        user_agent = user_agent.decode('utf-8')
+    for part in user_agent.split():
+        if part.startswith('m/'):
+            return set(part[2:].split(','))
+    return set()
+
+
+def _freeze_credential_clock(monkeypatch, now):
+    # RefreshableCredentials binds _local_now as a default argument, so
+    # patching the module attribute alone doesn't reach it.
+    original = credentials._local_now
+
+    def fetcher():
+        return now
+
+    monkeypatch.setattr(credentials, '_local_now', fetcher)
+    for cls in (
+        credentials.RefreshableCredentials,
+        credentials.DeferredRefreshableCredentials,
+    ):
+        defaults = tuple(
+            fetcher if value is original else value
+            for value in cls.__init__.__defaults__
+        )
+        monkeypatch.setattr(cls.__init__, '__defaults__', defaults)
+
+
+@_skip_daemon_tests_on_windows
+@pytest.mark.parametrize('case', _daemon_case_params())
+def test_credential_daemon_case(case, daemon_dir, monkeypatch):
+    if 'invalidatedAccessKeyId' in case:
+        pytest.fail('botocore has no Invalidate()')
+    layout = DaemonCaseLayout(daemon_dir, case)
+    with open(layout.environ['AWS_CONFIG_FILE'], 'w') as f:
+        f.write(case['configContents'])
+    with open(layout.environ['AWS_SHARED_CREDENTIALS_FILE'], 'w') as f:
+        f.write(case.get('credentialsContents', ''))
+    monkeypatch.chdir(daemon_dir)
+    _freeze_credential_clock(monkeypatch, _DAEMON_CASES_NOW)
+    layout.create_aws_folder()
+
+    exchanges = case['daemon'].get('exchanges', [])
+    exchange = exchanges[0] if exchanges else None
+
+    def reply(line):
+        if exchange is None:
+            return _daemon_error('UNEXPECTED_CALL')
+        return _daemon_case_reply_bytes(exchange, line)
+
+    mode = 'reply'
+    if exchange is not None and exchange.get('close'):
+        if not exchange['replyLines']:
+            mode = 'close'
+    daemons = {}
+    try:
+        for socket_name in case['daemon']['sockets']:
+            if socket_name == 'env-file':
+                path = layout.path('env')
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, 'w') as f:
+                    f.write('not a socket')
+                continue
+            if socket_name == 'link-dangling':
+                layout.create_link(
+                    os.path.join(daemon_dir, 'gone', 'missing-daemon.sock')
+                )
+                continue
+            if socket_name in ('link', 'link-stale'):
+                path = os.path.join(daemon_dir, 'daemon', 'daemon.sock')
+                layout.create_link(path)
+            else:
+                path = layout.path(socket_name)
+            daemon = FakeCredentialDaemon(path, reply=reply, mode=mode)
+            if socket_name == 'link-stale':
+                # The socket file stays, with nothing listening on it.
+                daemon.stop()
+            else:
+                daemons[
+                    'link' if socket_name == 'home-socket' else socket_name
+                ] = daemon
+        _run_daemon_case(case, layout, daemons)
+    finally:
+        for daemon in daemons.values():
+            daemon.stop()
+
+
+def _run_daemon_case(case, layout, daemons):
+    outcome = case['outcome']
+    next_key = case.get('nextProvider', {}).get('accessKeyId', 'AKIDNEXT')
+    next_creds = Credentials(next_key, 'next-secret', method='iam-role')
+    sent = []
+    creds = frozen = error = None
+    with (
+        mock.patch.dict(os.environ, layout.environ, clear=True),
+        mock.patch.object(
+            credentials.InstanceMetadataProvider,
+            'load',
+            return_value=next_creds,
+        ) as next_provider,
+        mock.patch(
+            'botocore.httpsession.URLLib3Session.send',
+            side_effect=_daemon_case_http_send(sent),
+        ),
+    ):
+        profile = case['profile'] if case.get('explicitProfile') else None
+        session = Session(profile=profile)
+        try:
+            client = session.create_client('sts', region_name='us-east-1')
+            if 'featureIds' in outcome:
+                client.get_caller_identity()
+            creds = session.get_credentials()
+            frozen = creds.get_frozen_credentials()
+        except Exception as e:
+            error = e
+
+    dialed = outcome.get('dialed')
+    if dialed == 'home-socket':
+        dialed = 'link'
+    if dialed is not None:
+        for logical, daemon in daemons.items():
+            expected = 1 if logical == dialed else 0
+            assert daemon.connections == expected, logical
+    if exchanges := case['daemon'].get('exchanges'):
+        expected_request = exchanges[0]['expectedRequest']
+        if dialed in daemons:
+            request = json.loads(daemons[dialed].requests[0])
+            assert request['method'] == expected_request['method']
+            if 'params' in expected_request:
+                assert request['params'] == expected_request['params']
+
+    if outcome.get('terminal'):
+        next_provider.assert_not_called()
+
+    if outcome['result'] == 'error':
+        assert error is not None, 'expected an error'
+        kind = outcome['errorKind']
+        if kind == 'ssoConfig':
+            assert not isinstance(error, CredentialDaemonError), repr(error)
+            assert isinstance(error, botocore.exceptions.BotoCoreError)
+        elif kind == 'refreshFailed':
+            assert getattr(error, 'code', None) is None, repr(error)
+        else:
+            assert isinstance(error, CredentialDaemonError), repr(error)
+            assert error.code == outcome['errorCode']
+        message = str(error)
+        if outcome.get('errorCode') == 'NOT_RUNNING' and dialed != 'none':
+            assert layout.path(dialed) in message
+        for text in outcome.get('messageContains', []):
+            assert text in message
+        for text in outcome.get('messageNotContains', []):
+            assert text not in message
+        return
+
+    assert error is None, repr(error)
+    source = outcome.get('source')
+    expected_method = {
+        'daemon': 'credential-daemon',
+        'environment': 'env',
+        'nextProvider': 'iam-role',
+        'assumeRole': 'assume-role',
+    }[source]
+    assert creds.method == expected_method
+    if source == 'nextProvider':
+        next_provider.assert_called()
+    else:
+        next_provider.assert_not_called()
+    if source == 'assumeRole':
+        assert frozen.access_key == _DAEMON_CASES_ROLE_KEY
+    if 'accessKeyId' in outcome:
+        assert frozen.access_key == outcome['accessKeyId']
+    if 'secretAccessKey' in outcome:
+        assert frozen.secret_key == outcome['secretAccessKey']
+    if 'sessionToken' in outcome:
+        assert frozen.token == outcome['sessionToken']
+    if 'accountId' in outcome:
+        assert frozen.account_id == outcome['accountId']
+    if 'expiresAt' in outcome:
+        assert creds._expiry_time == parse(outcome['expiresAt'])
+    if 'featureIds' in outcome:
+        # botocore keeps feature IDs in a set, so their order isn't
+        # checked.
+        signed = [r for action, r in sent if action == 'GetCallerIdentity']
+        assert len(signed) == 1
+        assert set(outcome['featureIds']) <= _ua_features(signed[0])
+
+
+@pytest.mark.parametrize(
+    'error',
+    [
+        CredentialDaemonError(code='NOT_RUNNING', error_msg='down'),
+        CredentialDaemonInvalidConfigError(error_msg='bad name'),
+    ],
+)
+def test_credential_daemon_errors_pickle(error):
+    unpickled = pickle.loads(pickle.dumps(error))
+    assert type(unpickled) is type(error)
+    assert unpickled.code == error.code
+    assert str(unpickled) == str(error)
+
+
+def test_credential_daemon_error_codes_and_classes():
+    error = CredentialDaemonError(code='NOT_RUNNING', error_msg='down')
+    assert isinstance(error, botocore.exceptions.CredentialRetrievalError)
+    assert 'credential-daemon' in str(error)
+    config_error = CredentialDaemonInvalidConfigError(error_msg='bad name')
+    assert config_error.code == 'INVALID_CONFIG'
+    assert str(config_error) == 'bad name'
+    assert isinstance(config_error, CredentialDaemonError)
+    assert isinstance(config_error, InvalidConfigError)
+
+
+@_skip_daemon_tests_on_windows
+class TestCredentialDaemonSession:
+    @pytest.fixture(autouse=True)
+    def setup_files(self, daemon_dir, make_daemon):
+        self.dir = daemon_dir
+        self.config_file = os.path.join(daemon_dir, 'config')
+        self.credentials_file = os.path.join(daemon_dir, 'credentials')
+        self.daemon = make_daemon()
+        self.environ = {
+            'AWS_CONFIG_FILE': self.config_file,
+            'AWS_SHARED_CREDENTIALS_FILE': self.credentials_file,
+            'AWS_CREDENTIAL_DAEMON_SOCKET': self.daemon.path,
+            'AWS_EC2_METADATA_DISABLED': 'true',
+            'HOME': daemon_dir,
+        }
+        self.write_files('', '')
+        with mock.patch.dict(os.environ, self.environ, clear=True):
+            yield
+
+    def write_files(self, config, creds):
+        with open(self.config_file, 'w') as f:
+            f.write(config)
+        with open(self.credentials_file, 'w') as f:
+            f.write(creds)
+
+    def test_aws_profile_uses_daemon(self):
+        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        os.environ['AWS_PROFILE'] = 'dev'
+        creds = Session().get_credentials()
+        frozen = creds.get_frozen_credentials()
+        assert creds.method == 'credential-daemon'
+        assert frozen.access_key == 'ASIADAEMON'
+        assert frozen.token == 'daemon-token'
+
+    def test_env_credentials_win_over_aws_profile(self):
+        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        os.environ.update(
+            {
+                'AWS_PROFILE': 'dev',
+                'AWS_ACCESS_KEY_ID': 'env-key',
+                'AWS_SECRET_ACCESS_KEY': 'env-secret',
+            }
+        )
+        creds = Session().get_credentials()
+        assert creds.method == 'env'
+        assert self.daemon.connections == 0
+
+    def test_explicit_profile_uses_daemon(self):
+        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        os.environ.update(
+            {
+                'AWS_ACCESS_KEY_ID': 'env-key',
+                'AWS_SECRET_ACCESS_KEY': 'env-secret',
+            }
+        )
+        creds = Session(profile='dev').get_credentials()
+        assert creds.method == 'credential-daemon'
+
+    def test_daemon_credential_in_credentials_file_is_ignored(self):
+        self.write_files(
+            '',
+            '[dev]\ndaemon_credential = dev\n'
+            'aws_access_key_id = file-key\n'
+            'aws_secret_access_key = file-secret\n',
+        )
+        session = Session(profile='dev')
+        creds = session.get_credentials()
+        assert creds.method == 'shared-credentials-file'
+        assert self.daemon.connections == 0
+        assert 'daemon_credential' in session.full_config['profiles']['dev']
+
+    def test_assume_role_ignores_daemon_credential_in_credentials_file(
+        self,
+    ):
+        self.write_files(
+            '[profile dev]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
+            'credential_source = Environment\n',
+            '[dev]\ndaemon_credential = dev\n',
+        )
+        os.environ.update(
+            {
+                'AWS_ACCESS_KEY_ID': 'env-key',
+                'AWS_SECRET_ACCESS_KEY': 'env-secret',
+            }
+        )
+        session = Session(profile='dev')
+        creds = session.get_credentials()
+        assert creds.method == 'assume-role'
+        assert self.daemon.connections == 0
+        assert 'daemon_credential' in session.full_config['profiles']['dev']
+
+    def test_role_arn_in_daemon_profile_is_invalid(self):
+        self.write_files(
+            '[profile dev]\ndaemon_credential = dev\n'
+            'role_arn = arn:aws:iam::123456789012:role/r\n'
+            'credential_source = Environment\n',
+            '',
+        )
+        with pytest.raises(CredentialDaemonInvalidConfigError):
+            Session(profile='dev').get_credentials()
+        assert self.daemon.connections == 0
+
+    def test_source_profile_with_role_arn_is_invalid(self):
+        self.write_files(
+            '[profile role]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
+            'source_profile = dev\n'
+            '[profile dev]\ndaemon_credential = dev\n'
+            'role_arn = arn:aws:iam::123456789012:role/other\n'
+            'credential_source = Environment\n',
+            '',
+        )
+        with pytest.raises(CredentialDaemonInvalidConfigError):
+            Session(profile='role').get_credentials()
+        assert self.daemon.connections == 0
+
+    def test_daemon_source_profile_for_assume_role(self, client_context):
+        self.write_files(
+            '[profile role]\nrole_arn = arn:aws:iam::123456789012:role/r\n'
+            'source_profile = dev\n'
+            '[profile dev]\ndaemon_credential = dev\n',
+            '',
+        )
+        session = Session(profile='role')
+        expiration = datetime.now(tzutc()) + timedelta(hours=1)
+        client_creator = mock.Mock()
+        client_creator.return_value.assume_role.return_value = {
+            'Credentials': {
+                'AccessKeyId': 'ASIAROLE',
+                'SecretAccessKey': 'role-secret',
+                'SessionToken': 'role-token',
+                'Expiration': expiration.isoformat(),
+            },
+            'AssumedRoleUser': {
+                'Arn': 'arn:aws:sts::123456789012:assumed-role/r/s'
+            },
+        }
+        provider = AssumeRoleProvider(
+            load_config=lambda: session.full_config,
+            client_creator=client_creator,
+            cache={},
+            profile_name='role',
+            profile_provider_builder=ProfileProviderBuilder(session),
+            load_config_file_profiles=lambda: load_config_file_profiles(
+                self.config_file
+            ),
+        )
+        frozen = provider.load().get_frozen_credentials()
+        assert frozen.access_key == 'ASIAROLE'
+        assert self.daemon.connections == 1
+        kwargs = client_creator.call_args[1]
+        assert kwargs['aws_access_key_id'] == 'ASIADAEMON'
+        assert kwargs['aws_session_token'] == 'daemon-token'
+        assert {'o', 'i', 'Aq'} <= client_context.features
+
+    def test_daemon_wins_over_credential_process(self):
+        self.write_files(
+            '[profile dev]\ndaemon_credential = dev\n'
+            'credential_process = /bin/false\n',
+            '',
+        )
+        with mock.patch.object(ProcessProvider, 'load') as process_load:
+            creds = Session(profile='dev').get_credentials()
+            frozen = creds.get_frozen_credentials()
+        assert creds.method == 'credential-daemon'
+        assert frozen.access_key == 'ASIADAEMON'
+        process_load.assert_not_called()
+
+    def test_daemon_profile_wins_over_env_web_identity(self):
+        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        os.environ.update(
+            {
+                'AWS_PROFILE': 'dev',
+                'AWS_ROLE_ARN': 'arn:aws:iam::123456789012:role/r',
+                'AWS_WEB_IDENTITY_TOKEN_FILE': os.path.join(
+                    self.dir, 'missing-token'
+                ),
+            }
+        )
+        creds = Session().get_credentials()
+        frozen = creds.get_frozen_credentials()
+        assert creds.method == 'credential-daemon'
+        assert frozen.access_key == 'ASIADAEMON'
+        assert self.daemon.connections == 1
+
+    def test_sso_session_profile_with_daemon(self):
+        self.write_files(
+            '[profile dev]\ndaemon_credential = dev\nsso_session = my-sso\n'
+            'sso_account_id = 111122223333\nsso_role_name = Admin\n'
+            '[sso-session my-sso]\nsso_region = us-east-1\n'
+            'sso_start_url = https://example.com/start\n',
+            '',
+        )
+        session = Session(profile='dev')
+        client = session.create_client('sts', region_name='us-east-1')
+        assert client is not None
+        assert session.get_credentials().method == 'credential-daemon'
+        assert session.get_auth_token() is None
+
+    def test_sso_session_in_daemon_falls_through_to_later_token_provider(
+        self,
+    ):
+        self.write_files(
+            '[profile dev]\ndaemon_credential = dev\nsso_session = my-sso\n'
+            'sso_account_id = 111122223333\nsso_role_name = Admin\n'
+            '[sso-session my-sso]\nsso_region = us-east-1\n'
+            'sso_start_url = https://example.com/start\n',
+            '',
+        )
+        session = Session(profile='dev')
+        later = mock.Mock(METHOD='later')
+        later.load_token.return_value = 'later-token'
+        session.get_component('token_provider').insert_after('sso', later)
+        assert session.get_auth_token() == 'later-token'
+
+    def test_no_daemon_running_sends_no_request(self):
+        self.write_files('[profile dev]\ndaemon_credential = dev\n', '')
+        os.environ['AWS_CREDENTIAL_DAEMON_SOCKET'] = os.path.join(
+            self.dir, 'missing.sock'
+        )
+        session = Session(profile='dev')
+        with mock.patch('botocore.httpsession.URLLib3Session.send') as send:
+            with pytest.raises(CredentialDaemonError) as exc_info:
+                client = session.create_client('sts', region_name='us-east-1')
+                client.get_caller_identity()
+        assert exc_info.value.code == 'NOT_RUNNING'
+        send.assert_not_called()

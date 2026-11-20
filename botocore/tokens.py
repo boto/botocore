@@ -35,6 +35,7 @@ from botocore.utils import (
     SSOTokenLoader,
     create_nested_client,
     get_token_from_environment,
+    load_config_file_profiles,
 )
 
 logger = logging.getLogger(__name__)
@@ -282,6 +283,18 @@ class SSOTokenProvider:
         if "sso_session" not in profile_config:
             return
 
+        if self._sso_session_in_credential_daemon(profile_config):
+            # The credential daemon holds this profile's SSO session, so the
+            # profile is treated as having no sso_session.
+            logger.debug(
+                'Profile "%s" gets its SSO session from the credential '
+                'daemon, so it has no SSO token for bearer authentication. '
+                'Services that use bearer tokens need an SSO session stored '
+                'in files.',
+                self._profile_name,
+            )
+            return
+
         sso_session_name = profile_config["sso_session"]
         sso_config = sso_sessions.get(sso_session_name, None)
 
@@ -311,6 +324,20 @@ class SSOTokenProvider:
             "sso_region": sso_config["sso_region"],
             "sso_start_url": sso_config["sso_start_url"],
         }
+
+    def _sso_session_in_credential_daemon(self, profile_config):
+        if not (
+            "daemon_credential" in profile_config
+            and "sso_account_id" in profile_config
+            and "sso_role_name" in profile_config
+        ):
+            return False
+        # daemon_credential is only honored in the shared config file.
+        config_file_profiles = load_config_file_profiles(
+            self._session.get_config_variable("config_file")
+        )
+        file_profile = config_file_profiles.get(self._profile_name, {})
+        return "daemon_credential" in file_profile
 
     @CachedProperty
     def _sso_config(self):
