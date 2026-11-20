@@ -376,6 +376,26 @@ class TestSessionConfigurationVars(BaseSessionTest):
         value = self.session.get_config_variable('region', methods=('env',))
         self.assertEqual(value, 'env-var')
 
+    def test_session_profile_add(self):
+        session = create_session(
+            session_profiles={
+                "test": {
+                    "role_arn": "arn:aws:iam::123456789012:role/test",
+                    "credential_source": "Ec2InstanceMetadata",
+                }
+            }
+        )
+
+        self.assertTrue("test" in session.full_config["profiles"])
+        self.assertEqual(
+            session.full_config["profiles"]["test"]["role_arn"],
+            "arn:aws:iam::123456789012:role/test",
+        )
+        self.assertEqual(
+            session.full_config["profiles"]["test"]["credential_source"],
+            "Ec2InstanceMetadata",
+        )
+
 
 class TestSessionPartitionFiles(BaseSessionTest):
     def test_lists_partitions_on_disk(self):
