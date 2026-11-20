@@ -15,7 +15,6 @@ import io
 import re
 
 import pytest
-from dateutil.tz import tzutc
 
 import botocore.session
 from botocore import UNSIGNED
@@ -1428,7 +1427,7 @@ class TestS3ExpiresHeaderResponse(BaseS3OperationTest):
             response = s3.get_object(Bucket='mybucket', Key='mykey')
             self.assertEqual(
                 response.get('Expires'),
-                datetime.datetime(1970, 1, 1, tzinfo=tzutc()),
+                datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
             )
             self.assertEqual(response.get('ExpiresString'), expires_value)
 

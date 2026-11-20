@@ -16,12 +16,13 @@ import io
 import operator
 import os
 import shutil
+import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from sys import getrefcount
 
 import pytest
-from dateutil.tz import tzoffset, tzutc
 
 import botocore
 from botocore import xform_name
@@ -69,6 +70,7 @@ from botocore.utils import (
     S3RegionRedirectorv2,
     SSOTokenLoader,
     _get_bearer_env_var_name,
+    _normalize_iso8601,
     calculate_sha256,
     calculate_tree_hash,
     datetime2timestamp,
@@ -103,7 +105,14 @@ from botocore.utils import (
     switch_to_virtual_host_style,
     validate_jmespath_for_set,
 )
-from tests import FreezeTime, RawResponse, create_session, mock, unittest
+from tests import (
+    FreezeTime,
+    RawResponse,
+    create_session,
+    mock,
+    tzoffset,
+    unittest,
+)
 
 DATE = datetime.datetime(
     2021, 12, 10, 00, 00, 00, tzinfo=datetime.timezone.utc
@@ -566,73 +575,73 @@ class TestParseTimestamps(unittest.TestCase):
     def test_parse_iso8601(self):
         self.assertEqual(
             parse_timestamp('1970-01-01T00:10:00.000Z'),
-            datetime.datetime(1970, 1, 1, 0, 10, tzinfo=tzutc()),
+            datetime.datetime(1970, 1, 1, 0, 10, tzinfo=datetime.timezone.utc),
         )
 
     def test_parse_epoch(self):
         self.assertEqual(
             parse_timestamp(1222172800),
-            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()),
+            datetime.datetime(
+                2008, 9, 23, 12, 26, 40, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_epoch_zero_time(self):
         self.assertEqual(
             parse_timestamp(0),
-            datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc()),
+            datetime.datetime(
+                1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_epoch_negative_time(self):
         self.assertEqual(
             parse_timestamp(-2208988800),
-            datetime.datetime(1900, 1, 1, 0, 0, 0, tzinfo=tzutc()),
+            datetime.datetime(
+                1900, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_epoch_beyond_2038(self):
         self.assertEqual(
             parse_timestamp(2524608000),
-            datetime.datetime(2050, 1, 1, 0, 0, 0, tzinfo=tzutc()),
+            datetime.datetime(
+                2050, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_epoch_as_string(self):
         self.assertEqual(
             parse_timestamp('1222172800'),
-            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()),
+            datetime.datetime(
+                2008, 9, 23, 12, 26, 40, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_rfc822(self):
         self.assertEqual(
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
-            datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()),
+            datetime.datetime(
+                2002, 10, 2, 13, 0, tzinfo=datetime.timezone.utc
+            ),
         )
 
     def test_parse_gmt_in_uk_time(self):
-        # In the UK the time switches from GMT to BST and back as part of
-        # their daylight savings time. time.tzname will therefore report
-        # both time zones. dateutil sees that the time zone is a local time
-        # zone and so parses it as local time, but it ends up being BST
-        # instead of GMT. To remedy this issue we can provide a time zone
-        # context which will enforce GMT == UTC.
+        # In the UK, local time switches between GMT and BST for daylight
+        # savings, so time.tzname reports both. This test pins that
+        # parse_timestamp always treats a "GMT" suffix as UTC regardless
+        # of the system's local tz reporting.
         with mock.patch('time.tzname', ('GMT', 'BST')):
             self.assertEqual(
                 parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
-                datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()),
+                datetime.datetime(
+                    2002, 10, 2, 13, 0, tzinfo=datetime.timezone.utc
+                ),
             )
 
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
-
-    def test_parse_timestamp_fails_with_bad_tzinfo(self):
-        mock_tzinfo = mock.Mock()
-        mock_tzinfo.__name__ = 'tzinfo'
-        mock_tzinfo.side_effect = OSError()
-        mock_get_tzinfo_options = mock.MagicMock(return_value=(mock_tzinfo,))
-
-        with mock.patch(
-            'botocore.utils.get_tzinfo_options', mock_get_tzinfo_options
-        ):
-            with self.assertRaises(RuntimeError):
-                parse_timestamp(0)
 
     @contextmanager
     def mocked_fromtimestamp_that_raises(self, exception_type):
@@ -660,6 +669,25 @@ class TestParseTimestamps(unittest.TestCase):
             self.assertEqual(with_fallback, wout_fallback)
             self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
 
+    def test_parse_timestamp_fails_when_fallback_overflows(self):
+        with self.mocked_fromtimestamp_that_raises(OverflowError):
+            with self.assertRaises(RuntimeError):
+                parse_timestamp(1e20)
+
+    def test_parse_timestamp_fallback_stays_utc_when_localizing_fails(self):
+        class MockDatetime(datetime.datetime):
+            @classmethod
+            def fromtimestamp(cls, *args, **kwargs):
+                raise OSError()
+
+            def astimezone(self, tz=None):
+                raise OSError()
+
+        with mock.patch('datetime.datetime', MockDatetime):
+            parsed = parse_timestamp(-2208988800)
+        self.assertEqual(parsed.utcoffset(), datetime.timedelta(0))
+        self.assertEqual(parsed.timestamp(), -2208988800)
+
     def test_parse_timestamp_succeeds_with_fromtimestamp_oserror(self):
         # Same as test_parse_timestamp_succeeds_with_fromtimestamp_overflowerror
         # but for systems where datetime.fromtimestamp() fails with OSerror for
@@ -669,6 +697,96 @@ class TestParseTimestamps(unittest.TestCase):
             with_fallback = parse_timestamp(0)
             self.assertEqual(with_fallback, wout_fallback)
             self.assertEqual(with_fallback.tzinfo, wout_fallback.tzinfo)
+
+
+@pytest.mark.parametrize(
+    "raw, normalized",
+    [
+        # Zone suffixes (case-insensitive) collapse to "+00:00"
+        ("2024-01-01T00:00:00Z", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00z", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00UTC", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00utc", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00 GMT", "2024-01-01T00:00:00+00:00"),
+        ("2024-01-01T00:00:00 gmt", "2024-01-01T00:00:00+00:00"),
+        # Compact basic form (with and without seconds, with fractional)
+        ("20240115T1234Z", "2024-01-15T12:34:00+00:00"),
+        ("20240115T123456Z", "2024-01-15T12:34:56+00:00"),
+        ("20240115T123456.5Z", "2024-01-15T12:34:56.500000+00:00"),
+        # Tz offset without a colon (with and without leading space)
+        ("2024-01-15T12:34:56+0530", "2024-01-15T12:34:56+05:30"),
+        ("2024-01-15T12:34:56 -0400", "2024-01-15T12:34:56-04:00"),
+        # Fractional seconds padded to 6 digits
+        ("2024-01-15T12:34:56.1", "2024-01-15T12:34:56.100000"),
+        ("2024-01-15T12:34:56.12+00:00", "2024-01-15T12:34:56.120000+00:00"),
+        # Fractional seconds truncated to 6 digits
+        ("2024-01-15T12:34:56.1234567", "2024-01-15T12:34:56.123456"),
+        # Three-digit hour from malformed AWS shared examples
+        ("2021-09-02T016:15:21-09:00", "2021-09-02T16:15:21-09:00"),
+        # Already-compliant input is unchanged
+        ("2024-01-15T12:34:56+00:00", "2024-01-15T12:34:56+00:00"),
+    ],
+)
+def test_normalize_iso8601(raw, normalized):
+    assert _normalize_iso8601(raw) == normalized
+    # Guards against typos in the table above: the expected value must
+    # be parseable by datetime.fromisoformat or the helper is pointless.
+    assert isinstance(
+        datetime.datetime.fromisoformat(normalized), datetime.datetime
+    )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2024-01-01T00:00:00Z\n",
+        " 2024-01-01T00:00:00Z",
+        "2024-01-01T00:00:00+00:00\r\n",
+    ],
+)
+def test_parse_timestamp_ignores_surrounding_whitespace(value):
+    assert parse_timestamp(value) == datetime.datetime(
+        2024, 1, 1, tzinfo=datetime.timezone.utc
+    )
+
+
+def test_parse_timestamp_numeric_string_out_of_epoch_range():
+    with pytest.raises(ValueError, match='Invalid timestamp'):
+        parse_timestamp('1e12')
+
+
+@pytest.fixture
+def new_york_local_time():
+    with mock.patch.dict(os.environ, {'TZ': 'America/New_York'}):
+        time.tzset()
+        yield
+    time.tzset()
+
+
+@pytest.mark.skipif(
+    sys.platform == 'win32', reason='time.tzset is unavailable on Windows'
+)
+@pytest.mark.parametrize(
+    "value, expected_offset_hours",
+    [
+        # 2026-07-02T00:00:00Z, EDT
+        (1782950400, -4),
+        ('1782950400', -4),
+        # 2026-01-15T00:00:00Z, EST
+        (1768435200, -5),
+        # 2026-11-01 01:30 local happens twice; each instant keeps its offset
+        (1793511000, -4),
+        (1793514600, -5),
+    ],
+)
+def test_parse_epoch_uses_local_offset_at_that_instant(
+    new_york_local_time, value, expected_offset_hours
+):
+    parsed = parse_timestamp(value)
+    assert parsed.utcoffset() == datetime.timedelta(
+        hours=expected_offset_hours
+    )
+    assert parsed.timestamp() == float(value)
 
 
 class TestDatetime2Timestamp(unittest.TestCase):
@@ -687,7 +805,9 @@ class TestDatetime2Timestamp(unittest.TestCase):
 
 class TestParseToUTCDatetime(unittest.TestCase):
     def test_handles_utc_time(self):
-        original = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        original = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(parse_to_aware_datetime(original), original)
 
     def test_handles_other_timezone(self):
@@ -697,25 +817,35 @@ class TestParseToUTCDatetime(unittest.TestCase):
 
     def test_handles_naive_datetime(self):
         original = datetime.datetime(1970, 1, 1, 0, 0, 0)
-        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        expected = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(parse_to_aware_datetime(original), expected)
 
     def test_handles_string_epoch(self):
-        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        expected = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(parse_to_aware_datetime('0'), expected)
 
     def test_handles_int_epoch(self):
-        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        expected = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(parse_to_aware_datetime(0), expected)
 
     def test_handles_full_iso_8601(self):
-        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        expected = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(
             parse_to_aware_datetime('1970-01-01T00:00:00Z'), expected
         )
 
     def test_year_only_iso_8601(self):
-        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        expected = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         self.assertEqual(parse_to_aware_datetime('1970-01-01'), expected)
 
 
