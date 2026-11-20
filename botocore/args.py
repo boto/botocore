@@ -693,8 +693,8 @@ class ClientArgsCreator:
         )
 
     def _validate_min_compression_size(self, min_size):
-        min_allowed_min_size = 1
-        max_allowed_min_size = 1048576
+        min_allowed_min_size = 0
+        max_allowed_min_size = 10485760
         error_msg_base = (
             f'Invalid value "{min_size}" for '
             'request_min_compression_size_bytes.'

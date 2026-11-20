@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import copy
 import gzip
 
 import pytest
@@ -152,3 +153,32 @@ def test_user_agent_has_gzip_feature_id(patched_session, monkeypatch):
     ua_string = get_captured_ua_strings(http_stubber)[0]
     feature_list = parse_registered_feature_ids(ua_string)
     assert 'L' in feature_list
+
+
+@pytest.mark.parametrize('compression_supported', [True, False])
+def test_zero_threshold_small_request(
+    patched_session, monkeypatch, compression_supported
+):
+    model = copy.deepcopy(FAKE_MODEL)
+    if not compression_supported:
+        del model['operations']['MockOperation']['requestcompression']
+    patch_load_service_model(patched_session, monkeypatch, model, FAKE_RULESET)
+    client = patched_session.create_client(
+        'otherservice',
+        region_name='us-west-2',
+        config=Config(request_min_compression_size_bytes=0),
+    )
+    with ClientHTTPStubber(client, strict=True) as http_stubber:
+        http_stubber.add_response(status=200, body=b'<response/>')
+        client.mock_operation(MockOpParamList=[{'MockOpParam': 'small'}])
+    request = http_stubber.requests[0]
+    expected = (
+        b'Action=MockOperation&Version=2020-02-02&'
+        b'MockOpParamList.member.1.MockOpParam=small'
+    )
+    if compression_supported:
+        assert request.headers['Content-Encoding'] == b'gzip'
+        assert gzip.decompress(request.body) == expected
+    else:
+        assert 'Content-Encoding' not in request.headers
+        assert request.body == expected.decode('utf-8')
