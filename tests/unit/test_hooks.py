@@ -669,6 +669,34 @@ class TestWildcardHandlers(unittest.TestCase):
         self.assertEqual(first, ['first-time', 'second-time', 'fourth-time'])
         self.assertEqual(second, ['third-time'])
 
+    def test_copy_emitter_with_unique_id_uses_count(self):
+        self.emitter.register(
+            'foo', self.hook, unique_id='bar', unique_id_uses_count=True
+        )
+        copied_emitter = copy.copy(self.emitter)
+
+        # Registering again on the copied emitter should only increase
+        # the count on the copied emitter.
+        copied_emitter.register(
+            'foo', self.hook, unique_id='bar', unique_id_uses_count=True
+        )
+
+        # The original emitter was only registered once, so a single
+        # unregister should remove the handler.
+        self.emitter.unregister(
+            'foo', self.hook, unique_id='bar', unique_id_uses_count=True
+        )
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 0)
+
+        # The copied emitter was registered twice, so the handler should
+        # still be there after a single unregister.
+        copied_emitter.unregister(
+            'foo', self.hook, unique_id='bar', unique_id_uses_count=True
+        )
+        copied_emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 1)
+
     def test_copy_events_with_partials(self):
         # There's a bug in python2.6 where you can't deepcopy
         # a partial object.  We want to ensure that doesn't
