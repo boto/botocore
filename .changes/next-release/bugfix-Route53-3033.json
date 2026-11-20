@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Route53",
+  "description": "Fix AttributeError in fix_route53_ids when a Route53 resource ID parameter (e.g. HostedZoneId) is non-string or None."
+}
