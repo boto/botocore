@@ -443,8 +443,12 @@ class CloudFrontSigner:
         return self._build_url(url, params)
 
     def _build_url(self, base_url, extra_params):
-        separator = '&' if '?' in base_url else '?'
+        separator = '&' if self._has_query_string(base_url) else '?'
         return base_url + separator + '&'.join(extra_params)
+
+    def _has_query_string(self, url):
+        _, marker, query = url.rpartition('?')
+        return bool(marker and ('=' in query or '&' in query))
 
     def build_policy(
         self, resource, date_less_than, date_greater_than=None, ip_address=None
