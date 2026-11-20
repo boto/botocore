@@ -119,7 +119,7 @@ class StreamingBody(IOBase):
         except URLLib3ProtocolError as e:
             raise ResponseStreamingError(error=e)
         self._amount_read += amount_read
-        if amount_read == 0 and len(b) > 0:
+        if amount_read == 0 and memoryview(b).nbytes > 0:
             # If the server sends empty contents then we know we need to verify
             # the content length.
             self._verify_content_length()

@@ -10,8 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import ctypes
 import io
 import unittest
+from array import array
 from io import BytesIO
 
 import pytest
@@ -971,3 +973,54 @@ class TestStreamingChecksumBody(unittest.TestCase):
         # Whole body has been read, next read signals the end of the stream and
         # validates the checksum of the body contents read
         self.wrapper.readinto(chunk)
+
+    def test_readinto_multibyte_buffer_hashes_only_received_bytes(self):
+        chunk = array('I', [0, 0])
+        actual = bytearray()
+        while amount := self.wrapper.readinto(chunk):
+            actual.extend(memoryview(chunk).cast('B')[:amount])
+        self.assertEqual(actual, self.raw_bytes)
+        self.assertEqual(self.wrapper.checksum.b64digest(), 'DUoRhQ==')
+
+    def test_readinto_byte_count_equal_to_element_count(self):
+        payload = b'ab'
+        checksum = Crc32Checksum()
+        checksum.update(payload)
+        wrapper = StreamingChecksumBody(
+            BytesIO(payload),
+            len(payload),
+            Crc32Checksum(),
+            checksum.b64digest(),
+        )
+        chunk = array('I', [0, 0])
+        self.assertEqual(2, wrapper.readinto(chunk))
+        self.assertEqual(0, wrapper.readinto(chunk))
+        self.assertEqual(b'ab', memoryview(chunk).cast('B')[:2].tobytes())
+
+    def test_readinto_multibyte_buffer_still_rejects_bad_checksum(self):
+        self._make_wrapper('duorhq==')
+        chunk = array('I', [0, 0])
+        with self.assertRaises(FlexibleChecksumError):
+            while self.wrapper.readinto(chunk):
+                pass
+
+    def test_readinto_zero_dimensional_buffer_validates_checksum(self):
+        chunk = memoryview(ctypes.c_uint32())
+        actual = bytearray()
+        while amount := self.wrapper.readinto(chunk):
+            actual.extend(chunk.cast('B')[:amount])
+        self.assertEqual(actual, self.raw_bytes)
+        self.assertEqual(self.wrapper.checksum.b64digest(), 'DUoRhQ==')
+
+    def test_readinto_multidimensional_buffer_validates_checksum(self):
+        chunk = memoryview(array('I', [0, 0])).cast('B').cast('I', [1, 2])
+        actual = bytearray()
+        while amount := self.wrapper.readinto(chunk):
+            actual.extend(chunk.cast('B')[:amount])
+        self.assertEqual(actual, self.raw_bytes)
+        self.assertEqual(self.wrapper.checksum.b64digest(), 'DUoRhQ==')
+
+    def test_readinto_zero_byte_multidimensional_buffer_is_noop(self):
+        chunk = memoryview(((ctypes.c_ubyte * 0) * 2)())
+        self.assertEqual(0, self.wrapper.readinto(chunk))
+        self.assertEqual(self.raw_bytes, self.wrapper.read())
