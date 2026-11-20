@@ -27,6 +27,7 @@ import botocore.client
 import botocore.configloader
 import botocore.credentials
 import botocore.tokens
+from botocore.tokens import FrozenAuthToken
 from botocore import (
     UNSIGNED,
     __version__,
@@ -857,6 +858,7 @@ class Session:
         aws_session_token=None,
         config=None,
         aws_account_id=None,
+        aws_bearer_token=None,
     ):
         """Create a botocore client.
 
@@ -927,6 +929,14 @@ class Session:
         :param aws_account_id: The account id to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
+        :type aws_bearer_token: string
+        :param aws_bearer_token: The bearer token to use for
+            authentication with services that support bearer token auth
+            (e.g. Bedrock). If provided, this takes precedence over any
+            bearer token resolved from environment variables (e.g.
+            AWS_BEARER_TOKEN_BEDROCK). Same semantics as
+            aws_access_key_id above.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -986,6 +996,9 @@ class Session:
             credentials = self.get_credentials()
         if getattr(credentials, 'method', None) == 'explicit':
             register_feature_id('CREDENTIALS_CODE')
+
+        # Create auth token resolver that uses explicit bearer token if provided
+        auth_token_resolver = self._get_auth_token_resolver(aws_bearer_token)
         auth_token = self.get_auth_token()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
@@ -1026,7 +1039,7 @@ class Session:
             exceptions_factory,
             config_store,
             user_agent_creator=user_agent_creator,
-            auth_token_resolver=self.get_auth_token,
+            auth_token_resolver=auth_token_resolver,
         )
         client = client_creator.create_client(
             service_name=service_name,
@@ -1045,6 +1058,27 @@ class Session:
             monitor.register(client.meta.events)
         self._register_client_plugins(client)
         return client
+
+    def _get_auth_token_resolver(self, aws_bearer_token=None):
+        """
+        Get an auth token resolver function.
+
+        If aws_bearer_token is provided, returns a resolver that returns
+        the explicit token for any signing name, taking precedence over
+        the default resolver.
+
+        If aws_bearer_token is not provided, returns the default
+        get_auth_token method.
+        """
+        if aws_bearer_token is None:
+            return self.get_auth_token
+
+        frozen_token = FrozenAuthToken(aws_bearer_token)
+
+        def auth_token_resolver(**kwargs):
+            return frozen_token
+
+        return auth_token_resolver
 
     def _resolve_region_name(self, region_name, config):
         # Figure out the user-provided region based on the various
