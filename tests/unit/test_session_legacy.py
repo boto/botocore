@@ -122,7 +122,7 @@ class SessionTest(BaseSessionTest):
         self.assertEqual(
             self.session.get_config_variable('region'), 'us-west-11'
         )
-        self.session.get_config_variable('profile') == 'default'
+        self.assertEqual(self.session.get_config_variable('profile'), 'default')
         saved_region = self.environ['FOO_REGION']
         del self.environ['FOO_REGION']
         saved_profile = self.environ['FOO_PROFILE']
