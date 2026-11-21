@@ -1413,6 +1413,20 @@ class TestMergeDicts(unittest.TestCase):
         merge_dicts(dict1, dict2, append_lists=True)
         self.assertEqual(dict1, {'Foo': ['foo_value']})
 
+    def test_nested_list_values_append(self):
+        dict1 = {'Foo': {'Bar': ['old_bar_value']}}
+        dict2 = {'Foo': {'Bar': ['new_bar_value']}}
+        merge_dicts(dict1, dict2, append_lists=True)
+        self.assertEqual(
+            dict1, {'Foo': {'Bar': ['old_bar_value', 'new_bar_value']}}
+        )
+
+    def test_nested_list_values_no_append(self):
+        dict1 = {'Foo': {'Bar': ['old_bar_value']}}
+        dict2 = {'Foo': {'Bar': ['new_bar_value']}}
+        merge_dicts(dict1, dict2)
+        self.assertEqual(dict1, {'Foo': {'Bar': ['new_bar_value']}})
+
 
 class TestLowercaseDict(unittest.TestCase):
     def test_lowercase_dict_empty(self):

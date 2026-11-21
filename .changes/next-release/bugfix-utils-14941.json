@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "utils",
+  "description": "Fix merge_dicts ignoring append_lists for lists inside nested dictionaries."
+}
