@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.44.9
+======
+
+* api-change:``quicksight``: Quicksight public SDK release for November 20
+* api-change:``sagemaker``: Amazon SageMaker AI adds APIs to view capacity reservations and their usage.
+
+
 1.44.8
 ======
 
