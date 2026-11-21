@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Parsers",
+  "description": "Fixed parsing of list-valued response headers so that ``rfc822`` timestamps, which contain a comma, and quoted strings containing commas or escaped quotes are split into the correct list entries."
+}
