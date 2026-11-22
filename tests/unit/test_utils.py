@@ -750,9 +750,31 @@ def test_parse_timestamp_ignores_surrounding_whitespace(value):
     )
 
 
-def test_parse_timestamp_numeric_string_out_of_epoch_range():
+@pytest.mark.parametrize(
+    "value",
+    [
+        '1e12',
+        # A millisecond epoch whose digits also read as a compact ISO 8601
+        # date on Python 3.11+.
+        '1420070400000',
+        'inf',
+    ],
+)
+def test_parse_timestamp_numeric_string_out_of_epoch_range(value):
     with pytest.raises(ValueError, match='Invalid timestamp'):
-        parse_timestamp('1e12')
+        parse_timestamp(value)
+
+
+def test_parse_timestamp_numeric_string_fromtimestamp_oserror():
+    # Windows raises OSError where POSIX raises ValueError.
+    class MockDatetime(datetime.datetime):
+        @classmethod
+        def fromtimestamp(cls, *args, **kwargs):
+            raise OSError()
+
+    with mock.patch('datetime.datetime', MockDatetime):
+        with pytest.raises(ValueError, match='Invalid timestamp'):
+            parse_timestamp('1e12')
 
 
 @pytest.fixture
