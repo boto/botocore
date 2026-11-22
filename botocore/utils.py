@@ -1076,7 +1076,8 @@ def _parse_timestamp_string(value):
         pass
     try:
         return email.utils.parsedate_to_datetime(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        # Python 3.10-3.12 raise OverflowError for an oversized UTC offset.
         pass
     # Legacy S3 Expires header shapes covered by handle_expires_header's
     # tests. Other non-ISO, non-RFC 2822 shapes are rejected.

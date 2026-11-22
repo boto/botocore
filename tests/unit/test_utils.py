@@ -777,6 +777,11 @@ def test_parse_timestamp_numeric_string_fromtimestamp_oserror():
             parse_timestamp('1e12')
 
 
+def test_parse_timestamp_rfc2822_overflowing_offset():
+    with pytest.raises(ValueError, match='Invalid timestamp'):
+        parse_timestamp('Wed, 02 Oct 2002 13:00:00 +99999999999999999999')
+
+
 @pytest.fixture
 def new_york_local_time():
     with mock.patch.dict(os.environ, {'TZ': 'America/New_York'}):
