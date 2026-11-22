@@ -1013,10 +1013,16 @@ def parse_timestamp(value):
     if isinstance(value, (int, float)):
         return _parse_epoch_seconds(value)
     try:
-        return _parse_epoch_seconds(float(value))
+        epoch_seconds = float(value)
     except (TypeError, ValueError):
-        pass
-    return _parse_timestamp_string(value)
+        return _parse_timestamp_string(value)
+    try:
+        return _parse_epoch_seconds(epoch_seconds)
+    except (ValueError, RuntimeError) as e:
+        # A numeric string is an epoch value and nothing else. Its digits
+        # can also read as a compact ISO 8601 date, e.g. a millisecond
+        # epoch, so don't try the string formats.
+        raise ValueError(f'Invalid timestamp "{value}"') from e
 
 
 _ISO_ZONE_SUFFIX_RE = re.compile(r"\s*(Z|UTC|GMT)$", re.IGNORECASE)
