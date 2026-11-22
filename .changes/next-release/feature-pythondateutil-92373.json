@@ -1,5 +1,5 @@
 {
   "type": "feature",
   "category": "``python-dateutil``",
-  "description": "Removed the python-dateutil dependency; timestamp parsing now uses the standard library. ``botocore.compat.get_tzinfo_options`` is removed."
+  "description": "Removed the python-dateutil dependency; timestamp parsing now uses the standard library. Timestamp strings must be ISO 8601 or RFC 2822; other date shapes that dateutil accepted now raise ``ValueError``. Parsed timestamps carry ``datetime.timezone`` tzinfo in place of dateutil's ``tzutc`` and ``tzlocal``. ``botocore.compat.get_tzinfo_options`` is removed."
 }
