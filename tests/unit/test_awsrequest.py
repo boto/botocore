@@ -497,6 +497,29 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
 
+    def test_expect_100_continue_final_status_without_reason_phrase(self):
+        # RFC 9112 allows an empty reason-phrase, e.g. "HTTP/1.1 403 \r\n".
+        # The final status must still be honored instead of being swallowed.
+        with mock.patch('urllib3.util.wait_for_read') as wait_mock:
+            s = FakeSocket(
+                b'HTTP/1.1 403 \r\n'
+                b'Strict-Transport-Security: max-age=63072000\r\n'
+                b'Content-Length: 0\r\n'
+                b'\r\n'
+            )
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            wait_mock.return_value = True
+            conn.request(
+                'PUT', '/bucket/foo', b'body', {'Expect': b'100-continue'}
+            )
+            self.assertEqual(wait_mock.call_count, 1)
+            response = conn.getresponse()
+            self.assertEqual(response.status, 403)
+            self.assertEqual(response.reason, '')
+            # The body is not sent after a final (non-100) response.
+            self.assertNotIn(b'body', s.sent_data)
+
     def test_expect_100_continue_no_response_from_server(self):
         with mock.patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
