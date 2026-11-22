@@ -782,6 +782,14 @@ def test_parse_timestamp_rfc2822_overflowing_offset():
         parse_timestamp('Wed, 02 Oct 2002 13:00:00 +99999999999999999999')
 
 
+def test_parse_timestamp_rfc2822_unknown_zone_is_utc():
+    parsed = parse_timestamp('Wed, 02 Oct 2002 13:00:00 -0000')
+    assert parsed.tzinfo is datetime.timezone.utc
+    assert parsed == datetime.datetime(
+        2002, 10, 2, 13, tzinfo=datetime.timezone.utc
+    )
+
+
 @pytest.fixture
 def new_york_local_time():
     with mock.patch.dict(os.environ, {'TZ': 'America/New_York'}):

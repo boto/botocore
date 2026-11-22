@@ -1075,7 +1075,11 @@ def _parse_timestamp_string(value):
     except ValueError:
         pass
     try:
-        return email.utils.parsedate_to_datetime(value)
+        parsed = email.utils.parsedate_to_datetime(value)
+        if parsed.tzinfo is None:
+            # A "-0000" zone means UTC with no local zone information.
+            parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+        return parsed
     except (TypeError, ValueError, OverflowError):
         # Python 3.10-3.12 raise OverflowError for an oversized UTC offset.
         pass
