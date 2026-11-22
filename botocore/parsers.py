@@ -698,6 +698,33 @@ class BaseJSONParser(ResponseParser):
             if self._has_unknown_tagged_union_member(shape, value):
                 tag = self._get_first_key(value)
                 return self._handle_unknown_tagged_union_member(tag)
+            serialized_names = shape._serialized_member_names
+            if serialized_names is not None and isinstance(value, dict):
+                if len(value) * 2 < len(serialized_names):
+                    # Most members are not set, for example in a DynamoDB
+                    # AttributeValue. Look up only the keys of the value,
+                    # and keep the order of the members in the shape.
+                    found = []
+                    for json_name, raw_value in value.items():
+                        member = serialized_names.get(json_name)
+                        if member is not None and raw_value is not None:
+                            found.append((member, raw_value))
+                    if len(found) > 1:
+                        found.sort()
+                    for member, raw_value in found:
+                        _, member_name, member_shape = member
+                        final_parsed[member_name] = self._parse_shape(
+                            member_shape, raw_value
+                        )
+                else:
+                    for json_name, member in serialized_names.items():
+                        raw_value = value.get(json_name)
+                        if raw_value is not None:
+                            _, member_name, member_shape = member
+                            final_parsed[member_name] = self._parse_shape(
+                                member_shape, raw_value
+                            )
+                return final_parsed
             for member_name in member_shapes:
                 member_shape = member_shapes[member_name]
                 json_name = member_shape.serialization.get('name', member_name)

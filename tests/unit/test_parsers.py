@@ -1699,3 +1699,54 @@ class TestNullInListParsing(unittest.TestCase):
             {'body': body, 'headers': {}, 'status_code': 200}, output_shape
         )
         self.assertEqual(parsed['data'][0][0]['values'], [1, None, 3])
+
+
+class TestJSONParserSparseStructures(unittest.TestCase):
+    def _parse(self, body, members):
+        parser = parsers.JSONParser()
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {'type': 'structure', 'members': {'Value': {'shape': 'Value'}}},
+            model.ShapeResolver(
+                {
+                    'Value': {'type': 'structure', 'members': members},
+                    'StringType': {'type': 'string'},
+                }
+            ),
+        )
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 200}, output_shape
+        )
+        return parsed['Value']
+
+    def test_keeps_member_order_of_shape(self):
+        members = {
+            name: {'shape': 'StringType'} for name in ['A', 'B', 'C', 'D', 'E']
+        }
+        parsed = self._parse(b'{"Value": {"D": "d", "B": "b"}}', members)
+        self.assertEqual(list(parsed.items()), [('B', 'b'), ('D', 'd')])
+
+    def test_uses_serialized_member_names(self):
+        members = {
+            'A': {'shape': 'StringType', 'locationName': 'a'},
+            'B': {'shape': 'StringType', 'locationName': 'b'},
+            'C': {'shape': 'StringType'},
+        }
+        parsed = self._parse(b'{"Value": {"b": "x", "B": "y"}}', members)
+        self.assertEqual(parsed, {'B': 'x'})
+
+    def test_skips_null_and_unknown_keys(self):
+        members = {name: {'shape': 'StringType'} for name in ['A', 'B', 'C']}
+        parsed = self._parse(b'{"Value": {"A": null, "Z": "z"}}', members)
+        self.assertEqual(parsed, {})
+
+    def test_members_with_the_same_serialized_name(self):
+        members = {
+            'A': {'shape': 'StringType', 'locationName': 'x'},
+            'B': {'shape': 'StringType', 'locationName': 'x'},
+            'C': {'shape': 'StringType'},
+            'D': {'shape': 'StringType'},
+            'E': {'shape': 'StringType'},
+        }
+        parsed = self._parse(b'{"Value": {"x": "v"}}', members)
+        self.assertEqual(parsed, {'A': 'v', 'B': 'v'})
