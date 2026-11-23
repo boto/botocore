@@ -594,6 +594,45 @@ class TestSigner(BaseSignerTest):
                     'operation_name', self.request, signing_type='presign-post'
                 )
 
+    def test_request_signer_outlives_session_event_emitter(self):
+        # Regression test for: RequestSigner held the event emitter as a
+        # weakref.proxy, so once the owning Session was garbage collected the
+        # signer raised ReferenceError. The signer should remain usable as long
+        # as the signer itself is alive.
+        import gc
+
+        import botocore.session
+        from botocore.model import ServiceId
+
+        def build_signer():
+            session = botocore.session.Session()
+            return RequestSigner(
+                ServiceId('elasticache'),
+                'eu-west-1',
+                'elasticache',
+                'v4',
+                session.get_credentials(),
+                session.get_component('event_emitter'),
+            )
+
+        signer = build_signer()
+        gc.collect()
+
+        url = signer.generate_presigned_url(
+            request_dict={
+                'method': 'GET',
+                'url': 'https://my-cache/?Action=connect&User=my-user',
+                'body': {},
+                'headers': {},
+                'context': {},
+            },
+            operation_name='connect',
+            expires_in=900,
+            region_name='eu-west-1',
+        )
+
+        self.assertIn('X-Amz-Signature=', url)
+
 
 class TestCloudfrontSigner(BaseSignerTest):
     def setUp(self):
