@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.44.10
+=======
+
+* api-change:``cloudfront``: Launch CloudFront in AWS European Sovereign Cloud.
+* api-change:``cloudfront-keyvaluestore``: This release adds support for KVSHQ API in the AWS European Sovereign Cloud. Requests for key value stores in the aws-eusc partition are now routed to account-based endpoints under cloudfront-kvs.global.api.amazonwebservices.eu.
+* api-change:``cloudwatchomni``: Release of the new integration type in CreateIntegration API - Used to add Microsoft Azure resources to the Amazon CloudWatch Omni context graph through an AWS Config connector for your Azure tenant.
+* api-change:``endpoint-rules``: Update endpoint-rules client to latest version
+* api-change:``fsx``: Adds support for new FSx for NetApp ONTAP resources
+
+
 1.44.9
 ======
 
