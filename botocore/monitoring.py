@@ -536,8 +536,8 @@ class CSMSerializer:
         if len(text) > max_length:
             logger.debug(
                 'Truncating following value to maximum length of %s: %s',
-                text,
                 max_length,
+                text,
             )
             return text[:max_length]
         return text
