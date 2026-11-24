@@ -1424,6 +1424,72 @@ class TestParseErrorResponses(unittest.TestCase):
             },
         )
 
+    def test_s3_error_response_with_empty_message(self):
+        # Some S3-compatible services send an empty Message element.
+        # It is parsed as an empty string, not None.
+        for message in (b'<Message></Message>', b'<Message/>'):
+            body = (
+                b'<Error>'
+                b'<Code>NoSuchTagSet</Code>'
+                + message
+                + b'<BucketName>asdf</BucketName>'
+                b'<RequestId>EF1EF43A74415102</RequestId>'
+                b'<HostId>hostid</HostId>'
+                b'</Error>'
+            )
+            headers = {
+                'x-amz-id-2': 'second-id',
+                'x-amz-request-id': 'request-id',
+            }
+            parser = parsers.RestXMLParser()
+            parsed = parser.parse(
+                {'body': body, 'headers': headers, 'status_code': 404}, None
+            )
+            self.assertEqual(
+                parsed['Error'],
+                {'Code': 'NoSuchTagSet', 'Message': '', 'BucketName': 'asdf'},
+            )
+
+    def test_rest_xml_error_response_with_empty_message(self):
+        body = (
+            b'<ErrorResponse>'
+            b'<Error>'
+            b'<Type>Sender</Type>'
+            b'<Code>NoSuchHostedZone</Code>'
+            b'<Message/>'
+            b'</Error>'
+            b'<RequestId>request-id</RequestId>'
+            b'</ErrorResponse>'
+        )
+        parser = parsers.RestXMLParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
+        self.assertEqual(
+            parsed['Error'],
+            {'Code': 'NoSuchHostedZone', 'Message': '', 'Type': 'Sender'},
+        )
+
+    def test_query_error_response_with_empty_message(self):
+        body = (
+            b'<ErrorResponse>'
+            b'<Error>'
+            b'<Type>Sender</Type>'
+            b'<Code>InvalidInput</Code>'
+            b'<Message></Message>'
+            b'</Error>'
+            b'<RequestId>request-id</RequestId>'
+            b'</ErrorResponse>'
+        )
+        parser = parsers.QueryParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 400}, None
+        )
+        self.assertEqual(
+            parsed['Error'],
+            {'Code': 'InvalidInput', 'Message': '', 'Type': 'Sender'},
+        )
+
     def test_s3_error_response_with_no_body(self):
         # If you try to HeadObject a key that does not exist,
         # you will get an empty body.  When this happens

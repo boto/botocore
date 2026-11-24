@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Parsers",
+  "description": "Parse an empty element in an XML error response, such as ``<Message></Message>``, as an empty string instead of ``None``, as non-error responses already do."
+}
