@@ -885,6 +885,45 @@ class TestAssumeRoleWithWebIdentity(BaseAssumeRoleTest):
         }
         self.assert_session_credentials(expected_params, profile='A')
 
+    def test_shared_cache_does_not_mix_tokens(self):
+        token_b = os.path.join(self.tempdir, 'token-b.jwt')
+        self.write_token('totally.b.token', path=token_b)
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'role_session_name = sname\n'
+            f'web_identity_token_file = {self.token_file}\n'
+            '[profile B]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'role_session_name = sname\n'
+            f'web_identity_token_file = {token_b}\n'
+        )
+        self.write_config(config)
+        shared_cache = {}
+        for profile, token in (
+            ('A', 'totally.a.token'),
+            ('B', 'totally.b.token'),
+        ):
+            expected = self.create_random_credentials()
+            session = StubbedSession(profile=profile)
+            session.get_component('credential_provider').get_provider(
+                'assume-role-with-web-identity'
+            ).cache = shared_cache
+            stubber = session.stub('sts')
+            stubber.add_response(
+                'assume_role_with_web_identity',
+                self.create_assume_role_response(expected),
+                {
+                    'RoleArn': 'arn:aws:iam::123456789:role/RoleA',
+                    'RoleSessionName': 'sname',
+                    'WebIdentityToken': token,
+                },
+            )
+            stubber.activate()
+            self.assert_creds_equal(session.get_credentials(), expected)
+            stubber.assert_no_pending_responses()
+        self.assertEqual(len(shared_cache), 2)
+
 
 class TestProcessProvider(unittest.TestCase):
     def setUp(self):
