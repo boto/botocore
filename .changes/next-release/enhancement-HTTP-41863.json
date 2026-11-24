@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "HTTP",
+  "description": "Load the CA bundle once per client instead of on every new HTTPS connection (`#3171 <https://github.com/boto/botocore/issues/3171>`__)"
+}
