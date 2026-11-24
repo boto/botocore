@@ -846,7 +846,7 @@ def merge_dicts(dict1, dict2, append_lists=False):
     for key in dict2:
         if isinstance(dict2[key], dict):
             if key in dict1 and key in dict2:
-                merge_dicts(dict1[key], dict2[key])
+                merge_dicts(dict1[key], dict2[key], append_lists=append_lists)
             else:
                 dict1[key] = dict2[key]
         # If the value is a list and the ``append_lists`` flag is set,
