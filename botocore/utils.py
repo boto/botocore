@@ -37,6 +37,7 @@ from urllib3.exceptions import LocationParseError
 
 import botocore
 import botocore.awsrequest
+import botocore.configloader
 import botocore.httpsession
 
 # IP Regexes retained for backwards compatibility
@@ -3725,6 +3726,23 @@ CLIENT_NAME_TO_HYPHENIZED_SERVICE_ID_OVERRIDES = {
     'stepfunctions': 'sfn',
     'storagegateway': 'storage-gateway',
 }
+
+
+def load_config_file_profiles(config_filename):
+    """Return the profiles parsed from the shared config file only.
+
+    Unlike ``Session.full_config``, the result does not include values
+    merged in from the shared credentials file.
+
+    :param config_filename: The path of the shared config file.
+    :returns: A dict mapping profile names to their config values, or
+        an empty dict if the file does not exist.
+    """
+    try:
+        loaded = botocore.configloader.load_config(config_filename)
+    except ConfigNotFound:
+        return {}
+    return loaded.get('profiles', {})
 
 
 def get_login_token_cache_directory():
