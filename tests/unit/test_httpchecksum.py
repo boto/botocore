@@ -900,6 +900,21 @@ class TestStreamingChecksumBody(unittest.TestCase):
         with self.assertRaises(FlexibleChecksumError):
             self.wrapper.read()
 
+    def test_negative_read_good(self):
+        self.assertEqual(self.wrapper.read(-1), self.raw_bytes)
+        self.assertEqual(self.wrapper.read(-1), b"")
+
+    def test_negative_read_bad(self):
+        self._make_wrapper("duorhq==")
+        with self.assertRaises(FlexibleChecksumError):
+            self.wrapper.read(-1)
+
+    def test_negative_read_after_partial_read_bad(self):
+        self._make_wrapper("duorhq==")
+        self.assertEqual(self.wrapper.read(5), b"hello")
+        with self.assertRaises(FlexibleChecksumError):
+            self.wrapper.read(-1)
+
     def test_many_reads_bad(self):
         self._make_wrapper("duorhq==")
         self.wrapper.read(5)
