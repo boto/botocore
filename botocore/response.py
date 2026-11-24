@@ -50,6 +50,9 @@ class StreamingBody(IOBase):
     """
 
     _DEFAULT_CHUNK_SIZE = 1024
+    # Iterating without a chunk_size yields whatever data has already
+    # arrived, up to this many bytes per chunk.
+    _MAX_AVAILABLE_CHUNK_SIZE = 64 * 1024
 
     def __init__(self, raw_stream, content_length):
         self._raw_stream = raw_stream
@@ -94,8 +97,11 @@ class StreamingBody(IOBase):
 
         If the amt argument is omitted, read all data.
         """
+        return self._read(self._raw_stream.read, amt)
+
+    def _read(self, reader, amt):
         try:
-            chunk = self._raw_stream.read(amt)
+            chunk = reader(amt)
         except URLLib3ReadTimeoutError as e:
             # TODO: the url will be None as urllib3 isn't setting it yet
             raise ReadTimeoutError(endpoint_url=e.url, error=e)
@@ -128,13 +134,31 @@ class StreamingBody(IOBase):
     def readlines(self):
         return self._raw_stream.readlines()
 
+    def _read_available(self):
+        """Read the data that has already arrived, up to 64 KiB.
+
+        Blocks only until some data is available, so slow streams are
+        not held back waiting for a full chunk. Falls back to reading
+        1 KiB through read() when the raw stream has no read1() (urllib3
+        before 2.2.1), or when read() has been overridden or patched, so
+        that code wrapping read() still sees every read.
+        """
+        read1 = getattr(self._raw_stream, 'read1', None)
+        if read1 is None or type(self).read is not _STREAMING_BODY_READ:
+            return self.read(self._DEFAULT_CHUNK_SIZE)
+        # urllib3's read1() can return None once the connection is released.
+        return self._read(
+            lambda amt: read1(amt) or b'', self._MAX_AVAILABLE_CHUNK_SIZE
+        )
+
     def __iter__(self):
-        """Return an iterator to yield 1k chunks from the raw stream."""
-        return self.iter_chunks(self._DEFAULT_CHUNK_SIZE)
+        """Return an iterator to yield chunks from the raw stream as the
+        data arrives, up to 64 KiB each."""
+        return self.iter_chunks()
 
     def __next__(self):
-        """Return the next 1k chunk from the raw stream."""
-        current_chunk = self.read(self._DEFAULT_CHUNK_SIZE)
+        """Return the next chunk from the raw stream, up to 64 KiB."""
+        current_chunk = self._read_available()
         if current_chunk:
             return current_chunk
         raise StopIteration()
@@ -147,11 +171,13 @@ class StreamingBody(IOBase):
 
     next = __next__
 
-    def iter_lines(self, chunk_size=_DEFAULT_CHUNK_SIZE, keepends=False):
+    def iter_lines(self, chunk_size=None, keepends=False):
         """Return an iterator to yield lines from the raw stream.
 
         This is achieved by reading chunk of bytes (of size chunk_size) at a
-        time from the raw stream, and then yielding lines from there.
+        time from the raw stream, and then yielding lines from there. If
+        chunk_size is not given, each read takes the data that has already
+        arrived, up to 64 KiB.
         """
         pending = b''
         for chunk in self.iter_chunks(chunk_size):
@@ -162,12 +188,19 @@ class StreamingBody(IOBase):
         if pending:
             yield pending.splitlines(keepends)[0]
 
-    def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
+    def iter_chunks(self, chunk_size=None):
         """Return an iterator to yield chunks of chunk_size bytes from the raw
         stream.
+
+        If chunk_size is not given, each chunk is the data that has already
+        arrived, up to 64 KiB, so chunks can be smaller than that before the
+        end of the stream.
         """
         while True:
-            current_chunk = self.read(chunk_size)
+            if chunk_size is None:
+                current_chunk = self._read_available()
+            else:
+                current_chunk = self.read(chunk_size)
             if current_chunk == b"":
                 break
             yield current_chunk
@@ -190,6 +223,9 @@ class StreamingBody(IOBase):
     def close(self):
         """Close the underlying http response stream."""
         self._raw_stream.close()
+
+
+_STREAMING_BODY_READ = StreamingBody.read
 
 
 def get_response(operation_model, http_response):

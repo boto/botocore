@@ -25,7 +25,7 @@ from botocore.exceptions import (
     ReadTimeoutError,
     ResponseStreamingError,
 )
-from tests import unittest
+from tests import mock, unittest
 from tests.unit import BaseResponseTest
 
 XMLBODY1 = (
@@ -178,20 +178,121 @@ class TestStreamWrapper(unittest.TestCase):
         self.assertTrue(body.closed)
 
     def test_default_iter_behavior(self):
-        body = BytesIO(b'a' * 2048)
-        stream = response.StreamingBody(body, content_length=2048)
+        size = 64 * 1024
+        body = BytesIO(b'a' * size * 2 + b'b')
+        stream = response.StreamingBody(body, content_length=size * 2 + 1)
         chunks = list(stream)
-        self.assertEqual(len(chunks), 2)
-        self.assertEqual(chunks, [b'a' * 1024, b'a' * 1024])
+        self.assertEqual(chunks, [b'a' * size, b'a' * size, b'b'])
 
     def test_streaming_body_is_an_iterator(self):
-        body = BytesIO(b'a' * 1024 + b'b' * 1024 + b'c' * 2)
-        stream = response.StreamingBody(body, content_length=2050)
-        self.assertEqual(b'a' * 1024, next(stream))
-        self.assertEqual(b'b' * 1024, next(stream))
+        size = 64 * 1024
+        body = BytesIO(b'a' * size + b'b' * size + b'c' * 2)
+        stream = response.StreamingBody(body, content_length=size * 2 + 2)
+        self.assertEqual(b'a' * size, next(stream))
+        self.assertEqual(b'b' * size, next(stream))
         self.assertEqual(b'c' * 2, next(stream))
         with self.assertRaises(StopIteration):
             next(stream)
+
+    def test_default_iter_yields_data_as_it_arrives(self):
+        # read1() returns the pieces as they arrive; iteration must not
+        # wait for a full chunk with read().
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab', b'c', b'defg']), content_length=7
+        )
+        self.assertEqual(list(stream), [b'ab', b'c', b'defg'])
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab\nc', b'd\n', b'e']), content_length=7
+        )
+        self.assertEqual(list(stream.iter_lines()), [b'ab', b'cd', b'e'])
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab', b'c']), content_length=3
+        )
+        self.assertEqual(list(stream.iter_chunks()), [b'ab', b'c'])
+
+    def test_default_iter_caps_chunk_size(self):
+        size = 64 * 1024
+        body = PiecewiseBody([b'a' * (size + 10)])
+        stream = response.StreamingBody(body, content_length=size + 10)
+        self.assertEqual(list(stream), [b'a' * size, b'a' * 10])
+        self.assertEqual(body.read1_sizes, [size, size, size])
+
+    def test_explicit_chunk_size_reads_full_chunks(self):
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab', b'c', b'defg']), content_length=7
+        )
+        self.assertEqual(list(stream.iter_chunks(3)), [b'abc', b'def', b'g'])
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab\nc', b'd\n', b'e']), content_length=7
+        )
+        self.assertEqual(list(stream.iter_lines(3)), [b'ab', b'cd', b'e'])
+
+    def test_default_iter_without_read1_reads_1k(self):
+        body = NoRead1Body(b'a' * 2048 + b'b')
+        stream = response.StreamingBody(body, content_length=2049)
+        self.assertEqual(list(stream), [b'a' * 1024, b'a' * 1024, b'b'])
+
+    def test_default_iter_uses_overridden_read(self):
+        reads = []
+
+        class CustomBody(response.StreamingBody):
+            def read(self, amt=None):
+                reads.append(amt)
+                return super().read(amt)
+
+        stream = CustomBody(BytesIO(b'a' * 1025), content_length=1025)
+        self.assertEqual(list(stream), [b'a' * 1024, b'a'])
+        self.assertEqual(reads, [1024, 1024, 1024])
+
+    def test_default_iter_uses_patched_read(self):
+        # Instrumentation libraries replace StreamingBody.read to observe
+        # streamed responses; iteration must keep going through it.
+        reads = []
+        original_read = response.StreamingBody.read
+
+        def patched_read(self, amt=None):
+            reads.append(amt)
+            return original_read(self, amt)
+
+        stream = response.StreamingBody(BytesIO(b'a' * 1025), 1025)
+        with mock.patch.object(response.StreamingBody, 'read', patched_read):
+            self.assertEqual(list(stream.iter_lines()), [b'a' * 1025])
+        self.assertEqual(reads, [1024, 1024, 1024])
+
+    def test_default_iter_verifies_content_length(self):
+        stream = response.StreamingBody(
+            PiecewiseBody([b'ab', b'c']), content_length=10
+        )
+        with self.assertRaises(IncompleteReadError):
+            list(stream)
+
+    def test_default_iter_handles_read1_returning_none(self):
+        class ReleasedBody(BytesIO):
+            def read1(self, amt=-1):
+                return None
+
+        stream = response.StreamingBody(ReleasedBody(), content_length=0)
+        self.assertEqual(list(stream), [])
+
+    def test_default_iter_catches_urllib3_read_timeout(self):
+        class TimeoutBody:
+            def read1(*args, **kwargs):
+                raise URLLib3ReadTimeoutError(None, None, None)
+
+        stream = response.StreamingBody(TimeoutBody(), content_length=None)
+        with self.assertRaises(ReadTimeoutError):
+            list(stream)
+
+    def test_default_iter_catches_urllib3_protocol_error(self):
+        class ProtocolErrorBody:
+            def read1(*args, **kwargs):
+                raise URLLib3ProtocolError(None, None, None)
+
+        stream = response.StreamingBody(
+            ProtocolErrorBody(), content_length=None
+        )
+        with self.assertRaises(ResponseStreamingError):
+            list(stream)
 
     def test_iter_chunks_single_byte(self):
         body = BytesIO(b'abcde')
@@ -292,6 +393,45 @@ class TestStreamWrapper(unittest.TestCase):
             self.assertEqual(stream.read(), b'1234567890')
             self.assertFalse(body.closed)
         self.assertTrue(body.closed)
+
+
+class PiecewiseBody(BytesIO):
+    """A raw stream whose read1() returns the given pieces one at a time,
+    like a socket that has only received part of the body so far."""
+
+    def __init__(self, pieces):
+        super().__init__(b''.join(pieces))
+        self._pieces = list(pieces)
+        self.read1_sizes = []
+
+    def read1(self, amt=-1):
+        self.read1_sizes.append(amt)
+        if not self._pieces:
+            return b''
+        piece = self._pieces.pop(0)
+        if 0 <= amt < len(piece):
+            self._pieces.insert(0, piece[amt:])
+            piece = piece[:amt]
+        return super().read(len(piece))
+
+    def read(self, amt=-1):
+        data = super().read(amt)
+        consumed = len(data)
+        while consumed and self._pieces:
+            if len(self._pieces[0]) <= consumed:
+                consumed -= len(self._pieces.pop(0))
+            else:
+                self._pieces[0] = self._pieces[0][consumed:]
+                consumed = 0
+        return data
+
+
+class NoRead1Body:
+    def __init__(self, data):
+        self._body = BytesIO(data)
+
+    def read(self, amt=None):
+        return self._body.read(amt)
 
 
 class FakeRawResponse(BytesIO):

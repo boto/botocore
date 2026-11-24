@@ -289,8 +289,8 @@ class StreamingChecksumBody(StreamingBody):
     def checksum(self):
         return self._checksum
 
-    def read(self, amt=None):
-        chunk = super().read(amt=amt)
+    def _read(self, reader, amt):
+        chunk = super()._read(reader, amt)
         self._checksum.update(chunk)
         if amt is None or (not chunk and amt > 0):
             self._validate_checksum()
