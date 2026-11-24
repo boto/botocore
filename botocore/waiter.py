@@ -374,7 +374,7 @@ class Waiter:
                 )
                 return
             if current_state == 'failure':
-                reason = f'Waiter encountered a terminal failure state: {acceptor.explanation}'
+                reason = f'Waiter encountered a terminal failure state: {last_matched_acceptor.explanation}'
                 raise WaiterError(
                     name=self.name,
                     reason=reason,
@@ -386,7 +386,7 @@ class Waiter:
                 else:
                     reason = (
                         f'Max attempts exceeded. Previously accepted state: '
-                        f'{acceptor.explanation}'
+                        f'{last_matched_acceptor.explanation}'
                     )
                 raise WaiterError(
                     name=self.name,
