@@ -394,7 +394,10 @@ class HierarchicalEmitter(BaseEventHooks):
         new_instance = self.__class__()
         new_state = self.__dict__.copy()
         new_state['_handlers'] = copy.copy(self._handlers)
-        new_state['_unique_id_handlers'] = copy.copy(self._unique_id_handlers)
+        new_state['_unique_id_handlers'] = {
+            unique_id: item.copy()
+            for unique_id, item in self._unique_id_handlers.items()
+        }
         new_instance.__dict__ = new_state
         return new_instance
 

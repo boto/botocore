@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Events",
+  "description": "Fix copied event emitters, such as clients created from the same session, sharing registration counts for handlers registered with ``unique_id_uses_count``."
+}
