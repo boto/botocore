@@ -259,6 +259,18 @@ class StructureShape(Shape):
     def is_tagged_union(self):
         return self.metadata.get('union', False)
 
+    @CachedProperty
+    def _serialized_member_names(self):
+        # Maps each serialized member name to the member's position,
+        # name and shape. This is None if two members share a serialized name.
+        serialized_names = {}
+        for index, (name, member) in enumerate(self.members.items()):
+            serialized_name = member.serialization.get('name', name)
+            if serialized_name in serialized_names:
+                return None
+            serialized_names[serialized_name] = (index, name, member)
+        return serialized_names
+
 
 class ListShape(Shape):
     @CachedProperty
