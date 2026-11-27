@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import ctypes
 import datetime
 from io import BytesIO
 
@@ -134,6 +135,26 @@ class TestStreamWrapper(unittest.TestCase):
         chunk = bytearray(b"")
         # Does not raise IncompleteReadError
         self.assertEqual(0, stream.readinto(chunk))
+
+    def test_readinto_zero_dimensional_buffer_reaches_eof(self):
+        stream = response.StreamingBody(BytesIO(b'abc'), content_length=3)
+        chunk = memoryview(ctypes.c_uint32())
+        self.assertEqual(3, stream.readinto(chunk))
+        self.assertEqual(b'abc', chunk.cast('B')[:3].tobytes())
+        self.assertEqual(0, stream.readinto(chunk))
+
+    def test_readinto_zero_dimensional_buffer_checks_content_length(self):
+        stream = response.StreamingBody(BytesIO(b'abc'), content_length=4)
+        chunk = memoryview(ctypes.c_uint32())
+        self.assertEqual(3, stream.readinto(chunk))
+        with self.assertRaises(IncompleteReadError):
+            stream.readinto(chunk)
+
+    def test_readinto_zero_byte_multidimensional_buffer_is_noop(self):
+        stream = response.StreamingBody(BytesIO(b'abc'), content_length=3)
+        chunk = memoryview(((ctypes.c_ubyte * 0) * 2)())
+        self.assertEqual(0, stream.readinto(chunk))
+        self.assertEqual(b'abc', stream.read())
 
     def test_streaming_body_readinto_catches_urllib3_read_timeout(self):
         class TimeoutBody:

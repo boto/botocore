@@ -298,12 +298,13 @@ class StreamingChecksumBody(StreamingBody):
 
     def readinto(self, b):
         amount_read = super().readinto(b)
-        if amount_read == len(b):
+        buffer_size = memoryview(b).nbytes
+        if amount_read == buffer_size:
             view = b
         else:
-            view = memoryview(b)[:amount_read]
+            view = memoryview(b).cast('B')[:amount_read]
         self._checksum.update(view)
-        if amount_read == 0 and len(b) > 0:
+        if amount_read == 0 and buffer_size > 0:
             self._validate_checksum()
         return amount_read
 
