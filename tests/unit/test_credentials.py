@@ -25,7 +25,6 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
-from dateutil.tz import tzlocal, tzutc
 
 import botocore.exceptions
 import botocore.session
@@ -69,6 +68,7 @@ from tests import (
     skip_if_crt,
     skip_if_windows,
     temporary_file,
+    tzlocal,
     unittest,
 )
 
@@ -2302,7 +2302,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
 
     def test_assume_role_refresher_serializes_datetime(self):
         client = mock.Mock()
-        time_zone = tzutc()
+        time_zone = timezone.utc
         expiration = datetime(
             year=2016, month=11, day=6, hour=1, minute=30, tzinfo=time_zone
         )
@@ -3918,7 +3918,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
             'expiresAt': '2018-10-18T22:26:40Z',
         }
         # This is just an arbitrary point in time we can pin to
-        self.now = datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc())
+        self.now = datetime(2008, 9, 23, 12, 26, 40, tzinfo=timezone.utc)
         # The SSO endpoint uses ms whereas the OIDC endpoint uses seconds
         self.now_timestamp = 1222172800000
         self.mock_time_fetcher = mock.Mock(return_value=self.now)
@@ -3991,7 +3991,7 @@ class TestSSOCredentialFetcher(unittest.TestCase):
 
     def test_expired_legacy_token_has_expected_behavior(self):
         # Mock the current time to be in the future after the access token has expired
-        now = datetime(2018, 10, 19, 12, 26, 40, tzinfo=tzutc())
+        now = datetime(2018, 10, 19, 12, 26, 40, tzinfo=timezone.utc)
         mock_client = mock.Mock()
         create_mock_client = mock.Mock(return_value=mock_client)
         fetcher = SSOCredentialFetcher(
@@ -4077,7 +4077,7 @@ class TestSSOProvider(unittest.TestCase):
             'sso_role_name': self.role_name,
             'sso_account_id': self.account_id,
         }
-        self.expires_at = datetime.now(tzutc()) + timedelta(hours=24)
+        self.expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
         self.cached_creds_key = '048db75bbe50955c16af7aba6ff9c41a3131bb7e'
         self.cached_token_key = '13f9d35043871d073ab260e020f0ffde092cb14b'
         self.cache = {
@@ -4247,7 +4247,7 @@ def _load_login_test_cases():
 
 
 class TestLoginProvider:
-    FROZEN_TIME = datetime(2025, 11, 19, 0, 0, 0, tzinfo=tzutc())
+    FROZEN_TIME = datetime(2025, 11, 19, 0, 0, 0, tzinfo=timezone.utc)
 
     @requires_crt()
     @pytest.mark.parametrize(
