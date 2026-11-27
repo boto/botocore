@@ -321,6 +321,30 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         # 2 seeks for the resets and 6 (2 per creation) for content-length
         self.assertEqual(body.total_resets, 8)
 
+    def test_reset_stream_on_retry_returns_to_initial_position(self):
+        # A body starting at a non-zero position must be rewound to
+        # that position on retry, not to 0 (see #3873).
+        op = mock.Mock()
+        body = RecordStreamResets('XXhello')
+        body.seek(2)
+        # Don't count the positioning seek above.
+        body.total_resets = 0
+        op.name = 'PutObject'
+        op.has_streaming_output = True
+        op.has_event_stream_output = False
+        op.metadata = {'protocol': 'rest-xml'}
+        request = request_dict()
+        request['body'] = body
+        request['context']['client_config'] = Config()
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=2
+        )
+        self.endpoint.make_request(op, request)
+        self.assertEqual(body.tell(), 2)
+        self.assertEqual(body.read(), 'hello')
+        # 2 seeks for the resets and 6 (2 per creation) for content-length
+        self.assertEqual(body.total_resets, 8)
+
 
 class TestEventStreamBody(TestEndpointBase):
     def test_event_stream_body_is_streaming(self):

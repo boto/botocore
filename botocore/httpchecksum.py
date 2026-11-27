@@ -211,6 +211,14 @@ class AwsChunkedWrapper:
         self._checksum_name = checksum_name
         self._checksum_cls = checksum_cls
         self._reset()
+        # Record the wrapped stream's position at wrap time. The stream
+        # may start at a non-zero position; seek() must rewind to that
+        # position, not to 0, so a retried request resends the same bytes
+        # the first attempt sent.
+        try:
+            self._initial_position = raw.tell()
+        except (AttributeError, OSError, ValueError):
+            self._initial_position = 0
 
         if chunk_size is None:
             chunk_size = self._DEFAULT_CHUNK_SIZE
@@ -229,7 +237,7 @@ class AwsChunkedWrapper:
                 error_msg="Can only seek to start of stream"
             )
         self._reset()
-        self._raw.seek(0)
+        self._raw.seek(self._initial_position)
 
     def read(self, size=None):
         # Normalize "read all" size values to None
