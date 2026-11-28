@@ -902,6 +902,14 @@ class TestCSMSerializer(unittest.TestCase):
             serialized_event_dict['SdkExceptionMessage'], 'Error on the wire'
         )
 
+    def test_truncate_debug_message_logs_max_length_first(self):
+        with self.assertLogs('botocore.monitoring', level='DEBUG') as cm:
+            self.serializer._truncate('xxxxxxx', 4)
+        self.assertIn(
+            'Truncating following value to maximum length of 4: xxxxxxx',
+            cm.output[0],
+        )
+
     def test_serialize_truncates_long_user_agent(self):
         max_user_agent_length = 256
         user_agent = 'a' * (max_user_agent_length + 1)
