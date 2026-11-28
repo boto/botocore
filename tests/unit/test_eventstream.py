@@ -24,6 +24,7 @@ from botocore.eventstream import (
     EventStreamMessage,
     InvalidHeadersLength,
     InvalidPayloadLength,
+    InvalidPreludeLength,
     MessagePrelude,
     NoInitialResponseError,
 )
@@ -273,6 +274,18 @@ INVALID_PAYLOAD_LENGTH = (
 )
 
 
+# The declared headers length is larger than the total length, so the
+# implied payload length is negative. The checksums are otherwise valid.
+INCONSISTENT_PRELUDE = (
+    b"\x00\x00\x00\x14"  # total length
+    b"\x00\x00\x00\x64"  # headers length
+    b"\xba\x9d\x4b\x6a"  # prelude crc
+    b"\x00\x00\x00\x00"  # remaining bytes up to total length
+    b"\xe6\xbe\x1f\x61",  # message crc
+    InvalidPreludeLength,
+)
+
+
 # Tuples of encoded messages and their expected exception
 NEGATIVE_CASES = [
     CORRUPTED_LENGTH,
@@ -282,6 +295,7 @@ NEGATIVE_CASES = [
     DUPLICATE_HEADER,
     INVALID_HEADERS_LENGTH,
     INVALID_PAYLOAD_LENGTH,
+    INCONSISTENT_PRELUDE,
 ]
 
 
@@ -350,6 +364,7 @@ def test_all_positive_cases():
         "duplicate-headers",
         "invalid-headers-length",
         "invalid-payload-length",
+        "inconsistent-prelude",
     ],
 )
 def test_negative_cases(encoded, exception):
